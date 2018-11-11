@@ -11,6 +11,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	//	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"fmt"
+	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/protobuf"
 	"sync"
@@ -53,26 +55,40 @@ type storage struct {
 }
 
 type CreateOmniLedger struct {
-	Version    bc.Version
-	Roster     onet.Roster
-	ShardCount int
-	EpochSize  time.Duration
+	Version      bc.Version
+	Roster       onet.Roster
+	ShardCount   int
+	EpochSize    time.Duration
+	IBGenesisMsg *bc.CreateGenesisBlock
+	//ShardGenesisMsg  *bc.CreateGenesisBlock
+	OwnerID          darc.Identity
+	SpawnInstruction *bc.Instruction
+	Timestamp        time.Time
 }
 
 type CreateOmniLedgerResponse struct {
-	Version     bc.Version
-	ShardRoster []onet.Roster
-	IDSkipBlock *skipchain.SkipBlock  // Genesis block of the identity ledger
-	ShardBlocks []skipchain.SkipBlock // Genesis block of each shard
-	GenesisDarc darc.Darc
-	Owner       darc.Signer
+	Version              bc.Version
+	ShardRoster          []onet.Roster
+	IDSkipBlock          *skipchain.SkipBlock  // Genesis block of the identity ledger
+	ShardBlocks          []skipchain.SkipBlock // Genesis block of each shard
+	GenesisDarc          darc.Darc
+	Owner                darc.Signer
+	OmniledgerInstanceID bc.InstanceID
 }
 
 type NewEpoch struct {
-	//
+	IBID         skipchain.SkipBlockID
+	IBRoster     onet.Roster
+	IBDarcID     darc.Darc
+	ShardIDs     []skipchain.SkipBlockID
+	ShardDarcIDs []darc.Darc
+	ShardRosters []onet.Roster
+	Owner        darc.Signer
 }
 
 type NewEpochResponse struct {
+	IBRoster     onet.Roster
+	ShardRosters []onet.Roster
 }
 
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
@@ -81,16 +97,7 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, err
 	}
 
-	// Create owner
-	owner := darc.NewSignerEd25519(nil, nil)
-
-	// Create the IB using byzcoin service (will contain genesis block + darc)
-	msg, err := byzcoin.DefaultGenesisMsg(req.Version,
-		&req.Roster, []string{"spawn:darc"}, owner.Identity())
-	if err != nil {
-		return nil, err
-	}
-	c, rep, err := bc.NewLedger(msg, false)
+	c, ibRep, err := bc.NewLedger(req.IBGenesisMsg, false)
 	if err != nil {
 		return nil, err
 	}
@@ -99,73 +106,16 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		Instructions: make([]byzcoin.Instruction, 1),
 	}
 
-	darc := msg.GenesisDarc
-	//darc.Rules.AddRule("spawn:omniledgerepoch", expression.Expr(owner.Identity().String()))
-	darc.Rules.AddRule("spawn:omniledgerepoch", darc.Rules.GetSignExpr())
+	fmt.Println("-------- PRINT1 ---------")
 
-	darcBuf, err := protobuf.Encode(&darc)
-	if err != nil {
+	tx.Instructions[0] = *(req.SpawnInstruction)
+	if _, err := c.AddTransactionAndWait(tx, 2); err != nil {
 		return nil, err
 	}
 
-	instr1 := byzcoin.Instruction{
-		InstanceID: bc.NewInstanceID(darc.BaseID),
-		Nonce:      bc.GenNonce(),
-		Index:      0,
-		Length:     1,
-		Invoke: &bc.Invoke{
-			Command: "evolve",
-			Args: []bc.Argument{
-				bc.Argument{Name: "darc", Value: darcBuf},
-			},
-		},
-	}
-	instr1.SignBy(darc.GetBaseID(), owner)
+	fmt.Println("-------- PRINT2 ---------")
 
-	tx.Instructions[0] = instr1
-	if _, err := c.AddTransactionAndWait(tx, 10); err != nil {
-		return nil, err
-	}
-
-	// Store parameters (#shard and epoch-size) in the identity ledger
-	scBuff := make([]byte, 8)
-	binary.PutVarint(scBuff, int64(req.ShardCount))
-
-	esBuff := make([]byte, 8)
-	binary.PutVarint(scBuff, int64(req.EpochSize))
-
-	instr2 := byzcoin.Instruction{
-		InstanceID: bc.NewInstanceID(darc.BaseID),
-		Nonce:      bc.GenNonce(),
-		Index:      0,
-		Length:     1,
-		Spawn: &bc.Spawn{
-			ContractID: ContractOmniledgerEpochID,
-			Args: []bc.Argument{
-				bc.Argument{Name: "darc", Value: darcBuf},
-				bc.Argument{Name: "shardCount", Value: scBuff},
-				bc.Argument{Name: "epochSize", Value: esBuff}},
-		},
-	}
-	instr2.SignBy(darc.GetID(), owner)
-
-	tx.Instructions[0] = instr2
-	if _, err := c.AddTransactionAndWait(tx, 10); err != nil {
-		return nil, err
-	}
-
-	// Do sharding to generate ShardRoster
-	/*
-		seed, err := binary.ReadVarint(bytes.NewBuffer(c.ID))
-		if err != nil {
-			log.Error("couldn't decode skipblock hash")
-			return nil, err
-		}
-		shardRosters := sharding(&req.Roster, req.ShardCount, seed)
-	*/
-
-	// Get shardRosters from proof
-	id := tx.Instructions[0].Hash()
+	id := tx.Instructions[0].DeriveID("").Slice()
 	gpr, err := c.GetProof(id)
 	if err != nil {
 		return nil, err
@@ -175,14 +125,20 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, errors.New("no association found for the proof")
 	}
 
-	var shardRosters []onet.Roster
-	gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, shardRosters)
+	cc := &lib.ChainConfig{}
+	err = gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, cc)
+	if err != nil {
+		return nil, err
+	}
+
+	shardRosters := cc.ShardRosters
 
 	// Create shards using byzcoin
 	// Create the messages -> Create the ledger of each shard
 	msgs := make([]*bc.CreateGenesisBlock, req.ShardCount)
 	for i := 0; i < req.ShardCount; i++ {
-		msg, err := byzcoin.DefaultGenesisMsg(req.Version, &shardRosters[i], []string{"spawn:darc"}, owner.Identity())
+		// TODO: Add "invoke:newepoch"
+		msg, err := byzcoin.DefaultGenesisMsg(req.Version, &shardRosters[i], []string{"spawn:darc", "invoke:newepoch"}, req.OwnerID)
 		if err != nil {
 			return nil, err
 		}
@@ -202,10 +158,10 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 	reply := &CreateOmniLedgerResponse{
 		Version:     req.Version,
 		ShardRoster: shardRosters,
-		IDSkipBlock: rep.Skipblock,
+		IDSkipBlock: ibRep.Skipblock,
 		ShardBlocks: ids,
-		GenesisDarc: darc,
-		Owner:       owner,
+		//GenesisDarc: d,
+		//Owner:       owner,
 	}
 
 	return reply, nil
@@ -228,72 +184,20 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 		return errors.New("Not enough validators per shard")
 	}
 
+	if req.IBGenesisMsg == nil {
+		return errors.New("Requires a genesis message")
+	}
+
+	if req.SpawnInstruction == nil || req.SpawnInstruction.Spawn == nil {
+		return errors.New("Requires a spawn instruction")
+	}
+
+	if len(req.SpawnInstruction.Signatures) < 1 {
+		return errors.New("Spawn instruction must be signed")
+	}
+
 	return nil
 }
-
-/*
-func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
-	rand.Seed(seed)
-	perm := rand.Perm(len(roster.List))
-	shardRosters := make([]onet.Roster, 0)
-	shardSize := int64(math.Floor(float64(len(roster.List) / shardCount)))
-
-	batches := make([][]int, 0)
-	for len(perm) > shardCount {
-		batches = append(batches, perm[0:shardSize])
-		perm = perm[shardSize:]
-	}
-	batches = append(batches, perm)
-
-	for i := 0; i < len(batches)-1; i++ {
-		batch := batches[i]
-		serverIDs := make([]*network.ServerIdentity, 0)
-		for j := 0; j < len(batch); j++ {
-			serverIDs = append(serverIDs, roster.List[batch[j]])
-		}
-		// TODO: new roster method (onet.newroster)
-		shardRosters = append(shardRosters, onet.Roster{
-			// ID?
-			List: serverIDs,
-			// Aggregate?
-		})
-	}
-
-	return shardRosters
-}
-*/
-
-/*func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
-	rand.Seed(seed)
-	perm := rand.Perm(len(roster.List))
-
-	// Build map: validator index to shard index
-	m := make(map[int]int)
-	c := 0
-	for _, p := range perm {
-		if c == shardCount {
-			c = 0
-		}
-
-		m[p] = c
-		c++
-	}
-
-	// Group validators by shard index
-	idGroups := make([][]*network.ServerIdentity, shardCount)
-	for k, v := range m {
-		idGroups[v] = append(idGroups[v], roster.List[k])
-	}
-
-	// Create shard rosters
-	shardRosters := make([]onet.Roster, shardCount)
-	for ind, ids := range idGroups {
-		shardRosters[ind] = *onet.NewRoster(ids)
-	}
-
-	return shardRosters
-}
-*/
 
 // NewEpoch
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
@@ -304,57 +208,81 @@ func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		Command: "request_new_epoch",
 	}*/
 
-	return nil, nil
-}
+	// Requires skipchain id and roster
+	var ibID skipchain.SkipBlockID
+	//var shardIDs []skipchain.SkipBlockID
+	var roster onet.Roster
+	var darcID darc.ID
+	var oldRosters []onet.Roster
 
-// AddNode
+	c := bc.NewClient(ibID, roster)
 
-// RemoveNode
+	instr1 := byzcoin.Instruction{
+		Nonce:  bc.GenNonce(),
+		Index:  0,
+		Length: 1,
+		Invoke: &bc.Invoke{
+			Command: "request_new_epoch",
+		},
+	}
+	instr1.SignBy(darcID) // Requires darc ID anr the owner signature
 
-// NewProtocol is called on all nodes of a Tree (except the root, since it is
-// the one starting the protocol) so it's the Service that will be called to
-// generate the PI on all others node.
-// If you use CreateProtocolOnet, this will not be called, as the Onet will
-// instantiate the protocol on its own. If you need more control at the
-// instantiation of the protocol, use CreateProtocolService, and you can
-// give some extra-configuration to your protocol in here.
-/*func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	log.Lvl3("Not templated yet")
-	return nil, nil
-}*/
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{instr1},
+	}
 
-// saves all data.
-/*func (s *Service) save() {
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	err := s.Save(storageID, s.storage)
+	_, err := c.AddTransactionAndWait(tx, 10)
 	if err != nil {
-		log.Error("Couldn't save data:", err)
+		return nil, err
 	}
-}*/
 
-// Tries to load the configuration and updates the data in the service
-// if it finds a valid config-file.
-/*func (s *Service) tryLoad() error {
-	s.storage = &storage{}
-	msg, err := s.Load(storageID)
+	gpr, err := c.GetProof(tx.Instructions[0].DeriveID("").Slice())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if msg == nil {
-		return nil
-	}
-	var ok bool
-	s.storage, ok = msg.(*storage)
-	if !ok {
-		return errors.New("Data of wrong type")
-	}
-	return nil
-}*/
 
-func (s *Service) registerContract(contractID string, c bc.ContractFn) error {
-	s.contracts[contractID] = c
-	return nil
+	cc := &lib.ChainConfig{}
+	err = gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, cc)
+	if err != nil {
+		return nil, err
+	}
+
+	proofBuf, err := protobuf.Encode(gpr.Proof)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Complete arguments
+	// Need to know the number of shards
+	// Need to know the IB id
+	for i := 0; i < len(cc.ShardRosters); i++ {
+		shardIndBuff := make([]byte, 8)
+		binary.PutVarint(shardIndBuff, int64(i))
+		instr := byzcoin.Instruction{
+			Nonce:  bc.GenNonce(),
+			Index:  0,
+			Length: 1,
+			Invoke: &bc.Invoke{
+				Command: "new_epoch",
+				Args: []bc.Argument{
+					bc.Argument{Name: "epoch", Value: proofBuf},
+					bc.Argument{Name: "shard-index", Value: shardIndBuff},
+					bc.Argument{Name: "ib-ID", Value: ibID},
+				},
+			},
+		}
+
+		tx.Instructions[0] = instr
+
+		newRoster := cc.ShardRosters[i]
+		oldRoster := oldRosters[i]
+		changesCount := getRosterChangesCount(oldRoster, newRoster)
+		for j := 0; j < changesCount; j++ {
+			c.AddTransactionAndWait(tx, 1)
+		}
+	}
+
+	return nil, nil
 }
 
 // newService receives the context that holds information about the node it's
@@ -373,8 +301,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	// Register processor function (handles certain message types, e.g. ViewChangeReq) if necessary
 	// Register contracts
-	s.registerContract(ContractOmniledgerEpochID, s.ContractOmniledgerEpoch)
-	s.registerContract(ContractNewEpochID, s.ContractNewEpoch)
+
+	// TODO: Use byzcoin.RegisterContract instead
+	bc.RegisterContract(c, ContractOmniledgerEpochID, s.ContractOmniledgerEpoch)
+	//bc.RegisterContract(c, ContractNewEpochID, s.ContractNewEpoch)
 
 	// Register verification
 	// Register protocols
