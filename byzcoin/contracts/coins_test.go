@@ -268,8 +268,8 @@ func (ct *cvTest) Store(key byzcoin.InstanceID, value []byte, contractID string,
 	ct.darcIDs[k] = darcID
 	ct.index++
 }
-func (ct cvTest) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
-	return ct.values[string(key)], ct.contractIDs[string(key)], ct.darcIDs[string(key)], nil
+func (ct cvTest) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	return ct.values[string(key)], 0, ct.contractIDs[string(key)], ct.darcIDs[string(key)], nil
 }
 func (ct cvTest) GetValue(key []byte) ([]byte, error) {
 	return ct.values[string(key)], nil

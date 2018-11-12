@@ -9,11 +9,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-
 	"github.com/dedis/cothority/byzcoin/trie"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -354,6 +353,7 @@ func (sc StateChange) toString(withValue bool) string {
 	out += fmt.Sprintf("\taction: %s\n", sc.StateAction)
 	out += fmt.Sprintf("\tcontractID: %s\n", string(sc.ContractID))
 	out += fmt.Sprintf("\tkey: %x\n", sc.InstanceID)
+	out += fmt.Sprintf("\tversion: %d\n", sc.Version)
 	if withValue {
 		out += fmt.Sprintf("\tvalue: %x", sc.Value)
 	}
@@ -381,6 +381,7 @@ func (sc *StateChange) Val() []byte {
 		StateAction: sc.StateAction,
 		ContractID:  sc.ContractID,
 		Value:       sc.Value,
+		Version:     sc.Version,
 		DarcID:      sc.DarcID,
 	}
 	buf, err := protobuf.Encode(&v)

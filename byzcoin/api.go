@@ -6,15 +6,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 )
 
 // ServiceName is used for registration on the onet.

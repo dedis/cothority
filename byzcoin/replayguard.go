@@ -12,7 +12,7 @@ import (
 // getSignerCounter returns 0 if the key is not set, otherwise it loads the
 // counter from the Trie.
 func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
-	val, _, _, err := st.GetValues(publicVersionKey(id))
+	val, _, _, _, err := st.GetValues(publicVersionKey(id))
 	if err == errKeyNotSet {
 		return 0, nil
 	}
@@ -43,6 +43,7 @@ func incrementSignerCounters(st ReadOnlyStateTrie, sigs []darc.Signature) (State
 			InstanceID:  publicVersionKey(id),
 			ContractID:  []byte{},
 			Value:       verBuf,
+			Version:     ver + 1,
 			DarcID:      darc.ID([]byte{}),
 		})
 	}

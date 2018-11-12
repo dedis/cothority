@@ -160,7 +160,7 @@ func (s *Service) decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf [
 func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
-	_, cid, darcID, err := v.GetValues(inst.InstanceID.Slice())
+	_, _, cid, darcID, err := v.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -277,7 +277,7 @@ func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, 
 }
 
 func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	_, _, darcID, err := v.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := v.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -336,7 +336,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 }
 
 func getEventByID(view byzcoin.ReadOnlyStateTrie, eid []byte) (*Event, error) {
-	v0, _, _, err := view.GetValues(eid)
+	v0, _, _, _, err := view.GetValues(eid)
 	if err != nil {
 		return nil, err
 	}

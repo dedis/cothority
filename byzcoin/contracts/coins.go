@@ -42,7 +42,7 @@ func ContractCoin(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHa
 
 	var value []byte
 	var darcID darc.ID
-	value, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	value, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
@@ -107,7 +107,7 @@ func ContractCoin(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHa
 				cid string
 				did darc.ID
 			)
-			v, cid, did, err = cdb.GetValues(target)
+			v, _, cid, did, err = cdb.GetValues(target)
 			if err == nil && cid != ContractCoinID {
 				err = errors.New("destination is not a coin contract")
 			}

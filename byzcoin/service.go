@@ -86,6 +86,9 @@ type Service struct {
 	// responsible for, one for each skipchain.
 	stateTries     map[string]*stateTrie
 	stateTriesLock sync.Mutex
+	// We need to store the state changes for keeping track
+	// of the history of an instance
+	stateChangeStorage *stateChangeStorage
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -422,7 +425,7 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 
 	for i := range req.SignerIDs {
 		key := publicVersionKey(req.SignerIDs[i])
-		buf, _, _, err := st.GetValues(key)
+		buf, _, _, _, err := st.GetValues(key)
 		if err == errKeyNotSet {
 			out[i] = 0
 			continue
@@ -506,6 +509,90 @@ query:
 		}
 	}
 	return
+}
+
+func entryToResponse(sce *StateChangeEntry, ok bool, err error) (*GetInstanceVersionResponse, error) {
+	if !ok {
+		err = errKeyNotSet
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetInstanceVersionResponse{
+		StateChange: sce.StateChange,
+		BlockIndex:  sce.BlockIndex,
+	}, nil
+}
+
+// GetInstanceVersion looks for the version of a given instance and responds
+// with the state change and the block index
+func (s *Service) GetInstanceVersion(req *GetInstanceVersion) (*GetInstanceVersionResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+
+	return entryToResponse(&sce, ok, err)
+}
+
+// GetLastInstanceVersion looks for the last version of an instance and
+// responds with the state change and the block when it hits
+func (s *Service) GetLastInstanceVersion(req *GetLastInstanceVersion) (*GetInstanceVersionResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getLast(req.InstanceID[:], req.SkipChainID)
+
+	return entryToResponse(&sce, ok, err)
+}
+
+// GetAllInstanceVersion looks for all the state changes of an instance
+// and responds with both the state change and the block index for
+// each version
+func (s *Service) GetAllInstanceVersion(req *GetAllInstanceVersion) (res *GetAllInstanceVersionResponse, err error) {
+	sces, err := s.stateChangeStorage.getAll(req.InstanceID[:], req.SkipChainID)
+	if err != nil {
+		return nil, err
+	}
+
+	scs := make([]GetInstanceVersionResponse, len(sces))
+	for i, e := range sces {
+		scs[i].StateChange = e.StateChange
+		scs[i].BlockIndex = e.BlockIndex
+	}
+
+	return &GetAllInstanceVersionResponse{StateChanges: scs}, nil
+}
+
+// CheckStateChangeValidity gets the list of state changes belonging to the same
+// block as the targeted one so that a hash can be computed and compared to the
+// one stored in the block
+func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*CheckStateChangeValidityResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+	if !ok {
+		err = errKeyNotSet
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	sb, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
+		Genesis: req.SkipChainID,
+		Index:   sce.BlockIndex,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sces, err := s.stateChangeStorage.getByBlock(req.SkipChainID, sce.BlockIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	scs := make(StateChanges, len(sces))
+	for i, e := range sces {
+		scs[i] = e.StateChange
+	}
+
+	return &CheckStateChangeValidityResponse{
+		StateChanges: scs,
+		BlockID:      sb.SkipBlock.Hash,
+	}, nil
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
@@ -609,6 +696,13 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	if err != nil {
 		return nil, err
 	}
+
+	// State changes are cached only when the block is confirmed
+	err = s.stateChangeStorage.append(scs, ssbReply.Latest)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return ssbReply.Latest, nil
 }
 
@@ -893,6 +987,12 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		// TODO: if this happens, we've now got a corrupted cdb. See issue #1447.
 		// This should never happen...
 		panic(s.ServerIdentity().String() + ": hash of collection doesn't correspond to root hash")
+	}
+
+	err = s.stateChangeStorage.append(scs, sb)
+	if err != nil {
+		panic("Couldn't append the state changes to the storage - this might" +
+			"mean that the db is broken. Error: " + err.Error())
 	}
 
 	// Notify all waiting channels for processed ClientTransactions.
@@ -1543,7 +1643,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		}
 	}()
 
-	_, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	_, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
@@ -1564,7 +1664,36 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
-	return contract(st, instr, ctxHash, cin)
+	scs, cout, err = contract(st, instr, ctxHash, cin)
+	if err != nil {
+		return
+	}
+
+	// As the InstanceID of each sc is not necessarily the same as the
+	// instruction, we need to get the version from the trie
+	vv := make(map[string]uint64)
+	for i, sc := range scs {
+		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
+		if !ok {
+			_, ver, _, _, err = st.GetValues(sc.InstanceID)
+		}
+
+		// this is done at this scope because we must increase
+		// the version only when it's not the first one
+		if err == errKeyNotSet {
+			ver = 0
+			err = nil
+		} else if err != nil {
+			return
+		} else {
+			ver++
+		}
+
+		scs[i].Version = ver
+		vv[hex.EncodeToString(sc.InstanceID)] = ver
+	}
+
+	return
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
@@ -1873,6 +2002,15 @@ func (s *Service) trySyncAll() {
 		log.Error(s.ServerIdentity(), err)
 		return
 	}
+
+	// It reads from the state change storage and gets the last
+	// block index for each chain
+	indices, err := s.stateChangeStorage.loadFromDB()
+	if err != nil {
+		log.Error(s.ServerIdentity(), err)
+		return
+	}
+
 	for _, scID := range gasr.IDs {
 		sb, err := s.db().GetLatestByID(scID)
 		if err != nil {
@@ -1883,7 +2021,93 @@ func (s *Service) trySyncAll() {
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 		}
+
+		// the MT root is not checked so we don't need the correct nonce
+		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+
+		index, ok := indices[sb.SkipChainID().String()]
+		if !ok {
+			// from the beginning
+			index = 0
+		}
+
+		// start from the last known skipblock
+		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
+		lksb, err := s.skService().GetSingleBlockByIndex(req)
+		if lksb != nil {
+			log.Lvlf2("Start creating state changes for skipchain %x", sb.SkipChainID())
+			_, err = s.buildStateChanges(lksb.SkipBlock.Hash, sst, []Coin{})
+			if err != nil {
+				log.Error(s.ServerIdentity(), err)
+			}
+		} // else there is no new block
 	}
+}
+
+// getBlockTx fetches the block with the given id and then decode the payload
+// to return the list of transactions
+func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.SkipBlock, error) {
+	sb, err := s.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sid})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var body DataBody
+	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return body.TxResults, sb, nil
+}
+
+// buildStateChanges recursively gets the TXs of a skipchain's blocks and populate
+// the state changes storage by restoring them from the TXs. We don't need to worry
+// about overriding thanks to the key generation.
+func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingStateTrie, cin []Coin) ([]Coin, error) {
+	txs, sb, err := s.getBlockTx(sid)
+	if err != nil {
+		return nil, err
+	}
+
+	// when an error occured, we stop where we are because those state changes
+	// should be generated without errors then something else went wrong
+	// (e.g. storage issue)
+	for _, tx := range txs {
+		if tx.Accepted {
+			// Only accepted transactions must be used
+			// to create the state changes
+			for _, instr := range tx.ClientTransaction.Instructions {
+				scs, cout, err := s.executeInstruction(sst, cin, instr, tx.ClientTransaction.InstructionsHash)
+				cin = cout
+				if err != nil {
+					return nil, err
+				}
+				counterScs, err := incrementSignerCounters(sst, instr.Signatures)
+				if err != nil {
+					return nil, err
+				}
+
+				scs = append(scs, counterScs...)
+				err = sst.StoreAll(scs)
+				if err != nil {
+					return nil, err
+				}
+
+				s.stateChangeStorage.append(scs, sb)
+			}
+		}
+	}
+
+	if len(sb.ForwardLink) > 0 {
+		// Follow the FL level 0 to create all the state changes
+		return s.buildStateChanges(sb.ForwardLink[0].To, sst, cin)
+	}
+
+	return nil, nil
 }
 
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
@@ -1900,6 +2124,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
 		stateChangeCache:       newStateChangeCache(),
+		stateChangeStorage:     newStateChangeStorage(c),
 		heartbeatsTimeout:      make(chan string, 1),
 		closeLeaderMonitorChan: make(chan bool, 1),
 		heartbeats:             newHeartbeats(),
@@ -1907,13 +2132,21 @@ func newService(c *onet.Context) (onet.Service, error) {
 		streamingMan:           streamingManager{},
 		closed:                 true,
 	}
-	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
-		s.GetProof, s.CheckAuthorization,
+	err := s.RegisterHandlers(
+		s.CreateGenesisBlock,
+		s.AddTransaction,
+		s.GetProof,
+		s.CheckAuthorization,
 		s.GetSignerCounters,
 		s.DownloadState,
-	); err != nil {
+		s.GetInstanceVersion,
+		s.GetLastInstanceVersion,
+		s.GetAllInstanceVersion,
+		s.CheckStateChangeValidity)
+	if err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
+
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
 		log.ErrFatal(err, "Couldn't register streaming messages")
 	}
@@ -1928,7 +2161,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.skService().RegisterStoreSkipblockCallback(s.updateTrieCallback)
 
 	// Register the view-change cosi protocols.
-	var err error
 	_, err = s.ProtocolRegister(viewChangeSubFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return cosiprotocol.NewSubFtCosi(n, s.verifyViewChange, cothority.Suite)
 	})

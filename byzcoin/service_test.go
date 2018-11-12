@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
@@ -377,7 +378,7 @@ func TestService_Depending(t *testing.T) {
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
-	_, _, _, err = cdb.GetValues(in1.Hash())
+	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
 	require.Equal(t, errKeyNotSet, err)
 
@@ -731,12 +732,12 @@ func TestService_StateChange(t *testing.T) {
 
 	var latest int64
 	f := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
-		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		_, _, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
 
-		val0, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		val0, _, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1443,7 +1444,7 @@ func TestService_DownloadState(t *testing.T) {
 		require.Nil(t, err)
 		st, err := service.getStateTrie(s.genesis.Hash)
 		require.Nil(t, err)
-		val, _, _, err := st.GetValues(make([]byte, 32))
+		val, _, _, _, err := st.GetValues(make([]byte, 32))
 		require.Nil(t, err)
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
@@ -1678,6 +1679,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
+// Check that we got no error from an existing state trie
 func TestService_UpdateTrieCallback(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -1686,6 +1688,196 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 	// as the trie index is different
 	err := s.service().updateTrieCallback(s.genesis.SkipChainID())
 	require.Nil(t, err)
+}
+
+// This tests that the state change storage will actually
+// store them and increase the versions accordingly over
+// several transactions and instructions
+func TestService_StateChangeStorage(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	n := 2
+	iid := genID()
+	fakeID := genID().Slice()
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the version is correctly increased for multiple state changes
+		sc1 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Create,
+		}
+		sc2 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Update,
+		}
+		sc3 := StateChange{ // this one should not increase the version of the previous two
+			InstanceID:  fakeID,
+			StateAction: Create,
+		}
+		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, contract)
+	}
+
+	for i := 0; i < n; i++ {
+		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, uint64(i*2+1))
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:     CurrentVersion,
+			SkipchainID: s.genesis.SkipChainID(),
+			Transaction: tx,
+		})
+		require.Nil(t, err)
+	}
+
+	proof := s.waitProofWithIdx(t, iid[:], 0)
+
+	for _, service := range s.services {
+		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+
+		require.Nil(t, err)
+		require.Equal(t, n*4, len(res.StateChanges))
+
+		for i := 0; i < n*4; i++ {
+			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
+				InstanceID:  iid,
+				Version:     uint64(i),
+				SkipChainID: proof.Latest.SkipChainID(),
+			})
+			require.Nil(t, err)
+			require.Equal(t, uint64(i), sc.StateChange.Version)
+			require.Equal(t, uint64(i), res.StateChanges[i].StateChange.Version)
+
+			res, err := service.CheckStateChangeValidity(&CheckStateChangeValidity{
+				SkipChainID: proof.Latest.SkipChainID(),
+				InstanceID:  iid,
+				Version:     uint64(i),
+			})
+			require.Nil(t, err)
+
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(proof.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+			require.Nil(t, err)
+
+			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
+		}
+
+		sc, err := service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+		require.Nil(t, err)
+		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
+
+		sc, err = service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  NewInstanceID(publicVersionKey(s.signer.Identity().String())),
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+		require.Nil(t, err)
+		require.Equal(t, uint64(4), sc.StateChange.Version)
+	}
+}
+
+// This tests that the service will restore the state changes
+// after a (re)boot and catch up potential new blocks
+func TestService_StateChangeCatchUp(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	n := 5
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the state trie is created from the known global state
+		_, ver, _, _, _ := cdb.GetValues(inst.Hash())
+		iid := inst.Hash()
+		if !bytes.Equal(inst.InstanceID.Slice(), s.darc.GetBaseID()) {
+			iid = inst.InstanceID.Slice()
+		}
+		sc1 := StateChange{
+			InstanceID:  iid,
+			ContractID:  []byte(contractID),
+			StateAction: Create,
+			Version:     ver + 1,
+		}
+		return []StateChange{sc1}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, contract)
+	}
+
+	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
+		instr := Instruction{
+			InstanceID:    NewInstanceID(iid),
+			Spawn:         &Spawn{ContractID: contractID},
+			SignerCounter: []uint64{counter},
+		}
+		tx := ClientTransaction{Instructions: Instructions{instr}}
+		tx.InstructionsHash = tx.Instructions.Hash()
+		err := tx.Instructions[0].SignWith(tx.InstructionsHash, s.signer)
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: wait,
+		})
+		require.Nil(t, err)
+
+		return &instr
+	}
+
+	instr := createTx(s.darc.GetBaseID(), uint64(1), 1)
+
+	for i := 0; i < n-1; i++ {
+		// add transactions that must be recreated
+		createTx(instr.Hash(), uint64(i+1), 0)
+	}
+	createTx(instr.Hash(), uint64(n), 1)
+
+	// Remove some entries to check it will recreate them
+	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
+		b := s.service().stateChangeStorage.getBucket(tx, s.genesis.SkipChainID())
+		if b == nil {
+			return errors.New("missing bucket")
+		}
+
+		c := b.Cursor()
+		// Remove entries associated with the second block
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if k[len(k)-1] == byte(2) {
+				err := c.Delete()
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	require.Nil(t, err)
+
+	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, 1, len(scs))
+
+	s.service().trySyncAll()
+
+	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, n+1, len(scs))
+	require.Equal(t, uint64(n), scs[n].StateChange.Version)
+
+	counterID := publicVersionKey(s.signer.Identity().String())
+	sc, ok, err := s.service().stateChangeStorage.getLast(counterID, s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.True(t, ok)
+	require.Equal(t, uint64(n+1), sc.StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
@@ -1909,7 +2101,7 @@ func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, 
 		return nil, nil, err
 	}
 
-	_, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}

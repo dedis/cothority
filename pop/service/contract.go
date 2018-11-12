@@ -63,7 +63,7 @@ func (s *Service) ContractPopParty(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	var ppi PopPartyInstance
 	if inst.Spawn == nil {
 		var ppiBuf []byte
-		ppiBuf, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+		ppiBuf, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, errors.New("couldn't get instance data: " + err.Error())
 		}
@@ -148,7 +148,7 @@ func (s *Service) ContractPopParty(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 				if err != nil {
 					return nil, nil, err
 				}
-				_, _, _, err = cdb.GetValues(d.GetBaseID())
+				_, _, _, _, err = cdb.GetValues(d.GetBaseID())
 				if err != nil {
 					log.Lvl2("Appending service-darc because it doesn't exist yet")
 					scs = append(scs, sc)

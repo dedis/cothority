@@ -318,6 +318,44 @@ public class ByzCoinRPCTest {
         }
     }
 
+    /**
+     * Checks that you can request for the instance versions and that you can verify
+     * that it has not been tempered.
+     */
+    @Test
+    void getInstanceVersion() throws Exception {
+        final int n = 5;
+
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
+        for (int i = 0; i < n-1; i++) {
+            bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1+i,10);
+        }
+
+        StateChange sc = bc.getInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId(), 1);
+
+        assertNotNull(sc);
+        assertEquals(1, sc.getVersion());
+
+        sc = bc.getLastInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId());
+
+        assertNotNull(sc);
+        assertEquals(n-1, sc.getVersion());
+
+        List<StateChange> scs;
+        scs = bc.getAllInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId());
+
+        assertEquals(n, scs.size());
+        assertEquals(n-1, scs.get(n-1).getVersion());
+        assertEquals("darc", scs.get(0).getContractId());
+        assertEquals(bc.getGenesisDarcInstance().getInstance().getId(), scs.get(0).getInstanceId());
+        assertEquals(scs.get(0).getDarcId(), scs.get(1).getDarcId());
+
+        boolean isValid = bc.checkStateChangeValidity(sc);
+        assertTrue(isValid);
+    }
+
     @Test
     void updateRoster() throws Exception {
         List<Signer> admins = new ArrayList<>();
