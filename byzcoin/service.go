@@ -2085,6 +2085,12 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 				if err != nil {
 					return nil, err
 				}
+				counterScs, err := incrementSignerCounters(sst, instr.Signatures)
+				if err != nil {
+					return nil, err
+				}
+
+				scs = append(scs, counterScs...)
 				err = sst.StoreAll(scs)
 				if err != nil {
 					return nil, err
@@ -2092,7 +2098,6 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 
 				s.stateChangeStorage.append(scs, sb)
 			}
-			// TODO: build counter state changes
 		}
 	}
 

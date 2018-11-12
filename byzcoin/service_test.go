@@ -1755,7 +1755,6 @@ func TestService_StateChangeStorage(t *testing.T) {
 				InstanceID:  iid,
 				Version:     uint64(i),
 			})
-			log.Lvlf2("%d", len(res.StateChanges))
 			require.Nil(t, err)
 
 			var header DataHeader
@@ -1771,6 +1770,13 @@ func TestService_StateChangeStorage(t *testing.T) {
 		})
 		require.Nil(t, err)
 		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
+
+		sc, err = service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  NewInstanceID(publicVersionKey(s.signer.Identity().String())),
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+		require.Nil(t, err)
+		require.Equal(t, uint64(4), sc.StateChange.Version)
 	}
 }
 
@@ -1860,6 +1866,12 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, n+1, len(scs))
 	require.Equal(t, uint64(n), scs[n].StateChange.Version)
+
+	counterID := publicVersionKey(s.signer.Identity().String())
+	sc, ok, err := s.service().stateChangeStorage.getLast(counterID, s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.True(t, ok)
+	require.Equal(t, uint64(n+1), sc.StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
