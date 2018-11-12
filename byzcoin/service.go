@@ -991,7 +991,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 
 	err = s.stateChangeStorage.append(scs, sb)
 	if err != nil {
-		log.Error(err)
+		panic("Couldn't append the state changes to the storage - this might" +
+			"mean that the db is broken. Error: " + err.Error())
 	}
 
 	// Notify all waiting channels for processed ClientTransactions.

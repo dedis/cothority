@@ -1679,6 +1679,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
+// Check that we got no error from an existing state trie
 func TestService_UpdateTrieCallback(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -1689,6 +1690,9 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 	require.Nil(t, err)
 }
 
+// This tests that the state change storage will actually
+// store them and increase the versions accordingly over
+// several transactions and instructions
 func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -1780,6 +1784,8 @@ func TestService_StateChangeStorage(t *testing.T) {
 	}
 }
 
+// This tests that the service will restore the state changes
+// after a (re)boot and catch up potential new blocks
 func TestService_StateChangeCatchUp(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()

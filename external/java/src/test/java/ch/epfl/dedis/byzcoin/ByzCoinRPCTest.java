@@ -318,6 +318,10 @@ public class ByzCoinRPCTest {
         }
     }
 
+    /**
+     * Checks that you can request for the instance versions and that you can verify
+     * that it has not been tempered.
+     */
     @Test
     void getInstanceVersion() throws Exception {
         final int n = 5;

@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Checks that the size of the storage is correctly restored
+// after reading the DB and that the indices are correct
 func TestStateChangeStorage_Init(t *testing.T) {
 	scs, name := generateDB(t)
 	defer os.Remove(name)
@@ -68,6 +70,7 @@ func createBlock() *skipchain.SkipBlock {
 	return sb
 }
 
+// Checks basic usage of the state change storage
 func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	scs, name := generateDB(t)
 	defer os.Remove(name)
@@ -106,6 +109,8 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	require.Equal(t, uint64(9), sce.StateChange.Version)
 }
 
+// Checks that GetByBlock returns the actual list of state
+// changes for this block
 func TestStateChangeStorage_GetByBlock(t *testing.T) {
 	store, name := generateDB(t)
 	defer os.Remove(name)
@@ -135,6 +140,7 @@ func TestStateChangeStorage_GetByBlock(t *testing.T) {
 	require.Equal(t, k, len(sce))
 }
 
+// Checks the independance of the skipchains for the state changes
 func TestStateChangeStorage_MultiSkipChain(t *testing.T) {
 	store, name := generateDB(t)
 	defer os.Remove(name)
@@ -180,6 +186,8 @@ func TestStateChangeStorage_MultiSkipChain(t *testing.T) {
 	}
 }
 
+// Checks the max size parameter is correctly taken in account
+// and that the storage keeps the size below the threshold
 func TestStateChangeStorage_MaxSize(t *testing.T) {
 	store, name := generateDB(t)
 	defer os.Remove(name)
@@ -229,6 +237,8 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 	require.Equal(t, 0, len(entries))
 }
 
+// Checks that the parameter of the maximum number of blocks is taken
+// in account and that older blocks are cleaned
 func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 	store, name := generateDB(t)
 	store.maxNbrBlock = 2
