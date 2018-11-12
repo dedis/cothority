@@ -2,6 +2,7 @@ package omniledger
 
 import (
 	"encoding/binary"
+	//"errors"
 	"fmt"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/network"
@@ -12,7 +13,7 @@ import (
 	"time"
 
 	bc "github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
@@ -129,6 +130,8 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 	//shardCount := 2
 	epochSize := 500 * time.Millisecond
 
+	//c := bc.NewClient(nil, *roster)
+
 	ibMsg, err := bc.DefaultGenesisMsg(version, roster, []string{"spawn:darc", "spawn:omniledgerepoch"}, owner.Identity())
 	if err != nil {
 		fmt.Println("ERR: ", err)
@@ -156,11 +159,17 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(ts.Unix()))
 
-	instr := &bc.Instruction{
+	/*signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
+	if err != nil {
+		fmt.Println("ERR: ", err)
+	}
+	if len(signerCtrs.Counters) != 1 {
+		err = errors.New("incorrect signer counter length")
+		fmt.Println("ERR: ", err)
+	}*/
+
+	instr := bc.Instruction{
 		InstanceID: bc.NewInstanceID(d.GetBaseID()),
-		Nonce:      bc.GenNonce(),
-		Index:      0,
-		Length:     1,
 		Spawn: &bc.Spawn{
 			ContractID: ContractOmniledgerEpochID,
 			Args: []bc.Argument{
@@ -171,17 +180,24 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 				bc.Argument{Name: "timestamp", Value: tsBuf},
 			},
 		},
+		//SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
+		SignerCounter: []uint64{1},
 	}
-	err = instr.SignBy(d.GetBaseID(), owner)
+	//err = instr.SignBy(d.GetBaseID(), owner)
+	spawnTx := &bc.ClientTransaction{
+		Instructions: bc.Instructions{instr},
+	}
+	spawnTx.SignWith(owner)
+	spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
 	return &CreateOmniLedger{
-		Version:          version,
-		Roster:           *roster,
-		ShardCount:       shardCount,
-		EpochSize:        epochSize,
-		IBGenesisMsg:     ibMsg,
-		OwnerID:          owner.Identity(),
-		SpawnInstruction: instr,
-		Timestamp:        ts,
+		Version:      version,
+		Roster:       *roster,
+		ShardCount:   shardCount,
+		EpochSize:    epochSize,
+		IBGenesisMsg: ibMsg,
+		OwnerID:      owner.Identity(),
+		SpawnTx:      spawnTx,
+		Timestamp:    ts,
 	}
 }

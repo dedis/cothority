@@ -67,13 +67,13 @@ func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(req.Timestamp.Unix()))
 
-	signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
+	/*signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
 	if err != nil {
 		return nil, nil, err
 	}
 	if len(signerCtrs.Counters) != 1 {
 		return nil, nil, errors.New("incorrect signer counter length")
-	}
+	}*/
 
 	instr := bc.Instruction{
 		InstanceID: bc.NewInstanceID(d.GetBaseID()),
@@ -87,13 +87,14 @@ func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse
 				bc.Argument{Name: "timestamp", Value: tsBuf},
 			},
 		},
-		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
+		SignerCounter: []uint64{1},
 	}
 
 	spawnTx := &bc.ClientTransaction{
 		Instructions: bc.Instructions{instr},
 	}
 	spawnTx.SignWith(owner)
+	spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
 	olInstID := instr.DeriveID("")
 
@@ -157,7 +158,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	var cc lib.ChainConfig
+	cc := &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
 	if err != nil {
 		return nil, err

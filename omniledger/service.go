@@ -121,7 +121,7 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, errors.New("no association found for the proof")
 	}
 
-	var cc lib.ChainConfig
+	cc := &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
 	if err != nil {
 		return nil, err
