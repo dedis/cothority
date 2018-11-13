@@ -17,7 +17,7 @@ import (
 const Name = "DKG"
 
 func init() {
-	onet.GlobalProtocolRegister(Name, NewProtocol)
+	onet.GlobalProtocolRegister(Name, NewSetup)
 }
 
 // Setup can give the DKG that can be used to get the shared public key.
@@ -39,8 +39,8 @@ type Setup struct {
 	structWaitReply chan []structWaitReply
 }
 
-// NewProtocol initialises the structure for use in one round
-func NewProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+// NewSetup initialises the structure for use in one round
+func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &Setup{
 		TreeNodeInstance: n,
 		keypair:          key.NewKeyPair(cothority.Suite),
@@ -65,12 +65,12 @@ func NewProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 // SharedSecret returns the necessary information for doing shared
 // encryption and decryption.
 func (o *Setup) SharedSecret() (*SharedSecret, error) {
-	return newSharedSecret(o.DKG)
+	return NewSharedSecret(o.DKG)
 }
 
-// newSharedSecret takes an initialized DistKeyGenerator and returns the
+// NewSharedSecret takes an initialized DistKeyGenerator and returns the
 // minimal set of values necessary to do shared encryption/decryption.
-func newSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, error) {
+func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, error) {
 	if gen == nil {
 		return nil, errors.New("no valid dkg given")
 	}
@@ -115,8 +115,7 @@ func (o *Setup) Dispatch() error {
 	for i := 0; i < l*(l-1); i++ {
 		// This is expected to return some errors, so do not stop on them.
 		err := o.allResponse(<-o.structResponse)
-		if err != nil && err.Error() != "vss: already existing response from same origin" &&
-			err.Error() != "dkg: can't give SecretCommits if deal not certified" {
+		if err != nil && err.Error() != "vss: already existing response from same origin" {
 			return err
 		}
 	}
@@ -129,6 +128,10 @@ func (o *Setup) Dispatch() error {
 			<-o.structWaitSetup
 			o.SendToParent(&WaitReply{})
 		}
+	}
+
+	if !o.DKG.Certified() {
+		return errors.New("not certified")
 	}
 
 	// TODO check something else? QUAD?
@@ -200,10 +203,10 @@ func (o *Setup) allResponse(resp structResponse) error {
 		return err
 	}
 	if just != nil {
+		// TODO error?
 		log.Warn(o.Name(), "Got a justification: ", just)
 	}
 	return nil
-	// TODO change something here???
 }
 
 // Convenience functions

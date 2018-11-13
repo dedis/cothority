@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	dkgprotocol "github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

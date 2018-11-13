@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	dkgprotocol "github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
-	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	dkg "github.com/dedis/kyber/share/dkg/pedersen"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
