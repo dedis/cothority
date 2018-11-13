@@ -142,7 +142,7 @@ func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin)
 
 		sc, err = updateRosterScs(cdb, darcID, req.Roster)
 		return
-	} else if inst.Invoke.Command == "newepoch" {
+	} else if inst.Invoke.Command == "new_epoch" {
 		ibID := inst.Invoke.Args.Search("ib-ID") // SkipBlockID is a []byte so there is no need to decode
 
 		shardIndBuf := inst.Invoke.Args.Search("shard-index")
@@ -181,49 +181,11 @@ func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin)
 		var oldMap map[network.ServerIdentityID]bool
 		var newMap map[network.ServerIdentityID]bool
 
-		oldRoster, _, _, _ = changeRoster(oldRoster, newRoster, oldMap, newMap)
+		oldRoster, _, _, _ = lib.ChangeRoster(oldRoster, newRoster, oldMap, newMap)
 		sc, err = updateRosterScs(cdb, darcID, oldRoster)
 	}
 	err = errors.New("invalid invoke command: " + inst.Invoke.Command)
 	return
-}
-
-func changeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.ServerIdentityID]bool) (onet.Roster, map[network.ServerIdentityID]bool, map[network.ServerIdentityID]bool, bool) {
-	oldList := oldRoster.List
-	newList := newRoster.List
-
-	if oldMap == nil {
-		oldMap = make(map[network.ServerIdentityID]bool)
-		for _, o := range oldList {
-			oldMap[o.ID] = true
-		}
-	}
-
-	// Add new element of newRoster to OldRoster, one at the time
-	for _, n := range newList {
-		if _, ok := oldMap[n.ID]; !ok {
-			oldRoster.List = append(oldRoster.List, n)
-			oldMap[n.ID] = true
-			return oldRoster, oldMap, newMap, true
-		}
-	}
-
-	if newMap == nil {
-		newMap = make(map[network.ServerIdentityID]bool)
-		for _, n := range newList {
-			newMap[n.ID] = true
-		}
-	}
-
-	// Remove old element of oldRoster, one at the time
-	for i, o := range oldList {
-		if _, ok := newMap[o.ID]; !ok {
-			oldRoster.List = append(oldRoster.List[:i], oldRoster.List[i+1:]...)
-			return oldRoster, oldMap, newMap, true
-		}
-	}
-
-	return oldRoster, oldMap, newMap, false
 }
 
 func updateRosterScs(cdb ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
