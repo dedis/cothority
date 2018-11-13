@@ -184,13 +184,14 @@ func (s *stateChangeStorage) setMaxNbrBlock(nbr int) {
 // is above the maximum. It will remove elements until cleanThreshold of
 // the space is available.
 func (s *stateChangeStorage) cleanBySize() error {
+	// size and sortedKeys need to be concurrent safe
+	s.sortedKeysLock.Lock()
+	defer s.sortedKeysLock.Unlock()
+
 	if s.size < s.maxSize || s.maxSize == 0 {
 		// nothing to clean
 		return nil
 	}
-
-	s.sortedKeysLock.Lock()
-	defer s.sortedKeysLock.Unlock()
 
 	sortedKeys := make(keyTimeArray, len(s.sortedKeys))
 	copy(sortedKeys, s.sortedKeys)
