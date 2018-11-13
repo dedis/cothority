@@ -2,7 +2,6 @@ package skipchain
 
 import (
 	"bytes"
-	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -90,7 +89,6 @@ func TestSkipBlock_Hash1(t *testing.T) {
 	sbd1.Height = 4
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
-	assert.Equal(t, hex.EncodeToString(h1), h1.String())
 
 	sbd2 := NewSkipBlock()
 	sbd2.Data = []byte("2")

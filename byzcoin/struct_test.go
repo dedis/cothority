@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -56,7 +57,7 @@ func TestStateChangeStorage_Init(t *testing.T) {
 
 	indices, err := scs.loadFromDB()
 	require.Nil(t, err)
-	require.Equal(t, k, indices[sbs[0].Hash.String()])
+	require.Equal(t, k, indices[fmt.Sprintf("%x", sbs[0].Hash)])
 	require.Equal(t, size, scs.size)
 }
 

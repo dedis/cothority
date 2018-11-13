@@ -2028,7 +2028,7 @@ func (s *Service) trySyncAll() {
 			log.Error(s.ServerIdentity(), err)
 		}
 
-		index, ok := indices[sb.SkipChainID().String()]
+		index, ok := indices[fmt.Sprintf("%x", sb.SkipChainID())]
 		if !ok {
 			// from the beginning
 			index = 0

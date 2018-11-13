@@ -47,11 +47,6 @@ func (sbid SkipBlockID) Equal(sb SkipBlockID) bool {
 	return bytes.Equal([]byte(sbid), []byte(sb))
 }
 
-// String returns the hex string of the byte array
-func (sbid SkipBlockID) String() string {
-	return fmt.Sprintf("%x", []byte(sbid[:]))
-}
-
 // VerifierID represents one of the verifications used to accept or
 // deny a SkipBlock.
 type VerifierID uuid.UUID
