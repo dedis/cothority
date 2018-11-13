@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "conode.fullname" . }}
+  labels:
+    app: {{ include "conode.name" . }}
+    chart: {{ include "conode.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: NodePort
+  ports:
+    - name: tcp1
+      port: {{ .Values.service.ports.tcp1 }}
+      nodePort: {{ .Values.service.nodePorts.tcp1 }}
+      targetPort: tcp1
+      protocol: TCP
+    - name: tcp2
+      port: {{ .Values.service.ports.tcp2 }}
+      nodePort: {{ .Values.service.nodePorts.tcp2 }}
+      targetPort: tcp2
+      protocol: TCP
+  selector:
+    app: {{ include "conode.name" . }}
+    release: {{ .Release.Name }}
