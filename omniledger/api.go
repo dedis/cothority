@@ -32,10 +32,10 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	}
 }
 
-func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse,
+func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	error) {
 	// Create client
-	c := bc.NewClient(nil, req.Roster)
+	c := NewClient(nil, req.Roster)
 
 	// Fill request's missing fields
 	owner := darc.NewSignerEd25519(nil, nil)
@@ -103,7 +103,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse
 	req.SpawnTx = spawnTx
 
 	// Create reply struct
-	req.Version = bc.CurrentVersion
+	//req.Version = bc.CurrentVersion
 	reply := &CreateOmniLedgerResponse{}
 	err = c.SendProtobuf(req.Roster.List[0], req, reply)
 	if err != nil {
@@ -119,6 +119,12 @@ func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse
 func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	// Connect to IB via client
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
+
+	// Fetch old roster
+	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
+	cc := &lib.ChainConfig{}
+	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
+	oldRosters := cc.ShardRosters
 
 	signerCtrs, err := ibClient.GetSignerCounters(req.Owner.Identity().String())
 	if err != nil {
@@ -146,19 +152,20 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		Instructions: []bc.Instruction{reqNewEpoch},
 	}
 	tx.SignWith(req.Owner)
+	tx.InstructionsHash = tx.Instructions.Hash()
 
-	_, err = ibClient.AddTransactionAndWait(tx, 10)
+	_, err = ibClient.AddTransactionAndWait(tx, 5)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get proof from request_new_epoch instr, prepare the new_epoch instrutions and send them to the shards
-	gpr, err := ibClient.GetProof(reqNewEpoch.DeriveID("").Slice())
+	// Get proof from request_new_epoch instr, prepare the new_epoch instructions and send them to the shards
+	gpr, err = ibClient.GetProof(reqNewEpoch.DeriveID("").Slice())
 	if err != nil {
 		return nil, err
 	}
 
-	cc := &lib.ChainConfig{}
+	cc = &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
 	if err != nil {
 		return nil, err
@@ -182,25 +189,27 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 					bc.Argument{Name: "ib-ID", Value: req.IBID},
 				},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + uint64(i)},
 		}
 		//newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
 		tx.Instructions[0] = newEpoch
 		tx.SignWith(req.Owner)
+		tx.InstructionsHash = tx.Instructions.Hash()
 
 		newRoster := cc.ShardRosters[i]
-		oldRoster := req.ShardRosters[i]
+		oldRoster := oldRosters[i]
 		changesCount := getRosterChangesCount(oldRoster, newRoster)
 
 		shardClient := bc.NewClient(req.ShardIDs[i], newRoster)
 		for j := 0; j < changesCount; j++ {
-			shardClient.AddTransactionAndWait(tx, 2)
+			shardClient.AddTransactionAndWait(tx, 5)
 		}
 	}
 
 	// TODO: Fill the reply w/ relevant changes
 	reply := &NewEpochResponse{
-		IBRoster:     *cc.Roster,
-		ShardRosters: cc.ShardRosters,
+		IBRoster: *cc.Roster,
+		//ShardRosters: cc.ShardRosters,
 	}
 
 	return reply, nil
