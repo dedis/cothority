@@ -1,15 +1,11 @@
 package skipchain
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"bytes"
-
 	"sync"
+	"testing"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -17,6 +13,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {

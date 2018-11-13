@@ -609,12 +609,44 @@ func TestService_Propagation(t *testing.T) {
 	}
 	service := genService.(*Service)
 
-	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
+	roster := onet.NewRoster(ro.List[:5])
+	sbRoot, err := makeGenesisRosterArgs(service, roster, nil, VerificationNone,
 		3, 3)
 	log.ErrFatal(err)
 	require.NotNil(t, sbRoot)
-	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbRoot})
-	log.ErrFatal(err)
+
+	k := 9
+	blocks := make([]*SkipBlock, k)
+	for i := 0; i < k; i++ {
+		sb := NewSkipBlock()
+		if i < k-1 {
+			sb.Roster = roster
+		} else {
+			sb.Roster = ro
+		}
+
+		ssbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		log.ErrFatal(err)
+
+		blocks[i] = ssbr.Latest
+	}
+
+	// Check that any conode can go from the genesis to the last
+	// block using the highest forward link level available
+	for _, s := range services {
+		sb := s.db.GetByID(sbRoot.Hash)
+		for len(sb.ForwardLink) > 0 {
+			sb = s.db.GetByID(sb.ForwardLink[len(sb.ForwardLink)-1].To)
+		}
+
+		require.Equal(t, sb.Hash, blocks[k-1].Hash)
+
+		// and backwards
+		sb = s.db.GetByID(blocks[k-1].Hash)
+		require.Equal(t, 3, len(sb.BackLinkIDs))
+		require.Equal(t, 0, len(sb.ForwardLink))
+		require.Equal(t, sbRoot.Hash, sb.BackLinkIDs[2])
+	}
 }
 
 func TestService_AddFollow(t *testing.T) {
