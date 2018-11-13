@@ -1,26 +1,17 @@
-package dkg
-
-/*
-Struct holds the messages that will be sent around in the protocol. You have
-to define each message twice: once the actual message, and a second time
-with the `*onet.TreeNode` embedded. The latter is used in the handler-function
-so that it can find out who sent the message.
-*/
+package pedersen
 
 import (
-	"errors"
-
 	"github.com/dedis/kyber"
-	dkgrabin "github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+
+	dkgpedersen "github.com/dedis/kyber/share/dkg/pedersen"
 )
 
 func init() {
 	network.RegisterMessages(&SharedSecret{},
 		&Init{}, &InitReply{},
-		&StartDeal{}, &Deal{},
-		&Response{}, &SecretCommit{})
+		&StartDeal{}, &Deal{})
 }
 
 // SharedSecret represents the needed information to do shared encryption
@@ -30,27 +21,6 @@ type SharedSecret struct {
 	V       kyber.Scalar
 	X       kyber.Point
 	Commits []kyber.Point
-}
-
-// NewSharedSecret takes an initialized DistKeyGenerator and returns the
-// minimal set of values necessary to do shared encryption/decryption.
-func NewSharedSecret(gen *dkgrabin.DistKeyGenerator) (*SharedSecret, error) {
-	if gen == nil {
-		return nil, errors.New("no valid dkg given")
-	}
-	if !gen.Finished() {
-		return nil, errors.New("dkg is not finished yet")
-	}
-	dks, err := gen.DistKeyShare()
-	if err != nil {
-		return nil, err
-	}
-	return &SharedSecret{
-		Index:   dks.Share.I,
-		V:       dks.Share.V,
-		X:       dks.Public(),
-		Commits: dks.Commits,
-	}, nil
 }
 
 // Init asks all nodes to set up a private/public key pair. It is sent to
@@ -88,7 +58,7 @@ type structStartDeal struct {
 
 // Deal sends the deals for the shared secret.
 type Deal struct {
-	Deal *dkgrabin.Deal
+	Deal *dkgpedersen.Deal
 }
 
 type structDeal struct {
@@ -98,22 +68,12 @@ type structDeal struct {
 
 // Response is sent to all other nodes.
 type Response struct {
-	Response *dkgrabin.Response
+	Response *dkgpedersen.Response
 }
 
 type structResponse struct {
 	*onet.TreeNode
 	Response
-}
-
-// SecretCommit is sent to all other nodes.
-type SecretCommit struct {
-	SecretCommit *dkgrabin.SecretCommits
-}
-
-type structSecretCommit struct {
-	*onet.TreeNode
-	SecretCommit
 }
 
 // WaitSetup is only sent if Init.Wait == true
