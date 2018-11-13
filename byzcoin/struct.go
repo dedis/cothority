@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -140,7 +141,7 @@ func (s *stateChangeStorage) loadFromDB() (map[string]int, error) {
 				return nil
 			})
 
-			indices[skipchain.SkipBlockID(scid).String()] = int(lastIndex + 1)
+			indices[fmt.Sprintf("%x", scid)] = int(lastIndex + 1)
 			return err
 		})
 	})
