@@ -2211,55 +2211,973 @@ public final class Calypso {
 
   }
 
+  public interface AuthoriseByzcoinIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.AuthoriseByzcoinID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+  }
+  /**
+   * <pre>
+   * AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+   * authorised IDs.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.AuthoriseByzcoinID}
+   */
+  public  static final class AuthoriseByzcoinID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.AuthoriseByzcoinID)
+      AuthoriseByzcoinIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthoriseByzcoinID.newBuilder() to construct.
+    private AuthoriseByzcoinID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthoriseByzcoinID() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthoriseByzcoinID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinID_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.class, ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID other = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID) obj;
+
+      boolean result = true;
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+     * authorised IDs.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.AuthoriseByzcoinID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.AuthoriseByzcoinID)
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinID_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.class, ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinID_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID build() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID result = new ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.AuthoriseByzcoinID)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.AuthoriseByzcoinID)
+    private static final ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthoriseByzcoinID>
+        PARSER = new com.google.protobuf.AbstractParser<AuthoriseByzcoinID>() {
+      @java.lang.Override
+      public AuthoriseByzcoinID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthoriseByzcoinID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthoriseByzcoinID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthoriseByzcoinID> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthoriseByzcoinIDReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.AuthoriseByzcoinIDReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * AuthoriseByzcoinIDReply is returned upon successful authorisation.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.AuthoriseByzcoinIDReply}
+   */
+  public  static final class AuthoriseByzcoinIDReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.AuthoriseByzcoinIDReply)
+      AuthoriseByzcoinIDReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthoriseByzcoinIDReply.newBuilder() to construct.
+    private AuthoriseByzcoinIDReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthoriseByzcoinIDReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthoriseByzcoinIDReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinIDReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinIDReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.class, ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply other = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthoriseByzcoinIDReply is returned upon successful authorisation.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.AuthoriseByzcoinIDReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.AuthoriseByzcoinIDReply)
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinIDReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinIDReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.class, ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthoriseByzcoinIDReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply build() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply result = new ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.AuthoriseByzcoinIDReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.AuthoriseByzcoinIDReply)
+    private static final ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthoriseByzcoinIDReply>
+        PARSER = new com.google.protobuf.AbstractParser<AuthoriseByzcoinIDReply>() {
+      @java.lang.Override
+      public AuthoriseByzcoinIDReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthoriseByzcoinIDReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthoriseByzcoinIDReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthoriseByzcoinIDReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.AuthoriseByzcoinIDReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface CreateLTSOrBuilder extends
       // @@protoc_insertion_point(interface_extends:calypso.CreateLTS)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    boolean hasRoster();
+    boolean hasProof();
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
-
-    /**
-     * <pre>
-     * BCID is the ID of the ByzCoin ledger that can use this LTS.
-     * </pre>
-     *
-     * <code>required bytes bcid = 2;</code>
-     */
-    boolean hasBcid();
-    /**
-     * <pre>
-     * BCID is the ID of the ByzCoin ledger that can use this LTS.
-     * </pre>
-     *
-     * <code>required bytes bcid = 2;</code>
-     */
-    com.google.protobuf.ByteString getBcid();
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder();
   }
   /**
    * <pre>
    * CreateLTS is used to start a DKG and store the private keys in each node.
+   * Prior to using this request, the Calypso roster must be recorded on the
+   * ByzCoin blockchain in the instance specified by InstanceID.
    * </pre>
    *
    * Protobuf type {@code calypso.CreateLTS}
@@ -2274,7 +3192,6 @@ public final class Calypso {
       super(builder);
     }
     private CreateLTS() {
-      bcid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -2302,21 +3219,16 @@ public final class Calypso {
               done = true;
               break;
             case 10: {
-              ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = roster_.toBuilder();
+                subBuilder = proof_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
+              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(roster_);
-                roster_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(proof_);
+                proof_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              bcid_ = input.readBytes();
               break;
             }
             default: {
@@ -2352,60 +3264,25 @@ public final class Calypso {
     }
 
     private int bitField0_;
-    public static final int ROSTER_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+    public static final int PROOF_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    public boolean hasRoster() {
+    public boolean hasProof() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
-      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
     /**
-     * <pre>
-     * Roster is the list of nodes that should participate in the DKG.
-     * </pre>
-     *
-     * <code>required .onet.Roster roster = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
-      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
-    }
-
-    public static final int BCID_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString bcid_;
-    /**
-     * <pre>
-     * BCID is the ID of the ByzCoin ledger that can use this LTS.
-     * </pre>
-     *
-     * <code>required bytes bcid = 2;</code>
-     */
-    public boolean hasBcid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <pre>
-     * BCID is the ID of the ByzCoin ledger that can use this LTS.
-     * </pre>
-     *
-     * <code>required bytes bcid = 2;</code>
-     */
-    public com.google.protobuf.ByteString getBcid() {
-      return bcid_;
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2415,15 +3292,11 @@ public final class Calypso {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasRoster()) {
+      if (!hasProof()) {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasBcid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getRoster().isInitialized()) {
+      if (!getProof().isInitialized()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -2435,10 +3308,7 @@ public final class Calypso {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getRoster());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, bcid_);
+        output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
     }
@@ -2451,11 +3321,7 @@ public final class Calypso {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getRoster());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, bcid_);
+          .computeMessageSize(1, getProof());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2473,15 +3339,10 @@ public final class Calypso {
       ch.epfl.dedis.lib.proto.Calypso.CreateLTS other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTS) obj;
 
       boolean result = true;
-      result = result && (hasRoster() == other.hasRoster());
-      if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
-      }
-      result = result && (hasBcid() == other.hasBcid());
-      if (hasBcid()) {
-        result = result && getBcid()
-            .equals(other.getBcid());
+      result = result && (hasProof() == other.hasProof());
+      if (hasProof()) {
+        result = result && getProof()
+            .equals(other.getProof());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -2494,13 +3355,9 @@ public final class Calypso {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasRoster()) {
-        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
-        hash = (53 * hash) + getRoster().hashCode();
-      }
-      if (hasBcid()) {
-        hash = (37 * hash) + BCID_FIELD_NUMBER;
-        hash = (53 * hash) + getBcid().hashCode();
+      if (hasProof()) {
+        hash = (37 * hash) + PROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getProof().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2600,6 +3457,8 @@ public final class Calypso {
     /**
      * <pre>
      * CreateLTS is used to start a DKG and store the private keys in each node.
+     * Prior to using this request, the Calypso roster must be recorded on the
+     * ByzCoin blockchain in the instance specified by InstanceID.
      * </pre>
      *
      * Protobuf type {@code calypso.CreateLTS}
@@ -2634,20 +3493,18 @@ public final class Calypso {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getRosterFieldBuilder();
+          getProofFieldBuilder();
         }
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        if (rosterBuilder_ == null) {
-          roster_ = null;
+        if (proofBuilder_ == null) {
+          proof_ = null;
         } else {
-          rosterBuilder_.clear();
+          proofBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        bcid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -2679,15 +3536,11 @@ public final class Calypso {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
+        if (proofBuilder_ == null) {
+          result.proof_ = proof_;
         } else {
-          result.roster_ = rosterBuilder_.build();
+          result.proof_ = proofBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.bcid_ = bcid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2737,11 +3590,8 @@ public final class Calypso {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.CreateLTS other) {
         if (other == ch.epfl.dedis.lib.proto.Calypso.CreateLTS.getDefaultInstance()) return this;
-        if (other.hasRoster()) {
-          mergeRoster(other.getRoster());
-        }
-        if (other.hasBcid()) {
-          setBcid(other.getBcid());
+        if (other.hasProof()) {
+          mergeProof(other.getProof());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2750,13 +3600,10 @@ public final class Calypso {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasRoster()) {
+        if (!hasProof()) {
           return false;
         }
-        if (!hasBcid()) {
-          return false;
-        }
-        if (!getRoster().isInitialized()) {
+        if (!getProof().isInitialized()) {
           return false;
         }
         return true;
@@ -2782,209 +3629,122 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public boolean hasRoster() {
+      public boolean hasProof() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
-        if (rosterBuilder_ == null) {
-          return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+        if (proofBuilder_ == null) {
+          return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
         } else {
-          return rosterBuilder_.getMessage();
+          return proofBuilder_.getMessage();
         }
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public Builder setRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
-        if (rosterBuilder_ == null) {
+      public Builder setProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          roster_ = value;
+          proof_ = value;
           onChanged();
         } else {
-          rosterBuilder_.setMessage(value);
+          proofBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public Builder setRoster(
-          ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder builderForValue) {
-        if (rosterBuilder_ == null) {
-          roster_ = builderForValue.build();
+      public Builder setProof(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
+        if (proofBuilder_ == null) {
+          proof_ = builderForValue.build();
           onChanged();
         } else {
-          rosterBuilder_.setMessage(builderForValue.build());
+          proofBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
-        if (rosterBuilder_ == null) {
+      public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              roster_ != null &&
-              roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
-            roster_ =
-              ch.epfl.dedis.lib.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+              proof_ != null &&
+              proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
+            proof_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.newBuilder(proof_).mergeFrom(value).buildPartial();
           } else {
-            roster_ = value;
+            proof_ = value;
           }
           onChanged();
         } else {
-          rosterBuilder_.mergeFrom(value);
+          proofBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public Builder clearRoster() {
-        if (rosterBuilder_ == null) {
-          roster_ = null;
+      public Builder clearProof() {
+        if (proofBuilder_ == null) {
+          proof_ = null;
           onChanged();
         } else {
-          rosterBuilder_.clear();
+          proofBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder getRosterBuilder() {
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getProofBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
-        return getRosterFieldBuilder().getBuilder();
+        return getProofFieldBuilder().getBuilder();
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
-      public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
-        if (rosterBuilder_ != null) {
-          return rosterBuilder_.getMessageOrBuilder();
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+        if (proofBuilder_ != null) {
+          return proofBuilder_.getMessageOrBuilder();
         } else {
-          return roster_ == null ?
-              ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+          return proof_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
         }
       }
       /**
-       * <pre>
-       * Roster is the list of nodes that should participate in the DKG.
-       * </pre>
-       *
-       * <code>required .onet.Roster roster = 1;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
-          getRosterFieldBuilder() {
-        if (rosterBuilder_ == null) {
-          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>(
-                  getRoster(),
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
+          getProofFieldBuilder() {
+        if (proofBuilder_ == null) {
+          proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>(
+                  getProof(),
                   getParentForChildren(),
                   isClean());
-          roster_ = null;
+          proof_ = null;
         }
-        return rosterBuilder_;
-      }
-
-      private com.google.protobuf.ByteString bcid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * BCID is the ID of the ByzCoin ledger that can use this LTS.
-       * </pre>
-       *
-       * <code>required bytes bcid = 2;</code>
-       */
-      public boolean hasBcid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <pre>
-       * BCID is the ID of the ByzCoin ledger that can use this LTS.
-       * </pre>
-       *
-       * <code>required bytes bcid = 2;</code>
-       */
-      public com.google.protobuf.ByteString getBcid() {
-        return bcid_;
-      }
-      /**
-       * <pre>
-       * BCID is the ID of the ByzCoin ledger that can use this LTS.
-       * </pre>
-       *
-       * <code>required bytes bcid = 2;</code>
-       */
-      public Builder setBcid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        bcid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * BCID is the ID of the ByzCoin ledger that can use this LTS.
-       * </pre>
-       *
-       * <code>required bytes bcid = 2;</code>
-       */
-      public Builder clearBcid() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        bcid_ = getDefaultInstance().getBcid();
-        onChanged();
-        return this;
+        return proofBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -3044,28 +3804,29 @@ public final class Calypso {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     * LTSID is a random 32-byte slice that represents the LTS.
-     * </pre>
-     *
-     * <code>required bytes ltsid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    boolean hasLtsid();
+    boolean hasByzcoinid();
     /**
-     * <pre>
-     * LTSID is a random 32-byte slice that represents the LTS.
-     * </pre>
-     *
-     * <code>required bytes ltsid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    com.google.protobuf.ByteString getLtsid();
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    boolean hasInstanceid();
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    com.google.protobuf.ByteString getInstanceid();
 
     /**
      * <pre>
      * X is the public key of the LTS.
      * </pre>
      *
-     * <code>required bytes x = 2;</code>
+     * <code>required bytes x = 3;</code>
      */
     boolean hasX();
     /**
@@ -3073,7 +3834,7 @@ public final class Calypso {
      * X is the public key of the LTS.
      * </pre>
      *
-     * <code>required bytes x = 2;</code>
+     * <code>required bytes x = 3;</code>
      */
     com.google.protobuf.ByteString getX();
   }
@@ -3095,7 +3856,8 @@ public final class Calypso {
       super(builder);
     }
     private CreateLTSReply() {
-      ltsid_ = com.google.protobuf.ByteString.EMPTY;
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
       x_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -3125,11 +3887,16 @@ public final class Calypso {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              ltsid_ = input.readBytes();
+              byzcoinid_ = input.readBytes();
               break;
             }
             case 18: {
               bitField0_ |= 0x00000002;
+              instanceid_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
               x_ = input.readBytes();
               break;
             }
@@ -3166,47 +3933,54 @@ public final class Calypso {
     }
 
     private int bitField0_;
-    public static final int LTSID_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString ltsid_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
     /**
-     * <pre>
-     * LTSID is a random 32-byte slice that represents the LTS.
-     * </pre>
-     *
-     * <code>required bytes ltsid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public boolean hasLtsid() {
+    public boolean hasByzcoinid() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <pre>
-     * LTSID is a random 32-byte slice that represents the LTS.
-     * </pre>
-     *
-     * <code>required bytes ltsid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public com.google.protobuf.ByteString getLtsid() {
-      return ltsid_;
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
     }
 
-    public static final int X_FIELD_NUMBER = 2;
+    public static final int INSTANCEID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString instanceid_;
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public boolean hasInstanceid() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
+    }
+
+    public static final int X_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString x_;
     /**
      * <pre>
      * X is the public key of the LTS.
      * </pre>
      *
-     * <code>required bytes x = 2;</code>
+     * <code>required bytes x = 3;</code>
      */
     public boolean hasX() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <pre>
      * X is the public key of the LTS.
      * </pre>
      *
-     * <code>required bytes x = 2;</code>
+     * <code>required bytes x = 3;</code>
      */
     public com.google.protobuf.ByteString getX() {
       return x_;
@@ -3219,7 +3993,11 @@ public final class Calypso {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasLtsid()) {
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasInstanceid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -3235,10 +4013,13 @@ public final class Calypso {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, ltsid_);
+        output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, x_);
+        output.writeBytes(2, instanceid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
     }
@@ -3251,11 +4032,15 @@ public final class Calypso {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, ltsid_);
+          .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, x_);
+          .computeBytesSize(2, instanceid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, x_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3273,10 +4058,15 @@ public final class Calypso {
       ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply) obj;
 
       boolean result = true;
-      result = result && (hasLtsid() == other.hasLtsid());
-      if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid()) {
+        result = result && getInstanceid()
+            .equals(other.getInstanceid());
       }
       result = result && (hasX() == other.hasX());
       if (hasX()) {
@@ -3294,9 +4084,13 @@ public final class Calypso {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasLtsid()) {
-        hash = (37 * hash) + LTSID_FIELD_NUMBER;
-        hash = (53 * hash) + getLtsid().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasInstanceid()) {
+        hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
+        hash = (53 * hash) + getInstanceid().hashCode();
       }
       if (hasX()) {
         hash = (37 * hash) + X_FIELD_NUMBER;
@@ -3440,10 +4234,12 @@ public final class Calypso {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        ltsid_ = com.google.protobuf.ByteString.EMPTY;
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        x_ = com.google.protobuf.ByteString.EMPTY;
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        x_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -3475,9 +4271,13 @@ public final class Calypso {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.ltsid_ = ltsid_;
+        result.byzcoinid_ = byzcoinid_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
+        }
+        result.instanceid_ = instanceid_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
         result.bitField0_ = to_bitField0_;
@@ -3529,8 +4329,11 @@ public final class Calypso {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply other) {
         if (other == ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply.getDefaultInstance()) return this;
-        if (other.hasLtsid()) {
-          setLtsid(other.getLtsid());
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasInstanceid()) {
+          setInstanceid(other.getInstanceid());
         }
         if (other.hasX()) {
           setX(other.getX());
@@ -3542,7 +4345,10 @@ public final class Calypso {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasLtsid()) {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasInstanceid()) {
           return false;
         }
         if (!hasX()) {
@@ -3571,53 +4377,72 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString ltsid_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <pre>
-       * LTSID is a random 32-byte slice that represents the LTS.
-       * </pre>
-       *
-       * <code>required bytes ltsid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public boolean hasLtsid() {
+      public boolean hasByzcoinid() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <pre>
-       * LTSID is a random 32-byte slice that represents the LTS.
-       * </pre>
-       *
-       * <code>required bytes ltsid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public com.google.protobuf.ByteString getLtsid() {
-        return ltsid_;
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
       }
       /**
-       * <pre>
-       * LTSID is a random 32-byte slice that represents the LTS.
-       * </pre>
-       *
-       * <code>required bytes ltsid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder setLtsid(com.google.protobuf.ByteString value) {
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        ltsid_ = value;
+        byzcoinid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <pre>
-       * LTSID is a random 32-byte slice that represents the LTS.
-       * </pre>
-       *
-       * <code>required bytes ltsid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder clearLtsid() {
+      public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        ltsid_ = getDefaultInstance().getLtsid();
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public boolean hasInstanceid() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        instanceid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder clearInstanceid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        instanceid_ = getDefaultInstance().getInstanceid();
         onChanged();
         return this;
       }
@@ -3628,17 +4453,17 @@ public final class Calypso {
        * X is the public key of the LTS.
        * </pre>
        *
-       * <code>required bytes x = 2;</code>
+       * <code>required bytes x = 3;</code>
        */
       public boolean hasX() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <pre>
        * X is the public key of the LTS.
        * </pre>
        *
-       * <code>required bytes x = 2;</code>
+       * <code>required bytes x = 3;</code>
        */
       public com.google.protobuf.ByteString getX() {
         return x_;
@@ -3648,13 +4473,13 @@ public final class Calypso {
        * X is the public key of the LTS.
        * </pre>
        *
-       * <code>required bytes x = 2;</code>
+       * <code>required bytes x = 3;</code>
        */
       public Builder setX(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000004;
         x_ = value;
         onChanged();
         return this;
@@ -3664,10 +4489,10 @@ public final class Calypso {
        * X is the public key of the LTS.
        * </pre>
        *
-       * <code>required bytes x = 2;</code>
+       * <code>required bytes x = 3;</code>
        */
       public Builder clearX() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         x_ = getDefaultInstance().getX();
         onChanged();
         return this;
@@ -3720,6 +4545,1168 @@ public final class Calypso {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ReshareLTSOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.ReshareLTS)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes ltsid = 1;</code>
+     */
+    boolean hasLtsid();
+    /**
+     * <code>required bytes ltsid = 1;</code>
+     */
+    com.google.protobuf.ByteString getLtsid();
+
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    boolean hasProof();
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder();
+  }
+  /**
+   * <pre>
+   * ReshareLTS is used to update the LTS shares. Prior to using this request,
+   * the Calypso roster must be updated on the ByzCoin blockchain in the instance
+   * specified by InstanceID.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.ReshareLTS}
+   */
+  public  static final class ReshareLTS extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.ReshareLTS)
+      ReshareLTSOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ReshareLTS.newBuilder() to construct.
+    private ReshareLTS(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ReshareLTS() {
+      ltsid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ReshareLTS(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ltsid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = proof_.toBuilder();
+              }
+              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(proof_);
+                proof_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTS_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTS_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.class, ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int LTSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ltsid_;
+    /**
+     * <code>required bytes ltsid = 1;</code>
+     */
+    public boolean hasLtsid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes ltsid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getLtsid() {
+      return ltsid_;
+    }
+
+    public static final int PROOF_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    public boolean hasProof() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+    }
+    /**
+     * <code>required .byzcoin.Proof proof = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasLtsid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasProof()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getProof().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, ltsid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getProof());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, ltsid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getProof());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.ReshareLTS)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) obj;
+
+      boolean result = true;
+      result = result && (hasLtsid() == other.hasLtsid());
+      if (hasLtsid()) {
+        result = result && getLtsid()
+            .equals(other.getLtsid());
+      }
+      result = result && (hasProof() == other.hasProof());
+      if (hasProof()) {
+        result = result && getProof()
+            .equals(other.getProof());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasLtsid()) {
+        hash = (37 * hash) + LTSID_FIELD_NUMBER;
+        hash = (53 * hash) + getLtsid().hashCode();
+      }
+      if (hasProof()) {
+        hash = (37 * hash) + PROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getProof().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.ReshareLTS prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * ReshareLTS is used to update the LTS shares. Prior to using this request,
+     * the Calypso roster must be updated on the ByzCoin blockchain in the instance
+     * specified by InstanceID.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.ReshareLTS}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.ReshareLTS)
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTSOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTS_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTS_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.class, ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getProofFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        ltsid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (proofBuilder_ == null) {
+          proof_ = null;
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTS_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTS getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTS build() {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTS result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTS buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTS result = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTS(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ltsid_ = ltsid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (proofBuilder_ == null) {
+          result.proof_ = proof_;
+        } else {
+          result.proof_ = proofBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.ReshareLTS)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.getDefaultInstance()) return this;
+        if (other.hasLtsid()) {
+          setLtsid(other.getLtsid());
+        }
+        if (other.hasProof()) {
+          mergeProof(other.getProof());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasLtsid()) {
+          return false;
+        }
+        if (!hasProof()) {
+          return false;
+        }
+        if (!getProof().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTS parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString ltsid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes ltsid = 1;</code>
+       */
+      public boolean hasLtsid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes ltsid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getLtsid() {
+        return ltsid_;
+      }
+      /**
+       * <code>required bytes ltsid = 1;</code>
+       */
+      public Builder setLtsid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ltsid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes ltsid = 1;</code>
+       */
+      public Builder clearLtsid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ltsid_ = getDefaultInstance().getLtsid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public boolean hasProof() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+        if (proofBuilder_ == null) {
+          return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+        } else {
+          return proofBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public Builder setProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          proof_ = value;
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public Builder setProof(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
+        if (proofBuilder_ == null) {
+          proof_ = builderForValue.build();
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              proof_ != null &&
+              proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
+            proof_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.newBuilder(proof_).mergeFrom(value).buildPartial();
+          } else {
+            proof_ = value;
+          }
+          onChanged();
+        } else {
+          proofBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public Builder clearProof() {
+        if (proofBuilder_ == null) {
+          proof_ = null;
+          onChanged();
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getProofBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getProofFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+        if (proofBuilder_ != null) {
+          return proofBuilder_.getMessageOrBuilder();
+        } else {
+          return proof_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+        }
+      }
+      /**
+       * <code>required .byzcoin.Proof proof = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
+          getProofFieldBuilder() {
+        if (proofBuilder_ == null) {
+          proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>(
+                  getProof(),
+                  getParentForChildren(),
+                  isClean());
+          proof_ = null;
+        }
+        return proofBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.ReshareLTS)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.ReshareLTS)
+    private static final ch.epfl.dedis.lib.proto.Calypso.ReshareLTS DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTS();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTS getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ReshareLTS>
+        PARSER = new com.google.protobuf.AbstractParser<ReshareLTS>() {
+      @java.lang.Override
+      public ReshareLTS parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ReshareLTS(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ReshareLTS> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ReshareLTS> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.ReshareLTS getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ReshareLTSReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.ReshareLTSReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * ReshareLTSReply is returned upon successful resharing. The LTSID and the
+   * public key X should remain the same.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.ReshareLTSReply}
+   */
+  public  static final class ReshareLTSReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.ReshareLTSReply)
+      ReshareLTSReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ReshareLTSReply.newBuilder() to construct.
+    private ReshareLTSReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ReshareLTSReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ReshareLTSReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTSReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTSReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.class, ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * ReshareLTSReply is returned upon successful resharing. The LTSID and the
+     * public key X should remain the same.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.ReshareLTSReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.ReshareLTSReply)
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTSReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTSReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.class, ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_ReshareLTSReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply build() {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.ReshareLTSReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.ReshareLTSReply)
+    private static final ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ReshareLTSReply>
+        PARSER = new com.google.protobuf.AbstractParser<ReshareLTSReply>() {
+      @java.lang.Override
+      public ReshareLTSReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ReshareLTSReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ReshareLTSReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ReshareLTSReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -5591,8 +7578,8 @@ public final class Calypso {
 
   }
 
-  public interface SharedPublicOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:calypso.SharedPublic)
+  public interface GetLTSReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.GetLTSReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -5614,21 +7601,21 @@ public final class Calypso {
   }
   /**
    * <pre>
-   * SharedPublic asks for the shared public key of the corresponding LTSID
+   * GetLTSReply asks for the shared public key of the corresponding LTSID
    * </pre>
    *
-   * Protobuf type {@code calypso.SharedPublic}
+   * Protobuf type {@code calypso.GetLTSReply}
    */
-  public  static final class SharedPublic extends
+  public  static final class GetLTSReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:calypso.SharedPublic)
-      SharedPublicOrBuilder {
+      // @@protoc_insertion_point(message_implements:calypso.GetLTSReply)
+      GetLTSReplyOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use SharedPublic.newBuilder() to construct.
-    private SharedPublic(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use GetLTSReply.newBuilder() to construct.
+    private GetLTSReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private SharedPublic() {
+    private GetLTSReply() {
       ltsid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -5637,7 +7624,7 @@ public final class Calypso {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private SharedPublic(
+    private GetLTSReply(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -5682,15 +7669,15 @@ public final class Calypso {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GetLTSReply_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GetLTSReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.Calypso.SharedPublic.class, ch.epfl.dedis.lib.proto.Calypso.SharedPublic.Builder.class);
+              ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.class, ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.Builder.class);
     }
 
     private int bitField0_;
@@ -5761,10 +7748,10 @@ public final class Calypso {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublic)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.GetLTSReply)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.Calypso.SharedPublic other = (ch.epfl.dedis.lib.proto.Calypso.SharedPublic) obj;
+      ch.epfl.dedis.lib.proto.Calypso.GetLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.GetLTSReply) obj;
 
       boolean result = true;
       result = result && (hasLtsid() == other.hasLtsid());
@@ -5792,69 +7779,69 @@ public final class Calypso {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic parseFrom(
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -5867,7 +7854,7 @@ public final class Calypso {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.SharedPublic prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.GetLTSReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -5884,29 +7871,29 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * SharedPublic asks for the shared public key of the corresponding LTSID
+     * GetLTSReply asks for the shared public key of the corresponding LTSID
      * </pre>
      *
-     * Protobuf type {@code calypso.SharedPublic}
+     * Protobuf type {@code calypso.GetLTSReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:calypso.SharedPublic)
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublicOrBuilder {
+        // @@protoc_insertion_point(builder_implements:calypso.GetLTSReply)
+        ch.epfl.dedis.lib.proto.Calypso.GetLTSReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GetLTSReply_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GetLTSReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.Calypso.SharedPublic.class, ch.epfl.dedis.lib.proto.Calypso.SharedPublic.Builder.class);
+                ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.class, ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.Calypso.SharedPublic.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -5932,17 +7919,17 @@ public final class Calypso {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GetLTSReply_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublic getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.Calypso.SharedPublic.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.Calypso.GetLTSReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublic build() {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublic result = buildPartial();
+      public ch.epfl.dedis.lib.proto.Calypso.GetLTSReply build() {
+        ch.epfl.dedis.lib.proto.Calypso.GetLTSReply result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -5950,8 +7937,8 @@ public final class Calypso {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublic buildPartial() {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublic result = new ch.epfl.dedis.lib.proto.Calypso.SharedPublic(this);
+      public ch.epfl.dedis.lib.proto.Calypso.GetLTSReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.GetLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.GetLTSReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5997,16 +7984,16 @@ public final class Calypso {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublic) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.SharedPublic)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.GetLTSReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.GetLTSReply)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.SharedPublic other) {
-        if (other == ch.epfl.dedis.lib.proto.Calypso.SharedPublic.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.GetLTSReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.GetLTSReply.getDefaultInstance()) return this;
         if (other.hasLtsid()) {
           setLtsid(other.getLtsid());
         }
@@ -6028,11 +8015,11 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublic parsedMessage = null;
+        ch.epfl.dedis.lib.proto.Calypso.GetLTSReply parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.SharedPublic) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.GetLTSReply) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -6106,596 +8093,41 @@ public final class Calypso {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:calypso.SharedPublic)
+      // @@protoc_insertion_point(builder_scope:calypso.GetLTSReply)
     }
 
-    // @@protoc_insertion_point(class_scope:calypso.SharedPublic)
-    private static final ch.epfl.dedis.lib.proto.Calypso.SharedPublic DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:calypso.GetLTSReply)
+    private static final ch.epfl.dedis.lib.proto.Calypso.GetLTSReply DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.SharedPublic();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.GetLTSReply();
     }
 
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublic getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.Calypso.GetLTSReply getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublic>
-        PARSER = new com.google.protobuf.AbstractParser<SharedPublic>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLTSReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetLTSReply>() {
       @java.lang.Override
-      public SharedPublic parsePartialFrom(
+      public GetLTSReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublic(input, extensionRegistry);
+        return new GetLTSReply(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<SharedPublic> parser() {
+    public static com.google.protobuf.Parser<GetLTSReply> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<SharedPublic> getParserForType() {
+    public com.google.protobuf.Parser<GetLTSReply> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.Calypso.SharedPublic getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface SharedPublicReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:calypso.SharedPublicReply)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <pre>
-     * X is the distributed public key.
-     * </pre>
-     *
-     * <code>required bytes x = 1;</code>
-     */
-    boolean hasX();
-    /**
-     * <pre>
-     * X is the distributed public key.
-     * </pre>
-     *
-     * <code>required bytes x = 1;</code>
-     */
-    com.google.protobuf.ByteString getX();
-  }
-  /**
-   * <pre>
-   * SharedPublicReply sends back the shared public key.
-   * </pre>
-   *
-   * Protobuf type {@code calypso.SharedPublicReply}
-   */
-  public  static final class SharedPublicReply extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:calypso.SharedPublicReply)
-      SharedPublicReplyOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use SharedPublicReply.newBuilder() to construct.
-    private SharedPublicReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private SharedPublicReply() {
-      x_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private SharedPublicReply(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.class, ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int X_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString x_;
-    /**
-     * <pre>
-     * X is the distributed public key.
-     * </pre>
-     *
-     * <code>required bytes x = 1;</code>
-     */
-    public boolean hasX() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <pre>
-     * X is the distributed public key.
-     * </pre>
-     *
-     * <code>required bytes x = 1;</code>
-     */
-    public com.google.protobuf.ByteString getX() {
-      return x_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasX()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, x_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, x_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply other = (ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply) obj;
-
-      boolean result = true;
-      result = result && (hasX() == other.hasX());
-      if (hasX()) {
-        result = result && getX()
-            .equals(other.getX());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasX()) {
-        hash = (37 * hash) + X_FIELD_NUMBER;
-        hash = (53 * hash) + getX().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * SharedPublicReply sends back the shared public key.
-     * </pre>
-     *
-     * Protobuf type {@code calypso.SharedPublicReply}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:calypso.SharedPublicReply)
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublicReplyOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.class, ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        x_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply build() {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply buildPartial() {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply result = new ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.x_ = x_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply other) {
-        if (other == ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.getDefaultInstance()) return this;
-        if (other.hasX()) {
-          setX(other.getX());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasX()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString x_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * X is the distributed public key.
-       * </pre>
-       *
-       * <code>required bytes x = 1;</code>
-       */
-      public boolean hasX() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <pre>
-       * X is the distributed public key.
-       * </pre>
-       *
-       * <code>required bytes x = 1;</code>
-       */
-      public com.google.protobuf.ByteString getX() {
-        return x_;
-      }
-      /**
-       * <pre>
-       * X is the distributed public key.
-       * </pre>
-       *
-       * <code>required bytes x = 1;</code>
-       */
-      public Builder setX(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        x_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * X is the distributed public key.
-       * </pre>
-       *
-       * <code>required bytes x = 1;</code>
-       */
-      public Builder clearX() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        x_ = getDefaultInstance().getX();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:calypso.SharedPublicReply)
-    }
-
-    // @@protoc_insertion_point(class_scope:calypso.SharedPublicReply)
-    private static final ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply();
-    }
-
-    public static ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublicReply>
-        PARSER = new com.google.protobuf.AbstractParser<SharedPublicReply>() {
-      @java.lang.Override
-      public SharedPublicReply parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicReply(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<SharedPublicReply> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<SharedPublicReply> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.Calypso.GetLTSReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -6712,6 +8144,16 @@ public final class Calypso {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_Read_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_AuthoriseByzcoinID_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_AuthoriseByzcoinID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_AuthoriseByzcoinIDReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_AuthoriseByzcoinIDReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_CreateLTS_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -6721,6 +8163,16 @@ public final class Calypso {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_CreateLTSReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_ReshareLTS_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_ReshareLTS_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_ReshareLTSReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_ReshareLTSReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_DecryptKey_descriptor;
   private static final 
@@ -6732,15 +8184,10 @@ public final class Calypso {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_DecryptKeyReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_calypso_SharedPublic_descriptor;
+    internal_static_calypso_GetLTSReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_calypso_SharedPublic_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_calypso_SharedPublicReply_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_calypso_SharedPublicReply_fieldAccessorTable;
+      internal_static_calypso_GetLTSReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -6750,20 +8197,23 @@ public final class Calypso {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\032" +
-      "\nonet.proto\"r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
-      "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
-      "\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsi" +
-      "d\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002" +
-      "(\014\"7\n\tCreateLTS\022\034\n\006roster\030\001 \002(\0132\014.onet.R" +
-      "oster\022\014\n\004bcid\030\002 \002(\014\"*\n\016CreateLTSReply\022\r\n" +
-      "\005ltsid\030\001 \002(\014\022\t\n\001x\030\002 \002(\014\"I\n\nDecryptKey\022\034\n" +
-      "\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002" +
-      "(\0132\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n" +
-      "\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\035\n" +
-      "\014SharedPublic\022\r\n\005ltsid\030\001 \002(\014\"\036\n\021SharedPu" +
-      "blicReply\022\t\n\001x\030\001 \002(\014B\"\n\027ch.epfl.dedis.li" +
-      "b.protoB\007Calypso"
+      "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\"" +
+      "r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\014\n\004uba" +
+      "r\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n\002cs\030\006 \003(" +
+      "\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsid\030\010 \002(\014\"!\n\004R" +
+      "ead\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(\014\"\'\n\022Author" +
+      "iseByzcoinID\022\021\n\tbyzcoinid\030\001 \002(\014\"\031\n\027Autho" +
+      "riseByzcoinIDReply\"*\n\tCreateLTS\022\035\n\005proof" +
+      "\030\001 \002(\0132\016.byzcoin.Proof\"B\n\016CreateLTSReply" +
+      "\022\021\n\tbyzcoinid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022" +
+      "\t\n\001x\030\003 \002(\014\":\n\nReshareLTS\022\r\n\005ltsid\030\001 \002(\014\022" +
+      "\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"\021\n\017Reshar" +
+      "eLTSReply\"I\n\nDecryptKey\022\034\n\004read\030\001 \002(\0132\016." +
+      "byzcoin.Proof\022\035\n\005write\030\002 \002(\0132\016.byzcoin.P" +
+      "roof\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007x" +
+      "hatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013GetLTSReply\022\r" +
+      "\n\005ltsid\030\001 \002(\014B\"\n\027ch.epfl.dedis.lib.proto" +
+      "B\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6777,7 +8227,6 @@ public final class Calypso {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
-          ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
         }, assigner);
     internal_static_calypso_Write_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -6791,44 +8240,61 @@ public final class Calypso {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_Read_descriptor,
         new java.lang.String[] { "Write", "Xc", });
-    internal_static_calypso_CreateLTS_descriptor =
+    internal_static_calypso_AuthoriseByzcoinID_descriptor =
       getDescriptor().getMessageTypes().get(2);
+    internal_static_calypso_AuthoriseByzcoinID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_AuthoriseByzcoinID_descriptor,
+        new java.lang.String[] { "Byzcoinid", });
+    internal_static_calypso_AuthoriseByzcoinIDReply_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_calypso_AuthoriseByzcoinIDReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_AuthoriseByzcoinIDReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_calypso_CreateLTS_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_calypso_CreateLTS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_CreateLTS_descriptor,
-        new java.lang.String[] { "Roster", "Bcid", });
+        new java.lang.String[] { "Proof", });
     internal_static_calypso_CreateLTSReply_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_calypso_CreateLTSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_CreateLTSReply_descriptor,
-        new java.lang.String[] { "Ltsid", "X", });
+        new java.lang.String[] { "Byzcoinid", "Instanceid", "X", });
+    internal_static_calypso_ReshareLTS_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_calypso_ReshareLTS_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_ReshareLTS_descriptor,
+        new java.lang.String[] { "Ltsid", "Proof", });
+    internal_static_calypso_ReshareLTSReply_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_calypso_ReshareLTSReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_ReshareLTSReply_descriptor,
+        new java.lang.String[] { });
     internal_static_calypso_DecryptKey_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_calypso_DecryptKey_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_DecryptKey_descriptor,
         new java.lang.String[] { "Read", "Write", });
     internal_static_calypso_DecryptKeyReply_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_calypso_DecryptKeyReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_DecryptKeyReply_descriptor,
         new java.lang.String[] { "Cs", "Xhatenc", "X", });
-    internal_static_calypso_SharedPublic_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_calypso_SharedPublic_fieldAccessorTable = new
+    internal_static_calypso_GetLTSReply_descriptor =
+      getDescriptor().getMessageTypes().get(10);
+    internal_static_calypso_GetLTSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_calypso_SharedPublic_descriptor,
+        internal_static_calypso_GetLTSReply_descriptor,
         new java.lang.String[] { "Ltsid", });
-    internal_static_calypso_SharedPublicReply_descriptor =
-      getDescriptor().getMessageTypes().get(7);
-    internal_static_calypso_SharedPublicReply_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_calypso_SharedPublicReply_descriptor,
-        new java.lang.String[] { "X", });
     ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor();
-    ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

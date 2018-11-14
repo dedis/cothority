@@ -37,13 +37,46 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 		cothority.Suite, ServiceName)}
 }
 
-// CreateLTS creates a random LTSID that can be used to reference
-// the LTS group created.
-func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
+// CreateLTS creates a random LTSID that can be used to reference the LTS group
+// created. It first sends a transaction to ByzCoin to spawn a LTS instance,
+// then it asks the Calypso cothority to start the DKG.
+func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []darc.Signer, counters []uint64) (reply *CreateLTSReply, err error) {
+	// Make the transaction and get its proof
+	rosterBuf, err := protobuf.Encode(ltsRoster)
+	if err != nil {
+		return nil, err
+	}
+	inst := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(darcID),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractLongTermSecretID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "roster",
+					Value: rosterBuf,
+				},
+			},
+		},
+		SignerCounter: counters,
+	}
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{inst},
+	}
+	if err := tx.SignWith(signers...); err != nil {
+		return nil, err
+	}
+	if _, err := c.bcClient.AddTransactionAndWait(tx, 4); err != nil {
+		return nil, err
+	}
+	resp, err := c.bcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	// Start the DKG
 	reply = &CreateLTSReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], &CreateLTS{
-		Roster: c.bcClient.Roster,
-		BCID:   c.bcClient.ID,
+		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
 		return nil, err
@@ -55,6 +88,7 @@ func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 // the read/write requests match and then re-encrypts the secret
 // given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
+	// TODO send to Calypso roster
 	reply = &DecryptKeyReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
 	if err != nil {

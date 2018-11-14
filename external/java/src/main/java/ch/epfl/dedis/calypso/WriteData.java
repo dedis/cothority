@@ -44,7 +44,7 @@ public class WriteData {
      * @param publisher   The darc with a rule for calypsoWrite and calypsoRead.
      * @throws CothorityException if something went wrong
      */
-    public WriteData(LTS lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
+    public WriteData(CreateLTSReply lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
         if (dataEnc.length > 8000000) {
             throw new CothorityException("data length too long");
         }
@@ -53,7 +53,7 @@ public class WriteData {
         if (extraData != null) {
             wr.setExtradata(ByteString.copyFrom(extraData));
         }
-        wr.setLtsid(lts.getLtsId().toProto());
+        wr.setLtsid(lts.hash().toProto());
         encryptKey(wr, lts, keyMaterial, publisher);
         write = wr.build();
     }
@@ -106,7 +106,7 @@ public class WriteData {
      * @param keyMaterial what should be threshold encrypted in the blockchain
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    private void encryptKey(Calypso.Write.Builder wr, LTS lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
+    private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
         try {
             KeyPair randkp = new KeyPair();
             Scalar r = randkp.scalar;
@@ -126,7 +126,7 @@ public class WriteData {
                 wr.addCs(Ckey.toProto());
             }
 
-            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLtsId().getId()));
+            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.hash().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();

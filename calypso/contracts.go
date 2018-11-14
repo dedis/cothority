@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -92,4 +93,74 @@ type contractRe struct {
 
 func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
 	return nil, errors.New("calypso read instances are never instantiated")
+}
+
+// ContractLongTermSecretID is the contract ID for updating the LTS roster.
+var ContractLongTermSecretID = "longTermSecret"
+
+type contractLTS struct {
+	byzcoin.BasicContract
+	LtsInstanceInfo LtsInstanceInfo
+}
+
+// LtsInstanceInfo is the information stored in an LTS instance.
+type LtsInstanceInfo struct {
+	Roster onet.Roster
+}
+
+func contractLTSFromBytes(in []byte) (byzcoin.Contract, error) {
+	c := &contractLTS{}
+
+	err := protobuf.DecodeWithConstructors(in, &c.LtsInstanceInfo, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, errors.New("couldn't unmarshal LtsInfo: " + err.Error())
+	}
+	return c, nil
+}
+
+func (c *contractLTS) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+	var darcID darc.ID
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if inst.Spawn.ContractID != ContractLongTermSecretID {
+		return nil, nil, errors.New("can only spawn long-term-secret instances")
+	}
+	infoBuf := inst.Spawn.Args.Search("lts_instance_info")
+	if infoBuf == nil || len(infoBuf) == 0 {
+		return nil, nil, errors.New("need a lts_instance_info argument")
+	}
+	var info LtsInstanceInfo
+	err = protobuf.DecodeWithConstructors(infoBuf, &info, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, nil, errors.New("passed lts_instance_info argument is invalid: " + err.Error())
+	}
+	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
+}
+
+func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+	var darcID darc.ID
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if inst.Invoke.Command != "reshare" {
+		return nil, nil, errors.New("can only reshare long-term secrets")
+	}
+	infoBuf := inst.Invoke.Args.Search("lts_instance_info")
+	if infoBuf == nil || len(infoBuf) == 0 {
+		return nil, nil, errors.New("need a lts_instance_info argument")
+	}
+	var info LtsInstanceInfo
+	err = protobuf.DecodeWithConstructors(infoBuf, &info, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, nil, errors.New("passed roster argument is invalid: " + err.Error())
+	}
+	// TODO verify the intersection between new roster and the old one
+	// uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3)
+	// c.LtsInfo ...
+	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Update, inst.DeriveID(""), ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
 }

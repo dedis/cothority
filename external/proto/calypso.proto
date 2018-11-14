@@ -1,7 +1,6 @@
 syntax = "proto2";
 package calypso;
 import "byzcoin.proto";
-import "onet.proto";
 
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "Calypso";
@@ -47,23 +46,43 @@ message Read {
 // These are the messages used in the API-calls
 // ***
 
+// AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+// authorised IDs.
+message AuthoriseByzcoinID {
+  required bytes byzcoinid = 1;
+}
+
+// AuthoriseByzcoinIDReply is returned upon successful authorisation.
+message AuthoriseByzcoinIDReply {
+}
+
 // CreateLTS is used to start a DKG and store the private keys in each node.
+// Prior to using this request, the Calypso roster must be recorded on the
+// ByzCoin blockchain in the instance specified by InstanceID.
 message CreateLTS {
-  // Roster is the list of nodes that should participate in the DKG.
-  required onet.Roster roster = 1;
-  // BCID is the ID of the ByzCoin ledger that can use this LTS.
-  required bytes bcid = 2;
+  required byzcoin.Proof proof = 1;
 }
 
 // CreateLTSReply is returned upon successfully setting up the distributed
 // key.
 message CreateLTSReply {
-  // LTSID is a random 32-byte slice that represents the LTS.
-  required bytes ltsid = 1;
+  required bytes byzcoinid = 1;
+  required bytes instanceid = 2;
   // X is the public key of the LTS.
-  required bytes x = 2;
-  // TODO: can we remove the LTSID and only use the public key to identify
-  // an LTS?
+  required bytes x = 3;
+}
+
+// ReshareLTS is used to update the LTS shares. Prior to using this request,
+// the Calypso roster must be updated on the ByzCoin blockchain in the instance
+// specified by InstanceID.
+message ReshareLTS {
+  required bytes ltsid = 1;
+  required byzcoin.Proof proof = 2;
+}
+
+// ReshareLTSReply is returned upon successful resharing. The LTSID and the
+// public key X should remain the same.
+message ReshareLTSReply {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
@@ -86,14 +105,8 @@ message DecryptKeyReply {
   required bytes x = 3;
 }
 
-// SharedPublic asks for the shared public key of the corresponding LTSID
-message SharedPublic {
+// GetLTSReply asks for the shared public key of the corresponding LTSID
+message GetLTSReply {
   // LTSID is the id of the LTS instance created.
   required bytes ltsid = 1;
-}
-
-// SharedPublicReply sends back the shared public key.
-message SharedPublicReply {
-  // X is the distributed public key.
-  required bytes x = 1;
 }

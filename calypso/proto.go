@@ -4,14 +4,12 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
-	"github.com/dedis/onet"
 )
 
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
 // package calypso;
 // import "byzcoin.proto";
-// import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "Calypso";
@@ -57,23 +55,43 @@ type Read struct {
 // These are the messages used in the API-calls
 // ***
 
+// AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+// authorised IDs.
+type AuthoriseByzcoinID struct {
+	ByzCoinID skipchain.SkipBlockID
+}
+
+// AuthoriseByzcoinIDReply is returned upon successful authorisation.
+type AuthoriseByzcoinIDReply struct {
+}
+
 // CreateLTS is used to start a DKG and store the private keys in each node.
+// Prior to using this request, the Calypso roster must be recorded on the
+// ByzCoin blockchain in the instance specified by InstanceID.
 type CreateLTS struct {
-	// Roster is the list of nodes that should participate in the DKG.
-	Roster onet.Roster
-	// BCID is the ID of the ByzCoin ledger that can use this LTS.
-	BCID skipchain.SkipBlockID
+	Proof byzcoin.Proof
 }
 
 // CreateLTSReply is returned upon successfully setting up the distributed
 // key.
 type CreateLTSReply struct {
-	// LTSID is a random 32-byte slice that represents the LTS.
-	LTSID []byte
+	ByzCoinID  skipchain.SkipBlockID
+	InstanceID []byte
 	// X is the public key of the LTS.
 	X kyber.Point
-	// TODO: can we remove the LTSID and only use the public key to identify
-	// an LTS?
+}
+
+// ReshareLTS is used to update the LTS shares. Prior to using this request,
+// the Calypso roster must be updated on the ByzCoin blockchain in the instance
+// specified by InstanceID.
+type ReshareLTS struct {
+	LTSID []byte
+	Proof byzcoin.Proof
+}
+
+// ReshareLTSReply is returned upon successful resharing. The LTSID and the
+// public key X should remain the same.
+type ReshareLTSReply struct {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
@@ -96,14 +114,8 @@ type DecryptKeyReply struct {
 	X kyber.Point
 }
 
-// SharedPublic asks for the shared public key of the corresponding LTSID
-type SharedPublic struct {
+// GetLTSReply asks for the shared public key of the corresponding LTSID
+type GetLTSReply struct {
 	// LTSID is the id of the LTS instance created.
 	LTSID []byte
-}
-
-// SharedPublicReply sends back the shared public key.
-type SharedPublicReply struct {
-	// X is the distributed public key.
-	X kyber.Point
 }

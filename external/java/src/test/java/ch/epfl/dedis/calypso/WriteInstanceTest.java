@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -45,8 +44,11 @@ class WriteInstanceTest {
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
         genesisDarc.addIdentity("spawn:calypsoWrite", admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
-        calypso = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        calypso = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS),
+            Collections.singletonList(admin), Collections.singletonList(1L));
         if (!calypso.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -54,7 +56,7 @@ class WriteInstanceTest {
         String secret = "this is a secret";
         Document doc = new Document(secret.getBytes(), 16, null, genesisDarc.getBaseId());
         w = new WriteInstance(calypso, genesisDarc.getId(),
-                Arrays.asList(admin), Collections.singletonList(1L),
+                Collections.singletonList(admin), Collections.singletonList(2L),
                 doc.getWriteData(calypso.getLTS()));
 
         Proof p = calypso.getProof(w.getInstance().getId());

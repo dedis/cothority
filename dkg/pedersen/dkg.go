@@ -27,9 +27,13 @@ type Setup struct {
 	Threshold uint32
 	Finished  chan bool
 	Wait      bool
+	NewDKG    func() (*dkgpedersen.DistKeyGenerator, error)
+
+	// KeyPair must be set by the caller, if this is a new DKG, then simply
+	// generate a new KeyPair.
+	KeyPair *key.Pair
 
 	nodes   []*onet.TreeNode
-	keypair *key.Pair
 	publics []kyber.Point
 
 	structStartDeal chan structStartDeal
@@ -43,7 +47,6 @@ type Setup struct {
 func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &Setup{
 		TreeNodeInstance: n,
-		keypair:          key.NewKeyPair(cothority.Suite),
 		Finished:         make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
@@ -64,26 +67,26 @@ func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // SharedSecret returns the necessary information for doing shared
 // encryption and decryption.
-func (o *Setup) SharedSecret() (*SharedSecret, error) {
+func (o *Setup) SharedSecret() (*SharedSecret, *dkgpedersen.DistKeyShare, error) {
 	return NewSharedSecret(o.DKG)
 }
 
 // NewSharedSecret takes an initialized DistKeyGenerator and returns the
 // minimal set of values necessary to do shared encryption/decryption.
-func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, error) {
+func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, *dkgpedersen.DistKeyShare, error) {
 	if gen == nil {
-		return nil, errors.New("no valid dkg given")
+		return nil, nil, errors.New("no valid dkg given")
 	}
 	dks, err := gen.DistKeyShare()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return &SharedSecret{
 		Index:   dks.Share.I,
 		V:       dks.Share.V,
 		X:       dks.Public(),
 		Commits: dks.Commits,
-	}, nil
+	}, dks, nil
 }
 
 // Start sends the Announce-message to all children
@@ -141,13 +144,13 @@ func (o *Setup) Dispatch() error {
 func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	return o.SendToParent(&InitReply{Public: o.keypair.Public})
+	return o.SendToParent(&InitReply{Public: o.KeyPair.Public})
 }
 
 // Root-node messages
 func (o *Setup) rootStartDeal(replies []structInitReply) error {
-	log.Lvl3(o.Name(), replies)
-	o.publics[0] = o.keypair.Public
+	log.Lvl3(o.Name(), len(replies))
+	o.publics[0] = o.KeyPair.Public
 	for _, r := range replies {
 		index, _ := o.Roster().Search(r.ServerIdentity.ID)
 		if index < 0 {
@@ -165,8 +168,12 @@ func (o *Setup) rootStartDeal(replies []structInitReply) error {
 func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
-	o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.keypair.Private,
-		ssd.Publics, int(ssd.Threshold))
+	if o.NewDKG == nil {
+		o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.KeyPair.Private,
+			ssd.Publics, int(ssd.Threshold))
+	} else {
+		o.DKG, err = o.NewDKG()
+	}
 	if err != nil {
 		return err
 	}

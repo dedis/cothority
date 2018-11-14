@@ -74,7 +74,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	require.Nil(t, err)
 	services := local.GetServices(servers, testServiceID)
 	for i := range services {
-		services[i].(*testService).Shared, err = dkgprotocol.NewSharedSecret(dkgs[i])
+		services[i].(*testService).Shared, _, err = dkgprotocol.NewSharedSecret(dkgs[i])
 		require.Nil(t, err)
 	}
 

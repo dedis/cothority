@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
@@ -180,4 +181,13 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 		key = append(key, keyPart...)
 	}
 	return
+}
+
+type newLtsConfig struct {
+	byzcoin.Proof
+}
+
+type reshareLtsConfig struct {
+	LTSID []byte
+	Proof byzcoin.Proof
 }

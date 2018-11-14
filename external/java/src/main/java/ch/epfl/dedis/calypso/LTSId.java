@@ -8,7 +8,7 @@ import com.google.protobuf.ByteString;
  * This class represents a LTSId that points to a Long Term Secret configuration in Calypso.
  */
 public class LTSId extends Sha256id {
-    public LTSId(byte[] id) throws CothorityCryptoException{
+    public LTSId(byte[] id) throws CothorityCryptoException {
         super(id);
     }
 

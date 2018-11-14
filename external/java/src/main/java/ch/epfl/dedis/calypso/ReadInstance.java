@@ -7,12 +7,9 @@ import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Spawn;
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.darc.DarcId;
-import ch.epfl.dedis.lib.darc.Request;
-import ch.epfl.dedis.lib.darc.Signature;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -158,7 +155,7 @@ public class ReadInstance {
         Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
-        // TODO sign
+        tx.signWith(signers);
         calypso.sendTransactionAndWait(tx, 5);
 
         return instr.deriveId("");

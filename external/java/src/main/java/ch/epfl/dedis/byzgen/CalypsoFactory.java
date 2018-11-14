@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.calypso.LTSInstance;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
@@ -7,6 +8,7 @@ import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.calypso.CalypsoRPC;
 import ch.epfl.dedis.calypso.LTSId;
 import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -106,9 +108,13 @@ public class CalypsoFactory {
      */
     public CalypsoRPC initialiseNewCalypso(Signer admin) throws CothorityException {
         Roster roster = createRoster();
-
         Darc adminDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
-        return new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500));
+        adminDarc.addIdentity("invoke:" + LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
+        adminDarc.addIdentity("spawn:" + LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
+        CalypsoRPC rpc = new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500));
+
+        // create the LTSInstance
+        return rpc;
     }
 
     private Roster createRoster() {
