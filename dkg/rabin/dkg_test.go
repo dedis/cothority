@@ -1,4 +1,4 @@
-package dkg
+package rabin
 
 import (
 	"testing"

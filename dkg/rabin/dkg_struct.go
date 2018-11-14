@@ -1,4 +1,4 @@
-package dkg
+package rabin
 
 /*
 Struct holds the messages that will be sent around in the protocol. You have

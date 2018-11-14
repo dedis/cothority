@@ -1,4 +1,4 @@
-package dkg
+package rabin
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 )
 
 // Name is the protocol identifier string.
-const Name = "DKG"
+const Name = "Rabin_DKG"
 
 func init() {
 	onet.GlobalProtocolRegister(Name, NewSetup)

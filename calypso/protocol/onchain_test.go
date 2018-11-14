@@ -142,31 +142,12 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 		}
 	}
 
-	/*
-			// Secret commits
-			for _, p := range dkgs {
-				commit, err := p.SecretCommits()
-				if err != nil {
-					return nil, err
-				}
-				for _, p2 := range dkgs {
-					compl, err := p2.ProcessSecretCommits(commit)
-					if err != nil {
-						return nil, err
-					}
-					if compl != nil {
-						return nil, errors.New("there should be no complaint")
-					}
-				}
-			}
-
-		// Verify if all is OK
-		for _, p := range dkgs {
-			if !p.Finished() {
-				return nil, errors.New("one of the dkgs is not finished yet")
-			}
+	// Verify if all is OK
+	for _, p := range dkgs {
+		if !p.Certified() {
+			return nil, errors.New("one of the dkgs is not finished yet")
 		}
-	*/
+	}
 	return
 }
 

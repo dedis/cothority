@@ -14,7 +14,7 @@ import (
 )
 
 // Name is the protocol identifier string.
-const Name = "DKG"
+const Name = "Pedersen_DKG"
 
 func init() {
 	onet.GlobalProtocolRegister(Name, NewSetup)
@@ -74,7 +74,6 @@ func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, error) {
 	if gen == nil {
 		return nil, errors.New("no valid dkg given")
 	}
-	// TODO check finished?
 	dks, err := gen.DistKeyShare()
 	if err != nil {
 		return nil, err
@@ -134,7 +133,6 @@ func (o *Setup) Dispatch() error {
 		return errors.New("not certified")
 	}
 
-	// TODO check something else? QUAD?
 	o.Finished <- true
 	return nil
 }
@@ -203,7 +201,6 @@ func (o *Setup) allResponse(resp structResponse) error {
 		return err
 	}
 	if just != nil {
-		// TODO error?
 		log.Warn(o.Name(), "Got a justification: ", just)
 	}
 	return nil
