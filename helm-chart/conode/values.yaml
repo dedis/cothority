@@ -2,6 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+## Docker image settings
 image:
   repository: dedis/conode
   tag: latest
@@ -10,6 +11,9 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
+## Conode uses two consecutive TCP ports
+## In this charts, the ports are exposed via a
+## NodePort service
 service:
   ports:
     tcp1: 6879
@@ -18,6 +22,7 @@ service:
     tcp1: 32079
     tcp2: 32080
 
+## The public config
 publicToml: |
   [[servers]]
     Address = "tls://127.0.0.1:6879"
@@ -25,6 +30,7 @@ publicToml: |
     Public = "908c4bf012f3e896a36f4d9590873122f084233e62808ce13fca97cae7edbc63"
     Description = "Example node"
 
+## The private config
 privateToml: |
   # This file contains your private key.
   # Do not give it away lightly!
@@ -35,6 +41,8 @@ privateToml: |
   ListenAddress = ""
   Description = "Example node"
 
+## Persistence configuragtion
+## Holds the block-chain data
 persistence:
   enabled: true
   accessMode: ReadWriteOnce
