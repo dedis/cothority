@@ -1214,8 +1214,10 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 
 	// Make sure the latest node is correctly activated.
 	ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
-	counter++
-	s.sendTxAndWait(t, ctx, 10)
+	for i := range s.services {
+		counter++
+		s.sendTxToAndWait(t, ctx, i, 10)
+	}
 
 	for _, node := range rosterR.List {
 		log.Lvl2("Checking node", node, "has testDarc stored")
@@ -1238,7 +1240,6 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 			time.Sleep(testInterval)
 		}
 	}
-	time.Sleep(1 * time.Second)
 }
 
 func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
