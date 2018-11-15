@@ -1,4 +1,4 @@
-package dkg
+package rabin
 
 /*
 Struct holds the messages that will be sent around in the protocol. You have
@@ -20,8 +20,7 @@ func init() {
 	network.RegisterMessages(&SharedSecret{},
 		&Init{}, &InitReply{},
 		&StartDeal{}, &Deal{},
-		&Response{}, &SecretCommit{},
-		&Verification{}, &VerificationReply{})
+		&Response{}, &SecretCommit{})
 }
 
 // SharedSecret represents the needed information to do shared encryption
@@ -115,26 +114,6 @@ type SecretCommit struct {
 type structSecretCommit struct {
 	*onet.TreeNode
 	SecretCommit
-}
-
-// Verification asks all nodes to verify the completion of the
-// protocol and to return the collective public key.
-type Verification struct {
-}
-
-type structVerification struct {
-	*onet.TreeNode
-	Verification
-}
-
-// VerificationReply contains the public key or nil if the verification failed
-type VerificationReply struct {
-	Public kyber.Point
-}
-
-type structVerificationReply struct {
-	*onet.TreeNode
-	VerificationReply
 }
 
 // WaitSetup is only sent if Init.Wait == true

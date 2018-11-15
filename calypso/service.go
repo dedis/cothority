@@ -17,7 +17,7 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/calypso/protocol"
 	"github.com/dedis/cothority/darc"
-	dkgprotocol "github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
