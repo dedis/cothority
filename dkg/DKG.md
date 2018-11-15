@@ -9,7 +9,7 @@ Under this folder, we implement two distributed key generation protocols:
 Pedersen DKG and Rabin DKG.
 
 DKG enables a group of participants to generate a distributed key with each
-participants holding only a share of the key. The key is also never computed
+participant holding only a share of the key. The key is also never computed
 locally but generated distributively whereas the public part of the key is
 known by every participants.
 

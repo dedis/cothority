@@ -92,7 +92,7 @@ func (o *Setup) Start() error {
 	// 1a - root asks children to send their public key
 	errs := o.Broadcast(&Init{Wait: o.Wait})
 	if len(errs) != 0 {
-		return fmt.Errorf("boradcast failed with error(s): %v", errs)
+		return fmt.Errorf("broadcast failed with error(s): %v", errs)
 	}
 	return nil
 }
