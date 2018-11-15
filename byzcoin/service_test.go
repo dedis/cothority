@@ -1078,6 +1078,12 @@ func TestService_SetConfigInterval(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
+	// Wait for a block completion to start the interval check
+	// to prevent the first one to be included in the setup block
+	ctx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
+	require.Nil(t, err)
+	s.sendTxAndWait(t, ctx, 10)
+
 	intervals := []time.Duration{testInterval, testInterval / 5,
 		testInterval * 2, testInterval / 5, testInterval * 20}
 	if testing.Short() {
@@ -1085,7 +1091,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 	}
 
 	lastInterval := testInterval
-	counter := 1
+	counter := 2
 	for i := 0; i < len(intervals); i++ {
 		for _, interval := range intervals {
 			// The next block should now be in the range of testInterval.
@@ -1099,10 +1105,9 @@ func TestService_SetConfigInterval(t *testing.T) {
 			// is bigger, due to dedis/cothority#1409
 			s.sendTxAndWait(t, ctx, 10)
 			dur := time.Now().Sub(start)
-			durErr := dur / 10 // leave a bit of room for error
-			require.True(t, dur+durErr > lastInterval)
+			require.True(t, dur > lastInterval)
 			if interval > lastInterval {
-				require.True(t, dur-durErr < interval)
+				require.True(t, dur < interval)
 			}
 			lastInterval = interval
 		}
