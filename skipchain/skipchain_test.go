@@ -593,7 +593,7 @@ func TestService_ParallelGenesis(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
-	nbrNodes := 10
+	nbrNodes := 60
 	if testing.Short() {
 		nbrNodes = 20
 	}
