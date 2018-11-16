@@ -213,6 +213,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 
 		// Try up to retries random servers from the given roster.
 		i := 0
+		// TODO: not random until the seed is set up
 		perm := rand.Perm(len(roster.List))
 		for ; i < retries; i++ {
 			// To handle the case where len(perm) < retries.

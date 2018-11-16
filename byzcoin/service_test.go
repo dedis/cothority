@@ -546,7 +546,7 @@ func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	// Store the latest block
+	// Fetch the latest block
 	reply, err := skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
@@ -1165,7 +1165,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		nbrNewNodes = 5
 	}
 
-	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
+	servers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
 
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
@@ -1212,10 +1212,19 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		s.sendTxAndWait(t, ctx, 10)
 	}
 
-	// Make sure the latest node is correctly activated.
-	ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
-	counter++
-	s.sendTxAndWait(t, ctx, 10)
+	// Make sure the latest node is correctly activated and that the
+	// new conodes are done with catching up
+	for _, ser := range servers {
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
+		counter++
+		_, err := ser.GetService(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   ctx,
+			InclusionWait: 10,
+		})
+		require.Nil(t, err)
+	}
 
 	for _, node := range rosterR.List {
 		log.Lvl2("Checking node", node, "has testDarc stored")
@@ -1238,7 +1247,6 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 			time.Sleep(testInterval)
 		}
 	}
-	time.Sleep(1 * time.Second)
 }
 
 func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
