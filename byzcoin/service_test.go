@@ -1165,7 +1165,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		nbrNewNodes = 5
 	}
 
-	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
+	servers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
 
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
@@ -1212,11 +1212,18 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		s.sendTxAndWait(t, ctx, 10)
 	}
 
-	// Make sure the latest node is correctly activated.
-	ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
-	for i := range s.services {
+	// Make sure the latest node is correctly activated and that the
+	// new conodes are done with catching up
+	for _, ser := range servers {
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
-		s.sendTxToAndWait(t, ctx, i, 10)
+		_, err := ser.GetService(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   ctx,
+			InclusionWait: 10,
+		})
+		require.Nil(t, err)
 	}
 
 	for _, node := range rosterR.List {
