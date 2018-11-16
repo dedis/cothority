@@ -958,10 +958,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
 
-	if _, err := s.db.StoreBlocks([]*SkipBlock{src, dst}); err != nil {
-		return errors.New("couldn't store new forward link or new block: " + err.Error())
-	}
-
 	ro := roster.Concat(dst.Roster.List...)
 
 	// Propagate the forward link and the new block as the roster
@@ -1401,10 +1397,15 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) {
 		}
 	}
 
-	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
-	if err != nil {
-		// TODO: prevent duplicates
-		log.Lvl3(err)
+	// Because of the sync, the forward link could already be added
+	// but we need to catch the case where the height is much above
+	// the current one which means we missed previous propagation
+	if len(sb.ForwardLink) <= pfl.Height {
+		err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
+		if err != nil {
+			log.Error(err)
+			return
+		}
 	}
 
 	// Update the forward link list of the block
