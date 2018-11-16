@@ -546,7 +546,7 @@ func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	// Store the latest block
+	// Fetch the latest block
 	reply, err := skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
