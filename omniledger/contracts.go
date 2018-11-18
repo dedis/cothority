@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
+	//"fmt"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
