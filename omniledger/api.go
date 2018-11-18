@@ -3,6 +3,7 @@ package omniledger
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
@@ -56,8 +57,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	scBuff := make([]byte, 8)
 	binary.PutVarint(scBuff, int64(req.ShardCount))
 
-	esBuff := make([]byte, 8)
-	binary.PutVarint(esBuff, int64(req.EpochSize))
+	esBuff := lib.EncodeDuration(req.EpochSize)
 
 	rosterBuf, err := protobuf.Encode(&(req.Roster))
 	if err != nil {
@@ -96,8 +96,6 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	spawnTx.SignWith(owner)
 	spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
-	olInstID := instr.DeriveID("")
-
 	// Add genesismsg and instr
 	req.IBGenesisMsg = ibMsg
 	req.SpawnTx = spawnTx
@@ -105,11 +103,11 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	// Create reply struct
 	//req.Version = bc.CurrentVersion
 	reply := &CreateOmniLedgerResponse{}
+	reply.Owner = owner
 	err = c.SendProtobuf(req.Roster.List[0], req, reply)
 	if err != nil {
 		return nil, nil, err
 	}
-	reply.OmniledgerInstanceID = olInstID
 
 	c.ID = reply.IDSkipBlock.CalculateHash()
 
@@ -154,16 +152,27 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	tx.SignWith(req.Owner)
 	tx.InstructionsHash = tx.Instructions.Hash()
 
-	_, err = ibClient.AddTransactionAndWait(tx, 5)
+	/*
+		_, err = ibClient.AddTransactionAndWait(tx, 5)
+		if err != nil {
+			return nil, err
+		}
+	*/
+
+	req.ReqNewEpochTx = &tx
+
+	reply := &NewEpochResponse{}
+	olClient := NewClient(req.IBID, req.IBRoster)
+	err = olClient.SendProtobuf(req.IBRoster.List[0], req, reply)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get proof from request_new_epoch instr, prepare the new_epoch instructions and send them to the shards
-	gpr, err = ibClient.GetProof(reqNewEpoch.DeriveID("").Slice())
+	/*gpr, err = ibClient.GetProof(reqNewEpoch.DeriveID("").Slice())
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	cc = &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
@@ -171,7 +180,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	proofBuf, err := protobuf.Encode(gpr.Proof)
+	proofBuf, err := protobuf.Encode(&gpr.Proof)
 	if err != nil {
 		return nil, err
 	}
@@ -207,10 +216,10 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	}
 
 	// TODO: Fill the reply w/ relevant changes
-	reply := &NewEpochResponse{
+	/*reply := &NewEpochResponse{
 		IBRoster: *cc.Roster,
 		//ShardRosters: cc.ShardRosters,
-	}
+	}*/
 
 	return reply, nil
 }

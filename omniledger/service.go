@@ -76,24 +76,25 @@ type CreateOmniLedgerResponse struct {
 }
 
 type NewEpoch struct {
-	IBID         skipchain.SkipBlockID
-	IBRoster     onet.Roster
-	IBDarcID     darc.Darc
-	ShardIDs     []skipchain.SkipBlockID
-	ShardDarcIDs []darc.Darc
-	ShardRosters []onet.Roster
-	Owner        darc.Signer
-	OLInstanceID bc.InstanceID
-	Timestamp    time.Time
+	IBID     skipchain.SkipBlockID
+	IBRoster onet.Roster
+	//IBDarcID     darc.Darc
+	ShardIDs []skipchain.SkipBlockID
+	//ShardDarcIDs []darc.Darc
+	//ShardRosters []onet.Roster
+	Owner         darc.Signer
+	OLInstanceID  bc.InstanceID
+	Timestamp     time.Time
+	ReqNewEpochTx *bc.ClientTransaction
 }
 
 type NewEpochResponse struct {
-	IBRoster     onet.Roster
-	ShardRosters []onet.Roster
+	IBRoster         onet.Roster
+	ReqNewEpochProof *bc.Proof
+	//ShardRosters []onet.Roster
 }
 
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
-
 	if err := checkCreateOmniLedger(req); err != nil {
 		return nil, err
 	}
@@ -111,13 +112,13 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 
 	fmt.Println("-------- PRINT2 ---------")
 
-	id := req.SpawnTx.Instructions[0].DeriveID("").Slice()
-	gpr, err := c.GetProof(id)
+	id := req.SpawnTx.Instructions[0].DeriveID("")
+	gpr, err := c.GetProof(id.Slice())
 	if err != nil {
 		return nil, err
 	}
 
-	if !gpr.Proof.InclusionProof.Match(id) {
+	if !gpr.Proof.InclusionProof.Match(id.Slice()) {
 		return nil, errors.New("no association found for the proof")
 	}
 
@@ -152,10 +153,11 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 
 	// Build reply
 	reply := &CreateOmniLedgerResponse{
-		Version:     req.Version,
-		ShardRoster: shardRosters,
-		IDSkipBlock: ibRep.Skipblock,
-		ShardBlocks: ids,
+		Version:              req.Version,
+		ShardRoster:          shardRosters,
+		IDSkipBlock:          ibRep.Skipblock,
+		ShardBlocks:          ids,
+		OmniledgerInstanceID: id,
 		//GenesisDarc: d,
 		//Owner:       owner,
 	}
@@ -195,92 +197,27 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 	return nil
 }
 
-// NewEpoch
-/*
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
-	// > Connect to the IB via a client, requires a SkipBlockID -> need to store the genesis block of the IB in the service?
-	// Send an invoke:requestNewEpoch
-	//byzcoin.NewClient()
-	//invoke := &bc.Invoke{
-	//	Command: "request_new_epoch",
+	reply := &NewEpochResponse{}
 
-	// Requires skipchain id and roster
-	var ibID skipchain.SkipBlockID
-	//var shardIDs []skipchain.SkipBlockID
-	var roster onet.Roster
-	var darcID darc.ID
-	var oldRosters []onet.Roster
+	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 
-	c := bc.NewClient(ibID, roster)
-
-	instr1 := byzcoin.Instruction{
-		Nonce:  bc.GenNonce(),
-		Index:  0,
-		Length: 1,
-		Invoke: &bc.Invoke{
-			Command: "request_new_epoch",
-		},
-	}
-	instr1.SignBy(darcID) // Requires darc ID anr the owner signature
-
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{instr1},
-	}
-
-	_, err := c.AddTransactionAndWait(tx, 10)
+	_, err := ibClient.AddTransactionAndWait(*req.ReqNewEpochTx, 5)
 	if err != nil {
 		return nil, err
 	}
 
-	gpr, err := c.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	reqNewEpochInstrID := req.ReqNewEpochTx.Instructions[0].DeriveID("")
+	gpr, err := ibClient.GetProof(reqNewEpochInstrID.Slice())
 	if err != nil {
 		return nil, err
 	}
 
-	cc := &lib.ChainConfig{}
-	err = gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, cc)
-	if err != nil {
-		return nil, err
-	}
+	// Send back proof
+	reply.ReqNewEpochProof = &gpr.Proof
 
-	proofBuf, err := protobuf.Encode(gpr.Proof)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Complete arguments
-	// Need to know the number of shards
-	// Need to know the IB id
-	for i := 0; i < len(cc.ShardRosters); i++ {
-		shardIndBuff := make([]byte, 8)
-		binary.PutVarint(shardIndBuff, int64(i))
-		instr := byzcoin.Instruction{
-			Nonce:  bc.GenNonce(),
-			Index:  0,
-			Length: 1,
-			Invoke: &bc.Invoke{
-				Command: "new_epoch",
-				Args: []bc.Argument{
-					bc.Argument{Name: "epoch", Value: proofBuf},
-					bc.Argument{Name: "shard-index", Value: shardIndBuff},
-					bc.Argument{Name: "ib-ID", Value: ibID},
-				},
-			},
-		}
-
-		tx.Instructions[0] = instr
-
-		newRoster := cc.ShardRosters[i]
-		oldRoster := oldRosters[i]
-		changesCount := getRosterChangesCount(oldRoster, newRoster)
-		for j := 0; j < changesCount; j++ {
-			c.AddTransactionAndWait(tx, 1)
-		}
-	}
-
-	return nil, nil
+	return reply, nil
 }
-*/
 
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
@@ -294,6 +231,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	// Register handlers (i.e. methods the service will call must have signature func({}interface) ({}interface, error))
 	if err := s.RegisterHandlers(s.CreateOmniLedger); err != nil {
+		log.ErrFatal(err, "Couldn't register messages")
+	}
+	if err := s.RegisterHandlers(s.NewEpoch); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	// Register processor function (handles certain message types, e.g. ViewChangeReq) if necessary

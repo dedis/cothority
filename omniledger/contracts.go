@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
@@ -82,12 +83,11 @@ func spawnOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins [
 	shardCount := int(shardCountDecoded)
 
 	epochSizeBuf := inst.Spawn.Args.Search("epochSize")
-	epochSizeDecoded, err := binary.ReadVarint(bytes.NewBuffer(epochSizeBuf))
+	epochSize, err := lib.DecodeDuration(epochSizeBuf)
 	if err != nil {
 		log.Error("couldn't decode epoch size")
 		return nil, coins, err
 	}
-	epochSize := time.Duration(int32(epochSizeDecoded)) * time.Millisecond
 
 	tsBuf := inst.Spawn.Args.Search("timestamp")
 	ts := time.Unix(int64(binary.BigEndian.Uint64(tsBuf)), 0)
@@ -132,9 +132,8 @@ func spawnOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins [
 }
 
 func invokeOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
-
 	if inst.Invoke.Command == "request_new_epoch" {
-		tsBuf := inst.Spawn.Args.Search("timestamp")
+		tsBuf := inst.Invoke.Args.Search("timestamp")
 		ts := time.Unix(int64(binary.BigEndian.Uint64(tsBuf)), 0)
 		if !checkValidTime(ts, time.Second*60) {
 			return nil, coins, errors.New("Client timestamp is too different from node's clock")
@@ -147,7 +146,7 @@ func invokeOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins 
 
 		cc := &lib.ChainConfig{}
 		if buf != nil {
-			err = protobuf.Decode(buf, cc)
+			err = protobuf.DecodeWithConstructors(buf, cc, network.DefaultConstructors(cothority.Suite))
 			if err != nil {
 				return nil, coins, err
 			}
@@ -175,7 +174,7 @@ func invokeOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins 
 		return nil, coins, errors.New("Request new epoch failed, was called too soon")
 	}
 
-	return nil, coins, nil
+	return nil, coins, errors.New("unknown instruction type")
 }
 
 // ContractNewEpoch ...

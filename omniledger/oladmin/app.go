@@ -7,14 +7,16 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/omniledger"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"gopkg.in/urfave/cli.v1"
 	"io"
@@ -29,12 +31,12 @@ var ConfigPath = "."
 
 // Config is the structure used to save an omniledger (identity ledger and shards) configuration.
 type Config struct {
-	IBID          skipchain.SkipBlockID
-	IBRoster      onet.Roster
-	IBDarc        darc.Darc
-	ShardIDs      []skipchain.SkipBlockID
-	ShardRosters  []onet.Roster
-	ShardDarcs    []darc.Darc
+	IBID     skipchain.SkipBlockID
+	IBRoster onet.Roster
+	//IBDarc        darc.Darc
+	ShardIDs []skipchain.SkipBlockID
+	//ShardRosters  []onet.Roster
+	//ShardDarcs    []darc.Darc
 	AdminIdentity darc.Identity
 	OLInstanceID  bc.InstanceID
 }
@@ -129,6 +131,7 @@ func createSharding(c *cli.Context) error {
 		ShardCount: sn,
 		EpochSize:  es,
 		Timestamp:  time.Now(),
+		Version:    bc.CurrentVersion,
 	}
 
 	// Create new omniledger
@@ -144,11 +147,11 @@ func createSharding(c *cli.Context) error {
 	}
 
 	cfg := Config{
-		IBRoster:      *roster,
-		ShardRosters:  reply.ShardRoster,
-		IBID:          reply.IDSkipBlock.SkipChainID(),
-		ShardIDs:      shardIDs,
-		IBDarc:        reply.GenesisDarc,
+		IBRoster: *roster,
+		//ShardRosters:  reply.ShardRoster,
+		IBID:     reply.IDSkipBlock.SkipChainID(),
+		ShardIDs: shardIDs,
+		//IBDarc:        reply.GenesisDarc,
 		AdminIdentity: reply.Owner.Identity(),
 		OLInstanceID:  reply.OmniledgerInstanceID,
 	}
@@ -165,6 +168,12 @@ func createSharding(c *cli.Context) error {
 
 	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x. \n", cfg.IBID)
 	fmt.Fprintf(c.App.Writer, "export OC=\"%v\"\n", cfgPath)
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("ABSOLUTE PATH create sharding:", dir)
 
 	// For testing purposes
 	c.App.Metadata["OC"] = cfgPath
@@ -188,6 +197,12 @@ func evolveShard(c *cli.Context) error {
 
 // TODO: Finish function
 func newEpoch(c *cli.Context) error {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("ABSOLUTE PATH newEpoch:", dir)
+
 	if c.NArg() < 2 {
 		return errors.New("Not enough arguments (2 required")
 	}
@@ -209,10 +224,7 @@ func newEpoch(c *cli.Context) error {
 	req := &omniledger.NewEpoch{
 		IBID:         cfg.IBID,
 		IBRoster:     cfg.IBRoster,
-		IBDarcID:     cfg.IBDarc,
 		ShardIDs:     cfg.ShardIDs,
-		ShardDarcIDs: cfg.ShardDarcs,
-		ShardRosters: cfg.ShardRosters,
 		Owner:        *signer,
 		OLInstanceID: cfg.OLInstanceID,
 		Timestamp:    time.Now(),
@@ -226,7 +238,7 @@ func newEpoch(c *cli.Context) error {
 	}
 
 	cfg.IBRoster = rep.IBRoster
-	cfg.ShardRosters = rep.ShardRosters
+	//cfg.ShardRosters = rep.ShardRosters
 
 	cfgPath, err = saveConfig(*cfg)
 	if err != nil {
@@ -269,10 +281,15 @@ func saveConfig(cfg Config) (string, error) {
 		return fn, err
 	}
 
+	/*err = ioutil.WriteFile("/home/qm/Desktop/ol.cfg", buf, 0644)
+	if err != nil {
+		return fn, err
+	}*/
+
 	return fn, nil
 }
 
-func loadConfig(file string) (*Config, error) {
+/*func loadConfig(file string) (*Config, error) {
 	var cfgBuf []byte
 	cfgBuf, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -281,6 +298,23 @@ func loadConfig(file string) (*Config, error) {
 
 	cfg := &Config{}
 	err = protobuf.Decode(cfgBuf, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}*/
+
+func loadConfig(file string) (*Config, error) {
+	cfg := &Config{}
+
+	var cfgBuf []byte
+	cfgBuf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	err = protobuf.DecodeWithConstructors(cfgBuf, cfg,
+		network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}
