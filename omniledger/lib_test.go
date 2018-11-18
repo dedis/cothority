@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestLib_ChangeRoster(t *testing.T) {
@@ -50,4 +51,17 @@ func TestLib_ChangeRoster(t *testing.T) {
 	for k := 0; k < len(r1.List); k++ {
 		assert.True(t, r1.List[k].Equal(r2.List[k]))
 	}
+}
+
+func TestLib_EncodeDecodeDuration(t *testing.T) {
+	d := time.Duration(1) * time.Second
+	dBuf := lib.EncodeDuration(d)
+	dd, err := lib.DecodeDuration(dBuf)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(d, dd)
+
+	assert.True(t, d.Nanoseconds() == dd.Nanoseconds())
 }

@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"bytes"
+	"encoding/binary"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 	"time"
@@ -50,4 +52,23 @@ func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.S
 	}
 
 	return oldRoster, oldMap, newMap, false
+}
+
+func EncodeDuration(d time.Duration) []byte {
+	durationInNs := int64(d * time.Nanosecond)
+	tBuf := make([]byte, 8)
+	binary.PutVarint(tBuf, durationInNs)
+
+	return tBuf
+}
+
+func DecodeDuration(dBuf []byte) (time.Duration, error) {
+	decoded, err := binary.ReadVarint(bytes.NewBuffer(dBuf))
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	duration := time.Duration(int64(decoded)) * time.Nanosecond
+
+	return duration, nil
 }
