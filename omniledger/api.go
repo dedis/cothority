@@ -216,12 +216,12 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	}
 
 	// TODO: Fill the reply w/ relevant changes
-	/*reply := &NewEpochResponse{
+	clientReply := &NewEpochResponse{
 		IBRoster: *cc.Roster,
 		//ShardRosters: cc.ShardRosters,
-	}*/
+	}
 
-	return reply, nil
+	return clientReply, nil
 }
 
 func getRosterChangesCount(oldRoster, newRoster onet.Roster) int {
