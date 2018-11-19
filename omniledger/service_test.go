@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	//"errors"
 	"fmt"
+	"github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -79,7 +80,7 @@ func TestService_CreateOmniLedger(t *testing.T) {
 	assert.NotNil(t, rep)
 
 	// Verify number of created shard is correct
-	fmt.Println(len(rep.ShardRoster))
+	//fmt.Println(len(rep.ShardRoster))
 	assert.True(t, len(rep.ShardRoster) == shardCount)
 
 	// Verify each shard has enough validators, i.e. >= 4
@@ -147,8 +148,7 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 	scBuff := make([]byte, 8)
 	binary.PutVarint(scBuff, int64(shardCount))
 
-	esBuff := make([]byte, 8)
-	binary.PutVarint(esBuff, int64(epochSize))
+	esBuff := lib.EncodeDuration(epochSize)
 
 	rosterBuf, err := protobuf.Encode(roster)
 	if err != nil {
