@@ -20,6 +20,21 @@
 // transcript.  The tag will be unique to that attendee/context pair, but
 // another service using another context will not be able to link two tags to
 // the same or different attendee.
+//
+// The contract "popParty" represents a pop-party in ByzCoin. It has the following
+// functionalities:
+//   * Spawn - takes a "FinalStatement" argument with the binary representation
+//     of the final statement to store.
+//   * Invoke - has the following Commands
+//     * "Finalize" - stores a final statement and doesn't let it be
+//       changed afterwards. It will also create a darc for every attendee
+//       and bind that darc to a coin account, putting an initial 1000000
+//       popCoins in it.
+//       This command has the following arguments:
+//       * "FinalStatement" - mandatory, to give the new final statement. It
+//         needs to be correctly finalized by the pop-service.
+//       * "Service" - when given, will create a darc and a coin-account for
+//         the service to use.
 package service
 
 import (
@@ -59,8 +74,7 @@ func init() {
 	}
 }
 
-// Name is the name to refer to the Template service from another
-// package.
+// Name is the name to refer to this service from another package.
 const Name = "PoPServer"
 const cfgName = "pop.bin"
 const bftSignFinal = "BFTFinal"
@@ -68,13 +82,6 @@ const bftSignMerge = "PopBFTSignMerge"
 const propagFinal = "PoPPropagateFinal"
 const propagDescription = "PoPPropagateDescription"
 const timeout = 60 * time.Second
-
-// SIGSIZE size of signature
-const SIGSIZE = 64
-
-// DELIMETER in locations field in PopDesc
-// const timeout = 60 * time.Second
-const DELIMETER = "; "
 
 var checkConfigID network.MessageTypeID
 var checkConfigReplyID network.MessageTypeID
@@ -380,7 +387,7 @@ func (s *Service) MergeRequest(req *MergeRequest) (network.Message,
 	// Check if the party is the merge list
 	found := false
 	for _, party := range final.Desc.Parties {
-		if Equal(party.Roster, final.Desc.Roster) {
+		if rosterEqual(party.Roster, final.Desc.Roster) {
 			found = true
 			break
 		}
@@ -815,7 +822,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 		locs = append(locs, f.Desc.Location)
 	}
 	sortAll(locs, Roster.List, na)
-	final.Desc.Location = strings.Join(locs, DELIMETER)
+	final.Desc.Location = strings.Join(locs, "; ")
 	final.Merged = true
 	final.Desc.Roster = Roster
 	final.Attendees = na
@@ -898,6 +905,9 @@ func (s *Service) PropagateDescription(msg network.Message) {
 	log.Lvl2("Stored proposed description on", s.ServerIdentity())
 }
 
+// SignatureSize is the size of signatures expected by this service.
+const SignatureSize = 64
+
 // signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
@@ -942,8 +952,8 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	select {
 	case sig := <-root.FinalSignatureChan:
-		if len(sig.Sig) >= SIGSIZE {
-			final.Signature = sig.Sig[:SIGSIZE]
+		if len(sig.Sig) >= SignatureSize {
+			final.Signature = sig.Sig[:SignatureSize]
 		} else {
 			final.Signature = []byte{}
 		}
@@ -1053,7 +1063,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 		locs = append(locs, f.Desc.Location)
 	}
 	sortAll(locs, Roster.List, na)
-	newFinal.Desc.Location = strings.Join(locs, DELIMETER)
+	newFinal.Desc.Location = strings.Join(locs, "; ")
 	newFinal.Desc.Roster = Roster
 	newFinal.Attendees = na
 	newFinal.Merged = true
@@ -1198,7 +1208,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	byzcoin.RegisterContract(c, ContractPopParty, s.ContractPopParty)
+	byzcoin.RegisterContract(c, ContractPopParty, contractPopPartyFromBytes)
 
 	return s, nil
 }

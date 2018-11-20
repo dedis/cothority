@@ -365,8 +365,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 			SignerCounter: []uint64{ctr + 1},
 		}},
 	}
-	ctx.InstructionsHash = ctx.Instructions.Hash()
-	if err = ctx.Instructions[0].SignWith(ctx.InstructionsHash, signer); err != nil {
+	if err = ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), signer); err != nil {
 		return err
 	}
 

@@ -135,8 +135,7 @@ type CheckAuthorizationResponse struct {
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It
-// will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-// GenesisDarcID is the value of GenesisReferenceID.
+// will be stored under the key [32]byte{} in the tree.
 type ChainConfig struct {
 	BlockInterval time.Duration
 	Roster        onet.Roster
@@ -220,8 +219,7 @@ type Argument struct {
 // instruction hashes (see the Hash method in Instruction), this hash is what
 // every instruction must sign for the transaction to be valid.
 type ClientTransaction struct {
-	Instructions     Instructions
-	InstructionsHash []byte
+	Instructions Instructions
 }
 
 // TxResult holds a transaction and the result of running it.

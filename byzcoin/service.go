@@ -228,7 +228,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 			Spawn:      spawn,
 		}},
 	}
-	ctx.InstructionsHash = ctx.Instructions.Hash()
 
 	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
 	if err != nil {
@@ -381,7 +380,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	if err != nil {
 		return nil, err
 	}
-	d, err := LoadDarcFromTrie(st, req.DarcID)
+	d, err := loadDarcFromTrie(st, req.DarcID)
 	if err != nil {
 		return nil, errors.New("couldn't find darc: " + err.Error())
 	}
@@ -395,7 +394,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := LoadDarcFromTrie(st, id)
+		d, err := loadDarcFromTrie(st, id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil
@@ -1556,20 +1555,15 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	var cin []Coin
 clientTransactions:
 	for _, tx := range txIn {
-		if !bytes.Equal(tx.ClientTransaction.InstructionsHash, tx.ClientTransaction.Instructions.Hash()) {
-			log.Error(s.ServerIdentity(), "invalid instruction hash")
-			tx.Accepted = false
-			txOut = append(txOut, tx)
-			continue clientTransactions
-		}
 		txsz := txSize(tx)
 
 		// Make a new trie for each instruction. If the instruction is
 		// sucessfully implemented and changes applied, then keep it
 		// (via cdbTemp = cdbI.c), otherwise dump it.
 		sstTempC := sstTemp.Clone()
+		h := tx.ClientTransaction.Instructions.Hash()
 		for _, instr := range tx.ClientTransaction.Instructions {
-			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, tx.ClientTransaction.InstructionsHash)
+			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, h)
 			if err != nil {
 				log.Errorf("%s Call to contract returned error: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
@@ -1643,17 +1637,17 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		}
 	}()
 
-	_, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	contents, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
 	}
 
-	contract, exists := s.contracts[contractID]
+	contractFactory, exists := s.contracts[contractID]
 	if !exists && ConfigInstanceID.Equal(instr.InstanceID) {
 		// Special case: first time call to genesis-configuration must return
 		// correct contract type.
-		contract, exists = s.contracts[ContractConfigID]
+		contractFactory, exists = s.contracts[ContractConfigID]
 	}
 
 	// If the leader does not have a verifier for this contract, it drops the
@@ -1664,9 +1658,29 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
-	scs, cout, err = contract(st, instr, ctxHash, cin)
+
+	c, err := contractFactory(contents)
 	if err != nil {
-		return
+		return nil, nil, err
+	}
+	if c == nil {
+		return nil, nil, errors.New("conrtact factory returned nil contract instance")
+	}
+
+	err = c.VerifyInstruction(st, instr, ctxHash)
+	if err != nil {
+		return nil, nil, fmt.Errorf("instruction verification failed: %v", err)
+	}
+
+	switch instr.GetType() {
+	case SpawnType:
+		scs, cout, err = c.Spawn(st, instr, cin)
+	case InvokeType:
+		scs, cout, err = c.Invoke(st, instr, cin)
+	case DeleteType:
+		scs, cout, err = c.Delete(st, instr, cin)
+	default:
+		return nil, nil, errors.New("unexpected contract type")
 	}
 
 	// As the InstanceID of each sc is not necessarily the same as the
@@ -2080,8 +2094,9 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 		if tx.Accepted {
 			// Only accepted transactions must be used
 			// to create the state changes
+			h := tx.ClientTransaction.Instructions.Hash()
 			for _, instr := range tx.ClientTransaction.Instructions {
-				scs, cout, err := s.executeInstruction(sst, cin, instr, tx.ClientTransaction.InstructionsHash)
+				scs, cout, err := s.executeInstruction(sst, cin, instr, h)
 				cin = cout
 				if err != nil {
 					return nil, err
@@ -2152,8 +2167,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
-	s.registerContract(ContractConfigID, s.ContractConfig)
-	s.registerContract(ContractDarcID, s.ContractDarc)
+	s.registerContract(ContractConfigID, contractConfigFromBytes)
+	s.registerContract(ContractDarcID, s.contractDarcFromBytes)
+
 	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err

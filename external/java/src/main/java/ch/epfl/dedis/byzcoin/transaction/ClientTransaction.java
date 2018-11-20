@@ -15,7 +15,6 @@ import java.util.List;
  */
 public class ClientTransaction {
     private List<Instruction> instructions;
-    private byte[] ctxHash;
 
     /**
      * Constructor for the client transaction.
@@ -30,7 +29,6 @@ public class ClientTransaction {
         for (ByzCoinProto.Instruction i : proto.getInstructionsList()) {
             instructions.add(new Instruction(i));
         }
-        this.ctxHash = proto.getInstructionshash().toByteArray();
     }
 
     /**
@@ -49,7 +47,6 @@ public class ClientTransaction {
         ByzCoinProto.ClientTransaction.Builder b = ByzCoinProto.ClientTransaction.newBuilder();
         for (Instruction instr : this.instructions) {
             b.addInstructions(instr.toProto());
-            b.setInstructionshash(ByteString.copyFrom(this.ctxHash));
         }
         return b.build();
     }
@@ -61,9 +58,9 @@ public class ClientTransaction {
      * @param signers is the list of signers who signs all instructions
      */
     public void signWith(List<Signer> signers) throws CothorityCryptoException {
-        this.ctxHash = this.hashInstructions();
+        byte[] h = this.hashInstructions();
         for (Instruction instr : this.instructions) {
-            instr.signWith(this.ctxHash, signers);
+            instr.signWith(h, signers);
         }
     }
 

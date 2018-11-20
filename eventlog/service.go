@@ -16,6 +16,14 @@ var ServiceName = "EventLog"
 
 var sid onet.ServiceID
 
+const contractName = "eventlog"
+
+// Set a relatively low time for bucketMaxAge: during peak message arrival
+// this will pretect the buckets from getting too big. During low message
+// arrival (< 1 per 5 sec) it does not create extra buckets, because time
+// periods with no events do not need buckets created for them.
+const bucketMaxAge = 5 * time.Second
+
 func init() {
 	var err error
 	sid, err = onet.RegisterNewService(ServiceName, newService)
@@ -129,9 +137,7 @@ filter:
 	return reply, nil
 }
 
-const contractName = "eventlog"
-
-func (s *Service) decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Event, error) {
+func decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 30 seconds in the past. (Why 30 sec
 	// and not something more auto-scaling like blockInterval * 30?
@@ -157,10 +163,10 @@ func (s *Service) decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf [
 }
 
 // invoke will add an event and update the corresponding indices.
-func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
-	cOut = c
+func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
 
-	_, _, cid, darcID, err := v.GetValues(inst.InstanceID.Slice())
+	_, _, cid, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -173,7 +179,7 @@ func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, 
 		return nil, nil, errors.New("expected a named argument of \"event\"")
 	}
 
-	event, err := s.decodeAndCheckEvent(v, eventBuf)
+	event, err := decodeAndCheckEvent(rst, eventBuf)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -197,7 +203,7 @@ func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, 
 	// For now: buckets are allowed to grow as big as needed (but the previous
 	// rule prevents buckets from getting too big by timing them out).
 
-	el := &eventLog{Instance: inst.InstanceID, v: v}
+	el := &eventLog{Instance: inst.InstanceID, v: rst}
 	bID, b, err := el.getLatestBucket()
 	if err != nil {
 		return nil, nil, err
@@ -220,7 +226,7 @@ func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, 
 	//   No latest bucket (b == nil).
 	//     or
 	//   Found a bucket, and it is head, and it is too old.
-	if b == nil || isHead && time.Duration(event.When-b.Start) > s.bucketMaxAge {
+	if b == nil || isHead && time.Duration(event.When-b.Start) > bucketMaxAge {
 		newBid := inst.DeriveID("bucket")
 
 		if b == nil {
@@ -276,41 +282,31 @@ func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, 
 	return
 }
 
-func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	_, _, _, darcID, err := v.GetValues(inst.InstanceID.Slice())
+func (c *contract) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	cid := inst.Spawn.ContractID
-	if cid != contractName {
-		return nil, nil, errors.New("invalid contract ID: " + cid)
-	}
-
-	// Store zeros as the pointer to the first bucket because there are not yet
-	// any events in this event log.
+	// Store c.iid as the pointer to the first bucket. It will in fact be all zeros,
+	// because during spawning, ByzCoin passes a zero-length slice to the new contract factory.
+	// In invoke we'll detect that the first bucket does not exist and do the necessary.
 	return []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), cid, make([]byte, 32), darcID),
+		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), contractName, c.iid.Slice(), darcID),
 	}, nil, nil
 }
 
-// contractFunction is the function that runs to process a transaction of
-// type "eventlog"
-func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+type contract struct {
+	byzcoin.BasicContract
+	iid byzcoin.InstanceID
+}
 
-	err := inst.Verify(v, ctxHash)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	switch inst.GetType() {
-	case byzcoin.InvokeType:
-		return s.invoke(v, inst, c)
-	case byzcoin.SpawnType:
-		return s.spawn(v, inst, c)
-	default:
-		return nil, nil, errors.New("invalid type")
-	}
+func contractFromBytes(in []byte) (byzcoin.Contract, error) {
+	c := &contract{}
+	c.iid = byzcoin.NewInstanceID(in)
+	return c, nil
 }
 
 // newService receives the context that holds information about the node it's
@@ -321,17 +317,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		omni:             c.Service(byzcoin.ServiceName).(*byzcoin.Service),
-		// Set a relatively low time for bucketMaxAge: during peak message arrival
-		// this will pretect the buckets from getting too big. During low message
-		// arrival (< 1 per 5 sec) it does not create extra buckets, because time
-		// periods with no events do not need buckets created for them.
-		bucketMaxAge: 5 * time.Second,
 	}
 	if err := s.RegisterHandlers(s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 
-	byzcoin.RegisterContract(s, contractName, s.contractFunction)
+	byzcoin.RegisterContract(s, contractName, contractFromBytes)
 	return s, nil
 }
 

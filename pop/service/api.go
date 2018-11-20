@@ -506,23 +506,12 @@ func (desc *PopDesc) Hash() []byte {
 	return hash.Sum(nil)
 }
 
-// Equal checks if the first list contains the second
-func Equal(r1, r2 *onet.Roster) bool {
+// rosterEqual checks if the first list contains the second
+func rosterEqual(r1, r2 *onet.Roster) bool {
 	if len(r1.List) != len(r2.List) {
 		return false
 	}
-	for _, p := range r2.List {
-		found := false
-		for _, d := range r1.List {
-			if p.Equal(d) {
-				found = true
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
+	return r1.Contains(r2.Publics())
 }
 
 func toToml(r *onet.Roster) ([][]string, error) {
