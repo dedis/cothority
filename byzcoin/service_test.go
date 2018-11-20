@@ -1838,7 +1838,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		return []StateChange{sc1}, []Coin{}, nil
 	}
 	for _, s := range s.hosts {
-		RegisterContract(s, contractID, adaptor(contract))
+		RegisterContract(s, contractID, adaptorNoVerify(contract))
 	}
 
 	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
