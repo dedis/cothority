@@ -79,7 +79,7 @@ func (c *contract) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction
 	}
 	c.FinalStatement = &fs
 
-	ppiBuf, err := protobuf.Encode(c.PopPartyInstance)
+	ppiBuf, err := protobuf.Encode(&c.PopPartyInstance)
 	if err != nil {
 		return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
 	}

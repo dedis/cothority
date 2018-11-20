@@ -801,7 +801,7 @@ func TestService_StateChange(t *testing.T) {
 		}
 		return nil, nil, errors.New("need spawn or invoke")
 	}
-	RegisterContract(s.hosts[0], "add", adaptor(f))
+	RegisterContract(s.hosts[0], "add", adaptorNoVerify(f))
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -2133,10 +2133,41 @@ func (ca *contractAdaptor) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []C
 	return ca.cb(cdb, inst, c)
 }
 
+type contractAdaptorNV struct {
+	BasicContract
+	cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)
+}
+
+func (ca *contractAdaptorNV) VerifyInstruction(cdb ReadOnlyStateTrie, inst Instruction, msg []byte) error {
+	// Always verifies the instruction as "ok".
+	return nil
+}
+
+func (ca *contractAdaptorNV) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptorNV) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptorNV) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
 // adaptor turns an old-style contract callback into a new-style contract.
 func adaptor(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)) func([]byte) (Contract, error) {
 	return func([]byte) (Contract, error) {
 		return &contractAdaptor{cb: cb}, nil
+	}
+}
+
+// adaptorNoVerify turns an old-style contract callback into a new-style contract
+// but uses a stub verifier (for use when testing createStateChanges, where Darcs
+// are not in place)
+func adaptorNoVerify(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)) func([]byte) (Contract, error) {
+	return func([]byte) (Contract, error) {
+		return &contractAdaptorNV{cb: cb}, nil
 	}
 }
 
