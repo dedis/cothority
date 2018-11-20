@@ -317,8 +317,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.SharedPublic); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
-	byzcoin.RegisterContract(c, ContractWriteID, contractWrite)
-	byzcoin.RegisterContract(c, ContractReadID, contractRead)
+	byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
+	byzcoin.RegisterContract(c, ContractReadID, contractReadFromBytes)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, err

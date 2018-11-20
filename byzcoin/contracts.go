@@ -17,22 +17,6 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// ContractConfigID denotes a config-contract
-var ContractConfigID = "config"
-
-// ContractDarcID denotes a darc-contract
-var ContractDarcID = "darc"
-
-// ConfigInstanceID represents the 0-id of the configuration instance.
-var ConfigInstanceID = InstanceID{}
-
-// CmdDarcEvolve is needed to evolve a darc.
-var CmdDarcEvolve = "evolve"
-
-// ContractFn is the type signature of the instance factory functions which can be
-// registered with the ByzCoin service.
-type ContractFn func(in []byte) (Contract, error)
-
 // Contract is the interface that an instance needs
 // to implement to be callable as a pre-compiled smart
 // contract.
@@ -47,6 +31,10 @@ type Contract interface {
 	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 }
 
+// ContractFn is the type signature of the instance factory functions which can be
+// registered with the ByzCoin service.
+type ContractFn func(in []byte) (Contract, error)
+
 // RegisterContract stores the contract in a map and will call it whenever a
 // contract needs to be done. GetService makes it possible to give either an
 // `onet.Context` or `onet.Server` to `RegisterContract`.
@@ -58,21 +46,59 @@ func RegisterContract(s skipchain.GetService, kind string, f ContractFn) error {
 	return scs.(*Service).registerContract(kind, f)
 }
 
-// LoadDarcFromTrie loads a darc which should be stored in key.
-func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
-	darcBuf, _, contract, _, err := st.GetValues(key)
-	if err != nil {
-		return nil, err
+// BasicContract is a type that contracts may choose to embed in order to provide
+// default implementations for the Contract interface.
+type BasicContract struct{}
+
+func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
+
+// VerifyInstruction offers the default implementation of verifying an instruction. Types
+// which embed BasicContract may choose to override this implementation.
+func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	if err := inst.Verify(rst, ctxHash); err != nil {
+		return err
 	}
-	if contract != ContractDarcID {
-		return nil, errors.New("expected contract to be darc but got: " + contract)
-	}
-	d, err := darc.NewFromProtobuf(darcBuf)
-	if err != nil {
-		return nil, err
-	}
-	return d, nil
+	return nil
 }
+
+// Spawn is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support spawning.
+func (b BasicContract) Spawn(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Spawn")
+	return
+}
+
+// Invoke is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support invoking.
+func (b BasicContract) Invoke(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Invoke")
+	return
+}
+
+// Delete is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support deleting.
+func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Delete")
+	return
+}
+
+//
+// Built-in contracts necessary for bootstrapping the ledger.
+//  * Config
+//  * Darc
+//
+
+// ContractConfigID denotes a config-contract
+var ContractConfigID = "config"
+
+// ContractDarcID denotes a darc-contract
+var ContractDarcID = "darc"
+
+// ConfigInstanceID represents the 0-id of the configuration instance.
+var ConfigInstanceID = InstanceID{}
+
+// CmdDarcEvolve is needed to evolve a darc.
+var CmdDarcEvolve = "evolve"
 
 type contractConfig struct {
 	BasicContract
@@ -235,42 +261,6 @@ func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roste
 	}, nil
 }
 
-// BasicContract is a type that contracts may choose to embed in order to provide
-// default implementations for the Contract interface.
-type BasicContract struct{}
-
-func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
-
-// VerifyInstruction offers the default implementation of verifying an instruction. Types
-// which embed BasicContract may choose to override this implementation.
-func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	if err := inst.Verify(rst, ctxHash); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Spawn is not implmented in a BasicContract. Types which embed BasicContract
-// must override this method if they support spawning.
-func (b BasicContract) Spawn(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
-	err = notImpl("Spawn")
-	return
-}
-
-// Invoke is not implmented in a BasicContract. Types which embed BasicContract
-// must override this method if they support invoking.
-func (b BasicContract) Invoke(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
-	err = notImpl("Invoke")
-	return
-}
-
-// Delete is not implmented in a BasicContract. Types which embed BasicContract
-// must override this method if they support deleting.
-func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
-	err = notImpl("Delete")
-	return
-}
-
 type contractDarc struct {
 	BasicContract
 	darc.Darc
@@ -336,7 +326,7 @@ func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []C
 		if err != nil {
 			return nil, nil, err
 		}
-		oldD, err := LoadDarcFromTrie(rst, darcID)
+		oldD, err := loadDarcFromTrie(rst, darcID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -400,4 +390,20 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID) (*darc.Darc, error) {
 		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
 	}
 	return darc.NewFromProtobuf(value)
+}
+
+// loadDarcFromTrie loads a darc which should be stored in key.
+func loadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
+	darcBuf, _, contract, _, err := st.GetValues(key)
+	if err != nil {
+		return nil, err
+	}
+	if contract != ContractDarcID {
+		return nil, errors.New("expected contract to be darc but got: " + contract)
+	}
+	d, err := darc.NewFromProtobuf(darcBuf)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
 }

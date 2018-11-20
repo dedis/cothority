@@ -380,7 +380,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	if err != nil {
 		return nil, err
 	}
-	d, err := LoadDarcFromTrie(st, req.DarcID)
+	d, err := loadDarcFromTrie(st, req.DarcID)
 	if err != nil {
 		return nil, errors.New("couldn't find darc: " + err.Error())
 	}
@@ -394,7 +394,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := LoadDarcFromTrie(st, id)
+		d, err := loadDarcFromTrie(st, id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil

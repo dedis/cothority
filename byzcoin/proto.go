@@ -135,8 +135,7 @@ type CheckAuthorizationResponse struct {
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It
-// will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-// GenesisDarcID is the value of GenesisReferenceID.
+// will be stored under the key [32]byte{} in the tree.
 type ChainConfig struct {
 	BlockInterval time.Duration
 	Roster        onet.Roster

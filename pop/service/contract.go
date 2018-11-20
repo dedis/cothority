@@ -42,7 +42,7 @@ type contract struct {
 	PopPartyInstance
 }
 
-func contractPopParty(in []byte) (byzcoin.Contract, error) {
+func contractPopPartyFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contract{}
 	err := protobuf.DecodeWithConstructors(in, &c.PopPartyInstance, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
@@ -53,18 +53,6 @@ func contractPopParty(in []byte) (byzcoin.Contract, error) {
 
 func (c *contract) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
-
-	/*
-		var darcID darc.ID
-		var ppi PopPartyInstance
-		if inst.Spawn == nil {
-			var ppiBuf []byte
-		} else {
-			darcID = inst.InstanceID.Slice()
-		}
-		switch {
-		case inst.Spawn != nil:
-	*/
 
 	fsBuf := inst.Spawn.Args.Search("FinalStatement")
 	if fsBuf == nil {

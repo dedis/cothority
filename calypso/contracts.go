@@ -19,7 +19,7 @@ type contractWr struct {
 	Write
 }
 
-func contractWrite(in []byte) (byzcoin.Contract, error) {
+func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contractWr{}
 
 	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
@@ -90,6 +90,6 @@ type contractRe struct {
 	Read
 }
 
-func contractRead(in []byte) (byzcoin.Contract, error) {
+func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
 	return nil, errors.New("calypso read instances are never instantiated")
 }

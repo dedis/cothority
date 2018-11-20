@@ -303,7 +303,7 @@ type contract struct {
 	iid byzcoin.InstanceID
 }
 
-func contractFunction(in []byte) (byzcoin.Contract, error) {
+func contractFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contract{}
 	c.iid = byzcoin.NewInstanceID(in)
 	return c, nil
@@ -322,7 +322,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 
-	byzcoin.RegisterContract(s, contractName, contractFunction)
+	byzcoin.RegisterContract(s, contractName, contractFromBytes)
 	return s, nil
 }
 

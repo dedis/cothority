@@ -15,9 +15,7 @@ must be equal.
 A contract can spawn new instances that are tied to another contract type. All
 instances are stored in the global state of ByzCoin. Every instance points
 to exactly one contract. An easy interpretation is to think of a contract as
-a class and the instance as an object instantiated from that class. Or, in Go,
-as the instance being the values of the `struct` and the contract being all
-methods defined on that `struct`.
+a class and the instance as an object instantiated from that class.
 
 ## Authorizations
 
@@ -46,31 +44,71 @@ in the Darc instance found in 1.
 
 ## Contract Arguments
 
-A contract is always pre-compiled into every node and has the following
-method signature:
+A contract is a collection of methods on a structure. Together these methods
+implement the `byzcoin.Contract` type, which is:
 
 ```go
-type ByzCoinContract func(st ReadOnlyStateTrie, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type Contract interface {
+	// Verify returns nil if the instruction is valid with regard to the signature.
+	VerifyInstruction(ReadOnlyStateTrie, Instruction, []byte) error
+	// Spawn is used to spawn new instances
+	Spawn(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	// Invoke only modifies existing instances
+	Invoke(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	// Delete removes the current instance
+	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+}
 ```
 
-Input:
-- `st` is a read-only reference to the trie representing the global state of
-all instances.
-- `tx` is the instruction sent by the client, which also holds the `InstanceID`
-pointing to the data the contract should work on.
-- `inCoins` is a list of coins given as input to this instruction.
+ByzCoin needs a "factory" function that can turn the contents of an instance
+into a pointer to structure which implements the byzcoin.Contract interface.
+This factory function is of type `byzcoin.ContractFn`:
 
-Output:
-- `sc` is the slice of stateChanges the contract wants to apply to the global
+```go
+// ContractFn is the type signature of the instance factory functions which can be
+// registered with the ByzCoin service.
+type ContractFn func(in []byte) (Contract, error)
+```
+
+The factory function is registered with ByzCoin via the `RegisterContract` function
+during server startup.
+
+The simplest way to make a contract is to define a structure that embeds
+`byzcoin.BasicContract`. This structure already implements all of the functions
+a contract needs to implement, with a default `VerifyInstruction` and
+other methods which return a "not implemented" error. Attach methods to your
+new structure as needed (i.e. `Spawn` and `Invoke`, but not `Delete` if your
+contract does not support deleting instances) in order to
+implement the behaviours that your contract supports.
+
+When ByzCoin needs to call your contract, it will look up the current
+value of the instance and pass it to your factory function. In the case
+of a spawn, it passes `nil`, because the instance does not exist yet; your
+factory function should return a pointer to a zero-value structure in
+this case.
+
+ByzCoin will then call the appropriate methods on this structure. It starts
+by calling `VerifyInstruction`, and if that does not return an error, it will
+call `Spawn`, `Invoke`, or `Delete`, depending on the instruction.
+
+These methods take the following input:
+- A read-only reference to the trie representing the global state of
+all instances.
+- The instruction sent by the client, which also holds the `InstanceID`
+pointing to the data the contract should work on.
+- A list of coins given as input to this instruction.
+
+They create the following output:
+- A slice of state changes the contract wants to apply to the global
 state. They will only be applied if all instructions in the `ClientTransaction`
 are valid, else they will be discarded.
-- `outCoins` is a list of coins remaining as output from this instruction, and will
+- A list of coins remaining as output from this instruction, and will
 be passed as input to the next instruction.
-- `err` if not nil, the contract indicates it failed, and all instructions in that
+- An error. If it is not `nil`, the contract indicates it failed, and all instructions in that
 `ClientTransaction` will be discarded.
 
 The contract itself has access to all elements of the trie, but will mainly
-work on the data pointed to by the `tx Instruction` given as a parameter. It is
+work on the data pointed to by the instruction given as a parameter. It is
 not allowed to change the trie by itself, only by creating one or more
 `StateChange`s that create/update/delete instances in the global state.
 
@@ -80,7 +118,7 @@ the trie, and only committed if all instructions are successful, else all
 
 If there are more than one `ClientTransaction`s in a block, the contracts called
 in the second `ClientTransaction` will see all changes applied from the first
-`ClientTransaction.` (But see issue #1379 for why this is currently not true.)
+`ClientTransaction.`
 
 ## Instance Structure
 
@@ -89,6 +127,7 @@ global state:
 
 - `InstanceID` is a globally unique identifier of that instance, composed
 of 32 bytes.
+- `Version` is the version number of this update to the instance, starting from 0.
 - `ContractID` points to the contract that will be called if that instance
 receives an instruction from the client
 - `Data` is interpreted by the contract and can change over time
@@ -112,7 +151,6 @@ spawn new instances.
 
 In the ByzCoin service, the following contracts are pre-defined:
 
-- `GenesisReference` - points to the genesis configuration
 - `Config` - holds the configuration of ByzCoin
 - `Darc` - defines the access control
 
@@ -122,18 +160,14 @@ contracts that will have to be registered with ByzCoin. An example is
 
 ## Genesis Configuration
 
-The special `InstanceID` with 64 x 0x00 bytes is the genesis configuration
+The special `InstanceID` with 32 0 bytes is the genesis configuration
 pointer that has as the data the `DarcID` of the genesis Darc. This instance
 is unique as it defines the basic running configuration of ByzCoin. The
 Darc it points to will delegate authorizations to spawn new instances to
 other Darcs, who can themselves delegate further.
 
-The following two contracts can only be instantiated once in the whole system:
-
-- `GenesisReference`, which has the `InstanceID` of 64 x 0x00 and points to the
-genesis Darc
-- `Config`, which defines the basic configuration of ByzCoin:
-  - `Roster` is the list of all nodes participating in the consensus
+The config holds the interval for the blocks, and also the current roster
+of nodes that collectively witness the transactions.
 
 ### Spawn
 
@@ -156,7 +190,11 @@ signatures to be accepted.
 When the client sends a spawn instruction to a Darc contract, he asks the instance
 to create a new instance with the given ContractID, which can be different from
 the Darc itself. The client must be able to authenticate against a
-`Spawn_contractid` rule defined in the Darc instance.
+`spawn:$contractid` rule defined in the Darc instance. For instance, to call
+Spawn on a contract ID of "eventlog", you must send a spawn request to
+an instance of a Darc contract that includes the "spawn:eventlog" rule,
+and the instruction must be signed by one of the keys mentioned in the rule's
+expression.
 
 The new instance spawned will have an instance ID equal to the hash of
 the Spawn instruction. The client can remember this instance ID in order
@@ -164,7 +202,7 @@ to invoke methods on it later.
 
 ### Invoke
 
-The only method that a client can invoke on a Darc instance is `Evolve`, which
+The only method that a client can invoke on a Darc instance is `evolve`, which
 asks ByzCoin to store a new version of the Darc in the global state.
 
 ### Delete

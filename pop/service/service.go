@@ -1208,7 +1208,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	byzcoin.RegisterContract(c, ContractPopParty, contractPopParty)
+	byzcoin.RegisterContract(c, ContractPopParty, contractPopPartyFromBytes)
 
 	return s, nil
 }

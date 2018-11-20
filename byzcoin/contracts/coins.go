@@ -174,20 +174,25 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 	sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 		ContractCoinID, ciBuf, darcID))
 	return
-	/*	case byzcoin.DeleteType:
-			// Delete our coin address, but only if the current coin is empty.
-			if ci.Value > 0 {
-				err = errors.New("cannot destroy a coinInstance that still has coins in it")
-				return
-			}
-			sc = byzcoin.StateChanges{
-				byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
-			}
-			return
-		}
-		err = errors.New("instruction type not allowed")
+}
+
+func (c *contractCoin) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	var darcID darc.ID
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
 		return
-	*/
+	}
+
+	if c.Value > 0 {
+		err = errors.New("cannot destroy a coinInstance that still has coins in it")
+		return
+	}
+	sc = byzcoin.StateChanges{
+		byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
+	}
+	return
 }
 
 // iid uses sha256(in) in order to manufacture an InstanceID from in
