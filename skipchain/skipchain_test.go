@@ -635,6 +635,7 @@ func TestService_Propagation(t *testing.T) {
 	// block using the highest forward link level available
 	for _, s := range services {
 		sb := s.db.GetByID(sbRoot.Hash)
+		require.NotNil(t, sb)
 		for len(sb.ForwardLink) > 0 {
 			sb = s.db.GetByID(sb.ForwardLink[len(sb.ForwardLink)-1].To)
 		}
@@ -647,6 +648,49 @@ func TestService_Propagation(t *testing.T) {
 		require.Equal(t, 0, len(sb.ForwardLink))
 		require.Equal(t, sbRoot.Hash, sb.BackLinkIDs[2])
 	}
+}
+
+// Checks a forged message from a evil conode cannot add
+// blocks to an existing skipchain
+func TestService_ForgedPropagationMessage(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	servers, roster, s := local.MakeSRS(cothority.Suite, 10, skipchainSID)
+
+	service := s.(*Service)
+	ro := onet.NewRoster(roster.List[:5])
+
+	sbRoot, err := makeGenesisRosterArgs(service, roster, nil, VerificationNone, 1, 1)
+	log.ErrFatal(err)
+	require.NotNil(t, sbRoot)
+
+	for i := 0; i < 3; i++ {
+		sb := NewSkipBlock()
+		sb.Roster = ro
+		_, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		log.ErrFatal(err)
+	}
+
+	blocks, err := service.db.GetProof(sbRoot.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, 4, len(blocks))
+	service = servers[5].GetService(ServiceName).(*Service)
+
+	err = service.propagateProofHandler([]byte{})
+	require.NotNil(t, err)
+
+	// checks that it could propagate something, this one is correct
+	err = service.propagateProofHandler(&PropagateProof{Proof(blocks)})
+	require.Nil(t, err)
+
+	// now checks the modified version
+	forgedBlock := NewSkipBlock()
+	forgedBlock.BackLinkIDs = []SkipBlockID{blocks[3].Hash}
+	forgedBlock.updateHash()
+	// it cannot forged the signature, hopefully
+	blocks[3].ForwardLink = []*ForwardLink{&ForwardLink{From: blocks[3].Hash, To: forgedBlock.Hash}}
+	err = service.propagateProofHandler(&PropagateProof{Proof(append(blocks, forgedBlock))})
+	require.NotNil(t, err)
 }
 
 func TestService_AddFollow(t *testing.T) {

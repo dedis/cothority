@@ -52,8 +52,10 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	db                      *SkipBlockDB
+	blockBuffer             *skipBlockBuffer
 	propagateGenesis        messaging.PropagationFunc
 	propagateForwardLink    messaging.PropagationFunc
+	propagateProof          messaging.PropagationFunc
 	verifiers               map[VerifierID]SkipBlockVerifier
 	storageMutex            sync.Mutex
 	Storage                 *Storage
@@ -958,16 +960,30 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
 
-	ro := roster.Concat(dst.Roster.List...)
+	// We send the new forward link to the previous roster only
+	err = s.startPropagation(s.propagateForwardLink, roster, &PropagateForwardLink{fwd, 0})
+	if err != nil {
+		return err
+	}
 
-	// Propagate the forward link and the new block as the roster
-	// could have changed, meaning one node cannot know the block
-	return s.startForwardLinkPropagation(ro, &PropagateForwardLink{
-		ForwardLink: fwd,
-		Newest:      dst,
-		Roster:      roster,
-		Height:      0,
-	})
+	// We send the shortest chain to the new conodes to let
+	// them know they joined the cothority
+	proof, err := s.db.GetProof(src.SkipChainID())
+	if err != nil {
+		return err
+	}
+
+	newRoster := []*network.ServerIdentity{}
+	for _, si := range dst.Roster.List {
+		if i, _ := src.Roster.Search(si.ID); i < 0 {
+			newRoster = append(newRoster, si)
+		}
+	}
+	log.Lvlf3("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
+
+	// current conode needs to be in the propagation roster
+	newRoster = append(newRoster, s.ServerIdentity())
+	return s.startPropagation(s.propagateProof, onet.NewRoster(newRoster), &PropagateProof{proof})
 }
 
 func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byte, error) {
@@ -1082,6 +1098,10 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 	}()
 	if ok {
 		s.verifyNewBlockBuffer.Store(sliceToArr(msg), true)
+		// We can cache the block because it has been verified by this conode
+		// but it will be added to the DB later on after the protocol
+		// has succeeded
+		s.blockBuffer.add(fs.Newest)
 	}
 	return ok
 }
@@ -1171,12 +1191,7 @@ func (s *Service) forwardLink(req *network.Envelope) {
 		// BackLinks are already stored in the new block so only
 		// the roster from the previous block needs to add the
 		// forward link
-		return s.startForwardLinkPropagation(from.Roster, &PropagateForwardLink{
-			ForwardLink: fl,
-			Newest:      nil,
-			Roster:      from.Roster,
-			Height:      fs.TargetHeight,
-		})
+		return s.startPropagation(s.propagateForwardLink, from.Roster, &PropagateForwardLink{fl, fs.TargetHeight})
 	}()
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't create forwardLink:", err, "requested by", req.ServerIdentity)
@@ -1357,7 +1372,16 @@ func (s *Service) propagateGenesisHandler(msg network.Message) {
 		return
 	}
 
-	s.db.Store(pg.Genesis)
+	if !s.blockIsFriendly(pg.Genesis) {
+		log.Error("Block is not friendly")
+		return
+	}
+
+	id := s.db.Store(pg.Genesis)
+	if id == nil {
+		// the error is logged in the store function
+		return
+	}
 
 	if !pg.Genesis.ParentBlockID.IsNull() {
 		sb := s.db.GetByID(pg.Genesis.ParentBlockID)
@@ -1376,50 +1400,81 @@ func (s *Service) propagateGenesisHandler(msg network.Message) {
 func (s *Service) propagateForwardLinkHandler(msg network.Message) {
 	pfl, ok := msg.(*PropagateForwardLink)
 	if !ok {
-		log.Error("Couldn't convert to slice of ForwardLinks")
+		log.Error("Couldn't convert to a ForwardLink propagation")
 		return
 	}
 
 	// Get the block to update the list of FLs
 	sb := s.db.GetByID(pfl.ForwardLink.From)
 	if sb == nil {
-		// Happen when the roster has changed
-		err := s.SyncChain(pfl.Roster, pfl.ForwardLink.From)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
-		sb = s.db.GetByID(pfl.ForwardLink.From)
-		if sb == nil {
-			log.Error("Couldn't get the block to attach the forward link")
-			return
-		}
+		// Here we assume the block must be there because it should
+		// have caught up during the signature request
+		log.Error("Couldn't get the block to attach the forward link")
+		return
 	}
 
-	// Because of the sync, the forward link could already be added
-	// but we need to catch the case where the height is much above
-	// the current one which means we missed previous propagation
-	if len(sb.ForwardLink) <= pfl.Height {
-		err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
-		if err != nil {
-			log.Error(err)
-			return
-		}
+	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
-	// Update the forward link list of the block
-	s.db.Store(sb)
+	// Update the forward link list of the block. The link is verified
+	// before the update.
+	id := s.db.Store(sb)
+	if id == nil {
+		// error already logged
+		return
+	}
 
-	// Add the new block if it's a lvl 0 forward link propagation
-	if pfl.Newest != nil {
-		if !s.blockIsFriendly(pfl.Newest) {
-			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), pfl.Newest.Hash)
+	// Add the block if available
+	if sb, ok := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To); ok {
+		if !s.blockIsFriendly(sb) {
+			log.Error("Trying to add a block that is not friendly")
 			return
 		}
 
-		s.db.Store(pfl.Newest)
+		id := s.db.Store(sb)
+		if id == nil {
+			// error already logged
+			return
+		}
+		s.blockBuffer.clear(sb.SkipChainID())
 	}
+}
+
+// TODO: change messaging package to allow to return an error
+// it makes the function easier to test
+func (s *Service) propagateProofHandlerNoError(msg network.Message) {
+	err := s.propagateProofHandler(msg)
+	if err != nil {
+		log.Error(err.Error())
+	}
+}
+
+// PropagateChainHandler handles a chain propagation message that
+// announces a skipchain to a new conode
+func (s *Service) propagateProofHandler(msg network.Message) error {
+	pc, ok := msg.(*PropagateProof)
+	if !ok {
+		return errors.New("Couldn't convert to PropagateProof message")
+	}
+
+	if len(pc.Proof) > 0 && !s.blockIsFriendly(pc.Proof[0]) {
+		return errors.New("Block is not friendly")
+	}
+
+	if err := pc.Proof.Verify(); err != nil {
+		return fmt.Errorf("Proof verification failed with: %s", err.Error())
+	}
+
+	_, err := s.db.StoreBlocks(pc.Proof)
+	if err != nil {
+		return err
+	}
+
+	log.Lvlf3("Proof has been propagated to %v", s.ServerIdentity())
+	return nil
 }
 
 // RegisterVerification stores the verification in a map and will
@@ -1456,14 +1511,27 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 	return nil
 }
 
-// notify other services about new/updated skipblock
-func (s *Service) startGenesisPropagation(genesis *SkipBlock) error {
+func (s *Service) startPropagation(propagate messaging.PropagationFunc, ro *onet.Roster, msg network.Message) error {
 	err := s.incrementWorking()
 	if err != nil {
 		return err
 	}
 	defer s.decrementWorking()
 
+	replies, err := propagate(ro, msg, s.propTimeout)
+	if err != nil {
+		return err
+	}
+
+	if replies != len(ro.List) {
+		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(ro.List))
+	}
+
+	return nil
+}
+
+// notify other services about new/updated skipblock
+func (s *Service) startGenesisPropagation(genesis *SkipBlock) error {
 	roster := genesis.Roster
 	log.Lvlf3("%s: propagating %x to %s", s.ServerIdentity(), genesis.Hash, roster.List)
 
@@ -1478,34 +1546,7 @@ func (s *Service) startGenesisPropagation(genesis *SkipBlock) error {
 		roster = roster.Concat(parent.Roster.List...)
 	}
 
-	replies, err := s.propagateGenesis(roster, &PropagateGenesis{genesis}, s.propTimeout)
-	if err != nil {
-		return err
-	}
-	if replies != len(roster.List) {
-		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(roster.List))
-	}
-	return nil
-}
-
-// notify other conodes that the forward link has been accepted
-func (s *Service) startForwardLinkPropagation(ro *onet.Roster, pfl *PropagateForwardLink) error {
-	err := s.incrementWorking()
-	if err != nil {
-		return err
-	}
-	defer s.decrementWorking()
-
-	replies, err := s.propagateForwardLink(ro, pfl, s.propTimeout)
-	if err != nil {
-		return err
-	}
-
-	if replies != len(ro.List) {
-		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(ro.List))
-	}
-
-	return nil
+	return s.startPropagation(s.propagateGenesis, roster, &PropagateGenesis{genesis})
 }
 
 // authenticate searches if this node or any follower-node can verify the
@@ -1637,6 +1678,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		propTimeout:      defaultPropagateTimeout,
 		closing:          make(chan bool),
+		blockBuffer:      newSkipBlockBuffer(),
 	}
 
 	if err := s.tryLoad(); err != nil {
@@ -1669,6 +1711,10 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.propagateForwardLink, err = messaging.NewPropagationFunc(c, "SkipchainPropagateFL", s.propagateForwardLinkHandler, -1)
+	if err != nil {
+		return nil, err
+	}
+	s.propagateProof, err = messaging.NewPropagationFunc(c, "SkipchainPropagateProof", s.propagateProofHandlerNoError, -1)
 	if err != nil {
 		return nil, err
 	}

@@ -485,6 +485,58 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 	return sb.Hash
 }
 
+// Proof is a list of blocks from the genesis to the latest block
+// using the shortest path
+type Proof []*SkipBlock
+
+// Verify checks that the proof is correct by checking individual
+// blocks and their back and forward links
+func (sbs Proof) Verify() error {
+	if len(sbs) == 0 {
+		return errors.New("Empty list of blocks")
+	}
+
+	if sbs[0].Index != 0 {
+		return errors.New("First element must be a genesis")
+	}
+
+	for i, sb := range sbs {
+		if !sb.CalculateHash().Equal(sb.Hash) {
+			return errors.New("Wrong hash")
+		}
+		if i > 0 {
+			// Check if there is a back link to the previous block
+			hit := false
+			for _, bl := range sb.BackLinkIDs {
+				if bl.Equal(sbs[i-1].Hash) {
+					hit = true
+				}
+			}
+
+			if !hit {
+				return fmt.Errorf("Wrong backlink %v %v", sb.BackLinkIDs, sbs[i-1].Hash)
+			}
+		}
+		if i < len(sbs)-1 {
+			// Check if there is a forward link to the next block
+			if len(sb.ForwardLink) == 0 {
+				return errors.New("Missing forward links")
+			}
+
+			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
+			if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
+				return err
+			}
+
+			if !sbs[i+1].Hash.Equal(fl.To) || !fl.From.Equal(sb.Hash) {
+				return errors.New("Wrong targets for the forward link")
+			}
+		}
+	}
+
+	return nil
+}
+
 // ForwardLink can be used to jump from old blocks to newer
 // blocks. Depending on the BaseHeight and MaximumHeight, older
 // rosters are asked to sign direct links to new blocks.
@@ -927,6 +979,35 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 	return sb, nil
 }
 
+// GetProof returns the shortest chain from the genesis to the latest block
+// using the heighest forward-links available in the local db
+func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
+	sbs = make([]*SkipBlock, 0)
+
+	err = db.View(func(tx *bolt.Tx) error {
+		sb, err := db.getFromTx(tx, sid)
+		if err != nil {
+			return err
+		}
+
+		sbs = append(sbs, sb)
+
+		for len(sb.ForwardLink) > 0 {
+			id := sb.ForwardLink[len(sb.ForwardLink)-1].To
+			sb, err = db.getFromTx(tx, id)
+
+			if err != nil {
+				return err
+			}
+
+			sbs = append(sbs, sb)
+		}
+
+		return err
+	})
+	return
+}
+
 // GetSkipchains returns all latest skipblocks from all skipchains.
 func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
 	return db.getAll()
@@ -1026,4 +1107,58 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 		return nil, err
 	}
 	return gen, nil
+}
+
+// skipBlockBuffer will cache a proposed block when the conode has
+// verified it and it will later store it in the DB after the protocol
+// has succeeded.
+// Blocks are stored per skipchain to prevent the cache to grow and it
+// is cleared after a new block is added (again per skipchain)
+type skipBlockBuffer struct {
+	buffer map[[32]byte]*SkipBlock
+	sync.Mutex
+}
+
+func newSkipBlockBuffer() *skipBlockBuffer {
+	return &skipBlockBuffer{
+		buffer: make(map[[32]byte]*SkipBlock),
+	}
+}
+
+// add stores the block using the skipchain ID as a key
+func (sbb *skipBlockBuffer) add(block *SkipBlock) {
+	sbb.Lock()
+	defer sbb.Unlock()
+
+	key := [32]byte{}
+	copy(key[:], block.SkipChainID())
+	sbb.buffer[key] = block
+}
+
+// get returns the block if the skipchain ID hits with the
+// correct block ID
+func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bool) {
+	sbb.Lock()
+	defer sbb.Unlock()
+
+	key := [32]byte{}
+	copy(key[:], sid)
+
+	block, ok := sbb.buffer[key]
+	if ok && !block.Hash.Equal(id) {
+		return nil, false
+	}
+
+	return block, ok
+}
+
+// clear deletes the current block of the given skipchain
+func (sbb *skipBlockBuffer) clear(sid SkipBlockID) {
+	sbb.Lock()
+	defer sbb.Unlock()
+
+	key := [32]byte{}
+	copy(key[:], sid)
+
+	delete(sbb.buffer, key)
 }

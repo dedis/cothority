@@ -46,6 +46,7 @@ func init() {
 		// Propagation
 		&PropagateGenesis{},
 		&PropagateForwardLink{},
+		&PropagateProof{},
 		// Request forward-signature
 		&ForwardSignature{},
 		// - Data structures
@@ -136,9 +137,13 @@ type PropagateGenesis struct {
 // of the Cothority
 type PropagateForwardLink struct {
 	ForwardLink *ForwardLink
-	Newest      *SkipBlock
-	Roster      *onet.Roster
 	Height      int
+}
+
+// PropagateProof sends the smallest path from the genesis to the latest
+// block to a conode recently added to the cothority
+type PropagateProof struct {
+	Proof Proof
 }
 
 // ForwardSignature is called once a new skipblock has been accepted by
