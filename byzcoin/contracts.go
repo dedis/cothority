@@ -240,10 +240,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 
 		sc, err = updateRosterScs(rst, darcID, req.Roster)
 		return
-	default:
-		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
-		return
-	} else if inst.Invoke.Command == "new_epoch" {
+	case "new_epoch":
 		ibID := inst.Invoke.Args.Search("ib-ID") // SkipBlockID is a []byte so there is no need to decode
 
 		shardIndBuf := inst.Invoke.Args.Search("shard-index")
@@ -251,21 +248,22 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 
 		proofBuf := inst.Invoke.Args.Search("epoch")
 		proof := &Proof{}
-		err := protobuf.Decode(proofBuf, proof)
+		err = protobuf.Decode(proofBuf, proof)
 		if err != nil {
-			return nil, coins, err
+			return
 		}
 
 		// Verify proof of request_new_epoch
 		err = proof.Verify(ibID)
 		if err != nil {
-			return nil, coins, err
+			return
 		}
 
 		// Load the config to get the current roster of the shard
-		conf, err := loadConfigFromTrie(cdb)
+		conf := &ChainConfig{}
+		conf, err = loadConfigFromTrie(rst)
 		if err != nil {
-			return nil, coins, err
+			return
 		}
 		oldRoster := conf.Roster
 
@@ -274,7 +272,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		//err = proof.ContractValue(cothority.Suite, "omniledgerepoch", omniCC)
 		err = proof.VerifyAndDecode(cothority.Suite, "omniledgerepoch", omniCC)
 		if err != nil {
-			return nil, coins, err
+			return
 		}
 		newRoster := omniCC.ShardRosters[shardInd]
 
@@ -283,7 +281,11 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var newMap map[network.ServerIdentityID]bool
 
 		oldRoster, _, _, _ = lib.ChangeRoster(oldRoster, newRoster, oldMap, newMap)
-		sc, err = updateRosterScs(cdb, darcID, oldRoster)
+		sc, err = updateRosterScs(rst, darcID, oldRoster)
+		return
+	default:
+		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
+		return
 	}
 }
 
