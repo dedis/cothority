@@ -51,14 +51,10 @@ public class CreateLTSReply {
         return X;
     }
 
-    public LTSId hash() {
+    public LTSId getLTSID() {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(this.byzcoinId.getId());
-            digest.update(this.instanceId.getId());
-            digest.update(this.X.toBytes());
-            return new LTSId(digest.digest());
-        } catch (NoSuchAlgorithmException | CothorityCryptoException e) {
+            return new LTSId(this.instanceId.getId());
+        } catch (CothorityCryptoException e) {
             throw new RuntimeException(e.getMessage());
         }
     }

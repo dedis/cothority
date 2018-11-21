@@ -80,7 +80,7 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 			proof, err := s.cl.GetProof(s.ltsReply.InstanceID)
 			require.NoError(t, err)
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
-				LTSID: s.ltsReply.Hash(),
+				LTSID: s.ltsReply.GetLTSID(),
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 
 			// Try to do resharing again
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
-				LTSID: s.ltsReply.Hash(),
+				LTSID: s.ltsReply.GetLTSID(),
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			proof, err := s.cl.GetProof(s.ltsReply.InstanceID)
 			require.NoError(t, err)
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
-				LTSID: s.ltsReply.Hash(),
+				LTSID: s.ltsReply.GetLTSID(),
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
@@ -150,7 +150,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 
 			// Try to do resharing again
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
-				LTSID: s.ltsReply.Hash(),
+				LTSID: s.ltsReply.GetLTSID(),
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
@@ -373,6 +373,13 @@ func newTS2(t *testing.T, nodes int, extras int) ts {
 	})
 	require.Nil(t, err)
 
+	reply2 := CreateLTSReply{
+		ByzCoinID:  s.gbReply.Skipblock.SkipChainID(),
+		InstanceID: tx.Instructions[0].DeriveID("").Slice(),
+		X:          s.ltsReply.X,
+	}
+
+	require.Equal(t, s.ltsReply.GetLTSID(), reply2.GetLTSID())
 	return s
 }
 
@@ -420,7 +427,7 @@ func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
 }
 
 func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
-	write := NewWrite(cothority.Suite, s.ltsReply.Hash(), s.gDarc.GetBaseID(), s.ltsReply.X, key)
+	write := NewWrite(cothority.Suite, s.ltsReply.GetLTSID(), s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
 
@@ -446,7 +453,7 @@ func (s *ts) closeAll(t *testing.T) {
 }
 
 func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
-	ltsID := string(s.ltsReply.Hash())
+	ltsID := string(s.ltsReply.GetLTSID())
 	var sshares []*share.PriShare
 	for i := range s.services {
 		for j := range s.ltsRoster.List {

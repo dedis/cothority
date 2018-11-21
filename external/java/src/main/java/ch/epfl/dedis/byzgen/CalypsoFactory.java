@@ -20,6 +20,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public class CalypsoFactory {
     private ArrayList<ServerIdentity> servers = new ArrayList<>();
@@ -111,10 +112,8 @@ public class CalypsoFactory {
         Darc adminDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
         adminDarc.addIdentity("invoke:" + LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
         adminDarc.addIdentity("spawn:" + LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
-        CalypsoRPC rpc = new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500));
-
-        // create the LTSInstance
-        return rpc;
+        return new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500),
+                Collections.singletonList(admin), Collections.singletonList(1L));
     }
 
     private Roster createRoster() {

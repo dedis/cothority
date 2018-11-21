@@ -6,7 +6,6 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -58,7 +57,6 @@ func (c *contractWr) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructi
 		instID := inst.DeriveID("")
 		log.Lvlf3("Successfully verified write request and will store in %x", instID)
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
-
 	case ContractReadID:
 		var rd Read
 		r := inst.Spawn.Args.Search("read")
@@ -101,11 +99,6 @@ var ContractLongTermSecretID = "longTermSecret"
 type contractLTS struct {
 	byzcoin.BasicContract
 	LtsInstanceInfo LtsInstanceInfo
-}
-
-// LtsInstanceInfo is the information stored in an LTS instance.
-type LtsInstanceInfo struct {
-	Roster onet.Roster
 }
 
 func contractLTSFromBytes(in []byte) (byzcoin.Contract, error) {

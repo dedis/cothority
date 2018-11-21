@@ -8133,6 +8133,645 @@ public final class Calypso {
 
   }
 
+  public interface LtsInstanceInfoOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.LtsInstanceInfo)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    boolean hasRoster();
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
+  }
+  /**
+   * <pre>
+   * LtsInstanceInfo is the information stored in an LTS instance.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.LtsInstanceInfo}
+   */
+  public  static final class LtsInstanceInfo extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.LtsInstanceInfo)
+      LtsInstanceInfoOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use LtsInstanceInfo.newBuilder() to construct.
+    private LtsInstanceInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private LtsInstanceInfo() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LtsInstanceInfo(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = roster_.toBuilder();
+              }
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(roster_);
+                roster_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_LtsInstanceInfo_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_LtsInstanceInfo_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.class, ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ROSTER_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    public boolean hasRoster() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+    /**
+     * <code>required .onet.Roster roster = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasRoster()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRoster().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getRoster());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getRoster());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo other = (ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo) obj;
+
+      boolean result = true;
+      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster()) {
+        result = result && getRoster()
+            .equals(other.getRoster());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasRoster()) {
+        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
+        hash = (53 * hash) + getRoster().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * LtsInstanceInfo is the information stored in an LTS instance.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.LtsInstanceInfo}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.LtsInstanceInfo)
+        ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfoOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_LtsInstanceInfo_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_LtsInstanceInfo_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.class, ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getRosterFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_LtsInstanceInfo_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo build() {
+        ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo result = new ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (rosterBuilder_ == null) {
+          result.roster_ = roster_;
+        } else {
+          result.roster_ = rosterBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo.getDefaultInstance()) return this;
+        if (other.hasRoster()) {
+          mergeRoster(other.getRoster());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasRoster()) {
+          return false;
+        }
+        if (!getRoster().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public boolean hasRoster() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+        if (rosterBuilder_ == null) {
+          return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        } else {
+          return rosterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public Builder setRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          roster_ = value;
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public Builder setRoster(
+          ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder builderForValue) {
+        if (rosterBuilder_ == null) {
+          roster_ = builderForValue.build();
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              roster_ != null &&
+              roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
+            roster_ =
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+          } else {
+            roster_ = value;
+          }
+          onChanged();
+        } else {
+          rosterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public Builder clearRoster() {
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+          onChanged();
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder getRosterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getRosterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+        if (rosterBuilder_ != null) {
+          return rosterBuilder_.getMessageOrBuilder();
+        } else {
+          return roster_ == null ?
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          getRosterFieldBuilder() {
+        if (rosterBuilder_ == null) {
+          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>(
+                  getRoster(),
+                  getParentForChildren(),
+                  isClean());
+          roster_ = null;
+        }
+        return rosterBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.LtsInstanceInfo)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.LtsInstanceInfo)
+    private static final ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<LtsInstanceInfo>
+        PARSER = new com.google.protobuf.AbstractParser<LtsInstanceInfo>() {
+      @java.lang.Override
+      public LtsInstanceInfo parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new LtsInstanceInfo(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<LtsInstanceInfo> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<LtsInstanceInfo> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Write_descriptor;
   private static final 
@@ -8188,6 +8827,11 @@ public final class Calypso {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_GetLTSReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_LtsInstanceInfo_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_LtsInstanceInfo_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8197,23 +8841,24 @@ public final class Calypso {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\"" +
-      "r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\014\n\004uba" +
-      "r\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n\002cs\030\006 \003(" +
-      "\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsid\030\010 \002(\014\"!\n\004R" +
-      "ead\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(\014\"\'\n\022Author" +
-      "iseByzcoinID\022\021\n\tbyzcoinid\030\001 \002(\014\"\031\n\027Autho" +
-      "riseByzcoinIDReply\"*\n\tCreateLTS\022\035\n\005proof" +
-      "\030\001 \002(\0132\016.byzcoin.Proof\"B\n\016CreateLTSReply" +
-      "\022\021\n\tbyzcoinid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022" +
-      "\t\n\001x\030\003 \002(\014\":\n\nReshareLTS\022\r\n\005ltsid\030\001 \002(\014\022" +
-      "\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"\021\n\017Reshar" +
-      "eLTSReply\"I\n\nDecryptKey\022\034\n\004read\030\001 \002(\0132\016." +
-      "byzcoin.Proof\022\035\n\005write\030\002 \002(\0132\016.byzcoin.P" +
-      "roof\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007x" +
-      "hatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013GetLTSReply\022\r" +
-      "\n\005ltsid\030\001 \002(\014B\"\n\027ch.epfl.dedis.lib.proto" +
-      "B\007Calypso"
+      "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\032" +
+      "\nonet.proto\"r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
+      "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
+      "\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsi" +
+      "d\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002" +
+      "(\014\"\'\n\022AuthoriseByzcoinID\022\021\n\tbyzcoinid\030\001 " +
+      "\002(\014\"\031\n\027AuthoriseByzcoinIDReply\"*\n\tCreate" +
+      "LTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin.Proof\"B\n\016Cr" +
+      "eateLTSReply\022\021\n\tbyzcoinid\030\001 \002(\014\022\022\n\ninsta" +
+      "nceid\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\":\n\nReshareLTS\022\r\n\005" +
+      "ltsid\030\001 \002(\014\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Pro" +
+      "of\"\021\n\017ReshareLTSReply\"I\n\nDecryptKey\022\034\n\004r" +
+      "ead\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002(\013" +
+      "2\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n\002c" +
+      "s\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013G" +
+      "etLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsInstance" +
+      "Info\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n\027ch" +
+      ".epfl.dedis.lib.protoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8227,6 +8872,7 @@ public final class Calypso {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
+          ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
         }, assigner);
     internal_static_calypso_Write_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -8294,7 +8940,14 @@ public final class Calypso {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_GetLTSReply_descriptor,
         new java.lang.String[] { "Ltsid", });
+    internal_static_calypso_LtsInstanceInfo_descriptor =
+      getDescriptor().getMessageTypes().get(11);
+    internal_static_calypso_LtsInstanceInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_LtsInstanceInfo_descriptor,
+        new java.lang.String[] { "Roster", });
     ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor();
+    ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

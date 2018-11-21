@@ -4,12 +4,14 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
 )
 
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
 // package calypso;
 // import "byzcoin.proto";
+// import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "Calypso";
@@ -118,4 +120,9 @@ type DecryptKeyReply struct {
 type GetLTSReply struct {
 	// LTSID is the id of the LTS instance created.
 	LTSID []byte
+}
+
+// LtsInstanceInfo is the information stored in an LTS instance.
+type LtsInstanceInfo struct {
+	Roster onet.Roster
 }

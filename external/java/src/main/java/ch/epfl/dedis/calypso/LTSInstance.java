@@ -35,7 +35,7 @@ public class LTSInstance {
      * @throws CothorityException
      */
     public LTSInstance(CalypsoRPC calypso, DarcId darcID, Roster roster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        ClientTransaction ctx = createSpawnTx(roster, darcID, signers, signerCtrs);
+        ClientTransaction ctx = createSpawnTx(new LTSInstanceInfo(roster), darcID, signers, signerCtrs);
         calypso.sendTransactionAndWait(ctx, 10);
         this.instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
         this.calypso = calypso;
@@ -78,7 +78,7 @@ public class LTSInstance {
      * @throws CothorityException if something goes wrong
      */
     public void reshareLTS(Roster roster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        ClientTransaction ctx = createInvokeTx(roster, this.instance.getId(), signers, signerCtrs);
+        ClientTransaction ctx = createInvokeTx(new LTSInstanceInfo(roster), this.instance.getId(), signers, signerCtrs);
         this.calypso.sendTransactionAndWait(ctx, 10);
     }
 
@@ -91,10 +91,10 @@ public class LTSInstance {
         return this.calypso.getProof(this.instance.getId());
     }
 
-    private static ClientTransaction createSpawnTx(Roster roster, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
-        byte[] rosterBuf = roster.toProto().toByteArray();
+    private static ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+        byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
-        args.add(new Argument("roster", rosterBuf));
+        args.add(new Argument("lts_instance_info", infoBuf));
         Spawn sp = new Spawn(LTSInstance.ContractId, args);
         Instruction inst = new Instruction(new InstanceId(darcID.getId()), signerCtrs, sp);
         ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
@@ -102,10 +102,10 @@ public class LTSInstance {
         return ctx;
     }
 
-    private static ClientTransaction createInvokeTx(Roster roster, InstanceId instanceId, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
-        byte[] rosterBuf = roster.toProto().toByteArray();
+    private static ClientTransaction createInvokeTx(LTSInstanceInfo info, InstanceId instanceId, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+        byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
-        args.add(new Argument("roster", rosterBuf));
+        args.add(new Argument("lts_instance_info", infoBuf));
         Invoke invoke = new Invoke(InvokeCommand, args);
         Instruction inst = new Instruction(instanceId, signerCtrs, invoke);
         ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));

@@ -155,7 +155,7 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 			X:          shared.X,
 		}
 		s.storage.Lock()
-		key := string(reply.Hash())
+		key := string(reply.GetLTSID())
 		s.storage.Shared[key] = shared
 		s.storage.Polys[key] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.storage.Rosters[key] = roster
@@ -163,7 +163,7 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 		s.storage.DKS[key] = dks
 		s.storage.Unlock()
 		s.save()
-		log.Lvlf2("%v Created LTS with ID: %x", s.ServerIdentity(), reply.Hash())
+		log.Lvlf2("%v Created LTS with ID: %x, pk %v", s.ServerIdentity(), reply.GetLTSID(), reply.X)
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("new-dkg didn't finish in time")
 	}
@@ -446,7 +446,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				InstanceID: instID,
 				X:          shared.X,
 			}
-			key := string(reply.Hash())
+			key := string(reply.GetLTSID())
 			log.Lvlf3("%v got shared %v on key %x", s.ServerIdentity(), shared, []byte(key))
 			s.storage.Lock()
 			s.storage.Shared[key] = shared

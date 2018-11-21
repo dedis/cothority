@@ -53,7 +53,7 @@ public class WriteData {
         if (extraData != null) {
             wr.setExtradata(ByteString.copyFrom(extraData));
         }
-        wr.setLtsid(lts.hash().toProto());
+        wr.setLtsid(lts.getLTSID().toProto());
         encryptKey(wr, lts, keyMaterial, publisher);
         write = wr.build();
     }
@@ -126,7 +126,7 @@ public class WriteData {
                 wr.addCs(Ckey.toProto());
             }
 
-            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.hash().getId()));
+            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();

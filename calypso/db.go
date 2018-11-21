@@ -1,7 +1,6 @@
 package calypso
 
 import (
-	"crypto/sha256"
 	"errors"
 	"sync"
 
@@ -30,14 +29,9 @@ type storage1 struct {
 	sync.Mutex
 }
 
-// Hash computes the hash of an LTS reply, this is an ID that is often used to
-// identify the LTS.
-func (r *CreateLTSReply) Hash() []byte {
-	h := sha256.New()
-	h.Write(r.ByzCoinID)
-	h.Write(r.InstanceID)
-	r.X.MarshalTo(h)
-	return h.Sum(nil)
+// GetLTSID returns the LTS ID, which is the instance ID for which the LTS configuration is stored on ByzCoin.
+func (r *CreateLTSReply) GetLTSID() []byte {
+	return r.InstanceID
 }
 
 // saves all data.

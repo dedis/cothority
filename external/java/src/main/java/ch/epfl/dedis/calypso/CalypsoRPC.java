@@ -1,11 +1,13 @@
 package ch.epfl.dedis.calypso;
 
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -32,12 +34,14 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param byzcoin the existing byzcoin ledger.
      * @throws CothorityException if something goes wrong
      */
-    public CalypsoRPC(ByzCoinRPC byzcoin) throws CothorityException {
+    public CalypsoRPC(ByzCoinRPC byzcoin, DarcId darcId, Roster ltsRoster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         super(byzcoin);
-    }
-
-    public CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval) throws CothorityException {
-        super(roster, genesis, blockInterval);
+        // Send a transaction to store the LTS roster in ByzCoin
+        LTSInstance inst = new LTSInstance(this, darcId, ltsRoster, signers, signerCtrs);
+        Proof proof = inst.getProof();
+        // Start the LTS/DKG protocol.
+        CreateLTSReply lts = createLTS(proof);
+        this.lts = lts;
     }
 
     /**
@@ -76,6 +80,7 @@ public class CalypsoRPC extends ByzCoinRPC {
         // Start the LTS/DKG protocol.
         CreateLTSReply lts = createLTS(proof);
         this.lts = lts;
+        logger.info("got LTS ID: " + Hex.printHexBinary(lts.getLTSID().getId()));
     }
 
     /**
@@ -87,6 +92,10 @@ public class CalypsoRPC extends ByzCoinRPC {
     private CalypsoRPC(ByzCoinRPC bc, LTSId ltsId) throws CothorityCommunicationException{
         super(bc);
         lts = getLTSReply(ltsId);
+    }
+
+    private CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval) throws CothorityException {
+        super(roster, genesis, blockInterval);
     }
 
     /**
@@ -160,7 +169,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @return the id of the Long Term Secret
      */
     public LTSId getLTSId() {
-        return lts.hash();
+        return lts.getLTSID();
     }
 
     /**

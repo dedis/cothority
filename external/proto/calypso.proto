@@ -1,6 +1,7 @@
 syntax = "proto2";
 package calypso;
 import "byzcoin.proto";
+import "onet.proto";
 
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "Calypso";
@@ -109,4 +110,9 @@ message DecryptKeyReply {
 message GetLTSReply {
   // LTSID is the id of the LTS instance created.
   required bytes ltsid = 1;
+}
+
+// LtsInstanceInfo is the information stored in an LTS instance.
+message LtsInstanceInfo {
+  required onet.Roster roster = 1;
 }
