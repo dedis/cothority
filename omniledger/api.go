@@ -94,7 +94,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 		Instructions: bc.Instructions{instr},
 	}
 	spawnTx.SignWith(owner)
-	spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
+	//spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
 	// Add genesismsg and instr
 	req.IBGenesisMsg = ibMsg
@@ -150,7 +150,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		Instructions: []bc.Instruction{reqNewEpoch},
 	}
 	tx.SignWith(req.Owner)
-	tx.InstructionsHash = tx.Instructions.Hash()
+	//tx.InstructionsHash = tx.Instructions.Hash()
 
 	/*
 		_, err = ibClient.AddTransactionAndWait(tx, 5)
@@ -203,7 +203,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		//newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
 		tx.Instructions[0] = newEpoch
 		tx.SignWith(req.Owner)
-		tx.InstructionsHash = tx.Instructions.Hash()
+		//tx.InstructionsHash = tx.Instructions.Hash()
 
 		newRoster := cc.ShardRosters[i]
 		oldRoster := oldRosters[i]

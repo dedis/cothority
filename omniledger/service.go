@@ -240,7 +240,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	// Register contracts
 
 	// TODO: Use byzcoin.RegisterContract instead
-	bc.RegisterContract(c, ContractOmniledgerEpochID, s.ContractOmniledgerEpoch)
+	bc.RegisterContract(c, ContractOmniledgerEpochID, contractOmniledgerEpochFromBytes)
 	//bc.RegisterContract(c, ContractNewEpochID, s.ContractNewEpoch)
 
 	// Register verification
