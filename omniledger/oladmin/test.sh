@@ -45,10 +45,10 @@ testNewEpoch(){
 	testOK run create -shards 1 -epoch 500 public.toml
 
 	ol=(ol*.cfg )
-	echo 1111111111111 $ol
+	echo $ol
 
 	key=(key*.cfg)
-	echo 2222222222222 $key
+	echo $key
 
 	testOK run newepoch $ol $key
 	testOK run newepoch $ol $key

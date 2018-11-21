@@ -188,7 +188,7 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 		Instructions: bc.Instructions{instr},
 	}
 	spawnTx.SignWith(owner)
-	spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
+	//spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
 	return &CreateOmniLedger{
 		Version:      version,
