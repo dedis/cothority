@@ -224,3 +224,35 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 
 	return NewSkipBlockDB(db, []byte("skipblock-test")), fname
 }
+
+// Checks if the buffer api works as expected
+func TestBlockBuffer(t *testing.T) {
+	bb := newSkipBlockBuffer()
+	sid := []byte{1}
+	bid := []byte{2}
+
+	sb := NewSkipBlock()
+	sb.Index = 1
+	sb.GenesisID = sid
+	sb.Hash = bid
+	bb.add(sb)
+
+	sb, ok := bb.get(sid, bid)
+	require.True(t, ok)
+	require.NotNil(t, sb)
+
+	// wrong key
+	sb, ok = bb.get(bid, bid)
+	require.False(t, ok)
+	require.Nil(t, sb)
+
+	// wrong block id
+	sb, ok = bb.get(sid, sid)
+	require.False(t, ok)
+	require.Nil(t, sb)
+
+	bb.clear(sid)
+	sb, ok = bb.get(sid, bid)
+	require.False(t, ok)
+	require.Nil(t, sb)
+}
