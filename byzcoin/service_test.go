@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
@@ -345,6 +346,27 @@ func TestService_DarcProxy(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestService_WrongSigner(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	in1 := createInstr(s.darc.GetBaseID(), dummyContract, "data", []byte("whatever"))
+	in1.SignerCounter = []uint64{1}
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	tx, err := combineInstrsAndSign(signer, in1)
+	require.NoError(t, err)
+
+	_, err = s.services[0].AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 2,
+	})
+	// Expect it to not be accepted, because only s.signer is in the Darc
+	require.Error(t, err)
+}
+
 // Test that inter-instruction dependencies are correctly handled.
 func TestService_Depending(t *testing.T) {
 	s := newSer(t, 1, testInterval)
@@ -377,7 +399,7 @@ func TestService_Depending(t *testing.T) {
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
-	_, _, _, err = cdb.GetValues(in1.Hash())
+	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
 	require.Equal(t, errKeyNotSet, err)
 
@@ -545,7 +567,7 @@ func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	// Store the latest block
+	// Fetch the latest block
 	reply, err := skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
@@ -648,7 +670,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	defer s.local.CloseAll()
 
 	for i := range s.hosts {
-		RegisterContract(s.hosts[i], "panic", panicContractFunc)
+		RegisterContract(s.hosts[i], "panic", adaptor(panicContractFunc))
 	}
 
 	// tx0 uses the panicing contract, so it should _not_ be stored.
@@ -730,13 +752,13 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
-	f := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
-		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
+	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		_, _, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
 
-		val0, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		val0, _, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -779,7 +801,7 @@ func TestService_StateChange(t *testing.T) {
 		}
 		return nil, nil, errors.New("need spawn or invoke")
 	}
-	RegisterContract(s.hosts[0], "add", f)
+	RegisterContract(s.hosts[0], "add", adaptorNoVerify(f))
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -820,10 +842,7 @@ func TestService_StateChange(t *testing.T) {
 	}
 
 	ct1 := ClientTransaction{Instructions: instrs}
-	ct1.InstructionsHash = ct1.Instructions.Hash()
-
 	ct2 := ClientTransaction{Instructions: instrs2}
-	ct2.InstructionsHash = ct2.Instructions.Hash()
 
 	_, txOut, scs := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
 	require.Equal(t, 2, len(txOut))
@@ -898,8 +917,7 @@ func TestService_DarcSpawn(t *testing.T) {
 			SignerCounter: []uint64{1},
 		}},
 	}
-	ctx.InstructionsHash = ctx.Instructions.Hash()
-	require.Nil(t, ctx.Instructions[0].SignWith(ctx.InstructionsHash, s.signer))
+	require.Nil(t, ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), s.signer))
 
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
@@ -1077,6 +1095,12 @@ func TestService_SetConfigInterval(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
+	// Wait for a block completion to start the interval check
+	// to prevent the first one to be included in the setup block
+	ctx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
+	require.Nil(t, err)
+	s.sendTxAndWait(t, ctx, 10)
+
 	intervals := []time.Duration{testInterval, testInterval / 5,
 		testInterval * 2, testInterval / 5, testInterval * 20}
 	if testing.Short() {
@@ -1084,7 +1108,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 	}
 
 	lastInterval := testInterval
-	counter := 1
+	counter := 2
 	for i := 0; i < len(intervals); i++ {
 		for _, interval := range intervals {
 			// The next block should now be in the range of testInterval.
@@ -1098,10 +1122,9 @@ func TestService_SetConfigInterval(t *testing.T) {
 			// is bigger, due to dedis/cothority#1409
 			s.sendTxAndWait(t, ctx, 10)
 			dur := time.Now().Sub(start)
-			durErr := dur / 10 // leave a bit of room for error
-			require.True(t, dur+durErr > lastInterval)
+			require.True(t, dur > lastInterval)
 			if interval > lastInterval {
-				require.True(t, dur-durErr < interval)
+				require.True(t, dur < interval)
 			}
 			lastInterval = interval
 		}
@@ -1159,7 +1182,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		nbrNewNodes = 5
 	}
 
-	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
+	servers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
 
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
@@ -1206,10 +1229,19 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		s.sendTxAndWait(t, ctx, 10)
 	}
 
-	// Make sure the latest node is correctly activated.
-	ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
-	counter++
-	s.sendTxAndWait(t, ctx, 10)
+	// Make sure the latest node is correctly activated and that the
+	// new conodes are done with catching up
+	for _, ser := range servers {
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
+		counter++
+		_, err := ser.GetService(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   ctx,
+			InclusionWait: 10,
+		})
+		require.Nil(t, err)
+	}
 
 	for _, node := range rosterR.List {
 		log.Lvl2("Checking node", node, "has testDarc stored")
@@ -1232,7 +1264,6 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 			time.Sleep(testInterval)
 		}
 	}
-	time.Sleep(1 * time.Second)
 }
 
 func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
@@ -1443,7 +1474,7 @@ func TestService_DownloadState(t *testing.T) {
 		require.Nil(t, err)
 		st, err := service.getStateTrie(s.genesis.Hash)
 		require.Nil(t, err)
-		val, _, _, err := st.GetValues(make([]byte, 32))
+		val, _, _, _, err := st.GetValues(make([]byte, 32))
 		require.Nil(t, err)
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
@@ -1628,11 +1659,11 @@ func TestService_StateChangeCache(t *testing.T) {
 	// only call it once.
 	contractID := "stateShangeCacheTest"
 	var ctr int
-	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
-	s.service().registerContract(contractID, contract)
+	s.service().registerContract(contractID, adaptor(contract))
 
 	scID := s.genesis.SkipChainID()
 	st, err := s.service().getStateTrie(scID)
@@ -1678,6 +1709,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
+// Check that we got no error from an existing state trie
 func TestService_UpdateTrieCallback(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -1686,6 +1718,195 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 	// as the trie index is different
 	err := s.service().updateTrieCallback(s.genesis.SkipChainID())
 	require.Nil(t, err)
+}
+
+// This tests that the state change storage will actually
+// store them and increase the versions accordingly over
+// several transactions and instructions
+func TestService_StateChangeStorage(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	n := 2
+	iid := genID()
+	fakeID := genID().Slice()
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the version is correctly increased for multiple state changes
+		sc1 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Create,
+		}
+		sc2 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Update,
+		}
+		sc3 := StateChange{ // this one should not increase the version of the previous two
+			InstanceID:  fakeID,
+			StateAction: Create,
+		}
+		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, adaptor(contract))
+	}
+
+	for i := 0; i < n; i++ {
+		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, uint64(i*2+1))
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:     CurrentVersion,
+			SkipchainID: s.genesis.SkipChainID(),
+			Transaction: tx,
+		})
+		require.Nil(t, err)
+	}
+
+	proof := s.waitProofWithIdx(t, iid[:], 0)
+
+	for _, service := range s.services {
+		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+
+		require.Nil(t, err)
+		require.Equal(t, n*4, len(res.StateChanges))
+
+		for i := 0; i < n*4; i++ {
+			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
+				InstanceID:  iid,
+				Version:     uint64(i),
+				SkipChainID: proof.Latest.SkipChainID(),
+			})
+			require.Nil(t, err)
+			require.Equal(t, uint64(i), sc.StateChange.Version)
+			require.Equal(t, uint64(i), res.StateChanges[i].StateChange.Version)
+
+			res, err := service.CheckStateChangeValidity(&CheckStateChangeValidity{
+				SkipChainID: proof.Latest.SkipChainID(),
+				InstanceID:  iid,
+				Version:     uint64(i),
+			})
+			require.Nil(t, err)
+
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(proof.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+			require.Nil(t, err)
+
+			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
+		}
+
+		sc, err := service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+		require.Nil(t, err)
+		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
+
+		sc, err = service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  NewInstanceID(publicVersionKey(s.signer.Identity().String())),
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
+		require.Nil(t, err)
+		require.Equal(t, uint64(4), sc.StateChange.Version)
+	}
+}
+
+// This tests that the service will restore the state changes
+// after a (re)boot and catch up potential new blocks
+func TestService_StateChangeCatchUp(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	n := 5
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the state trie is created from the known global state
+		_, ver, _, _, _ := cdb.GetValues(inst.Hash())
+		iid := inst.Hash()
+		if !bytes.Equal(inst.InstanceID.Slice(), s.darc.GetBaseID()) {
+			iid = inst.InstanceID.Slice()
+		}
+		sc1 := StateChange{
+			InstanceID:  iid,
+			ContractID:  []byte(contractID),
+			StateAction: Create,
+			Version:     ver + 1,
+		}
+		return []StateChange{sc1}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, adaptorNoVerify(contract))
+	}
+
+	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
+		instr := Instruction{
+			InstanceID:    NewInstanceID(iid),
+			Spawn:         &Spawn{ContractID: contractID},
+			SignerCounter: []uint64{counter},
+		}
+		tx := ClientTransaction{Instructions: Instructions{instr}}
+		err := tx.Instructions[0].SignWith(tx.Instructions.Hash(), s.signer)
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: wait,
+		})
+		require.Nil(t, err)
+
+		return &instr
+	}
+
+	instr := createTx(s.darc.GetBaseID(), uint64(1), 1)
+
+	for i := 0; i < n-1; i++ {
+		// add transactions that must be recreated
+		createTx(instr.Hash(), uint64(i+1), 0)
+	}
+	createTx(instr.Hash(), uint64(n), 1)
+
+	// Remove some entries to check it will recreate them
+	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
+		b := s.service().stateChangeStorage.getBucket(tx, s.genesis.SkipChainID())
+		if b == nil {
+			return errors.New("missing bucket")
+		}
+
+		c := b.Cursor()
+		// Remove entries associated with the second block
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if k[len(k)-1] == byte(2) {
+				err := c.Delete()
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	require.Nil(t, err)
+
+	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, 1, len(scs))
+
+	s.service().trySyncAll()
+
+	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, n+1, len(scs))
+	require.Equal(t, uint64(n), scs[n].StateChange.Version)
+
+	counterID := publicVersionKey(s.signer.Identity().String())
+	sc, ok, err := s.service().stateChangeStorage.getLast(counterID, s.genesis.SkipChainID())
+	require.Nil(t, err)
+	require.True(t, ok)
+	require.Equal(t, uint64(n+1), sc.StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
@@ -1895,21 +2116,71 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	return s
 }
 
-func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+type contractAdaptor struct {
+	BasicContract
+	cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)
+}
+
+func (ca *contractAdaptor) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptor) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptor) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+type contractAdaptorNV struct {
+	BasicContract
+	cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)
+}
+
+func (ca *contractAdaptorNV) VerifyInstruction(cdb ReadOnlyStateTrie, inst Instruction, msg []byte) error {
+	// Always verifies the instruction as "ok".
+	return nil
+}
+
+func (ca *contractAdaptorNV) Spawn(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptorNV) Invoke(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+func (ca *contractAdaptorNV) Delete(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return ca.cb(cdb, inst, c)
+}
+
+// adaptor turns an old-style contract callback into a new-style contract.
+func adaptor(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)) func([]byte) (Contract, error) {
+	return func([]byte) (Contract, error) {
+		return &contractAdaptor{cb: cb}, nil
+	}
+}
+
+// adaptorNoVerify turns an old-style contract callback into a new-style contract
+// but uses a stub verifier (for use when testing createStateChanges, where Darcs
+// are not in place)
+func adaptorNoVerify(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error)) func([]byte) (Contract, error) {
+	return func([]byte) (Contract, error) {
+		return &contractAdaptorNV{cb: cb}, nil
+	}
+}
+
+func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
-	err := inst.Verify(cdb, ctxHash)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	_, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
+func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1928,20 +2199,20 @@ func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, 
 	}
 }
 
-func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	// This has to sleep for less than testInterval / 2 or else it will
 	// block the system from processing txs. See #1359.
 	time.Sleep(testInterval / 5)
-	return dummyContractFunc(cdb, inst, ctxHash, c)
+	return dummyContractFunc(cdb, inst, c)
 }
 
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for _, s := range servers {
-		RegisterContract(s, dummyContract, dummyContractFunc)
-		RegisterContract(s, slowContract, slowContractFunc)
-		RegisterContract(s, invalidContract, invalidContractFunc)
+		RegisterContract(s, dummyContract, adaptor(dummyContractFunc))
+		RegisterContract(s, slowContract, adaptor(slowContractFunc))
+		RegisterContract(s, invalidContract, adaptor(invalidContractFunc))
 	}
 }
 

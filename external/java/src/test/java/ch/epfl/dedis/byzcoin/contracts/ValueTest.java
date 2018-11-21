@@ -131,12 +131,7 @@ class ValueTest {
         if (txr.size() == 2) {
             assertEquals(2, p.getLatest().getIndex());
 
-            ClientTransactionId ref;
-            if (!txr.get(0).isAccepted()) {
-                ref = txr.get(0).getClientTransaction().getId();
-            } else {
-                ref = txr.get(1).getClientTransaction().getId();
-            }
+            ClientTransactionId ref = txr.get(0).getClientTransaction().getId();
             assertTrue(ref.equals(txid));
             return;
         }

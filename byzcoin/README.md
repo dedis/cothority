@@ -166,6 +166,11 @@ For more information, see [the Darc README](../darc/README.md).
 - [Contracts](Contracts.md) gives a short overview how contracts work and
 some examples how to use them.
 
+## Versions
+
+- [Versions](InstanceVersioning.md) gives a short overview how instance
+versions are stored and how to access them.
+
 # Administration
 
 The tool to create and configure a running ByzCoin ledger is called

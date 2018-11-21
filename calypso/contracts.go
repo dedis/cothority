@@ -12,112 +12,84 @@ import (
 )
 
 // ContractWriteID references a write contract system-wide.
-var ContractWriteID = "calypsoWrite"
+const ContractWriteID = "calypsoWrite"
 
-// ContractWrite is used to store a secret in the ledger, so that an
-// authorized reader can retrieve it by creating a Read-instance.
-//
-// Accepted Instructions:
-//  - spawn:calypsoWrite creates a new write-request. TODO: verify the LTS exists
-//  - spawn:calypsoRead creates a new read-request for this write-request.
-func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	err := inst.Verify(cdb, ctxHash)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	switch inst.GetType() {
-	case byzcoin.SpawnType:
-		var sc byzcoin.StateChanges
-		nc := c
-		switch inst.Spawn.ContractID {
-		case ContractWriteID:
-			w := inst.Spawn.Args.Search("write")
-			if w == nil || len(w) == 0 {
-				return nil, nil, errors.New("need a write request in 'write' argument")
-			}
-			var wr Write
-			err := protobuf.DecodeWithConstructors(w, &wr, network.DefaultConstructors(cothority.Suite))
-			if err != nil {
-				return nil, nil, errors.New("couldn't unmarshal write: " + err.Error())
-			}
-			if err = wr.CheckProof(cothority.Suite, darcID); err != nil {
-				return nil, nil, errors.New("proof of write failed: " + err.Error())
-			}
-			instID := inst.DeriveID("")
-			log.Lvlf3("Successfully verified write request and will store in %x", instID)
-			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
-		case ContractReadID:
-			var scs byzcoin.StateChanges
-			var err error
-			scs, nc, err = s.ContractRead(cdb, inst, ctxHash, c)
-			if err != nil {
-				return nil, nil, err
-			}
-			sc = append(sc, scs...)
-		default:
-			return nil, nil, errors.New("can only spawn writes and reads")
-		}
-		return sc, nc, nil
-	default:
-		return nil, nil, errors.New("asked for something we cannot do")
-	}
+type contractWr struct {
+	byzcoin.BasicContract
+	Write
 }
 
-// ContractReadID references a read contract system-wide.
-var ContractReadID = "calypsoRead"
+func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
+	c := &contractWr{}
 
-// ContractRead is used to create read instances that prove a reader has access
-// to a given write instance. The following instructions are accepted:
-//
-//  - spawn:calypsoRead which does some health-checks to make sure that the read
-//  request is valid.
-//
-// TODO: correctly handle multi signatures for read requests: to whom should the
-// secret be re-encrypted to? Perhaps for multi signatures we only want to have
-// ephemeral keys.
-func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	err := inst.Verify(cdb, ctxHash)
+	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, nil, err
+		return nil, errors.New("couldn't unmarshal write: " + err.Error())
 	}
+	return c, nil
+}
+
+func (c *contractWr) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
 
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 
-	switch inst.GetType() {
-	case byzcoin.SpawnType:
-		if inst.Spawn.ContractID != ContractReadID {
-			return nil, nil, errors.New("can only spawn read instances")
+	switch inst.Spawn.ContractID {
+	case ContractWriteID:
+		w := inst.Spawn.Args.Search("write")
+		if w == nil || len(w) == 0 {
+			err = errors.New("need a write request in 'write' argument")
+			return
 		}
+		err = protobuf.DecodeWithConstructors(w, &c.Write, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			err = errors.New("couldn't unmarshal write: " + err.Error())
+			return
+		}
+		if err = c.Write.CheckProof(cothority.Suite, darcID); err != nil {
+			err = errors.New("proof of write failed: " + err.Error())
+			return
+		}
+		instID := inst.DeriveID("")
+		log.Lvlf3("Successfully verified write request and will store in %x", instID)
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
+
+	case ContractReadID:
+		var rd Read
 		r := inst.Spawn.Args.Search("read")
 		if r == nil || len(r) == 0 {
 			return nil, nil, errors.New("need a read argument")
 		}
-		var re Read
-		err := protobuf.DecodeWithConstructors(r, &re, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(r, &rd, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return nil, nil, errors.New("passed read argument is invalid: " + err.Error())
 		}
-		_, cid, _, err := cdb.GetValues(re.Write.Slice())
+		_, _, wc, _, err := rst.GetValues(rd.Write.Slice())
 		if err != nil {
 			return nil, nil, errors.New("referenced write-id is not correct: " + err.Error())
 		}
-		if cid != ContractWriteID {
-			return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
+		if wc != ContractWriteID {
+			return nil, nil, errors.New("referenced write-id is not a write instance, got " + wc)
 		}
-		return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
+		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}
 	default:
-		return nil, nil, errors.New("not a spawn instruction")
+		err = errors.New("can only spawn writes and reads")
 	}
+	return
+}
 
+// ContractReadID references a read contract system-wide.
+const ContractReadID = "calypsoRead"
+
+type contractRe struct {
+	byzcoin.BasicContract
+	Read
+}
+
+func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
+	return nil, errors.New("calypso read instances are never instantiated")
 }

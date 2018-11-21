@@ -9,11 +9,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-
 	"github.com/dedis/cothority/byzcoin/trie"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -81,9 +80,9 @@ func (args Arguments) Search(name string) []byte {
 // signers. If some instructions need to be signed by different sets of
 // signers, then use the SighWith method of Instruction.
 func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
-	ctx.InstructionsHash = ctx.Instructions.Hash()
+	h := ctx.Instructions.Hash()
 	for i := range ctx.Instructions {
-		if err := ctx.Instructions[i].SignWith(ctx.InstructionsHash, signers...); err != nil {
+		if err := ctx.Instructions[i].SignWith(h, signers...); err != nil {
 			return err
 		}
 	}
@@ -259,7 +258,7 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 		if err != nil {
 			return nil
 		}
-		d, err := LoadDarcFromTrie(st, darcID)
+		d, err := loadDarcFromTrie(st, darcID)
 		if err != nil {
 			return nil
 		}
@@ -354,6 +353,7 @@ func (sc StateChange) toString(withValue bool) string {
 	out += fmt.Sprintf("\taction: %s\n", sc.StateAction)
 	out += fmt.Sprintf("\tcontractID: %s\n", string(sc.ContractID))
 	out += fmt.Sprintf("\tkey: %x\n", sc.InstanceID)
+	out += fmt.Sprintf("\tversion: %d\n", sc.Version)
 	if withValue {
 		out += fmt.Sprintf("\tvalue: %x", sc.Value)
 	}
@@ -381,6 +381,7 @@ func (sc *StateChange) Val() []byte {
 		StateAction: sc.StateAction,
 		ContractID:  sc.ContractID,
 		Value:       sc.Value,
+		Version:     sc.Version,
 		DarcID:      sc.DarcID,
 	}
 	buf, err := protobuf.Encode(&v)

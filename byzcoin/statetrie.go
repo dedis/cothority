@@ -14,7 +14,7 @@ var errKeyNotSet = errors.New("key not set")
 // ReadOnlyStateTrie is the read-only interface for StagingStateTrie and
 // StateTrie.
 type ReadOnlyStateTrie interface {
-	GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error)
+	GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error)
 	GetProof(key []byte) (*trie.Proof, error)
 	GetIndex() int
 }
@@ -47,7 +47,7 @@ func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 
 // GetValues returns the associated value, contract ID and darcID. An error is
 // returned if the key does not exist or another issue occurs.
-func (t *stagingStateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
+func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -65,6 +65,7 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, contractID strin
 	}
 
 	value = vals.Value
+	version = vals.Version
 	contractID = string(vals.ContractID)
 	darcID = vals.DarcID
 	return
@@ -131,7 +132,7 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int) error {
 
 // GetValues returns the associated value, contractID and darcID. An error is
 // returned if the key does not exist.
-func (t *stateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
+func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -149,6 +150,7 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, contractID string, darc
 	}
 
 	value = vals.Value
+	version = vals.Version
 	contractID = string(vals.ContractID)
 	darcID = vals.DarcID
 	return

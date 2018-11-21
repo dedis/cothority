@@ -24,7 +24,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority"
-	dkgprotocol "github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg/rabin"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/evoting/protocol"

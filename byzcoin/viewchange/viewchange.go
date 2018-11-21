@@ -366,7 +366,8 @@ func (m *stateLog) add(req InitReq) {
 	// Invariant: requests must have the same view
 	for _, v := range m.received {
 		if !v.View.Equal(req.View) {
-			panic("view is not equal")
+			log.Error("view is not equal")
+			return
 		}
 	}
 	m.curr = req.View

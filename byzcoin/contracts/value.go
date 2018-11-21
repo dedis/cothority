@@ -18,40 +18,69 @@ var ContractValueID = "value"
 // ContractValue is a simple key/value storage where you
 // can put any data inside as wished.
 // It can spawn new value instances and will store the "value" argument in these
-// new instances.
-// Existing value instances can be "update"d and deleted.
-func ContractValue(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
-	cOut = c
+// new instances. Existing value instances can be updated and deleted.
 
-	err = inst.Verify(cdb, ctxHash)
-	if err != nil {
-		return
-	}
+type contractValue struct {
+	byzcoin.BasicContract
+	value []byte
+}
 
+func contractValueFromBytes(in []byte) (byzcoin.Contract, error) {
+	return &contractValue{value: in}, nil
+}
+
+func (c *contractValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	// Find the darcID for this instance.
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
 
-	switch inst.GetType() {
-	case byzcoin.SpawnType:
-		return []byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
-				ContractValueID, inst.Spawn.Args.Search("value"), darcID),
-		}, c, nil
-	case byzcoin.InvokeType:
-		if inst.Invoke.Command != "update" {
-			return nil, nil, errors.New("Value contract can only update")
-		}
-		return []byzcoin.StateChange{
+	sc = []byzcoin.StateChange{
+		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
+			ContractValueID, inst.Spawn.Args.Search("value"), darcID),
+	}
+	return
+}
+
+func (c *contractValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	switch inst.Invoke.Command {
+	case "update":
+		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 				ContractValueID, inst.Invoke.Args.Search("value"), darcID),
-		}, c, nil
-	case byzcoin.DeleteType:
-		return byzcoin.StateChanges{
-			byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractValueID, nil, darcID),
-		}, c, nil
+		}
+		return
+	default:
+		return nil, nil, errors.New("Value contract can only update")
 	}
-	return nil, nil, errors.New("didn't find any instruction")
+}
+
+func (c *contractValue) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	sc = byzcoin.StateChanges{
+		byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractValueID, nil, darcID),
+	}
+	return
 }

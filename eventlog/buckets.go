@@ -46,7 +46,7 @@ func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
 }
 
 func (e eventLog) getBucketByID(objID []byte) (*bucket, error) {
-	v0, _, _, err := e.v.GetValues(objID)
+	v0, _, _, _, err := e.v.GetValues(objID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (e eventLog) getBucketByID(objID []byte) (*bucket, error) {
 }
 
 func (e eventLog) getIndexValue() ([]byte, error) {
-	v0, _, _, err := e.v.GetValues(e.Instance.Slice())
+	v0, _, _, _, err := e.v.GetValues(e.Instance.Slice())
 	if err != nil {
 		return nil, err
 	}

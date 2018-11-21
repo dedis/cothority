@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "conode.fullname" . }}
+  labels:
+    app: {{ template "conode.name" . }}
+    chart: {{ template "conode.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  public.toml: {{ .Values.publicToml | quote }}
+  setup.sh: |
+    set -ex
+
+    cp /config/public.toml /data/public.toml
+    cp /secret/private.toml /data/private.toml

@@ -51,3 +51,61 @@ transactions.
 
 You can set the environment variable BC to the config file for the ByzCoin
 you are currently working with. (Client apps should follow this same standard.)
+
+## Generating a new keypair
+
+```
+$ bcadmin key
+```
+
+Generates a new keypair and prints the result in the console
+
+Optional flags:
+
+-save file.txt            Outputs the key in file.txt instead of stdout
+## Managing DARCS
+
+```
+$ bcadmin darc add -bc $file
+```
+
+Adds a new darc with a random keypair for both signing and evolving it.
+
+Optional flags:
+
+ * -out_id file.txt          Outputs the ID of the DARC in file.txt
+ * -out_key file.txt         Outputs the key of the DARC in file.txt
+ * -out file.txt             Outputs the full description of the DARC in file.txt
+ * -owner key:%x             Creates the DARC with the mentioned key as owner (sign & evolve)
+ * -darc darc:%x             Creates the DARC using the mentioned DARC for creation (uses Genesis DARC by default)
+ * -sign key:%x              Uses this key to sign the transaction (AdminIdentity by default)
+
+```
+$ bcadmin darc show -bc $file
+```
+
+Shows a DARC either in stdout or in a given file
+
+Optional flags:
+
+ * -out file.txt             Outputs the description of the DARC in file.txt instead of stdout
+ * -darc darc:%x             Shows the DARC with provided ID, Genesis DARC by default
+
+```
+$ bcadmin darc rule -bc $file -rule $action
+```
+
+Manages rules for a DARC
+
+Optional flags:
+ * -darc darc:%x             Modifies the rules of this DARC (uses Genesis DARC by default)
+ * -sign key:%x              Uses this key to sign the transaction (AdminIdentity by default)
+ * -delete                   Deletes the specified rule if it exists
+ * -identity:%x              The expression that will determine the necessary signatures to perform the action (mandatory if -delete is not used)
+ * -replace                  Overwrites the expression for the necessary signatures to perform the action (if not provided and action already exists in Rules the action will fail)
+
+ ```
+ $ bcadmin darc
+ ```
+
+ is equivalent to show

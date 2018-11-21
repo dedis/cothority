@@ -7,6 +7,24 @@
 //
 // For more details, see
 // https://github.com/dedis/cothority/tree/master/calypso/README.md
+//
+// There are two contracts implemented by this package:
+//
+// Contract "calypsoWrite" is used to store a secret in the ledger, so that an
+// authorized reader can retrieve it by creating a Read-instance.
+//
+// Accepted Instructions:
+//  - spawn:calypsoWrite creates a new write-request from the argument "write"
+//  - spawn:calypsoRead creates a new read-request for this write-request.
+//
+// Contract "calypsoRead" is used to create read instances that prove a reader
+// has access to a given write instance. They are only spawned by calling Spawn
+// on an existing Write instance, with the proposed Read request in the "read"
+// argument.
+//
+// TODO: correctly handle multi signatures for read requests: to whom should the
+// secret be re-encrypted to? Perhaps for multi signatures we only want to have
+// ephemeral keys.
 package calypso
 
 import (
@@ -17,7 +35,7 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/calypso/protocol"
 	"github.com/dedis/cothority/darc"
-	dkgprotocol "github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
@@ -31,7 +49,7 @@ import (
 var calypsoID onet.ServiceID
 
 // ServiceName of the secret-management part of Calypso.
-var ServiceName = "Calypso"
+const ServiceName = "Calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
 const propagationTimeout = 10 * time.Second
@@ -299,8 +317,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.SharedPublic); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
-	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)
-	byzcoin.RegisterContract(c, ContractReadID, s.ContractRead)
+	byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
+	byzcoin.RegisterContract(c, ContractReadID, contractReadFromBytes)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, err

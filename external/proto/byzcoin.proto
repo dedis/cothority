@@ -201,7 +201,6 @@ message Argument {
 // every instruction must sign for the transaction to be valid.
 message ClientTransaction {
   repeated Instruction instructions = 1;
-  required bytes instructionshash = 2;
 }
 
 // TxResult holds a transaction and the result of running it.
@@ -222,6 +221,8 @@ message StateChange {
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
   required bytes darcid = 5;
+  // Version is the monotonically increased version of the instance
+  required uint64 version = 6;
 }
 
 // Coin is a generic structure holding any type of coin. Coins are defined
@@ -286,7 +287,8 @@ message StateChangeBody {
   required sint32 stateaction = 1;
   required bytes contractid = 2;
   required bytes value = 3;
-  required bytes darcid = 4;
+  required uint64 version = 4;
+  required bytes darcid = 5;
 }
 
 // GetSignerCounters is a request to get the latest version for the specified
@@ -300,4 +302,58 @@ message GetSignerCounters {
 // request.
 message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
+}
+
+// GetInstanceVersion is a request asking the service to fetch
+// the version of the given instance
+message GetInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+  required uint64 version = 3;
+}
+
+// GetLastInstanceVersion is request asking for the last version
+// of a given instance
+message GetLastInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+}
+
+// GetInstanceVersionResponse is the response for both
+// GetInstanceVersion and GetLastInstanceVersion. It contains
+// the state change if it exists and the block index where
+// it has been applied
+message GetInstanceVersionResponse {
+  required StateChange statechange = 1;
+  required sint32 blockindex = 2;
+}
+
+// GetAllInstanceVersion is a request asking for the list of
+// state changes of a given instance
+message GetAllInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+}
+
+// GetAllInstanceVersionResponse is the response that contains
+// the list of state changes of a instance
+message GetAllInstanceVersionResponse {
+  repeated GetInstanceVersionResponse statechanges = 1;
+}
+
+// CheckStateChangeValidity is a request to get the list
+// of state changes belonging to the same block as the
+// targeted one to compute the hash
+message CheckStateChangeValidity {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+  required uint64 version = 3;
+}
+
+// CheckStateChangeValidityResponse is the response with
+// the list of state changes so that the hash can be
+// compared against the one in the block
+message CheckStateChangeValidityResponse {
+  repeated StateChange statechanges = 1;
+  required bytes blockid = 2;
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
-	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	dkg "github.com/dedis/kyber/share/dkg/pedersen"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
@@ -142,26 +142,9 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 		}
 	}
 
-	// Secret commits
-	for _, p := range dkgs {
-		commit, err := p.SecretCommits()
-		if err != nil {
-			return nil, err
-		}
-		for _, p2 := range dkgs {
-			compl, err := p2.ProcessSecretCommits(commit)
-			if err != nil {
-				return nil, err
-			}
-			if compl != nil {
-				return nil, errors.New("there should be no complaint")
-			}
-		}
-	}
-
 	// Verify if all is OK
 	for _, p := range dkgs {
-		if !p.Finished() {
+		if !p.Certified() {
 			return nil, errors.New("one of the dkgs is not finished yet")
 		}
 	}
