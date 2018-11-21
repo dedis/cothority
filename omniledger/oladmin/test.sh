@@ -12,14 +12,14 @@ main(){
     startTest
     buildConode github.com/dedis/cothority/omniledger
 	test Create
-    #test Evolve
-    #test NewEpoch
+    test NewEpoch
+	#test Evolve
     stopTest
 }
 
 testCreate(){
     runCoBG 1 2 3 4
-	
+
     testFail run create
 	testFail run create -shards
 	testFail run create -shards 0
@@ -27,6 +27,7 @@ testCreate(){
 	testFail run create -shards 1 -epoch
 	testFail run create -shards 1 -epoch 500
 	testOK run create -shards 1 -epoch 500 public.toml
+	rm -f key*.cfg ol*.cfg
 }
 
 testEvolve(){
@@ -36,14 +37,21 @@ testEvolve(){
 	testFail run evolve ol.cfg
 	testFail run evolve ol.cfg key.cfg
 	testOK run evolve ol.cfg key.cfg newroster.toml
+	rm -f key*.cfg ol*.cfg
 }
 
 testNewEpoch(){
-	runCoBG 1 2
-	testOK run create -shards 2 -epoch 10 roster.toml
-	testFail run newepoch 
-	testFail run newepoch ol.cfg
-	testOK run newepoch ol.cfg key.cfg
+	runCoBG 1 2 3 4
+	testOK run create -shards 1 -epoch 500 public.toml
+
+	ol=(ol*.cfg )
+	echo 1111111111111 $ol
+
+	key=(key*.cfg)
+	echo 2222222222222 $key
+
+	testOK run newepoch $ol $key
+	testOK run newepoch $ol $key
 }
 
 run(){
