@@ -979,6 +979,11 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 			newRoster = append(newRoster, si)
 		}
 	}
+
+	if len(newRoster) == 0 {
+		return nil
+	}
+
 	log.Lvlf3("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
 
 	// current conode needs to be in the propagation roster
