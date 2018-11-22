@@ -23,13 +23,13 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/service"
 )
 
 func init() {
@@ -161,7 +161,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 
 		round.Record()
 
-		pairingSuite := bn256.NewSuite()
+		pairingSuite := bn256.NewSuiteG2()
 		pairingPublicKeys := blsftcosiService.GetPairingPublicKeys()
 		thresholdPolicy := protocol.NewThresholdPolicy(blsftcosiService.Threshold)
 		err = protocol.Verify(pairingSuite, pairingPublicKeys, proposal, serviceReply.Signature, thresholdPolicy)

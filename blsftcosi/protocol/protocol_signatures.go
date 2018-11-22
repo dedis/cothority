@@ -102,7 +102,7 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 				responseMap[res.subProtocol] = res.structResponse
 
 				// check if threshold is reachable
-				if sumRefusals(responseMap) > len(p.PairingPublics)-p.Threshold {
+				if sumRefusals(responseMap) > len(p.Roster().Publics())-p.Threshold {
 					// we assume the root accepts the proposal
 					thresholdReachable = false
 				}

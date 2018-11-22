@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
 	"github.com/stretchr/testify/require"
 )
 

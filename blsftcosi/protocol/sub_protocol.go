@@ -23,12 +23,9 @@ func init() {
 // sub_protocol is run by each sub-leader and each node once, and n times by
 // the root leader, where n is the number of sub-leader.
 
-// SubFtCosi holds the different channels used to receive the different protocol messages.
+// SubBlsFtCosi holds the different channels used to receive the different protocol messages.
 type SubBlsFtCosi struct {
 	*onet.TreeNodeInstance
-	PairingPublics []kyber.Point
-	PairingPublic  kyber.Point
-	PairingPrivate kyber.Scalar
 	Msg            []byte
 	Data           []byte
 	Timeout        time.Duration
@@ -55,7 +52,7 @@ func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, err
 	return NewSubBlsFtCosi(n, vf, cothority.Suite, bn256.NewSuite())
 }
 
-// NewSubFtCosi is used to define the subprotocol and to register
+// NewSubBlsFtCosi is used to define the subprotocol and to register
 // the channels where the messages will be received.
 func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite, pairingSuite pairing.Suite) (onet.ProtocolInstance, error) {
 	// tests if it's a three level tree
@@ -103,7 +100,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 		}
 		p.Done()
 	}()
-	log.Lvl3("SubBlsFtCosi: Public keys are", p.PairingPublics)
+	log.Lvl3("SubBlsFtCosi: Public keys are", p.Roster().Publics())
 	var err error
 	var channelOpen bool
 
@@ -148,7 +145,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 		go func() {
 			log.Lvl3(p.ServerIdentity(), "starting verification in the background")
 			verificationOk := p.verificationFn(p.Msg, p.Data)
-			personalResponse, err := p.getResponse(verificationOk, p.PairingPublics, p.PairingPrivate)
+			personalResponse, err := p.getResponse(verificationOk, p.Roster().Publics(), p.Private())
 			if err != nil {
 				log.Error("error while generating own commitment:", err)
 				return
@@ -201,7 +198,7 @@ loop:
 			nodesCanRespond = remove(nodesCanRespond, response.TreeNode)
 
 			// verify mask of the received response
-			verificationMask, err := NewMask(p.pairingSuite, p.PairingPublics, -1)
+			verificationMask, err := NewMask(p.pairingSuite, p.Roster().Publics(), -1)
 			if err != nil {
 				return err
 			}
@@ -215,7 +212,7 @@ loop:
 				// verify the refusals is signed correctly
 				for index, refusal := range response.Refusals {
 					refusalMsg := []byte(fmt.Sprintf("%s:%d", p.Msg, index))
-					refusalPublic := p.PairingPublics[index]
+					refusalPublic := p.Roster().Publics()[index]
 					err = bls.Verify(p.pairingSuite, refusalPublic, refusalMsg, refusal)
 					// Do not send invalid refusals
 					if err != nil {
@@ -245,7 +242,7 @@ loop:
 					// verify the refusal is signed correctly
 					for index, refusal := range response.Refusals {
 						refusalMsg := []byte(fmt.Sprintf("%s:%d", p.Msg, index))
-						refusalPublic := p.PairingPublics[index]
+						refusalPublic := p.Roster().Publics()[index]
 						err = bls.Verify(p.pairingSuite, refusalPublic, refusalMsg, refusal)
 						// ignore the refusal if not properly signed.
 						if err == nil {
@@ -255,7 +252,7 @@ loop:
 
 					if p.IsLeaf() {
 						log.Warn(p.ServerIdentity(), "leaf refused Response, marking as not signed")
-						return p.sendAggregatedResponses(p.PairingPublics, []StructResponse{}, Refusals)
+						return p.sendAggregatedResponses(p.Roster().Publics(), []StructResponse{}, Refusals)
 					}
 					log.Warn(p.ServerIdentity(), "non-leaf got refusal")
 				} else {
@@ -275,7 +272,7 @@ loop:
 
 				if quickAnswer || finalAnswer {
 
-					err = p.sendAggregatedResponses(p.PairingPublics, responses, Refusals)
+					err = p.sendAggregatedResponses(p.Roster().Publics(), responses, Refusals)
 					if err != nil {
 						return err
 					}
@@ -304,7 +301,7 @@ loop:
 
 			// sending responses received
 			// TODO - Only send if there are newer responses
-			err = p.sendAggregatedResponses(p.PairingPublics, responses, Refusals)
+			err = p.sendAggregatedResponses(p.Roster().Publics(), responses, Refusals)
 			if err != nil {
 				return err
 			}
@@ -361,7 +358,7 @@ func (p *SubBlsFtCosi) Start() error {
 	if p.Data == nil {
 		return errors.New("subprotocol does not have data, it can be empty but cannot be nil")
 	}
-	if p.PairingPublics == nil || len(p.PairingPublics) < 1 {
+	if p.Roster().Publics() == nil || len(p.Roster().Publics()) < 1 {
 		return errors.New("subprotocol has invalid public keys")
 	}
 	if p.verificationFn == nil {

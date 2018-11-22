@@ -13,14 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/service"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.
@@ -49,6 +49,7 @@ func Config(tomlFileName string, detail bool) error {
 // In case a server doesn't reply in time or there is an error in the
 // signature, an error is returned.
 func Servers(g *app.Group, detail bool) error {
+	log.Lvlf2("%v", g.Roster.List)
 	totalSuccess := true
 	// First check all servers individually and write the working servers
 	// in a list
@@ -63,6 +64,7 @@ func Servers(g *app.Group, detail bool) error {
 		if err == nil {
 			working = append(working, e)
 		} else {
+			log.Error(err)
 			totalSuccess = false
 		}
 	}
@@ -142,7 +144,7 @@ func checkList(list *onet.Roster, descs []string, detail bool) error {
 // (pass an io.File or use an strings.NewReader for strings). It uses
 // the roster el to create the collective signature.
 // In case the signature fails, an error is returned.
-func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*service.SignatureResponse, error) {
+func signStatement(client *service.Client, read io.Reader, ro *onet.Roster) (*service.SignatureResponse, error) {
 	suite, ok := client.Suite().(pairing.Suite)
 	if !ok {
 		return nil, errors.New("not a cosi suite")
@@ -155,7 +157,7 @@ func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*se
 	var err error
 	go func() {
 		log.Lvl3("Waiting for the response on SignRequest")
-		response, e := client.SignatureRequest(el, msg)
+		response, e := client.SignatureRequest(ro, msg)
 		if e != nil {
 			err = e
 			close(pchan)
@@ -170,7 +172,7 @@ func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*se
 		if !ok || err != nil {
 			return nil, errors.New("received an invalid response")
 		}
-		err = protocol.Verify(suite, el.Publics(), msg, response.Signature, protocol.CompletePolicy{})
+		err = protocol.Verify(suite, ro.Publics(), msg, response.Signature, protocol.CompletePolicy{})
 		if err != nil {
 			return nil, err
 		}

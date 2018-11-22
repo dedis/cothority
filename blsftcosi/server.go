@@ -1,14 +1,11 @@
 package main
 
 import (
-	"gopkg.in/urfave/cli.v1"
-
-	// Empty imports to have the init-functions called which should
-	// register the protocol
-
+	_ "github.com/dedis/cothority/blsftcosi/protocol"
+	_ "github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/onet/app"
-	_ "github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
-	_ "github.com/dedis/student_18_blsftcosi/blsftcosi/service"
+	"gopkg.in/urfave/cli.v1" // Empty imports to have the init-functions called which should
+	// register the protocol
 )
 
 func runServer(ctx *cli.Context) {

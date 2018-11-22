@@ -10,13 +10,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/dedis/cothority/blsftcosi/check"
+	"github.com/dedis/cothority/blsftcosi/protocol"
+	s "github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/check"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
-	s "github.com/dedis/student_18_blsftcosi/blsftcosi/service"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -28,6 +29,7 @@ type sigHex struct {
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func checkConfig(c *cli.Context) error {
+	log.SetDebugVisible(3)
 	tomlFileName := c.String(optionGroup)
 	return check.Config(tomlFileName, c.Bool("detail"))
 }
@@ -35,6 +37,7 @@ func checkConfig(c *cli.Context) error {
 // signFile will search for the file and sign it
 // it always returns nil as an error
 func signFile(c *cli.Context) error {
+	log.SetDebugVisible(3)
 	if c.Args().First() == "" {
 		log.Fatal("Please give the file to sign", 1)
 	}
@@ -57,7 +60,7 @@ func signFile(c *cli.Context) error {
 	}
 	writeSigAsJSON(sig, outFile)
 	if outFileName != "" {
-		log.Lvl2("Signature written to: %s", outFile.Name())
+		log.Lvlf2("Signature written to: %s", outFile.Name())
 	} // else keep the Stdout empty
 	return nil
 }
@@ -126,7 +129,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	publics := entityListToPublics(el)
 	client := s.NewClient()
 
-	h := protocol.ThePairingSuite.Hash()
+	h := client.Suite().(pairing.Suite).Hash()
 	io.Copy(h, read)
 	msg := h.Sum(nil)
 
@@ -147,10 +150,10 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	case response, ok := <-pchan:
 		log.Lvl5("Response:", response)
 		if !ok || err != nil {
-			return nil, errors.New("received an invalid repsonse")
+			return nil, errors.New("received an invalid response")
 		}
 
-		err = protocol.Verify(protocol.ThePairingSuite, publics, msg, response.Signature, protocol.CompletePolicy{})
+		err = protocol.Verify(client.Suite().(pairing.Suite), publics, msg, response.Signature, protocol.CompletePolicy{})
 		if err != nil {
 			return nil, err
 		}
@@ -205,10 +208,12 @@ func verify(fileName, sigFileName, groupToml string) error {
 }
 
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) error {
+	suite := s.NewClient().Suite().(pairing.Suite)
+
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	publics := entityListToPublics(el)
-	h := protocol.ThePairingSuite.Hash()
+	h := suite.Hash()
 	h.Write(b)
 	fHash := h.Sum(nil)
 	h.Reset()
@@ -220,7 +225,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 			"doesn't match with the hash of the file.)")
 	}
 	// TODO - We should use suite from cothority
-	if err := protocol.Verify(protocol.ThePairingSuite, publics, fHash, sig.Signature, protocol.CompletePolicy{}); err != nil {
+	if err := protocol.Verify(suite, publics, fHash, sig.Signature, protocol.CompletePolicy{}); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil

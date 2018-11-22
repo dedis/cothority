@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/kyber/sign/cosi"
@@ -41,9 +40,6 @@ type BlsFtCosi struct {
 	Threshold      int
 	FinalSignature chan []byte // final signature that is sent back to client
 
-	PairingPublics  []kyber.Point // Public keys are marshaled binaries of G2 points
-	PairingPublic   kyber.Point   // Public keys are marshaled binaries of G2 points
-	PairingPrivate  kyber.Scalar
 	stoppedOnce     sync.Once
 	subProtocols    []*SubBlsFtCosi
 	startChan       chan bool
@@ -72,7 +68,7 @@ func GlobalRegisterDefaultProtocols() {
 	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
 }
 
-// NewFtCosi method is used to define the ftcosi protocol.
+// NewBlsFtCosi method is used to define the ftcosi protocol.
 func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite, pairingSuite pairing.Suite) (onet.ProtocolInstance, error) {
 
 	c := &BlsFtCosi{
@@ -146,6 +142,7 @@ func (p *BlsFtCosi) Dispatch() error {
 		log.Lvl2("Invoking start sub protocol", tree)
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
+			log.Error(err)
 			p.FinalSignature <- nil
 			return err
 		}
@@ -153,7 +150,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	// Wait and collect all the signature responses
-	responses, runningSubProtocols, err := p.collectSignatures(trees, p.subProtocols, p.PairingPublics)
+	responses, runningSubProtocols, err := p.collectSignatures(trees, p.subProtocols, p.Roster().Publics())
 	if err != nil {
 		return err
 	}
@@ -176,7 +173,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	}
 
 	// generate root signature
-	signaturePoint, finalMask, err := generateSignature(p.pairingSuite, p.TreeNodeInstance, p.PairingPublics, p.PairingPrivate, responses, p.Msg, verificationOk)
+	signaturePoint, finalMask, err := generateSignature(p.pairingSuite, p.TreeNodeInstance, p.Roster().Publics(), p.Private(), responses, p.Msg, verificationOk)
 	if err != nil {
 		p.FinalSignature <- nil
 		return err
@@ -266,9 +263,6 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	}
 
 	cosiSubProtocol.Threshold = subThreshold
-	cosiSubProtocol.PairingPrivate = p.PairingPrivate
-	cosiSubProtocol.PairingPublic = p.PairingPublic
-	cosiSubProtocol.PairingPublics = p.PairingPublics
 
 	log.Lvl2("Starting sub protocol on", tree)
 	err = cosiSubProtocol.Start()

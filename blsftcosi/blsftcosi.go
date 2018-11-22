@@ -8,10 +8,10 @@ import (
 	"path"
 	"time"
 
+	"github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/student_18_blsftcosi/blsftcosi/protocol"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -107,6 +107,7 @@ func main() {
 			Name:  "server",
 			Usage: "Start blsftcosi server",
 			Action: func(c *cli.Context) error {
+				log.SetDebugVisible(3)
 				runServer(c)
 				return nil
 			},
@@ -117,13 +118,15 @@ func main() {
 					Aliases: []string{"s"},
 					Usage:   "Setup server configuration (interactive)",
 					Action: func(c *cli.Context) error {
+						suite := service.NewClient().Suite()
+
 						if c.String(optionConfig) != "" {
 							log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
 						}
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						app.InteractiveConfig(protocol.ThePairingSuite, BinaryName)
+						app.InteractiveConfig(suite, BinaryName)
 						return nil
 					},
 				},

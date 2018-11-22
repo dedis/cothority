@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 
-	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -16,7 +16,7 @@ type Client struct {
 
 // NewClient instantiates a new blsftcosi.Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+	return &Client{Client: onet.NewClient(bn256.NewSuiteG2(), ServiceName)}
 }
 
 // SignatureRequest sends a CoSi sign request to the Cothority defined by the given
