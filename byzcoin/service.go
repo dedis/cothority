@@ -902,8 +902,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// Checks if the block has forward links, which means that it is not a
 	// new block but either a forward link update or a skipchain propagation
 	// meaning the last block will be called later.
-	// We still need the update for state change storage so we only
-	// skip the catch up.
 	// In the case of a genesis block, we need to let it pass so we
 	// learn about it because the callback won't be called after the
 	// catch up
