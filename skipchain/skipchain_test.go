@@ -592,6 +592,7 @@ func TestService_ParallelGenesis(t *testing.T) {
 	}
 }
 
+// Checks that the propagation (genesis, FL, proof) is done correctly
 func TestService_Propagation(t *testing.T) {
 	nbrNodes := 60
 	if testing.Short() {
@@ -601,7 +602,7 @@ func TestService_Propagation(t *testing.T) {
 
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeSRS(cothority.Suite, nbrNodes, skipchainSID)
+	servers, fullRoster, genService := local.MakeSRS(cothority.Suite, nbrNodes, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -609,8 +610,8 @@ func TestService_Propagation(t *testing.T) {
 	}
 	service := genService.(*Service)
 
-	roster := onet.NewRoster(ro.List[:5])
-	sbRoot, err := makeGenesisRosterArgs(service, roster, nil, VerificationNone,
+	firstFiveRoster := onet.NewRoster(fullRoster.List[:5])
+	sbRoot, err := makeGenesisRosterArgs(service, firstFiveRoster, nil, VerificationNone,
 		3, 3)
 	log.ErrFatal(err)
 	require.NotNil(t, sbRoot)
@@ -620,9 +621,9 @@ func TestService_Propagation(t *testing.T) {
 	for i := 0; i < k; i++ {
 		sb := NewSkipBlock()
 		if i < k-1 {
-			sb.Roster = roster
+			sb.Roster = firstFiveRoster
 		} else {
-			sb.Roster = ro
+			sb.Roster = fullRoster
 		}
 
 		ssbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
@@ -683,11 +684,11 @@ func TestService_ForgedPropagationMessage(t *testing.T) {
 	err = service.propagateProofHandler(&PropagateProof{Proof(blocks)})
 	require.Nil(t, err)
 
-	// now checks the modified version
+	// now check the modified version
 	forgedBlock := NewSkipBlock()
 	forgedBlock.BackLinkIDs = []SkipBlockID{blocks[3].Hash}
 	forgedBlock.updateHash()
-	// it cannot forged the signature, hopefully
+	// it cannot forge the signature, hopefully
 	blocks[3].ForwardLink = []*ForwardLink{&ForwardLink{From: blocks[3].Hash, To: forgedBlock.Hash}}
 	err = service.propagateProofHandler(&PropagateProof{Proof(append(blocks, forgedBlock))})
 	require.NotNil(t, err)

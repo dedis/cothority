@@ -514,7 +514,7 @@ func (sbs Proof) Verify() error {
 			}
 
 			if !hit {
-				return fmt.Errorf("Wrong backlink %v %v", sb.BackLinkIDs, sbs[i-1].Hash)
+				return errors.New("Missing backlink")
 			}
 		}
 		if i < len(sbs)-1 {
