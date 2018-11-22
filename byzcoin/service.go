@@ -899,6 +899,18 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			"programmer error if you see this message.")
 	}
 
+	// Checks if the block has forward links, which means that it is not a
+	// new block but either a forward link update or a skipchain propagation
+	// meaning the last block will be called later.
+	// We still need the update for state change storage so we only
+	// skip the catch up.
+	// In the case of a genesis block, we need to let it pass so we
+	// learn about it because the callback won't be called after the
+	// catch up
+	if len(sb.ForwardLink) > 0 && !s.catchingUp && sb.Index != 0 {
+		return nil
+	}
+
 	// Create the trie for the genesis block if it has not been
 	// created yet.
 	// We don't need to wrap the check and use another
