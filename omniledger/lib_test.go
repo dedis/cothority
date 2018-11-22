@@ -65,3 +65,45 @@ func TestLib_EncodeDecodeDuration(t *testing.T) {
 
 	assert.True(t, d.Nanoseconds() == dd.Nanoseconds())
 }
+
+func TestLib_ShardingMultiplier(t *testing.T) {
+	l := onet.NewLocalTest(cothority.Suite)
+	defer l.CloseAll()
+
+	nodeCount := 8
+	_, roster, _ := l.GenTree(nodeCount, true)
+
+	shardCount := 2
+	seed := int64(1)
+
+	shardRosters := lib.Sharding(roster, shardCount, seed)
+
+	assert.True(t, len(shardRosters) == shardCount)
+
+	for _, sr := range shardRosters {
+		assert.True(t, len(sr.List) == nodeCount/shardCount)
+	}
+}
+
+func TestLib_ShardingNotMultiplier(t *testing.T) {
+	l := onet.NewLocalTest(cothority.Suite)
+	defer l.CloseAll()
+
+	nodeCount := 19
+	_, roster, _ := l.GenTree(nodeCount, true)
+
+	shardCount := 4
+	seed := int64(1)
+
+	shardRosters := lib.Sharding(roster, shardCount, seed)
+
+	assert.True(t, len(shardRosters) == shardCount)
+
+	for ind, sr := range shardRosters {
+		if ind < nodeCount%shardCount {
+			assert.True(t, len(sr.List) == nodeCount/shardCount+1)
+		} else {
+			assert.True(t, len(sr.List) == nodeCount/shardCount)
+		}
+	}
+}
