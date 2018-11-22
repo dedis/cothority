@@ -651,6 +651,26 @@ func TestService_Propagation(t *testing.T) {
 	}
 }
 
+func createSkipchain(service *Service, ro *onet.Roster) (Proof, error) {
+	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone, 1, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < 3; i++ {
+		sb := NewSkipBlock()
+		sb.Roster = ro
+		sb.Index = i + 1
+		_, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	blocks, err := service.db.GetProof(sbRoot.SkipChainID())
+	return Proof(blocks), err
+}
+
 // Checks a forged message from a evil conode cannot add
 // blocks to an existing skipchain
 func TestService_ForgedPropagationMessage(t *testing.T) {
@@ -661,36 +681,39 @@ func TestService_ForgedPropagationMessage(t *testing.T) {
 	service := s.(*Service)
 	ro := onet.NewRoster(roster.List[:5])
 
-	sbRoot, err := makeGenesisRosterArgs(service, roster, nil, VerificationNone, 1, 1)
-	log.ErrFatal(err)
-	require.NotNil(t, sbRoot)
-
-	for i := 0; i < 3; i++ {
-		sb := NewSkipBlock()
-		sb.Roster = ro
-		_, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
-		log.ErrFatal(err)
-	}
-
-	blocks, err := service.db.GetProof(sbRoot.SkipChainID())
+	p1, err := createSkipchain(service, ro)
 	require.Nil(t, err)
-	require.Equal(t, 4, len(blocks))
+
+	p2, err := createSkipchain(service, ro)
+	require.Nil(t, err)
+
+	// Use an unknown member of the roster
 	service = servers[5].GetService(ServiceName).(*Service)
 
 	err = service.propagateProofHandler([]byte{})
 	require.NotNil(t, err)
 
 	// checks that it could propagate something, this one is correct
-	err = service.propagateProofHandler(&PropagateProof{Proof(blocks)})
+	err = service.propagateProofHandler(&PropagateProof{p1})
 	require.Nil(t, err)
 
-	// now check the modified version
+	// checks that the block cannot be tempered
+	p1[2].Data = []byte{1}
+	err = service.propagateProofHandler(&PropagateProof{p1})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Wrong hash")
+
+	// checks that the targets have to match
+	err = service.propagateProofHandler(&PropagateProof{append(p1[:2], p2[2], p1[3])})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Wrong targets")
+
+	// checks that the signature must match
 	forgedBlock := NewSkipBlock()
-	forgedBlock.BackLinkIDs = []SkipBlockID{blocks[3].Hash}
+	forgedBlock.BackLinkIDs = []SkipBlockID{p1[3].Hash}
 	forgedBlock.updateHash()
-	// it cannot forge the signature, hopefully
-	blocks[3].ForwardLink = []*ForwardLink{&ForwardLink{From: blocks[3].Hash, To: forgedBlock.Hash}}
-	err = service.propagateProofHandler(&PropagateProof{Proof(append(blocks, forgedBlock))})
+	p1[3].ForwardLink = []*ForwardLink{&ForwardLink{From: p1[3].Hash, To: forgedBlock.Hash}}
+	err = service.propagateProofHandler(&PropagateProof{Proof(append(p1, forgedBlock))})
 	require.NotNil(t, err)
 }
 

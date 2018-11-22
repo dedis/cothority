@@ -1000,6 +1000,10 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 				return err
 			}
 
+			if sb == nil {
+				return errors.New("Couldn't find one of the blocks")
+			}
+
 			sbs = append(sbs, sb)
 		}
 
