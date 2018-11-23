@@ -3,7 +3,7 @@ Servers = 8
 Bf = 4
 Rounds = 1
 RunWait = "600s"
-Suite = "Ed25519"
+Suite = "bn256.G2"
 
 Hosts, NSubtrees, FailingSubleaders,FailingLeafs
   4,  1, 0,  0

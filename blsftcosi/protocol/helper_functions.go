@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/kyber/sign/bls"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
 )
 
@@ -94,51 +93,6 @@ func signedByteSliceToPoint(ps pairing.Suite, sig []byte) (kyber.Point, error) {
 	return pointSig, nil
 }
 
-func PointToByteSlice(ps pairing.Suite, sig kyber.Point) ([]byte, error) {
-	byteSig, err := sig.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	return byteSig, nil
-}
-
-func publicByteSliceToPoint(ps pairing.Suite, public []byte) (kyber.Point, error) {
-	pointPublic := ps.G2().Point()
-
-	if err := pointPublic.UnmarshalBinary(public); err != nil {
-		return nil, err
-	}
-
-	return pointPublic, nil
-
-}
-
-func PublicKeyToByteSlice(ps pairing.Suite, public kyber.Point) ([]byte, error) {
-	bytePublic, err := public.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	return bytePublic, nil
-}
-
-func privateByteSliceToScalar(ps pairing.Suite, private []byte) (kyber.Scalar, error) {
-	scalarPrivate := ps.G2().Scalar()
-	if err := scalarPrivate.UnmarshalBinary(private); err != nil {
-		return nil, err
-	}
-	return scalarPrivate, nil
-}
-
-func PrivateKeyToByteSlice(ps pairing.Suite, private kyber.Scalar) ([]byte, error) {
-	bytePrivate, err := private.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	return bytePrivate, nil
-}
-
 func aggregateResponses(ps pairing.Suite, publics []kyber.Point,
 	structResponses []StructResponse) (kyber.Point, *Mask, error) {
 	if publics == nil {
@@ -201,10 +155,6 @@ func aggregateSignatures(ps pairing.Suite, signatures []kyber.Point, masks [][]b
 	return r, aggMask, nil
 }
 
-func AppendSigAndMask(signature []byte, mask *Mask) []byte {
-	return append(signature, mask.mask...)
-}
-
 // Verify checks the given cosignature on the provided message using the list
 // of public keys and cosigning policy.
 func Verify(ps pairing.Suite, publics []kyber.Point, message, sig []byte, policy Policy) error {
@@ -234,10 +184,9 @@ func Verify(ps pairing.Suite, publics []kyber.Point, message, sig []byte, policy
 	err = bls.Verify(ps, pks, message, signature)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
-	} else {
-		log.Lvl1("Signature verified and is correct!")
 	}
 
+	log.Lvl1("Signature verified and is correct!")
 	log.Lvl1("m.CountEnabled():", mask.CountEnabled())
 	monitor.RecordSingleMeasure("correct_nodes", float64(mask.CountEnabled()))
 
@@ -246,38 +195,4 @@ func Verify(ps pairing.Suite, publics []kyber.Point, message, sig []byte, policy
 	}
 
 	return nil
-}
-
-// GetLeafsIDs returns a slice of leaves for tree
-func GetLeafsIDs(tree *onet.Tree, root, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
-	exampleTrees, err := genTrees(tree.Roster, root, nNodes, nSubtrees)
-	if err != nil {
-		return nil, fmt.Errorf("error in creation of example tree:%s", err)
-	}
-	leafsIDs := make([]network.ServerIdentityID, 0)
-	for _, subtree := range exampleTrees {
-		if len(subtree.Root.Children) < 1 {
-			return nil, fmt.Errorf("expected a subtree with at least a subleader, but found none")
-		}
-		for _, leaf := range subtree.Root.Children[0].Children {
-			leafsIDs = append(leafsIDs, leaf.ServerIdentity.ID)
-		}
-	}
-	return leafsIDs, nil
-}
-
-// GetSubleaderIDs returns a slice of subleaders for tree
-func GetSubleaderIDs(tree *onet.Tree, root, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
-	exampleTrees, err := genTrees(tree.Roster, root, nNodes, nSubtrees)
-	if err != nil {
-		return nil, fmt.Errorf("error in creation of example tree:%s", err)
-	}
-	subleadersIDs := make([]network.ServerIdentityID, 0)
-	for _, subtree := range exampleTrees {
-		if len(subtree.Root.Children) < 1 {
-			return nil, fmt.Errorf("expected a subtree with at least a subleader, but found none")
-		}
-		subleadersIDs = append(subleadersIDs, subtree.Root.Children[0].ServerIdentity.ID)
-	}
-	return subleadersIDs, nil
 }

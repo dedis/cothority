@@ -1,12 +1,8 @@
 package protocol
 
 import (
-	"crypto/cipher"
-	"crypto/sha512"
-	"hash"
 	"time"
 
-	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 )
@@ -20,20 +16,8 @@ const DefaultProtocolName = "blsftCoSiProtoDefault"
 // main protocol.
 const DefaultSubProtocolName = "blsftSubCoSiProtoDefault"
 
-type blsftCosiSuite struct {
-	pairing.Suite
-	r cipher.Stream
-}
-
 func init() {
 	network.RegisterMessages(&Announcement{}, &Response{}, &Stop{})
-}
-func (m *blsftCosiSuite) Hash() hash.Hash {
-	return sha512.New() // TODO change hash?
-}
-
-func (m *blsftCosiSuite) RandomStream() cipher.Stream {
-	return m.r
 }
 
 // Announcement is the blsftcosi annoucement message

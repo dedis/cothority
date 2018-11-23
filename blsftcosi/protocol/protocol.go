@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // VerificationFn is called on every node. Where msg is the message that is
@@ -185,7 +186,7 @@ func (p *BlsFtCosi) Dispatch() error {
 		return err
 	}
 
-	finalSignature := AppendSigAndMask(signature, finalMask)
+	finalSignature := append(signature, finalMask.mask...)
 
 	log.Lvl3(p.ServerIdentity().Address, "Created final signature", signature, finalMask, finalSignature)
 
@@ -241,6 +242,36 @@ func (p *BlsFtCosi) Start() error {
 	log.Lvl3("Starting CoSi")
 	p.startChan <- true
 	return nil
+}
+
+func (p *BlsFtCosi) getLeaves() []*network.ServerIdentity {
+	log.Lvlf2("%d", len(p.Children()))
+
+	return dfsLeaves(p.TreeNode())
+}
+
+func dfsLeaves(tn *onet.TreeNode) []*network.ServerIdentity {
+	if tn.IsLeaf() {
+		return []*network.ServerIdentity{tn.ServerIdentity}
+	}
+
+	si := []*network.ServerIdentity{}
+	for _, c := range tn.Children {
+		si = append(si, dfsLeaves(c)...)
+	}
+	return si
+}
+
+func (p *BlsFtCosi) getSubLeaders() []*network.ServerIdentity {
+	si := []*network.ServerIdentity{}
+
+	for _, c := range p.Children() {
+		if !c.IsLeaf() {
+			si = append(si, c.ServerIdentity)
+		}
+	}
+
+	return si
 }
 
 // startSubProtocol creates, parametrize and starts a subprotocol on a given tree

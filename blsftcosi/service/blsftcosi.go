@@ -137,14 +137,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 		subblsftcosi := pi.(*protocol.SubBlsFtCosi)
 		return subblsftcosi, nil
-	case protocol.DefaultKDProtocolName:
-		pi, err := protocol.NewBlsKeyDist(tn)
-		if err != nil {
-			return nil, err
-		}
-		blskeydist := pi.(*protocol.BlsKeyDist)
-		blskeydist.Timeout = propagationTimeout
-		return blskeydist, nil
 	}
 	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }

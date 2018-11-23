@@ -392,7 +392,7 @@ func (p *SubBlsFtCosi) getResponse(accepts bool, publics []kyber.Point, private 
 		return StructResponse{}, err
 	}
 
-	personalSig, err := PointToByteSlice(p.pairingSuite, p.pairingSuite.G1().Point())
+	personalSig, err := p.pairingSuite.G1().Point().MarshalBinary()
 	if err != nil {
 		return StructResponse{}, err
 	}

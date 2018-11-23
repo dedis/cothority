@@ -29,7 +29,6 @@ type sigHex struct {
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func checkConfig(c *cli.Context) error {
-	log.SetDebugVisible(3)
 	tomlFileName := c.String(optionGroup)
 	return check.Config(tomlFileName, c.Bool("detail"))
 }
@@ -37,7 +36,6 @@ func checkConfig(c *cli.Context) error {
 // signFile will search for the file and sign it
 // it always returns nil as an error
 func signFile(c *cli.Context) error {
-	log.SetDebugVisible(3)
 	if c.Args().First() == "" {
 		log.Fatal("Please give the file to sign", 1)
 	}

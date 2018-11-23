@@ -19,7 +19,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestServiceCosi(t *testing.T) {
-	log.SetDebugVisible(3)
 	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist

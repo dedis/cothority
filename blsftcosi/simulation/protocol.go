@@ -57,7 +57,6 @@ func NewSimulationProtocol(config string) (onet.Simulation, error) {
 
 // Setup implements onet.Simulation.
 func (s *SimulationProtocol) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
-	log.SetDebugVisible(2)
 	sc := &onet.SimulationConfig{}
 	s.CreateRoster(sc, hosts, 2000)
 	err := s.CreateTree(sc)
@@ -83,35 +82,13 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 		log.Fatal("Didn't find this node in roster")
 	}
 
-	///*
-	serviceIndex, _ := config.Roster.Search(config.Server.ServerIdentity.ID)
-	blsftcosiService := config.GetService(service.ServiceName).(*service.Service)
-	blsftcosiService.SetPairingKeys(serviceIndex, s.Hosts, config.Tree)
-	//*/
+	config.Tree
 
-	// get subleader ids
-	subleadersIds, err := protocol.GetSubleaderIDs(config.Tree, 0, s.Hosts, s.NSubtrees)
-	if err != nil {
-		return err
-	}
-	if len(subleadersIds) > s.FailingSubleaders {
-		subleadersIds = subleadersIds[:s.FailingSubleaders]
-	}
-
-	// get leafs ids
-	leafsIds, err := protocol.GetLeafsIDs(config.Tree, 0, s.Hosts, s.NSubtrees)
-	if err != nil {
-		return err
-	}
-	if len(leafsIds) > s.FailingLeafs {
-		leafsIds = leafsIds[:s.FailingLeafs]
-	}
-
-	toIntercept := append(leafsIds, subleadersIds...)
+	toIntercept := []*network.ServerIdentity{}
 	log.Lvl2("Failing nodes", toIntercept)
 	// intercept announcements on some nodes
-	for _, id := range toIntercept {
-		if id == config.Server.ServerIdentity.ID {
+	for _, n := range toIntercept {
+		if n.ID.Equal(config.Server.ServerIdentity.ID) {
 			config.Server.RegisterProcessorFunc(onet.ProtocolMsgID, func(e *network.Envelope) {
 				//get message
 				_, msg, err := network.Unmarshal(e.Msg.(*onet.ProtocolMsg).MsgSlice, config.Server.Suite())
@@ -162,7 +139,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		round.Record()
 
 		pairingSuite := bn256.NewSuiteG2()
-		pairingPublicKeys := blsftcosiService.GetPairingPublicKeys()
+		pairingPublicKeys := config.Roster.Publics()
 		thresholdPolicy := protocol.NewThresholdPolicy(blsftcosiService.Threshold)
 		err = protocol.Verify(pairingSuite, pairingPublicKeys, proposal, serviceReply.Signature, thresholdPolicy)
 		if err != nil {

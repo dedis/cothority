@@ -107,7 +107,6 @@ func main() {
 			Name:  "server",
 			Usage: "Start blsftcosi server",
 			Action: func(c *cli.Context) error {
-				log.SetDebugVisible(3)
 				runServer(c)
 				return nil
 			},
