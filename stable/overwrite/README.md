@@ -4,7 +4,7 @@
 
 # Cothority
 
-The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
+The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch).
 
 ## Table of Contents
 
@@ -12,14 +12,14 @@ The collective authority (cothority) project provides a framework for developmen
 - [Overview](https://github.com/dedis/cothority#overview)
 - [Getting Started](https://github.com/dedis/cothority#getting-started)
 	- [Cothority Client - CoSi](https://github.com/dedis/cothority#cothority-client---cosi)
-	- [Cothority Server](https://github.com/dedis/cothority#cothority-server) 
+	- [Cothority Server](https://github.com/dedis/cothority#cothority-server)
 - [Documentation](https://github.com/dedis/cothority#documentation)
 - [Research](https://github.com/dedis/cothority#research)
 - [Contributing](https://github.com/dedis/cothority#contributing)
 - [License](https://github.com/dedis/cothority#license)
 - [Contact](https://github.com/dedis/cothority#contact)
 
-## Disclaimer 
+## Disclaimer
 
 The software in this repository is highly experimental and under heavy development. Do not use it for anything security-critical yet.
 
@@ -62,7 +62,7 @@ go get -u github.com/dedis/cothority/cosi
 To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
-export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
+export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml
 ```
 
 #### Usage
@@ -99,7 +99,7 @@ conode help
 
 #### Configuration
 
-To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
+To configure your conode you need to *open two consecutive ports* (e.g., 7770 and 7771) on your machine, then execute
 
 ```
 conode setup
@@ -107,12 +107,12 @@ conode setup
 
 and follow the instructions of the dialog. After a successful setup there should be two configuration files:
 
-- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority.
 - The *private configuration file* of your cothoriy server is located at `$HOME/.config/conode/private.toml`.
 
 **Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
-**Note:** 
+**Note:**
 
 - The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 - On macOS the configuration files are located at `$HOME/Library/cosi/{public,private}.toml`.
@@ -137,7 +137,7 @@ Each of the parts of the cothority project has a corresponding wiki which are wo
 
 The research behind the cothority project has been published in several academic papers:
 
-- **Keeping Authorities “Honest or Bust” with Decentralized Witness Cosigning** ([pdf](http://arxiv.org/pdf/1503.08768.pdf)); *Ewa Syta, Iulia Tamas, Dylan Visher, David Isaac Wolinsky, Philipp Jovanovic, Linus Gasser, Nicolas Gailly, Ismail Khoffi, Bryan Ford*; IEEE Symposium on Security and Privacy, 2016. 
+- **Keeping Authorities “Honest or Bust” with Decentralized Witness Cosigning** ([pdf](http://arxiv.org/pdf/1503.08768.pdf)); *Ewa Syta, Iulia Tamas, Dylan Visher, David Isaac Wolinsky, Philipp Jovanovic, Linus Gasser, Nicolas Gailly, Ismail Khoffi, Bryan Ford*; IEEE Symposium on Security and Privacy, 2016.
 - **Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing** ([pdf](https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf)); *Eleftherios Kokoris-Kogias, Philipp Jovanovic, Nicolas Gailly, Ismail Khoffi, Linus Gasser, Bryan Ford*; USENIX Security, 2016.
 - **Scalable Bias-Resistant Distributed Randomness** ([pdf](https://eprint.iacr.org/2016/1067.pdf)); *Ewa Syta, Philipp Jovanovic, Eleftherios Kokoris Kogias, Nicolas Gailly, Linus Gasser, Ismail Khoffi, Michael J. Fischer, Bryan Ford*; IACR Cryptology ePrint Archive, Report 2016/1067.
 
@@ -153,4 +153,3 @@ The software in this repository is put under a dual-licensing scheme: In general
 ## Contact
 
 We are always happy to hear about your experiences with the cothority project. Feel free to contact us on our [mailing list](https://groups.google.com/forum/#!forum/cothority) or by [email](mailto:dedis@epfl.ch).
-

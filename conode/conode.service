@@ -3,7 +3,7 @@ Description=Collective Authority node
 After=syslog.target network.target
 
 [Service]
-ExecStart=/usr/bin/docker run --rm -p 6879-6880:6879-6880 --name conode -v %h/conode_data:/conode_data dedis/conode:latest
+ExecStart=/usr/bin/docker run --rm -p 7770-7771:7770-7771 --name conode -v %h/conode_data:/conode_data dedis/conode:latest
 ExecStop=/usr/bin/docker rm -f conode
 
 [Install]

@@ -16,8 +16,8 @@ fullnameOverride: ""
 ## NodePort service
 service:
   ports:
-    tcp1: 6879
-    tcp2: 6880
+    tcp1: 7770
+    tcp2: 7771
   nodePorts:
     tcp1: 32079
     tcp2: 32080
@@ -25,7 +25,7 @@ service:
 ## The public config
 publicToml: |
   [[servers]]
-    Address = "tls://127.0.0.1:6879"
+    Address = "tls://127.0.0.1:7770"
     Suite = "Ed25519"
     Public = "908c4bf012f3e896a36f4d9590873122f084233e62808ce13fca97cae7edbc63"
     Description = "Example node"
@@ -37,7 +37,7 @@ privateToml: |
   Suite = "Ed25519"
   Public = "908c4bf012f3e896a36f4d9590873122f084233e62808ce13fca97cae7edbc63"
   Private = "b7641da23f8cd27176955847cb484abb16326e954749733bd93efbfaa2afc501"
-  Address = "tls://:6879"
+  Address = "tls://:7770"
   ListenAddress = ""
   Description = "Example node"
 
