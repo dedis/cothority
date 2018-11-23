@@ -127,7 +127,7 @@ type GetAllSkipChainIDsReply struct {
 
 // Internal calls
 
-// PropagateGenesis sends a newly created SkipChain to all members of
+// PropagateGenesis sends the genesis block of a newly created SkipChain to all members of
 // the Cothority
 type PropagateGenesis struct {
 	Genesis *SkipBlock
