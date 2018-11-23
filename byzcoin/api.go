@@ -94,7 +94,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
-	err := c.SendProtobuf(c.Roster.List[0], &GetProof{
+	err := c.SendProtobuf(c.Roster.RandomServerIdentity(), &GetProof{
 		Version: CurrentVersion,
 		ID:      c.ID,
 		Key:     key,
@@ -109,7 +109,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 // execute in the given darc.
 func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.Action, error) {
 	reply := &CheckAuthorizationResponse{}
-	err := c.SendProtobuf(c.Roster.List[0], &CheckAuthorization{
+	err := c.SendProtobuf(c.Roster.RandomServerIdentity(), &CheckAuthorization{
 		Version:    CurrentVersion,
 		ByzCoinID:  c.ID,
 		DarcID:     dID,
@@ -143,6 +143,9 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 
 	// Sanity check the values.
 	_, _, contract, darcID, err := p.Proof.KeyValue()
+	if err != nil {
+		return nil, errors.New("couldn't get keyvalue: " + err.Error())
+	}
 	if contract != ContractConfigID {
 		return nil, errors.New("expected contract to be config but got: " + contract)
 	}
@@ -253,7 +256,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	req := StreamingRequest{
 		ID: c.ID,
 	}
-	conn, err := c.Stream(c.Roster.List[0], &req)
+	conn, err := c.Stream(c.Roster.RandomServerIdentity(), &req)
 	if err != nil {
 		return err
 	}
@@ -278,7 +281,7 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 		SignerIDs:   ids,
 	}
 	var reply GetSignerCountersResponse
-	err := c.SendProtobuf(c.Roster.List[0], &req, &reply)
+	err := c.SendProtobuf(c.Roster.RandomServerIdentity(), &req, &reply)
 	if err != nil {
 		return nil, err
 	}
