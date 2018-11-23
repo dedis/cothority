@@ -175,7 +175,7 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 // All hosts must be online in this step.
 func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	// Verify the request
-	roster, _, err := s.getLtsRoster(&req.Proof)
+	roster, ltsid, err := s.getLtsRoster(&req.Proof)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,8 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		return nil, err
 	}
 
-	key := string(req.LTSID)
+	// TODO(jallen): the key should be of type byzcoin.InstanceID
+	key := string(ltsid)
 
 	// Initialise the protocol
 	setupDKG, err := func() (*dkgprotocol.Setup, error) {
@@ -197,7 +198,6 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		// NOTE: the roster stored in ByzCoin must have myself.
 		tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
 		cfg := reshareLtsConfig{
-			LTSID: req.LTSID,
 			Proof: req.Proof,
 		}
 		cfgBuf, err := protobuf.Encode(&cfg)
@@ -446,7 +446,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				InstanceID: instID,
 				X:          shared.X,
 			}
-			key := string(reply.GetLTSID())
+			key := string(instID)
 			log.Lvlf3("%v got shared %v on key %x", s.ServerIdentity(), shared, []byte(key))
 			s.storage.Lock()
 			s.storage.Shared[key] = shared
@@ -467,7 +467,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			return nil, err
 		}
 
-		key := string(cfg.LTSID)
+		_, ltsid, err := s.getLtsRoster(&cfg.Proof)
+		key := string(ltsid)
 
 		// Set up the protocol
 		pi, err := dkgprotocol.NewSetup(tn)

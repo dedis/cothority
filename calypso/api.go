@@ -42,7 +42,7 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 // then it asks the Calypso cothority to start the DKG.
 func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []darc.Signer, counters []uint64) (reply *CreateLTSReply, err error) {
 	// Make the transaction and get its proof
-	rosterBuf, err := protobuf.Encode(ltsRoster)
+	buf, err := protobuf.Encode(&LtsInstanceInfo{*ltsRoster})
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +52,8 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 			ContractID: ContractLongTermSecretID,
 			Args: []byzcoin.Argument{
 				{
-					Name:  "roster",
-					Value: rosterBuf,
+					Name:  "lts_instance_info",
+					Value: buf,
 				},
 			},
 		},
@@ -88,7 +88,6 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 // the read/write requests match and then re-encrypts the secret
 // given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
-	// TODO send to Calypso roster
 	reply = &DecryptKeyReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
 	if err != nil {

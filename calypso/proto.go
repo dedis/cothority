@@ -87,7 +87,6 @@ type CreateLTSReply struct {
 // the Calypso roster must be updated on the ByzCoin blockchain in the instance
 // specified by InstanceID.
 type ReshareLTS struct {
-	LTSID []byte
 	Proof byzcoin.Proof
 }
 

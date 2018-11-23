@@ -188,6 +188,5 @@ type newLtsConfig struct {
 }
 
 type reshareLtsConfig struct {
-	LTSID []byte
 	Proof byzcoin.Proof
 }
