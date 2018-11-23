@@ -33,6 +33,10 @@ func main() {
 			Usage: "Cothority group definition in `FILE.toml`",
 		},
 		cli.StringFlag{
+			Name:  "host",
+			Usage: "Request information about this host",
+		},
+		cli.StringFlag{
 			Name:  "format, f",
 			Value: "txt",
 			Usage: "Output format: \"txt\" (default) or \"json\".",
@@ -62,14 +66,29 @@ type se struct {
 func action(c *cli.Context) error {
 	groupToml := c.GlobalString("g")
 	format := c.String("format")
+	var list []*network.ServerIdentity
 
-	el, err := readGroup(groupToml)
-	log.ErrFatal(err, "Couldn't Read File")
-	log.Lvl3(el)
+	host := c.String("host")
+	if host != "" {
+		// Only contact one host
+		log.Print("Only contacting one host", host)
+		addr := network.Address(host)
+		if !strings.HasPrefix(host, "tls://") {
+			addr = network.NewAddress(network.TLS, host)
+		}
+		list = append(list, network.NewServerIdentity(nil, addr))
+	} else {
+
+		ro, err := readGroup(groupToml)
+		log.ErrFatal(err, "Couldn't Read File")
+		log.Lvl3(ro)
+		list = ro.List
+		log.Print("List is", list)
+	}
 	cl := status.NewClient()
 
 	var all []se
-	for _, server := range el.List {
+	for _, server := range list {
 		sr, err := cl.Request(server)
 		if err != nil {
 			err = fmt.Errorf("could not get status from %v: %v", server, err)
@@ -116,6 +135,12 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 
 // prints the status response that is returned from the server
 func printTxt(e *status.Response) {
+	log.Info("-----------------------------------------------")
+	log.Infof("Address = \"%s\"", e.ServerIdentity.Address)
+	log.Info("Suite = \"Ed25519\"")
+	log.Infof("Public = \"%s\"", e.ServerIdentity.Public)
+	log.Infof("Description = \"%s\"", e.ServerIdentity.Description)
+	log.Info("-----------------------------------------------")
 	var a []string
 	if e.Status == nil {
 		log.Error("no status from ", e.ServerIdentity)
