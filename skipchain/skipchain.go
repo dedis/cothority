@@ -1378,7 +1378,7 @@ func (s *Service) propagateGenesisHandler(msg network.Message) {
 	}
 
 	if !s.blockIsFriendly(pg.Genesis) {
-		log.Error("Block is not friendly")
+		log.Error("Conode doesn't want to follow that skipchain")
 		return
 	}
 
@@ -1433,12 +1433,7 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) {
 	}
 
 	// Add the block if available
-	if sb, ok := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To); ok {
-		if !s.blockIsFriendly(sb) {
-			log.Error("Trying to add a block that is not friendly")
-			return
-		}
-
+	if sb := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To); sb != nil {
 		id := s.db.Store(sb)
 		if id == nil {
 			// error already logged

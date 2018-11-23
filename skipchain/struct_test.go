@@ -271,22 +271,18 @@ func TestBlockBuffer(t *testing.T) {
 	sb.Hash = bid
 	bb.add(sb)
 
-	sb, ok := bb.get(sid, bid)
-	require.True(t, ok)
+	sb = bb.get(sid, bid)
 	require.NotNil(t, sb)
 
 	// wrong key
-	sb, ok = bb.get(bid, bid)
-	require.False(t, ok)
+	sb = bb.get(bid, bid)
 	require.Nil(t, sb)
 
 	// wrong block id
-	sb, ok = bb.get(sid, sid)
-	require.False(t, ok)
+	sb = bb.get(sid, sid)
 	require.Nil(t, sb)
 
 	bb.clear(sid)
-	sb, ok = bb.get(sid, bid)
-	require.False(t, ok)
+	sb = bb.get(sid, bid)
 	require.Nil(t, sb)
 }

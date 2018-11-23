@@ -1141,7 +1141,7 @@ func (sbb *skipBlockBuffer) add(block *SkipBlock) {
 
 // get returns the block if the skipchain ID hits with the
 // correct block ID
-func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bool) {
+func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) *SkipBlock {
 	sbb.Lock()
 	defer sbb.Unlock()
 
@@ -1149,11 +1149,11 @@ func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bo
 	copy(key[:], sid)
 
 	block, ok := sbb.buffer[key]
-	if ok && !block.Hash.Equal(id) {
-		return nil, false
+	if !ok || !block.Hash.Equal(id) {
+		return nil
 	}
 
-	return block, ok
+	return block
 }
 
 // clear deletes the current block of the given skipchain
