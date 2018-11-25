@@ -134,8 +134,7 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 	// Create the messages -> Create the ledger of each shard
 	msgs := make([]*bc.CreateGenesisBlock, req.ShardCount)
 	for i := 0; i < req.ShardCount; i++ {
-		// TODO: Add "invoke:newepoch"
-		msg, err := byzcoin.DefaultGenesisMsg(req.Version, &shardRosters[i], []string{"spawn:darc", "invoke:newepoch"}, req.OwnerID)
+		msg, err := byzcoin.DefaultGenesisMsg(req.Version, &shardRosters[i], []string{"spawn:darc", "invoke:new_epoch"}, req.OwnerID)
 		if err != nil {
 			return nil, err
 		}
@@ -198,8 +197,6 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 }
 
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
-	reply := &NewEpochResponse{}
-
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 
 	_, err := ibClient.AddTransactionAndWait(*req.ReqNewEpochTx, 5)
@@ -214,6 +211,7 @@ func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	}
 
 	// Send back proof
+	reply := &NewEpochResponse{}
 	reply.ReqNewEpochProof = &gpr.Proof
 
 	return reply, nil
