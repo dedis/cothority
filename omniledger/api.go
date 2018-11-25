@@ -100,6 +100,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	// Add genesismsg and instr
 	req.IBGenesisMsg = ibMsg
 	req.SpawnTx = spawnTx
+	req.OwnerID = owner.Identity()
 
 	// Create reply struct
 	//req.Version = bc.CurrentVersion
