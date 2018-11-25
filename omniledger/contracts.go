@@ -13,8 +13,8 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
-	"math/rand"
-	"sort"
+	//"math/rand"
+	//"sort"
 	"time"
 )
 
@@ -91,7 +91,7 @@ func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instru
 	}
 
 	// Do sharding
-	shardRosters := sharding(roster, shardCount, int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice())))
+	shardRosters := lib.Sharding(roster, shardCount, int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice())))
 
 	// Create ChainConfig struct to store data on the chain
 	config := &lib.ChainConfig{
@@ -149,7 +149,8 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 		if ts.Sub(cc.Timestamp).Seconds() >= cc.EpochSize.Seconds() {
 			// compute new shards
 			seed := int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice()))
-			shardRosters := sharding(cc.Roster, cc.ShardCount, seed)
+
+			shardRosters := lib.Sharding(cc.Roster, cc.ShardCount, seed)
 
 			// update chain config
 			cc.Timestamp = ts
@@ -164,6 +165,7 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 			sc = []bc.StateChange{
 				bc.NewStateChange(bc.Update, inst.DeriveID(""), ContractOmniledgerEpochID, ccBuf, darcID),
 			}
+			log.Print("UPDATED ID BYZCOIN")
 
 			return
 		}
@@ -344,53 +346,6 @@ func (s *Service) ContractNewEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction
 	default:
 		return nil, coins, errors.New("unsupported instruction type")
 	}
-}
-
-func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
-	rand.Seed(seed)
-	//perm := rand.Perm(len(roster.List))
-
-	perm := make([]int, len(roster.List))
-	for i := 0; i < len(roster.List); i++ {
-		perm[i] = i
-	}
-
-	// Build map: validator index to shard index
-	m := make(map[int]int)
-	c := 0
-	for _, p := range perm {
-		if c == shardCount {
-			c = 0
-		}
-
-		m[p] = c
-		c++
-	}
-
-	// Compute the sorted list of keys
-	keys := make([]int, 0)
-	for k := range m {
-		keys = append(keys, k)
-	}
-
-	sort.Ints(keys)
-
-	// Group validators by shard index
-	idGroups := make([][]*network.ServerIdentity, shardCount)
-
-	for k := range keys {
-		v := m[k]
-		idGroups[v] = append(idGroups[v], roster.List[k])
-	}
-
-	// Create shard rosters
-	shardRosters := make([]onet.Roster, shardCount)
-	for ind, ids := range idGroups {
-		temp := onet.NewRoster(ids)
-		shardRosters[ind] = *temp
-	}
-
-	return shardRosters
 }
 
 func checkValidTime(t time.Time, window time.Duration) bool {
