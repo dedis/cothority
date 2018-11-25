@@ -273,3 +273,21 @@ func getRosterChangesCount(oldRoster, newRoster onet.Roster) int {
 
 	return changesCount
 }
+
+func (c *Client) GetStatus(req *GetStatus) (*GetStatusResponse, error) {
+	ibClient := bc.NewClient(req.IBID, req.IBRoster)
+	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	cc := &lib.ChainConfig{}
+	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
+
+	reply := &GetStatusResponse{
+		IBRoster:     *cc.Roster,
+		ShardRosters: cc.ShardRosters,
+	}
+
+	return reply, nil
+}

@@ -70,6 +70,12 @@ func main() {
 			Action:    evolveShard,
 		},
 		{
+			Name:      "status",
+			Usage:     "prints the current roster and shard rosters",
+			ArgsUsage: "the omniledger config file",
+			Action:    getStatus,
+		},
+		{
 			Name:      "newepoch",
 			Usage:     "starts a new epoch",
 			ArgsUsage: "the omniledger config and the key config files",
@@ -248,7 +254,35 @@ func newEpoch(c *cli.Context) error {
 	return nil
 }
 
-// TODO: Finish function
+func getStatus(c *cli.Context) error {
+	// Parse CLI arguments
+	cfgPath := c.Args().Get(0)
+
+	cfg, err := loadConfig(cfgPath)
+	if err != nil {
+		return err
+	}
+
+	req := &omniledger.GetStatus{
+		IBID:         cfg.IBID,
+		IBRoster:     cfg.IBRoster,
+		OLInstanceID: cfg.OLInstanceID,
+	}
+
+	client := omniledger.NewClient(cfg.IBID, cfg.IBRoster)
+	reply, err := client.GetStatus(req)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(c.App.Writer, "Omniledger roster:", reply.IBRoster.List)
+	for ind, sr := range reply.ShardRosters {
+		fmt.Fprintln(c.App.Writer, "Shard "+fmt.Sprint(ind)+" roster:", sr.List)
+	}
+
+	return nil
+}
+
 func darcUpdate(c *cli.Context) error {
 
 	return nil
@@ -288,22 +322,6 @@ func saveConfig(cfg Config) (string, error) {
 
 	return fn, nil
 }
-
-/*func loadConfig(file string) (*Config, error) {
-	var cfgBuf []byte
-	cfgBuf, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := &Config{}
-	err = protobuf.Decode(cfgBuf, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
-}*/
 
 func loadConfig(file string) (*Config, error) {
 	cfg := &Config{}

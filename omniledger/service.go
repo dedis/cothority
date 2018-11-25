@@ -94,6 +94,19 @@ type NewEpochResponse struct {
 	//ShardRosters []onet.Roster
 }
 
+type GetStatus struct {
+	IBID     skipchain.SkipBlockID
+	IBRoster onet.Roster
+	//ShardIDs     []skipchain.SkipBlockID
+	//Owner        darc.Signer
+	OLInstanceID bc.InstanceID
+}
+
+type GetStatusResponse struct {
+	IBRoster     onet.Roster
+	ShardRosters []onet.Roster
+}
+
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
 	if err := checkCreateOmniLedger(req); err != nil {
 		return nil, err
