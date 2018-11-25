@@ -3,6 +3,7 @@ package omniledger
 import (
 	"encoding/binary"
 	"errors"
+	"github.com/dedis/onet/log"
 	//"fmt"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
@@ -120,10 +121,11 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 
 	// Fetch old roster
 	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
-	cc := &lib.ChainConfig{}
-	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
-	oldRosters := cc.ShardRosters
+	oldCC := &lib.ChainConfig{}
+	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, oldCC)
+	oldRosters := oldCC.ShardRosters
 
+	// Get IB signer counter
 	signerCtrs, err := ibClient.GetSignerCounters(req.Owner.Identity().String())
 	if err != nil {
 		return nil, err
@@ -132,10 +134,10 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, errors.New("incorrect signer counter length")
 	}
 
+	// Prepare and send request_new_epoch instruction to IB
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(req.Timestamp.Unix()))
 
-	// Prepare and send request_new_epoch instruction to IB
 	reqNewEpoch := bc.Instruction{
 		InstanceID: req.OLInstanceID,
 		Invoke: &bc.Invoke{
@@ -150,17 +152,10 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		Instructions: []bc.Instruction{reqNewEpoch},
 	}
 	tx.SignWith(req.Owner)
-	//tx.InstructionsHash = tx.Instructions.Hash()
-
-	/*
-		_, err = ibClient.AddTransactionAndWait(tx, 5)
-		if err != nil {
-			return nil, err
-		}
-	*/
 
 	req.ReqNewEpochTx = &tx
 
+	// Send tx via service, get response
 	reply := &NewEpochResponse{}
 	olClient := NewClient(req.IBID, req.IBRoster)
 	err = olClient.SendProtobuf(req.IBRoster.List[0], req, reply)
@@ -168,14 +163,9 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	// Get proof from request_new_epoch instr, prepare the new_epoch instructions and send them to the shards
-	/*gpr, err = ibClient.GetProof(reqNewEpoch.DeriveID("").Slice())
-	if err != nil {
-		return nil, err
-	}*/
-
-	cc = &lib.ChainConfig{}
-	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
+	// Get latest/New chain config from service response
+	latestCC := &lib.ChainConfig{}
+	err = reply.ReqNewEpochProof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, latestCC)
 	if err != nil {
 		return nil, err
 	}
@@ -185,11 +175,23 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	for i := 0; i < len(cc.ShardRosters); i++ {
+	for i := 0; i < len(latestCC.ShardRosters); i++ {
+		//log.Print("SENDING TO SHARD", i)
+		oldRoster := oldRosters[i]
+		newRoster := latestCC.ShardRosters[i]
+		changesCount := getRosterChangesCount(oldRoster, newRoster)
+		log.Print("OLD ROSTER:", oldRoster.List)
+		log.Print("NEW ROSTER:", newRoster.List)
+		log.Print("#CHANGES:", changesCount)
+
+		log.Print("SHARD ID", req.ShardIDs[i])
+		shardClient := bc.NewClient(req.ShardIDs[i], newRoster)
+
 		shardIndBuff := make([]byte, 8)
 		binary.PutVarint(shardIndBuff, int64(i))
+
 		newEpoch := bc.Instruction{
-			// TODO: Must give the instance id of the shard -> Save them when creating the shard ledgers
+			InstanceID: bc.NewInstanceID(nil),
 			Invoke: &bc.Invoke{
 				Command: "new_epoch",
 				Args: []bc.Argument{
@@ -198,27 +200,36 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 					bc.Argument{Name: "ib-ID", Value: req.IBID},
 				},
 			},
-			SignerCounter: []uint64{signerCtrs.Counters[0] + uint64(i)},
 		}
+
+		// Fetch counter of each shard
+		shardSignerCounter, err := shardClient.GetSignerCounters(req.Owner.Identity().String())
+		if err != nil {
+			return nil, err
+		}
+
 		//newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
-		tx.Instructions[0] = newEpoch
-		tx.SignWith(req.Owner)
-		//tx.InstructionsHash = tx.Instructions.Hash()
+		//tx.Instructions[0] = newEpoch
+		//tx.SignWith(req.Owner)
 
-		newRoster := cc.ShardRosters[i]
-		oldRoster := oldRosters[i]
-		changesCount := getRosterChangesCount(oldRoster, newRoster)
-
-		shardClient := bc.NewClient(req.ShardIDs[i], newRoster)
 		for j := 0; j < changesCount; j++ {
+			log.Print("ACTUALLY SENDING IT", j)
+			// TODO:
+			// Just update the signer counter
+			// And resign the tx
+			// Increment the counter for every repeated instruction
+
+			//newEpoch.SignerCounter = []uint64{uint64(j + 1)}
+
+			newEpoch.SignerCounter = []uint64{shardSignerCounter.Counters[0] + uint64(j+1)}
+			tx.Instructions[0] = newEpoch
+			tx.SignWith(req.Owner)
 			shardClient.AddTransactionAndWait(tx, 5)
 		}
 	}
 
-	// TODO: Fill the reply w/ relevant changes
 	clientReply := &NewEpochResponse{
-		IBRoster: *cc.Roster,
-		//ShardRosters: cc.ShardRosters,
+		IBRoster: *latestCC.Roster,
 	}
 
 	return clientReply, nil
