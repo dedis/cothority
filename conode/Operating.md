@@ -49,7 +49,7 @@ example, if you have two servers:
 
 You can keep both servers running, and use scp to move the DB file from
 conode-live to conode-standby. Both servers should have the same private.toml
-file, which includes the line `Address = "tcp://10.0.0.1:6879"`
+file, which includes the line `Address = "tcp://10.0.0.1:7770"`
 
 In the event that conode-live is down and unrecoverable, you can add 10.0.0.1 as
 a secondary address to conode-standby and start the conode on it. From this

@@ -87,11 +87,10 @@ it up as follows:
 
 ```ascii art
 +--------------------------+------------+--------------------------+
-|     Onchain-Secrets      |APPLICATIONS|                          |
-|                          +------------+     Proof of Personhood  |
-|       ByzCoin                                                    |
-|                               Status            E-voting         |
-| CISC Identity SkipChain                                          |
+|                          |APPLICATIONS|                          |
+|     Onchain-Secrets      +------------+     Proof of Personhood  |
+|                                                                  |
+|       ByzCoin                 Status            E-voting         |
 +------------------------+---------------+-------------------------+
 |                        |BUILDING BLOCKS|                         |
 | Consensus              +---------------+       Key Sharding      |

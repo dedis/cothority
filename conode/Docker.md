@@ -10,7 +10,7 @@ installed. First you need to setup the conode, use the following command to
 setup conode in your `~/conode_data`-directory:
 
 ```
-docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
+docker run -it --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
 ```
 
 This will create a `conode_data`-directory and ask you for the configuration details:
@@ -35,7 +35,7 @@ used in the `docker run`-command.
 Once a conode is setup, you can start it like that:
 
 ```
-docker run --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+docker run --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
 ### Using Crontab
@@ -45,7 +45,7 @@ line to your crontab (`crontab -e`) and your conode will start with the next
 system-startup:
 
 ```
-@reboot docker run --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+@reboot docker run --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
 ### Using systemd
@@ -85,7 +85,7 @@ make docker
 ```
 
 If you use `make docker_run` the first time, a directory called `conode_data` will be
-created and you will be asked for a port - use 6879 or adapt the Makefile - and a
+created and you will be asked for a port - use 7770 or adapt the Makefile - and a
 description of you node. Your public and private key for the conode will be stored
 in `conode_data`. If you run `make docker_run` again, the stored configuration will
 be used.

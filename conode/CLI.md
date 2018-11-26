@@ -21,7 +21,7 @@ go get -u github.com/dedis/cothority/conode
 
 ## Configuration
 
-To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
+To configure your conode you need to *open two consecutive ports* (e.g., 7770 and 7771) on your machine, then execute
 
 ```
 conode setup
