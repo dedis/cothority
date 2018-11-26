@@ -36,5 +36,5 @@ test_java: docker
 	cd external/java; \
 	for a in $$(seq 100); do \
 	  echo "Round $$a at $$(date)"; \
-	  mvn test -DByzCoinRPCTest#updateRoster || exit 1; \
+	  mvn -Dtest=ByzCoinRPCTest test || exit 1; \
 	done
