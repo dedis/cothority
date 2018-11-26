@@ -33,4 +33,8 @@ docker:
 	cd external/docker/; make docker_test
 
 test_java: docker
-	cd external/java; mvn test -DByzCoinRPCTest#updateRoster
+	cd external/java; \
+	for a in $$(seq 100); do \
+	  echo "Round $$a at $$(date)"; \
+	  mvn test -DByzCoinRPCTest#updateRoster || exit 1; \
+	done
