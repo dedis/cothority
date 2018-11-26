@@ -37,4 +37,5 @@ test_java: docker
 	for a in $$(seq 100); do \
 	  echo "Round $$a at $$(date)"; \
 	  mvn -Dtest=ByzCoinRPCTest test || exit 1; \
+		sleep 5; \
 	done
