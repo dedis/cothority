@@ -83,7 +83,7 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 	}
 
 	// handle answers from all parallel threads
-	sharedMask, err := NewMask(p.pairingSuite, publics, -1)
+	sharedMask, err := NewMask(p.suite, publics, -1)
 	if err != nil {
 		close(closingChan)
 		return nil, nil, err
@@ -155,8 +155,8 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 	runningSubProtocols := make([]*SubBlsFtCosi, 0, len(responsesChan))
 	responses := make([]StructResponse, 0, len(responsesChan))
 	for subProtocol, response := range responseMap {
-		sign, _ := signedByteSliceToPoint(p.pairingSuite, response.CoSiReponse)
-		if !sign.Equal(p.pairingSuite.G1().Point()) {
+		sign, _ := signedByteSliceToPoint(p.suite, response.CoSiReponse)
+		if !sign.Equal(p.suite.G1().Point()) {
 			// Only pass subProtocols that have atleast one valid response in them.
 			runningSubProtocols = append(runningSubProtocols, subProtocol)
 			responses = append(responses, response)

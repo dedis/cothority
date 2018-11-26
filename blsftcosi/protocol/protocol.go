@@ -7,10 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/pairing/bn256"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -46,8 +44,7 @@ type BlsFtCosi struct {
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
-	suite           cosi.Suite
-	pairingSuite    pairing.Suite
+	suite           pairing.Suite
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
@@ -59,7 +56,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // Called by GlobalRegisterDefaultProtocols
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, cothority.Suite, bn256.NewSuite())
+	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, bn256.NewSuite())
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -70,7 +67,7 @@ func GlobalRegisterDefaultProtocols() {
 }
 
 // NewBlsFtCosi method is used to define the ftcosi protocol.
-func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite, pairingSuite pairing.Suite) (onet.ProtocolInstance, error) {
+func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite pairing.Suite) (onet.ProtocolInstance, error) {
 
 	c := &BlsFtCosi{
 		TreeNodeInstance: n,
@@ -80,7 +77,6 @@ func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName s
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
 		suite:            suite,
-		pairingSuite:     pairingSuite,
 	}
 
 	return c, nil
@@ -174,7 +170,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	}
 
 	// generate root signature
-	signaturePoint, finalMask, err := generateSignature(p.pairingSuite, p.TreeNodeInstance, p.Roster().Publics(), p.Private(), responses, p.Msg, verificationOk)
+	signaturePoint, finalMask, err := generateSignature(p.suite, p.TreeNodeInstance, p.Roster().Publics(), p.Private(), responses, p.Msg, verificationOk)
 	if err != nil {
 		p.FinalSignature <- nil
 		return err
