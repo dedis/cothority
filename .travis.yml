@@ -2,13 +2,6 @@ language: node_js
 sudo: required
 dist: trusty
 
-node_js:
-  - "lts/*"
-
-env:
-  - TEST_DIR=cothority
-  - TEST_DIR=kyber
-
 install:
   - gimme 1.9
   - . $HOME/.gimme/envs/go1.9.env
@@ -18,36 +11,16 @@ install:
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
   - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
-script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
-
 cache:
   directories:
     - $HOME/.cache/go-build
     - $HOME/.m2
-
-after_success:
-  - npm run coveralls
 
 notifications:
   email: false
 
 matrix:
   include:
-    - language: go
-
-      go:
-        - "1.11.x"
-
-      install:
-        - go get -t ./...
-        - go get github.com/dedis/Coding || true
-
-      before_install:
-        - cd $TRAVIS_BUILD_DIR
-
-      script:
-        - make test
-
     - language: java
 
       script:

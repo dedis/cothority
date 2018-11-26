@@ -33,4 +33,4 @@ docker:
 	cd external/docker/; make docker_test
 
 test_java: docker
-	cd external/java; mvn test
+	cd external/java; mvn test -DByzCoinRPCTest#updateRoster
