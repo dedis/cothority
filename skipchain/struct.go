@@ -1119,13 +1119,13 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 // Blocks are stored per skipchain to prevent the cache to grow and it
 // is cleared after a new block is added (again per skipchain)
 type skipBlockBuffer struct {
-	buffer map[[32]byte]*SkipBlock
+	buffer map[string]*SkipBlock
 	sync.Mutex
 }
 
 func newSkipBlockBuffer() *skipBlockBuffer {
 	return &skipBlockBuffer{
-		buffer: make(map[[32]byte]*SkipBlock),
+		buffer: make(map[string]*SkipBlock),
 	}
 }
 
@@ -1134,9 +1134,7 @@ func (sbb *skipBlockBuffer) add(block *SkipBlock) {
 	sbb.Lock()
 	defer sbb.Unlock()
 
-	key := [32]byte{}
-	copy(key[:], block.SkipChainID())
-	sbb.buffer[key] = block
+	sbb.buffer[string(block.SkipChainID())] = block
 }
 
 // get returns the block if the skipchain ID hits with the
@@ -1145,10 +1143,7 @@ func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) *SkipBlock {
 	sbb.Lock()
 	defer sbb.Unlock()
 
-	key := [32]byte{}
-	copy(key[:], sid)
-
-	block, ok := sbb.buffer[key]
+	block, ok := sbb.buffer[string(sid)]
 	if !ok || !block.Hash.Equal(id) {
 		return nil
 	}
@@ -1161,8 +1156,5 @@ func (sbb *skipBlockBuffer) clear(sid SkipBlockID) {
 	sbb.Lock()
 	defer sbb.Unlock()
 
-	key := [32]byte{}
-	copy(key[:], sid)
-
-	delete(sbb.buffer, key)
+	delete(sbb.buffer, string(sid))
 }
