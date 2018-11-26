@@ -36,6 +36,12 @@ test_java: docker
 	cd external/java; \
 	for a in $$(seq 100); do \
 	  echo "Round $$a at $$(date)"; \
-	  mvn -Dtest=ByzCoinRPCTest test || exit 1; \
+		if mvn -Dtest=ByzCoinRPCTest test > log.txt 2>&1; then \
+			echo Successfully ran \#$$a at $$(date); \
+		else \
+			echo Failed at $$(date); \
+			cat log.txt; \
+			exit 1; \
+		fi; \
 		sleep 5; \
 	done
