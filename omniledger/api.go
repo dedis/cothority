@@ -171,7 +171,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	proofBuf, err := protobuf.Encode(&gpr.Proof)
+	proofBuf, err := protobuf.Encode(reply.ReqNewEpochProof)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		log.Print("#CHANGES:", changesCount)
 
 		log.Print("SHARD ID", req.ShardIDs[i])
-		shardClient := bc.NewClient(req.ShardIDs[i], newRoster)
+		shardClient := bc.NewClient(req.ShardIDs[i], oldRoster)
 
 		shardIndBuff := make([]byte, 8)
 		binary.PutVarint(shardIndBuff, int64(i))

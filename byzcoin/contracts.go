@@ -283,7 +283,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 
 		oldRoster, _, _, _ = lib.ChangeRoster(oldRoster, newRoster, oldMap, newMap)
 		sc, err = updateRosterScs(rst, darcID, oldRoster)
-		log.Print("UPDATED SHARD")
+		log.Print("UPDATED SHARD", oldRoster.List, newRoster.List)
 		return
 	default:
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
