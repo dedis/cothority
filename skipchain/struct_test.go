@@ -205,6 +205,40 @@ func TestSkipBlock_Payload(t *testing.T) {
 	require.Equal(t, h, sb.CalculateHash())
 }
 
+// This checks if the it returns the shortest path or an error
+// when blocks are missing
+func TestGetProof(t *testing.T) {
+	db, file := setupSkipBlockDB(t)
+	defer os.Remove(file)
+
+	root := NewSkipBlock()
+	root.updateHash()
+	sb1 := NewSkipBlock()
+	sb1.BackLinkIDs = []SkipBlockID{root.Hash}
+	sb1.updateHash()
+	sb2 := NewSkipBlock()
+	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
+	sb2.updateHash()
+	sb1.ForwardLink = []*ForwardLink{&ForwardLink{To: sb2.Hash}}
+	root.ForwardLink = []*ForwardLink{&ForwardLink{To: sb1.Hash}, &ForwardLink{To: sb2.Hash}}
+
+	_, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
+	require.Nil(t, err)
+
+	blocks, err := db.GetProof(root.Hash)
+	require.Nil(t, err)
+	require.Equal(t, 2, len(blocks))
+	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(db.bucketName).Delete(sb2.Hash)
+	})
+	require.Nil(t, err)
+
+	_, err = db.GetProof(root.Hash)
+	require.NotNil(t, err)
+}
+
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
 // The caller is responsible to close and remove the database file after using it.
 func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
@@ -223,4 +257,32 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	require.Nil(t, err)
 
 	return NewSkipBlockDB(db, []byte("skipblock-test")), fname
+}
+
+// Checks if the buffer api works as expected
+func TestBlockBuffer(t *testing.T) {
+	bb := newSkipBlockBuffer()
+	sid := []byte{1}
+	bid := []byte{2}
+
+	sb := NewSkipBlock()
+	sb.Index = 1
+	sb.GenesisID = sid
+	sb.Hash = bid
+	bb.add(sb)
+
+	sb = bb.get(sid, bid)
+	require.NotNil(t, sb)
+
+	// wrong key
+	sb = bb.get(bid, bid)
+	require.Nil(t, sb)
+
+	// wrong block id
+	sb = bb.get(sid, sid)
+	require.Nil(t, sb)
+
+	bb.clear(sid)
+	sb = bb.get(sid, bid)
+	require.Nil(t, sb)
 }

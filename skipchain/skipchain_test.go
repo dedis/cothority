@@ -592,6 +592,7 @@ func TestService_ParallelGenesis(t *testing.T) {
 	}
 }
 
+// Checks that the propagation (genesis, FL, proof) is done correctly
 func TestService_Propagation(t *testing.T) {
 	nbrNodes := 60
 	if testing.Short() {
@@ -601,7 +602,7 @@ func TestService_Propagation(t *testing.T) {
 
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeSRS(cothority.Suite, nbrNodes, skipchainSID)
+	servers, fullRoster, genService := local.MakeSRS(cothority.Suite, nbrNodes, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -609,12 +610,111 @@ func TestService_Propagation(t *testing.T) {
 	}
 	service := genService.(*Service)
 
-	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
+	firstFiveRoster := onet.NewRoster(fullRoster.List[:5])
+	sbRoot, err := makeGenesisRosterArgs(service, firstFiveRoster, nil, VerificationNone,
 		3, 3)
 	log.ErrFatal(err)
 	require.NotNil(t, sbRoot)
-	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbRoot})
-	log.ErrFatal(err)
+
+	k := 9
+	blocks := make([]*SkipBlock, k)
+	for i := 0; i < k; i++ {
+		sb := NewSkipBlock()
+		if i < k-1 {
+			sb.Roster = firstFiveRoster
+		} else {
+			sb.Roster = fullRoster
+		}
+
+		ssbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		log.ErrFatal(err)
+
+		blocks[i] = ssbr.Latest
+	}
+
+	// Check that any conode can go from the genesis to the last
+	// block using the highest forward link level available
+	for _, s := range services {
+		sb := s.db.GetByID(sbRoot.Hash)
+		require.NotNil(t, sb)
+		for len(sb.ForwardLink) > 0 {
+			sb = s.db.GetByID(sb.ForwardLink[len(sb.ForwardLink)-1].To)
+		}
+
+		require.Equal(t, sb.Hash, blocks[k-1].Hash)
+
+		// and backwards
+		sb = s.db.GetByID(blocks[k-1].Hash)
+		require.Equal(t, 3, len(sb.BackLinkIDs))
+		require.Equal(t, 0, len(sb.ForwardLink))
+		require.Equal(t, sbRoot.Hash, sb.BackLinkIDs[2])
+	}
+}
+
+func createSkipchain(service *Service, ro *onet.Roster) (Proof, error) {
+	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone, 1, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < 3; i++ {
+		sb := NewSkipBlock()
+		sb.Roster = ro
+		sb.Index = i + 1
+		_, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	blocks, err := service.db.GetProof(sbRoot.SkipChainID())
+	return Proof(blocks), err
+}
+
+// Checks a forged message from a evil conode cannot add
+// blocks to an existing skipchain
+func TestService_ForgedPropagationMessage(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	servers, roster, s := local.MakeSRS(cothority.Suite, 10, skipchainSID)
+
+	service := s.(*Service)
+	ro := onet.NewRoster(roster.List[:5])
+
+	p1, err := createSkipchain(service, ro)
+	require.Nil(t, err)
+
+	p2, err := createSkipchain(service, ro)
+	require.Nil(t, err)
+
+	// Use an unknown member of the roster
+	service = servers[5].GetService(ServiceName).(*Service)
+
+	err = service.propagateProofHandler([]byte{})
+	require.NotNil(t, err)
+
+	// checks that it could propagate something, this one is correct
+	err = service.propagateProofHandler(&PropagateProof{p1})
+	require.Nil(t, err)
+
+	// checks that the block cannot be tempered
+	p1[2].Data = []byte{1}
+	err = service.propagateProofHandler(&PropagateProof{p1})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Wrong hash")
+
+	// checks that the targets have to match
+	err = service.propagateProofHandler(&PropagateProof{append(p1[:2], p2[2], p1[3])})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Wrong targets")
+
+	// checks that the signature must match
+	forgedBlock := NewSkipBlock()
+	forgedBlock.BackLinkIDs = []SkipBlockID{p1[3].Hash}
+	forgedBlock.updateHash()
+	p1[3].ForwardLink = []*ForwardLink{&ForwardLink{From: p1[3].Hash, To: forgedBlock.Hash}}
+	err = service.propagateProofHandler(&PropagateProof{Proof(append(p1, forgedBlock))})
+	require.NotNil(t, err)
 }
 
 func TestService_AddFollow(t *testing.T) {
