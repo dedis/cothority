@@ -275,15 +275,15 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err != nil {
 			return
 		}
-		newRoster := omniCC.ShardRosters[shardInd]
+		targetRoster := omniCC.ShardRosters[shardInd]
 
 		// Apply roster change
 		var oldMap map[network.ServerIdentityID]bool
 		var newMap map[network.ServerIdentityID]bool
 
-		oldRoster, _, _, _ = lib.ChangeRoster(oldRoster, newRoster, oldMap, newMap)
-		sc, err = updateRosterScs(rst, darcID, oldRoster)
-		log.Print("UPDATED SHARD", oldRoster.List, newRoster.List)
+		tempRoster, _, _, _ := lib.ChangeRoster(oldRoster, targetRoster, oldMap, newMap)
+		sc, err = updateRosterScs(rst, darcID, tempRoster)
+		log.Print("UPDATED SHARD", tempRoster.List, targetRoster.List)
 		return
 	default:
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
