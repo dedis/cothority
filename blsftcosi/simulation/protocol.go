@@ -25,7 +25,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/cothority/blsftcosi/service"
-	"github.com/dedis/kyber/pairing/bn256"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -138,13 +138,17 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 
 		round.Record()
 
-		pairingSuite := bn256.NewSuiteG2()
-		pairingPublicKeys := config.Roster.Publics()
-		thresholdPolicy := protocol.NewThresholdPolicy(blsftcosiService.Threshold)
-		err = protocol.Verify(pairingSuite, pairingPublicKeys, proposal, serviceReply.Signature, thresholdPolicy)
+		suite := client.PairingSuite()
+		publics := config.Roster.Publics()
+		thresholdPolicy := cosi.NewThresholdPolicy(blsftcosiService.Threshold)
+		err = serviceReply.Signature.Verify(suite, proposal, publics, thresholdPolicy)
 		if err != nil {
 			return fmt.Errorf("error while verifying signature:%s", err)
 		}
+
+		mask, err := serviceReply.Signature.GetMask(suite, publics)
+		monitor.RecordSingleMeasure("correct_nodes", float64(mask.CountEnabled()))
+
 		log.Lvl2("Signature correctly verified!")
 	}
 	return nil

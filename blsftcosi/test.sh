@@ -54,9 +54,9 @@ testSignFile(){
     echo "Running first sign"
     echo "My Test Message File" > foo.txt
     echo "My Second Test Message File" > bar.txt
-    runCl 1 sign foo.txt > /dev/null
+    runCl 1 sign foo.txt
     echo "Running second sign"
-    runCl 1 sign foo.txt -o cl1/signature > /dev/null
+    runCl 1 sign foo.txt -o cl1/signature
     testOK runCl 1 verify foo.txt -s cl1/signature
     testFail runCl 1 verify bar.txt -s cl1/signature
     rm foo.txt

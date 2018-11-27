@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet/log"
 )
 
@@ -79,7 +80,7 @@ func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, erro
 	}
 
 	// handle answers from all parallel threads
-	sharedMask, err := NewMask(p.suite, p.Roster().Publics(), -1)
+	sharedMask, err := cosi.NewMask(p.suite.(cosi.Suite), p.Roster().Publics(), nil)
 	if err != nil {
 		close(closingChan)
 		return nil, nil, err
@@ -103,7 +104,7 @@ func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, erro
 					thresholdReachable = false
 				}
 
-				newMask, err := AggregateMasks(sharedMask.Mask(), res.structResponse.Mask)
+				newMask, err := cosi.AggregateMasks(sharedMask.Mask(), res.structResponse.Mask)
 				if err != nil {
 					err = fmt.Errorf("error in aggregation of response masks: %s", err)
 					close(closingChan)
@@ -151,7 +152,7 @@ func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, erro
 	runningSubProtocols := make([]*SubBlsFtCosi, 0, len(responsesChan))
 	responses := make([]StructResponse, 0, len(responsesChan))
 	for subProtocol, response := range responseMap {
-		sign, _ := signedByteSliceToPoint(p.suite, response.CoSiReponse)
+		sign, _ := response.Signature.Point(p.suite)
 		if !sign.Equal(p.suite.G1().Point()) {
 			// Only pass subProtocols that have atleast one valid response in them.
 			runningSubProtocols = append(runningSubProtocols, subProtocol)

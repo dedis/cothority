@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/kyber/pairing/bn256"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
@@ -20,7 +20,7 @@ func TestServiceCosi(t *testing.T) {
 	local := onet.NewTCPTest(testSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, roster, _ := local.GenTree(30, false)
+	_, roster, _ := local.GenTree(10, false)
 	defer local.CloseAll()
 
 	// Send a request to the service to all hosts
@@ -38,7 +38,7 @@ func TestServiceCosi(t *testing.T) {
 		require.Nil(t, err, "Couldn't send")
 
 		// verify the response still
-		require.Nil(t, protocol.Verify(testSuite, roster.Publics(), msg, reply.Signature, protocol.CompletePolicy{}))
+		require.Nil(t, reply.Signature.Verify(testSuite, msg, roster.Publics(), cosi.CompletePolicy{}))
 
 	}
 }
@@ -47,7 +47,7 @@ func TestCreateAggregate(t *testing.T) {
 	local := onet.NewTCPTest(testSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, roster, _ := local.GenTree(30, false)
+	_, roster, _ := local.GenTree(10, false)
 	defer local.CloseAll()
 
 	// Send a request to the service
@@ -64,5 +64,5 @@ func TestCreateAggregate(t *testing.T) {
 	require.Nil(t, err, "Couldn't send")
 
 	// verify the response still
-	require.Nil(t, protocol.Verify(testSuite, roster.Publics(), msg, res.Signature, protocol.CompletePolicy{}))
+	require.Nil(t, res.Signature.Verify(testSuite, msg, roster.Publics(), cosi.CompletePolicy{}))
 }

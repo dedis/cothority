@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/kyber/sign/bls"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -25,7 +26,6 @@ func init() {
 type SubBlsFtCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
-	Data           []byte
 	Timeout        time.Duration
 	Threshold      int
 	stoppedOnce    sync.Once
@@ -45,7 +45,7 @@ type SubBlsFtCosi struct {
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a, b []byte) bool { return true }
+	vf := func(a []byte) bool { return true }
 	return NewSubBlsFtCosi(n, vf, bn256.NewSuiteG2())
 }
 
@@ -126,7 +126,6 @@ func (p *SubBlsFtCosi) Dispatch() error {
 		p.Timeout /= 2
 	}
 	p.Msg = announcement.Msg
-	p.Data = announcement.Data
 	p.Threshold = announcement.Threshold
 
 	// verify that threshold is valid
@@ -140,7 +139,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 	if !p.IsRoot() {
 		go func() {
 			log.Lvl3(p.ServerIdentity(), "starting verification in the background")
-			verificationOk := p.verificationFn(p.Msg, p.Data)
+			verificationOk := p.verificationFn(p.Msg)
 			personalResponse, err := p.getResponse(verificationOk, p.Roster().Publics(), p.Private())
 			if err != nil {
 				log.Error("error while generating own commitment:", err)
@@ -194,7 +193,7 @@ loop:
 			nodesCanRespond = remove(nodesCanRespond, response.TreeNode)
 
 			// verify mask of the received response
-			verificationMask, err := NewMask(p.suite, p.Roster().Publics(), -1)
+			verificationMask, err := cosi.NewMask(p.suite.(cosi.Suite), p.Roster().Publics(), nil)
 			if err != nil {
 				return err
 			}
@@ -233,7 +232,7 @@ loop:
 				}
 
 				// check if response is a refusal or acceptance
-				sign, _ := signedByteSliceToPoint(p.suite, response.CoSiReponse)
+				sign, _ := response.Signature.Point(p.suite)
 				if sign.Equal(p.suite.G1().Point()) { // refusal
 					// verify the refusal is signed correctly
 					for index, refusal := range response.Refusals {
@@ -351,9 +350,6 @@ func (p *SubBlsFtCosi) Start() error {
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
 	}
-	if p.Data == nil {
-		return errors.New("subprotocol does not have data, it can be empty but cannot be nil")
-	}
 	if p.Roster().Publics() == nil || len(p.Roster().Publics()) < 1 {
 		return errors.New("subprotocol has invalid public keys")
 	}
@@ -372,7 +368,7 @@ func (p *SubBlsFtCosi) Start() error {
 
 	announcement := StructAnnouncement{
 		p.TreeNode(),
-		Announcement{p.Msg, p.Data, p.Timeout, p.Threshold},
+		Announcement{p.Msg, p.Timeout, p.Threshold},
 	}
 	p.ChannelAnnouncement <- announcement
 	return nil
@@ -383,7 +379,7 @@ func (p *SubBlsFtCosi) Start() error {
 // Returns the response and an error if there was a problem in the process.
 func (p *SubBlsFtCosi) getResponse(accepts bool, publics []kyber.Point, private kyber.Scalar) (StructResponse, error) {
 
-	personalMask, err := NewMask(p.suite, publics, -1)
+	personalMask, err := cosi.NewMask(p.suite.(cosi.Suite), publics, nil)
 	if err != nil {
 		return StructResponse{}, err
 	}
@@ -396,7 +392,7 @@ func (p *SubBlsFtCosi) getResponse(accepts bool, publics []kyber.Point, private 
 	Refusals := make(map[int][]byte)
 
 	if accepts {
-		personalMask, err = NewMask(p.suite, publics, p.Index())
+		personalMask, err = cosi.NewMask(p.suite.(cosi.Suite), publics, p.Public())
 		if err != nil {
 			return StructResponse{}, err
 		}
@@ -442,4 +438,65 @@ func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
 		}
 	}
 	return nodesList
+}
+
+func aggregateResponses(ps pairing.Suite, publics []kyber.Point,
+	structResponses []StructResponse) (kyber.Point, *cosi.Mask, error) {
+	if publics == nil {
+		return nil, nil, fmt.Errorf("publics should not be nil, but is")
+	} else if structResponses == nil {
+		return nil, nil, fmt.Errorf("structCommitments should not be nil, but is")
+	}
+
+	// extract lists of responses and masks
+	var signatures []kyber.Point
+	var masks [][]byte
+
+	for _, r := range structResponses {
+		atmp, err := r.Signature.Point(ps)
+		_ = err
+		signatures = append(signatures, atmp)
+		masks = append(masks, r.Mask)
+	}
+
+	// create final aggregated mask
+	finalMask, err := cosi.NewMask(ps.(cosi.Suite), publics, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	aggResponse := ps.G1().Point()
+	aggMask := finalMask.Mask()
+	if len(masks) > 0 {
+		//aggregate responses and masks
+		aggResponse, aggMask, err = aggregateSignatures(ps, signatures, masks)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	err = finalMask.SetMask(aggMask)
+	if err != nil {
+		return nil, nil, err
+	}
+	return aggResponse, finalMask, nil
+}
+
+// AggregateResponses returns the sum of given responses.
+func aggregateSignatures(ps pairing.Suite, signatures []kyber.Point, masks [][]byte) (sum kyber.Point, sig []byte, err error) {
+	if signatures == nil {
+		return nil, nil, fmt.Errorf("no signatures provided")
+	}
+	aggMask := make([]byte, len(masks[0]))
+	r := ps.G1().Point()
+
+	for i, signature := range signatures {
+
+		r = r.Add(r, signature)
+		aggMask, err = cosi.AggregateMasks(aggMask, masks[i])
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return r, aggMask, nil
 }

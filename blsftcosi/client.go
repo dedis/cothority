@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/blsftcosi/check"
-	"github.com/dedis/cothority/blsftcosi/protocol"
 	s "github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -41,10 +41,10 @@ func signFile(c *cli.Context) error {
 	}
 	fileName := c.Args().First()
 	groupToml := c.String(optionGroup)
-	file, err := os.Open(fileName)
+	msg, err := ioutil.ReadFile(fileName)
 	log.ErrFatal(err, "Couldn't read file to be signed:")
 
-	sig, err := sign(file, groupToml)
+	sig, err := sign(msg, groupToml)
 	log.ErrFatal(err, "Couldn't create signature:")
 
 	log.Lvl3(sig)
@@ -75,7 +75,7 @@ func verifyFile(c *cli.Context) error {
 
 // verifyPrintResult prints out OK or what failed.
 func verifyPrintResult(err error) {
-	log.ErrFatal(err, "Invalid: Signature verification failed:")
+	log.ErrFatal(err, "Invalid: Signature verification failed")
 
 	log.Print("[+] OK: Signature is valid.")
 }
@@ -98,7 +98,7 @@ func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 }
 
 // sign takes a stream and a toml file defining the servers
-func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
+func sign(msg []byte, tomlFileName string) (*s.SignatureResponse, error) {
 	log.Lvl2("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -113,7 +113,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 			tomlFileName)
 	}
 	log.Lvl2("Sending signature to", g.Roster)
-	res, err := signStatement(r, g.Roster)
+	res, err := signStatement(msg, g.Roster)
 	if err != nil {
 		return nil, err
 	}
@@ -122,20 +122,18 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
+func signStatement(msg []byte, el *onet.Roster) (*s.SignatureResponse,
 	error) {
 	publics := entityListToPublics(el)
 	client := s.NewClient()
 
-	h := client.Suite().(pairing.Suite).Hash()
-	io.Copy(h, read)
-	msg := h.Sum(nil)
+	log.Lvlf4("Signing message %x", msg)
 
 	pchan := make(chan *s.SignatureResponse)
 	var err error
 	go func() {
 		log.Lvl3("Waiting for the response on SignRequest")
-		response, e := client.SignatureRequest(el, msg)
+		response, e := client.SignatureRequest(el, msg[:])
 		if e != nil {
 			err = e
 			close(pchan)
@@ -146,12 +144,12 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 
 	select {
 	case response, ok := <-pchan:
-		log.Lvl5("Response:", response)
+		log.Lvlf5("Response: %x", response.Signature)
 		if !ok || err != nil {
 			return nil, errors.New("received an invalid response")
 		}
 
-		err = protocol.Verify(client.Suite().(pairing.Suite), publics, msg, response.Signature, protocol.CompletePolicy{})
+		err = response.Signature.Verify(client.PairingSuite(), msg[:], publics, cosi.CompletePolicy{})
 		if err != nil {
 			return nil, err
 		}
@@ -200,7 +198,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl4("Verfifying signature")
+	log.Lvlf4("Verifying signature %x %x", b, sig.Signature)
 	err = verifySignatureHash(b, sig, g.Roster)
 	return err
 }
@@ -214,16 +212,13 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 	h := suite.Hash()
 	h.Write(b)
 	fHash := h.Sum(nil)
-	h.Reset()
-	h.Write(fHash)
-	hashHash := h.Sum(nil)
-	if !bytes.Equal(hashHash, sig.Hash) {
+	if !bytes.Equal(fHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
 	// TODO - We should use suite from cothority
-	if err := protocol.Verify(suite, publics, fHash, sig.Signature, protocol.CompletePolicy{}); err != nil {
+	if err := sig.Signature.Verify(suite, b, publics, cosi.CompletePolicy{}); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil

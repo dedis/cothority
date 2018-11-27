@@ -7,15 +7,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/pairing/bn256"
+	"github.com/dedis/kyber/sign/bls"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
 
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
-type VerificationFn func(msg []byte, data []byte) bool
+type VerificationFn func(msg []byte) bool
 
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
@@ -29,13 +32,12 @@ func init() {
 type BlsFtCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
-	Data           []byte
 	CreateProtocol CreateProtocolFunction
 	// Timeout is not a global timeout for the protocol, but a timeout used
 	// for waiting for responses for sub protocols.
 	Timeout        time.Duration
 	Threshold      int
-	FinalSignature chan []byte // final signature that is sent back to client
+	FinalSignature chan BlsSignature // final signature that is sent back to client
 
 	stoppedOnce     sync.Once
 	subProtocols    []*SubBlsFtCosi
@@ -54,8 +56,8 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // with an always-true verification.
 // Called by GlobalRegisterDefaultProtocols
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a, b []byte) bool { return true }
-	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, bn256.NewSuite())
+	vf := func(a []byte) bool { return true }
+	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, bn256.NewSuiteG2())
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -69,8 +71,7 @@ func GlobalRegisterDefaultProtocols() {
 func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite pairing.Suite) (onet.ProtocolInstance, error) {
 	c := &BlsFtCosi{
 		TreeNodeInstance: n,
-		FinalSignature:   make(chan []byte, 1),
-		Data:             make([]byte, 0),
+		FinalSignature:   make(chan BlsSignature, 1),
 		startChan:        make(chan bool, 1),
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
@@ -140,7 +141,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	verifyChan := make(chan bool, 1)
 	go func() {
 		log.Lvl3(p.ServerIdentity().Address, "starting verification")
-		verifyChan <- p.verificationFn(p.Msg, p.Data)
+		verifyChan <- p.verificationFn(p.Msg)
 	}()
 
 	// start all subprotocols
@@ -193,7 +194,7 @@ func (p *BlsFtCosi) Dispatch() error {
 		return err
 	}
 
-	finalSignature := append(signature, finalMask.mask...)
+	finalSignature := append(signature, finalMask.Mask()...)
 
 	log.Lvl3(p.ServerIdentity().Address, "Created final signature", signature, finalMask, finalSignature)
 
@@ -251,12 +252,10 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	}
 	cosiSubProtocol := pi.(*SubBlsFtCosi)
 	cosiSubProtocol.Msg = p.Msg
-	cosiSubProtocol.Data = p.Data
 	cosiSubProtocol.Timeout = p.Timeout / 2
 
 	//the Threshold (minus root node) is divided evenly among the subtrees
 	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(len(p.subTrees))))
-	log.Lvlf2("%d", subThreshold)
 	if subThreshold > tree.Size()-1 {
 		subThreshold = tree.Size() - 1
 	}
@@ -270,4 +269,75 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	}
 
 	return cosiSubProtocol, err
+}
+
+// Sign the message with this node and aggregates with all child signatures (in structResponses)
+// Also aggregates the child bitmasks
+func generateSignature(ps pairing.Suite, t *onet.TreeNodeInstance, publics []kyber.Point, private kyber.Scalar, structResponses []StructResponse,
+	msg []byte, ok bool) (kyber.Point, *cosi.Mask, error) {
+
+	if t == nil {
+		return nil, nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
+	} else if structResponses == nil {
+		return nil, nil, fmt.Errorf("StructResponse should not be nil, but is")
+	} else if publics == nil {
+		return nil, nil, fmt.Errorf("publics should not be nil, but is")
+	} else if msg == nil {
+		return nil, nil, fmt.Errorf("msg should not be nil, but is")
+	}
+
+	// extract lists of responses
+	var signatures []kyber.Point
+	var masks [][]byte
+
+	for _, r := range structResponses {
+		atmp, err := r.Signature.Point(ps)
+		_ = err
+		signatures = append(signatures, atmp)
+		masks = append(masks, r.Mask)
+	}
+
+	//generate personal mask
+	var personalMask *cosi.Mask
+	if ok {
+		personalMask, _ = cosi.NewMask(ps.(cosi.Suite), publics, t.Public())
+	} else {
+		personalMask, _ = cosi.NewMask(ps.(cosi.Suite), publics, nil)
+	}
+
+	masks = append(masks, personalMask.Mask())
+
+	// generate personal signature and append to other sigs
+	personalSig, err := bls.Sign(ps, private, msg)
+
+	if err != nil {
+		return nil, nil, err
+	}
+	personalPointSig, err := BlsSignature(personalSig).Point(ps)
+	if !ok {
+		personalPointSig = ps.G1().Point()
+	}
+
+	signatures = append(signatures, personalPointSig)
+
+	// Aggregate all signatures
+	aggSignature, aggMask, err := aggregateSignatures(ps, signatures, masks)
+	if err != nil {
+		log.Lvl3(t.ServerIdentity().Address, "failed to create aggregate signature")
+		return nil, nil, err
+	}
+
+	//create final aggregated mask
+	finalMask, err := cosi.NewMask(ps.(cosi.Suite), publics, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = finalMask.SetMask(aggMask)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Lvl3(t.ServerIdentity().Address, "is done aggregating signatures with total of", len(signatures), "signatures")
+
+	return aggSignature, finalMask, nil
 }

@@ -54,7 +54,7 @@ type SignatureRequest struct {
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Hash      []byte
-	Signature []byte
+	Signature protocol.BlsSignature
 }
 
 // SignatureRequest treats external request to this service.
@@ -99,7 +99,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	}
 
 	// wait for reply
-	var sig []byte
+	var sig protocol.BlsSignature
 	select {
 	case sig = <-p.FinalSignature:
 	case <-time.After(p.Timeout + time.Second):

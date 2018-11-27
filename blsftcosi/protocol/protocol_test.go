@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing/bn256"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,11 +19,11 @@ const FailureProtocolName = "FailureProtocol"
 const FailureSubProtocolName = "FailureSubProtocol"
 
 func NewFailureProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a, b []byte) bool { return true }
+	vf := func(a []byte) bool { return true }
 	return NewBlsFtCosi(n, vf, FailureSubProtocolName, testSuite)
 }
 func NewFailureSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a, b []byte) bool { return false }
+	vf := func(a []byte) bool { return false }
 	return NewSubBlsFtCosi(n, vf, testSuite)
 }
 
@@ -86,7 +87,7 @@ func TestProtocol_25_5(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func runProtocol(nbrNodes, nbrSubTrees, threshold int) ([]byte, *onet.Roster, error) {
+func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Roster, error) {
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 	servers, roster, tree := local.GenTree(nbrNodes, false)
@@ -117,7 +118,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) ([]byte, *onet.Roster, er
 	}
 
 	// get and verify signature
-	sig, err := getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, NewThresholdPolicy(threshold))
+	sig, err := getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,13 +144,15 @@ func TestQuickAnswerProtocol_25_5(t *testing.T) {
 	require.InEpsilon(t, 12, mask.CountEnabled(), 5)
 }
 
-func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*Mask, error) {
+func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
 	sig, roster, err := runProtocol(nbrNodes, nbrTrees, nbrNodes/2)
 	if err != nil {
 		return nil, err
 	}
 
-	mask, err := NewMask(testSuite, roster.Publics(), -1)
+	var suite network.Suite
+	suite = testSuite
+	mask, err := cosi.NewMask(suite.(cosi.Suite), roster.Publics(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +209,7 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure int) error {
 	}
 
 	// get and verify signature
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, NewThresholdPolicy(threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
 	if err != nil {
 		return err
 	}
@@ -258,7 +261,7 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 	}
 
 	// get and verify signature
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, NewThresholdPolicy(cosiProtocol.Threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(cosiProtocol.Threshold))
 	if err != nil {
 		return err
 	}
@@ -353,7 +356,7 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) error {
 
 	// only the leader agrees, the verification should only pass with a threshold of 1
 	// the rest, including using the complete policy should fail
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, NewThresholdPolicy(threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
 	if err != nil {
 		return err
 	}
@@ -368,11 +371,11 @@ type testService struct {
 	*onet.ServiceProcessor
 }
 
-func getAndVerifySignature(cosiProtocol *BlsFtCosi, proposal []byte, policy Policy) ([]byte, error) {
-	var signature []byte
+func getAndVerifySignature(proto *BlsFtCosi, proposal []byte, policy cosi.Policy) (BlsSignature, error) {
+	var signature BlsSignature
 	log.Lvl3("Waiting for Instance")
 	select {
-	case signature = <-cosiProtocol.FinalSignature:
+	case signature = <-proto.FinalSignature:
 		log.Lvl3("Instance is done")
 	case <-time.After(defaultTimeout * 2):
 		// wait a bit longer than the protocol timeout
@@ -380,18 +383,7 @@ func getAndVerifySignature(cosiProtocol *BlsFtCosi, proposal []byte, policy Poli
 		return nil, fmt.Errorf("didn't get commitment in time")
 	}
 
-	return signature, verifySignature(signature, cosiProtocol.Roster().Publics(), proposal, policy)
-}
-
-func verifySignature(signature []byte, publics []kyber.Point,
-	proposal []byte, policy Policy) error {
-	// verify signature
-	err := Verify(testSuite, publics, proposal, signature, policy)
-	if err != nil {
-		return fmt.Errorf("didn't get a valid signature: %s", err)
-	}
-	log.Lvl3("Signature correctly verified!")
-	return nil
+	return signature, signature.Verify(testSuite, proto.Msg, proto.Roster().Publics(), policy)
 }
 
 // Starts a new service. No function needed.
