@@ -43,7 +43,7 @@ type Write struct {
 	// ExtraData is clear text and application-specific
 	ExtraData []byte `protobuf:"opt"`
 	// LTSID points to the identity of the lts group
-	LTSID []byte
+	LTSID byzcoin.InstanceID
 }
 
 // Read is the data stored in a read instance. It has a pointer to the write
@@ -78,7 +78,7 @@ type CreateLTS struct {
 // key.
 type CreateLTSReply struct {
 	ByzCoinID  skipchain.SkipBlockID
-	InstanceID []byte
+	InstanceID byzcoin.InstanceID
 	// X is the public key of the LTS.
 	X kyber.Point
 }
@@ -118,7 +118,7 @@ type DecryptKeyReply struct {
 // GetLTSReply asks for the shared public key of the corresponding LTSID
 type GetLTSReply struct {
 	// LTSID is the id of the LTS instance created.
-	LTSID []byte
+	LTSID byzcoin.InstanceID
 }
 
 // LtsInstanceInfo is the information stored in an LTS instance.

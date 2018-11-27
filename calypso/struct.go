@@ -37,7 +37,7 @@ type suite interface {
 // Output:
 //   - write - structure containing the encrypted key U, Cs and the NIZKP of
 //   it containing the reader-darc.
-func NewWrite(suite suites.Suite, ltsid []byte, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
+func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
 	wr := &Write{LTSID: ltsid}
 	r := suite.Scalar().Pick(suite.RandomStream())
 	C := suite.Point().Mul(r, X)
@@ -50,7 +50,7 @@ func NewWrite(suite suites.Suite, ltsid []byte, writeDarc darc.ID, X kyber.Point
 		key = key[min(len(key), kp.EmbedLen()):]
 	}
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid), nil)
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid.Slice()), nil)
 	wr.Ubar = suite.Point().Mul(r, gBar)
 	s := suite.Scalar().Pick(suite.RandomStream())
 	w := suite.Point().Mul(s, nil)
@@ -83,7 +83,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	ue := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.U)
 	w := suite.Point().Add(gf, ue)
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(wr.LTSID), nil)
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(wr.LTSID.Slice()), nil)
 	gfBar := suite.Point().Mul(wr.F, gBar)
 	ueBar := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.Ubar)
 	wBar := suite.Point().Add(gfBar, ueBar)
@@ -188,5 +188,7 @@ type newLtsConfig struct {
 }
 
 type reshareLtsConfig struct {
-	Proof byzcoin.Proof
+	byzcoin.Proof
+	Commits  []kyber.Point
+	OldNodes []kyber.Point
 }

@@ -107,15 +107,14 @@ func (o *Setup) Dispatch() error {
 	if err != nil {
 		return err
 	}
-	for range o.publics[1:] {
+	// TODO: "This will fail as soon as we start doing things with thresold." - nicolas
+	for i := 0; i < o.DKG.ExpectedDeals(); i++ {
 		err := o.allDeal(<-o.structDeal)
 		if err != nil {
 			return err
 		}
 	}
-	l := len(o.publics)
-	for i := 0; i < l*(l-1); i++ {
-		// This is expected to return some errors, so do not stop on them.
+	for !o.DKG.Certified() {
 		err := o.allResponse(<-o.structResponse)
 		if err != nil && err.Error() != "vss: already existing response from same origin" {
 			return err
@@ -144,6 +143,9 @@ func (o *Setup) Dispatch() error {
 func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
+	if o.KeyPair == nil {
+		return errors.New("no keypair")
+	}
 	return o.SendToParent(&InitReply{Public: o.KeyPair.Public})
 }
 
@@ -166,9 +168,9 @@ func (o *Setup) rootStartDeal(replies []structInitReply) error {
 
 // Messages for both
 func (o *Setup) allStartDeal(ssd structStartDeal) error {
-	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
 	if o.NewDKG == nil {
+		// TODO: Should be newdistkeyhandler
 		o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.KeyPair.Private,
 			ssd.Publics, int(ssd.Threshold))
 	} else {
@@ -182,7 +184,6 @@ func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl3(o.Name(), "sending out deals", len(deals))
 	for i, d := range deals {
 		if err := o.SendTo(o.nodes[i], &Deal{d}); err != nil {
 			return err
@@ -192,7 +193,6 @@ func (o *Setup) allStartDeal(ssd structStartDeal) error {
 }
 
 func (o *Setup) allDeal(sd structDeal) error {
-	log.Lvl3(o.Name(), sd.ServerIdentity)
 	resp, err := o.DKG.ProcessDeal(sd.Deal.Deal)
 	if err != nil {
 		log.Error(o.Name(), err)

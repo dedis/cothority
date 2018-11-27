@@ -4555,24 +4555,15 @@ public final class Calypso {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes ltsid = 1;</code>
-     */
-    boolean hasLtsid();
-    /**
-     * <code>required bytes ltsid = 1;</code>
-     */
-    com.google.protobuf.ByteString getLtsid();
-
-    /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
     boolean hasProof();
     /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
     /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder();
   }
@@ -4595,7 +4586,6 @@ public final class Calypso {
       super(builder);
     }
     private ReshareLTS() {
-      ltsid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -4623,13 +4613,8 @@ public final class Calypso {
               done = true;
               break;
             case 10: {
-              bitField0_ |= 0x00000001;
-              ltsid_ = input.readBytes();
-              break;
-            }
-            case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -4637,7 +4622,7 @@ public final class Calypso {
                 subBuilder.mergeFrom(proof_);
                 proof_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000002;
+              bitField0_ |= 0x00000001;
               break;
             }
             default: {
@@ -4673,37 +4658,22 @@ public final class Calypso {
     }
 
     private int bitField0_;
-    public static final int LTSID_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString ltsid_;
+    public static final int PROOF_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
     /**
-     * <code>required bytes ltsid = 1;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
-    public boolean hasLtsid() {
+    public boolean hasProof() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes ltsid = 1;</code>
-     */
-    public com.google.protobuf.ByteString getLtsid() {
-      return ltsid_;
-    }
-
-    public static final int PROOF_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
-    /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
-     */
-    public boolean hasProof() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
     }
     /**
-     * <code>required .byzcoin.Proof proof = 2;</code>
+     * <code>required .byzcoin.Proof proof = 1;</code>
      */
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
       return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
@@ -4716,10 +4686,6 @@ public final class Calypso {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasLtsid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       if (!hasProof()) {
         memoizedIsInitialized = 0;
         return false;
@@ -4736,10 +4702,7 @@ public final class Calypso {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, ltsid_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeMessage(2, getProof());
+        output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
     }
@@ -4752,11 +4715,7 @@ public final class Calypso {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, ltsid_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getProof());
+          .computeMessageSize(1, getProof());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4774,11 +4733,6 @@ public final class Calypso {
       ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) obj;
 
       boolean result = true;
-      result = result && (hasLtsid() == other.hasLtsid());
-      if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
-      }
       result = result && (hasProof() == other.hasProof());
       if (hasProof()) {
         result = result && getProof()
@@ -4795,10 +4749,6 @@ public final class Calypso {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasLtsid()) {
-        hash = (37 * hash) + LTSID_FIELD_NUMBER;
-        hash = (53 * hash) + getLtsid().hashCode();
-      }
       if (hasProof()) {
         hash = (37 * hash) + PROOF_FIELD_NUMBER;
         hash = (53 * hash) + getProof().hashCode();
@@ -4943,14 +4893,12 @@ public final class Calypso {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        ltsid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
         if (proofBuilder_ == null) {
           proof_ = null;
         } else {
           proofBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -4981,10 +4929,6 @@ public final class Calypso {
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
-        }
-        result.ltsid_ = ltsid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
         }
         if (proofBuilder_ == null) {
           result.proof_ = proof_;
@@ -5040,9 +4984,6 @@ public final class Calypso {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other) {
         if (other == ch.epfl.dedis.lib.proto.Calypso.ReshareLTS.getDefaultInstance()) return this;
-        if (other.hasLtsid()) {
-          setLtsid(other.getLtsid());
-        }
         if (other.hasProof()) {
           mergeProof(other.getProof());
         }
@@ -5053,9 +4994,6 @@ public final class Calypso {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasLtsid()) {
-          return false;
-        }
         if (!hasProof()) {
           return false;
         }
@@ -5085,52 +5023,17 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString ltsid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes ltsid = 1;</code>
-       */
-      public boolean hasLtsid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes ltsid = 1;</code>
-       */
-      public com.google.protobuf.ByteString getLtsid() {
-        return ltsid_;
-      }
-      /**
-       * <code>required bytes ltsid = 1;</code>
-       */
-      public Builder setLtsid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        ltsid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes ltsid = 1;</code>
-       */
-      public Builder clearLtsid() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        ltsid_ = getDefaultInstance().getLtsid();
-        onChanged();
-        return this;
-      }
-
       private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
         if (proofBuilder_ == null) {
@@ -5140,7 +5043,7 @@ public final class Calypso {
         }
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public Builder setProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
@@ -5152,11 +5055,11 @@ public final class Calypso {
         } else {
           proofBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public Builder setProof(
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
@@ -5166,15 +5069,15 @@ public final class Calypso {
         } else {
           proofBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -5186,11 +5089,11 @@ public final class Calypso {
         } else {
           proofBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public Builder clearProof() {
         if (proofBuilder_ == null) {
@@ -5199,19 +5102,19 @@ public final class Calypso {
         } else {
           proofBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getProofBuilder() {
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
         onChanged();
         return getProofFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
         if (proofBuilder_ != null) {
@@ -5222,7 +5125,7 @@ public final class Calypso {
         }
       }
       /**
-       * <code>required .byzcoin.Proof proof = 2;</code>
+       * <code>required .byzcoin.Proof proof = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
@@ -8850,15 +8753,15 @@ public final class Calypso {
       "\002(\014\"\031\n\027AuthoriseByzcoinIDReply\"*\n\tCreate" +
       "LTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin.Proof\"B\n\016Cr" +
       "eateLTSReply\022\021\n\tbyzcoinid\030\001 \002(\014\022\022\n\ninsta" +
-      "nceid\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\":\n\nReshareLTS\022\r\n\005" +
-      "ltsid\030\001 \002(\014\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Pro" +
-      "of\"\021\n\017ReshareLTSReply\"I\n\nDecryptKey\022\034\n\004r" +
-      "ead\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002(\013" +
-      "2\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n\002c" +
-      "s\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013G" +
-      "etLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsInstance" +
-      "Info\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n\027ch" +
-      ".epfl.dedis.lib.protoB\007Calypso"
+      "nceid\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"+\n\nReshareLTS\022\035\n\005" +
+      "proof\030\001 \002(\0132\016.byzcoin.Proof\"\021\n\017ReshareLT" +
+      "SReply\"I\n\nDecryptKey\022\034\n\004read\030\001 \002(\0132\016.byz" +
+      "coin.Proof\022\035\n\005write\030\002 \002(\0132\016.byzcoin.Proo" +
+      "f\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhat" +
+      "enc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013GetLTSReply\022\r\n\005l" +
+      "tsid\030\001 \002(\014\"/\n\017LtsInstanceInfo\022\034\n\006roster\030" +
+      "\001 \002(\0132\014.onet.RosterB\"\n\027ch.epfl.dedis.lib" +
+      ".protoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8915,7 +8818,7 @@ public final class Calypso {
     internal_static_calypso_ReshareLTS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_ReshareLTS_descriptor,
-        new java.lang.String[] { "Ltsid", "Proof", });
+        new java.lang.String[] { "Proof", });
     internal_static_calypso_ReshareLTSReply_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_calypso_ReshareLTSReply_fieldAccessorTable = new

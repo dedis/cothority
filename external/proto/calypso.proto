@@ -77,8 +77,7 @@ message CreateLTSReply {
 // the Calypso roster must be updated on the ByzCoin blockchain in the instance
 // specified by InstanceID.
 message ReshareLTS {
-  required bytes ltsid = 1;
-  required byzcoin.Proof proof = 2;
+  required byzcoin.Proof proof = 1;
 }
 
 // ReshareLTSReply is returned upon successful resharing. The LTSID and the

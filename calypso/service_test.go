@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -58,7 +59,7 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 			ctx := byzcoin.ClientTransaction{
 				Instructions: []byzcoin.Instruction{
 					{
-						InstanceID: byzcoin.NewInstanceID(s.ltsReply.InstanceID),
+						InstanceID: s.ltsReply.InstanceID,
 						Invoke: &byzcoin.Invoke{
 							Command: "reshare",
 							Args: []byzcoin.Argument{
@@ -77,25 +78,35 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 			require.NoError(t, err)
 
 			// Get the proof and start resharing
-			proof, err := s.cl.GetProof(s.ltsReply.InstanceID)
+			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
 			require.NoError(t, err)
+
+			log.Lvl1("first reshare")
+			var wg sync.WaitGroup
+			wg.Add(len(s.ltsRoster.List))
+			s.afterReshare(func() { wg.Done() })
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
-			require.True(t, s.reconstructKey(t).Equal(sec1))
+			wg.Wait()
+			r := s.reconstructKey(t)
+			require.True(t, r.Equal(sec1))
 
 			// Try to do resharing again
+			wg.Add(len(s.ltsRoster.List))
+			log.Lvl1("second reshare")
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
+			wg.Wait()
 			require.True(t, s.reconstructKey(t).Equal(sec1))
 		}(nodes)
 	}
 }
 
-func _TestService_ReshareLTS_OneMore(t *testing.T) {
+func TestService_ReshareLTS_OneMore(t *testing.T) {
 	for _, nodes := range []int{4, 7} {
 		func(nodes int) {
 			if nodes > 5 && testing.Short() {
@@ -118,7 +129,7 @@ func _TestService_ReshareLTS_OneMore(t *testing.T) {
 			ctx := byzcoin.ClientTransaction{
 				Instructions: []byzcoin.Instruction{
 					{
-						InstanceID: byzcoin.NewInstanceID(s.ltsReply.InstanceID),
+						InstanceID: s.ltsReply.InstanceID,
 						Invoke: &byzcoin.Invoke{
 							Command: "reshare",
 							Args: []byzcoin.Argument{
@@ -137,19 +148,28 @@ func _TestService_ReshareLTS_OneMore(t *testing.T) {
 			require.NoError(t, err)
 
 			// Get the proof and start resharing
-			proof, err := s.cl.GetProof(s.ltsReply.InstanceID)
+			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
 			require.NoError(t, err)
+
+			log.Lvl1("first reshare")
+			var wg sync.WaitGroup
+			wg.Add(len(s.ltsRoster.List))
+			s.afterReshare(func() { wg.Done() })
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
+			wg.Wait()
 			require.True(t, s.reconstructKey(t).Equal(sec1))
 
 			// Try to do resharing again
+			log.Lvl1("second reshare")
+			wg.Add(len(s.ltsRoster.List))
 			_, err = s.services[0].ReshareLTS(&ReshareLTS{
 				Proof: proof.Proof,
 			})
 			require.NoError(t, err)
+			wg.Wait()
 			require.True(t, s.reconstructKey(t).Equal(sec1))
 		}(nodes)
 	}
@@ -371,11 +391,11 @@ func newTS2(t *testing.T, nodes int, extras int) ts {
 
 	reply2 := CreateLTSReply{
 		ByzCoinID:  s.gbReply.Skipblock.SkipChainID(),
-		InstanceID: tx.Instructions[0].DeriveID("").Slice(),
+		InstanceID: tx.Instructions[0].DeriveID(""),
 		X:          s.ltsReply.X,
 	}
 
-	require.Equal(t, s.ltsReply.GetLTSID(), reply2.GetLTSID())
+	require.True(t, s.ltsReply.InstanceID.Equal(reply2.InstanceID))
 	return s
 }
 
@@ -395,6 +415,12 @@ func (s *ts) createGenesis(t *testing.T) {
 
 	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
 	require.Nil(t, err)
+}
+
+func (s *ts) afterReshare(f func()) {
+	for _, sv := range s.services {
+		sv.afterReshare = f
+	}
 }
 
 func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof {
@@ -423,7 +449,7 @@ func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
 }
 
 func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
-	write := NewWrite(cothority.Suite, s.ltsReply.GetLTSID(), s.gDarc.GetBaseID(), s.ltsReply.X, key)
+	write := NewWrite(cothority.Suite, s.ltsReply.InstanceID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
 
@@ -449,13 +475,15 @@ func (s *ts) closeAll(t *testing.T) {
 }
 
 func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
-	ltsID := string(s.ltsReply.GetLTSID())
+	id := s.ltsReply.InstanceID
 	var sshares []*share.PriShare
 	for i := range s.services {
 		for j := range s.ltsRoster.List {
 			if s.services[i].ServerIdentity().Equal(s.ltsRoster.List[j]) {
 				s.services[i].storage.Lock()
-				sshares = append(sshares, s.services[i].storage.DKS[ltsID].PriShare())
+				if s.services[i].storage.DKS[id] != nil {
+					sshares = append(sshares, s.services[i].storage.DKS[id].PriShare())
+				}
 				s.services[i].storage.Unlock()
 			}
 		}

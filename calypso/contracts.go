@@ -150,10 +150,10 @@ func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	var info LtsInstanceInfo
 	err = protobuf.DecodeWithConstructors(infoBuf, &info, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, nil, errors.New("passed roster argument is invalid: " + err.Error())
+		return nil, nil, errors.New("passed lts_instance_info argument is invalid: " + err.Error())
 	}
 	// TODO verify the intersection between new roster and the old one
 	// uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3)
 	// c.LtsInfo ...
-	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Update, inst.DeriveID(""), ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
+	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
 }
