@@ -217,6 +217,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		//tx.Instructions[0] = newEpoch
 		//tx.SignWith(req.Owner)
 
+		tempRoster := oldRoster
 		for j := 0; j < changesCount; j++ {
 			log.Print("ACTUALLY SENDING IT", j)
 			// TODO:
@@ -230,6 +231,11 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 			tx.Instructions[0] = newEpoch
 			tx.SignWith(req.Owner)
 			shardClient.AddTransactionAndWait(tx, 5)
+
+			tempRoster = lib.ChangeRoster(tempRoster, newRoster)
+			//shardClient = bc.NewClient(req.ShardIDs[i], tempRoster)
+			shardClient.Roster = tempRoster
+			//log.Print("CLIENT ROSTER:", shardClient.Roster.List)
 		}
 	}
 
