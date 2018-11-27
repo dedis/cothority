@@ -14,6 +14,34 @@ index 8d8e480..4c855da 100644
  			return err
  		}
  		if pi == nil {
+diff --git a/server.go b/server.go
+index 5151248..c043dae 100644
+--- a/server.go
++++ b/server.go
+@@ -159,6 +159,10 @@ func (c *Server) Close() error {
+ 	}
+ 	c.Unlock()
+ 
++	err := c.Router.Stop()
++	if err != nil {
++		log.Error("While stopping router:", err)
++	}
+ 	// For all services that have `TestClose` defined, call it to make
+ 	// sure they are able to clean up. This should only be used for tests!
+ 	c.serviceManager.servicesMutex.Lock()
+@@ -177,11 +181,10 @@ func (c *Server) Close() error {
+ 	wg.Wait()
+ 	c.WebSocket.stop()
+ 	c.overlay.Close()
+-	err := c.serviceManager.closeDatabase()
++	err = c.serviceManager.closeDatabase()
+ 	if err != nil {
+ 		log.Lvl3("Error closing database: " + err.Error())
+ 	}
+-	err = c.Router.Stop()
+ 	log.Lvl3("Host Close", c.ServerIdentity.Address, "listening?", c.Router.Listening())
+ 	return err
+ }
 diff --git a/service.go b/service.go
 index 88784f5..d95b4d3 100644
 --- a/service.go
