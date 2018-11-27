@@ -1,16 +1,16 @@
 diff --git a/overlay.go b/overlay.go
-index 8d8e480..af729d8 100644
+index 8d8e480..4c855da 100644
 --- a/overlay.go
 +++ b/overlay.go
 @@ -158,6 +158,11 @@ func (o *Overlay) TransmitMsg(onetMsg *ProtocolMsg, io MessageProxy) error {
  		// request the PI from the Service and binds the two
  		pi, err = o.server.serviceManager.newProtocol(tni, config)
  		if err != nil {
-+			log.Print("closing")
-+			if err := tni.closeDispatch(); err != nil {
-+				log.Error("couldn't close treenode:", err)
-+			}
-+			log.Print("closing done")
++			log.Print(o.ServerIdentity(), "closing")
++			o.instancesLock.Lock()
++			o.nodeDelete(onetMsg.To)
++			o.instancesLock.Unlock()
++			log.Print(o.ServerIdentity(), "closing done")
  			return err
  		}
  		if pi == nil {
@@ -29,3 +29,28 @@ index 88784f5..d95b4d3 100644
  	si, ok := s.serviceByID(tni.Token().ServiceID)
  	defaultHandle := func() (ProtocolInstance, error) { return s.server.protocolInstantiate(tni.Token().ProtoID, tni) }
  	if !ok {
+diff --git a/treenode.go b/treenode.go
+index 549d351..3233852 100644
+--- a/treenode.go
++++ b/treenode.go
+@@ -338,12 +338,18 @@ func (n *TreeNodeInstance) Shutdown() error {
+ 
+ // closeDispatch shuts down the go-routine and calls the protocolInstance-shutdown
+ func (n *TreeNodeInstance) closeDispatch() error {
+-	log.Lvl3("Closing node", n.Info())
++	defer func() {
++		if r := recover(); r != nil {
++			log.Print("Recovered in f", r)
++			log.Print(log.Stack())
++		}
++	}()
++	log.LLvl3("Closing node", n.Info())
+ 	n.msgDispatchQueueMutex.Lock()
+ 	n.closing = true
+ 	close(n.msgDispatchQueueWait)
+ 	n.msgDispatchQueueMutex.Unlock()
+-	log.Lvl3("Closed node", n.Info())
++	log.LLvl3("Closed node", n.Info())
+ 	pni := n.ProtocolInstance()
+ 	if pni == nil {
+ 		return errors.New("Can't shutdown empty ProtocolInstance")
