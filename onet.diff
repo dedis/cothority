@@ -1,0 +1,31 @@
+diff --git a/overlay.go b/overlay.go
+index 8d8e480..af729d8 100644
+--- a/overlay.go
++++ b/overlay.go
+@@ -158,6 +158,11 @@ func (o *Overlay) TransmitMsg(onetMsg *ProtocolMsg, io MessageProxy) error {
+ 		// request the PI from the Service and binds the two
+ 		pi, err = o.server.serviceManager.newProtocol(tni, config)
+ 		if err != nil {
++			log.Print("closing")
++			if err := tni.closeDispatch(); err != nil {
++				log.Error("couldn't close treenode:", err)
++			}
++			log.Print("closing done")
+ 			return err
+ 		}
+ 		if pi == nil {
+diff --git a/service.go b/service.go
+index 88784f5..d95b4d3 100644
+--- a/service.go
++++ b/service.go
+@@ -426,6 +426,10 @@ func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
+ // the creation of the PI. Otherwise the service is responsible for setting up
+ // the PI.
+ func (s *serviceManager) newProtocol(tni *TreeNodeInstance, config *GenericConfig) (pi ProtocolInstance, err error) {
++	if s.server.Closed() {
++		err = errors.New("will not pass protocol once the server is closed")
++		return
++	}
+ 	si, ok := s.serviceByID(tni.Token().ServiceID)
+ 	defaultHandle := func() (ProtocolInstance, error) { return s.server.protocolInstantiate(tni.Token().ProtoID, tni) }
+ 	if !ok {
