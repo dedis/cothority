@@ -5,29 +5,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/kyber"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
 
+type responseProtocol struct {
+	structResponse StructResponse
+	subProtocol    *SubBlsFtCosi
+}
+
 // Collect signatures from each sub-leader, restart whereever sub-leaders fail to respond.
 // The collected signatures are already aggregated for a particular group
-func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
-	subProtocols []*SubBlsFtCosi, publics []kyber.Point) ([]StructResponse, []*SubBlsFtCosi, error) {
-
-	type responseProtocol struct {
-		structResponse StructResponse
-		subProtocol    *SubBlsFtCosi
-	}
-
-	responsesChan := make(chan responseProtocol, 2*len(subProtocols))
-	errChan := make(chan error, len(subProtocols))
+func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, error) {
+	responsesChan := make(chan responseProtocol, 2*len(p.subProtocols))
+	errChan := make(chan error, len(p.subProtocols))
 	closingChan := make(chan bool)
 
 	// receive in parallel
 	var closingWg sync.WaitGroup
-	closingWg.Add(len(subProtocols))
-	for i, subProtocol := range subProtocols {
+	closingWg.Add(len(p.subProtocols))
+	for i, subProtocol := range p.subProtocols {
 		go func(i int, subProtocol *SubBlsFtCosi) {
 			defer closingWg.Done()
 			timeout := time.After(p.Timeout)
@@ -36,13 +32,13 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 				case <-closingChan:
 					return
 				case <-subProtocol.subleaderNotResponding:
-					subleaderID := trees[i].Root.Children[0].RosterIndex
+					subleaderID := p.subTrees[i].Root.Children[0].RosterIndex
 					log.Lvlf2("(subprotocol %v) subleader with id %d failed, restarting subprotocol", i, subleaderID)
 
 					// generate new tree by adding the current subleader to the end of the
 					// leafs and taking the first leaf for the new subleader.
-					nodes := []int{trees[i].Root.RosterIndex}
-					for _, child := range trees[i].Root.Children[0].Children {
+					nodes := []int{p.subTrees[i].Root.RosterIndex}
+					for _, child := range p.subTrees[i].Root.Children[0].Children {
 						nodes = append(nodes, child.RosterIndex)
 					}
 
@@ -54,7 +50,7 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 					nodes = append(nodes, subleaderID)
 
 					var err error
-					trees[i], err = genSubtree(trees[i].Roster, nodes)
+					p.subTrees[i], err = genSubtree(p.subTrees[i].Roster, nodes)
 					if err != nil {
 						errChan <- fmt.Errorf("(subprotocol %v) error in tree generation: %v", i, err)
 						return
@@ -63,12 +59,12 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 					// restart subprotocol
 					// send stop signal to old protocol
 					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
-					subProtocol, err = p.startSubProtocol(trees[i])
+					subProtocol, err = p.startSubProtocol(p.subTrees[i])
 					if err != nil {
 						errChan <- fmt.Errorf("(subprotocol %v) error in restarting of subprotocol: %s", i, err)
 						return
 					}
-					subProtocols[i] = subProtocol
+					p.subProtocols[i] = subProtocol
 				case response := <-subProtocol.subResponse:
 					responsesChan <- responseProtocol{response, subProtocol}
 					timeout = make(chan time.Time) // deactivate timeout
@@ -83,15 +79,15 @@ func (p *BlsFtCosi) collectSignatures(trees []*onet.Tree,
 	}
 
 	// handle answers from all parallel threads
-	sharedMask, err := NewMask(p.suite, publics, -1)
+	sharedMask, err := NewMask(p.suite, p.Roster().Publics(), -1)
 	if err != nil {
 		close(closingChan)
 		return nil, nil, err
 	}
-	responseMap := make(map[*SubBlsFtCosi]StructResponse, len(subProtocols))
+	responseMap := make(map[*SubBlsFtCosi]StructResponse, len(p.subProtocols))
 	thresholdReached := true
 	thresholdReachable := true
-	if len(subProtocols) > 0 {
+	if len(p.subProtocols) > 0 {
 		thresholdReached = false
 		for !thresholdReached && thresholdReachable {
 			select {

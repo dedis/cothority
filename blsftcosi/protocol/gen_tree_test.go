@@ -20,10 +20,9 @@ func TestGenTreesRoot(t *testing.T) {
 	for _, nbrNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
-			servers := local.GenServers(nbrNodes)
-			roster := local.GenRosterFromHost(servers...)
+			_, _, tree := local.GenTree(nbrNodes, false)
 
-			trees, err := genTrees(roster, 0, nbrNodes, nSubtrees)
+			trees, err := genTrees(tree, nSubtrees)
 			if err != nil {
 				t.Fatal("Error in tree generation:", err)
 			}
@@ -49,10 +48,9 @@ func TestGenTreesCount(t *testing.T) {
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
-			servers := local.GenServers(nNodes)
-			roster := local.GenRosterFromHost(servers...)
+			_, _, tree := local.GenTree(nNodes, false)
 
-			trees, err := genTrees(roster, 0, nNodes, nSubtrees)
+			trees, err := genTrees(tree, nSubtrees)
 			if err != nil {
 				t.Fatal("Error in tree generation:", err)
 			}
@@ -89,10 +87,9 @@ func TestGenTreesSubtrees(t *testing.T) {
 			}
 
 			local := onet.NewLocalTest(testSuite)
-			servers := local.GenServers(nNodes)
-			roster := local.GenRosterFromHost(servers...)
+			_, _, tree := local.GenTree(nNodes, false)
 
-			trees, err := genTrees(roster, 0, nNodes, nSubtrees)
+			trees, err := genTrees(tree, nSubtrees)
 			if err != nil {
 				t.Fatal("Error in tree generation:", err)
 			}
@@ -112,10 +109,9 @@ func TestGenTreesComplete(t *testing.T) {
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
-			servers := local.GenServers(nNodes)
-			roster := local.GenRosterFromHost(servers...)
+			_, _, tree := local.GenTree(nNodes, false)
 
-			trees, err := genTrees(roster, 0, nNodes, nSubtrees)
+			trees, err := genTrees(tree, nSubtrees)
 			if err != nil {
 				t.Fatal("Error in tree generation:", err)
 			}
@@ -156,69 +152,6 @@ func testNode(t *testing.T, node, parent *onet.TreeNode, tree *onet.Tree) {
 	}
 }
 
-// tests that the GenTree function returns errors correctly
-func TestGenTreesErrors(t *testing.T) {
-	negativeNumbers := []int{0, -1, -2, -12, -34}
-	positiveNumber := 12
-	for _, negativeNumber := range negativeNumbers {
-		local := onet.NewLocalTest(testSuite)
-		servers := local.GenServers(positiveNumber)
-		roster := local.GenRosterFromHost(servers...)
-
-		trees, err := genTrees(roster, 0, negativeNumber, positiveNumber)
-		if err == nil {
-			t.Fatal("the GenTree function should throw an error" +
-				" with negative number of nodes, but doesn't")
-		}
-		if trees != nil {
-			t.Fatal("the GenTree function should return a nil tree" +
-				" with errors, but doesn't")
-		}
-
-		trees, err = genTrees(roster, 0, positiveNumber, negativeNumber)
-		if err == nil {
-			t.Fatal("the GenTree function should throw an error" +
-				" with negative number of subtrees, but doesn't")
-		}
-		if trees != nil {
-			t.Fatal("the GenTree function should return a nil tree" +
-				" with errors, but doesn't")
-		}
-
-		local.CloseAll()
-	}
-}
-
-// tests that the GenTree function returns roster errors correctly
-func TestGenTreesRosterErrors(t *testing.T) {
-	local := onet.NewLocalTest(testSuite)
-
-	trees, err := genTrees(nil, 0, 12, 3)
-	if err == nil {
-		t.Fatal("the GenTree function should throw an error" +
-			" with an nil roster, but doesn't")
-	}
-	if trees != nil {
-		t.Fatal("the GenTree function should return a nil tree" +
-			" with errors, but doesn't")
-	}
-
-	servers := local.GenServers(2)
-	roster := local.GenRosterFromHost(servers...)
-
-	trees, err = genTrees(roster, 0, 12, 3)
-	if err == nil {
-		t.Fatal("the GenTree function should throw an error" +
-			" with a roster containing less servers than the number of nodes, but doesn't")
-	}
-	if trees != nil {
-		t.Fatal("the GenTree function should return a nil tree" +
-			" with errors, but doesn't")
-	}
-
-	local.CloseAll()
-}
-
 // tests that the GenTree function uses as many different servers from the roster as possible
 func TestGenTreesUsesWholeRoster(t *testing.T) {
 
@@ -227,10 +160,9 @@ func TestGenTreesUsesWholeRoster(t *testing.T) {
 	for _, nServers := range servers {
 
 		local := onet.NewLocalTest(testSuite)
-		servers := local.GenServers(nServers)
-		roster := local.GenRosterFromHost(servers...)
+		_, _, tree := local.GenTree(nNodes, false)
 
-		trees, err := genTrees(roster, 0, nNodes, 4)
+		trees, err := genTrees(tree, 4)
 		if err != nil {
 			t.Fatal("Error in tree generation:", err)
 		}

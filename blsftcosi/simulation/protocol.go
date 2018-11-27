@@ -63,12 +63,7 @@ func (s *SimulationProtocol) Setup(dir string, hosts []string) (*onet.Simulation
 	if err != nil {
 		return nil, err
 	}
-	/*
-		serviceIndex, _ := sc.Roster.Search(sc.Server.ServerIdentity.ID)
-		blsftcosiService := sc.GetService(service.ServiceName).(*service.Service)
-		blsftcosiService.SetPairingKeys(serviceIndex, host, sc.Roster)
 
-	*/
 	return sc, nil
 }
 
@@ -82,10 +77,15 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 		log.Fatal("Didn't find this node in roster")
 	}
 
-	config.Tree
+	tree, err := protocol.NewBlsProtocolTree(config.Tree, s.NSubtrees)
+	if err != nil {
+		return err
+	}
 
-	toIntercept := []*network.ServerIdentity{}
-	log.Lvl2("Failing nodes", toIntercept)
+	leaves := tree.GetLeaves()
+	subleaders := tree.GetSubLeaders()
+
+	toIntercept := append(leaves[:s.FailingLeafs], subleaders[:s.FailingSubleaders]...)
 	// intercept announcements on some nodes
 	for _, n := range toIntercept {
 		if n.ID.Equal(config.Server.ServerIdentity.ID) {
@@ -99,7 +99,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 
 				switch msg.(type) {
 				case *protocol.Announcement, *protocol.Response:
-					log.Lvl3("Ignoring blsftcosi message on ", config.Server.ServerIdentity)
+					log.Lvl1("Ignoring blsftcosi message for simulation on ", config.Server.ServerIdentity)
 				default:
 					config.Overlay.Process(e)
 				}

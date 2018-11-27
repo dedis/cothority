@@ -5,7 +5,40 @@ import (
 	"fmt"
 
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
+
+// BlsProtocolTree represents the subtrees used in the BLS CoSi protocol
+type BlsProtocolTree []*onet.Tree
+
+// NewBlsProtocolTree creates a new tree that can be used in the BLS CoSi protocol
+func NewBlsProtocolTree(tree *onet.Tree, nSubTrees int) (BlsProtocolTree, error) {
+	return genTrees(tree, nSubTrees)
+}
+
+// GetLeaves returns the server identities of the leaves
+func (pt BlsProtocolTree) GetLeaves() []*network.ServerIdentity {
+	si := []*network.ServerIdentity{}
+
+	for _, t := range pt {
+		for _, c := range t.Root.Children[0].Children {
+			si = append(si, c.ServerIdentity)
+		}
+	}
+
+	return si
+}
+
+// GetSubLeaders returns the server identities of the subleaders
+func (pt BlsProtocolTree) GetSubLeaders() []*network.ServerIdentity {
+	si := []*network.ServerIdentity{}
+
+	for _, t := range pt {
+		si = append(si, t.Root.Children[0].ServerIdentity)
+	}
+
+	return si
+}
 
 // genTrees will create a given number of subtrees of the same number of nodes.
 // Each generated subtree will have the same root.
@@ -14,7 +47,10 @@ import (
 // NOTE: register being not implementable with the current API could hurt the scalability tests
 // TODO: we may be able to simplify the code here to make sure the existing onet
 // tree generation functions.
-func genTrees(roster *onet.Roster, root, nNodes, nSubtrees int) ([]*onet.Tree, error) {
+func genTrees(tree *onet.Tree, nSubtrees int) ([]*onet.Tree, error) {
+	roster := tree.Roster
+	nNodes := len(roster.List)
+	root := tree.Root.RosterIndex
 
 	// parameter verification
 	if roster == nil {
@@ -23,10 +59,6 @@ func genTrees(roster *onet.Roster, root, nNodes, nSubtrees int) ([]*onet.Tree, e
 	if nNodes < 1 {
 		return nil, fmt.Errorf("the number of nodes in the trees "+
 			"cannot be less than one, but is %d", nNodes)
-	}
-	if len(roster.List) < nNodes {
-		return nil, fmt.Errorf("the trees should have %d nodes, "+
-			"but there is only %d servers in the roster", nNodes, len(roster.List))
 	}
 	if nSubtrees < 1 {
 		return nil, fmt.Errorf("the number of subtrees"+

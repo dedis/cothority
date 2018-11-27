@@ -164,7 +164,7 @@ func Verify(ps pairing.Suite, publics []kyber.Point, message, sig []byte, policy
 	if message == nil {
 		return errors.New("no message provided")
 	}
-	if sig == nil {
+	if sig == nil || len(sig) == 0 {
 		return errors.New("no signature provided")
 	}
 

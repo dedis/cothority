@@ -9,8 +9,6 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing/bn256"
-	"github.com/dedis/kyber/sign/bls"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
@@ -64,7 +62,7 @@ func TestMain(m *testing.M) {
 
 // Tests various trees configurations
 func TestProtocol_1_1(t *testing.T) {
-	_, _, err := runProtocol(1, 1, 1)
+	_, _, err := runProtocol(1, 0, 1)
 	require.Nil(t, err)
 }
 
@@ -104,9 +102,14 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) ([]byte, *onet.Roster, er
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
-	cosiProtocol.NSubtrees = nbrSubTrees
 	cosiProtocol.Timeout = defaultTimeout
 	cosiProtocol.Threshold = threshold
+	if nbrSubTrees > 0 {
+		err = cosiProtocol.SetNbrSubTree(nbrSubTrees)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	err = cosiProtocol.Start()
 	if err != nil {
@@ -183,11 +186,11 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure int) error {
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
-	cosiProtocol.NSubtrees = nbrTrees
 	cosiProtocol.Timeout = defaultTimeout
 	cosiProtocol.Threshold = threshold
+	cosiProtocol.SetNbrSubTree(nbrTrees)
 
-	leaves := cosiProtocol.getLeaves()
+	leaves := cosiProtocol.subTrees.GetLeaves()
 	for _, s := range servers {
 		for _, l := range leaves[:nbrFailure] {
 			if s.ServerIdentity.ID.Equal(l.ID) {
@@ -237,11 +240,11 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{1, 2, 3}
-	cosiProtocol.NSubtrees = nbrTrees
 	cosiProtocol.Timeout = defaultTimeout
 	cosiProtocol.Threshold = nbrNodes - 1
+	cosiProtocol.SetNbrSubTree(nbrTrees)
 
-	subLeaders := cosiProtocol.getSubLeaders()
+	subLeaders := cosiProtocol.subTrees.GetSubLeaders()
 	for _, s := range servers {
 		if s.ServerIdentity.ID.Equal(subLeaders[0].ID) {
 			s.Pause()
@@ -280,8 +283,11 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	// missing create protocol
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.Msg = []byte{}
-	cosiProtocol.NSubtrees = 1
 	cosiProtocol.Timeout = defaultTimeout
+
+	// wrong subtree number
+	err = cosiProtocol.SetNbrSubTree(1)
+	require.NotNil(t, err)
 
 	err = cosiProtocol.Start()
 	if err == nil {
@@ -295,8 +301,8 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	}
 	cosiProtocol = pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
-	cosiProtocol.NSubtrees = 1
 	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.SetNbrSubTree(1)
 
 	err = cosiProtocol.Start()
 	if err == nil {
@@ -336,9 +342,9 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) error {
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{}
-	cosiProtocol.NSubtrees = nbrTrees
 	cosiProtocol.Timeout = defaultTimeout
 	cosiProtocol.Threshold = threshold
+	cosiProtocol.SetNbrSubTree(nbrTrees)
 
 	err = cosiProtocol.Start()
 	if err != nil {
@@ -360,11 +366,6 @@ type testService struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*onet.ServiceProcessor
-
-	// Has to be initialized by the test
-	private           kyber.Scalar
-	public            kyber.Point
-	pairingPublicKeys []kyber.Point
 }
 
 func getAndVerifySignature(cosiProtocol *BlsFtCosi, proposal []byte, policy Policy) ([]byte, error) {
@@ -398,7 +399,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &testService{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	s.private, s.public = bls.NewKeyPair(testSuite, random.New())
 	return s, nil
 }
 

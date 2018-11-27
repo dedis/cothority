@@ -21,8 +21,8 @@ import (
 // As a prototype, it just signs and returns. It would be very easy to write an
 // updated version that chains all signatures for example.
 
-const propagationTimeout = 20 * time.Second
-const protocolTimeout = 40 * time.Second
+const propagationTimeout = 2 * time.Second
+const protocolTimeout = 10 * time.Second
 
 // ServiceID is
 var ServiceID onet.ServiceID
@@ -69,7 +69,6 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	if tree == nil {
 		return nil, errors.New("failed to generate tree")
 	}
-	log.Lvlf2("Tree size %d", tree.Size())
 
 	// configure the BlsFtCosi protocol
 	pi, err := s.CreateProtocol(protocol.DefaultProtocolName, tree)
@@ -80,26 +79,24 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	p.CreateProtocol = s.CreateProtocol
 	p.Msg = req.Message
 	// We set NSubtrees to the square root of n to evenly distribute the load
-	if s.NSubtrees == 0 {
-		p.NSubtrees = int(math.Sqrt(float64(nNodes)))
+	if s.NSubtrees <= 0 {
+		p.SetNbrSubTree(int(math.Sqrt(float64(nNodes))))
 	} else {
-		p.NSubtrees = s.NSubtrees
-	}
-	if p.NSubtrees < 1 {
-		p.NSubtrees = 1
+		p.SetNbrSubTree(s.NSubtrees)
 	}
 	p.Timeout = protocolTimeout
 
 	// Complete Threshold
 	p.Threshold = p.Tree().Size()
+	if s.Threshold > 0 {
+		p.Threshold = s.Threshold
+	}
 
 	// start the protocol
 	log.Lvl3("Cosi Service starting up root protocol")
 	if err = pi.Start(); err != nil {
 		return nil, err
 	}
-
-	log.Lvlf3("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
 	// wait for reply
 	var sig []byte
@@ -145,7 +142,6 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		suite:            bn256.NewSuiteG2(),
-		Threshold:        1,
 	}
 	s.wg.Add(1)
 

@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 )
 
 // VerificationFn is called on every node. Where msg is the message that is
@@ -29,7 +28,6 @@ func init() {
 // This protocol should only exist on the root node.
 type BlsFtCosi struct {
 	*onet.TreeNodeInstance
-	NSubtrees      int
 	Msg            []byte
 	Data           []byte
 	CreateProtocol CreateProtocolFunction
@@ -45,6 +43,7 @@ type BlsFtCosi struct {
 	subProtocolName string
 	verificationFn  VerificationFn
 	suite           pairing.Suite
+	subTrees        BlsProtocolTree
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
@@ -68,7 +67,6 @@ func GlobalRegisterDefaultProtocols() {
 
 // NewBlsFtCosi method is used to define the ftcosi protocol.
 func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite pairing.Suite) (onet.ProtocolInstance, error) {
-
 	c := &BlsFtCosi{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan []byte, 1),
@@ -79,7 +77,32 @@ func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName s
 		suite:            suite,
 	}
 
+	if len(n.Roster().List) > 1 {
+		c.SetNbrSubTree(1)
+	}
+
 	return c, nil
+}
+
+// SetNbrSubTree generatesN new subtrees that will be used
+// for the protocol
+func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
+	if nbr > len(p.Roster().List)-1 {
+		return errors.New("Cannot have more subtrees than nodes")
+	}
+	if p.Threshold == 1 || nbr <= 0 {
+		p.subTrees = []*onet.Tree{}
+		return nil
+	}
+
+	var err error
+	p.subTrees, err = NewBlsProtocolTree(p.Tree(), nbr)
+	if err != nil {
+		p.FinalSignature <- nil
+		return fmt.Errorf("error in tree generation: %s", err)
+	}
+
+	return nil
 }
 
 // Shutdown stops the protocol
@@ -120,23 +143,11 @@ func (p *BlsFtCosi) Dispatch() error {
 		verifyChan <- p.verificationFn(p.Msg, p.Data)
 	}()
 
-	// generate trees
-	nNodes := p.Tree().Size()
-	trees, err := genTrees(p.Tree().Roster, p.Tree().Root.RosterIndex, nNodes, p.NSubtrees)
-	if err != nil {
-		p.FinalSignature <- nil
-		return fmt.Errorf("error in tree generation: %s", err)
-	}
-
-	// if one node, sign without subprotocols
-	if nNodes == 1 || p.Threshold == 1 {
-		trees = make([]*onet.Tree, 0)
-	}
-
 	// start all subprotocols
-	p.subProtocols = make([]*SubBlsFtCosi, len(trees))
-	for i, tree := range trees {
+	p.subProtocols = make([]*SubBlsFtCosi, len(p.subTrees))
+	for i, tree := range p.subTrees {
 		log.Lvl2("Invoking start sub protocol", tree)
+		var err error
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
 			log.Error(err)
@@ -147,7 +158,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	// Wait and collect all the signature responses
-	responses, runningSubProtocols, err := p.collectSignatures(trees, p.subProtocols, p.Roster().Publics())
+	responses, runningSubProtocols, err := p.collectSignatures()
 	if err != nil {
 		return err
 	}
@@ -225,49 +236,9 @@ func (p *BlsFtCosi) Start() error {
 		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
 	}
 
-	if p.NSubtrees < 1 {
-		log.Warn("no number of subtree specified, using one subtree")
-		p.NSubtrees = 1
-	}
-	if p.NSubtrees >= p.Tree().Size() && p.NSubtrees > 1 {
-		p.Shutdown()
-		return fmt.Errorf("cannot create more subtrees (%d) than there are non-root nodes (%d) in the tree",
-			p.NSubtrees, p.Tree().Size()-1)
-	}
-
 	log.Lvl3("Starting CoSi")
 	p.startChan <- true
 	return nil
-}
-
-func (p *BlsFtCosi) getLeaves() []*network.ServerIdentity {
-	log.Lvlf2("%d", len(p.Children()))
-
-	return dfsLeaves(p.TreeNode())
-}
-
-func dfsLeaves(tn *onet.TreeNode) []*network.ServerIdentity {
-	if tn.IsLeaf() {
-		return []*network.ServerIdentity{tn.ServerIdentity}
-	}
-
-	si := []*network.ServerIdentity{}
-	for _, c := range tn.Children {
-		si = append(si, dfsLeaves(c)...)
-	}
-	return si
-}
-
-func (p *BlsFtCosi) getSubLeaders() []*network.ServerIdentity {
-	si := []*network.ServerIdentity{}
-
-	for _, c := range p.Children() {
-		if !c.IsLeaf() {
-			si = append(si, c.ServerIdentity)
-		}
-	}
-
-	return si
 }
 
 // startSubProtocol creates, parametrize and starts a subprotocol on a given tree
@@ -284,7 +255,8 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	cosiSubProtocol.Timeout = p.Timeout / 2
 
 	//the Threshold (minus root node) is divided evenly among the subtrees
-	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
+	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(len(p.subTrees))))
+	log.Lvlf2("%d", subThreshold)
 	if subThreshold > tree.Size()-1 {
 		subThreshold = tree.Size() - 1
 	}

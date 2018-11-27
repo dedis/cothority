@@ -46,7 +46,7 @@ type SubBlsFtCosi struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubBlsFtCosi(n, vf, bn256.NewSuite())
+	return NewSubBlsFtCosi(n, vf, bn256.NewSuiteG2())
 }
 
 // NewSubBlsFtCosi is used to define the subprotocol and to register
