@@ -20,6 +20,7 @@ type ChainConfig struct {
 	ShardRosters []onet.Roster
 }
 
+/*
 func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.ServerIdentityID]bool) (onet.Roster, map[network.ServerIdentityID]bool, map[network.ServerIdentityID]bool, bool) {
 	intermList := append([]*network.ServerIdentity{}, oldRoster.List...)
 	newList := newRoster.List
@@ -57,7 +58,41 @@ func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.S
 
 	return oldRoster, oldMap, newMap, false
 }
+*/
 
+func ChangeRoster(oldRoster, newRoster onet.Roster) onet.Roster {
+	intermList := append([]*network.ServerIdentity{}, oldRoster.List...)
+	newList := newRoster.List
+
+	oldMap := make(map[network.ServerIdentityID]bool)
+	for _, o := range intermList {
+		oldMap[o.ID] = true
+	}
+
+	// Add new element of newRoster to oldRoster, one at the time
+	for _, n := range newList {
+		if _, ok := oldMap[n.ID]; !ok {
+			intermList = append(intermList, n)
+			return *onet.NewRoster(intermList)
+		}
+	}
+
+	newMap := make(map[network.ServerIdentityID]bool)
+	for _, n := range newList {
+		newMap[n.ID] = true
+	}
+
+	// Remove old element of oldRoster, one at the time
+	for i, o := range intermList {
+		if _, ok := newMap[o.ID]; !ok {
+			intermList = append(intermList[:i], intermList[i+1:]...)
+			return *onet.NewRoster(intermList)
+		}
+	}
+
+	// If oldRoster and newRoster have the same nodes
+	return oldRoster
+}
 func EncodeDuration(d time.Duration) []byte {
 	durationInNs := int64(d * time.Nanosecond)
 	tBuf := make([]byte, 8)

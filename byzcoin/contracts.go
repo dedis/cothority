@@ -278,10 +278,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		targetRoster := omniCC.ShardRosters[shardInd]
 
 		// Apply roster change
-		var oldMap map[network.ServerIdentityID]bool
-		var newMap map[network.ServerIdentityID]bool
-
-		tempRoster, _, _, _ := lib.ChangeRoster(oldRoster, targetRoster, oldMap, newMap)
+		tempRoster := lib.ChangeRoster(oldRoster, targetRoster)
 		sc, err = updateRosterScs(rst, darcID, tempRoster)
 		log.Print("UPDATED SHARD", tempRoster.List, targetRoster.List)
 		return
