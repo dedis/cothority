@@ -91,8 +91,8 @@ func Sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
 	// Finally, create the shard rosters from the shard groups
 	shardRosters := make([]onet.Roster, shardCount)
 	for i := 0; i < len(shardRosters); i++ {
-		roster := onet.NewRoster(shardGroups[i])
-		shardRosters[i] = *roster
+		shardRoster := onet.NewRoster(shardGroups[i])
+		shardRosters[i] = *shardRoster
 	}
 
 	return shardRosters
