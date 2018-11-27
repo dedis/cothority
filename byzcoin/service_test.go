@@ -1079,14 +1079,20 @@ func TestService_SetConfig(t *testing.T) {
 	blocksize := 424242
 	ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, blocksize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
+	log.Print("1")
 
 	_, err := s.service().LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
+	log.Print("2")
 
 	newInterval, newBlocksize, err := s.service().LoadBlockInfo(s.genesis.SkipChainID())
+	log.Print("3")
 	require.NoError(t, err)
+	log.Print("4")
 	require.Equal(t, interval, newInterval)
+	log.Print("5")
 	require.Equal(t, blocksize, newBlocksize)
+	log.Print("6 - Test is done")
 }
 
 func TestService_SetConfigInterval(t *testing.T) {
