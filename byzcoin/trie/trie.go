@@ -27,18 +27,18 @@ func LoadTrie(db DB) (*Trie, error) {
 		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
-			return errors.New("nonce does not exist")
+			return errors.New("trie-error: db-nonce does not exist")
 		}
 		nonce = clone(nonceBuf)
 
 		// check the root node and that the value exists
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
-			return errors.New("root does not exist")
+			return errors.New("trie-error: root does not exist")
 		}
 		rootVal := b.Get([]byte(rootKey))
 		if rootVal == nil {
-			return errors.New("invalid reference to root")
+			return errors.New("trie-error: invalid reference to root")
 		}
 		return nil
 	})

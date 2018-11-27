@@ -160,6 +160,17 @@ type bcStorage struct {
 	sync.Mutex
 }
 
+// NewProtocol to show it's broken
+func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
+	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
+	if s.closed {
+		return nil, errors.New("service is closed")
+	}
+	log.Lvl3("Not templated yet")
+	return nil, nil
+}
+
 // CreateGenesisBlock asks the service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
