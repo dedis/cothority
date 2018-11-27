@@ -3,6 +3,7 @@ package omniledger
 import (
 	"encoding/binary"
 	"errors"
+
 	"github.com/dedis/onet/log"
 	//"fmt"
 	"github.com/dedis/cothority"
@@ -122,6 +123,9 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 
 	// Fetch old roster
 	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
+	if err != nil {
+		return nil, err
+	}
 	oldCC := &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, oldCC)
 	oldRosters := oldCC.ShardRosters

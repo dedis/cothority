@@ -3,11 +3,13 @@ package lib
 import (
 	"bytes"
 	"encoding/binary"
+
 	"github.com/dedis/onet"
 	//"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"math/rand"
 	"time"
+
+	"github.com/dedis/onet/network"
 )
 
 type ChainConfig struct {
@@ -19,12 +21,12 @@ type ChainConfig struct {
 }
 
 func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.ServerIdentityID]bool) (onet.Roster, map[network.ServerIdentityID]bool, map[network.ServerIdentityID]bool, bool) {
-	oldList := oldRoster.List
+	intermList := append([]*network.ServerIdentity{}, oldRoster.List...)
 	newList := newRoster.List
 
 	if oldMap == nil {
 		oldMap = make(map[network.ServerIdentityID]bool)
-		for _, o := range oldList {
+		for _, o := range intermList {
 			oldMap[o.ID] = true
 		}
 	}
@@ -32,9 +34,9 @@ func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.S
 	// Add new element of newRoster to OldRoster, one at the time
 	for _, n := range newList {
 		if _, ok := oldMap[n.ID]; !ok {
-			oldRoster.List = append(oldRoster.List, n)
+			intermList = append(intermList, n)
 			oldMap[n.ID] = true
-			return oldRoster, oldMap, newMap, true
+			return *onet.NewRoster(intermList), oldMap, newMap, true
 		}
 	}
 
@@ -46,10 +48,10 @@ func ChangeRoster(oldRoster, newRoster onet.Roster, oldMap, newMap map[network.S
 	}
 
 	// Remove old element of oldRoster, one at the time
-	for i, o := range oldList {
+	for i, o := range intermList {
 		if _, ok := newMap[o.ID]; !ok {
-			oldRoster.List = append(oldRoster.List[:i], oldRoster.List[i+1:]...)
-			return oldRoster, oldMap, newMap, true
+			intermList = append(intermList[:i], intermList[i+1:]...)
+			return *onet.NewRoster(intermList), oldMap, newMap, true
 		}
 	}
 
