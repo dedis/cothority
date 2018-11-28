@@ -12,7 +12,7 @@ test_playground:
 	(cd ../onet; patch -p1 < ../cothority/onet.diff); \
 	cd byzcoin; \
 	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race -run SetConfig\$$ > log.txt 2>&1; then \
+		if DEBUG_TIME=true go test -v -race -run SetConfig\$$ -count 10 > log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \

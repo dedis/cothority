@@ -1,5 +1,5 @@
 diff --git a/local.go b/local.go
-index a8316e4..82a391b 100644
+index a8316e4..fa0ac13 100644
 --- a/local.go
 +++ b/local.go
 @@ -259,7 +259,7 @@ func (l *LocalTest) WaitDone(t time.Duration) error {
@@ -11,7 +11,7 @@ index a8316e4..82a391b 100644
  	if r := recover(); r != nil {
  		// Make sure that a panic is correctly caught, as CloseAll is most often
  		// called in a `defer` statement, and we don't want to show leaking
-@@ -269,15 +269,17 @@ func (l *LocalTest) CloseAll() {
+@@ -269,15 +269,36 @@ func (l *LocalTest) CloseAll() {
  	if l.T != nil && l.T.Failed() {
  		return
  	}
@@ -26,11 +26,30 @@ index a8316e4..82a391b 100644
  		log.OutputToBuf()
  	}
  
-+	log.Print()
++	// For all services that have `TestClose` defined, call it to make
++	// sure they are able to clean up. This should only be used for tests!
++	var wg sync.WaitGroup
++	for _, srv := range l.Servers {
++		srv.serviceManager.servicesMutex.Lock()
++		for _, serv := range srv.serviceManager.services {
++			wg.Add(1)
++			go func(s Service) {
++				defer wg.Done()
++				c, ok := s.(TestClose)
++				if ok {
++					c.TestClose()
++				}
++			}(serv)
++		}
++		srv.serviceManager.servicesMutex.Unlock()
++	}
++	wg.Wait()
++
++	log.Print(l.Check)
  	if err := l.WaitDone(5 * time.Second); err != nil {
  		switch l.Check {
  		case CheckNone:
-@@ -299,17 +301,19 @@ func (l *LocalTest) CloseAll() {
+@@ -299,17 +320,19 @@ func (l *LocalTest) CloseAll() {
  		}
  	}
  
@@ -52,7 +71,7 @@ index a8316e4..82a391b 100644
  			err := server.Close()
  			if err != nil {
  				log.Error("Closing server", server.ServerIdentity.Address,
-@@ -324,8 +328,10 @@ func (l *LocalTest) CloseAll() {
+@@ -324,8 +347,10 @@ func (l *LocalTest) CloseAll() {
  		}(srv)
  	}
  	sd.Wait()
@@ -63,7 +82,7 @@ index a8316e4..82a391b 100644
  
  	os.RemoveAll(l.path)
  	l.closed = true
-@@ -333,9 +339,11 @@ func (l *LocalTest) CloseAll() {
+@@ -333,9 +358,11 @@ func (l *LocalTest) CloseAll() {
  	if log.DebugVisible() == 0 {
  		log.OutputToOs()
  	}
@@ -92,22 +111,32 @@ index 8d8e480..4c855da 100644
  		}
  		if pi == nil {
 diff --git a/server.go b/server.go
-index 5151248..c043dae 100644
+index 5151248..ab73ee5 100644
 --- a/server.go
 +++ b/server.go
-@@ -159,6 +159,10 @@ func (c *Server) Close() error {
+@@ -159,29 +159,16 @@ func (c *Server) Close() error {
  	}
  	c.Unlock()
  
+-	// For all services that have `TestClose` defined, call it to make
+-	// sure they are able to clean up. This should only be used for tests!
+-	c.serviceManager.servicesMutex.Lock()
+-	var wg sync.WaitGroup
+-	for _, serv := range c.serviceManager.services {
+-		wg.Add(1)
+-		go func(s Service) {
+-			defer wg.Done()
+-			c, ok := s.(TestClose)
+-			if ok {
+-				c.TestClose()
+-			}
+-		}(serv)
 +	err := c.Router.Stop()
 +	if err != nil {
 +		log.Error("While stopping router:", err)
-+	}
- 	// For all services that have `TestClose` defined, call it to make
- 	// sure they are able to clean up. This should only be used for tests!
- 	c.serviceManager.servicesMutex.Lock()
-@@ -177,11 +181,10 @@ func (c *Server) Close() error {
- 	wg.Wait()
+ 	}
+-	c.serviceManager.servicesMutex.Unlock()
+-	wg.Wait()
  	c.WebSocket.stop()
  	c.overlay.Close()
 -	err := c.serviceManager.closeDatabase()
