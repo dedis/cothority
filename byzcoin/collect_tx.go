@@ -104,7 +104,6 @@ func (p *CollectTxProtocol) Start() error {
 func (p *CollectTxProtocol) Dispatch() error {
 	defer p.Done()
 
-	// log.Print(p.ServerIdentity(), "waiting for finish")
 	var req structCollectTxRequest
 	select {
 	case req = <-p.requestChan:
@@ -117,7 +116,6 @@ func (p *CollectTxProtocol) Dispatch() error {
 	case <-p.closing:
 		return errors.New("closing down system")
 	}
-	// log.Print(p.ServerIdentity(), "done waiting for finish")
 
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{

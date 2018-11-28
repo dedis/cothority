@@ -160,17 +160,6 @@ type bcStorage struct {
 	sync.Mutex
 }
 
-// NewProtocol to show it's broken
-func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	s.closedMutex.Lock()
-	defer s.closedMutex.Unlock()
-	if s.closed {
-		return nil, errors.New("service is closed")
-	}
-	log.Lvl3("Not templated yet")
-	return nil, nil
-}
-
 // CreateGenesisBlock asks the service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
@@ -1259,19 +1248,13 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
-	log.Print(s.ServerIdentity(), "start")
 	s.pollChanWG.Add(1)
 	closeSignal := make(chan bool)
 	go func() {
 		s.closedMutex.Lock()
-		log.Print(s.ServerIdentity(), "go-routine")
-		defer func() {
-			log.Print(s.ServerIdentity(), "wg.done")
-			s.pollChanWG.Done()
-		}()
+		s.pollChanWG.Done()
 		if s.closed {
 			s.closedMutex.Unlock()
-			log.Print(s.ServerIdentity(), "quitting")
 			return
 		}
 		s.working.Add(1)
@@ -1284,13 +1267,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				panic("couldn't get configuration - this is bad and probably" +
 					"a problem with the database! " + err.Error())
 			}
-			log.Printf("%s: Waiting for channel %#v #p", s.ServerIdentity(), closeSignal, closeSignal)
 			select {
 			case <-closeSignal:
 				log.Lvl2(s.ServerIdentity(), "abort waiting for next block")
 				return
 			case <-time.After(bcConfig.BlockInterval):
-				log.Print(s.ServerIdentity(), "next block")
 				// Need to update the config, as in the meantime a new block should have
 				// arrived with a possible new configuration.
 				bcConfig, err = s.LoadConfig(scID)
@@ -1319,7 +1300,6 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				root := proto.(*CollectTxProtocol)
 				root.SkipchainID = scID
 				root.LatestID = latest.Hash
-				// log.Print(s.ServerIdentity(), "starting collection")
 				if err := root.Start(); err != nil {
 					panic("Failed to start the protocol with error: " + err.Error() +
 						" Start() only returns an error when the protocol is not initialised correctly," +
@@ -1357,7 +1337,6 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 						return
 					}
 				}
-				log.Print(s.ServerIdentity(), "done waiting for signal")
 
 				log.Lvl3("Collected all new transactions:", len(txs))
 
@@ -1822,16 +1801,12 @@ func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	log.Print(s.ServerIdentity(), "closing test")
 	s.closedMutex.Lock()
 	if !s.closed {
 		s.closed = true
 		s.closedMutex.Unlock()
-		log.Print(s.ServerIdentity(), "cleaning up goroutines")
 		s.cleanupGoroutines()
-		log.Print(s.ServerIdentity(), "waiting for s.working")
 		s.working.Wait()
-		log.Print(s.ServerIdentity(), "done")
 	} else {
 		s.closedMutex.Unlock()
 	}
@@ -1845,13 +1820,10 @@ func (s *Service) cleanupGoroutines() {
 
 	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {
-		log.Printf("%s: Closing channel %#v %p", s.ServerIdentity(), c, c)
 		close(c)
-		log.Print(s.ServerIdentity(), "channel closed")
 		delete(s.pollChan, k)
 	}
 	s.pollChanMut.Unlock()
-	log.Print(s.ServerIdentity(), "waiting for pollChanWG")
 	s.pollChanWG.Wait()
 }
 

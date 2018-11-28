@@ -1,5 +1,5 @@
 diff --git a/local.go b/local.go
-index a8316e4..7a7904b 100644
+index a8316e4..452451c 100644
 --- a/local.go
 +++ b/local.go
 @@ -269,7 +269,6 @@ func (l *LocalTest) CloseAll() {
@@ -10,26 +10,17 @@ index a8316e4..7a7904b 100644
  	InformAllServersStopped()
  
  	// If the debug-level is 0, we copy all errors to a buffer that
-@@ -278,6 +277,25 @@ func (l *LocalTest) CloseAll() {
+@@ -278,6 +277,16 @@ func (l *LocalTest) CloseAll() {
  		log.OutputToBuf()
  	}
  
-+	// For all services that have `TestClose` defined, call it to make
-+	// sure they are able to clean up. This should only be used for tests!
 +	var wg sync.WaitGroup
 +	for _, srv := range l.Servers {
-+		srv.serviceManager.servicesMutex.Lock()
-+		for _, serv := range srv.serviceManager.services {
-+			wg.Add(1)
-+			go func(s Service) {
-+				defer wg.Done()
-+				c, ok := s.(TestClose)
-+				if ok {
-+					c.TestClose()
-+				}
-+			}(serv)
-+		}
-+		srv.serviceManager.servicesMutex.Unlock()
++		wg.Add(1)
++		go func(s *Server) {
++			s.callTestClose()
++			wg.Done()
++		}(srv)
 +	}
 +	wg.Wait()
 +
@@ -51,7 +42,7 @@ index 8d8e480..e3e8e7f 100644
  		}
  		if pi == nil {
 diff --git a/server.go b/server.go
-index 5151248..ab73ee5 100644
+index 5151248..b2b7f61 100644
 --- a/server.go
 +++ b/server.go
 @@ -159,29 +159,16 @@ func (c *Server) Close() error {
@@ -88,6 +79,29 @@ index 5151248..ab73ee5 100644
  	log.Lvl3("Host Close", c.ServerIdentity.Address, "listening?", c.Router.Listening())
  	return err
  }
+@@ -260,3 +247,22 @@ func (c *Server) WaitStartup() {
+ 		time.Sleep(50 * time.Millisecond)
+ 	}
+ }
++
++// For all services that have `TestClose` defined, call it to make
++// sure they are able to clean up. This should only be used for tests!
++func (c *Server) callTestClose() {
++	wg := sync.WaitGroup{}
++	c.serviceManager.servicesMutex.Lock()
++	for _, serv := range c.serviceManager.services {
++		wg.Add(1)
++		go func(s Service) {
++			defer wg.Done()
++			c, ok := s.(TestClose)
++			if ok {
++				c.TestClose()
++			}
++		}(serv)
++	}
++	c.serviceManager.servicesMutex.Unlock()
++	wg.Wait()
++}
 diff --git a/service.go b/service.go
 index 88784f5..d95b4d3 100644
 --- a/service.go
@@ -104,19 +118,26 @@ index 88784f5..d95b4d3 100644
  	defaultHandle := func() (ProtocolInstance, error) { return s.server.protocolInstantiate(tni.Token().ProtoID, tni) }
  	if !ok {
 diff --git a/treenode.go b/treenode.go
-index 549d351..0dc8c20 100644
+index 549d351..aad33b4 100644
 --- a/treenode.go
 +++ b/treenode.go
-@@ -338,6 +338,12 @@ func (n *TreeNodeInstance) Shutdown() error {
+@@ -338,6 +338,11 @@ func (n *TreeNodeInstance) Shutdown() error {
  
  // closeDispatch shuts down the go-routine and calls the protocolInstance-shutdown
  func (n *TreeNodeInstance) closeDispatch() error {
 +	defer func() {
 +		if r := recover(); r != nil {
-+			log.Print("Recovered in f", r)
-+			log.Print(log.Stack())
++			log.Error("Recovered panic:", r)
 +		}
 +	}()
  	log.Lvl3("Closing node", n.Info())
  	n.msgDispatchQueueMutex.Lock()
  	n.closing = true
+@@ -617,6 +622,7 @@ func (n *TreeNodeInstance) Public() kyber.Point {
+ // NOTE: It is to be used VERY carefully and is likely to disappear in the next
+ // releases.
+ func (n *TreeNodeInstance) CloseHost() error {
++	n.Host().callTestClose()
+ 	return n.Host().Close()
+ }
+ 
