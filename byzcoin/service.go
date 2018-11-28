@@ -1056,7 +1056,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		if sb.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s genesis leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			}
 		}
@@ -1089,7 +1088,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		if bcConfig.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			} else {
 				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
@@ -1250,17 +1248,18 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
+	s.pollChanWG.Add(1)
 	closeSignal := make(chan bool)
 	go func() {
 		s.closedMutex.Lock()
+		defer s.pollChanWG.Done()
 		if s.closed {
 			s.closedMutex.Unlock()
 			return
 		}
 		s.working.Add(1)
-		s.closedMutex.Unlock()
 		defer s.working.Done()
-		defer s.pollChanWG.Done()
+		s.closedMutex.Unlock()
 		var txs []ClientTransaction
 		for {
 			bcConfig, err := s.LoadConfig(scID)
@@ -1338,6 +1337,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 						return
 					}
 				}
+
 				log.Lvl3("Collected all new transactions:", len(txs))
 
 				if len(txs) == 0 {
@@ -1939,7 +1939,6 @@ func (s *Service) startAllChains() error {
 		}
 		if leader.Equal(s.ServerIdentity()) {
 			s.pollChanMut.Lock()
-			s.pollChanWG.Add(1)
 			s.pollChan[string(gen)] = s.startPolling(gen)
 			s.pollChanMut.Unlock()
 		}
