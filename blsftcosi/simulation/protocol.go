@@ -23,8 +23,8 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/blsftcosi"
 	"github.com/dedis/cothority/blsftcosi/protocol"
-	"github.com/dedis/cothority/blsftcosi/service"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -118,17 +118,17 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 	for round := 0; round < s.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		blsftcosiService := config.GetService(service.ServiceName).(*service.Service)
+		blsftcosiService := config.GetService(blsftcosi.ServiceName).(*blsftcosi.Service)
 		blsftcosiService.NSubtrees = s.NSubtrees
 		blsftcosiService.Threshold = s.Hosts - s.FailingLeafs - s.FailingSubleaders
 
-		client := service.NewClient()
+		client := blsftcosi.NewClient()
 		proposal := []byte{0xFF}
-		serviceReq := &service.SignatureRequest{
+		serviceReq := &blsftcosi.SignatureRequest{
 			Roster:  config.Roster,
 			Message: proposal,
 		}
-		serviceReply := &service.SignatureResponse{}
+		serviceReply := &blsftcosi.SignatureResponse{}
 
 		log.Lvl1("Sending request to service...")
 		err := client.SendProtobuf(config.Server.ServerIdentity, serviceReq, serviceReply)
