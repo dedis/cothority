@@ -1067,7 +1067,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		if sb.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s genesis leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			}
 		}
@@ -1100,7 +1099,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		if bcConfig.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			} else {
 				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
@@ -1261,17 +1259,24 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
+	log.Print(s.ServerIdentity(), "start")
+	s.pollChanWG.Add(1)
 	closeSignal := make(chan bool)
 	go func() {
 		s.closedMutex.Lock()
+		log.Print(s.ServerIdentity(), "go-routine")
+		defer func() {
+			log.Print(s.ServerIdentity(), "wg.done")
+			s.pollChanWG.Done()
+		}()
 		if s.closed {
 			s.closedMutex.Unlock()
+			log.Print(s.ServerIdentity(), "quitting")
 			return
 		}
 		s.working.Add(1)
-		s.closedMutex.Unlock()
 		defer s.working.Done()
-		defer s.pollChanWG.Done()
+		s.closedMutex.Unlock()
 		var txs []ClientTransaction
 		for {
 			bcConfig, err := s.LoadConfig(scID)
@@ -1279,11 +1284,13 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				panic("couldn't get configuration - this is bad and probably" +
 					"a problem with the database! " + err.Error())
 			}
+			log.Printf("%s: Waiting for channel %#v #p", s.ServerIdentity(), closeSignal, closeSignal)
 			select {
 			case <-closeSignal:
 				log.Lvl2(s.ServerIdentity(), "abort waiting for next block")
 				return
 			case <-time.After(bcConfig.BlockInterval):
+				log.Print(s.ServerIdentity(), "next block")
 				// Need to update the config, as in the meantime a new block should have
 				// arrived with a possible new configuration.
 				bcConfig, err = s.LoadConfig(scID)
@@ -1350,6 +1357,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 						return
 					}
 				}
+				log.Print(s.ServerIdentity(), "done waiting for signal")
+
 				log.Lvl3("Collected all new transactions:", len(txs))
 
 				if len(txs) == 0 {
@@ -1813,14 +1822,16 @@ func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	// log.Print(s.ServerIdentity(), "closing test")
+	log.Print(s.ServerIdentity(), "closing test")
 	s.closedMutex.Lock()
 	if !s.closed {
 		s.closed = true
 		s.closedMutex.Unlock()
+		log.Print(s.ServerIdentity(), "cleaning up goroutines")
 		s.cleanupGoroutines()
-		// log.Print(s.ServerIdentity(), "waiting for s.working")
+		log.Print(s.ServerIdentity(), "waiting for s.working")
 		s.working.Wait()
+		log.Print(s.ServerIdentity(), "done")
 	} else {
 		s.closedMutex.Unlock()
 	}
@@ -1834,11 +1845,13 @@ func (s *Service) cleanupGoroutines() {
 
 	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {
+		log.Printf("%s: Closing channel %#v %p", s.ServerIdentity(), c, c)
 		close(c)
+		log.Print(s.ServerIdentity(), "channel closed")
 		delete(s.pollChan, k)
 	}
 	s.pollChanMut.Unlock()
-	// log.Print(s.ServerIdentity(), "waiting for pollChanWG")
+	log.Print(s.ServerIdentity(), "waiting for pollChanWG")
 	s.pollChanWG.Wait()
 }
 
@@ -1954,7 +1967,6 @@ func (s *Service) startAllChains() error {
 		}
 		if leader.Equal(s.ServerIdentity()) {
 			s.pollChanMut.Lock()
-			s.pollChanWG.Add(1)
 			s.pollChan[string(gen)] = s.startPolling(gen)
 			s.pollChanMut.Unlock()
 		}
