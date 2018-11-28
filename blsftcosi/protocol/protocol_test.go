@@ -19,11 +19,11 @@ const FailureProtocolName = "FailureProtocol"
 const FailureSubProtocolName = "FailureSubProtocol"
 
 func NewFailureProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return true }
+	vf := func(a, b []byte) bool { return true }
 	return NewBlsFtCosi(n, vf, FailureSubProtocolName, testSuite)
 }
 func NewFailureSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return false }
+	vf := func(a, b []byte) bool { return false }
 	return NewSubBlsFtCosi(n, vf, testSuite)
 }
 

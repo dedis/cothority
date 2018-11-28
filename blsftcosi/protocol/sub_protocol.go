@@ -26,6 +26,7 @@ func init() {
 type SubBlsFtCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
+	Data           []byte
 	Timeout        time.Duration
 	Threshold      int
 	stoppedOnce    sync.Once
@@ -45,7 +46,7 @@ type SubBlsFtCosi struct {
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return true }
+	vf := func(a, b []byte) bool { return true }
 	return NewSubBlsFtCosi(n, vf, bn256.NewSuiteG2())
 }
 
@@ -126,6 +127,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 		p.Timeout /= 2
 	}
 	p.Msg = announcement.Msg
+	p.Data = announcement.Data
 	p.Threshold = announcement.Threshold
 
 	// verify that threshold is valid
@@ -139,7 +141,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 	if !p.IsRoot() {
 		go func() {
 			log.Lvl3(p.ServerIdentity(), "starting verification in the background")
-			verificationOk := p.verificationFn(p.Msg)
+			verificationOk := p.verificationFn(p.Msg, p.Data)
 			personalResponse, err := p.getResponse(verificationOk, p.Roster().Publics(), p.Private())
 			if err != nil {
 				log.Error("error while generating own commitment:", err)
@@ -368,7 +370,7 @@ func (p *SubBlsFtCosi) Start() error {
 
 	announcement := StructAnnouncement{
 		p.TreeNode(),
-		Announcement{p.Msg, p.Timeout, p.Threshold},
+		Announcement{p.Msg, p.Data, p.Timeout, p.Threshold},
 	}
 	p.ChannelAnnouncement <- announcement
 	return nil

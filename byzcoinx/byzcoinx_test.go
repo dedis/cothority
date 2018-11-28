@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -19,7 +19,7 @@ import (
 )
 
 var defaultTimeout = 20 * time.Second
-var testSuite = cothority.Suite
+var testSuite = bn256.NewSuiteG2()
 
 type Counter struct {
 	veriCount   int
@@ -196,12 +196,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.Nil(t, err)
 
 	// verify signature
-	var policy cosi.Policy
-	if nbrFault == 0 {
-		policy = nil
-	} else {
-		policy = cosi.NewThresholdPolicy(bftCosiProto.Threshold)
-	}
+	policy := cosi.NewThresholdPolicy(bftCosiProto.Threshold)
 	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
 	require.Nil(t, err)
 
@@ -231,7 +226,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if bytes.Compare(sig.Msg, proposal) != 0 {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
-	err := cosi.Verify(testSuite, publics, proposal, sig.Sig, policy)
+	err := sig.Sig.Verify(testSuite, proposal, publics, policy)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

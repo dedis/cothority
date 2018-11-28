@@ -18,7 +18,7 @@ import (
 
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
-type VerificationFn func(msg []byte) bool
+type VerificationFn func(msg, data []byte) bool
 
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
@@ -32,6 +32,7 @@ func init() {
 type BlsFtCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
+	Data           []byte
 	CreateProtocol CreateProtocolFunction
 	// Timeout is not a global timeout for the protocol, but a timeout used
 	// for waiting for responses for sub protocols.
@@ -56,7 +57,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // with an always-true verification.
 // Called by GlobalRegisterDefaultProtocols
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return true }
+	vf := func(a, b []byte) bool { return true }
 	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, bn256.NewSuiteG2())
 }
 
@@ -141,7 +142,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	verifyChan := make(chan bool, 1)
 	go func() {
 		log.Lvl3(p.ServerIdentity().Address, "starting verification")
-		verifyChan <- p.verificationFn(p.Msg)
+		verifyChan <- p.verificationFn(p.Msg, p.Data)
 	}()
 
 	// start all subprotocols
@@ -252,6 +253,7 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	}
 	cosiSubProtocol := pi.(*SubBlsFtCosi)
 	cosiSubProtocol.Msg = p.Msg
+	cosiSubProtocol.Data = p.Data
 	cosiSubProtocol.Timeout = p.Timeout / 2
 
 	//the Threshold (minus root node) is divided evenly among the subtrees

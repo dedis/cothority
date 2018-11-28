@@ -90,6 +90,7 @@ func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Poi
 // Announcement is the blsftcosi annoucement message
 type Announcement struct {
 	Msg       []byte // statement to be signed
+	Data      []byte
 	Timeout   time.Duration
 	Threshold int
 }
