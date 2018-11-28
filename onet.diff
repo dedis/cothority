@@ -1,5 +1,5 @@
 diff --git a/local.go b/local.go
-index a8316e4..fa0ac13 100644
+index a8316e4..95307cc 100644
 --- a/local.go
 +++ b/local.go
 @@ -259,7 +259,7 @@ func (l *LocalTest) WaitDone(t time.Duration) error {
@@ -7,7 +7,7 @@ index a8316e4..fa0ac13 100644
  // CloseAll closes all the servers.
  func (l *LocalTest) CloseAll() {
 -	log.Lvl3("Stopping all")
-+	log.LLvl3("Stopping all")
++	// log.LLvl3("Stopping all")
  	if r := recover(); r != nil {
  		// Make sure that a panic is correctly caught, as CloseAll is most often
  		// called in a `defer` statement, and we don't want to show leaking
@@ -16,10 +16,10 @@ index a8316e4..fa0ac13 100644
  		return
  	}
 -
-+	log.Print()
++	// log.Print()
  	InformAllServersStopped()
  
-+	log.Print()
++	// log.Print()
  	// If the debug-level is 0, we copy all errors to a buffer that
  	// will be discarded at the end.
  	if log.DebugVisible() == 0 {
@@ -45,7 +45,7 @@ index a8316e4..fa0ac13 100644
 +	}
 +	wg.Wait()
 +
-+	log.Print(l.Check)
++	// log.Print(l.Check)
  	if err := l.WaitDone(5 * time.Second); err != nil {
  		switch l.Check {
  		case CheckNone:
@@ -53,13 +53,13 @@ index a8316e4..fa0ac13 100644
  		}
  	}
  
-+	log.Print()
++	// log.Print()
  	for _, node := range l.Nodes {
 -		log.Lvl3("Closing node", node)
-+		log.LLvl3("Closing node", node)
++		// log.LLvl3("Closing node", node)
  		node.closeDispatch()
  	}
-+	log.Print()
++	// log.Print()
  	l.Nodes = make([]*TreeNodeInstance, 0)
  
  	sd := sync.WaitGroup{}
@@ -67,7 +67,7 @@ index a8316e4..fa0ac13 100644
  		sd.Add(1)
  		go func(server *Server) {
 -			log.Lvl3("Closing server", server.ServerIdentity.Address)
-+			log.LLvl3("Closing server", server.ServerIdentity.Address)
++			// log.LLvl3("Closing server", server.ServerIdentity.Address)
  			err := server.Close()
  			if err != nil {
  				log.Error("Closing server", server.ServerIdentity.Address,
@@ -75,10 +75,10 @@ index a8316e4..fa0ac13 100644
  		}(srv)
  	}
  	sd.Wait()
-+	log.Print()
++	// log.Print()
  	l.Servers = map[network.ServerIdentityID]*Server{}
  	l.ctx.Stop()
-+	log.Print()
++	// log.Print()
  
  	os.RemoveAll(l.path)
  	l.closed = true
@@ -86,27 +86,27 @@ index a8316e4..fa0ac13 100644
  	if log.DebugVisible() == 0 {
  		log.OutputToOs()
  	}
-+	log.Print()
++	// log.Print()
  	if l.Check != CheckNone {
  		log.AfterTest(nil)
  	}
-+	log.Print()
++	// log.Print()
  }
  
  // getTree returns the tree of the given TreeNode
 diff --git a/overlay.go b/overlay.go
-index 8d8e480..4c855da 100644
+index 8d8e480..efcc2d5 100644
 --- a/overlay.go
 +++ b/overlay.go
 @@ -158,6 +158,11 @@ func (o *Overlay) TransmitMsg(onetMsg *ProtocolMsg, io MessageProxy) error {
  		// request the PI from the Service and binds the two
  		pi, err = o.server.serviceManager.newProtocol(tni, config)
  		if err != nil {
-+			log.Print(o.ServerIdentity(), "closing")
++			// log.Print(o.ServerIdentity(), "closing")
 +			o.instancesLock.Lock()
 +			o.nodeDelete(onetMsg.To)
 +			o.instancesLock.Unlock()
-+			log.Print(o.ServerIdentity(), "closing done")
++			// log.Print(o.ServerIdentity(), "closing done")
  			return err
  		}
  		if pi == nil {
@@ -164,7 +164,7 @@ index 88784f5..d95b4d3 100644
  	defaultHandle := func() (ProtocolInstance, error) { return s.server.protocolInstantiate(tni.Token().ProtoID, tni) }
  	if !ok {
 diff --git a/treenode.go b/treenode.go
-index 549d351..3233852 100644
+index 549d351..baaa006 100644
 --- a/treenode.go
 +++ b/treenode.go
 @@ -338,12 +338,18 @@ func (n *TreeNodeInstance) Shutdown() error {
@@ -178,13 +178,13 @@ index 549d351..3233852 100644
 +			log.Print(log.Stack())
 +		}
 +	}()
-+	log.LLvl3("Closing node", n.Info())
++	// log.LLvl3("Closing node", n.Info())
  	n.msgDispatchQueueMutex.Lock()
  	n.closing = true
  	close(n.msgDispatchQueueWait)
  	n.msgDispatchQueueMutex.Unlock()
 -	log.Lvl3("Closed node", n.Info())
-+	log.LLvl3("Closed node", n.Info())
++	// log.LLvl3("Closed node", n.Info())
  	pni := n.ProtocolInstance()
  	if pni == nil {
  		return errors.New("Can't shutdown empty ProtocolInstance")

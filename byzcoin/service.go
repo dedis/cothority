@@ -1312,7 +1312,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				root := proto.(*CollectTxProtocol)
 				root.SkipchainID = scID
 				root.LatestID = latest.Hash
-				log.Print(s.ServerIdentity(), "starting collection")
+				// log.Print(s.ServerIdentity(), "starting collection")
 				if err := root.Start(); err != nil {
 					panic("Failed to start the protocol with error: " + err.Error() +
 						" Start() only returns an error when the protocol is not initialised correctly," +
@@ -1813,13 +1813,13 @@ func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	log.Print(s.ServerIdentity(), "closing test")
+	// log.Print(s.ServerIdentity(), "closing test")
 	s.closedMutex.Lock()
 	if !s.closed {
 		s.closed = true
 		s.closedMutex.Unlock()
 		s.cleanupGoroutines()
-		log.Print(s.ServerIdentity(), "waiting for s.working")
+		// log.Print(s.ServerIdentity(), "waiting for s.working")
 		s.working.Wait()
 	} else {
 		s.closedMutex.Unlock()
@@ -1838,7 +1838,7 @@ func (s *Service) cleanupGoroutines() {
 		delete(s.pollChan, k)
 	}
 	s.pollChanMut.Unlock()
-	log.Print(s.ServerIdentity(), "waiting for pollChanWG")
+	// log.Print(s.ServerIdentity(), "waiting for pollChanWG")
 	s.pollChanWG.Wait()
 }
 
