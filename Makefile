@@ -8,19 +8,24 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # You can use `test_playground` to run any test or part of cothority
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
-# cd byzcoin; \
-# if DEBUG_TIME=true go test -v -race -run SetConfig\$$ -count 10 > log.txt 2>&1; then \
 
-test_playground:
+test_playground_orig:
 	(cd ../onet; patch -p1 < ../cothority/onet.diff); \
+	cd byzcoin; \
 	for a in $$( seq 100 ); do \
-		if make test > log.txt 2>&1; then \
+	  if DEBUG_TIME=true go test -v -race -run SetConfig\$$ -count 10 > log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \
 			cat log.txt; \
 			exit 1; \
 		fi; \
+	done;
+
+test_playground:
+	(cd ../onet; patch -p1 < ../cothority/onet.diff); \
+	for a in $$( seq 100 ); do \
+	  make test || exit 1; \
 	done;
 
 # Other targets are:
