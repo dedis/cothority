@@ -618,8 +618,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// For a genesis block, we create a throwaway staging trie.
 		// There is no need to verify the darc because the caller does
 		// it.
+		if r == nil {
+			return nil, errors.New("need roster for genesis block")
+		}
 		sb = skipchain.NewSkipBlock()
-		sb.Roster = r
 		sb.MaximumHeight = 32
 		sb.BaseHeight = 4
 		// We have to register the verification functions in the genesis block
@@ -646,9 +648,6 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		log.Lvlf3("Creating block #%d with %d transactions", sbLatest.Index+1,
 			len(tx))
 		sb = sbLatest.Copy()
-		if r != nil {
-			sb.Roster = r
-		}
 
 		st, err := s.getStateTrie(scID)
 		if err != nil {
@@ -663,7 +662,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs = s.createStateChanges(sst, scID, tx, noTimeout)
+	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -686,12 +685,22 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
+	if r != nil {
+		sb.Roster = r
+	}
 	var ssb = skipchain.StoreSkipBlock{
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
 	log.Lvlf3("Storing skipblock with %d transactions.", len(txRes))
-	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
+	var ssbReply *skipchain.StoreSkipBlockReply
+	if sb.Roster.List[0].Equal(s.ServerIdentity()) {
+		ssbReply, err = s.skService().StoreSkipBlock(&ssb)
+	} else {
+		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
+		ssbReply = &skipchain.StoreSkipBlockReply{}
+		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -974,7 +983,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
-	_, _, scs := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
 	// Store old config before the global state gets updated, so that we can compare
 	// with the previous roster to know if something has changed.
@@ -1286,7 +1295,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 						" This function should never be called on a skipchain that does not exist.")
 				}
 
-				log.Lvl2(s.ServerIdentity(), "Starting new block", latest.Index+1)
+				log.Lvlf2("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, scID)
 				tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
 
 				proto, err := s.CreateProtocol(collectTxProtocol, tree)
@@ -1358,7 +1367,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				if err != nil {
 					panic("the state trie must exist because we only start polling after creating/loading the skipchain")
 				}
-				_, txOut, _ := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, bcConfig.BlockInterval/2)
+				_, txOut, _, sstTemp := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, bcConfig.BlockInterval/2)
+				bcConfig, err = loadConfigFromTrie(sstTemp)
+				if err != nil {
+					panic("couldn't load config from temp stage Trie, this should never happen: " + err.Error())
+				}
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
@@ -1445,7 +1458,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 		sst = st.MakeStagingStateTrie()
 	}
-	mtr, txOut, scs := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
+	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -1541,7 +1554,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1561,7 +1574,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 	deadline := time.Now().Add(timeout)
 
-	sstTemp := sst.Clone()
+	sstTemp = sst.Clone()
 	var cin []Coin
 clientTransactions:
 	for _, tx := range txIn {
