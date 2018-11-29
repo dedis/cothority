@@ -18,8 +18,6 @@ func TestMain(m *testing.M) {
 
 func TestServiceCosi(t *testing.T) {
 	local := onet.NewTCPTest(testSuite)
-	// generate 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
 	_, roster, _ := local.GenTree(10, false)
 	defer local.CloseAll()
 

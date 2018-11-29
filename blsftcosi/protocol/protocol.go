@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // VerificationFn is called on every node. Where msg is the message that is
@@ -153,20 +154,17 @@ func (p *BlsFtCosi) Dispatch() error {
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
 			log.Error(err)
-			p.FinalSignature <- nil
 			return err
 		}
 	}
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	// Wait and collect all the signature responses
-	responses, runningSubProtocols, err := p.collectSignatures()
+	responses, err := p.collectSignatures()
 	if err != nil {
 		return err
 	}
 	log.Lvl3(p.ServerIdentity().Address, "collected all signature responses")
-
-	_ = runningSubProtocols
 
 	// verifies the proposal
 	var verificationOk bool
@@ -178,20 +176,17 @@ func (p *BlsFtCosi) Dispatch() error {
 	}
 	if !verificationOk {
 		// root should not fail the verification otherwise it would not have started the protocol
-		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
 
 	// generate root signature
 	signaturePoint, finalMask, err := generateSignature(p.suite, p.TreeNodeInstance, p.Roster().Publics(), p.Private(), responses, p.Msg, verificationOk)
 	if err != nil {
-		p.FinalSignature <- nil
 		return err
 	}
 
 	signature, err := signaturePoint.MarshalBinary()
 	if err != nil {
-		p.FinalSignature <- nil
 		return err
 	}
 
@@ -209,37 +204,42 @@ func (p *BlsFtCosi) Dispatch() error {
 // Start is done only by root and starts the protocol.
 // It also verifies that the protocol has been correctly parameterized.
 func (p *BlsFtCosi) Start() error {
-	if p.Msg == nil {
-		p.Shutdown()
-		return fmt.Errorf("no proposal msg specified")
-	}
-	if p.CreateProtocol == nil {
-		p.Shutdown()
-		return fmt.Errorf("no create protocol function specified")
-	}
-	if p.verificationFn == nil {
-		p.Shutdown()
-		return fmt.Errorf("verification function cannot be nil")
-	}
-	if p.subProtocolName == "" {
-		p.Shutdown()
-		return fmt.Errorf("sub-protocol name cannot be empty")
-	}
-	if p.Timeout < 10*time.Nanosecond {
-		p.Shutdown()
-		return fmt.Errorf("unrealistic timeout")
-	}
-	if p.Threshold > p.Tree().Size() {
-		p.Shutdown()
-		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, p.Tree().Size())
-	}
-	if p.Threshold < 1 {
-		p.Shutdown()
-		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
+	err := p.checkIntegrity()
+	if err != nil {
+		p.Done()
+		return err
 	}
 
 	log.Lvl3("Starting CoSi")
 	p.startChan <- true
+	return nil
+}
+
+// checkIntegrity checks if the protocol has been instantiated with
+// correct parameters
+func (p *BlsFtCosi) checkIntegrity() error {
+	if p.Msg == nil {
+		return fmt.Errorf("no proposal msg specified")
+	}
+	if p.CreateProtocol == nil {
+		return fmt.Errorf("no create protocol function specified")
+	}
+	if p.verificationFn == nil {
+		return fmt.Errorf("verification function cannot be nil")
+	}
+	if p.subProtocolName == "" {
+		return fmt.Errorf("sub-protocol name cannot be empty")
+	}
+	if p.Timeout < 10*time.Nanosecond {
+		return fmt.Errorf("unrealistic timeout")
+	}
+	if p.Threshold > p.Tree().Size() {
+		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, p.Tree().Size())
+	}
+	if p.Threshold < 1 {
+		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
+	}
+
 	return nil
 }
 
@@ -275,28 +275,17 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 
 // Sign the message with this node and aggregates with all child signatures (in structResponses)
 // Also aggregates the child bitmasks
-func generateSignature(ps pairing.Suite, t *onet.TreeNodeInstance, publics []kyber.Point, private kyber.Scalar, structResponses []StructResponse,
-	msg []byte, ok bool) (kyber.Point, *cosi.Mask, error) {
+func generateSignature(ps pairing.Suite, t *onet.TreeNodeInstance, publics []kyber.Point, private kyber.Scalar,
+	responses map[network.ServerIdentityID]*Response, msg []byte, ok bool) (kyber.Point, *cosi.Mask, error) {
 
 	if t == nil {
 		return nil, nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
-	} else if structResponses == nil {
+	} else if responses == nil {
 		return nil, nil, fmt.Errorf("StructResponse should not be nil, but is")
 	} else if publics == nil {
 		return nil, nil, fmt.Errorf("publics should not be nil, but is")
 	} else if msg == nil {
 		return nil, nil, fmt.Errorf("msg should not be nil, but is")
-	}
-
-	// extract lists of responses
-	var signatures []kyber.Point
-	var masks [][]byte
-
-	for _, r := range structResponses {
-		atmp, err := r.Signature.Point(ps)
-		_ = err
-		signatures = append(signatures, atmp)
-		masks = append(masks, r.Mask)
 	}
 
 	//generate personal mask
@@ -307,23 +296,20 @@ func generateSignature(ps pairing.Suite, t *onet.TreeNodeInstance, publics []kyb
 		personalMask, _ = cosi.NewMask(ps.(cosi.Suite), publics, nil)
 	}
 
-	masks = append(masks, personalMask.Mask())
-
 	// generate personal signature and append to other sigs
 	personalSig, err := bls.Sign(ps, private, msg)
-
 	if err != nil {
 		return nil, nil, err
 	}
-	personalPointSig, err := BlsSignature(personalSig).Point(ps)
-	if !ok {
-		personalPointSig = ps.G1().Point()
+
+	// fill the map with the Root signature
+	responses[t.ServerIdentity().ID] = &Response{
+		Mask:      personalMask.Mask(),
+		Signature: personalSig,
 	}
 
-	signatures = append(signatures, personalPointSig)
-
 	// Aggregate all signatures
-	aggSignature, aggMask, err := aggregateSignatures(ps, signatures, masks)
+	response, err := makeAggregateResponse(ps, publics, responses)
 	if err != nil {
 		log.Lvl3(t.ServerIdentity().Address, "failed to create aggregate signature")
 		return nil, nil, err
@@ -334,12 +320,16 @@ func generateSignature(ps pairing.Suite, t *onet.TreeNodeInstance, publics []kyb
 	if err != nil {
 		return nil, nil, err
 	}
-	err = finalMask.SetMask(aggMask)
+	err = finalMask.SetMask(response.Mask)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	log.Lvl3(t.ServerIdentity().Address, "is done aggregating signatures with total of", len(signatures), "signatures")
+	finalSignature, err := response.Signature.Point(ps)
+	if err != nil {
+		return nil, nil, err
+	}
+	log.Lvl3(t.ServerIdentity().Address, "is done aggregating signatures with total of", len(responses), "signatures")
 
-	return aggSignature, finalMask, nil
+	return finalSignature, finalMask, err
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 type responseProtocol struct {
@@ -14,9 +15,17 @@ type responseProtocol struct {
 	subProtocol    *SubBlsFtCosi
 }
 
+func (p *BlsFtCosi) checkFailureThreshold(numFailure int) bool {
+	if numFailure == 0 {
+		return false
+	}
+
+	return numFailure > len(p.Roster().List)-p.Threshold
+}
+
 // Collect signatures from each sub-leader, restart whereever sub-leaders fail to respond.
 // The collected signatures are already aggregated for a particular group
-func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, error) {
+func (p *BlsFtCosi) collectSignatures() (map[network.ServerIdentityID]*Response, error) {
 	responsesChan := make(chan responseProtocol, 2*len(p.subProtocols))
 	errChan := make(chan error, len(p.subProtocols))
 	closingChan := make(chan bool)
@@ -80,54 +89,34 @@ func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, erro
 	}
 
 	// handle answers from all parallel threads
-	sharedMask, err := cosi.NewMask(p.suite.(cosi.Suite), p.Roster().Publics(), nil)
-	if err != nil {
-		close(closingChan)
-		return nil, nil, err
-	}
-	responseMap := make(map[*SubBlsFtCosi]StructResponse, len(p.subProtocols))
-	thresholdReached := true
-	thresholdReachable := true
+	responseMap := make(map[network.ServerIdentityID]*Response)
+	numSignature := 0
+	numFailure := 0
 	if len(p.subProtocols) > 0 {
-		thresholdReached = false
-		for !thresholdReached && thresholdReachable {
+		for numSignature < p.Threshold-1 && !p.checkFailureThreshold(numFailure) {
 			select {
 			case res := <-responsesChan:
-				// If there is a response, add to map.
-				// This assumes that the last response of a subtree is the biggest one.
-				// TODO- Check if this should be changed??
-				responseMap[res.subProtocol] = res.structResponse
-
-				// check if threshold is reachable
-				if sumRefusals(responseMap) > len(p.Roster().Publics())-p.Threshold {
-					// we assume the root accepts the proposal
-					thresholdReachable = false
+				mask, err := cosi.NewMask(p.suite.(cosi.Suite), p.Roster().Publics(), nil)
+				if err != nil {
+					return nil, err
+				}
+				err = mask.SetMask(res.structResponse.Mask)
+				if err != nil {
+					return nil, err
 				}
 
-				newMask, err := cosi.AggregateMasks(sharedMask.Mask(), res.structResponse.Mask)
-				if err != nil {
-					err = fmt.Errorf("error in aggregation of response masks: %s", err)
-					close(closingChan)
-					return nil, nil, err
-				}
-				err = sharedMask.SetMask(newMask)
-				if err != nil {
-					err = fmt.Errorf("error in setting of shared masks: %s", err)
-					close(closingChan)
-					return nil, nil, err
-				}
-				if sharedMask.CountEnabled() >= p.Threshold-1 { // we assume the root accepts the proposal
-					thresholdReached = true
-				}
+				numSignature += mask.CountEnabled()
+				numFailure += len(res.subProtocol.List()) - 1 - mask.CountEnabled()
+				responseMap[res.structResponse.ServerIdentity.ID] = &res.structResponse.Response
 			case err := <-errChan:
 				err = fmt.Errorf("error in getting responses: %s", err)
 				close(closingChan)
-				return nil, nil, err
+				return nil, err
 			case <-time.After(p.Timeout):
 				close(closingChan)
-				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout %v "+
-					"for Threshold %d, got %d responses and %d refusals", p.Timeout,
-					p.Threshold, sharedMask.CountEnabled(), sumRefusals(responseMap))
+				return nil, fmt.Errorf("not enough replies from nodes at timeout %v "+
+					"for Threshold %d, got %d responses for %d requests", p.Timeout,
+					p.Threshold, numSignature, len(p.Roster().List)-1)
 			}
 		}
 	}
@@ -141,32 +130,12 @@ func (p *BlsFtCosi) collectSignatures() ([]StructResponse, []*SubBlsFtCosi, erro
 	}
 
 	if len(errs) > 0 {
-		return nil, nil, fmt.Errorf("failed to collect responses with errors %v", errs)
+		return nil, fmt.Errorf("failed to collect responses with errors %v", errs)
 	}
-	if !thresholdReachable {
-		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold of %d cannot be achieved",
-			sumRefusals(responseMap), p.Threshold)
-	}
-
-	// extract protocols and responses from map
-	runningSubProtocols := make([]*SubBlsFtCosi, 0, len(responsesChan))
-	responses := make([]StructResponse, 0, len(responsesChan))
-	for subProtocol, response := range responseMap {
-		sign, _ := response.Signature.Point(p.suite)
-		if !sign.Equal(p.suite.G1().Point()) {
-			// Only pass subProtocols that have atleast one valid response in them.
-			runningSubProtocols = append(runningSubProtocols, subProtocol)
-			responses = append(responses, response)
-		}
+	if p.checkFailureThreshold(numFailure) {
+		return nil, fmt.Errorf("too many refusals (got %d), the threshold of %d cannot be achieved",
+			numFailure, p.Threshold)
 	}
 
-	return responses, runningSubProtocols, nil
-}
-
-func sumRefusals(responseMap map[*SubBlsFtCosi]StructResponse) int {
-	sumRefusal := 0
-	for _, response := range responseMap {
-		sumRefusal += len(response.Refusals)
-	}
-	return sumRefusal
+	return responseMap, nil
 }

@@ -56,13 +56,13 @@ func (sig BlsSignature) Point(suite pairing.Suite) (kyber.Point, error) {
 
 // Verify checks the signature over the message using the given public keys and policy
 func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Point, policy cosi.Policy) error {
-	if publics == nil {
+	if publics == nil || len(publics) == 0 {
 		return errors.New("no public keys provided")
 	}
 	if msg == nil {
 		return errors.New("no message provided")
 	}
-	if sig == nil {
+	if sig == nil || len(sig) == 0 {
 		return errors.New("no signature provided")
 	}
 
@@ -106,7 +106,6 @@ type StructAnnouncement struct {
 type Response struct {
 	Signature BlsSignature
 	Mask      []byte
-	Refusals  map[int][]byte
 }
 
 // StructResponse just contains Response and the data necessary to identify and
@@ -114,6 +113,18 @@ type Response struct {
 type StructResponse struct {
 	*onet.TreeNode
 	Response
+}
+
+// Refusal is the signed refusal response from a given node
+type Refusal struct {
+	Signature []byte
+	Nonce     []byte
+}
+
+// StructRefusal contains the refusal and the treenode that sent it
+type StructRefusal struct {
+	*onet.TreeNode
+	Refusal
 }
 
 // Stop is a message used to instruct a node to stop its protocol

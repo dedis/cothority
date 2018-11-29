@@ -135,7 +135,7 @@ func TestQuickAnswerProtocol_2_1(t *testing.T) {
 func TestQuickAnswerProtocol_5_1(t *testing.T) {
 	mask, err := runQuickAnswerProtocol(5, 1)
 	require.Nil(t, err)
-	require.Equal(t, 2, mask.CountEnabled())
+	require.Equal(t, 3, mask.CountEnabled())
 }
 
 func TestQuickAnswerProtocol_25_5(t *testing.T) {
@@ -163,22 +163,21 @@ func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
 }
 
 func TestProtocol_FailingLeaves_5_1(t *testing.T) {
-	err := runProtocolFailingNodes(5, 1, 1)
+	err := runProtocolFailingNodes(5, 1, 1, 4)
 	require.Nil(t, err)
 }
 
 func TestProtocol_FailingLeaves_25_9(t *testing.T) {
-	err := runProtocolFailingNodes(25, 3, 2)
+	err := runProtocolFailingNodes(25, 3, 2, 23)
 	require.Nil(t, err)
 }
 
-func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure int) error {
+func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) error {
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(nbrNodes, false)
 
 	services := local.GetServices(servers, testServiceID)
-	threshold := nbrNodes - nbrFailure
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(DefaultProtocolName, tree)
@@ -314,32 +313,45 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 }
 
 func TestProtocol_AllFailing_5_1(t *testing.T) {
-	err := runProtocolAllFailing(5, 1, 1)
+	_, err := runProtocolAllFailing(5, 1, 1)
 	require.Nil(t, err)
 
-	err = runProtocolAllFailing(5, 1, 2)
+	_, err = runProtocolAllFailing(5, 1, 2)
 	require.NotNil(t, err)
 }
 
 func TestProtocol_AllFailing_25_3(t *testing.T) {
-	err := runProtocolAllFailing(25, 3, 1)
+	_, err := runProtocolAllFailing(25, 3, 1)
 	require.Nil(t, err)
 
-	err = runProtocolAllFailing(25, 3, 2)
+	_, err = runProtocolAllFailing(25, 3, 2)
 	require.NotNil(t, err)
 }
 
-func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) error {
+func TestProtocol_QuickFailure_15(t *testing.T) {
+	ts, err := runProtocolAllFailing(15, 1, 15)
+	require.NotNil(t, err)
+	require.True(t, ts.Add(defaultTimeout).After(time.Now()), "Protocol should not reach the timeout")
+}
+
+func TestProtocol_QuickFailure_14(t *testing.T) {
+	ts, err := runProtocolAllFailing(15, 1, 14)
+	require.NotNil(t, err)
+	require.True(t, ts.Add(defaultTimeout).After(time.Now()), "Protocol should not reach the timeout")
+}
+
+func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error) {
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(nbrNodes, false)
 
 	services := local.GetServices(servers, testServiceID)
 
+	time := time.Now()
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(FailureProtocolName, tree)
 	if err != nil {
-		return err
+		return time, err
 	}
 
 	cosiProtocol := pi.(*BlsFtCosi)
@@ -351,17 +363,17 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) error {
 
 	err = cosiProtocol.Start()
 	if err != nil {
-		return err
+		return time, err
 	}
 
 	// only the leader agrees, the verification should only pass with a threshold of 1
 	// the rest, including using the complete policy should fail
 	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
 	if err != nil {
-		return err
+		return time, err
 	}
 
-	return nil
+	return time, nil
 }
 
 // testService allows setting the pairing keys of the protocol.
