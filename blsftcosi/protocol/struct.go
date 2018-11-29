@@ -27,6 +27,9 @@ func init() {
 	network.RegisterMessages(&Announcement{}, &Response{}, &Stop{})
 }
 
+// ResponseMap is the container used to store responses coming from the children
+type ResponseMap map[onet.TreeNodeID]*Response
+
 // BlsSignature contains the message and its aggregated signature
 type BlsSignature []byte
 

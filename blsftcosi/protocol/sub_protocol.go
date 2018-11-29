@@ -14,7 +14,6 @@ import (
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -196,15 +195,15 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		return errors.New("Couldn't pass the annoucement to children")
 	}
 
-	responses := make(map[network.ServerIdentityID]*Response)
+	responses := make(ResponseMap)
 	for _, c := range p.Children() {
 		// Accept response for those identities only
-		responses[c.ServerIdentity.ID] = nil
+		responses[c.ID] = nil
 	}
 
 	own, err := p.makeResponse()
 	if ok := p.verificationFn(p.Msg, p.Data); ok {
-		responses[p.ServerIdentity().ID] = own
+		responses[p.TreeNode().ID] = own
 	}
 
 	timeout := time.After(p.Timeout)
@@ -217,12 +216,12 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 				return nil
 			}
 
-			r, ok := responses[reply.ServerIdentity.ID]
+			r, ok := responses[reply.ID]
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
 				if err := bls.Verify(p.suite, reply.ServerIdentity.Public, p.Msg, reply.Signature); err == nil {
-					responses[reply.ServerIdentity.ID] = &reply.Response
+					responses[reply.ID] = &reply.Response
 					done++
 				}
 			} else {
@@ -235,7 +234,7 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 
 			if err := bls.Verify(p.suite, reply.ServerIdentity.Public, reply.Nonce, reply.Signature); err == nil {
 				// The child gives an empty signature as a mark of refusal
-				responses[reply.ServerIdentity.ID] = &Response{}
+				responses[reply.ID] = &Response{}
 				refusals++
 			} else {
 				log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
@@ -311,7 +310,7 @@ func (p *SubBlsFtCosi) makeRefusal() (*Refusal, error) {
 	return &Refusal{Signature: sig, Nonce: nonce}, err
 }
 
-func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses map[network.ServerIdentityID]*Response) (*Response, error) {
+func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (*Response, error) {
 	finalMask, err := cosi.NewMask(suite.(cosi.Suite), publics, nil)
 	if err != nil {
 		return nil, err
@@ -358,8 +357,18 @@ func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
 			"that is not the root, ignored")
 	}
 	log.Lvl3("Received stop", p.ServerIdentity())
-	close(p.ChannelAnnouncement)
-	// close(p.ChannelResponse) // Channel left open to allow verification function to safely return
+
+	return p.Shutdown()
+}
+
+// Shutdown closes the different channel to stop the current work
+func (p *SubBlsFtCosi) Shutdown() error {
+	p.stoppedOnce.Do(func() {
+		log.Lvlf2("Subprotocol shut down on %v", p.ServerIdentity())
+		close(p.ChannelAnnouncement)
+		close(p.ChannelResponse)
+		close(p.ChannelRefusal)
+	})
 	return nil
 }
 
