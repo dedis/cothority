@@ -1,7 +1,3 @@
-/*
-* This is a template for creating an app. It only has one command which
-* prints out the name of the app.
- */
 package main
 
 import (
@@ -31,12 +27,9 @@ var ConfigPath = "."
 
 // Config is the structure used to save an omniledger (identity ledger and shards) configuration.
 type Config struct {
-	IBID     skipchain.SkipBlockID
-	IBRoster onet.Roster
-	//IBDarc        darc.Darc
-	ShardIDs []skipchain.SkipBlockID
-	//ShardRosters  []onet.Roster
-	//ShardDarcs    []darc.Darc
+	IBID          skipchain.SkipBlockID
+	IBRoster      onet.Roster
+	ShardIDs      []skipchain.SkipBlockID
 	AdminIdentity darc.Identity
 	OLInstanceID  bc.InstanceID
 }
@@ -97,11 +90,6 @@ func main() {
 }
 
 func createSharding(c *cli.Context) error {
-	/*fmt.Println(c.NArg())
-	if c.NArg() < 5 { // NArg() counts the flags and their value as arguments
-		return errors.New("Not enough arguments (1 required)")
-	}*/
-
 	// Parse CLI arguments
 	sn := c.Int("shards")
 	if sn == 0 {
@@ -153,11 +141,9 @@ func createSharding(c *cli.Context) error {
 	}
 
 	cfg := Config{
-		IBRoster: *roster,
-		//ShardRosters:  reply.ShardRoster,
-		IBID:     reply.IDSkipBlock.SkipChainID(),
-		ShardIDs: shardIDs,
-		//IBDarc:        reply.GenesisDarc,
+		IBRoster:      *roster,
+		IBID:          reply.IDSkipBlock.SkipChainID(),
+		ShardIDs:      shardIDs,
 		AdminIdentity: reply.Owner.Identity(),
 		OLInstanceID:  reply.OmniledgerInstanceID,
 	}
@@ -181,9 +167,6 @@ func createSharding(c *cli.Context) error {
 	}
 	fmt.Println("ABSOLUTE PATH create sharding:", dir)
 
-	// For testing purposes
-	c.App.Metadata["OC"] = cfgPath
-
 	return nil
 }
 
@@ -201,7 +184,6 @@ func evolveShard(c *cli.Context) error {
 	return nil
 }
 
-// TODO: Finish function
 func newEpoch(c *cli.Context) error {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -314,11 +296,6 @@ func saveConfig(cfg Config) (string, error) {
 	if err != nil {
 		return fn, err
 	}
-
-	/*err = ioutil.WriteFile("/home/qm/Desktop/ol.cfg", buf, 0644)
-	if err != nil {
-		return fn, err
-	}*/
 
 	return fn, nil
 }

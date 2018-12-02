@@ -9,8 +9,6 @@ import (
 	"errors"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	//	"github.com/dedis/cothority/byzcoin/darc/expression"
-	"fmt"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
 	"sync"
@@ -52,19 +50,19 @@ type storage struct {
 	sync.Mutex
 }
 
+// CreateOmniledger requests the creation of a new OmniLedger
 type CreateOmniLedger struct {
 	Version      bc.Version
 	Roster       onet.Roster
 	ShardCount   int
 	EpochSize    time.Duration
 	IBGenesisMsg *bc.CreateGenesisBlock
-	//ShardGenesisMsg  *bc.CreateGenesisBlock
-	OwnerID darc.Identity
-	//SpawnInstruction *bc.Instruction
-	SpawnTx   *bc.ClientTransaction
-	Timestamp time.Time
+	OwnerID      darc.Identity
+	SpawnTx      *bc.ClientTransaction
+	Timestamp    time.Time
 }
 
+// CreateOmniLedgerResponse is the reply after a CreateOmniledger is finished
 type CreateOmniLedgerResponse struct {
 	Version              bc.Version
 	ShardRoster          []onet.Roster
@@ -75,6 +73,7 @@ type CreateOmniLedgerResponse struct {
 	OmniledgerInstanceID bc.InstanceID
 }
 
+// NewEpoch requests the start of a new epoch
 type NewEpoch struct {
 	IBID     skipchain.SkipBlockID
 	IBRoster onet.Roster
@@ -88,12 +87,14 @@ type NewEpoch struct {
 	ReqNewEpochTx *bc.ClientTransaction
 }
 
+// NewEpochResponse is the reply after an NewEpoch is finished
 type NewEpochResponse struct {
 	IBRoster         onet.Roster
 	ReqNewEpochProof *bc.Proof
 	//ShardRosters []onet.Roster
 }
 
+// GetStatus requests the current Omniledger and shard rosters
 type GetStatus struct {
 	IBID     skipchain.SkipBlockID
 	IBRoster onet.Roster
@@ -102,11 +103,20 @@ type GetStatus struct {
 	OLInstanceID bc.InstanceID
 }
 
+// GetStatusResponse is the reply after a GetStatus
 type GetStatusResponse struct {
 	IBRoster     onet.Roster
 	ShardRosters []onet.Roster
 }
 
+// CreateOmniLedger sets up a new Omniledger.
+// It starts by creating the identity byzcoin ledger and spawning an Omnildger instance.
+// Then, it creates the individual shard ledgers.
+// Input:
+//		- req - A CreateOmniLedger struct
+// Output:
+//		- A CreateOmniLedgerResponse in case of success, nil otherwise
+//		- An error if any, nil otherwise
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
 	if err := checkCreateOmniLedger(req); err != nil {
 		return nil, err
@@ -117,13 +127,9 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, err
 	}
 
-	fmt.Println("-------- PRINT1 ---------")
-
 	if _, err := c.AddTransactionAndWait(*req.SpawnTx, 2); err != nil {
 		return nil, err
 	}
-
-	fmt.Println("-------- PRINT2 ---------")
 
 	id := req.SpawnTx.Instructions[0].DeriveID("")
 	gpr, err := c.GetProof(id.Slice())
@@ -209,6 +215,13 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 	return nil
 }
 
+// NewEpoch sends a transaction invoking the request new epoch instruction
+// to an Omniledger instance.
+// Input:
+//		- req - A NewEpoch struct
+// Output:
+//		- A NewEpochResponse in case of success, nil otherwise
+//		- An error if any, nil otherwise
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 
@@ -247,18 +260,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.NewEpoch); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
-	// Register processor function (handles certain message types, e.g. ViewChangeReq) if necessary
+
 	// Register contracts
-
-	// TODO: Use byzcoin.RegisterContract instead
 	bc.RegisterContract(c, ContractOmniledgerEpochID, contractOmniledgerEpochFromBytes)
-	//bc.RegisterContract(c, ContractNewEpochID, s.ContractNewEpoch)
-
-	// Register verification
-	// Register protocols
-	// Register skipchain callbacks + enable view change
-	// Register view-change cosi protocols
-	// Start all chains
 
 	return s, nil
 }

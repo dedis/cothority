@@ -4,29 +4,34 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/dedis/onet/log"
-	//"fmt"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 )
 
 // ServiceName is used for registration on the onet.
 const ServiceName = "OmniLedger"
 
-// Client is a structure to communicate with the OmniLedger
-// service.
+// Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
 	ID     skipchain.SkipBlockID
 	Roster onet.Roster
 }
 
-// NewClient returns a new client connected to the service
+// NewClient returns a new Client structure which can be used to communicate
+// with an omnilegdger ledger.
+// Input:
+// 		- ID - The ID of the ledger we want to connect
+// 		- Roster - A roster of nodes which will be contacted
+//	 	to communicate with the ledger
+// Output:
+//		- A Client structure
 func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
 		Client: onet.NewClient(cothority.Suite, ServiceName),
@@ -35,6 +40,13 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	}
 }
 
+// NewOmniLedger sets up a new OmniLedger ledger.
+// Input:
+// 		- req - A CreateOmniledger structure
+// Output:
+//		- A client connected to the newly created OmniLedger
+//		- A CreateOmniledgerResponse struct in case of success, nil otherwise
+//		- An error if any, nil otherwise
 func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	error) {
 	// Create client
@@ -117,6 +129,12 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	return c, reply, nil
 }
 
+// NewEpoch requests the start of a new epoch.
+// Input:
+// 		- req - A NewEpoch structure
+// Output:
+//		- A NewEpochResponse struct in case of success, nil otherwise
+//		- An error if any, nil otherwise
 func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	// Connect to IB via client
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
@@ -284,6 +302,13 @@ func getRosterChangesCount(oldRoster, newRoster onet.Roster) int {
 	return changesCount
 }
 
+// GetStatus gets the current omniledger and shards rosters
+// according to the omniledger.
+// Input:
+// 		- req - A GetStatus struct
+// Output:
+//		- A GetStatusResponse in case of success, nil otherwise
+//		- An error if any, nil otherwise
 func (c *Client) GetStatus(req *GetStatus) (*GetStatusResponse, error) {
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
