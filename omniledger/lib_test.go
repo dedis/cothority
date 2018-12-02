@@ -54,16 +54,21 @@ func TestLib_ChangeRoster(t *testing.T) {
 }
 
 func TestLib_EncodeDecodeDuration(t *testing.T) {
-	d := time.Duration(1) * time.Second
-	dBuf := lib.EncodeDuration(d)
-	dd, err := lib.DecodeDuration(dBuf)
-	if err != nil {
-		fmt.Println(err)
-	}
+	sec := time.Duration(1) * time.Second
+	secBuf := lib.EncodeDuration(sec)
+	s, err := lib.DecodeDuration(secBuf)
 
-	fmt.Println(d, dd)
+	assert.Nil(t, err)
+	assert.True(t, sec.Nanoseconds() == s.Nanoseconds())
+	assert.True(t, sec.Seconds() == s.Seconds())
+	assert.True(t, sec.Minutes() == s.Minutes())
 
-	assert.True(t, d.Nanoseconds() == dd.Nanoseconds())
+	min := time.Duration(1) * time.Minute
+	minBuf := lib.EncodeDuration(min)
+	m, err := lib.DecodeDuration(minBuf)
+
+	assert.Nil(t, err)
+	assert.True(t, m.Nanoseconds() == m.Nanoseconds())
 }
 
 func TestLib_ShardingMultiplier(t *testing.T) {
