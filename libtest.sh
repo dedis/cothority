@@ -359,11 +359,7 @@ runCoBG(){
       # Always redirect output of server in log-file, but
       # only output to stdout if DBG_SRV > 0.
       rm -f "$COLOG$nb.log.dead"
-      if [ "$DBG_SRV" = 0 ]; then
-        ./conode -d $DBG_SRV -c co$nb/private.toml server > "$COLOG$nb.log" | cat
-      else
-        ./conode -d $DBG_SRV -c co$nb/private.toml server 2>&1 | tee "$COLOG$nb.log"
-      fi
+      ./conode -d $DBG_SRV -c co$nb/private.toml server 2>&1 | tee "$COLOG$nb.log"
       touch "$COLOG$nb.log.dead"
     ) &
   done

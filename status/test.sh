@@ -18,6 +18,8 @@ testNetwork(){
     testOut "Running network"
     testGrep "Available_Services" runCl -g public.toml
     testGrep "Available_Services" runCl -g public.toml
+    testGrep "Available_Services" runCl --host localhost:2002
+    testGrep "Available_Services" runCl --host tls://localhost:2002
 }
 
 testBuild(){

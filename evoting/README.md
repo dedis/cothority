@@ -144,7 +144,7 @@ something like
 
 ```
 CONTAINER ID        IMAGE                  COMMAND                  CREATED                  STATUS              PORTS                                              NAMES
-7fd75268fdbd        dedis/conode:evoting   "./conode -debug 3 s…"   Less than a second ago   Up 2 seconds        0.0.0.0:32843->6879/tcp, 0.0.0.0:32842->6880/tcp   conode
+7fd75268fdbd        dedis/conode:evoting   "./conode -debug 3 s…"   Less than a second ago   Up 2 seconds        0.0.0.0:32843->7770/tcp, 0.0.0.0:32842->7771/tcp   conode
 ```
 
 Note that the host ports are assigned randomly by docker. Please use the `-p` flag

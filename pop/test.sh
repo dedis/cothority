@@ -43,7 +43,6 @@ main() {
   run testAuthStore
   run testAtVerify
   run testAtMultipleKey
-  run testMerge
   run testPropagateConfig
   run testBCStore
   stopTest
@@ -95,6 +94,8 @@ testPropagateConfig() {
   testNGrep "City1" runCl 1 org proposed ${addr[1]}
 }
 
+# This is not supported anymore - pop will be removed as a service and move
+# to byzcoin as a contract.
 testMerge() {
   MERGE_FILE="pop_merge.toml"
   mkConfigMerge 3 3 2 4

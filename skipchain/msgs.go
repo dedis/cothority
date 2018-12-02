@@ -44,7 +44,9 @@ func init() {
 		&ListFollowReply{},
 		// - Internal calls
 		// Propagation
-		&PropagateSkipBlocks{},
+		&PropagateGenesis{},
+		&PropagateForwardLink{},
+		&PropagateProof{},
 		// Request forward-signature
 		&ForwardSignature{},
 		// - Data structures
@@ -125,10 +127,23 @@ type GetAllSkipChainIDsReply struct {
 
 // Internal calls
 
-// PropagateSkipBlocks sends a newly signed SkipBlock to all members of
+// PropagateGenesis sends the genesis block of a newly created SkipChain to all members of
 // the Cothority
-type PropagateSkipBlocks struct {
-	SkipBlocks []*SkipBlock
+type PropagateGenesis struct {
+	Genesis *SkipBlock
+}
+
+// PropagateForwardLink sends a newly signed forward-link to all members
+// of the Cothority
+type PropagateForwardLink struct {
+	ForwardLink *ForwardLink
+	Height      int
+}
+
+// PropagateProof sends the smallest path from the genesis to the latest
+// block to a conode recently added to the cothority
+type PropagateProof struct {
+	Proof Proof
 }
 
 // ForwardSignature is called once a new skipblock has been accepted by

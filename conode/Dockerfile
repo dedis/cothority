@@ -14,6 +14,6 @@ RUN mkdir -p .local/share .config
 RUN ln -s /conode_data .local/share/conode
 RUN ln -s /conode_data .config/conode
 
-EXPOSE 6879 6880
+EXPOSE 7770 7771
 
 CMD "./setup-then-start.sh"

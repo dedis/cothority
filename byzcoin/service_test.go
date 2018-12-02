@@ -844,7 +844,7 @@ func TestService_StateChange(t *testing.T) {
 	ct1 := ClientTransaction{Instructions: instrs}
 	ct2 := ClientTransaction{Instructions: instrs2}
 
-	_, txOut, scs := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
+	_, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
 	require.Equal(t, 2, len(txOut))
 	require.True(t, txOut[0].Accepted)
 	require.False(t, txOut[1].Accepted)
@@ -1137,20 +1137,17 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 
 	log.Lvl1("Creating blocks to check rotation of the roster while keeping leader")
 	rosterR := s.roster
-	rosterLast := rosterR
 	for i := 0; i < 6; i++ {
-		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterLast.ID), "roster has not been updated")
-		rosterLast = rosterR
 		rosterR = onet.NewRoster([]*network.ServerIdentity{
 			rosterR.List[0], rosterR.List[2], rosterR.List[3], rosterR.List[1]})
 		log.Lvl2("Creating block", i)
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1+i)
 		s.sendTxAndWait(t, ctx, 10)
+		log.Lvl2("Verifying the correct roster is in place")
+		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
+		require.Nil(t, err)
+		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 	}
-	// time.Sleep(time.Second)
 }
 
 func TestService_SetConfigRosterNewLeader(t *testing.T) {
@@ -1159,18 +1156,16 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 
 	log.Lvl1("Creating blocks to check rotation of the leader")
 	rosterR := s.roster
-	rosterLast := rosterR
-	for i := 0; i < 8; i++ {
-		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterLast.ID), "roster has not been updated")
-		rosterLast = rosterR
+	for i := 0; i < 1; i++ {
 		rosterR = onet.NewRoster([]*network.ServerIdentity{
 			rosterR.List[1], rosterR.List[2], rosterR.List[3], rosterR.List[0]})
 		log.Lvl2("Creating block", i)
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1+i)
 		s.sendTxAndWait(t, ctx, 10)
+		log.Lvl2("Verifying the correct roster is in place")
+		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
+		require.Nil(t, err)
+		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 	}
 }
 
@@ -1197,20 +1192,14 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	log.Lvl1("Creating blocks to check rotation of the leader")
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
 	rosterR := s.roster
-	rosterLast := rosterR
 	counter := 2
 	for _, newNode := range newRoster.List {
-		log.Lvl2("Verifying the correct roster is in place")
-		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
-		require.True(t, latest.Roster.ID.Equal(rosterLast.ID), "roster has not been updated")
-
 		var i int
 		for i = 1; i < 10; i++ {
 			time.Sleep(testInterval * time.Duration(i))
-			log.Lvlf2("Verifying the last node %s has all the data", rosterLast.List[len(rosterLast.List)-1])
+			log.Lvlf2("Verifying the last node %s has all the data", rosterR.List[len(rosterR.List)-1])
 			reply := &GetProofResponse{}
-			err = leanClient.SendProtobuf(rosterLast.List[len(rosterLast.List)-1], &GetProof{
+			err = leanClient.SendProtobuf(rosterR.List[len(rosterR.List)-1], &GetProof{
 				Version: CurrentVersion,
 				ID:      s.genesis.Hash,
 				Key:     testDarc.GetBaseID(),
@@ -1222,11 +1211,15 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		require.True(t, i < 10, "didn't get proof in reasonable time")
 
 		log.Lvlf2("Adding new node to the roster")
-		rosterLast = rosterR
 		rosterR = onet.NewRoster(append(rosterR.List, newNode))
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
+
+		log.Lvl2("Verifying the correct roster is in place")
+		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
+		require.Nil(t, err)
+		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 	}
 
 	// Make sure the latest node is correctly activated and that the
@@ -1679,7 +1672,7 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
-	root, txOut, states := s.service().createStateChanges(sst, scID, txs, noTimeout)
+	root, txOut, states, _ := s.service().createStateChanges(sst, scID, txs, noTimeout)
 	require.Equal(t, 2, len(txOut))
 	require.Equal(t, 1, ctr)
 	// we expect one state change to increment the signature counter
@@ -1692,7 +1685,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, txOut1, states1 := s.service().createStateChanges(sst, scID, txOut, noTimeout)
+	root1, txOut1, states1, _ := s.service().createStateChanges(sst, scID, txOut, noTimeout)
 	require.Equal(t, 1, ctr)
 	require.Equal(t, root, root1)
 	require.Equal(t, txOut, txOut1)
@@ -1702,7 +1695,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// again, i.e., ctr == 2.
 	s.service().stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, txOut2, states2 := s.service().createStateChanges(sst, scID, txs, noTimeout)
+	root2, txOut2, states2, _ := s.service().createStateChanges(sst, scID, txs, noTimeout)
 	require.Equal(t, root, root2)
 	require.Equal(t, txOut, txOut2)
 	require.Equal(t, states, states2)
