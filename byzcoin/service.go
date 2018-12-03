@@ -856,6 +856,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	// Fetch all missing blocks to fill the hole
 	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
 	if err != nil {
+		log.Printf("Tried to update from genesis-block: %x", sb.SkipChainID())
 		log.Error("Couldn't update blocks: " + err.Error())
 		return
 	}

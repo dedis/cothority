@@ -188,6 +188,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	// try to read the transaction back again
 	log.Lvl1("reading the transactions back")
+	log.Printf("Working with skipchain-id: %x", s.genesis.SkipChainID())
 	txs := []ClientTransaction{tx1, tx2}
 	for i := 0; i < 2; i++ {
 		if i == 1 {
