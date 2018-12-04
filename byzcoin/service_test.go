@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -1220,6 +1221,15 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
 		require.Nil(t, err)
 		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
+		// Get latest genesis darc and verify the 'view_change' rule is updated
+		st, err := s.service().GetReadOnlyStateTrie(s.genesis.Hash)
+		require.Nil(t, err)
+		val, _, _, _, err := st.GetValues(s.darc.GetBaseID())
+		require.Nil(t, err)
+		d, err := darc.NewFromProtobuf(val)
+		require.Nil(t, err)
+		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:view_change"))), " | ")
+		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
 
 	// Make sure the latest node is correctly activated and that the
@@ -1227,7 +1237,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	for _, ser := range servers {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
-		_, err := ser.GetService(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+		_, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   ctx,
@@ -2201,7 +2211,7 @@ func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Stat
 
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
-	// services []skipchain.GetService in the method signature doesn't work :(
+	// services []skipchain.Service in the method signature doesn't work :(
 	for _, s := range servers {
 		RegisterContract(s, dummyContract, adaptor(dummyContractFunc))
 		RegisterContract(s, slowContract, adaptor(slowContractFunc))
