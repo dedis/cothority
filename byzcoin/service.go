@@ -585,7 +585,7 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 
 	scs := make(StateChanges, len(sces))
 	for i, e := range sces {
-		scs[i] = e.StateChange
+		scs[i] = e.StateChange.Copy()
 	}
 
 	return &CheckStateChangeValidityResponse{

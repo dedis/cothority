@@ -1730,7 +1730,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	n := 2
+	n := 4
 	iid := genID()
 	fakeID := genID().Slice()
 	contractID := "stateShangeCacheTest"
@@ -1759,9 +1759,10 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Nil(t, err)
 
 		_, err = s.service().AddTransaction(&AddTxRequest{
-			Version:     CurrentVersion,
-			SkipchainID: s.genesis.SkipChainID(),
-			Transaction: tx,
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 5,
 		})
 		require.Nil(t, err)
 	}
@@ -1769,6 +1770,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	proof := s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
+		log.Lvl1("Checking service", service.ServerIdentity())
 		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
 			InstanceID:  iid,
 			SkipChainID: proof.Latest.SkipChainID(),
@@ -1778,6 +1780,8 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Equal(t, n*4, len(res.StateChanges))
 
 		for i := 0; i < n*4; i++ {
+			log.Lvlf1("Getting version %d of iid %x",
+				i, iid[:])
 			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
 				InstanceID:  iid,
 				Version:     uint64(i),
@@ -1794,10 +1798,11 @@ func TestService_StateChangeStorage(t *testing.T) {
 			})
 			require.Nil(t, err)
 
-			var header DataHeader
-			err = protobuf.DecodeWithConstructors(proof.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{res.BlockID})
 			require.Nil(t, err)
-
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			require.Nil(t, err)
 			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
 
@@ -1813,7 +1818,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			SkipChainID: proof.Latest.SkipChainID(),
 		})
 		require.Nil(t, err)
-		require.Equal(t, uint64(4), sc.StateChange.Version)
+		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 	}
 }
 
