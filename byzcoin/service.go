@@ -857,7 +857,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
 	if err != nil {
 		log.Printf("Tried to update from genesis-block: %x", sb.SkipChainID())
-		log.Error("Couldn't update blocks: " + err.Error())
+		log.Error(s.ServerIdentity(), "Couldn't update blocks: "+err.Error())
 		return
 	}
 	latest := search.SkipBlock

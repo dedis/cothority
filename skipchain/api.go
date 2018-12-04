@@ -335,9 +335,15 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *Ski
 // It returns that block, or an error if that block is not found.
 func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
 	reply = &GetSingleBlockByIndexReply{}
-	err = c.SendProtobuf(roster.RandomServerIdentity(),
-		&GetSingleBlockByIndex{genesis, index}, reply)
-	return
+	perms := rand.Perm(len(roster.List))
+	for _, ind := range perms {
+		err = c.SendProtobuf(roster.List[ind],
+			&GetSingleBlockByIndex{genesis, index}, reply)
+		if err == nil {
+			return
+		}
+	}
+	return nil, errors.New("all nodes failed to return block")
 }
 
 // CreateLinkPrivate asks the conode to create a link by sending a public
