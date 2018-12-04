@@ -84,6 +84,17 @@ func (r *heartbeats) updateTimeout(key string, timeout time.Duration) {
 	}
 }
 
+func (r *heartbeats) stop(key string) {
+	r.Lock()
+	defer r.Unlock()
+	hb, ok := r.heartbeatMap[key]
+	if !ok {
+		return
+	}
+	hb.closeChan <- true
+	delete(r.heartbeatMap, key)
+}
+
 func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan string) error {
 	r.Lock()
 	defer r.Unlock()

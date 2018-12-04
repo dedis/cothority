@@ -1117,7 +1117,7 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 	if ok {
 		s.verifyNewBlockBuffer.Delete(arr)
 	} else {
-		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+		log.Errorf("%s got asked to acknowledge for unknown block %x", s.ServerIdentity(), msg)
 	}
 	return ok
 }
