@@ -237,7 +237,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 
 		tempRoster := oldRoster
 		for j := 0; j < changesCount; j++ {
-			log.Print("ACTUALLY SENDING IT", j)
+			log.Print("ACTUALLY SENDING IT", j, "TO", shardClient.Roster.List[0].Address.String())
 			// TODO:
 			// Just update the signer counter
 			// And resign the tx

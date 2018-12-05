@@ -144,6 +144,7 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 			seed := int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice()))
 
 			shardRosters := lib.Sharding(cc.Roster, cc.ShardCount, seed)
+			log.Print("AFTER SHARDING:", shardRosters[0].List, shardRosters[1].List)
 
 			// update chain config
 			cc.Timestamp = ts
