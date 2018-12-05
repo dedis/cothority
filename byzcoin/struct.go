@@ -49,6 +49,8 @@ func (sces StateChangeEntries) Swap(i, j int) {
 	sces[i], sces[j] = sces[j], sces[i]
 }
 
+// Copy creates a deep copy of the statechange, so that tests
+// can correctly work on those copies.
 func (sc StateChange) Copy() StateChange {
 	c := StateChange{
 		StateAction: sc.StateAction,

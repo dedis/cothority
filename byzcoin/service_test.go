@@ -1798,7 +1798,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			})
 			require.Nil(t, err)
 
-			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{res.BlockID})
+			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: res.BlockID})
 			require.Nil(t, err)
 			var header DataHeader
 			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
@@ -1876,7 +1876,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		// add transactions that must be recreated
 		createTx(instr.Hash(), uint64(i+1), 0)
 	}
-	createTx(instr.Hash(), uint64(n), 1)
+	createTx(instr.Hash(), uint64(n), 2)
 
 	// Remove some entries to check it will recreate them
 	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
