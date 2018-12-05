@@ -1641,6 +1641,7 @@ func TestService_DarcToSc(t *testing.T) {
 	}
 
 	// remove the mapping and then load it again
+	log.Lvl1("Reloading all services")
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
 		service.TestClose()
@@ -1648,6 +1649,7 @@ func TestService_DarcToSc(t *testing.T) {
 	}
 
 	// check that the mapping is still correct
+	log.Lvl1("Verifying mapping is still correct")
 	for _, service := range s.services {
 		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
 	}
