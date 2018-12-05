@@ -30,6 +30,8 @@ func newViewChangeManager() viewChangeManager {
 	}
 }
 
+// adds a new controller to the map. This method should always be followed
+// by `start`, else `started` will not work.
 func (m *viewChangeManager) add(SendInitReq viewchange.SendInitReqFunc,
 	sendNewView viewchange.SendNewViewReqFunc, isLeader viewchange.IsLeaderFunc, k string) {
 	m.Lock()
@@ -38,11 +40,38 @@ func (m *viewChangeManager) add(SendInitReq viewchange.SendInitReqFunc,
 	m.controllers[k] = &c
 }
 
-func (m *viewChangeManager) start(myID network.ServerIdentityID, scID skipchain.SkipBlockID, initialDuration time.Duration, f int, k string) {
+// actually starts the viewchange monitor. This should always be called after
+// `add`, else `started` will not work
+func (m *viewChangeManager) start(myID network.ServerIdentityID, scID skipchain.SkipBlockID, initialDuration time.Duration, f int) {
+	k := string(scID)
 	m.Lock()
 	defer m.Unlock()
-	c := m.controllers[k]
+	c, ok := m.controllers[k]
+	if !ok {
+		panic("never start without add first: " + log.Stack())
+	}
 	go c.Start(myID, scID, initialDuration, f)
+}
+
+// started returns true if the monitor is started. This supposes that `start`
+// has been called after `add`.
+func (m *viewChangeManager) started(scID skipchain.SkipBlockID) bool {
+	m.Lock()
+	defer m.Unlock()
+	_, s := m.controllers[string(scID)]
+	return s
+}
+
+func (m *viewChangeManager) stop(scID skipchain.SkipBlockID) {
+	k := string(scID)
+	m.Lock()
+	defer m.Unlock()
+	c, ok := m.controllers[k]
+	if !ok {
+		return
+	}
+	c.Stop()
+	delete(m.controllers, k)
 }
 
 func (m *viewChangeManager) addReq(req viewchange.InitReq) {
@@ -68,7 +97,10 @@ func (m *viewChangeManager) done(view viewchange.View) {
 func (m *viewChangeManager) waiting(k string) bool {
 	m.Lock()
 	defer m.Unlock()
-	c := m.controllers[k]
+	c, ok := m.controllers[k]
+	if !ok {
+		return false
+	}
 	return c.Waiting()
 }
 

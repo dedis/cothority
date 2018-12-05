@@ -985,17 +985,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	// Store old config before the global state gets updated, so that we can compare
-	// with the previous roster to know if something has changed.
-	var oldConfig *ChainConfig
-	if sb.Index > 0 {
-		var err error
-		oldConfig, err = s.LoadConfig(sb.SkipChainID())
-		if err != nil {
-			panic("Couldn't get configuration of the block - this might" +
-				"mean that the db is broken. Error: " + err.Error())
-		}
-	}
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
 	if err = st.StoreAll(scs, sb.Index); err != nil {
@@ -1019,24 +1008,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 	s.notifications.informBlock(sb.SkipChainID())
 
-	// Check whether the heartbeat monitor exists, if it doesn't we start a
-	// new one
-	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
-	if err != nil {
-		return err
-	}
-	if sb.Index == 0 {
-		if s.heartbeats.exists(string(sb.SkipChainID())) {
-			panic("This is a new genesis block, but we're already running " +
-				"the heartbeat monitor, it should never happen.")
-		}
-		log.Lvlf2("%s started heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
-		s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
-	} else {
-		log.Lvlf2("%s updating heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
-		s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
-	}
-
 	// If we are adding a genesis block, then look into it for the darc ID
 	// and add it to the darcToSc hash map.
 	if sb.Index == 0 {
@@ -1048,38 +1019,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		s.darcToScMut.Lock()
 		s.darcToSc[string(d.GetBaseID())] = sb.SkipChainID()
 		s.darcToScMut.Unlock()
-		// create the view-change manager entry
-		initialDur, err := s.computeInitialDuration(sb.Hash)
-		if err != nil {
-			return err
-		}
-
-		// Start viewchange monitor that will fire if we don't get updates in time.
-		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.Hash))
-		s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash), string(sb.Hash))
-		// TODO fault threshold might change
-
-		// Start polling if we're the leader.
-		s.pollChanMut.Lock()
-		k := string(sb.SkipChainID())
-		if sb.Roster.List[0].Equal(s.ServerIdentity()) {
-			if _, ok := s.pollChan[k]; !ok {
-				log.Lvlf2("%s genesis leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChan[k] = s.startPolling(sb.SkipChainID())
-			}
-		}
-		s.pollChanMut.Unlock()
-		return nil
-	}
-
-	// If it is a view-change transaction, then there are four cases
-	// (1) We are now the leader, and we were not polling, so start.
-	// (2) We are now the leader, but we were already polling (shouldn't happen, so we log a warning).
-	// (3) We are no longer the leader, but we were polling, so stop.
-	// (4) We are not the leader, and we weren't polling: do nothing.
-	view := isViewChangeTx(body.TxResults)
-	if view != nil {
-		s.viewChangeMan.done(*view)
 	}
 
 	// Get the latest configuration of the global state, which includes the latest
@@ -1090,25 +1029,69 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			"mean that the db is broken. Error: " + err.Error())
 	}
 
-	// Check if the roster changed and if the polling needs to be updated.
-	if !oldConfig.Roster.ID.Equal(bcConfig.Roster.ID) {
-		s.pollChanMut.Lock()
-		k := string(sb.SkipChainID())
-		if bcConfig.Roster.List[0].Equal(s.ServerIdentity()) {
-			if _, ok := s.pollChan[k]; !ok {
-				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				s.pollChan[k] = s.startPolling(sb.SkipChainID())
-			} else {
-				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
+	// Variables for easy understanding what's being tested. Node in this context
+	// is this node.
+	i, _ := bcConfig.Roster.Search(s.ServerIdentity().ID)
+	nodeInNew := i >= 0
+	nodeIsLeader := bcConfig.Roster.List[0].Equal(s.ServerIdentity())
+	initialDur, err := s.computeInitialDuration(sb.Hash)
+	if err != nil {
+		return err
+	}
+	// Check if the polling needs to be updated.
+	s.pollChanMut.Lock()
+	scIDstr := string(sb.SkipChainID())
+	if nodeIsLeader {
+		if _, ok := s.pollChan[scIDstr]; !ok {
+			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
+			s.pollChan[scIDstr] = s.startPolling(sb.SkipChainID())
+		}
+	} else {
+		if c, ok := s.pollChan[scIDstr]; ok {
+			log.Lvlf2("%s old leader stopped polling for %x", s.ServerIdentity(), sb.SkipChainID())
+			close(c)
+			delete(s.pollChan, scIDstr)
+		}
+	}
+	s.pollChanMut.Unlock()
+
+	// Check if viewchange needs to be started/stopped
+	// Check whether the heartbeat monitor exists, if it doesn't we start a
+	// new one
+	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
+	if err != nil {
+		return err
+	}
+	if nodeInNew {
+		// Update or start heartbeats
+		if s.heartbeats.exists(string(sb.SkipChainID())) {
+			log.Lvlf2("%s updating heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
+			s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
+		} else {
+			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
+			s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+		}
+		if s.viewChangeMan.started(sb.SkipChainID()) {
+			// If it is a view-change transaction, confirm it's done
+			view := isViewChangeTx(body.TxResults)
+			if view != nil {
+				s.viewChangeMan.done(*view)
 			}
 		} else {
-			if c, ok := s.pollChan[k]; ok {
-				log.Lvlf2("%s old leader stopped polling for %x", s.ServerIdentity(), sb.SkipChainID())
-				close(c)
-				delete(s.pollChan, k)
-			}
+			// Start viewchange monitor that will fire if we don't get updates in time.
+			log.Lvlf2("%s started viewchangeMonitor for %x", s.ServerIdentity(), sb.SkipChainID())
+			s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.SkipChainID()))
+			s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash))
 		}
-		s.pollChanMut.Unlock()
+	} else {
+		if s.heartbeats.exists(scIDstr) {
+			log.Lvlf2("%s stopping heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
+			s.heartbeats.stop(scIDstr)
+		}
+	}
+	if !nodeInNew && s.viewChangeMan.started(sb.SkipChainID()) {
+		log.Lvlf2("%s not in roster, but viewChangeMonitor started - stopping now for %x", s.ServerIdentity(), sb.SkipChainID())
+		s.viewChangeMan.stop(sb.SkipChainID())
 	}
 
 	// At this point everything should be stored.
@@ -1858,7 +1841,7 @@ func (s *Service) monitorLeaderFailure() {
 		for {
 			select {
 			case key := <-s.heartbeatsTimeout:
-				log.Lvl3(s.ServerIdentity(), "missed heartbeat")
+				log.Lvlf3("%s: missed heartbeat for %x", s.ServerIdentity(), key)
 				gen := []byte(key)
 				latest, err := s.db().GetLatestByID(gen)
 				if err != nil {
@@ -1978,7 +1961,7 @@ func (s *Service) startAllChains() error {
 			return err
 		}
 		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
-		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen), string(gen))
+		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen))
 		// TODO fault threshold might change
 	}
 

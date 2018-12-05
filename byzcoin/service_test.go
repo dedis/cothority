@@ -1288,6 +1288,34 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	}
 }
 
+// Replaces all nodes from the previous roster with new nodes
+func TestService_SetConfigRosterReplace(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, 4, ByzCoinID)
+
+	log.Lvl1("Replace with new roster", newRoster.List)
+	goodRoster := onet.NewRoster(s.roster.List)
+	counter := 1
+	for _, si := range newRoster.List {
+		log.Lvl1("Adding", si)
+		goodRoster = onet.NewRoster(append(goodRoster.List, si))
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		_, err := cl.AddTransactionAndWait(ctx, 10)
+		require.Nil(t, err)
+
+		log.Lvl1("Removing", goodRoster.List[0])
+		goodRoster = onet.NewRoster(goodRoster.List[1:])
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
+		_, err = cl.AddTransactionAndWait(ctx, 10)
+		require.Nil(t, err)
+	}
+}
+
 func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 	ids := []darc.Identity{s.signer.Identity()}
 	for i := 0; i < nbr; i++ {
@@ -1555,7 +1583,6 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		s.services[i].TestClose()
 		s.hosts[i].Pause()
 	}
-
 	// Wait for proof that the new expected leader, s.services[nFailures],
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
@@ -1563,7 +1590,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	for i := 0; i < nFailures; i++ {
 		time.Sleep(time.Duration(math.Pow(2, float64(i))) * s.interval * rotationWindow)
 	}
-	time.Sleep(s.interval)
+	time.Sleep(2 * s.interval)
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	log.Lvl2("Verifying roster", config.Roster.List)
