@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -135,7 +136,7 @@ func (c *contractLTS) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 
 func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	var darcID darc.ID
-	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	curBuf, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -147,13 +148,35 @@ func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	if infoBuf == nil || len(infoBuf) == 0 {
 		return nil, nil, errors.New("need a lts_instance_info argument")
 	}
-	var info LtsInstanceInfo
-	err = protobuf.DecodeWithConstructors(infoBuf, &info, network.DefaultConstructors(cothority.Suite))
+
+	var curInfo, newInfo LtsInstanceInfo
+	err = protobuf.DecodeWithConstructors(infoBuf, &newInfo, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, nil, errors.New("passed lts_instance_info argument is invalid: " + err.Error())
 	}
-	// TODO verify the intersection between new roster and the old one
-	// uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3)
-	// c.LtsInfo ...
+	err = protobuf.DecodeWithConstructors(curBuf, &curInfo, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, nil, errors.New("current info is invalid: " + err.Error())
+	}
+
+	// Verify the intersection between new roster and the old one. There must be
+	// at least a threshold of nodes in the intersection.
+	n := len(curInfo.Roster.List)
+	overlap := intersectRosters(&curInfo.Roster, &newInfo.Roster)
+	thr := n - (n-1)/3
+	if overlap < thr {
+		return nil, nil, errors.New("new roster does not overlap enough with current roster")
+	}
+
 	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
+}
+
+func intersectRosters(r1, r2 *onet.Roster) int {
+	res := 0
+	for _, x := range r2.List {
+		if i, _ := r1.Search(x.ID); i != -1 {
+			res++
+		}
+	}
+	return res
 }

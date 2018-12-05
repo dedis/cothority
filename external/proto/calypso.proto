@@ -47,14 +47,14 @@ message Read {
 // These are the messages used in the API-calls
 // ***
 
-// AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+// Authorise is used to add the given ByzCoinID into the list of
 // authorised IDs.
-message AuthoriseByzcoinID {
+message Authorise {
   required bytes byzcoinid = 1;
 }
 
-// AuthoriseByzcoinIDReply is returned upon successful authorisation.
-message AuthoriseByzcoinIDReply {
+// AuthoriseReply is returned upon successful authorisation.
+message AuthoriseReply {
 }
 
 // CreateLTS is used to start a DKG and store the private keys in each node.

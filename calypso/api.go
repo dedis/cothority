@@ -6,7 +6,9 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -82,6 +84,22 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 		return nil, err
 	}
 	return reply, nil
+}
+
+// Authorise adds a ByzCoinID to the list of authorized IDs for each
+// server in the roster. The AuthoriseByzcoinID service refuses requests
+// that do not come from localhost.
+//
+// It should be called by the administrator at the beginning, before any other
+// API calls are made. A ByzCoinID that is not authorised will not be allowed to
+// call the other APIs.
+func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
+	reply := &AuthoriseReply{}
+	err := c.c.SendProtobuf(who, &Authorise{ByzCoinID: what}, reply)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DecryptKey takes as input Read- and Write- Proofs. It verifies that

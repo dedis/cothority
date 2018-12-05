@@ -57,14 +57,14 @@ type Read struct {
 // These are the messages used in the API-calls
 // ***
 
-// AuthoriseByzcoinID is used to add the given ByzCoinID into the list of
+// Authorise is used to add the given ByzCoinID into the list of
 // authorised IDs.
-type AuthoriseByzcoinID struct {
+type Authorise struct {
 	ByzCoinID skipchain.SkipBlockID
 }
 
-// AuthoriseByzcoinIDReply is returned upon successful authorisation.
-type AuthoriseByzcoinIDReply struct {
+// AuthoriseReply is returned upon successful authorisation.
+type AuthoriseReply struct {
 }
 
 // CreateLTS is used to start a DKG and store the private keys in each node.

@@ -32,6 +32,10 @@ func TestClient_CreateLTS(t *testing.T) {
 	c, _, err := byzcoin.NewLedger(msg, false)
 	require.Nil(t, err)
 	calypsoClient := NewClient(c)
+	for _, who := range roster.List {
+		err := calypsoClient.Authorise(who, c.ID)
+		require.NoError(t, err)
+	}
 
 	// Invoke CreateLTS
 	ltsReply, err := calypsoClient.CreateLTS(roster, d.GetBaseID(), []darc.Signer{signer}, []uint64{1})
@@ -73,6 +77,10 @@ func TestClient_Calypso(t *testing.T) {
 	calypsoClient := NewClient(c)
 
 	//Create the LTS
+	for _, who := range roster.List {
+		err := calypsoClient.Authorise(who, c.ID)
+		require.NoError(t, err)
+	}
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
 	adminCt++
 	require.Nil(t, err)

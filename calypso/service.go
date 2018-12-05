@@ -30,6 +30,8 @@ package calypso
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -90,11 +92,29 @@ type vData struct {
 	Signature *darc.Signature
 }
 
-// AuthoriseByzcoinID adds a ByzCoinID to the list of authorized IDs. It should
+// ProcessClientRequest implements onet.Service. We override the version
+// we normally get from embeddeding onet.ServiceProcessor in order to
+// hook it and get a look at the http.Request.
+func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
+	if path == "Authorise" {
+		h, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err != nil {
+			return nil, nil, err
+		}
+		ip := net.ParseIP(h)
+		if !ip.IsLoopback() {
+			return nil, nil, errors.New("AuthoriseByzcoinIDReq is only allowed on loopback.")
+		}
+	}
+
+	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
+}
+
+// Authorise adds a ByzCoinID to the list of authorized IDs. It should
 // be called by the administrator at the beginning, before any other API calls
 // are made. A ByzCoinID that is not authorised will not be allowed to call the
 // other APIs.
-func (s *Service) AuthoriseByzcoinID(req *AuthoriseByzcoinID) (*AuthoriseByzcoinIDReply, error) {
+func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 	s.storage.Lock()
 	defer s.storage.Unlock()
 	if len(req.ByzCoinID) == 0 {
@@ -105,7 +125,7 @@ func (s *Service) AuthoriseByzcoinID(req *AuthoriseByzcoinID) (*AuthoriseByzcoin
 		return nil, errors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[key] = true
-	return &AuthoriseByzcoinIDReply{}, nil
+	return &AuthoriseReply{}, nil
 }
 
 // CreateLTS takes as input a roster with a list of all nodes that should
@@ -278,21 +298,20 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	return &ReshareLTSReply{}, nil
 }
 
-// TODO(jallen): why is this commented out?
 func (s *Service) verifyProof(proof *byzcoin.Proof, roster *onet.Roster) error {
-	/*
-		scID := proof.Latest.SkipChainID()
-		s.storage.Lock()
-		defer s.storage.Unlock()
-		if _, ok := s.storage.AuthorisedByzCoinIDs[string(scID)]; !ok {
-			return errors.New("this ByzCoin ID is not authorised")
-		}
-		if roster == nil || !roster.ID.Equal(proof.Latest.Roster.ID) {
-			return errors.New("roster ID not equal")
-		}
-		return proof.Verify(scID)
-	*/
-	return nil
+	scID := proof.Latest.SkipChainID()
+	s.storage.Lock()
+	defer s.storage.Unlock()
+	if _, ok := s.storage.AuthorisedByzCoinIDs[string(scID)]; !ok {
+		return errors.New("this ByzCoin ID is not authorised")
+	}
+
+	// We used to check that the roster ID did not change here, but with
+	// resharing, it is expected that the roster can change.
+	// TODO: Confirm with Kelong that this is correct to remove; that this
+	// does not open us up to abuse/attack.
+
+	return proof.Verify(scID)
 }
 
 func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.InstanceID, error) {
@@ -630,7 +649,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey, s.GetLTSReply); err != nil {
+	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
+		s.GetLTSReply, s.Authorise); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)

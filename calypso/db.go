@@ -68,6 +68,9 @@ func (s *Service) tryLoad() error {
 		if len(s.storage.DKS) == 0 {
 			s.storage.DKS = make(map[byzcoin.InstanceID]*dkg.DistKeyShare)
 		}
+		if len(s.storage.AuthorisedByzCoinIDs) == 0 {
+			s.storage.AuthorisedByzCoinIDs = make(map[string]bool)
+		}
 	}()
 
 	// In the future, we'll make database upgrades below.

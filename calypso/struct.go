@@ -14,6 +14,7 @@ import (
 
 func init() {
 	network.RegisterMessages(CreateLTS{}, CreateLTSReply{},
+		Authorise{}, AuthoriseReply{},
 		DecryptKey{}, DecryptKeyReply{})
 }
 

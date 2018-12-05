@@ -39,6 +39,40 @@ func TestService_CreateLTS(t *testing.T) {
 	}
 }
 
+func TestService_ReshareLTS_Different(t *testing.T) {
+	nodes := 4
+	s := newTS2(t, nodes, nodes)
+	defer s.closeAll(t)
+	require.NotNil(t, s.ltsReply.ByzCoinID)
+	require.NotNil(t, s.ltsReply.InstanceID)
+	require.NotNil(t, s.ltsReply.X)
+
+	otherRoster := onet.NewRoster(s.allRoster.List[nodes:])
+	ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*otherRoster})
+	require.NoError(t, err)
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID: s.ltsReply.InstanceID,
+				Invoke: &byzcoin.Invoke{
+					Command: "reshare",
+					Args: []byzcoin.Argument{
+						{
+							Name:  "lts_instance_info",
+							Value: ltsInstInfoBuf,
+						},
+					},
+				},
+				SignerCounter: []uint64{2},
+			},
+		},
+	}
+	require.Nil(t, ctx.SignWith(s.signer))
+	_, err = s.cl.AddTransactionAndWait(ctx, 4)
+	require.Error(t, err)
+}
+
 func TestService_ReshareLTS_Same(t *testing.T) {
 	for _, nodes := range []int{4, 7} {
 		func(nodes int) {
@@ -399,8 +433,6 @@ func newTS2(t *testing.T, nodes int, extras int) ts {
 	return s
 }
 
-// TODO test for ByzCoinID authorisation
-
 func (s *ts) createGenesis(t *testing.T) {
 	var err error
 	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.byzRoster,
@@ -415,6 +447,12 @@ func (s *ts) createGenesis(t *testing.T) {
 
 	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
 	require.Nil(t, err)
+
+	for _, svc := range s.services {
+		req := &Authorise{ByzCoinID: s.cl.ID}
+		_, err = svc.Authorise(req)
+		require.NoError(t, err)
+	}
 }
 
 func (s *ts) afterReshare(f func()) {
