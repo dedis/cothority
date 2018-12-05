@@ -49,6 +49,20 @@ func (sces StateChangeEntries) Swap(i, j int) {
 	sces[i], sces[j] = sces[j], sces[i]
 }
 
+// Copy creates a deep copy of the statechange, so that tests
+// can correctly work on those copies.
+func (sc StateChange) Copy() StateChange {
+	c := StateChange{
+		StateAction: sc.StateAction,
+		Version:     sc.Version,
+	}
+	c.InstanceID = append([]byte{}, sc.InstanceID...)
+	c.ContractID = append([]byte{}, sc.ContractID...)
+	c.Value = append([]byte{}, sc.Value...)
+	c.DarcID = append([]byte{}, sc.DarcID...)
+	return c
+}
+
 // keyTime stores information to keep track of the age of the
 // oldest version of an instance for cleaning purposes.
 type keyTime struct {

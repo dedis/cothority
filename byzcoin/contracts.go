@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -218,8 +219,29 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err = newConfig.sanityCheck(oldConfig); err != nil {
 			return
 		}
+		var val []byte
+		val, _, _, _, err = rst.GetValues(darcID)
+		if err != nil {
+			return
+		}
+		var genesisDarc *darc.Darc
+		genesisDarc, err = darc.NewFromProtobuf(val)
+		if err != nil {
+			return
+		}
+		var rules []string
+		for _, p := range newConfig.Roster.Publics() {
+			rules = append(rules, "ed25519:"+p.String())
+		}
+		genesisDarc.Rules.UpdateRule("invoke:view_change", expression.InitOrExpr(rules...))
+		var genesisBuf []byte
+		genesisBuf, err = genesisDarc.ToProto()
+		if err != nil {
+			return
+		}
 		sc = []StateChange{
 			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
+			NewStateChange(Update, NewInstanceID(darcID), ContractDarcID, genesisBuf, darcID),
 		}
 		return
 	case "view_change":

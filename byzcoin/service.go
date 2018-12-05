@@ -585,7 +585,7 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 
 	scs := make(StateChanges, len(sces))
 	for i, e := range sces {
-		scs[i] = e.StateChange
+		scs[i] = e.StateChange.Copy()
 	}
 
 	return &CheckStateChangeValidityResponse{
@@ -1830,14 +1830,10 @@ func (s *Service) monitorLeaderFailure() {
 		return
 	}
 	s.working.Add(1)
-	s.closedMutex.Unlock()
 	defer s.working.Done()
+	s.closedMutex.Unlock()
 
 	go func() {
-		select {
-		case <-s.closeLeaderMonitorChan:
-		default:
-		}
 		for {
 			select {
 			case key := <-s.heartbeatsTimeout:
@@ -1886,6 +1882,8 @@ func (s *Service) registerContract(contractID string, c ContractFn) error {
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
 func (s *Service) startAllChains() error {
+	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
 	if !s.closed {
 		return errors.New("Can only call startAllChains if the service has been closed before")
 	}
@@ -1965,16 +1963,13 @@ func (s *Service) startAllChains() error {
 		// TODO fault threshold might change
 	}
 
-	s.monitorLeaderFailure()
-
 	// Running trySyncAll in background so it doesn't stop the other
 	// services from starting.
 	// TODO: do this on a per-needed basis, or only a couple of seconds
 	// after startup.
 	go func() {
-		s.working.Add(1)
+		s.monitorLeaderFailure()
 		s.trySyncAll()
-		s.working.Done()
 	}()
 
 	return nil

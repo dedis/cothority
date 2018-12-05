@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -1220,6 +1221,15 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
 		require.Nil(t, err)
 		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
+		// Get latest genesis darc and verify the 'view_change' rule is updated
+		st, err := s.service().GetReadOnlyStateTrie(s.genesis.Hash)
+		require.Nil(t, err)
+		val, _, _, _, err := st.GetValues(s.darc.GetBaseID())
+		require.Nil(t, err)
+		d, err := darc.NewFromProtobuf(val)
+		require.Nil(t, err)
+		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:view_change"))), " | ")
+		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
 
 	// Make sure the latest node is correctly activated and that the
@@ -1227,7 +1237,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	for _, ser := range servers {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
-		_, err := ser.GetService(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+		_, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   ctx,
@@ -1658,6 +1668,7 @@ func TestService_DarcToSc(t *testing.T) {
 	}
 
 	// remove the mapping and then load it again
+	log.Lvl1("Reloading all services")
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
 		service.TestClose()
@@ -1665,6 +1676,7 @@ func TestService_DarcToSc(t *testing.T) {
 	}
 
 	// check that the mapping is still correct
+	log.Lvl1("Verifying mapping is still correct")
 	for _, service := range s.services {
 		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
 	}
@@ -1747,7 +1759,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	n := 2
+	n := 4
 	iid := genID()
 	fakeID := genID().Slice()
 	contractID := "stateShangeCacheTest"
@@ -1776,9 +1788,10 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Nil(t, err)
 
 		_, err = s.service().AddTransaction(&AddTxRequest{
-			Version:     CurrentVersion,
-			SkipchainID: s.genesis.SkipChainID(),
-			Transaction: tx,
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 5,
 		})
 		require.Nil(t, err)
 	}
@@ -1786,6 +1799,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	proof := s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
+		log.Lvl1("Checking service", service.ServerIdentity())
 		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
 			InstanceID:  iid,
 			SkipChainID: proof.Latest.SkipChainID(),
@@ -1795,6 +1809,8 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Equal(t, n*4, len(res.StateChanges))
 
 		for i := 0; i < n*4; i++ {
+			log.Lvlf1("Getting version %d of iid %x",
+				i, iid[:])
 			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
 				InstanceID:  iid,
 				Version:     uint64(i),
@@ -1811,10 +1827,11 @@ func TestService_StateChangeStorage(t *testing.T) {
 			})
 			require.Nil(t, err)
 
-			var header DataHeader
-			err = protobuf.DecodeWithConstructors(proof.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: res.BlockID})
 			require.Nil(t, err)
-
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			require.Nil(t, err)
 			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
 
@@ -1830,7 +1847,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			SkipChainID: proof.Latest.SkipChainID(),
 		})
 		require.Nil(t, err)
-		require.Equal(t, uint64(4), sc.StateChange.Version)
+		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 	}
 }
 
@@ -1888,7 +1905,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		// add transactions that must be recreated
 		createTx(instr.Hash(), uint64(i+1), 0)
 	}
-	createTx(instr.Hash(), uint64(n), 1)
+	createTx(instr.Hash(), uint64(n), 2)
 
 	// Remove some entries to check it will recreate them
 	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
@@ -2228,7 +2245,7 @@ func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Stat
 
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
-	// services []skipchain.GetService in the method signature doesn't work :(
+	// services []skipchain.Service in the method signature doesn't work :(
 	for _, s := range servers {
 		RegisterContract(s, dummyContract, adaptor(dummyContractFunc))
 		RegisterContract(s, slowContract, adaptor(slowContractFunc))
