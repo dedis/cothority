@@ -8,6 +8,7 @@ import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -47,7 +48,11 @@ class WriteInstanceTest {
         genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
         genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
-        calypso = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS),
+        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        for (ServerIdentity si : bc.getRoster().getNodes()) {
+            CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+        }
+        calypso = new CalypsoRPC(bc, genesisDarc.getId(), bc.getRoster(),
             Collections.singletonList(admin), Collections.singletonList(1L));
         if (!calypso.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");

@@ -1,7 +1,9 @@
 package ch.epfl.dedis.calypso;
 
+import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
@@ -18,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,45 +45,6 @@ public class CalypsoRPC extends ByzCoinRPC {
         // Start the LTS/DKG protocol.
         CreateLTSReply lts = createLTS(proof);
         this.lts = lts;
-    }
-
-    /**
-     * Creates a new ByzCoin ledger and a new Long Term Secret. The roster that holds the long-term secret is the same
-     * one as the ByzCoin roster.
-     *
-     * @param roster        the nodes participating in the ledger and holds shares to the LTS
-     * @param genesis       the first darc
-     * @param blockInterval how often a new block is created
-     * @param signers
-     * @param signerCtrs
-     * @throws CothorityException if something goes wrong
-     */
-    public CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        this(roster, roster, genesis, blockInterval, signers, signerCtrs);
-    }
-
-    /**
-     *
-     * @param byzcoinRoster
-     * @param ltsRoster
-     * @param genesis
-     * @param blockInterval
-     * @param signers
-     * @param signerCtrs
-     * @throws CothorityException
-     */
-    public CalypsoRPC(Roster byzcoinRoster, Roster ltsRoster, Darc genesis, Duration blockInterval, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        this(byzcoinRoster, genesis, blockInterval);
-        if (genesis.getExpression("spawn:" + LTSInstance.ContractId) == null || genesis.getExpression("invoke:" + LTSInstance.InvokeCommand) == null) {
-            throw new CothorityException("darc must contain permissions for LTS and resharing");
-        }
-        // Send a transaction to store the LTS roster in ByzCoin
-        LTSInstance inst = new LTSInstance(this, genesis.getBaseId(), ltsRoster, signers, signerCtrs);
-        Proof proof = inst.getProof();
-        // Start the LTS/DKG protocol.
-        CreateLTSReply lts = createLTS(proof);
-        this.lts = lts;
-        logger.info("got LTS ID: " + Hex.printHexBinary(lts.getLTSID().getId()));
     }
 
     /**
@@ -143,7 +107,7 @@ public class CalypsoRPC extends ByzCoinRPC {
     }
 
     /**
-     * Ask the secret-manageemnt cothority for the decryption shares.
+     * Ask the secret-management cothority for the decryption shares.
      *
      * @param writeProof The proof of the write request.
      * @param readProof  The proof of the read request.
@@ -197,5 +161,14 @@ public class CalypsoRPC extends ByzCoinRPC {
      */
     public static CalypsoRPC fromCalypso(Roster roster, SkipblockId byzcoinId, LTSId ltsId) throws CothorityException {
         return new CalypsoRPC(ByzCoinRPC.fromByzCoin(roster, byzcoinId), ltsId);
+    }
+
+    public static void authorise(ServerIdentity si, SkipblockId byzcoinId) throws CothorityCommunicationException {
+        Calypso.Authorise.Builder b = Calypso.Authorise.newBuilder();
+        b.setByzcoinid(byzcoinId.toProto());
+
+        Roster r = new Roster(Collections.singletonList(si));
+        ByteString msg = r.sendMessage("Calypso/Authorise", b.build());
+        return;
     }
 }

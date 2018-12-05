@@ -7,10 +7,14 @@ import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.KeyPair;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.proto.Calypso;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -20,6 +24,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,8 +58,11 @@ class CalypsoTest {
 
         try {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());
-            calypso = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS),
-                    Collections.singletonList(admin), Collections.singletonList(1L));
+            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+            for (ServerIdentity si : bc.getRoster().getNodes()) {
+                CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+            }
+            calypso = new CalypsoRPC(bc, genesisDarc.getId(), bc.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
             if (!calypso.checkLiveness()) {
                 throw new CothorityCommunicationException("liveness check failed");
             }
@@ -267,8 +275,11 @@ class CalypsoTest {
         Darc userDarc = new Darc(Arrays.asList(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")).getIdentity()), null, null);
         calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
 
-        CalypsoRPC calypso2 = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc,  Duration.ofMillis(500),
-                Collections.singletonList(admin), Collections.singletonList(1L));
+        ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, Duration.ofMillis(500));
+        for (ServerIdentity si : bc2.getRoster().getNodes()) {
+            CalypsoRPC.authorise(si, bc2.getGenesisBlock().getId());
+        }
+        CalypsoRPC calypso2 = new CalypsoRPC(bc2, genesisDarc.getId(), bc2.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
         try {
             calypso2.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 2L, 10);
             logger.info("correctly saved same darc in another ByzCoin");

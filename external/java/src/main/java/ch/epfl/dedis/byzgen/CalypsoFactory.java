@@ -112,7 +112,12 @@ public class CalypsoFactory {
         Darc adminDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
         adminDarc.addIdentity("invoke:" + LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
         adminDarc.addIdentity("spawn:" + LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
-        return new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500),
+        ByzCoinRPC bc = new ByzCoinRPC(roster, adminDarc, Duration.ofMillis(500));
+        for (ServerIdentity si: bc.getRoster().getNodes()
+             ) {
+            CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+        }
+        return new CalypsoRPC(bc, adminDarc.getId(), roster,
                 Collections.singletonList(admin), Collections.singletonList(1L));
     }
 

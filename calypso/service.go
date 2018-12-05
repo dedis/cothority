@@ -102,8 +102,8 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 			return nil, nil, err
 		}
 		ip := net.ParseIP(h)
-		if !ip.IsLoopback() {
-			return nil, nil, errors.New("AuthoriseByzcoinIDReq is only allowed on loopback.")
+		if false && !ip.IsLoopback() {
+			return nil, nil, errors.New("Authorise is only allowed on loopback.")
 		}
 	}
 
