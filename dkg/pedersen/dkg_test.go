@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestSetupDKG(t *testing.T) {
@@ -33,6 +34,8 @@ func setupDKG(t *testing.T, nbrNodes int) {
 	pi, err := local.CreateProtocol(Name, tree)
 	protocol := pi.(*Setup)
 	protocol.Wait = true
+	protocol.KeyPair = key.NewKeyPair(cothority.Suite)
+
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}

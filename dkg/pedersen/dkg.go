@@ -143,6 +143,10 @@ func (o *Setup) Dispatch() error {
 func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
+	o.KeyPair = &key.Pair{
+		Public:  o.Public(),
+		Private: o.Private(),
+	}
 	if o.KeyPair == nil {
 		return errors.New("no keypair")
 	}
@@ -151,7 +155,6 @@ func (o *Setup) childInit(i structInit) error {
 
 // Root-node messages
 func (o *Setup) rootStartDeal(replies []structInitReply) error {
-	log.Lvl3(o.Name(), len(replies))
 	o.publics[0] = o.KeyPair.Public
 	for _, r := range replies {
 		index, _ := o.Roster().Search(r.ServerIdentity.ID)
