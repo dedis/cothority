@@ -102,8 +102,13 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 			return nil, nil, err
 		}
 		ip := net.ParseIP(h)
-		if false && !ip.IsLoopback() {
-			return nil, nil, errors.New("Authorise is only allowed on loopback.")
+
+		// TODO: This makes Java testing not work, because Java client commands
+		// come from outside of the docker container. So, what to do?
+		const enableLoopbackCheck = false
+
+		if enableLoopbackCheck && !ip.IsLoopback() {
+			return nil, nil, errors.New("authorise is only allowed on loopback")
 		}
 	}
 
