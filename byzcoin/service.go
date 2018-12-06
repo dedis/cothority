@@ -519,7 +519,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// If we are the genesis block, create the trie.
-	if sb.Index == 0 {
+	if sb.Index == 0 && !s.hasStateTrie(sb.SkipChainID()) {
 		var body DataBody
 		err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
@@ -700,6 +700,13 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 // skipchain.
 func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStateTrie, error) {
 	return s.getStateTrie(scID)
+}
+
+func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
+	idStr := fmt.Sprintf("%x", id)
+	_, ok := s.stateTries[idStr]
+
+	return ok
 }
 
 func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
