@@ -340,8 +340,8 @@ func (txr TxResults) Hash() []byte {
 func NewStateChange(sa StateAction, iID InstanceID, contractID string, value []byte, darcID darc.ID) StateChange {
 	return StateChange{
 		StateAction: sa,
-		InstanceID:  iID.Slice(),
-		ContractID:  []byte(contractID),
+		InstanceID:  append([]byte{}, iID[:]...),
+		ContractID:  append([]byte{}, []byte(contractID)...),
 		Value:       value,
 		DarcID:      darcID,
 	}

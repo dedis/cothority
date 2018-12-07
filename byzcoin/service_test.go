@@ -1689,7 +1689,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// Register a stateful contract, so we can monitor how many times that
 	// the contract gets called. Using the state change cache, we should
 	// only call it once.
-	contractID := "stateShangeCacheTest"
+	contractID := "stateChangeCacheTest"
 	var ctr int
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		ctr++
@@ -1758,24 +1758,25 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
+	signerIID := NewInstanceID(publicVersionKey(s.signer.Identity().String()))
 
-	n := 4
+	n := 2
 	iid := genID()
 	fakeID := genID().Slice()
-	contractID := "stateShangeCacheTest"
+	contractID := "stateChangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the version is correctly increased for multiple state changes
 		sc1 := StateChange{
-			InstanceID:  iid[:],
 			StateAction: Create,
+			InstanceID:  iid[:],
 		}
 		sc2 := StateChange{
-			InstanceID:  iid[:],
 			StateAction: Update,
+			InstanceID:  iid[:],
 		}
 		sc3 := StateChange{ // this one should not increase the version of the previous two
-			InstanceID:  fakeID,
 			StateAction: Create,
+			InstanceID:  fakeID,
 		}
 		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
 	}
@@ -1787,41 +1788,61 @@ func TestService_StateChangeStorage(t *testing.T) {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, uint64(i*2+1))
 		require.Nil(t, err)
 
+		// Queue all transactions, except for the last one
+		wait := 0
+		if i == n-1 {
+			wait = n
+		}
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   tx,
-			InclusionWait: 5,
+			InclusionWait: wait,
 		})
 		require.Nil(t, err)
 	}
 
-	proof := s.waitProofWithIdx(t, iid[:], 0)
-
+	scID := s.genesis.SkipChainID()
 	for _, service := range s.services {
 		log.Lvl1("Checking service", service.ServerIdentity())
-		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
-			InstanceID:  iid,
-			SkipChainID: proof.Latest.SkipChainID(),
-		})
+		// Waiting for other nodes to include the latest
+		// statechanges.
+		for i := 0; i < 10; i++ {
+			log.Lvl2("Checking signer")
+			res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
+				SkipChainID: scID,
+				InstanceID:  signerIID,
+			})
+			require.Nil(t, err)
+			if len(res.StateChanges) == n*2 {
+				break
+			}
+			// Even if the leader got the block, the other nodes still need time to
+			// apply the block
+			time.Sleep(testInterval)
+		}
 
+		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
+			SkipChainID: scID,
+			InstanceID:  iid,
+		})
 		require.Nil(t, err)
 		require.Equal(t, n*4, len(res.StateChanges))
 
+		log.Lvlf1("Getting versions of iid %x and signer %x", iid[:], signerIID[:])
 		for i := 0; i < n*4; i++ {
-			log.Lvlf1("Getting version %d of iid %x",
-				i, iid[:])
+			log.Lvlf1("Getting version %d", i)
 			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
+				SkipChainID: scID,
 				InstanceID:  iid,
 				Version:     uint64(i),
-				SkipChainID: proof.Latest.SkipChainID(),
 			})
 			require.Nil(t, err)
 			require.Equal(t, uint64(i), sc.StateChange.Version)
 			require.Equal(t, uint64(i), res.StateChanges[i].StateChange.Version)
 
 			res, err := service.CheckStateChangeValidity(&CheckStateChangeValidity{
-				SkipChainID: proof.Latest.SkipChainID(),
+				SkipChainID: scID,
 				InstanceID:  iid,
 				Version:     uint64(i),
 			})
@@ -1835,18 +1856,20 @@ func TestService_StateChangeStorage(t *testing.T) {
 			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
 
+		log.Lvl1("Checking last version of iid")
 		sc, err := service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			SkipChainID: scID,
 			InstanceID:  iid,
-			SkipChainID: proof.Latest.SkipChainID(),
 		})
-		require.Nil(t, err)
+		require.Nil(t, err, "iid key not found")
 		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
 
+		log.Lvl1("Checking last version of signer")
 		sc, err = service.GetLastInstanceVersion(&GetLastInstanceVersion{
-			InstanceID:  NewInstanceID(publicVersionKey(s.signer.Identity().String())),
-			SkipChainID: proof.Latest.SkipChainID(),
+			SkipChainID: scID,
+			InstanceID:  signerIID,
 		})
-		require.Nil(t, err)
+		require.Nil(t, err, "signer key not found")
 		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 	}
 }
@@ -1858,7 +1881,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	defer s.local.CloseAll()
 
 	n := 5
-	contractID := "stateShangeCacheTest"
+	contractID := "stateChangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the state trie is created from the known global state
 		_, ver, _, _, _ := cdb.GetValues(inst.Hash())
@@ -2122,7 +2145,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest", "delete"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateChangeCacheTest", "delete"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
