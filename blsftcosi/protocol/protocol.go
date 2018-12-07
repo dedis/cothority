@@ -109,7 +109,6 @@ func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
 	var err error
 	p.subTrees, err = NewBlsProtocolTree(p.Tree(), nbr)
 	if err != nil {
-		p.FinalSignature <- nil
 		return fmt.Errorf("error in tree generation: %s", err)
 	}
 
@@ -121,7 +120,7 @@ func (p *BlsFtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		for _, subFtCosi := range p.subProtocols {
 			// we're stopping the root thus it will stop the children
-			// by itself
+			// by itself using a broadcasted message
 			subFtCosi.Shutdown()
 		}
 		close(p.startChan)
@@ -149,17 +148,16 @@ func (p *BlsFtCosi) Dispatch() error {
 
 	log.Lvl3("root protocol started")
 
-	// Verification of the data
-	verifyChan := make(chan bool, 1)
-	go func() {
-		log.Lvl3(p.ServerIdentity().Address, "starting verification")
-		verifyChan <- p.verificationFn(p.Msg, p.Data)
-	}()
+	// Verification of the data is done before contacting the children
+	if ok := p.verificationFn(p.Msg, p.Data); !ok {
+		// root should not fail the verification otherwise it would not have started the protocol
+		return fmt.Errorf("verification failed on root node")
+	}
 
 	// start all subprotocols
 	p.subProtocols = make([]*SubBlsFtCosi, len(p.subTrees))
 	for i, tree := range p.subTrees {
-		log.Lvl2("Invoking start sub protocol", tree)
+		log.Lvlf3("Invoking start sub protocol on %v", tree.Root.ServerIdentity)
 		var err error
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
@@ -174,23 +172,11 @@ func (p *BlsFtCosi) Dispatch() error {
 	if err != nil {
 		return err
 	}
+
 	log.Lvl3(p.ServerIdentity().Address, "collected all signature responses")
 
-	// verifies the proposal
-	var verificationOk bool
-	select {
-	case verificationOk = <-verifyChan:
-		close(verifyChan)
-	case <-time.After(p.Timeout):
-		log.Error(p.ServerIdentity(), "timeout while waiting for the verification!")
-	}
-	if !verificationOk {
-		// root should not fail the verification otherwise it would not have started the protocol
-		return fmt.Errorf("verification failed on root node")
-	}
-
 	// generate root signature
-	signaturePoint, finalMask, err := p.generateSignature(responses, verificationOk)
+	signaturePoint, finalMask, err := p.generateSignature(responses)
 	if err != nil {
 		return err
 	}
@@ -215,7 +201,7 @@ func (p *BlsFtCosi) Start() error {
 		return err
 	}
 
-	log.Lvl3("Starting BLS CoSi")
+	log.Lvlf3("Starting BLS CoSi on %v", p.ServerIdentity())
 	p.startChan <- true
 	return nil
 }
@@ -392,15 +378,13 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 
 // Sign the message with this node and aggregates with all child signatures (in structResponses)
 // Also aggregates the child bitmasks
-func (p *BlsFtCosi) generateSignature(responses ResponseMap, ok bool) (kyber.Point, *cosi.Mask, error) {
+func (p *BlsFtCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.Mask, error) {
 	publics := p.RosterServicePublics()
 
 	//generate personal mask
-	var personalMask *cosi.Mask
-	if ok {
-		personalMask, _ = cosi.NewMask(p.suite, publics, p.Public())
-	} else {
-		personalMask, _ = cosi.NewMask(p.suite, publics, nil)
+	personalMask, err := cosi.NewMask(p.suite, publics, p.Public())
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// generate personal signature and append to other sigs

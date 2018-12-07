@@ -147,8 +147,8 @@ func TestBftCoSiFault(t *testing.T) {
 	require.Nil(t, err)
 
 	configs := []struct{ n, f, r int }{
-		//{4, 1, 0},
-		//{9, 2, 0},
+		{4, 1, 0},
+		{9, 2, 0},
 		{10, 3, 0},
 	}
 	for _, c := range configs {

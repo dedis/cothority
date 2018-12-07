@@ -33,6 +33,7 @@ type SubBlsFtCosi struct {
 	verificationFn VerificationFn
 	suite          *pairing.SuiteBn256
 	startChan      chan bool
+	closeChan      chan struct{}
 
 	// protocol/subprotocol channels
 	// these are used to communicate between the subprotocol and the main protocol
@@ -71,6 +72,7 @@ func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing
 		verificationFn:   vf,
 		suite:            suite,
 		startChan:        make(chan bool, 1),
+		closeChan:        make(chan struct{}),
 	}
 
 	if n.IsRoot() {
@@ -104,17 +106,18 @@ func (p *SubBlsFtCosi) Dispatch() error {
 	return p.dispatchLeaf()
 }
 
-func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) (*Announcement, bool) {
+func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
 	var a *Announcement
 	// Keep looping until the correct announcement to prevent
 	// an attacker from killing the protocol with false message
 	for a == nil {
-		msg, ok := <-p.ChannelAnnouncement
-		if !ok {
-			return nil, ok
-		}
-		if parent.Equal(msg.TreeNode) {
-			a = &msg.Announcement
+		select {
+		case <-p.closeChan:
+			return nil
+		case msg := <-p.ChannelAnnouncement:
+			if parent.Equal(msg.TreeNode) {
+				a = &msg.Announcement
+			}
 		}
 	}
 
@@ -123,15 +126,7 @@ func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) (*Announcement, b
 	p.Timeout = a.Timeout / 2
 	p.Threshold = a.Threshold
 
-	return a, true
-}
-
-func (p *SubBlsFtCosi) checkFailureThreshold(numFailure int) bool {
-	if numFailure == 0 {
-		return false
-	}
-
-	return numFailure >= len(p.Roster().List)-p.Threshold
+	return a
 }
 
 // dispatchRoot takes care of sending announcements to the children and
@@ -164,13 +159,13 @@ func (p *SubBlsFtCosi) dispatchRoot() error {
 	}
 
 	select {
-	case reply, ok := <-p.ChannelResponse:
-		if !ok {
-			return nil
+	case <-p.closeChan:
+		return nil
+	case reply := <-p.ChannelResponse:
+		if reply.Equal(p.Root().Children[0]) {
+			// Transfer the response to the parent protocol
+			p.subResponse <- reply
 		}
-
-		// Transfer the response to the parent protocol
-		p.subResponse <- reply
 	case <-time.After(p.Timeout):
 		// It might be only the subleader then we send a notification
 		// to let the parent protocol take actions
@@ -185,9 +180,9 @@ func (p *SubBlsFtCosi) dispatchRoot() error {
 // responses and aggregate them to eventually send that to
 // the root
 func (p *SubBlsFtCosi) dispatchSubLeader() error {
-	a, ok := p.waitAnnouncement(p.Root())
-	if !ok {
-		return nil // channel closed
+	a := p.waitAnnouncement(p.Root())
+	if a == nil {
+		return nil
 	}
 
 	errs := p.SendToChildrenInParallel(a)
@@ -211,11 +206,9 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 	done := 0
 	for done < len(p.Children()) {
 		select {
+		case <-p.closeChan:
+			return nil
 		case reply, ok := <-p.ChannelResponse:
-			if !ok {
-				return nil
-			}
-
 			r, ok := responses[reply.ID]
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
@@ -228,14 +221,13 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 			} else {
 				log.Warnf("Duplicate message from %v", reply.ServerIdentity.ID)
 			}
-		case reply, ok := <-p.ChannelRefusal:
-			if !ok {
-				return nil
-			}
-
+		case reply := <-p.ChannelRefusal:
+			_, ok := responses[reply.ID]
 			serviceName := onet.ServiceFactory.Name(p.Token().ServiceID)
 
-			if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
+			if !ok {
+				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
+			} else if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
 				// The child gives an empty signature as a mark of refusal
 				responses[reply.ID] = &Response{}
 				done++
@@ -263,29 +255,36 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 
 // dispatchLeaf prepares the signature and send it to the subleader
 func (p *SubBlsFtCosi) dispatchLeaf() error {
-	_, ok := p.waitAnnouncement(p.Root().Children[0])
-	if !ok {
-		return nil // channel closed
+	a := p.waitAnnouncement(p.Root().Children[0])
+	if a == nil {
+		return nil
 	}
 
-	ok = p.verificationFn(p.Msg, p.Data)
-	var r interface{}
-	var err error
-	if ok {
-		log.Lvlf3("Leaf %v signed", p.ServerIdentity())
-		r, err = p.makeResponse()
-		if err != nil {
-			return err
-		}
-	} else {
-		log.Lvlf3("Leaf %v refused to sign", p.ServerIdentity())
-		r, err = p.makeRefusal()
-		if err != nil {
-			return err
-		}
-	}
+	res := make(chan bool)
+	go p.makeVerification(res)
 
-	return p.SendToParent(r)
+	select {
+	case <-p.closeChan:
+		return nil
+	case ok := <-res:
+		var r interface{}
+		var err error
+		if ok {
+			log.Lvlf3("Leaf %v signed", p.ServerIdentity())
+			r, err = p.makeResponse()
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Lvlf3("Leaf %v refused to sign", p.ServerIdentity())
+			r, err = p.makeRefusal()
+			if err != nil {
+				return err
+			}
+		}
+
+		return p.SendToParent(r)
+	}
 }
 
 // Sign the message pack it with the mask as a response
@@ -359,6 +358,12 @@ func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses
 	return &Response{Signature: sig, Mask: finalMask.Mask()}, nil
 }
 
+// makeVerification executes the verification function provided and
+// returns the result in the given channel
+func (p *SubBlsFtCosi) makeVerification(out chan bool) {
+	out <- p.verificationFn(p.Msg, p.Data)
+}
+
 // HandleStop is called when a Stop message is send to this node.
 // It broadcasts the message to all the nodes in tree and each node will stop
 // the protocol by calling p.Done.
@@ -376,9 +381,11 @@ func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
 func (p *SubBlsFtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		log.Lvlf2("Subprotocol shut down on %v", p.ServerIdentity())
-		close(p.ChannelAnnouncement)
-		close(p.ChannelResponse)
-		close(p.ChannelRefusal)
+		// Only this channel is closed to cut off expensive operations
+		// and select statements but we let other channels be cleaned
+		// by the GC to avoid sending to closed channel
+		close(p.startChan)
+		close(p.closeChan)
 	})
 	return nil
 }
