@@ -965,9 +965,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 	if len(final.Signature) <= 0 {
 		log.Error("Signing failed")
-		return errors.New(
-			"signing failed")
-
+		return errors.New("signing failed")
 	}
 
 	replies, err := s.propagateFinalize(final.Desc.Roster, final, 10*time.Second)
@@ -985,8 +983,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 // Receives Replies, updates info about global merge party
 // When all merge party's info is saved, merge it and starts global sighning process
 // After all, sends StoreConfig request to other conodes of own party
-func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
-	error) {
+func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement, error) {
 	if m.distrib {
 		// Used not to start merge process 2 times, when one is on run.
 		log.Lvl2(s.ServerIdentity(), "Not enter merge")
