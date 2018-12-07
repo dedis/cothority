@@ -19,7 +19,6 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-
 	cli "gopkg.in/urfave/cli.v1"
 )
 

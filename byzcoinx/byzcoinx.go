@@ -6,7 +6,6 @@
 package byzcoinx
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -15,7 +14,6 @@ import (
 	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -51,7 +49,7 @@ type ByzCoinX struct {
 	// suite is the ftcosi.Suite, which may be different from the suite used
 	// in the protocol because we need sha512 for the hash function so that
 	// the signature can be verified using eddsa.Verify.
-	suite pairing.Suite
+	suite *pairing.SuiteBn256
 	// nSubtrees is the number of subtrees used for the ftcosi protocols.
 	nSubtrees int
 }
@@ -149,7 +147,7 @@ func (bft *ByzCoinX) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	err := prepSig.Verify(bft.suite, bft.Msg, bft.publics, cosi.NewThresholdPolicy(bft.Threshold))
+	err := prepSig.Verify(bft.suite, bft.Msg, bft.publics)
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignatureChan <- FinalSignature{nil, nil}
@@ -179,8 +177,10 @@ func (bft *ByzCoinX) Dispatch() error {
 		log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 	}
 
-	if !bytes.Equal(commitSig, prepSig) {
-		return errors.New("Signatures don't match")
+	err = commitSig.Verify(bft.suite, bft.Msg, bft.publics)
+	if err != nil {
+		bft.FinalSignatureChan <- FinalSignature{nil, nil}
+		return errors.New("Commit signature is wrong")
 	}
 
 	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
@@ -189,7 +189,7 @@ func (bft *ByzCoinX) Dispatch() error {
 
 // NewByzCoinX creates and initialises a ByzCoinX protocol.
 func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
-	suite pairing.Suite) (*ByzCoinX, error) {
+	suite *pairing.SuiteBn256) (*ByzCoinX, error) {
 	return &ByzCoinX{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
@@ -198,7 +198,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
 		prepSigChan:         make(chan protocol.BlsSignature, 0),
-		publics:             n.Roster().Publics(),
+		publics:             n.RosterServicePublics(),
 		suite:               suite,
 		// We set nSubtrees to the cube root of n to evenly distribute the load,
 		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
@@ -206,7 +206,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 	}, nil
 }
 
-func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite pairing.Suite) map[string]onet.NewProtocol {
+func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pairing.SuiteBn256) map[string]onet.NewProtocol {
 
 	protocolMap := make(map[string]onet.NewProtocol)
 
@@ -245,7 +245,7 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite pair
 
 // GlobalInitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi globally.
-func GlobalInitBFTCoSiProtocol(suite pairing.Suite, vf, ack protocol.VerificationFn, protoName string) error {
+func GlobalInitBFTCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {
@@ -257,7 +257,7 @@ func GlobalInitBFTCoSiProtocol(suite pairing.Suite, vf, ack protocol.Verificatio
 
 // InitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi to the context c.
-func InitBFTCoSiProtocol(suite pairing.Suite, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
+func InitBFTCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := c.ProtocolRegister(protoName, proto); err != nil {

@@ -8,7 +8,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/dedis/cothority/blsftcosi"
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
@@ -35,7 +35,7 @@ const (
 
 func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "blsftcosi"
+	cliApp.Name = "blscosi"
 	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
 	cliApp.Version = Version
 	binaryFlags := []cli.Flag{
@@ -117,15 +117,13 @@ func main() {
 					Aliases: []string{"s"},
 					Usage:   "Setup server configuration (interactive)",
 					Action: func(c *cli.Context) error {
-						suite := blsftcosi.NewClient().Suite()
-
 						if c.String(optionConfig) != "" {
 							log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
 						}
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						app.InteractiveConfig(suite, BinaryName)
+						app.InteractiveConfig(cothority.Suite, BinaryName)
 						return nil
 					},
 				},

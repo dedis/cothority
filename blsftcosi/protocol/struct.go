@@ -33,7 +33,8 @@ type ResponseMap map[onet.TreeNodeID]*Response
 // BlsSignature contains the message and its aggregated signature
 type BlsSignature []byte
 
-// GetMask creates and returns the mask associated with the signature
+// GetMask creates and returns the mask associated with the signature. If
+// no mask has been appended, mask with every bit enabled is assumed
 func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*cosi.Mask, error) {
 	mask, err := cosi.NewMask(suite.(cosi.Suite), publics, nil)
 	if err != nil {
@@ -41,7 +42,18 @@ func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*co
 	}
 
 	lenCom := suite.G1().PointLen()
-	mask.SetMask(sig[lenCom:])
+	bits := sig[lenCom:]
+
+	if len(bits) == 0 {
+		for i := 0; i < mask.Len(); i++ {
+			mask.SetBit(i, true)
+		}
+	} else {
+		err := mask.SetMask(sig[lenCom:])
+		if err != nil {
+			return mask, err
+		}
+	}
 
 	return mask, nil
 }
@@ -57,8 +69,15 @@ func (sig BlsSignature) Point(suite pairing.Suite) (kyber.Point, error) {
 	return pointSig, nil
 }
 
-// Verify checks the signature over the message using the given public keys and policy
-func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Point, policy cosi.Policy) error {
+// Verify checks the signature over the message using the public keys and a default policy
+func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Point) error {
+	policy := cosi.NewThresholdPolicy(DefaultThreshold(len(publics)))
+
+	return sig.VerifyWithPolicy(ps, msg, publics, policy)
+}
+
+// VerifyWithPolicy checks the signature over the message using the given public keys and policy
+func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics []kyber.Point, policy cosi.Policy) error {
 	if publics == nil || len(publics) == 0 {
 		return errors.New("no public keys provided")
 	}
@@ -74,6 +93,9 @@ func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Poi
 
 	// Unpack the participation mask and get the aggregate public key
 	mask, err := sig.GetMask(ps, publics)
+	if err != nil {
+		return err
+	}
 
 	err = bls.Verify(ps, mask.AggregatePublic, msg, signature)
 	if err != nil {

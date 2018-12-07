@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/pairing"
+	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -42,9 +45,18 @@ func TestCli(t *testing.T) {
 		Servers: make([]*app.ServerToml, len(roster.List)),
 	}
 	for i, si := range roster.List {
+		pub, err := encoding.PointToStringHex(pairing.NewSuiteBn256(), si.ServicePublic(skipchain.ServiceName))
+		require.NoError(t, err)
+
+		services := make(map[string]app.ServiceConfig)
+		services[skipchain.ServiceName] = app.ServiceConfig{
+			Public: pub,
+		}
+
 		g.Servers[i] = &app.ServerToml{
-			Address: si.Address,
-			Public:  si.Public.String(),
+			Address:  si.Address,
+			Public:   si.Public.String(),
+			Services: services,
 		}
 	}
 	rf := path.Join(dir, "roster.toml")

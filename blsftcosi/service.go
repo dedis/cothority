@@ -1,37 +1,28 @@
-// Package service implements a blsftcosi service for which clients can connect to
-// and then sign messages.
+// Package blsftcosi implements a service and client that provides an API
+// to request a signature to a cothority
 package blsftcosi
 
 import (
 	"errors"
-	"math"
-	"sync"
 	"time"
 
 	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
 
-// This file contains all the code to run a CoSi service. It is used to reply to
-// client request for signing something using CoSi.
-// As a prototype, it just signs and returns. It would be very easy to write an
-// updated version that chains all signatures for example.
-
-const propagationTimeout = 2 * time.Second
 const protocolTimeout = 10 * time.Second
 
-// ServiceID is
+// ServiceID is the key to get the service later
 var ServiceID onet.ServiceID
 
 // ServiceName is the name to refer to the CoSi service
 const ServiceName = "blsftCoSiService"
 
 func init() {
-	ServiceID, _ = onet.RegisterNewService(ServiceName, newCoSiService)
+	ServiceID, _ = onet.RegisterNewServiceWithSuite(ServiceName, pairing.NewSuiteBn256(), newCoSiService)
 	network.RegisterMessage(&SignatureRequest{})
 	network.RegisterMessage(&SignatureResponse{})
 }
@@ -40,9 +31,9 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	suite     pairing.Suite
-	wg        sync.WaitGroup
 	Threshold int
 	NSubtrees int
+	Timeout   time.Duration
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -77,17 +68,13 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	}
 	p := pi.(*protocol.BlsFtCosi)
 	p.CreateProtocol = s.CreateProtocol
+	p.Timeout = s.Timeout
 	p.Msg = req.Message
-	// We set NSubtrees to the square root of n to evenly distribute the load
-	if s.NSubtrees <= 0 {
-		p.SetNbrSubTree(int(math.Sqrt(float64(nNodes))))
-	} else {
+
+	if s.NSubtrees > 0 {
 		p.SetNbrSubTree(s.NSubtrees)
 	}
-	p.Timeout = protocolTimeout
 
-	// Complete Threshold
-	p.Threshold = p.Tree().Size()
 	if s.Threshold > 0 {
 		p.Threshold = s.Threshold
 	}
@@ -120,20 +107,9 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	log.Lvl3("Cosi Service received on", s.ServerIdentity(), "received new protocol event-", tn.ProtocolName())
 	switch tn.ProtocolName() {
 	case protocol.DefaultProtocolName:
-		log.Lvl3("IT SHOULD NEVER COME HERE")
-		pi, err := protocol.NewDefaultProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		blsftcosi := pi.(*protocol.BlsFtCosi)
-		return blsftcosi, nil
+		return protocol.NewDefaultProtocol(tn)
 	case protocol.DefaultSubProtocolName:
-		pi, err := protocol.NewDefaultSubProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		subblsftcosi := pi.(*protocol.SubBlsFtCosi)
-		return subblsftcosi, nil
+		return protocol.NewDefaultSubProtocol(tn)
 	}
 	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }
@@ -141,9 +117,9 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		suite:            bn256.NewSuiteG2(),
+		suite:            pairing.NewSuiteBn256(),
+		Timeout:          protocolTimeout,
 	}
-	s.wg.Add(1)
 
 	if err := s.RegisterHandler(s.SignatureRequest); err != nil {
 		log.Error("couldn't register message:", err)

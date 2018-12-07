@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/kyber/pairing/bn256"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +30,7 @@ func NewFailureSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, err
 // Used for tests
 var testServiceID onet.ServiceID
 
-const testServiceName = "ServiceBlsFtCosi"
+const testServiceName = "TestServiceBlsFtCosi"
 
 var newProtocolMethods = map[string]func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error){
 	DefaultProtocolName:    NewDefaultProtocol,
@@ -41,7 +41,7 @@ var newProtocolMethods = map[string]func(*onet.TreeNodeInstance) (onet.ProtocolI
 
 func init() {
 	var err error
-	testServiceID, err = onet.RegisterNewService(testServiceName, newService)
+	testServiceID, err = onet.RegisterNewServiceWithSuite(testServiceName, testSuite, newService)
 	log.ErrFatal(err)
 
 	// Register Protocols
@@ -50,8 +50,8 @@ func init() {
 	onet.GlobalProtocolRegister(FailureSubProtocolName, NewFailureSubProtocol)
 }
 
-var testSuite = bn256.NewSuiteG2()
-var defaultTimeout = 2 * time.Second
+var testSuite = pairing.NewSuiteBn256()
+var defaultTimeout = 20 * time.Second
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -78,7 +78,7 @@ func TestProtocol_25_1(t *testing.T) {
 }
 
 func TestProtocol_7_5(t *testing.T) {
-	_, _, err := runProtocol(7, 5, 5)
+	_, _, err := runProtocol(7, 5, 7)
 	require.Nil(t, err)
 }
 
@@ -88,7 +88,7 @@ func TestProtocol_25_5(t *testing.T) {
 }
 
 func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Roster, error) {
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	servers, roster, tree := local.GenTree(nbrNodes, false)
 
@@ -132,16 +132,16 @@ func TestQuickAnswerProtocol_2_1(t *testing.T) {
 	require.Equal(t, 1, mask.CountEnabled())
 }
 
-func TestQuickAnswerProtocol_5_1(t *testing.T) {
-	mask, err := runQuickAnswerProtocol(5, 1)
+func TestQuickAnswerProtocol_5_4(t *testing.T) {
+	mask, err := runQuickAnswerProtocol(5, 4)
 	require.Nil(t, err)
-	require.Equal(t, 3, mask.CountEnabled())
+	require.Equal(t, 2, mask.CountEnabled())
 }
 
-func TestQuickAnswerProtocol_25_5(t *testing.T) {
+func TestQuickAnswerProtocol_24_5(t *testing.T) {
 	mask, err := runQuickAnswerProtocol(24, 5)
 	require.Nil(t, err)
-	require.InEpsilon(t, 12, mask.CountEnabled(), 5)
+	require.InEpsilon(t, 14, mask.CountEnabled(), 2)
 }
 
 func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
@@ -150,9 +150,9 @@ func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
 		return nil, err
 	}
 
-	var suite network.Suite
-	suite = testSuite
-	mask, err := cosi.NewMask(suite.(cosi.Suite), roster.Publics(), nil)
+	publics := roster.ServicePublics(testServiceName)
+
+	mask, err := cosi.NewMask(testSuite, publics, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,8 @@ func getAndVerifySignature(proto *BlsFtCosi, proposal []byte, policy cosi.Policy
 		return nil, fmt.Errorf("didn't get commitment in time")
 	}
 
-	return signature, signature.Verify(testSuite, proto.Msg, proto.Roster().Publics(), policy)
+	publics := proto.Roster().ServicePublics(testServiceName)
+	return signature, signature.VerifyWithPolicy(testSuite, proto.Msg, publics, policy)
 }
 
 // Starts a new service. No function needed.

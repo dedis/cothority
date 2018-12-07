@@ -16,7 +16,6 @@ import (
 
 	"github.com/dedis/cothority/blsftcosi"
 	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -222,32 +221,30 @@ func sign(msg []byte, tomlFileName string) (*blsftcosi.SignatureResponse, error)
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func signStatement(msg []byte, ro *onet.Roster) (*blsftcosi.SignatureResponse, error) {
-	publics := ro.Publics()
 	client := blsftcosi.NewClient()
+	publics := ro.ServicePublics(blsftcosi.ServiceName)
 
 	log.Lvlf4("Signing message %x", msg)
 
-	pchan := make(chan *blsftcosi.SignatureResponse)
-	var err error
+	pchan := make(chan *blsftcosi.SignatureResponse, 1)
+	echan := make(chan error, 1)
 	go func() {
 		log.Lvl3("Waiting for the response on SignRequest")
-		response, e := client.SignatureRequest(ro, msg[:])
-		if e != nil {
-			err = e
-			close(pchan)
+		response, err := client.SignatureRequest(ro, msg[:])
+		if err != nil {
+			echan <- err
 			return
 		}
 		pchan <- response
 	}()
 
 	select {
-	case response, ok := <-pchan:
+	case err := <-echan:
+		return nil, err
+	case response := <-pchan:
 		log.Lvlf5("Response: %x", response.Signature)
-		if !ok || err != nil {
-			return nil, errors.New("received an invalid response")
-		}
 
-		err = response.Signature.Verify(client.PairingSuite(), msg[:], publics, cosi.CompletePolicy{})
+		err := response.Signature.Verify(client.PairingSuite(), msg[:], publics)
 		if err != nil {
 			return nil, err
 		}
@@ -302,11 +299,11 @@ func verify(fileName, sigFileName, groupToml string) error {
 }
 
 func verifySignatureHash(b []byte, sig *blsftcosi.SignatureResponse, ro *onet.Roster) error {
-	suite := blsftcosi.NewClient().Suite().(pairing.Suite)
+	suite := blsftcosi.NewClient().Suite().(*pairing.SuiteBn256)
 
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
-	publics := ro.Publics()
+	publics := ro.ServicePublics(blsftcosi.ServiceName)
 	h := suite.Hash()
 	h.Write(b)
 	fHash := h.Sum(nil)
@@ -315,8 +312,8 @@ func verifySignatureHash(b []byte, sig *blsftcosi.SignatureResponse, ro *onet.Ro
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	// TODO - We should use suite from cothority
-	if err := sig.Signature.Verify(suite, b, publics, cosi.CompletePolicy{}); err != nil {
+
+	if err := sig.Signature.Verify(suite, b, publics); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil

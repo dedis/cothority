@@ -25,6 +25,7 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
@@ -40,11 +41,12 @@ const bftFollowBlock = "SkipchainBFTFollow"
 
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
+var suite = pairing.NewSuiteBn256()
 
 var sid onet.ServiceID
 
 func init() {
-	sid, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
+	sid, _ = onet.RegisterNewServiceWithSuite(ServiceName, suite, newSkipchainService)
 	network.RegisterMessages(&Storage{})
 }
 
@@ -993,11 +995,11 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 
 func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byte, error) {
 	// load the mask of the new roster
-	newMask, err := cosi.NewMask(cothority.Suite, newRoster.Publics(), nil)
+	newMask, err := cosi.NewMask(suite, newRoster.ServicePublics(ServiceName), nil)
 	if err != nil {
 		return nil, err
 	}
-	lenRes := cothority.Suite.PointLen() + cothority.Suite.ScalarLen()
+	lenRes := suite.G1().PointLen()
 	if len(sig) < lenRes {
 		return nil, fmt.Errorf("signature is too short, got %v but need %v", len(sig), lenRes)
 	}
@@ -1007,13 +1009,13 @@ func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byt
 	}
 
 	// initialise a new mask for the original roster
-	origMask, err := cosi.NewMask(cothority.Suite, origRoster.Publics(), nil)
+	origMask, err := cosi.NewMask(suite, origRoster.ServicePublics(ServiceName), nil)
 	if err != nil {
 		return nil, err
 	}
 
 	// map the mask of the new roster to the original roster
-	for i, pk := range origRoster.Publics() {
+	for i, pk := range origRoster.ServicePublics(ServiceName) {
 		ok, err := newMask.KeyEnabled(pk)
 		if err != nil {
 			return nil, err
@@ -1240,9 +1242,13 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		if len(fs.Links) == 0 {
 			return errors.New("link list should not be empty")
 		}
+
 		newRoster := src.Roster
+
 		for i, fl := range fs.Links {
-			if err := fl.Verify(cothority.Suite, newRoster.Publics()); err != nil {
+			publics := newRoster.ServicePublics(ServiceName)
+
+			if err := fl.Verify(suite, publics); err != nil {
 				return errors.New("verification failed: " + err.Error())
 			}
 			if fl.NewRoster != nil {
@@ -1718,12 +1724,12 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = byzcoinx.InitBFTCoSiProtocol(cothority.Suite, s.Context,
+	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bftNewBlock)
 	if err != nil {
 		return nil, err
 	}
-	err = byzcoinx.InitBFTCoSiProtocol(cothority.Suite, s.Context,
+	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
 	if err != nil {
 		return nil, err

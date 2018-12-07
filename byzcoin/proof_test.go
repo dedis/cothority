@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/pairing"
+	"github.com/dedis/kyber/sign/bls"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -130,15 +130,7 @@ func genForwardLink(t *testing.T, from, to *skipchain.SkipBlock, privs []kyber.S
 	if !from.Roster.ID.Equal(to.Roster.ID) {
 		fwd.NewRoster = to.Roster
 	}
-	v, V := cosi.Commit(cothority.Suite)
-	ch, err := cosi.Challenge(cothority.Suite, V, from.Roster.Aggregate, fwd.Hash())
-	require.Nil(t, err)
-	resp, err := cosi.Response(cothority.Suite, privs[0], v, ch)
-	require.Nil(t, err)
-	mask, err := cosi.NewMask(cothority.Suite, from.Roster.Publics(), from.Roster.Publics()[0])
-	require.Nil(t, err)
-	sig, err := cosi.Sign(cothority.Suite, V, resp, mask)
-	require.Nil(t, err)
+	sig, err := bls.Sign(pairing.NewSuiteBn256(), privs[0], fwd.Hash())
 	fwd.Signature = byzcoinx.FinalSignature{
 		Msg: fwd.Hash(),
 		Sig: sig,
@@ -157,7 +149,7 @@ func genRoster(num int) (*onet.Roster, []kyber.Scalar) {
 	var privs []kyber.Scalar
 	for i := 0; i < num; i++ {
 		n := network.Address(fmt.Sprintf("tls://0.0.0.%d:2000", 2*i+1))
-		kp := key.NewKeyPair(cothority.Suite)
+		kp := key.NewKeyPair(pairing.NewSuiteBn256())
 		ids = append(ids, network.NewServerIdentity(kp.Public, n))
 		privs = append(privs, kp.Private)
 	}

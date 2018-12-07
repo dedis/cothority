@@ -90,7 +90,7 @@ func (p *ExtendRoster) HandleExtendRoster(msg ProtoStructExtendRoster) error {
 
 	log.Lvlf3("%s: Check block with roster %s", p.ServerIdentity(), msg.Block.Roster.List)
 	if p.isBlockAccepted(msg.ServerIdentity, &msg.Block) {
-		sig, err := schnorr.Sign(cothority.Suite, p.Private(), msg.Block.SkipChainID())
+		sig, err := schnorr.Sign(cothority.Suite, p.Host().ServerIdentity.GetPrivate(), msg.Block.SkipChainID())
 		if err != nil {
 			log.Error("couldn't sign genesis-block")
 			return p.SendToParent(&ProtoExtendRosterReply{})

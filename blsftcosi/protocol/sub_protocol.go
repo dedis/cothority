@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/pairing/bn256"
 	"github.com/dedis/kyber/sign/bls"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -32,7 +31,7 @@ type SubBlsFtCosi struct {
 	Threshold      int
 	stoppedOnce    sync.Once
 	verificationFn VerificationFn
-	suite          pairing.Suite
+	suite          *pairing.SuiteBn256
 	startChan      chan bool
 
 	// protocol/subprotocol channels
@@ -50,12 +49,12 @@ type SubBlsFtCosi struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubBlsFtCosi(n, vf, bn256.NewSuiteG2())
+	return NewSubBlsFtCosi(n, vf, pairing.NewSuiteBn256())
 }
 
 // NewSubBlsFtCosi is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite pairing.Suite) (onet.ProtocolInstance, error) {
+func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	// tests if it's a three level tree
 	moreThreeLevel := false
 	n.Tree().Root.Visit(0, func(depth int, n *onet.TreeNode) {
@@ -76,7 +75,7 @@ func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite pairing.
 
 	if n.IsRoot() {
 		c.subleaderNotResponding = make(chan bool, 1)
-		c.subResponse = make(chan StructResponse, 2) // can send 2 responses
+		c.subResponse = make(chan StructResponse, 1)
 	}
 
 	err := c.RegisterChannels(&c.ChannelAnnouncement, &c.ChannelResponse, &c.ChannelRefusal)
@@ -159,7 +158,9 @@ func (p *SubBlsFtCosi) dispatchRoot() error {
 		Threshold: p.Threshold,
 	})
 	if err != nil {
-		return err
+		// Only log what happened so we can try to finish the protocol
+		// (e.g. one child is offline)
+		log.Warnf("Error when broadcasting to children: %s", err.Error())
 	}
 
 	select {
@@ -192,7 +193,6 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 	errs := p.SendToChildrenInParallel(a)
 	if len(errs) > 0 {
 		log.Error(errs)
-		return errors.New("Couldn't pass the annoucement to children")
 	}
 
 	responses := make(ResponseMap)
@@ -203,13 +203,13 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 
 	own, err := p.makeResponse()
 	if ok := p.verificationFn(p.Msg, p.Data); ok {
+		log.Lvlf3("Subleader %v signed", p.ServerIdentity())
 		responses[p.TreeNode().ID] = own
 	}
 
 	timeout := time.After(p.Timeout)
 	done := 0
-	refusals := 0
-	for done+refusals < len(p.Children()) && done < p.Threshold && !p.checkFailureThreshold(refusals) {
+	for done < len(p.Children()) {
 		select {
 		case reply, ok := <-p.ChannelResponse:
 			if !ok {
@@ -220,7 +220,8 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				if err := bls.Verify(p.suite, reply.ServerIdentity.Public, p.Msg, reply.Signature); err == nil {
+				public := p.RosterServicePublic(reply.ServerIdentity)
+				if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
 					responses[reply.ID] = &reply.Response
 					done++
 				}
@@ -232,10 +233,12 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 				return nil
 			}
 
-			if err := bls.Verify(p.suite, reply.ServerIdentity.Public, reply.Nonce, reply.Signature); err == nil {
+			serviceName := onet.ServiceFactory.Name(p.Token().ServiceID)
+
+			if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
 				// The child gives an empty signature as a mark of refusal
 				responses[reply.ID] = &Response{}
-				refusals++
+				done++
 			} else {
 				log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
 			}
@@ -246,12 +249,15 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		}
 	}
 
-	r, err := makeAggregateResponse(p.suite, p.Roster().Publics(), responses)
+	publics := p.RosterServicePublics()
+
+	r, err := makeAggregateResponse(p.suite, publics, responses)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
+	log.Lvlf3("Subleader %v sent its reply with mask %b", p.ServerIdentity(), r.Mask)
 	return p.SendToParent(r)
 }
 
@@ -266,11 +272,13 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 	var r interface{}
 	var err error
 	if ok {
+		log.Lvlf3("Leaf %v signed", p.ServerIdentity())
 		r, err = p.makeResponse()
 		if err != nil {
 			return err
 		}
 	} else {
+		log.Lvlf3("Leaf %v refused to sign", p.ServerIdentity())
 		r, err = p.makeRefusal()
 		if err != nil {
 			return err
@@ -282,8 +290,11 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 
 // Sign the message pack it with the mask as a response
 func (p *SubBlsFtCosi) makeResponse() (*Response, error) {
-	mask, err := cosi.NewMask(p.suite.(cosi.Suite), p.Roster().Publics(), p.Public())
+	publics := p.RosterServicePublics()
+
+	mask, err := cosi.NewMask(p.suite, publics, p.Public())
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
@@ -388,9 +399,6 @@ func (p *SubBlsFtCosi) Start() error {
 func (p *SubBlsFtCosi) checkIntegrity() error {
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
-	}
-	if p.Roster().Publics() == nil || len(p.Roster().Publics()) < 1 {
-		return errors.New("subprotocol has invalid public keys")
 	}
 	if p.verificationFn == nil {
 		return errors.New("subprotocol has an empty verification fn")

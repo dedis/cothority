@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
@@ -48,7 +49,7 @@ var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, VerifyId
 var VerifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
 
 func init() {
-	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
+	identityService, _ = onet.RegisterNewServiceWithSuite(ServiceName, pairing.NewSuiteBn256(), newIdentityService)
 	network.RegisterMessage(&storage1{})
 	network.RegisterMessage(&IDBlock{})
 }
@@ -110,7 +111,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 				"Invalid request")
 
 		}
-		if err := req.Final.Verify(); err != nil {
+		if err := req.Final.VerifyWithService(ServiceName); err != nil {
 			log.Error(s.ServerIdentity(), "Invalid FinalStatement: ", err)
 			return nil, errors.New(
 				"Signature of final statement is invalid: " + err.Error())

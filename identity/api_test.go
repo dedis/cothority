@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/cothority/ftcosi/protocol"
+	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
@@ -94,20 +94,16 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	node, err := srvc.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	c := node.(*protocol.FtCosi)
+	c := node.(*protocol.BlsFtCosi)
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
-	c.Threshold = byzcoinx.Threshold(len(tree.List()))
 
 	err = node.Start()
 	require.Nil(t, err)
 
 	final.Signature = <-c.FinalSignature
 	require.NotNil(t, final.Signature)
-	// here we assume the mask is 1 byte long, hence the line below turns
-	// a cosi signature into an eddsa signature
-	final.Signature = final.Signature[0 : len(final.Signature)-1]
 	srvc.Storage.Auth.AdminKeys = append(srvc.Storage.Auth.AdminKeys, keypairAdmin.Public)
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
@@ -450,14 +446,14 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 
 func registerCosiProtocols(c *onet.Context, protoName string) error {
 	vf := func(a, b []byte) bool { return true }
-	suite := protocol.EdDSACompatibleCosiSuite
+	suite := pairing.NewSuiteBn256()
 	cosiSubProtoName := protoName + "_sub"
 
 	cosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewFtCosi(n, vf, cosiSubProtoName, suite)
+		return protocol.NewBlsFtCosi(n, vf, cosiSubProtoName, suite)
 	}
 	cosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubFtCosi(n, vf, suite)
+		return protocol.NewSubBlsFtCosi(n, vf, suite)
 	}
 
 	if _, err := c.ProtocolRegister(protoName, cosiProto); err != nil {

@@ -1028,7 +1028,7 @@ func TestService_LeaderChange(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(res[0].ForwardLink))
 	// Forward link must be verified with the src block
-	require.Nil(t, res[0].ForwardLink[0].Verify(cothority.Suite, ro.Publics()))
+	require.Nil(t, res[0].ForwardLink[0].Verify(suite, ro.ServicePublics(ServiceName)))
 }
 
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {

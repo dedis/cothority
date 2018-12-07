@@ -3,14 +3,13 @@ package blsftcosi
 import (
 	"testing"
 
-	"github.com/dedis/kyber/pairing/bn256"
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
-var testSuite = bn256.NewSuiteG2()
+var testSuite = pairing.NewSuiteBn256()
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -29,15 +28,20 @@ func TestServiceCosi(t *testing.T) {
 		Message: msg,
 	}
 
+	publics := roster.ServicePublics(ServiceName)
+
 	for _, dst := range roster.List {
 		reply := &SignatureResponse{}
-		log.Lvl1("Sending request to service...")
+		log.Lvlf1("Sending request to service... %v", dst)
 		err := client.SendProtobuf(dst, serviceReq, reply)
 		require.Nil(t, err, "Couldn't send")
 
-		// verify the response still
-		require.Nil(t, reply.Signature.Verify(testSuite, msg, roster.Publics(), cosi.CompletePolicy{}))
+		// need to correct the roster as _dst_ becomes the root
+		// for the protocol, the order of the public keys is different
+		publics = roster.NewRosterWithRoot(dst).ServicePublics(ServiceName)
 
+		// verify the response still
+		require.Nil(t, reply.Signature.Verify(testSuite, msg, publics))
 	}
 }
 
@@ -57,10 +61,12 @@ func TestCreateAggregate(t *testing.T) {
 	_, err := client.SignatureRequest(el1, msg)
 	require.NotNil(t, err)
 	// Create a roster with a missing aggregate and ID.
-	el2 := &onet.Roster{List: roster.List}
+	el2 := roster
 	res, err := client.SignatureRequest(el2, msg)
 	require.Nil(t, err, "Couldn't send")
 
+	publics := roster.ServicePublics(ServiceName)
+
 	// verify the response still
-	require.Nil(t, res.Signature.Verify(testSuite, msg, roster.Publics(), cosi.CompletePolicy{}))
+	require.Nil(t, res.Signature.Verify(testSuite, msg, publics))
 }
