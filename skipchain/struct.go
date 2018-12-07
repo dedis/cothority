@@ -525,7 +525,7 @@ func (sbs Proof) Verify() error {
 			}
 
 			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
-			if err := fl.Verify(pairing.NewSuiteBn256(), sb.Roster.Publics()); err != nil {
+			if err := fl.Verify(pairing.NewSuiteBn256(), sb.Roster.ServicePublics(ServiceName)); err != nil {
 				return err
 			}
 
