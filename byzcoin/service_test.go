@@ -163,14 +163,14 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx1,
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx1,
+		InclusionWait: 5,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
-	time.Sleep(s.interval)
 
 	// add the second tx
 	log.Lvl1("adding the second tx")
@@ -178,9 +178,10 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, value2, s.signer, 2)
 	require.Nil(t, err)
 	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx2,
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx2,
+		InclusionWait: 5,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -215,7 +216,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
 		// Waiting for all blocks to be propagated
-		time.Sleep(s.interval)
+		// time.Sleep(s.interval)
 		log.Lvl1("bringing the failed node back up")
 		s.hosts[len(s.hosts)-1].Unpause()
 		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
