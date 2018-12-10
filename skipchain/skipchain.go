@@ -556,6 +556,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBl
 		NewRoster: sb.Roster,
 	}}
 	if sb.Index == id.Index {
+		log.Print("Already found this block")
 		return &GetSingleBlockByIndexReply{sb, links}, nil
 	}
 	for len(sb.ForwardLink) > 0 {
@@ -576,12 +577,15 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBl
 			return nil
 		}()
 		if sb == nil {
+			log.Error("nothing found")
 			return nil, errors.New("didn't find block in forward link")
 		}
 		if sb.Index == id.Index {
+			log.Print("Found block")
 			return &GetSingleBlockByIndexReply{sb, links}, nil
 		}
 	}
+	log.Error("nothing found")
 	return nil, errors.New("No block with this index found")
 }
 
