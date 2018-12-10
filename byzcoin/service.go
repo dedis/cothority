@@ -570,6 +570,7 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		return nil, err
 	}
 
+	log.Print(s.ServerIdentity(), "GSBBI CheckStateValidity")
 	sb, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
 		Genesis: req.SkipChainID,
 		Index:   sce.BlockIndex,
@@ -793,6 +794,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 				log.Lvl2("Downloading corresponding block")
 				cl := skipchain.NewClient()
 				// TODO: make sure the downloaded block is correct
+				log.Print(s.ServerIdentity(), "GSBBI downloadDB")
 				search, err := cl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
 				if err != nil {
 					return errors.New("couldn't get correct block for verification: " + err.Error())
@@ -854,6 +856,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	cl := skipchain.NewClient()
 
 	// Fetch all missing blocks to fill the hole
+	log.Print(s.ServerIdentity(), "GSBBI catchup")
 	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
 	if err != nil {
 		log.Printf("Tried to update from genesis-block: %x", sb.SkipChainID())
@@ -2050,6 +2053,7 @@ func (s *Service) trySyncAll() {
 		}
 
 		// start from the last known skipblock
+		log.Print(s.ServerIdentity(), "GSBBI trySyncAll")
 		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
 		lksb, err := s.skService().GetSingleBlockByIndex(req)
 		if lksb != nil {
