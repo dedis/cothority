@@ -341,10 +341,10 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 	for _, ind := range perms {
 		err = c.SendProtobuf(roster.List[ind],
 			&GetSingleBlockByIndex{genesis, index}, reply)
-		log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
 		if err == nil {
 			return
 		}
+		log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
 	}
 	return nil, errors.New("all nodes failed to return block")
 }
