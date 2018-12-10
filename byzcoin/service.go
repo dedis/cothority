@@ -255,6 +255,14 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("skipchain ID is does not exist")
 	}
 
+	latest, err := s.db().GetLatest(gen)
+	if err != nil {
+		return nil, err
+	}
+	if i, _ := latest.Roster.Search(s.ServerIdentity().ID); i < 0 {
+		return nil, errors.New("refusing to store transaction for chain we're not responsible")
+	}
+
 	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
 	if err != nil {
 		return nil, err
