@@ -856,7 +856,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	// Fetch all missing blocks to fill the hole
 	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
 	if err != nil {
-		log.Error("Couldn't update blocks: " + err.Error())
+		log.Error(s.ServerIdentity(), "Couldn't update blocks: "+err.Error())
 		return
 	}
 	latest := search.SkipBlock
