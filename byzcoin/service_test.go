@@ -163,14 +163,14 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx1,
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx1,
+		InclusionWait: 5,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
-	time.Sleep(s.interval)
 
 	// add the second tx
 	log.Lvl1("adding the second tx")
@@ -178,9 +178,10 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, value2, s.signer, 2)
 	require.Nil(t, err)
 	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx2,
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx2,
+		InclusionWait: 5,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -217,7 +218,6 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		s.hosts[len(s.hosts)-1].Unpause()
 		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
 
-		time.Sleep(s.interval)
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
 			require.Nil(t, pr.Verify(s.genesis.SkipChainID()))
@@ -2058,11 +2058,12 @@ func (s *ser) waitProofWithIdx(t *testing.T, key []byte, idx int) Proof {
 			Key:     key,
 			ID:      s.genesis.SkipChainID(),
 		})
-		require.Nil(t, err)
-		pr = resp.Proof
-		if pr.InclusionProof.Match(key) {
-			ok = true
-			break
+		if err == nil {
+			pr = resp.Proof
+			if pr.InclusionProof.Match(key) {
+				ok = true
+				break
+			}
 		}
 
 		// wait for the block to be processed
