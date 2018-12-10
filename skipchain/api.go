@@ -344,7 +344,7 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 		if err == nil {
 			return
 		}
-		log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
+		// log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
 	}
 	return nil, errors.New("all nodes failed to return block")
 }
