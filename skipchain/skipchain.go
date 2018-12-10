@@ -545,8 +545,10 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBlockByIndexReply, error) {
+	log.Printf("%s: Getting single block: %+v", s.ServerIdentity(), id)
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
+		log.Error("no such chain")
 		return nil, errors.New("No such genesis-block")
 	}
 	links := []*ForwardLink{{
@@ -557,6 +559,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBl
 		return &GetSingleBlockByIndexReply{sb, links}, nil
 	}
 	for len(sb.ForwardLink) > 0 {
+		log.Printf("Looping %+v", sb.SkipBlockFix)
 		// Search for the highest ForwardLink that doesn't shoot over the target
 		sb = func() *SkipBlock {
 			for i := len(sb.ForwardLink) - 1; i >= 0; i-- {
