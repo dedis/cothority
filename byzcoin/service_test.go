@@ -214,11 +214,13 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
+		// Waiting for all blocks to be propagated
+		time.Sleep(s.interval)
 		log.Lvl1("bringing the failed node back up")
 		s.hosts[len(s.hosts)-1].Unpause()
 		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
 
-		time.Sleep(s.interval)
+		// time.Sleep(s.interval)
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
 			require.Nil(t, pr.Verify(s.genesis.SkipChainID()))

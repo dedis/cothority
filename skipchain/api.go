@@ -336,11 +336,11 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *Ski
 func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
 	reply = &GetSingleBlockByIndexReply{}
 	perms := rand.Perm(len(roster.List))
-	log.Printf("Asking index %d of chain %x from list %s", index, genesis, roster.List)
+	// log.Printf("Asking index %d of chain %x from list %s", index, genesis, roster.List)
 	for _, ind := range perms {
 		err = c.SendProtobuf(roster.List[ind],
 			&GetSingleBlockByIndex{genesis, index}, reply)
-		log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
+		// log.Printf("%d: err: %s, reply: %+v", ind, err, reply)
 		if err == nil {
 			return
 		}
