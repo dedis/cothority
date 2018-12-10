@@ -106,6 +106,46 @@ func (p *SubBlsFtCosi) Dispatch() error {
 	return p.dispatchLeaf()
 }
 
+// HandleStop is called when a Stop message is send to this node.
+// It broadcasts the message to all the nodes in tree and each node will stop
+// the protocol by calling p.Done.
+func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
+	if !stop.TreeNode.Equal(p.Root()) {
+		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
+			"that is not the root, ignored")
+	}
+	log.Lvl3("Received stop", p.ServerIdentity())
+
+	return p.Shutdown()
+}
+
+// Shutdown closes the different channel to stop the current work
+func (p *SubBlsFtCosi) Shutdown() error {
+	p.stoppedOnce.Do(func() {
+		log.Lvlf2("Subprotocol shut down on %v", p.ServerIdentity())
+		// Only this channel is closed to cut off expensive operations
+		// and select statements but we let other channels be cleaned
+		// by the GC to avoid sending to closed channel
+		close(p.startChan)
+		close(p.closeChan)
+	})
+	return nil
+}
+
+// Start is done only by root and starts the subprotocol
+func (p *SubBlsFtCosi) Start() error {
+	log.Lvl3(p.ServerIdentity(), "Starting subCoSi")
+	if err := p.checkIntegrity(); err != nil {
+		p.startChan <- false
+		p.Done()
+		return err
+	}
+
+	p.startChan <- true
+	return nil
+}
+
+// waitAnnouncement waits for an announcement of the right node
 func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
 	var a *Announcement
 	// Keep looping until the correct announcement to prevent
@@ -123,7 +163,7 @@ func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
 
 	p.Msg = a.Msg
 	p.Data = a.Data
-	p.Timeout = a.Timeout / 2
+	p.Timeout = a.Timeout
 	p.Threshold = a.Threshold
 
 	return a
@@ -202,7 +242,9 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		responses[p.TreeNode().ID] = own
 	}
 
-	timeout := time.After(p.Timeout)
+	// we need to timeout the children faster than the root timeout to let it
+	// know the subleader is alive, but some children are failing
+	timeout := time.After(p.Timeout / 2)
 	done := 0
 	for done < len(p.Children()) {
 		select {
@@ -213,7 +255,7 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				public := p.RosterServicePublic(reply.ServerIdentity)
+				public := p.NodePublic(reply.ServerIdentity)
 				if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
 					responses[reply.ID] = &reply.Response
 					done++
@@ -241,9 +283,7 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		}
 	}
 
-	publics := p.RosterServicePublics()
-
-	r, err := makeAggregateResponse(p.suite, publics, responses)
+	r, err := makeAggregateResponse(p.suite, p.Publics(), responses)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -263,6 +303,8 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 	res := make(chan bool)
 	go p.makeVerification(res)
 
+	// give a chance to avoid sending the response if a stop
+	// has been requested
 	select {
 	case <-p.closeChan:
 		return nil
@@ -287,11 +329,9 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 	}
 }
 
-// Sign the message pack it with the mask as a response
+// Sign the message and pack it with the mask as a response
 func (p *SubBlsFtCosi) makeResponse() (*Response, error) {
-	publics := p.RosterServicePublics()
-
-	mask, err := cosi.NewMask(p.suite, publics, p.Public())
+	mask, err := cosi.NewMask(p.suite, p.Publics(), p.Public())
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -308,6 +348,8 @@ func (p *SubBlsFtCosi) makeResponse() (*Response, error) {
 	}, nil
 }
 
+// makeRefusal will sign a random nonce so that we can check
+// that the refusal is not forged
 func (p *SubBlsFtCosi) makeRefusal() (*Refusal, error) {
 	nonce := make([]byte, 8)
 	_, err := rand.Read(nonce)
@@ -320,6 +362,8 @@ func (p *SubBlsFtCosi) makeRefusal() (*Refusal, error) {
 	return &Refusal{Signature: sig, Nonce: nonce}, err
 }
 
+// makeAggregateResponse takes all the responses from the children and the subleader to
+// aggregate the signature and the mask
 func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (*Response, error) {
 	finalMask, err := cosi.NewMask(suite.(cosi.Suite), publics, nil)
 	if err != nil {
@@ -364,45 +408,8 @@ func (p *SubBlsFtCosi) makeVerification(out chan bool) {
 	out <- p.verificationFn(p.Msg, p.Data)
 }
 
-// HandleStop is called when a Stop message is send to this node.
-// It broadcasts the message to all the nodes in tree and each node will stop
-// the protocol by calling p.Done.
-func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
-	if !stop.TreeNode.Equal(p.Root()) {
-		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
-			"that is not the root, ignored")
-	}
-	log.Lvl3("Received stop", p.ServerIdentity())
-
-	return p.Shutdown()
-}
-
-// Shutdown closes the different channel to stop the current work
-func (p *SubBlsFtCosi) Shutdown() error {
-	p.stoppedOnce.Do(func() {
-		log.Lvlf2("Subprotocol shut down on %v", p.ServerIdentity())
-		// Only this channel is closed to cut off expensive operations
-		// and select statements but we let other channels be cleaned
-		// by the GC to avoid sending to closed channel
-		close(p.startChan)
-		close(p.closeChan)
-	})
-	return nil
-}
-
-// Start is done only by root and starts the subprotocol
-func (p *SubBlsFtCosi) Start() error {
-	log.Lvl3(p.ServerIdentity(), "Starting subCoSi")
-	if err := p.checkIntegrity(); err != nil {
-		p.startChan <- false
-		p.Done()
-		return err
-	}
-
-	p.startChan <- true
-	return nil
-}
-
+// checkIntegrity checks that the subprotocol can start with the current
+// parameters
 func (p *SubBlsFtCosi) checkIntegrity() error {
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")

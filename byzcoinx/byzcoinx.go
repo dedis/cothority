@@ -198,7 +198,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
 		prepSigChan:         make(chan protocol.BlsSignature, 0),
-		publics:             n.RosterServicePublics(),
+		publics:             n.Publics(),
 		suite:               suite,
 		// We set nSubtrees to the cube root of n to evenly distribute the load,
 		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).

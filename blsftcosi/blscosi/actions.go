@@ -34,12 +34,19 @@ func check(c *cli.Context) error {
 	tomlFileName := c.String(optionGroup)
 
 	f, err := os.Open(tomlFileName)
-	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := app.ReadGroupDescToml(f)
-	log.ErrFatal(err, "Error while reading group definition file", err)
-	if len(group.Roster.List) == 0 {
-		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s", tomlFileName)
+	if err != nil {
+		return fmt.Errorf("Couldn't open group definition file: %s", err.Error())
 	}
+
+	group, err := app.ReadGroupDescToml(f)
+	if err != nil {
+		return fmt.Errorf("Error while reading group definition file: %s", err.Error())
+	}
+
+	if group.Roster == nil || len(group.Roster.List) == 0 {
+		return fmt.Errorf("Empty roster or invalid group defintion in: %s", tomlFileName)
+	}
+
 	log.Info("Checking the availability and responsiveness of the servers in the group...")
 	return checkCothority(group, c.Bool("detail"))
 }
@@ -60,8 +67,8 @@ func checkCothority(g *app.Group, detail bool) error {
 		if d := g.GetDescription(e); d != "" {
 			desc = []string{d, d}
 		}
-		el := onet.NewRoster([]*network.ServerIdentity{e})
-		err := checkRoster(el, desc, true)
+		ro := onet.NewRoster([]*network.ServerIdentity{e})
+		err := checkRoster(ro, desc, true)
 		if err == nil {
 			working = append(working, e)
 		} else {
@@ -69,6 +76,7 @@ func checkCothority(g *app.Group, detail bool) error {
 			totalSuccess = false
 		}
 	}
+
 	wn := len(working)
 	if wn > 1 {
 		// Check one big roster sqrt(len(working)) times.
@@ -110,9 +118,9 @@ func checkCothority(g *app.Group, detail bool) error {
 // waits for the reply.
 // If the reply doesn't arrive in time, it will return an
 // error.
-func checkRoster(list *onet.Roster, descs []string, detail bool) error {
+func checkRoster(ro *onet.Roster, descs []string, detail bool) error {
 	serverStr := ""
-	for i, s := range list.List {
+	for i, s := range ro.List {
 		name := strings.Split(descs[i], " ")[0]
 		if detail {
 			serverStr += s.Address.NetworkAddress() + "_"
@@ -120,19 +128,17 @@ func checkRoster(list *onet.Roster, descs []string, detail bool) error {
 		serverStr += name + " "
 	}
 	log.Lvl3("Sending message to: " + serverStr)
+	log.Lvlf3("Checking %d server(s) %s: ", len(ro.List), serverStr)
 	msg := []byte("verification")
-	fmt.Printf("Checking %d server(s) %s: ", len(list.List), serverStr)
-	sig, err := signStatement(msg, list)
+	sig, err := signStatement(msg, ro)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	err = verifySignatureHash(msg, sig, list)
+	err = verifySignatureHash(msg, sig, ro)
 	if err != nil {
-		fmt.Printf("Invalid signature: %s\n", err.Error())
-		return err
+		return fmt.Errorf("Invalid signature: %s", err.Error())
 	}
-	fmt.Println("Success")
+
 	return nil
 }
 
@@ -140,26 +146,37 @@ func checkRoster(list *onet.Roster, descs []string, detail bool) error {
 // it always returns nil as an error
 func signFile(c *cli.Context) error {
 	if c.Args().First() == "" {
-		log.Fatal("Please give the file to sign", 1)
+		return errors.New("Please give the file to sign")
 	}
 	fileName := c.Args().First()
 	groupToml := c.String(optionGroup)
 	msg, err := ioutil.ReadFile(fileName)
-	log.ErrFatal(err, "Couldn't read file to be signed:")
+	if err != nil {
+		return errors.New("Couldn't read file to be signed:" + err.Error())
+	}
 
 	sig, err := sign(msg, groupToml)
-	log.ErrFatal(err, "Couldn't create signature:")
+	if err != nil {
+		return fmt.Errorf("Couldn't create signature: %s", err.Error())
+	}
 
 	log.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		log.ErrFatal(err, "Couldn't create signature file:")
+		if err != nil {
+			return fmt.Errorf("Couldn't create signature file: %s", err.Error())
+		}
 	} else {
 		outFile = os.Stdout
 	}
-	writeSigAsJSON(sig, outFile)
+
+	err = writeSigAsJSON(sig, outFile)
+	if err != nil {
+		return err
+	}
+
 	if outFileName != "" {
 		log.Lvlf2("Signature written to: %s", outFile.Name())
 	} // else keep the Stdout empty
@@ -168,31 +185,43 @@ func signFile(c *cli.Context) error {
 
 func verifyFile(c *cli.Context) error {
 	if len(c.Args().First()) == 0 {
-		log.Fatal("Please give the 'msgFile'", 1)
+		return errors.New("Please give the 'msgFile'")
 	}
+
 	sigOrEmpty := c.String("signature")
 	err := verify(c.Args().First(), sigOrEmpty, c.String(optionGroup))
-	log.ErrFatal(err, "Invalid: Signature verification failed")
+	if err != nil {
+		return fmt.Errorf("Invalid: Signature verification failed: %s", err.Error())
+	}
 
-	log.Print("[+] OK: Signature is valid.")
+	log.Lvl2("[+] OK: Signature is valid.")
 	return nil
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *blsftcosi.SignatureResponse, outW io.Writer) {
+func writeSigAsJSON(res *blsftcosi.SignatureResponse, outW io.Writer) error {
 	b, err := json.Marshal(sigHex{
 		Hash:      hex.EncodeToString(res.Hash),
 		Signature: hex.EncodeToString(res.Signature)},
 	)
-	log.ErrFatal(err, "Couldn't encode signature:")
+
+	if err != nil {
+		return fmt.Errorf("Couldn't encode signature: %s", err.Error())
+	}
 
 	var out bytes.Buffer
-	json.Indent(&out, b, "", "\t")
-	outW.Write([]byte("\n"))
-	_, err = out.WriteTo(outW)
-	log.ErrFatal(err, "Couldn't write signature:")
+	err = json.Indent(&out, b, "", "\t")
+	if err != nil {
+		return err
+	}
 
-	outW.Write([]byte("\n"))
+	_, err = out.WriteTo(outW)
+	if err != nil {
+		return fmt.Errorf("Couldn't write signature: %s", err.Error())
+	}
+
+	_, err = outW.Write([]byte("\n"))
+	return err
 }
 
 // sign takes a stream and a toml file defining the servers
@@ -207,15 +236,11 @@ func sign(msg []byte, tomlFileName string) (*blsftcosi.SignatureResponse, error)
 		return nil, err
 	}
 	if len(g.Roster.List) <= 0 {
-		return nil, errors.New("Empty or invalid blsftcosi group file:" +
-			tomlFileName)
+		return nil, fmt.Errorf("Empty or invalid blsftcosi group file: %s", tomlFileName)
 	}
+
 	log.Lvl2("Sending signature to", g.Roster)
-	res, err := signStatement(msg, g.Roster)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+	return signStatement(msg, g.Roster)
 }
 
 // signStatement can be used to sign the contents passed in the io.Reader
@@ -244,7 +269,7 @@ func signStatement(msg []byte, ro *onet.Roster) (*blsftcosi.SignatureResponse, e
 	case response := <-pchan:
 		log.Lvlf5("Response: %x", response.Signature)
 
-		err := response.Signature.Verify(client.PairingSuite(), msg[:], publics)
+		err := response.Signature.Verify(client.Suite().(*pairing.SuiteBn256), msg[:], publics)
 		if err != nil {
 			return nil, err
 		}
@@ -264,6 +289,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return errors.New("Couldn't open msgFile: " + err.Error())
 	}
+
 	// Read the JSON signature file
 	log.Lvl4("Reading signature")
 	var sigBytes []byte
@@ -276,11 +302,13 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
+
 	log.Lvl4("Unmarshalling signature ")
 	sigStr := &sigHex{}
 	if err = json.Unmarshal(sigBytes, sigStr); err != nil {
 		return err
 	}
+
 	sig := &blsftcosi.SignatureResponse{}
 	sig.Hash, err = hex.DecodeString(sigStr.Hash)
 	sig.Signature, err = hex.DecodeString(sigStr.Signature)
@@ -288,26 +316,25 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
+
 	log.Lvl4("Reading group definition")
 	g, err := app.ReadGroupDescToml(fGroup)
 	if err != nil {
 		return err
 	}
+
 	log.Lvlf4("Verifying signature %x %x", b, sig.Signature)
-	err = verifySignatureHash(b, sig, g.Roster)
-	return err
+	return verifySignatureHash(b, sig, g.Roster)
 }
 
 func verifySignatureHash(b []byte, sig *blsftcosi.SignatureResponse, ro *onet.Roster) error {
 	suite := blsftcosi.NewClient().Suite().(*pairing.SuiteBn256)
-
-	// We have to hash twice, as the hash in the signature is the hash of the
-	// message sent to be signed
 	publics := ro.ServicePublics(blsftcosi.ServiceName)
+
 	h := suite.Hash()
 	h.Write(b)
-	fHash := h.Sum(nil)
-	if !bytes.Equal(fHash, sig.Hash) {
+	hash := h.Sum(nil)
+	if !bytes.Equal(hash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")

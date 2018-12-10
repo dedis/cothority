@@ -25,6 +25,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/blsftcosi"
 	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -137,7 +138,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 
 		round.Record()
 
-		suite := client.PairingSuite()
+		suite := client.Suite().(pairing.Suite)
 		publics := config.Roster.ServicePublics(blsftcosi.ServiceName)
 
 		err = serviceReply.Signature.Verify(suite, proposal, publics)

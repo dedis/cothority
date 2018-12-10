@@ -51,13 +51,10 @@ func init() {
 }
 
 var testSuite = pairing.NewSuiteBn256()
-var defaultTimeout = 20 * time.Second
+var testTimeout = 20 * time.Second
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	if testing.Short() {
-		defaultTimeout = 20 * time.Second
-	}
 	log.MainTest(m)
 }
 
@@ -103,7 +100,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Rost
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.Threshold = threshold
 	if nbrSubTrees > 0 {
 		err = cosiProtocol.SetNbrSubTree(nbrSubTrees)
@@ -188,7 +185,7 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) erro
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.Threshold = threshold
 	cosiProtocol.SetNbrSubTree(nbrTrees)
 
@@ -242,7 +239,7 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{1, 2, 3}
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.Threshold = nbrNodes - 1
 	cosiProtocol.SetNbrSubTree(nbrTrees)
 
@@ -285,7 +282,7 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	// missing create protocol
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.Msg = []byte{}
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 
 	// wrong subtree number
 	err = cosiProtocol.SetNbrSubTree(1)
@@ -303,7 +300,7 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	}
 	cosiProtocol = pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.SetNbrSubTree(1)
 
 	err = cosiProtocol.Start()
@@ -331,13 +328,13 @@ func TestProtocol_AllFailing_25_3(t *testing.T) {
 func TestProtocol_QuickFailure_15(t *testing.T) {
 	ts, err := runProtocolAllFailing(15, 1, 15)
 	require.NotNil(t, err)
-	require.True(t, ts.Add(defaultTimeout).After(time.Now()), "Protocol should not reach the timeout")
+	require.True(t, ts.Add(testTimeout).After(time.Now()), "Protocol should not reach the timeout")
 }
 
 func TestProtocol_QuickFailure_14(t *testing.T) {
 	ts, err := runProtocolAllFailing(15, 1, 14)
 	require.NotNil(t, err)
-	require.True(t, ts.Add(defaultTimeout).After(time.Now()), "Protocol should not reach the timeout")
+	require.True(t, ts.Add(testTimeout).After(time.Now()), "Protocol should not reach the timeout")
 }
 
 func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error) {
@@ -357,7 +354,7 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error)
 	cosiProtocol := pi.(*BlsFtCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{}
-	cosiProtocol.Timeout = defaultTimeout
+	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.Threshold = threshold
 	cosiProtocol.SetNbrSubTree(nbrTrees)
 
@@ -389,7 +386,7 @@ func getAndVerifySignature(proto *BlsFtCosi, proposal []byte, policy cosi.Policy
 	select {
 	case signature = <-proto.FinalSignature:
 		log.Lvl3("Instance is done")
-	case <-time.After(defaultTimeout * 2):
+	case <-time.After(testTimeout * 2):
 		// wait a bit longer than the protocol timeout
 		log.Lvl3("Didnt received commitment in time")
 		return nil, fmt.Errorf("didn't get commitment in time")

@@ -3,7 +3,6 @@ package blsftcosi
 import (
 	"errors"
 
-	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -16,12 +15,7 @@ type Client struct {
 
 // NewClient instantiates a new blsftcosi.Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(pairing.NewSuiteBn256(), ServiceName)}
-}
-
-// PairingSuite returns the suite casted as a pairing Suite
-func (c *Client) PairingSuite() pairing.Suite {
-	return c.Suite().(pairing.Suite)
+	return &Client{Client: onet.NewClient(suite, ServiceName)}
 }
 
 // SignatureRequest sends a CoSi sign request to the Cothority defined by the given
@@ -38,8 +32,6 @@ func (c *Client) SignatureRequest(r *onet.Roster, msg []byte) (*SignatureRespons
 	log.Lvl4("Sending message to", dst)
 	reply := &SignatureResponse{}
 	err := c.SendProtobuf(dst, serviceReq, reply)
-	if err != nil {
-		return nil, err
-	}
-	return reply, nil
+
+	return reply, err
 }

@@ -8,12 +8,15 @@ import (
 
 	"github.com/dedis/cothority/blsftcosi/protocol"
 	"github.com/dedis/kyber/pairing"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
 
 const protocolTimeout = 10 * time.Second
+
+var suite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // ServiceID is the key to get the service later
 var ServiceID onet.ServiceID
@@ -22,7 +25,7 @@ var ServiceID onet.ServiceID
 const ServiceName = "blsftCoSiService"
 
 func init() {
-	ServiceID, _ = onet.RegisterNewServiceWithSuite(ServiceName, pairing.NewSuiteBn256(), newCoSiService)
+	ServiceID, _ = onet.RegisterNewServiceWithSuite(ServiceName, suite, newCoSiService)
 	network.RegisterMessage(&SignatureRequest{})
 	network.RegisterMessage(&SignatureResponse{})
 }
@@ -71,12 +74,17 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	p.Timeout = s.Timeout
 	p.Msg = req.Message
 
-	if s.NSubtrees > 0 {
-		p.SetNbrSubTree(s.NSubtrees)
-	}
-
+	// Threshold before the subtrees so that we can optimize situation
+	// like a threshold of one
 	if s.Threshold > 0 {
 		p.Threshold = s.Threshold
+	}
+
+	if s.NSubtrees > 0 {
+		err = p.SetNbrSubTree(s.NSubtrees)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// start the protocol
@@ -85,13 +93,8 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		return nil, err
 	}
 
-	// wait for reply
-	var sig protocol.BlsSignature
-	select {
-	case sig = <-p.FinalSignature:
-	case <-time.After(p.Timeout + time.Second):
-		return nil, errors.New("protocol timed out")
-	}
+	// wait for reply. This will always eventually return.
+	sig := <-p.FinalSignature
 
 	// The hash is the message ftcosi actually signs, we recompute it the
 	// same way as ftcosi and then return it.
@@ -117,7 +120,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		suite:            pairing.NewSuiteBn256(),
+		suite:            suite,
 		Timeout:          protocolTimeout,
 	}
 

@@ -15,6 +15,8 @@ import (
 	"github.com/dedis/onet/log"
 )
 
+const defaultTimeout = 20 * time.Second
+
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
 type VerificationFn func(msg, data []byte) bool
@@ -76,18 +78,18 @@ func DefaultThreshold(n int) int {
 
 // NewBlsFtCosi method is used to define the ftcosi protocol.
 func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+	nNodes := len(n.Roster().List)
 	c := &BlsFtCosi{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan BlsSignature, 1),
+		Timeout:          defaultTimeout,
+		Threshold:        DefaultThreshold(nNodes),
 		startChan:        make(chan bool, 1),
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
 		suite:            suite,
 	}
 
-	c.Threshold = DefaultThreshold(len(n.Roster().List))
-
-	nNodes := len(n.Roster().List)
 	// the default number of subtree is the square root to
 	// distribute the nodes evenly
 	c.SetNbrSubTree(int(math.Sqrt(float64(nNodes - 1))))
@@ -95,7 +97,7 @@ func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName s
 	return c, nil
 }
 
-// SetNbrSubTree generatesN new subtrees that will be used
+// SetNbrSubTree generates N new subtrees that will be used
 // for the protocol
 func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
 	if nbr > len(p.Roster().List)-1 {
@@ -109,7 +111,7 @@ func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
 	var err error
 	p.subTrees, err = NewBlsProtocolTree(p.Tree(), nbr)
 	if err != nil {
-		return fmt.Errorf("error in tree generation: %s", err)
+		return fmt.Errorf("error in tree generation: %s", err.Error())
 	}
 
 	return nil
@@ -186,8 +188,7 @@ func (p *BlsFtCosi) Dispatch() error {
 		return err
 	}
 
-	finalSignature := append(signature, finalMask.Mask()...)
-	p.FinalSignature <- finalSignature
+	p.FinalSignature <- append(signature, finalMask.Mask()...)
 	log.Lvlf3("%v created final signature %x with mask %b", p.ServerIdentity(), signature, finalMask.Mask())
 	return nil
 }
@@ -234,11 +235,9 @@ func (p *BlsFtCosi) checkIntegrity() error {
 	return nil
 }
 
+// checkFailureThreshold returns true when the number of failures
+// is above the threshold
 func (p *BlsFtCosi) checkFailureThreshold(numFailure int) bool {
-	if numFailure == 0 {
-		return false
-	}
-
 	return numFailure > len(p.Roster().List)-p.Threshold
 }
 
@@ -254,10 +253,10 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
-	// at least one or two leaves
-	cosiSubProtocol.Timeout = p.Timeout / 4
+	// at least three leaves as new subleader
+	cosiSubProtocol.Timeout = p.Timeout / 3
 	// Give one leaf for free but as we don't know how many leaves
-	// could fail from the other trees, we as much as possible
+	// could fail from the other trees, we need as much as possible
 	// responses. The main protocol will deal with early answers.
 	cosiSubProtocol.Threshold = tree.Size() - 1
 
@@ -276,11 +275,15 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 	responsesChan := make(chan StructResponse, len(p.subProtocols))
 	errChan := make(chan error, len(p.subProtocols))
 	closeChan := make(chan bool)
+	// force to stop pending selects in case of timeout or quick answers
+	defer func() { close(closeChan) }()
 
 	for i, subProtocol := range p.subProtocols {
 		go func(i int, subProtocol *SubBlsFtCosi) {
-			timeout := time.After(p.Timeout / 2)
 			for {
+				// this select doesn't have any timeout because a global is used
+				// when aggregating the response. The close channel will act as
+				// a timeout if one subprotocol hangs.
 				select {
 				case <-closeChan:
 					// quick answer/failure
@@ -323,12 +326,6 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 				case response := <-subProtocol.subResponse:
 					responsesChan <- response
 					return
-				case <-timeout:
-					// This should never happen, as the subProto should return before that
-					// timeout, even if it didn't receive enough responses.
-					errChan <- fmt.Errorf("timeout should not happen while waiting for response: %v",
-						subProtocol.Root().Children[0].ServerIdentity)
-					return
 				}
 			}
 		}(i, subProtocol)
@@ -342,7 +339,7 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 	for len(p.subProtocols) > 0 && numSignature < p.Threshold-1 && !p.checkFailureThreshold(numFailure) {
 		select {
 		case res := <-responsesChan:
-			publics := p.RosterServicePublics()
+			publics := p.Publics()
 			mask, err := cosi.NewMask(p.suite, publics, nil)
 			if err != nil {
 				return nil, err
@@ -359,14 +356,13 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 			err = fmt.Errorf("error in getting responses: %s", err)
 			return nil, err
 		case <-timeout:
+			// here we use the entire timeout so that the protocol won't take
+			// more than Timeout + root computation time
 			return nil, fmt.Errorf("not enough replies from nodes at timeout %v "+
 				"for Threshold %d, got %d responses for %d requests", p.Timeout,
 				p.Threshold, numSignature, len(p.Roster().List)-1)
 		}
 	}
-
-	// Force to stop pending subprotocols in case of quick answer/failure scenario
-	close(closeChan)
 
 	if p.checkFailureThreshold(numFailure) {
 		return nil, fmt.Errorf("too many refusals (got %d), the threshold of %d cannot be achieved",
@@ -379,7 +375,7 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 // Sign the message with this node and aggregates with all child signatures (in structResponses)
 // Also aggregates the child bitmasks
 func (p *BlsFtCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.Mask, error) {
-	publics := p.RosterServicePublics()
+	publics := p.Publics()
 
 	//generate personal mask
 	personalMask, err := cosi.NewMask(p.suite, publics, p.Public())

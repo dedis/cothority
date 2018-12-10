@@ -34,6 +34,14 @@ const (
 )
 
 func main() {
+	cliApp := createApp()
+	if cliApp != nil {
+		err := cliApp.Run(os.Args)
+		log.ErrFatal(err)
+	}
+}
+
+func createApp() *cli.App {
 	cliApp := cli.NewApp()
 	cliApp.Name = "blscosi"
 	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
@@ -137,8 +145,8 @@ func main() {
 		log.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
-	err := cliApp.Run(os.Args)
-	log.ErrFatal(err)
+
+	return cliApp
 }
 
 func runServer(ctx *cli.Context) {

@@ -9,9 +9,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -41,26 +38,9 @@ func TestCli(t *testing.T) {
 
 	// All this mess is to take the roster we have from onet.NewTCPTest
 	// and get it into a file that create can read.
-	g := &app.GroupToml{
-		Servers: make([]*app.ServerToml, len(roster.List)),
-	}
-	for i, si := range roster.List {
-		pub, err := encoding.PointToStringHex(pairing.NewSuiteBn256(), si.ServicePublic(skipchain.ServiceName))
-		require.NoError(t, err)
-
-		services := make(map[string]app.ServiceConfig)
-		services[skipchain.ServiceName] = app.ServiceConfig{
-			Public: pub,
-		}
-
-		g.Servers[i] = &app.ServerToml{
-			Address:  si.Address,
-			Public:   si.Public.String(),
-			Services: services,
-		}
-	}
+	g := &app.Group{Roster: roster}
 	rf := path.Join(dir, "roster.toml")
-	err = g.Save(rf)
+	err = g.Save(cothority.Suite, rf)
 	require.NoError(t, err)
 
 	interval := 100 * time.Millisecond
