@@ -2059,11 +2059,12 @@ func (s *ser) waitProofWithIdx(t *testing.T, key []byte, idx int) Proof {
 			Key:     key,
 			ID:      s.genesis.SkipChainID(),
 		})
-		require.Nil(t, err)
-		pr = resp.Proof
-		if pr.InclusionProof.Match(key) {
-			ok = true
-			break
+		if err == nil {
+			pr = resp.Proof
+			if pr.InclusionProof.Match(key) {
+				ok = true
+				break
+			}
 		}
 
 		// wait for the block to be processed
