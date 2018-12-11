@@ -245,6 +245,44 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	}
 }
 
+func TestService_AddTransaction_WrongNode(t *testing.T) {
+	log.SetShowTime(true)
+	s := newSerN(t, 1, time.Second, 4, false)
+	defer s.local.CloseAll()
+
+	outsideServer := s.local.GenServers(1)[0]
+	outside := outsideServer.Service(ServiceName).(*Service)
+	registerDummy([]*onet.Server{outsideServer})
+
+	// add the first tx to outside server
+	log.Lvl1("adding the first tx - this should fail")
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
+	require.Nil(t, err)
+	atx := &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx1,
+		InclusionWait: 5,
+	}
+	_, err = outside.AddTransaction(atx)
+	require.NotNil(t, err)
+
+	// Adding outside to roster
+	log.Lvl1("Adding new node to the roster")
+	rosterR := onet.NewRoster(append(s.roster.List, outside.ServerIdentity()))
+	ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1)
+	s.sendTxAndWait(t, ctx, 10)
+
+	log.Lvl1("Waiting for new node to be contacted")
+	time.Sleep(testInterval)
+
+	log.Lvl1("adding tx to now included node")
+	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
+	require.Nil(t, err)
+	_, err = outside.AddTransaction(atx)
+	require.Nil(t, err)
+}
+
 func TestService_GetProof(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
@@ -853,6 +891,112 @@ func TestService_StateChange(t *testing.T) {
 	require.Equal(t, latest, int64(n-1))
 }
 
+func TestService_StateChangeVerification(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	cid := "createSC"
+	iid := NewInstanceID(make([]byte, 32))
+	iid[0] = byte(32)
+	iid2 := NewInstanceID(iid.Slice())
+	iid2[0] = byte(64)
+	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		zeroBuf := make([]byte, 8)
+		var sa StateAction
+		switch inst.GetType() {
+		case SpawnType:
+			sa = Create
+		case InvokeType:
+			sa = Update
+		case DeleteType:
+			sa = Remove
+		}
+
+		return []StateChange{
+			StateChange{
+				StateAction: Create,
+				InstanceID:  inst.DeriveID("").Slice(),
+				ContractID:  []byte(cid),
+				Value:       zeroBuf,
+			},
+			StateChange{
+				StateAction: Update,
+				InstanceID:  inst.DeriveID("").Slice(),
+				ContractID:  []byte(cid),
+				Value:       zeroBuf,
+			},
+			StateChange{
+				StateAction: sa,
+				InstanceID:  iid2.Slice(),
+				ContractID:  []byte(cid),
+				Value:       zeroBuf,
+			},
+		}, nil, nil
+	}
+	RegisterContract(s.hosts[0], cid, adaptorNoVerify(f))
+	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	require.NotNil(t, cdb)
+
+	// Create iid so we can send instructions to it
+	err = cdb.StoreAll([]StateChange{{
+		StateAction: Create,
+		InstanceID:  iid.Slice(),
+		ContractID:  []byte(cid),
+		Value:       make([]byte, 8),
+	}}, 0)
+	require.Nil(t, err)
+
+	log.Lvl1("Failing updating and removing non-existing instances")
+	_, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Invoke:     &Invoke{},
+	}}}), noTimeout)
+	require.Equal(t, 0, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, false, txOut[0].Accepted)
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Delete:     &Delete{},
+	}}}), noTimeout)
+	require.Equal(t, 0, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, false, txOut[0].Accepted)
+
+	log.Lvl1("Create new instance, but fail to create it twice")
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Spawn:      &Spawn{ContractID: cid},
+	}}}), noTimeout)
+	require.Equal(t, 3, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, true, txOut[0].Accepted)
+	require.Nil(t, cdb.StoreAll(scs, 0))
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Spawn:      &Spawn{ContractID: cid},
+	}}}), noTimeout)
+	require.Equal(t, 0, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, false, txOut[0].Accepted)
+
+	log.Lvl1("Accept updating and removing existing instance")
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Invoke:     &Invoke{},
+	}}}), noTimeout)
+	require.Equal(t, 3, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, true, txOut[0].Accepted)
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+		InstanceID: iid,
+		Delete:     &Delete{},
+	}}}), noTimeout)
+	require.Equal(t, 3, len(scs))
+	require.Equal(t, 1, len(txOut))
+	require.Equal(t, true, txOut[0].Accepted)
+}
+
 func TestService_DarcEvolutionFail(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -1237,13 +1381,20 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	for _, ser := range servers {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
-		_, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
-			Version:       CurrentVersion,
-			SkipchainID:   s.genesis.SkipChainID(),
-			Transaction:   ctx,
-			InclusionWait: 10,
-		})
-		require.Nil(t, err)
+		for i := 0; i < 2; i++ {
+			_, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+				Version:       CurrentVersion,
+				SkipchainID:   s.genesis.SkipChainID(),
+				Transaction:   ctx,
+				InclusionWait: 10,
+			})
+			if err == nil {
+				break
+			} else if i == 2 {
+				require.Nil(t, err)
+			}
+			time.Sleep(testInterval)
+		}
 	}
 
 	for _, node := range rosterR.List {
@@ -1762,23 +1913,25 @@ func TestService_StateChangeStorage(t *testing.T) {
 
 	n := 2
 	iid := genID()
-	fakeID := genID().Slice()
 	contractID := "stateChangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the version is correctly increased for multiple state changes
-		sc1 := StateChange{
-			StateAction: Create,
-			InstanceID:  iid[:],
+		var scs []StateChange
+		if _, _, _, _, err := cdb.GetValues(iid.Slice()); err == errKeyNotSet {
+			scs = []StateChange{{
+				StateAction: Create,
+				InstanceID:  iid[:],
+			}}
 		}
-		sc2 := StateChange{
+		scs = append(scs, StateChange{
 			StateAction: Update,
 			InstanceID:  iid[:],
-		}
-		sc3 := StateChange{ // this one should not increase the version of the previous two
+		})
+		scs = append(scs, StateChange{ // this one should not increase the version of the previous two
 			StateAction: Create,
-			InstanceID:  fakeID,
-		}
-		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
+			InstanceID:  inst.DeriveID("").Slice(),
+		})
+		return scs, []Coin{}, nil
 	}
 	for _, s := range s.hosts {
 		RegisterContract(s, contractID, adaptor(contract))
@@ -1827,10 +1980,10 @@ func TestService_StateChangeStorage(t *testing.T) {
 			InstanceID:  iid,
 		})
 		require.Nil(t, err)
-		require.Equal(t, n*4, len(res.StateChanges))
+		require.Equal(t, 2*n+1, len(res.StateChanges))
 
 		log.Lvlf1("Getting versions of iid %x and signer %x", iid[:], signerIID[:])
-		for i := 0; i < n*4; i++ {
+		for i := 0; i < n*2; i++ {
 			log.Lvlf1("Getting version %d", i)
 			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
 				SkipChainID: scID,
@@ -1862,7 +2015,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			InstanceID:  iid,
 		})
 		require.Nil(t, err, "iid key not found")
-		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
+		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 
 		log.Lvl1("Checking last version of signer")
 		sc, err = service.GetLastInstanceVersion(&GetLastInstanceVersion{
@@ -1884,16 +2037,19 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	contractID := "stateChangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the state trie is created from the known global state
-		_, ver, _, _, _ := cdb.GetValues(inst.Hash())
 		iid := inst.Hash()
 		if !bytes.Equal(inst.InstanceID.Slice(), s.darc.GetBaseID()) {
 			iid = inst.InstanceID.Slice()
 		}
+		_, ver, _, _, err := cdb.GetValues(iid)
 		sc1 := StateChange{
+			StateAction: Update,
 			InstanceID:  iid,
 			ContractID:  []byte(contractID),
-			StateAction: Create,
 			Version:     ver + 1,
+		}
+		if err != nil {
+			sc1.StateAction = Create
 		}
 		return []StateChange{sc1}, []Coin{}, nil
 	}
