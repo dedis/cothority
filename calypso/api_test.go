@@ -15,39 +15,46 @@ import (
 // Tests the client function CreateLTS
 func TestClient_CreateLTS(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
-	l.GetServices(servers, calypsoID)
+	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
+	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:dummy", "spawn:" + ContractLongTermSecretID},
+		signer.Identity())
 	msg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
-
-	// The darc inside it should be valid.
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
-	//Create Ledger
+
+	// Create the clients
 	c, _, err := byzcoin.NewLedger(msg, false)
 	require.Nil(t, err)
-	//Create a Calypso Client (Byzcoin + Onet)
 	calypsoClient := NewClient(c)
-	//Invoke CreateLTS
-	ltsReply, err := calypsoClient.CreateLTS()
+	for _, who := range roster.List {
+		err := calypsoClient.Authorise(who, c.ID)
+		require.NoError(t, err)
+	}
+
+	// Invoke CreateLTS
+	ltsReply, err := calypsoClient.CreateLTS(roster, d.GetBaseID(), []darc.Signer{signer}, []uint64{1})
 	require.Nil(t, err)
-	require.NotNil(t, ltsReply.LTSID)
+	require.NotNil(t, ltsReply.ByzCoinID)
+	require.NotNil(t, ltsReply.InstanceID)
 	require.NotNil(t, ltsReply.X)
 }
+
+// TODO(jallen): Write TestClient_Reshare (and add api.go part too, I guess)
 
 // Tests the client api's AddRead, AddWrite, DecryptKey
 func TestClient_Calypso(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
-	l.GetServices(servers, calypsoID)
+	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
 	admin := darc.NewSignerEd25519(nil, nil)
+	adminCt := uint64(1)
 	provider1 := darc.NewSignerEd25519(nil, nil)
 	reader1 := darc.NewSignerEd25519(nil, nil)
 	provider2 := darc.NewSignerEd25519(nil, nil)
@@ -55,7 +62,7 @@ func TestClient_Calypso(t *testing.T) {
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:" + byzcoin.ContractDarcID},
+		[]string{"spawn:darc", "spawn:" + ContractLongTermSecretID},
 		admin.Identity())
 
 	msg.BlockInterval = 100 * time.Millisecond
@@ -70,7 +77,12 @@ func TestClient_Calypso(t *testing.T) {
 	calypsoClient := NewClient(c)
 
 	//Create the LTS
-	ltsReply, err := calypsoClient.CreateLTS()
+	for _, who := range roster.List {
+		err := calypsoClient.Authorise(who, c.ID)
+		require.NoError(t, err)
+	}
+	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})
+	adminCt++
 	require.Nil(t, err)
 	//If no error, assign it
 	calypsoClient.ltsReply = ltsReply
@@ -85,7 +97,8 @@ func TestClient_Calypso(t *testing.T) {
 		expression.InitOrExpr(reader1.Identity().String()))
 	require.NotNil(t, darc1)
 	require.Nil(t, err)
-	_, err = calypsoClient.SpawnDarc(admin, 1, gDarc, *darc1, 10)
+	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc1, 10)
+	adminCt++
 	require.Nil(t, err)
 
 	//Create a similar darc for provider2, reader2
@@ -97,12 +110,13 @@ func TestClient_Calypso(t *testing.T) {
 	darc2.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
 		expression.InitOrExpr(reader2.Identity().String()))
 	//Spawn it
-	_, err = calypsoClient.SpawnDarc(admin, 2, gDarc, *darc2, 10)
+	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc2, 10)
+	adminCt++
 	require.Nil(t, err)
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance
-	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.LTSID,
+	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
 		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
 	//Write it to calypso
 	wr1, err := calypsoClient.AddWrite(write1, provider1, 1, *darc1, 10)
@@ -121,7 +135,7 @@ func TestClient_Calypso(t *testing.T) {
 
 	key2 := []byte("secret key 2")
 	//Create a Write instance
-	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.LTSID,
+	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
 		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
 	wr2, err := calypsoClient.AddWrite(write2, provider2, 1, *darc2, 10)
 	require.Nil(t, err)

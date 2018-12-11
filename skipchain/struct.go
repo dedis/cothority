@@ -353,7 +353,7 @@ type SkipBlock struct {
 	ChildSL []SkipBlockID
 
 	// Payload is additional data that needs to be hashed by the application
-	// itself into SkipBlockFix.Data. A normal usecase is to set
+	// itself into SkipBlockFix.Data. A normal use case is to set
 	// SkipBlockFix.Data to the sha256 of this payload. Then the proofs
 	// using the skipblocks can return simply the SkipBlockFix, as long as they
 	// don't need the payload.

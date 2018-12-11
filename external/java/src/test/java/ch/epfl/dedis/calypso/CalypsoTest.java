@@ -7,12 +7,14 @@ import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.proto.Calypso;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,10 +53,16 @@ class CalypsoTest {
         reader = new SignerEd25519();
         testInstanceController = TestServerInit.getInstance();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
+        genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
         try {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());
-            calypso = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+            for (ServerIdentity si : bc.getRoster().getNodes()) {
+                CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+            }
+            calypso = new CalypsoRPC(bc, genesisDarc.getId(), bc.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
             if (!calypso.checkLiveness()) {
                 throw new CothorityCommunicationException("liveness check failed");
             }
@@ -66,14 +75,14 @@ class CalypsoTest {
         }
 
         readerDarc = new Darc(Arrays.asList(publisher.getIdentity()), Arrays.asList(reader.getIdentity()), "readerDarc".getBytes());
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(readerDarc, admin, 1L, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(readerDarc, admin, 2L, 10);
 
         // Spawn a new darc with the calypso read/write rules for a new signer.
         publisherDarc = new Darc(Arrays.asList(publisher.getIdentity()), Arrays.asList(publisher.getIdentity()), "calypso darc".getBytes());
         publisherDarc.setRule("spawn:calypsoWrite", publisher.getIdentity().toString().getBytes());
         publisherDarc.addIdentity("spawn:calypsoRead", publisher.getIdentity(), Rules.OR);
         publisherDarc.addIdentity("spawn:calypsoRead", readerDarc.getIdentity(), Rules.OR);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin,  2L,10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin,  3L,10);
 
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
@@ -162,7 +171,7 @@ class CalypsoTest {
     }
 
     @Test
-    void testDecryptKey() throws Exception {
+    void decryptKey() throws Exception {
         Document doc1 = new Document("this is secret 1".getBytes(), 16, null, publisherDarc.getBaseId());
         WriteInstance w1 = new WriteInstance(calypso, publisherDarc.getBaseId(),
                 Arrays.asList(publisher), Collections.singletonList(1L),
@@ -206,10 +215,10 @@ class CalypsoTest {
 
     @Test
     void getSharedPublicKey() throws Exception {
-        assertThrows(CothorityCommunicationException.class, ()-> calypso.getSharedPublicKey(new LTSId(new byte[32])));
-        Point shared = calypso.getSharedPublicKey(calypso.getLTSId());
-        assertNotNull(shared);
-        assertTrue(calypso.getLTSX().equals(shared));
+        assertThrows(CothorityCommunicationException.class, ()-> calypso.getLTSReply(new LTSId(new byte[32])));
+        CreateLTSReply lts2 = calypso.getLTSReply(calypso.getLTS().getLTSID());
+        assertNotNull(lts2.getX());
+        assertTrue(calypso.getLTSX().equals(lts2.getX()));
     }
 
     @Test
@@ -248,7 +257,7 @@ class CalypsoTest {
     }
 
     @Test
-    void checFailingkWriteAuthorization() throws CothorityException {
+    void checkFailingWriteAuthorization() throws CothorityException {
         Signer publisher2 = new SignerEd25519();
         try {
             doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher2, 1L);
@@ -266,10 +275,13 @@ class CalypsoTest {
         Darc userDarc = new Darc(Arrays.asList(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")).getIdentity()), null, null);
         calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
 
-        CalypsoRPC calypso2 = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc,
-                Duration.ofMillis(500));
+        ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, Duration.ofMillis(500));
+        for (ServerIdentity si : bc2.getRoster().getNodes()) {
+            CalypsoRPC.authorise(si, bc2.getGenesisBlock().getId());
+        }
+        CalypsoRPC calypso2 = new CalypsoRPC(bc2, genesisDarc.getId(), bc2.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
         try {
-            calypso2.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 1L, 10);
+            calypso2.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 2L, 10);
             logger.info("correctly saved same darc in another ByzCoin");
         } catch (CothorityCommunicationException e) {
             fail("incorrectly refused to save again");
@@ -373,8 +385,9 @@ class CalypsoTest {
 
     @Test
     void multiLTS() throws CothorityException{
-        CalypsoRPC calypso2 = new CalypsoRPC(calypso);
-        assertFalse(calypso2.getLTSId().equals(calypso.getLTS().getLtsId()));
+        CalypsoRPC calypso2 = new CalypsoRPC(calypso, calypso.getGenesisDarc().getBaseId(), calypso.getRoster(),
+                Collections.singletonList(admin), Collections.singletonList(4L));
+        assertFalse(calypso2.getLTSId().equals(calypso.getLTS().getLTSID()));
     }
 
     @Test

@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
@@ -13,6 +14,7 @@ import (
 
 func init() {
 	network.RegisterMessages(CreateLTS{}, CreateLTSReply{},
+		Authorise{}, AuthoriseReply{},
 		DecryptKey{}, DecryptKeyReply{})
 }
 
@@ -36,7 +38,7 @@ type suite interface {
 // Output:
 //   - write - structure containing the encrypted key U, Cs and the NIZKP of
 //   it containing the reader-darc.
-func NewWrite(suite suites.Suite, ltsid []byte, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
+func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
 	wr := &Write{LTSID: ltsid}
 	r := suite.Scalar().Pick(suite.RandomStream())
 	C := suite.Point().Mul(r, X)
@@ -49,7 +51,7 @@ func NewWrite(suite suites.Suite, ltsid []byte, writeDarc darc.ID, X kyber.Point
 		key = key[min(len(key), kp.EmbedLen()):]
 	}
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid), nil)
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid.Slice()), nil)
 	wr.Ubar = suite.Point().Mul(r, gBar)
 	s := suite.Scalar().Pick(suite.RandomStream())
 	w := suite.Point().Mul(s, nil)
@@ -82,7 +84,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	ue := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.U)
 	w := suite.Point().Add(gf, ue)
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(wr.LTSID), nil)
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(wr.LTSID.Slice()), nil)
 	gfBar := suite.Point().Mul(wr.F, gBar)
 	ueBar := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.Ubar)
 	wBar := suite.Point().Add(gfBar, ueBar)
@@ -180,4 +182,14 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 		key = append(key, keyPart...)
 	}
 	return
+}
+
+type newLtsConfig struct {
+	byzcoin.Proof
+}
+
+type reshareLtsConfig struct {
+	byzcoin.Proof
+	Commits  []kyber.Point
+	OldNodes []kyber.Point
 }

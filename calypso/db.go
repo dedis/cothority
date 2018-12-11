@@ -4,8 +4,9 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/dedis/cothority/byzcoin"
 	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	"github.com/dedis/cothority/skipchain"
+	dkg "github.com/dedis/kyber/share/dkg/pedersen"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -16,12 +17,15 @@ const dbVersion = 1
 // than one structure.
 var storageKey = []byte("storage")
 
-// storage1 is used to save all elements of the DKG.
-type storage1 struct {
-	Shared  map[string]*dkgprotocol.SharedSecret
-	Polys   map[string]*pubPoly
-	Rosters map[string]*onet.Roster
-	OLIDs   map[string]skipchain.SkipBlockID
+// storage is used to save all elements of the DKG.
+type storage struct {
+	AuthorisedByzCoinIDs map[string]bool
+
+	Shared  map[byzcoin.InstanceID]*dkgprotocol.SharedSecret
+	Polys   map[byzcoin.InstanceID]*pubPoly
+	Rosters map[byzcoin.InstanceID]*onet.Roster
+	Replies map[byzcoin.InstanceID]*CreateLTSReply
+	DKS     map[byzcoin.InstanceID]*dkg.DistKeyShare
 
 	sync.Mutex
 }
@@ -41,7 +45,7 @@ func (s *Service) save() error {
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	s.storage = &storage1{}
+	s.storage = &storage{}
 	ver, err := s.LoadVersion()
 	if err != nil {
 		return err
@@ -50,16 +54,22 @@ func (s *Service) tryLoad() error {
 	// Make sure we don't have any unallocated maps.
 	defer func() {
 		if len(s.storage.Polys) == 0 {
-			s.storage.Polys = make(map[string]*pubPoly)
+			s.storage.Polys = make(map[byzcoin.InstanceID]*pubPoly)
 		}
 		if len(s.storage.Shared) == 0 {
-			s.storage.Shared = make(map[string]*dkgprotocol.SharedSecret)
+			s.storage.Shared = make(map[byzcoin.InstanceID]*dkgprotocol.SharedSecret)
 		}
 		if len(s.storage.Rosters) == 0 {
-			s.storage.Rosters = make(map[string]*onet.Roster)
+			s.storage.Rosters = make(map[byzcoin.InstanceID]*onet.Roster)
 		}
-		if len(s.storage.OLIDs) == 0 {
-			s.storage.OLIDs = make(map[string]skipchain.SkipBlockID)
+		if len(s.storage.Replies) == 0 {
+			s.storage.Replies = make(map[byzcoin.InstanceID]*CreateLTSReply)
+		}
+		if len(s.storage.DKS) == 0 {
+			s.storage.DKS = make(map[byzcoin.InstanceID]*dkg.DistKeyShare)
+		}
+		if len(s.storage.AuthorisedByzCoinIDs) == 0 {
+			s.storage.AuthorisedByzCoinIDs = make(map[string]bool)
 		}
 	}()
 
@@ -79,7 +89,7 @@ func (s *Service) tryLoad() error {
 		return nil
 	}
 	var ok bool
-	s.storage, ok = msg.(*storage1)
+	s.storage, ok = msg.(*storage)
 	if !ok {
 		return errors.New("data of wrong type")
 	}

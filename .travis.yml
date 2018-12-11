@@ -10,8 +10,8 @@ env:
   - TEST_DIR=kyber
 
 install:
-  - gimme 1.9
-  - . $HOME/.gimme/envs/go1.9.env
+  - gimme 1.11
+  - . $HOME/.gimme/envs/go1.11.env
   - go get github.com/dedis/Coding || true
   # Because we are using "language: node_js" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
@@ -39,8 +39,8 @@ matrix:
         - "1.11.x"
 
       install:
-        - go get -t ./...
         - go get github.com/dedis/Coding || true
+        - go get -t ./...
 
       before_install:
         - cd $TRAVIS_BUILD_DIR

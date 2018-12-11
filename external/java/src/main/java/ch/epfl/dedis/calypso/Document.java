@@ -8,7 +8,6 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,7 +67,7 @@ public class Document {
      * @return a WriteData with the encrypted data
      * @throws CothorityException if something goes wrong
      */
-    public WriteData getWriteData(LTS lts) throws CothorityException {
+    public WriteData getWriteData(CreateLTSReply lts) throws CothorityException {
         return new WriteData(lts, Encryption.encryptData(data, keyMaterial), keyMaterial, extraData, publisherId);
     }
 

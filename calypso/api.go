@@ -6,7 +6,9 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -37,18 +39,67 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 		cothority.Suite, ServiceName)}
 }
 
-// CreateLTS creates a random LTSID that can be used to reference
-// the LTS group created.
-func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
+// CreateLTS creates a random LTSID that can be used to reference the LTS group
+// created. It first sends a transaction to ByzCoin to spawn a LTS instance,
+// then it asks the Calypso cothority to start the DKG.
+func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []darc.Signer, counters []uint64) (reply *CreateLTSReply, err error) {
+	// Make the transaction and get its proof
+	buf, err := protobuf.Encode(&LtsInstanceInfo{*ltsRoster})
+	if err != nil {
+		return nil, err
+	}
+	inst := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(darcID),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractLongTermSecretID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "lts_instance_info",
+					Value: buf,
+				},
+			},
+		},
+		SignerCounter: counters,
+	}
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{inst},
+	}
+	if err := tx.SignWith(signers...); err != nil {
+		return nil, err
+	}
+	if _, err := c.bcClient.AddTransactionAndWait(tx, 4); err != nil {
+		return nil, err
+	}
+	resp, err := c.bcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	// Start the DKG
 	reply = &CreateLTSReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], &CreateLTS{
-		Roster: c.bcClient.Roster,
-		BCID:   c.bcClient.ID,
+		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
 		return nil, err
 	}
 	return reply, nil
+}
+
+// Authorise adds a ByzCoinID to the list of authorized IDs for each
+// server in the roster. The AuthoriseByzcoinID service refuses requests
+// that do not come from localhost.
+//
+// It should be called by the administrator at the beginning, before any other
+// API calls are made. A ByzCoinID that is not authorised will not be allowed to
+// call the other APIs.
+func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
+	reply := &AuthoriseReply{}
+	err := c.c.SendProtobuf(who, &Authorise{ByzCoinID: what}, reply)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DecryptKey takes as input Read- and Write- Proofs. It verifies that

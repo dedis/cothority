@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -30,8 +32,183 @@ func TestService_CreateLTS(t *testing.T) {
 			}
 			s := newTS(t, nodes)
 			defer s.closeAll(t)
-			require.NotNil(t, s.ltsReply.LTSID)
+			require.NotNil(t, s.ltsReply.ByzCoinID)
+			require.NotNil(t, s.ltsReply.InstanceID)
 			require.NotNil(t, s.ltsReply.X)
+		}(nodes)
+	}
+}
+
+// Try to change the roster to a new roster that is disjoint, which
+// should result in an error.
+func TestService_ReshareLTS_Different(t *testing.T) {
+	nodes := 4
+	s := newTSWithExtras(t, nodes, nodes)
+	defer s.closeAll(t)
+	require.NotNil(t, s.ltsReply.ByzCoinID)
+	require.NotNil(t, s.ltsReply.InstanceID)
+	require.NotNil(t, s.ltsReply.X)
+
+	// The current DKG is on List[0:nodes], and this new roster will
+	// be on List[nodes:], thus entirely disjoint.
+	otherRoster := onet.NewRoster(s.allRoster.List[nodes:])
+	ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*otherRoster})
+	require.NoError(t, err)
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID: s.ltsReply.InstanceID,
+				Invoke: &byzcoin.Invoke{
+					Command: "reshare",
+					Args: []byzcoin.Argument{
+						{
+							Name:  "lts_instance_info",
+							Value: ltsInstInfoBuf,
+						},
+					},
+				},
+				SignerCounter: []uint64{2},
+			},
+		},
+	}
+	require.Nil(t, ctx.SignWith(s.signer))
+	_, err = s.cl.AddTransactionAndWait(ctx, 4)
+	require.Error(t, err)
+}
+
+func TestService_ReshareLTS_Same(t *testing.T) {
+	for _, nodes := range []int{4, 7} {
+		func(nodes int) {
+			if nodes > 5 && testing.Short() {
+				log.Info("skipping, dkg might take too long for", nodes)
+				return
+			}
+			s := newTS(t, nodes)
+			defer s.closeAll(t)
+			require.NotNil(t, s.ltsReply.ByzCoinID)
+			require.NotNil(t, s.ltsReply.InstanceID)
+			require.NotNil(t, s.ltsReply.X)
+			sec1 := s.reconstructKey(t)
+
+			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
+			require.NoError(t, err)
+
+			ctx := byzcoin.ClientTransaction{
+				Instructions: []byzcoin.Instruction{
+					{
+						InstanceID: s.ltsReply.InstanceID,
+						Invoke: &byzcoin.Invoke{
+							Command: "reshare",
+							Args: []byzcoin.Argument{
+								{
+									Name:  "lts_instance_info",
+									Value: ltsInstInfoBuf,
+								},
+							},
+						},
+						SignerCounter: []uint64{2},
+					},
+				},
+			}
+			require.Nil(t, ctx.SignWith(s.signer))
+			_, err = s.cl.AddTransactionAndWait(ctx, 4)
+			require.NoError(t, err)
+
+			// Get the proof and start resharing
+			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
+			require.NoError(t, err)
+
+			log.Lvl1("first reshare")
+			var wg sync.WaitGroup
+			wg.Add(len(s.ltsRoster.List))
+			s.afterReshare(func() { wg.Done() })
+			_, err = s.services[0].ReshareLTS(&ReshareLTS{
+				Proof: proof.Proof,
+			})
+			require.NoError(t, err)
+			wg.Wait()
+			r := s.reconstructKey(t)
+			require.True(t, r.Equal(sec1))
+
+			// Try to do resharing again
+			wg.Add(len(s.ltsRoster.List))
+			log.Lvl1("second reshare")
+			_, err = s.services[0].ReshareLTS(&ReshareLTS{
+				Proof: proof.Proof,
+			})
+			require.NoError(t, err)
+			wg.Wait()
+			require.True(t, s.reconstructKey(t).Equal(sec1))
+		}(nodes)
+	}
+}
+
+func TestService_ReshareLTS_OneMore(t *testing.T) {
+	for _, nodes := range []int{4, 7} {
+		func(nodes int) {
+			if nodes > 5 && testing.Short() {
+				log.Info("skipping, dkg might take too long for", nodes)
+				return
+			}
+			s := newTSWithExtras(t, nodes, 1)
+			defer s.closeAll(t)
+			require.NotNil(t, s.ltsReply.ByzCoinID)
+			require.NotNil(t, s.ltsReply.InstanceID)
+			require.NotNil(t, s.ltsReply.X)
+			sec1 := s.reconstructKey(t)
+
+			// Create a new roster that has one more node that
+			// before
+			s.ltsRoster = onet.NewRoster(s.allRoster.List[:nodes+1])
+			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
+			require.NoError(t, err)
+
+			ctx := byzcoin.ClientTransaction{
+				Instructions: []byzcoin.Instruction{
+					{
+						InstanceID: s.ltsReply.InstanceID,
+						Invoke: &byzcoin.Invoke{
+							Command: "reshare",
+							Args: []byzcoin.Argument{
+								{
+									Name:  "lts_instance_info",
+									Value: ltsInstInfoBuf,
+								},
+							},
+						},
+						SignerCounter: []uint64{2},
+					},
+				},
+			}
+			require.Nil(t, ctx.SignWith(s.signer))
+			_, err = s.cl.AddTransactionAndWait(ctx, 4)
+			require.NoError(t, err)
+
+			// Get the proof and start resharing
+			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
+			require.NoError(t, err)
+
+			log.Lvl1("first reshare")
+			var wg sync.WaitGroup
+			wg.Add(len(s.ltsRoster.List))
+			s.afterReshare(func() { wg.Done() })
+			_, err = s.services[0].ReshareLTS(&ReshareLTS{
+				Proof: proof.Proof,
+			})
+			require.NoError(t, err)
+			wg.Wait()
+			require.True(t, s.reconstructKey(t).Equal(sec1))
+
+			// Try to do resharing again
+			log.Lvl1("second reshare")
+			wg.Add(len(s.ltsRoster.List))
+			_, err = s.services[0].ReshareLTS(&ReshareLTS{
+				Proof: proof.Proof,
+			})
+			require.NoError(t, err)
+			wg.Wait()
+			require.True(t, s.reconstructKey(t).Equal(sec1))
 		}(nodes)
 	}
 }
@@ -58,7 +235,7 @@ func TestContract_Write_Benchmark(t *testing.T) {
 	totalTrans := 10
 	var times []time.Duration
 
-	var ctr uint64 = 1
+	var ctr uint64 = 2
 	for i := 0; i < 50; i++ {
 		iids := make([]byzcoin.InstanceID, totalTrans)
 		start := time.Now()
@@ -151,7 +328,9 @@ type ts struct {
 	local      *onet.LocalTest
 	servers    []*onet.Server
 	services   []*Service
-	roster     *onet.Roster
+	allRoster  *onet.Roster
+	ltsRoster  *onet.Roster
+	byzRoster  *onet.Roster
 	ltsReply   *CreateLTSReply
 	signer     darc.Signer
 	cl         *byzcoin.Client
@@ -193,38 +372,97 @@ func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) 
 }
 
 func newTS(t *testing.T, nodes int) ts {
+	return newTSWithExtras(t, nodes, 0)
+}
+
+// newTSWithExtras initially the byzRoster and ltsRoster are the same, the extras are
+// there so that we can change the ltsRoster later to be something different.
+func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 	s := ts{}
 	s.local = onet.NewLocalTestT(cothority.Suite, t)
 
 	// Create the service
-	s.servers, s.roster, _ = s.local.GenTree(nodes, true)
+	s.servers, s.allRoster, _ = s.local.GenTree(nodes+extras, true)
 	services := s.local.GetServices(s.servers, calypsoID)
 	for _, ser := range services {
 		s.services = append(s.services, ser.(*Service))
 	}
+	s.byzRoster = onet.NewRoster(s.allRoster.List[:nodes])
+	s.ltsRoster = onet.NewRoster(s.allRoster.List[:nodes])
 
 	// Create the skipchain
 	s.signer = darc.NewSignerEd25519(nil, nil)
 	s.createGenesis(t)
 
+	// Create LTS instance
+	ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
+	require.NoError(t, err)
+	inst := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(s.gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractLongTermSecretID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "lts_instance_info",
+					Value: ltsInstInfoBuf,
+				},
+			},
+		},
+		SignerCounter: []uint64{1},
+	}
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{inst},
+	}
+	require.NoError(t, tx.SignWith(s.signer))
+	_, err = s.cl.AddTransactionAndWait(tx, 4)
+	require.NoError(t, err)
+
+	// Get the proof
+	resp, err := s.cl.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	require.NoError(t, err)
+
 	// Start DKG
-	var err error
-	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{Roster: *s.roster, BCID: s.gbReply.Skipblock.Hash})
+	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{
+		Proof: resp.Proof,
+	})
 	require.Nil(t, err)
 
+	reply2 := CreateLTSReply{
+		ByzCoinID:  s.gbReply.Skipblock.SkipChainID(),
+		InstanceID: tx.Instructions[0].DeriveID(""),
+		X:          s.ltsReply.X,
+	}
+
+	require.True(t, s.ltsReply.InstanceID.Equal(reply2.InstanceID))
 	return s
 }
 
 func (s *ts) createGenesis(t *testing.T) {
 	var err error
-	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
-		[]string{"spawn:" + ContractWriteID, "spawn:" + ContractReadID}, s.signer.Identity())
+	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.byzRoster,
+		[]string{"spawn:" + ContractWriteID,
+			"spawn:" + ContractReadID,
+			"spawn:" + ContractLongTermSecretID,
+			"invoke:" + "reshare"},
+		s.signer.Identity())
 	require.Nil(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc
 	s.genesisMsg.BlockInterval = time.Second
 
 	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
 	require.Nil(t, err)
+
+	for _, svc := range s.services {
+		req := &Authorise{ByzCoinID: s.cl.ID}
+		_, err = svc.Authorise(req)
+		require.NoError(t, err)
+	}
+}
+
+func (s *ts) afterReshare(f func()) {
+	for _, sv := range s.services {
+		sv.afterReshare = f
+	}
 }
 
 func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof {
@@ -253,7 +491,7 @@ func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
 }
 
 func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
-	write := NewWrite(cothority.Suite, s.ltsReply.LTSID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
+	write := NewWrite(cothority.Suite, s.ltsReply.InstanceID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
 
@@ -276,4 +514,26 @@ func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 func (s *ts) closeAll(t *testing.T) {
 	require.Nil(t, s.cl.Close())
 	s.local.CloseAll()
+}
+
+func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
+	id := s.ltsReply.InstanceID
+	var sshares []*share.PriShare
+	for i := range s.services {
+		for j := range s.ltsRoster.List {
+			if s.services[i].ServerIdentity().Equal(s.ltsRoster.List[j]) {
+				s.services[i].storage.Lock()
+				if s.services[i].storage.DKS[id] != nil {
+					sshares = append(sshares, s.services[i].storage.DKS[id].PriShare())
+				}
+				s.services[i].storage.Unlock()
+			}
+		}
+	}
+	n := len(s.ltsRoster.List)
+	th := n - (n-1)/3
+	require.Equal(t, n, len(sshares))
+	sec, err := share.RecoverSecret(cothority.Suite, sshares, th, n)
+	require.NoError(t, err)
+	return sec
 }

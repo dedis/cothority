@@ -27,9 +27,13 @@ type Setup struct {
 	Threshold uint32
 	Finished  chan bool
 	Wait      bool
+	NewDKG    func() (*dkgpedersen.DistKeyGenerator, error)
+
+	// KeyPair must be set by the caller, if this is a new DKG, then simply
+	// generate a new KeyPair.
+	KeyPair *key.Pair
 
 	nodes   []*onet.TreeNode
-	keypair *key.Pair
 	publics []kyber.Point
 
 	structStartDeal chan structStartDeal
@@ -43,7 +47,6 @@ type Setup struct {
 func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &Setup{
 		TreeNodeInstance: n,
-		keypair:          key.NewKeyPair(cothority.Suite),
 		Finished:         make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
@@ -64,26 +67,26 @@ func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // SharedSecret returns the necessary information for doing shared
 // encryption and decryption.
-func (o *Setup) SharedSecret() (*SharedSecret, error) {
+func (o *Setup) SharedSecret() (*SharedSecret, *dkgpedersen.DistKeyShare, error) {
 	return NewSharedSecret(o.DKG)
 }
 
 // NewSharedSecret takes an initialized DistKeyGenerator and returns the
 // minimal set of values necessary to do shared encryption/decryption.
-func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, error) {
+func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, *dkgpedersen.DistKeyShare, error) {
 	if gen == nil {
-		return nil, errors.New("no valid dkg given")
+		return nil, nil, errors.New("no valid dkg given")
 	}
 	dks, err := gen.DistKeyShare()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return &SharedSecret{
 		Index:   dks.Share.I,
 		V:       dks.Share.V,
 		X:       dks.Public(),
 		Commits: dks.Commits,
-	}, nil
+	}, dks, nil
 }
 
 // Start sends the Announce-message to all children
@@ -104,15 +107,14 @@ func (o *Setup) Dispatch() error {
 	if err != nil {
 		return err
 	}
-	for range o.publics[1:] {
+	// TODO: "This will fail as soon as we start doing things with thresold." - nicolas
+	for i := 0; i < o.DKG.ExpectedDeals(); i++ {
 		err := o.allDeal(<-o.structDeal)
 		if err != nil {
 			return err
 		}
 	}
-	l := len(o.publics)
-	for i := 0; i < l*(l-1); i++ {
-		// This is expected to return some errors, so do not stop on them.
+	for !o.DKG.Certified() {
 		err := o.allResponse(<-o.structResponse)
 		if err != nil && err.Error() != "vss: already existing response from same origin" {
 			return err
@@ -141,13 +143,19 @@ func (o *Setup) Dispatch() error {
 func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	return o.SendToParent(&InitReply{Public: o.keypair.Public})
+	o.KeyPair = &key.Pair{
+		Public:  o.Public(),
+		Private: o.Private(),
+	}
+	if o.KeyPair == nil {
+		return errors.New("no keypair")
+	}
+	return o.SendToParent(&InitReply{Public: o.KeyPair.Public})
 }
 
 // Root-node messages
 func (o *Setup) rootStartDeal(replies []structInitReply) error {
-	log.Lvl3(o.Name(), replies)
-	o.publics[0] = o.keypair.Public
+	o.publics[0] = o.KeyPair.Public
 	for _, r := range replies {
 		index, _ := o.Roster().Search(r.ServerIdentity.ID)
 		if index < 0 {
@@ -163,10 +171,14 @@ func (o *Setup) rootStartDeal(replies []structInitReply) error {
 
 // Messages for both
 func (o *Setup) allStartDeal(ssd structStartDeal) error {
-	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
-	o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.keypair.Private,
-		ssd.Publics, int(ssd.Threshold))
+	if o.NewDKG == nil {
+		// TODO: Should be newdistkeyhandler
+		o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.KeyPair.Private,
+			ssd.Publics, int(ssd.Threshold))
+	} else {
+		o.DKG, err = o.NewDKG()
+	}
 	if err != nil {
 		return err
 	}
@@ -175,7 +187,6 @@ func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl3(o.Name(), "sending out deals", len(deals))
 	for i, d := range deals {
 		if err := o.SendTo(o.nodes[i], &Deal{d}); err != nil {
 			return err
@@ -185,7 +196,6 @@ func (o *Setup) allStartDeal(ssd structStartDeal) error {
 }
 
 func (o *Setup) allDeal(sd structDeal) error {
-	log.Lvl3(o.Name(), sd.ServerIdentity)
 	resp, err := o.DKG.ProcessDeal(sd.Deal.Deal)
 	if err != nil {
 		log.Error(o.Name(), err)

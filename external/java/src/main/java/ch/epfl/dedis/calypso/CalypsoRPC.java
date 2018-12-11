@@ -1,14 +1,17 @@
 package ch.epfl.dedis.calypso;
 
+import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.darc.DarcId;
+import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.ByteString;
@@ -17,12 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * CalypsoRPC is the entry point for all the RPC calls to the Calypso service, which acts as the secret-management cothority.
  */
 public class CalypsoRPC extends ByzCoinRPC {
-    private LTS lts;
+    private CreateLTSReply lts;
 
     private final Logger logger = LoggerFactory.getLogger(ch.epfl.dedis.calypso.CalypsoRPC.class);
 
@@ -32,22 +37,14 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param byzcoin the existing byzcoin ledger.
      * @throws CothorityException if something goes wrong
      */
-    public CalypsoRPC(ByzCoinRPC byzcoin) throws CothorityException{
+    public CalypsoRPC(ByzCoinRPC byzcoin, DarcId darcId, Roster ltsRoster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         super(byzcoin);
-        lts = createLTS();
-    }
-
-    /**
-     * Creates a new ByzCoin ledger and a new Long Term Secret.
-     *
-     * @param roster        the nodes participating in the ledger
-     * @param genesis       the first darc
-     * @param blockInterval how often a new block is created
-     * @throws CothorityException if something goes wrong
-     */
-    public CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval) throws CothorityException {
-        super(roster, genesis, blockInterval);
-        lts = createLTS();
+        // Send a transaction to store the LTS roster in ByzCoin
+        LTSInstance inst = new LTSInstance(this, darcId, ltsRoster, signers, signerCtrs);
+        Proof proof = inst.getProof();
+        // Start the LTS/DKG protocol.
+        CreateLTSReply lts = createLTS(proof);
+        this.lts = lts;
     }
 
     /**
@@ -58,8 +55,11 @@ public class CalypsoRPC extends ByzCoinRPC {
      */
     private CalypsoRPC(ByzCoinRPC bc, LTSId ltsId) throws CothorityCommunicationException{
         super(bc);
-        Point X = getSharedPublicKey(ltsId);
-        lts = new LTS(ltsId, X);
+        lts = getLTSReply(ltsId);
+    }
+
+    private CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval) throws CothorityException {
+        super(roster, genesis, blockInterval);
     }
 
     /**
@@ -71,16 +71,16 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @return the aggregate public symmetricKey of the ocs-shard
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public Point getSharedPublicKey(LTSId ltsId) throws CothorityCommunicationException {
-        Calypso.SharedPublic.Builder request =
-                Calypso.SharedPublic.newBuilder();
+    public CreateLTSReply getLTSReply(LTSId ltsId) throws CothorityCommunicationException {
+        Calypso.GetLTSReply.Builder request =
+                Calypso.GetLTSReply.newBuilder();
         request.setLtsid(ltsId.toProto());
 
-        ByteString msg = getRoster().sendMessage("Calypso/SharedPublic", request.build());
+        ByteString msg = getRoster().sendMessage("Calypso/GetLTSReply", request.build());
 
         try {
-            Calypso.SharedPublicReply reply = Calypso.SharedPublicReply.parseFrom(msg);
-            return new Ed25519Point(reply.getX());
+            Calypso.CreateLTSReply reply = Calypso.CreateLTSReply.parseFrom(msg);
+            return new CreateLTSReply(reply);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -92,23 +92,22 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @return The LTS configuration that is needed to execute the write contract.
      * @throws CothorityCommunicationException if something went wrong
      */
-    public LTS createLTS() throws CothorityCommunicationException {
+    public CreateLTSReply createLTS(Proof proof) throws CothorityCommunicationException {
         Calypso.CreateLTS.Builder b = Calypso.CreateLTS.newBuilder();
-        b.setRoster(getRoster().toProto());
-        b.setBcid(getGenesisBlock().getId().toProto());
+        b.setProof(proof.toProto());
 
         ByteString msg = getRoster().sendMessage("Calypso/CreateLTS", b.build());
 
         try {
             Calypso.CreateLTSReply resp = Calypso.CreateLTSReply.parseFrom(msg);
-            return new LTS(resp);
+            return new CreateLTSReply(resp);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
 
     /**
-     * Ask the secret-manageemnt cothority for the decryption shares.
+     * Ask the secret-management cothority for the decryption shares.
      *
      * @param writeProof The proof of the write request.
      * @param readProof  The proof of the read request.
@@ -134,7 +133,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @return the id of the Long Term Secret
      */
     public LTSId getLTSId() {
-        return lts.getLtsId();
+        return lts.getLTSID();
     }
 
     /**
@@ -147,7 +146,7 @@ public class CalypsoRPC extends ByzCoinRPC {
     /**
      * @return the Long Term Secret.
      */
-    public LTS getLTS(){
+    public CreateLTSReply getLTS(){
         return lts;
     }
 
@@ -162,5 +161,14 @@ public class CalypsoRPC extends ByzCoinRPC {
      */
     public static CalypsoRPC fromCalypso(Roster roster, SkipblockId byzcoinId, LTSId ltsId) throws CothorityException {
         return new CalypsoRPC(ByzCoinRPC.fromByzCoin(roster, byzcoinId), ltsId);
+    }
+
+    public static void authorise(ServerIdentity si, SkipblockId byzcoinId) throws CothorityCommunicationException {
+        Calypso.Authorise.Builder b = Calypso.Authorise.newBuilder();
+        b.setByzcoinid(byzcoinId.toProto());
+
+        Roster r = new Roster(Collections.singletonList(si));
+        ByteString msg = r.sendMessage("Calypso/Authorise", b.build());
+        return;
     }
 }

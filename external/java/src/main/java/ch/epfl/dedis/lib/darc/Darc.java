@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.calypso.Document;
 import ch.epfl.dedis.lib.exception.CothorityAlreadyExistsException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;

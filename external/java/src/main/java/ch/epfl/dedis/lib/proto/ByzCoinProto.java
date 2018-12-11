@@ -9187,8 +9187,7 @@ public final class ByzCoinProto {
   /**
    * <pre>
    * ChainConfig stores all the configuration information for one skipchain. It
-   * will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-   * GenesisDarcID is the value of GenesisReferenceID.
+   * will be stored under the key [32]byte{} in the tree.
    * </pre>
    *
    * Protobuf type {@code byzcoin.ChainConfig}
@@ -9551,8 +9550,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * ChainConfig stores all the configuration information for one skipchain. It
-     * will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-     * GenesisDarcID is the value of GenesisReferenceID.
+     * will be stored under the key [32]byte{} in the tree.
      * </pre>
      *
      * Protobuf type {@code byzcoin.ChainConfig}

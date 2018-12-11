@@ -115,8 +115,7 @@ message CheckAuthorizationResponse {
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It
-// will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-// GenesisDarcID is the value of GenesisReferenceID.
+// will be stored under the key [32]byte{} in the tree.
 message ChainConfig {
   required sint64 blockinterval = 1;
   required onet.Roster roster = 2;
