@@ -168,7 +168,7 @@ public class WriteData {
         return write.getExtradata().toByteArray();
     }
 
-    public Calypso.Write getWrite() {
+    public Calypso.Write toProto() {
         return write;
     }
 

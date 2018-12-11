@@ -1275,6 +1275,10 @@ func TestService_DarcToSc(t *testing.T) {
 	for _, service := range s.services {
 		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
 	}
+
+	for _, service := range s.services {
+		service.TestClose()
+	}
 }
 
 func TestService_StateChangeCache(t *testing.T) {

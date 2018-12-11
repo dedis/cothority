@@ -10,7 +10,6 @@ import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,7 +113,7 @@ public class WriteInstance {
      * Create a spawn instruction with a spawnCalypsoWrite request and send it to the ledger.
      */
     private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers) throws CothorityException {
-        Argument arg = new Argument("write", req.getWrite().toByteArray());
+        Argument arg = new Argument("write", req.toProto().toByteArray());
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
         Instruction instr = new Instruction(new InstanceId(darcID.getId()), Instruction.genNonce(), 0, 1, spawn);
         instr.signBy(darcID, signers);
