@@ -372,7 +372,10 @@ func add(c *cli.Context) error {
 
 func key(c *cli.Context) error {
 	newSigner := darc.NewSignerEd25519(nil, nil)
-	lib.SaveKey(newSigner)
+	err := lib.SaveKey(newSigner)
+	if err != nil {
+		return err
+	}
 
 	var fo io.Writer
 

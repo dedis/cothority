@@ -73,6 +73,10 @@ var cmds = cli.Commands{
 				EnvVar: "BC",
 				Usage:  "the ByzCoin config",
 			},
+			cli.StringFlag{
+				Name:  "darc",
+				Usage: "the DarcID that has the spawn:evenlog right (default is the genesis DarcID)",
+			},
 		},
 		Action: create,
 	},
@@ -119,7 +123,7 @@ var cmds = cli.Commands{
 			cli.StringFlag{
 				Name:   "el",
 				EnvVar: "EL",
-				Usage:  "the eventlog id (64 hex bytes), from \"el create\"",
+				Usage:  "the eventlog id, from \"el create\"",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -145,7 +149,7 @@ var cmds = cli.Commands{
 			cli.StringFlag{
 				Name:   "el",
 				EnvVar: "EL",
-				Usage:  "the eventlog id (64 hex bytes), from \"el create\"",
+				Usage:  "the eventlog id, from \"el create\"",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -169,6 +173,12 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: search,
+	},
+	{
+		Name:    "key",
+		Usage:   "generates a new keypair and prints it on stdout",
+		Aliases: []string{"k"},
+		Action:  key,
 	},
 }
 
@@ -267,17 +277,33 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 	return cl, nil
 }
 
+func key(c *cli.Context) error {
+	s := darc.NewSignerEd25519(nil, nil)
+	fmt.Println("Identity:", s.Identity())
+	fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
+	return nil
+}
+
 func create(c *cli.Context) error {
 	cl, err := getClient(c, true)
 	if err != nil {
 		return err
 	}
 
-	genDarc, err := cl.ByzCoin.GetGenDarc()
-	if err != nil {
-		return err
+	e := c.String("darc")
+	if e == "" {
+		genDarc, err := cl.ByzCoin.GetGenDarc()
+		if err != nil {
+			return err
+		}
+		cl.DarcID = genDarc.GetBaseID()
+	} else {
+		eb, err := hex.DecodeString(e)
+		if err != nil {
+			return err
+		}
+		cl.DarcID = darc.ID(eb)
 	}
-	cl.DarcID = genDarc.GetBaseID()
 
 	err = cl.Create()
 	if err != nil {
