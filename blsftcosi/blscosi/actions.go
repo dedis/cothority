@@ -311,7 +311,13 @@ func verify(fileName, sigFileName, groupToml string) error {
 
 	sig := &blsftcosi.SignatureResponse{}
 	sig.Hash, err = hex.DecodeString(sigStr.Hash)
+	if err != nil {
+		return err
+	}
 	sig.Signature, err = hex.DecodeString(sigStr.Signature)
+	if err != nil {
+		return err
+	}
 	fGroup, err := os.Open(groupToml)
 	if err != nil {
 		return err
@@ -332,7 +338,11 @@ func verifySignatureHash(b []byte, sig *blsftcosi.SignatureResponse, ro *onet.Ro
 	publics := ro.ServicePublics(blsftcosi.ServiceName)
 
 	h := suite.Hash()
-	h.Write(b)
+	_, err := h.Write(b)
+	if err != nil {
+		return err
+	}
+
 	hash := h.Sum(nil)
 	if !bytes.Equal(hash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +

@@ -1,3 +1,5 @@
+// Package protocol implements the BLS protocol using a main protocol and multiple
+// subprotocols, one for each substree.
 package protocol
 
 import (

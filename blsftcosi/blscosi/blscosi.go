@@ -35,10 +35,8 @@ const (
 
 func main() {
 	cliApp := createApp()
-	if cliApp != nil {
-		err := cliApp.Run(os.Args)
-		log.ErrFatal(err)
-	}
+	err := cliApp.Run(os.Args)
+	log.ErrFatal(err)
 }
 
 func createApp() *cli.App {

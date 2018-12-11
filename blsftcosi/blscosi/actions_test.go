@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/dedis/kyber/pairing"
@@ -25,31 +26,37 @@ func TestMain_Check(t *testing.T) {
 	defer local.CloseAll()
 	hosts, roster, _ := local.GenTree(10, true)
 
-	publicToml := tmp + "/public.toml"
+	publicToml := path.Join(tmp, "public.toml")
+	errorToml := path.Join(tmp, "error.toml")
 
 	cliApp := createApp()
 	require.NotNil(t, cliApp)
 
+	// missing group file
 	err := cliApp.Run([]string{"", "check", "-g", ""})
 	require.Error(t, err)
 
-	err = ioutil.WriteFile(tmp+"/error.toml", []byte("abc"), 0644)
+	// corrupted group file
+	err = ioutil.WriteFile(errorToml, []byte("abc"), 0644)
 	require.NoError(t, err)
-	err = cliApp.Run([]string{"", "check", "-g", tmp + "/error.toml"})
+	err = cliApp.Run([]string{"", "check", "-g", errorToml})
 	require.Error(t, err)
 
+	// empty roster
 	group := &app.Group{Roster: &onet.Roster{List: []*network.ServerIdentity{}}}
 	err = group.Save(testSuite, publicToml)
 	require.NoError(t, err)
 	err = cliApp.Run([]string{"", "check", "-g", publicToml})
 	require.Error(t, err)
 
+	// correct request
 	group = &app.Group{Roster: roster}
 	err = group.Save(testSuite, publicToml)
 	require.NoError(t, err)
 	err = cliApp.Run([]string{"", "check", "-g", publicToml, "--detail"})
 	require.NoError(t, err)
 
+	// one failure
 	hosts[0].Close()
 	err = cliApp.Run([]string{"", "check", "-g", publicToml})
 	require.Error(t, err)
@@ -62,8 +69,8 @@ func TestMain_Sign(t *testing.T) {
 
 	os.Chdir(tmp)
 
-	publicToml := tmp + "/public.toml"
-	signatureFile := tmp + "/sig.json"
+	publicToml := path.Join(tmp, "public.toml")
+	signatureFile := path.Join(tmp, "sig.json")
 
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
