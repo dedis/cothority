@@ -107,14 +107,14 @@ type vData struct {
 // we normally get from embeddeding onet.ServiceProcessor in order to
 // hook it and get a look at the http.Request.
 func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
-	if path == "Authorise" {
+	if !disableLoopbackCheck && path == "Authorise" {
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {
 			return nil, nil, err
 		}
 		ip := net.ParseIP(h)
 
-		if !disableLoopbackCheck && !ip.IsLoopback() {
+		if !ip.IsLoopback() {
 			return nil, nil, errors.New("authorise is only allowed on loopback")
 		}
 	}

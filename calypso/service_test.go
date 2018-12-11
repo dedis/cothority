@@ -39,14 +39,18 @@ func TestService_CreateLTS(t *testing.T) {
 	}
 }
 
+// Try to change the roster to a new roster that is disjoint, which
+// should result in an error.
 func TestService_ReshareLTS_Different(t *testing.T) {
 	nodes := 4
-	s := newTS2(t, nodes, nodes)
+	s := newTSWithExtras(t, nodes, nodes)
 	defer s.closeAll(t)
 	require.NotNil(t, s.ltsReply.ByzCoinID)
 	require.NotNil(t, s.ltsReply.InstanceID)
 	require.NotNil(t, s.ltsReply.X)
 
+	// The current DKG is on List[0:nodes], and this new roster will
+	// be on List[nodes:], thus entirely disjoint.
 	otherRoster := onet.NewRoster(s.allRoster.List[nodes:])
 	ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*otherRoster})
 	require.NoError(t, err)
@@ -147,7 +151,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 				log.Info("skipping, dkg might take too long for", nodes)
 				return
 			}
-			s := newTS2(t, nodes, 1)
+			s := newTSWithExtras(t, nodes, 1)
 			defer s.closeAll(t)
 			require.NotNil(t, s.ltsReply.ByzCoinID)
 			require.NotNil(t, s.ltsReply.InstanceID)
@@ -368,12 +372,12 @@ func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) 
 }
 
 func newTS(t *testing.T, nodes int) ts {
-	return newTS2(t, nodes, 0)
+	return newTSWithExtras(t, nodes, 0)
 }
 
-// newTS2 initially the byzRoster and ltsRoster are the same, the extras are
+// newTSWithExtras initially the byzRoster and ltsRoster are the same, the extras are
 // there so that we can change the ltsRoster later to be something different.
-func newTS2(t *testing.T, nodes int, extras int) ts {
+func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 	s := ts{}
 	s.local = onet.NewLocalTestT(cothority.Suite, t)
 
