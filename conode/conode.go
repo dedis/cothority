@@ -185,6 +185,7 @@ func setup(c *cli.Context) error {
 			Private:     priv,
 			Address:     serverBinding,
 			Description: c.String("description"),
+			Services:    app.GenerateServiceKeyPairs(),
 		}
 
 		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
