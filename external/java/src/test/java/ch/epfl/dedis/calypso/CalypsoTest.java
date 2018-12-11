@@ -257,7 +257,7 @@ class CalypsoTest {
     }
 
     @Test
-    void checFailingkWriteAuthorization() throws CothorityException {
+    void checkFailingWriteAuthorization() throws CothorityException {
         Signer publisher2 = new SignerEd25519();
         try {
             doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher2, 1L);

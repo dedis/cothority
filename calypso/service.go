@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -61,6 +62,8 @@ const propagationTimeout = 10 * time.Second
 
 const calypsoReshareProto = "calypso_reshare_proto"
 
+var disableLoopbackCheck = false
+
 func init() {
 	var err error
 	_, err = onet.GlobalProtocolRegister(calypsoReshareProto, dkgprotocol.NewSetup)
@@ -68,6 +71,14 @@ func init() {
 	calypsoID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &vData{})
+
+	// The loopback check makes Java testing not work, because Java client commands
+	// come from outside of the docker container. The Java testing Docker
+	// container runs with this variable set.
+	if os.Getenv("COTHORITY_ALLOW_INSECURE_ADMIN") != "" {
+		log.Warn("COTHORITY_ALLOW_INSECURE_ADMIN is set; Calypso admin actions allowed from the public network.")
+		disableLoopbackCheck = true
+	}
 }
 
 // Service is our calypso-service. It stores all created LTSs.
@@ -103,11 +114,7 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 		}
 		ip := net.ParseIP(h)
 
-		// TODO: This makes Java testing not work, because Java client commands
-		// come from outside of the docker container. So, what to do?
-		const enableLoopbackCheck = false
-
-		if enableLoopbackCheck && !ip.IsLoopback() {
+		if !disableLoopbackCheck && !ip.IsLoopback() {
 			return nil, nil, errors.New("authorise is only allowed on loopback")
 		}
 	}

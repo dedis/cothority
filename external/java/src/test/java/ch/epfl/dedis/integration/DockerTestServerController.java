@@ -72,7 +72,7 @@ public class DockerTestServerController extends TestServerController {
             throw new InterruptedException("Node numbering starts at 1!");
         }
         logger.info("Starting container co{}/private.toml", nodeNumber);
-        runCmdInBackground(blockchainContainer, "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
+        runCmdInBackground(blockchainContainer, "env", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
         // Wait a bit for the server to actually start.
         Thread.sleep(1000);
     }
