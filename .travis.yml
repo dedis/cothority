@@ -59,5 +59,17 @@ matrix:
 
     - language: java
 
+      before_install:
+        - go get github.com/dedis/kyber
+        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/kyber
+        - git checkout bn256_available
+        - go get github.com/dedis/protobuf
+        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/protobuf
+        - git checkout interface_marshaler
+        - go get github.com/dedis/onet
+        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/onet
+        - git checkout service_public_key
+        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/cothority
+
       script:
         - make test_java
