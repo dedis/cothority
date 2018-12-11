@@ -93,6 +93,10 @@ public class DockerTestServerController extends TestServerController {
         }
     }
 
+    /**
+     * We only get 4 conodes because the run_conode.sh file (from the Dockerfile) only starts 4 conodes.
+     * The other conodes (5 to 7) are used for testing roster changes.
+     */
     @Override
     public List<CalypsoFactory.ConodeAddress> getConodes() {
         return Arrays.asList(
