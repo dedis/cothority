@@ -168,7 +168,17 @@ public class WriteData {
         return write.getExtradata().toByteArray();
     }
 
-    public Calypso.Write getWrite() {
+    public Calypso.Write toProto() {
         return write;
+    }
+
+    /**
+     * Takes a byte array as an input to parse into the protobuf representation of WriteData.
+     * @param buf the protobuf data
+     * @return WriteData
+     * @throws InvalidProtocolBufferException if the protobuf data is invalid.
+     */
+    public static WriteData fromProto(byte[] buf) throws InvalidProtocolBufferException {
+        return new WriteData(Calypso.Write.parseFrom(buf));
     }
 }
