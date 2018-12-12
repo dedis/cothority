@@ -207,7 +207,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		log.Print("NEW ROSTER:", newRoster.List)
 		log.Print("#CHANGES:", changesCount)
 
-		log.Print("SHARD ID", req.ShardIDs[i])
+		log.Printf("SHARD ID: %x", req.ShardIDs[i])
 		shardClient := bc.NewClient(req.ShardIDs[i], oldRoster)
 
 		shardIndBuff := make([]byte, 8)

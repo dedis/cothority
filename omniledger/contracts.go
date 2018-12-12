@@ -157,7 +157,7 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 
 			// return changes
 			sc = []bc.StateChange{
-				bc.NewStateChange(bc.Update, inst.DeriveID(""), ContractOmniledgerEpochID, ccBuf, darcID),
+				bc.NewStateChange(bc.Update, inst.InstanceID, ContractOmniledgerEpochID, ccBuf, darcID),
 			}
 			log.Print("UPDATED ID BYZCOIN")
 

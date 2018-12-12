@@ -230,7 +230,7 @@ func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	reqNewEpochInstrID := req.ReqNewEpochTx.Instructions[0].DeriveID("")
+	reqNewEpochInstrID := req.ReqNewEpochTx.Instructions[0].InstanceID
 	gpr, err := ibClient.GetProof(reqNewEpochInstrID.Slice())
 	if err != nil {
 		return nil, err
