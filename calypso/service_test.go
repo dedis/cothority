@@ -158,7 +158,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			require.NotNil(t, s.ltsReply.X)
 			sec1 := s.reconstructKey(t)
 
-			// Create a new roster that has one more node that
+			// Create a new roster that has one more node than
 			// before
 			s.ltsRoster = onet.NewRoster(s.allRoster.List[:nodes+1])
 			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})

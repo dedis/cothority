@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 
 import static ch.epfl.dedis.integration.TestServerController.*;
 import static java.time.temporal.ChronoUnit.MILLIS;
-import static java.time.temporal.ChronoUnit.NANOS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ByzCoinRPCTest {

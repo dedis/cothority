@@ -10,11 +10,10 @@ import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.KeyPair;
-import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.proto.Calypso;
+import static ch.epfl.dedis.integration.TestServerController.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -417,5 +416,51 @@ class CalypsoTest {
         ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2), Collections.singletonList(1L));
         Document doc2 = Document.fromCalypso(calypso2, ri.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc2));
+    }
+
+    @Test
+    void reshareSame() throws Exception {
+        // create a new transaction with the same roster
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+        LTSInstance ltsInst = LTSInstance.fromByzCoin(calypso, calypso.getLTS().getInstanceId());
+        ltsInst.reshareLTS(calypso.getRoster(), Collections.singletonList(admin), adminCtrs.getCounters());
+        // start the resharing
+        Proof proof = ltsInst.getProof();
+        logger.info("starting resharing");
+        calypso.reshareLTS(proof);
+        // try to write something to make sure it works
+        decryptKey();
+    }
+
+    @Test
+    void reshareOneMore() throws Exception {
+        try {
+            // create a new transaction with one more node in the roster
+            testInstanceController.startConode(5);
+            CalypsoRPC.authorise(conode5, calypso.getGenesisBlock().getId());
+
+            List<ServerIdentity> newList = calypso.getRoster().getNodes();
+            assertTrue(newList.add(conode5));
+            Roster newRoster = new Roster(newList);
+
+            SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+            adminCtrs.increment();
+
+            LTSInstance ltsInst = LTSInstance.fromByzCoin(calypso, calypso.getLTS().getInstanceId());
+            ltsInst.reshareLTS(newRoster, Collections.singletonList(admin), adminCtrs.getCounters());
+
+            // start the resharing
+            Proof proof = ltsInst.getProof();
+            logger.info("starting resharing");
+            calypso.reshareLTS(proof);
+
+            // try to write something to make sure it works
+            decryptKey();
+        } catch (CothorityException e) {
+            throw e;
+        } finally {
+            testInstanceController.killConode(5);
+        }
     }
 }
