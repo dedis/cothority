@@ -81,7 +81,7 @@ public class EventLogInstance {
      * @param id the contract ID, it must be already initialised and stored on byzcoin
      * @throws CothorityException if something goes wrong
      */
-    private EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+    public EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         this.bc = bc;
         this.setInstance(id);
     }

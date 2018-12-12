@@ -10,32 +10,28 @@ Here are some examples of how to use el.
 
 ## Make a new key pair
 
-Using the `bcadmin` tool, you can create a key pair:
+Using the `el` tool, you can create a key pair:
 
 ```
-$ bcadmin keys
+$ el key
 ```
 
-The keys are printed on the stdout. You will give the public key to the
-ByzCoin administrator to use with the "bcadmin add" command to give your
-private key the right to make new event logs. They will be executing something like:
+The keys are printed on stdout. You will give the public key to the
+ByzCoin administrator who will use the "bcadmin add" command to give your
+private key the right to make new event logs (add "spawn:eventlog"
+and "invoke:eventlog" rules to a Darc).
+
+You can now make the event log like this:
 
 ```
-$ bcadmin add -bc $file spawn:eventlog -identity your-public-key
-$ bcadmin add -bc $file invoke:eventlog -identity your-public-key
+$ PRIVATE_KEY=$priv el create -bc $file -darc $darcID
 ```
 
-Now you will create an eventlog. You need to tell el where to find the ByzCoin
-ledger. The ByzCoin admin will give you a ByzCoin config file, which you will
-use with the -bc argument, or you can set the BC environment variable to the
-name of the ByzCoin config file. 
-
-```
-$ PRIVATE_KEY=$priv el create -bc $file
-```
-
-A new event log will be spawned, and the event log ID will be printed. Set the
-EL environment variable to communicate it to future calls to the `el` program.
+The ByzCoin admin will give you a ByzCoin config file, which you will use with
+the -bc argument, or you can set the BC environment variable to the name of the
+ByzCoin config file. He/she will also give you a DarcID to use.  A new event log
+will be spawned, and the event log ID will be printed. Set the EL environment
+variable to communicate it to future calls to the `el` program.
 
 You need to give the private key from above, using the PRIVATE_KEY environment
 variable or the `-priv` argument.
