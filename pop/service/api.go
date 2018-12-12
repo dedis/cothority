@@ -354,17 +354,16 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		services := []network.ServiceIdentity{}
 		for i := 4; i < len(s); i += 2 {
 			suite := onet.ServiceFactory.Suite(s[i])
-			if suite == nil {
-				return nil, errors.New("Missing Suite for this service")
+			if suite != nil {
+				pub, err := encoding.StringHexToPoint(suite, s[i+1])
+				if err != nil {
+					return nil, err
+				}
+				services = append(services, network.ServiceIdentity{
+					Name:   s[i],
+					Public: pub,
+				})
 			}
-			pub, err := encoding.StringHexToPoint(suite, s[i+1])
-			if err != nil {
-				return nil, err
-			}
-			services = append(services, network.ServiceIdentity{
-				Name:   s[i],
-				Public: pub,
-			})
 		}
 		si.ServiceIdentities = services
 
@@ -553,14 +552,13 @@ func toToml(r *onet.Roster) ([][]string, error) {
 
 		for _, sid := range si.ServiceIdentities {
 			suite := onet.ServiceFactory.Suite(sid.Name)
-			if suite == nil {
-				return nil, errors.New("Missing Suite for this service")
+			if suite != nil {
+				pub, err := encoding.PointToStringHex(suite, sid.Public)
+				if err != nil {
+					return nil, err
+				}
+				sistr = append(sistr, sid.Name, pub)
 			}
-			pub, err := encoding.PointToStringHex(suite, sid.Public)
-			if err != nil {
-				return nil, err
-			}
-			sistr = append(sistr, sid.Name, pub)
 		}
 
 		rostr[i] = sistr

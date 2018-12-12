@@ -25,8 +25,7 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/ftcosi/check"
-	_ "github.com/dedis/cothority/ftcosi/service"
+	"github.com/dedis/cothority/blsftcosi/blscosi/check"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber/util/encoding"
@@ -158,7 +157,7 @@ func checkConfig(c *cli.Context) error {
 	if tomlFileName == "" {
 		log.Fatal("[-] Must give the roster file to check.")
 	}
-	return check.Config(tomlFileName, c.Bool("detail"))
+	return check.CothorityCheck(tomlFileName, c.Bool("detail"))
 }
 
 func setup(c *cli.Context) error {

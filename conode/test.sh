@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=5
+DBG_SRV=0
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
@@ -26,7 +27,7 @@ testDatabase(){
     runCoBG 1
 
     # rename database file
-    hexPK=$(cat co1/public.toml  | grep 'Public = '  | cut -d = -f 2 - | tr -d ' "')
+    hexPK=$(cat co1/public.toml  | grep -m 1 'Public = '  | cut -d = -f 2 - | tr -d ' "')
     shaPK=$(ls -t "$CONODE_SERVICE_PATH" | head -n 1 | sed 's/.db$//g')
     testOK mv "$CONODE_SERVICE_PATH/$shaPK.db" "$CONODE_SERVICE_PATH/$hexPK.db"
 

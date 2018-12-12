@@ -64,7 +64,8 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	roster := local.GenRosterFromHost(servers...)
-	srvc := local.GetServices(servers, identityService)[0].(*Service)
+	srvcIdentity := local.GetServices(servers, identityService)[0].(*Service)
+	srvcPop := servers[0].Service(service.Name).(*service.Service)
 	keypairAdmin := key.NewKeyPair(tSuite)
 	keypairUser := key.NewKeyPair(tSuite)
 
@@ -84,14 +85,16 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	// Sign Final
 	protoName := "TestIdentity_StoreKeys"
-	err = registerCosiProtocols(srvc.Context, protoName)
+	// Protocol is created using the pop service so that it
+	// will use the correct key pair (e.i. the pop one)
+	err = registerCosiProtocols(srvcPop.Context, protoName)
 	require.Nil(t, err)
 
-	rooted := roster.NewRosterWithRoot(srvc.ServerIdentity())
+	rooted := roster.NewRosterWithRoot(srvcPop.ServerIdentity())
 	require.NotNil(t, rooted)
 	tree := rooted.GenerateNaryTree(len(roster.List))
 	require.NotNil(t, tree)
-	node, err := srvc.CreateProtocol(protoName, tree)
+	node, err := srvcPop.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
 	c := node.(*protocol.BlsFtCosi)
@@ -104,13 +107,13 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	final.Signature = <-c.FinalSignature
 	require.NotNil(t, final.Signature)
-	srvc.Storage.Auth.AdminKeys = append(srvc.Storage.Auth.AdminKeys, keypairAdmin.Public)
+	srvcIdentity.Storage.Auth.AdminKeys = append(srvcIdentity.Storage.Auth.AdminKeys, keypairAdmin.Public)
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	require.Nil(t, err)
-	_, err = srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
+	_, err = srvcIdentity.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, err)
-	require.Equal(t, 1, len(srvc.Storage.Auth.Sets))
+	require.Equal(t, 1, len(srvcIdentity.Storage.Auth.Sets))
 }
 
 func TestIdentity_StoreKeys2(t *testing.T) {

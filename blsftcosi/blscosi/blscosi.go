@@ -6,7 +6,6 @@ package main
 import (
 	"os"
 	"path"
-	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet/app"
@@ -27,10 +26,6 @@ const (
 
 	optionConfig      = "config"
 	optionConfigShort = "c"
-
-	// RequestTimeOut defines when the client stops waiting for the CoSi group to
-	// reply
-	RequestTimeOut = time.Second * 10
 )
 
 func main() {
@@ -99,7 +94,7 @@ func createApp() *cli.App {
 			Name:    "check",
 			Aliases: []string{"c"},
 			Usage:   "Check if the servers in the group definition are up and running",
-			Action:  check,
+			Action:  checkRequest,
 			Flags: append(clientFlags,
 				cli.BoolFlag{
 					Name:  "detail, l",
