@@ -203,7 +203,7 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 }
 
 // ReshareLTS starts a request to reshare the LTS. The new roster which holds
-// the new secret shares must exist in the InstanceID specified by the request.
+// the new secret shares must exist in the proof specified by the request.
 // All hosts must be online in this step.
 func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	// Verify the request

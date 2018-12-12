@@ -1,7 +1,5 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.byzcoin.InstanceId;
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
@@ -107,6 +105,30 @@ public class CalypsoRPC extends ByzCoinRPC {
     }
 
     /**
+     * Start a request to reshare the LTS. The new roster which holds
+     * the new secret shares must exist in the proof specified by the request.
+     * All hosts must be online in this step.
+     *
+     * @param proof the proof that contains the new roster, typically created using LTSInstance.
+     * @throws CothorityCommunicationException if something goes wrong
+     */
+    public void reshareLTS(Proof proof) throws CothorityCommunicationException {
+        Calypso.ReshareLTS.Builder b = Calypso.ReshareLTS.newBuilder();
+        b.setProof(proof.toProto());
+
+        ByteString msg = getRoster().sendMessage("Calypso/ReshareLTS", b.build());
+
+        try {
+            // parse the message to make sure it's in the right format,
+            // no need to return anything because the public key remains the same
+            Calypso.ReshareLTSReply.parseFrom(msg);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+
+    /**
      * Ask the secret-management cothority for the decryption shares.
      *
      * @param writeProof The proof of the write request.
@@ -163,12 +185,24 @@ public class CalypsoRPC extends ByzCoinRPC {
         return new CalypsoRPC(ByzCoinRPC.fromByzCoin(roster, byzcoinId), ltsId);
     }
 
+    /**
+     * Connect to a server to an authorised ByzCoin ID. This API is only works if the server is on the local network,
+     * unless the environment variable COTHORITY_ALLOW_INSECURE_ADMIN is set.
+     * @param si the server identity
+     * @param byzcoinId the ByzCoin ID
+     * @throws CothorityCommunicationException if something goes wrong.
+     */
     public static void authorise(ServerIdentity si, SkipblockId byzcoinId) throws CothorityCommunicationException {
         Calypso.Authorise.Builder b = Calypso.Authorise.newBuilder();
         b.setByzcoinid(byzcoinId.toProto());
 
         Roster r = new Roster(Collections.singletonList(si));
         ByteString msg = r.sendMessage("Calypso/Authorise", b.build());
-        return;
+
+        try {
+            Calypso.AuthoriseReply.parseFrom(msg);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
     }
 }
