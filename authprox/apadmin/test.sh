@@ -3,10 +3,15 @@
 DBG_TEST=2
 DBG_SRV=0
 
+# Use 3 servers, use all of them, don't leave one down.
+NBR=3
+NBR_SERVERS_GROUP=$NBR
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
+	build $APPDIR/../../eventlog/el
+	
 	startTest
 	buildConode github.com/dedis/cothority/byzcoin github.com/dedis/cothority/authprox
 
@@ -18,7 +23,7 @@ main(){
 }
 
 BCSetup(){
-	runGrepSed "export PRIVATE_KEY=" "" ./bcadmin keys
+	runGrepSed "export PRIVATE_KEY=" "" ./el key
 	eval $SED
 	[ -z "$PRIVATE_KEY" ] && exit 1
 	ID=`awk '/^Identity: / { print $2}' < $RUNOUT`
