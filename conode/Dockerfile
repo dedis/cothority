@@ -1,4 +1,4 @@
-FROM golang:1.10 as builder
+FROM golang:1.11 as builder
 ARG BUILDFLAG="-s -w -X main.gitTag=unknown github.com/dedis/onet.gitTag=unknown"
 RUN apt-get update && apt-get install -y clang
 RUN go get github.com/dedis/cothority

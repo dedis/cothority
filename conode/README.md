@@ -45,3 +45,11 @@ cat ../*/conode_data/public.toml > roster.toml
 
 You will find more details about the available apps on
 [Applications](https://github.com/dedis/cothority/tree/master/doc/Applications.md).
+
+# Docker creation
+
+For creating a new docker image, there are two commands:
+
+* `make docker` - creates a docker image from source, uses `master` for all repos
+* `make docker_dev` - creates a docker image with the currently checked out versions
+on your machine.
