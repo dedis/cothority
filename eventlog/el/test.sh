@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=0
 
 # Use 3 servers, use all of them, don't leave one down.
@@ -51,8 +51,9 @@ testLogging(){
 	testCountLines 103 $el search
 
 	testCountLines 0 $el search -t test -from '0s ago'
-	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d`
-	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d`
+	# The first form of relative date is for MacOS, the second for Linux.
+	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d || date -d yesterday +%Y-%m-%d`
+	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d || date -d tomorrow +%Y-%m-%d`
 }
 
 testCreate(){
