@@ -127,7 +127,7 @@ func checkRoster(ro *onet.Roster, descs []string, detail bool) error {
 	return nil
 }
 
-// signStatement can be used to sign the contents passed in the io.Reader
+// SignStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
 func SignStatement(msg []byte, ro *onet.Roster) (*blsftcosi.SignatureResponse, error) {
 	client := blsftcosi.NewClient()
@@ -163,6 +163,7 @@ func SignStatement(msg []byte, ro *onet.Roster) (*blsftcosi.SignatureResponse, e
 	}
 }
 
+// VerifySignatureHash checks that the signature is correct
 func VerifySignatureHash(b []byte, sig *blsftcosi.SignatureResponse, ro *onet.Roster) error {
 	suite := blsftcosi.NewClient().Suite().(*pairing.SuiteBn256)
 	publics := ro.ServicePublics(blsftcosi.ServiceName)
