@@ -18,11 +18,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"path"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/check"
@@ -48,6 +50,10 @@ const (
 )
 
 var gitTag = ""
+
+// Seed the random number generator, because onet uses it to choose
+// permutations of rosters, etc.
+func init() { rand.Seed(time.Now().UTC().UnixNano()) }
 
 func main() {
 	cliApp := cli.NewApp()
