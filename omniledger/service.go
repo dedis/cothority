@@ -176,8 +176,6 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		IDSkipBlock:          ibRep.Skipblock,
 		ShardBlocks:          ids,
 		OmniledgerInstanceID: id,
-		//GenesisDarc: d,
-		//Owner:       owner,
 	}
 
 	return reply, nil

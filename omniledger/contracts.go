@@ -15,8 +15,19 @@ import (
 	"time"
 )
 
-const VALID_TIME_WINDOW = time.Second * 60
+// ValidTimeWindow indicates the maximum difference of time allowed between an instruction timestamp and a node's internal clock.
+// The motivation here is to prevent attacks where adversary tamper with the instruction timestamp.
+// In future work, the valid time window should be made a parameter of the omniledger, just like the epoch size, instead of a hardcoded constant.
+//
+// Example:
+// A new epoch can only be called N seconds after the previous new epoch (where N is a configuration parameter of the omniledger).
+// The contract checks if the instruction timestamp respects this constraints.
+// An adversary might change the instrutction timestamp such that it bypasses this constraint.
+// To prevent this, an extra constraint on the instruction timestamp is added: the timestamp must also be within
+// ValidTimeWindow seconds of a node's internal clock.
+const ValidTimeWindow = time.Second * 60
 
+// ContractOmniledgerEpochID denotes a omniledger epoch contract
 var ContractOmniledgerEpochID = "omniledgerepoch"
 
 type contractOmniledgerEpoch struct {
@@ -36,6 +47,7 @@ func contractOmniledgerEpochFromBytes(in []byte) (bc.Contract, error) {
 func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, cout []bc.Coin, err error) {
 	cout = coins
 
+	// Decode darc and do some verifications
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
@@ -51,7 +63,7 @@ func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instru
 		return
 	}
 
-	// Get arguments from the instruction's arguments (#shard, epoch-size)
+	//Decode instruction's arguments
 	shardCountBuf := inst.Spawn.Args.Search("shardCount")
 	shardCountDecoded, err := binary.ReadVarint(bytes.NewBuffer(shardCountBuf))
 	if err != nil {
@@ -69,12 +81,14 @@ func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instru
 
 	tsBuf := inst.Spawn.Args.Search("timestamp")
 	ts := time.Unix(int64(binary.BigEndian.Uint64(tsBuf)), 0)
-	if !checkValidTime(ts, VALID_TIME_WINDOW) {
+
+	// Verify instruction's timestamp is not too different from the node's clock
+	if !checkValidTime(ts, ValidTimeWindow) {
 		err = errors.New("Client timestamp is too different from node's clock")
 		return
 	}
 
-	// Get roster from instruction's arguments
+	// Get initial roster from instruction's arguments
 	rosterBuf := inst.Spawn.Args.Search("roster")
 	roster := &onet.Roster{}
 	err = protobuf.DecodeWithConstructors(rosterBuf, roster, network.DefaultConstructors(cothority.Suite))
@@ -86,7 +100,7 @@ func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instru
 	// Do sharding
 	shardRosters := lib.Sharding(roster, shardCount, int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice())))
 
-	// Create ChainConfig struct to store data on the chain
+	// Create ChainConfig struct to store instance data
 	config := &lib.ChainConfig{
 		Roster:       roster,
 		ShardCount:   shardCount,
@@ -94,8 +108,6 @@ func (c *contractOmniledgerEpoch) Spawn(rst bc.ReadOnlyStateTrie, inst bc.Instru
 		Timestamp:    ts,
 		ShardRosters: shardRosters,
 	}
-
-	// TODO: Check sanity of config
 
 	// Encode the config
 	configBuf, err := protobuf.Encode(config)
@@ -117,13 +129,17 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 
 	switch inst.Invoke.Command {
 	case "request_new_epoch":
+		// Decode instrution's arguments
 		tsBuf := inst.Invoke.Args.Search("timestamp")
 		ts := time.Unix(int64(binary.BigEndian.Uint64(tsBuf)), 0)
-		if !checkValidTime(ts, time.Second*60) {
+
+		// Verify instruction's timestamp is not too different from the node's clock
+		if !checkValidTime(ts, ValidTimeWindow) {
 			err = errors.New("Client timestamp is too different from node's clock")
 			return
 		}
 
+		// Get and decode instance data
 		var buf []byte
 		var darcID darc.ID
 		buf, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
@@ -139,6 +155,7 @@ func (c *contractOmniledgerEpoch) Invoke(rst bc.ReadOnlyStateTrie, inst bc.Instr
 			}
 		}
 
+		// Verify it is indeed time for a new epoch
 		if ts.Sub(cc.Timestamp).Seconds() >= cc.EpochSize.Seconds() {
 			// compute new shards
 			seed := int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice()))

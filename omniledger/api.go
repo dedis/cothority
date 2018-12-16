@@ -49,12 +49,13 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 //		- An error if any, nil otherwise
 func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	error) {
-	// Create client
+	// Connect to an OL client
 	c := NewClient(nil, req.Roster)
 
-	// Fill request's missing fields
+	// Create a new public/private key pair
 	owner := darc.NewSignerEd25519(nil, nil)
 
+	// Create genesis message for the IB
 	ibMsg, err := bc.DefaultGenesisMsg(req.Version,
 		&req.Roster, []string{"spawn:darc", "spawn:omniledgerepoch", "invoke:request_new_epoch"}, owner.Identity())
 	if err != nil {
@@ -63,6 +64,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 
 	d := ibMsg.GenesisDarc
 
+	// Encode the instruction arguments
 	darcBuf, err := protobuf.Encode(&d)
 	if err != nil {
 		return nil, nil, err
@@ -81,14 +83,7 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(req.Timestamp.Unix()))
 
-	/*signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(signerCtrs.Counters) != 1 {
-		return nil, nil, errors.New("incorrect signer counter length")
-	}*/
-
+	// Define the spawn instruction
 	instr := bc.Instruction{
 		InstanceID: bc.NewInstanceID(d.GetBaseID()),
 		Spawn: &bc.Spawn{
@@ -104,19 +99,18 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 		SignerCounter: []uint64{1},
 	}
 
+	// Create the transaction
 	spawnTx := &bc.ClientTransaction{
 		Instructions: bc.Instructions{instr},
 	}
 	spawnTx.SignWith(owner)
-	//spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
-	// Add genesismsg and instr
+	// Fill the request
 	req.IBGenesisMsg = ibMsg
 	req.SpawnTx = spawnTx
 	req.OwnerID = owner.Identity()
 
-	// Create reply struct
-	//req.Version = bc.CurrentVersion
+	// Send the request and get the reply
 	reply := &CreateOmniLedgerResponse{}
 	reply.Owner = owner
 	err = c.SendProtobuf(req.Roster.List[0], req, reply)
@@ -139,12 +133,12 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	// Connect to IB via client
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 
-	// Fetch old roster
+	// Fetch old roster from proof
+	oldCC := &lib.ChainConfig{}
 	gpr, err := ibClient.GetProof(req.OLInstanceID.Slice())
 	if err != nil {
 		return nil, err
 	}
-	oldCC := &lib.ChainConfig{}
 	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, oldCC)
 	oldRosters := oldCC.ShardRosters
 
@@ -178,7 +172,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 
 	req.ReqNewEpochTx = &tx
 
-	// Send tx via service, get response
+	// Send tx via the OL service
 	reply := &NewEpochResponse{}
 	olClient := NewClient(req.IBID, req.IBRoster)
 	err = olClient.SendProtobuf(req.IBRoster.List[0], req, reply)
@@ -186,18 +180,21 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	// Get latest/New chain config from service response
+	// Get latest/new chain config from service response
 	latestCC := &lib.ChainConfig{}
 	err = reply.ReqNewEpochProof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, latestCC)
 	if err != nil {
 		return nil, err
 	}
 
+	// Encode request new epoch proof, will be sent to shards
 	proofBuf, err := protobuf.Encode(reply.ReqNewEpochProof)
 	if err != nil {
 		return nil, err
 	}
 
+	// This double for loop is responsible for applying the shard roster changes.
+	// The outer loop iterates over the shards while the inner loop sends the changes for that shard, one by one.
 	for i := 0; i < len(latestCC.ShardRosters); i++ {
 		//log.Print("SENDING TO SHARD", i)
 		oldRoster := oldRosters[i]
@@ -231,29 +228,19 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 			return nil, err
 		}
 
-		//newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
-		//tx.Instructions[0] = newEpoch
-		//tx.SignWith(req.Owner)
-
 		tempRoster := oldRoster
 		for j := 0; j < changesCount; j++ {
 			log.Print("ACTUALLY SENDING IT", j, "TO", shardClient.Roster.List[0].Address.String())
-			// TODO:
-			// Just update the signer counter
-			// And resign the tx
-			// Increment the counter for every repeated instruction
-
-			//newEpoch.SignerCounter = []uint64{uint64(j + 1)}
-
+			// The signer counter must be incremented => tx must be updated and resigned
 			newEpoch.SignerCounter = []uint64{shardSignerCounter.Counters[0] + uint64(j+1)}
 			tx.Instructions[0] = newEpoch
 			tx.SignWith(req.Owner)
+
 			shardClient.AddTransactionAndWait(tx, 5)
 
+			// The client roster must be updated to ensure it will be able to contact a node in the current shard roster state
 			tempRoster = lib.ChangeRoster(tempRoster, newRoster)
-			//shardClient = bc.NewClient(req.ShardIDs[i], tempRoster)
 			shardClient.Roster = tempRoster
-			//log.Print("CLIENT ROSTER:", shardClient.Roster.List)
 		}
 	}
 

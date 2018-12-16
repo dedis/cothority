@@ -128,10 +128,7 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 	owner := s.signer
 	version := bc.CurrentVersion
 	roster := s.roster
-	//shardCount := 2
 	epochSize := 500 * time.Millisecond
-
-	//c := bc.NewClient(nil, *roster)
 
 	ibMsg, err := bc.DefaultGenesisMsg(version, roster, []string{"spawn:darc", "spawn:omniledgerepoch"}, owner.Identity())
 	if err != nil {
@@ -159,15 +156,6 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(ts.Unix()))
 
-	/*signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
-	if err != nil {
-		fmt.Println("ERR: ", err)
-	}
-	if len(signerCtrs.Counters) != 1 {
-		err = errors.New("incorrect signer counter length")
-		fmt.Println("ERR: ", err)
-	}*/
-
 	instr := bc.Instruction{
 		InstanceID: bc.NewInstanceID(d.GetBaseID()),
 		Spawn: &bc.Spawn{
@@ -180,15 +168,13 @@ func getCorrectRequest(s *ser) *CreateOmniLedger {
 				bc.Argument{Name: "timestamp", Value: tsBuf},
 			},
 		},
-		//SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		SignerCounter: []uint64{1},
 	}
-	//err = instr.SignBy(d.GetBaseID(), owner)
+
 	spawnTx := &bc.ClientTransaction{
 		Instructions: bc.Instructions{instr},
 	}
 	spawnTx.SignWith(owner)
-	//spawnTx.InstructionsHash = spawnTx.Instructions.Hash()
 
 	return &CreateOmniLedger{
 		Version:      version,

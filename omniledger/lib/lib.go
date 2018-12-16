@@ -25,7 +25,7 @@ type ChainConfig struct {
 // The algorithm starts by adding new nodes, then removing old ones.
 // Changes are applied one at the time, that is the output roster will
 // differ by one node from the input (except if input and output roster
-// have the same nodes already). Thus, the fonction must be called multiple
+// have the same nodes already). The fonction must be called multiple
 // times to apply all the changes.
 //
 // Example:

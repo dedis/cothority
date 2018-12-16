@@ -16,7 +16,6 @@ main(){
     test NewEpoch
 	#test Status
 
-	#test Evolve
     stopTest
 }
 
@@ -33,16 +32,6 @@ testCreate(){
 	rm -f key*.cfg ol*.cfg
 }
 
-testEvolve(){
-	runCoBG 1 2
-	testOK run create -shards 2 -epoch 10 roster.toml
-	testFail run evolve 
-	testFail run evolve ol.cfg
-	testFail run evolve ol.cfg key.cfg
-	testOK run evolve ol.cfg key.cfg newroster.toml
-	rm -f key*.cfg ol*.cfg
-}
-
 testNewEpoch(){
 	runCoBG 1 2 3 4 5 6 7 8
 	testOK run create -shards 2 -epoch 500 public.toml
@@ -53,19 +42,12 @@ testNewEpoch(){
 	key=(key*.cfg)
 	echo $key
 
+	testFail run newepoch
+	testFail run newepoch $ol
+	testFail run newepoch $key $ol
+
 	testOK run newepoch $ol $key
-
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-	echo -----------------------------------------------------------
-
 	sleep 2
-
 	testOK run newepoch $ol $key
 }
 
@@ -75,6 +57,7 @@ testStatus() {
 
 	ol=(ol*.cfg )
 
+	testFail run status
 	testOK run status $ol
 }
 

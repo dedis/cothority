@@ -57,12 +57,6 @@ func main() {
 			Action: createSharding,
 		},
 		{
-			Name:      "evolve",
-			Usage:     "evolves a shard",
-			ArgsUsage: "the omniledger config, the key config and the roster files",
-			Action:    evolveShard,
-		},
-		{
 			Name:      "status",
 			Usage:     "prints the current roster and shard rosters",
 			ArgsUsage: "the omniledger config file",
@@ -161,36 +155,10 @@ func createSharding(c *cli.Context) error {
 	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x. \n", cfg.IBID)
 	fmt.Fprintf(c.App.Writer, "export OC=\"%v\"\n", cfgPath)
 
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("ABSOLUTE PATH create sharding:", dir)
-
-	return nil
-}
-
-func evolveShard(c *cli.Context) error {
-	if c.NArg() < 3 {
-		return errors.New("Not enough arguments (3 required")
-	}
-
-	/*
-		olPath := c.Args().Get(0)
-		keyPath := c.Args().Get(1)
-		rosterPath := c.Args().Get(2)
-	*/
-
 	return nil
 }
 
 func newEpoch(c *cli.Context) error {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("ABSOLUTE PATH newEpoch:", dir)
-
 	if c.NArg() < 2 {
 		return errors.New("Not enough arguments (2 required")
 	}
@@ -225,8 +193,8 @@ func newEpoch(c *cli.Context) error {
 		return err
 	}
 
+	// Save the IB roster resulting from the new epoch
 	cfg.IBRoster = rep.IBRoster
-	//cfg.ShardRosters = rep.ShardRosters
 
 	cfgPath, err = saveConfig(*cfg)
 	if err != nil {
@@ -240,32 +208,31 @@ func getStatus(c *cli.Context) error {
 	// Parse CLI arguments
 	cfgPath := c.Args().Get(0)
 
+	// Load config file
 	cfg, err := loadConfig(cfgPath)
 	if err != nil {
 		return err
 	}
 
+	// Prepare request
 	req := &omniledger.GetStatus{
 		IBID:         cfg.IBID,
 		IBRoster:     cfg.IBRoster,
 		OLInstanceID: cfg.OLInstanceID,
 	}
 
+	// Connect to client, send request and get reply
 	client := omniledger.NewClient(cfg.IBID, cfg.IBRoster)
 	reply, err := client.GetStatus(req)
 	if err != nil {
 		return err
 	}
 
+	// Print results
 	fmt.Fprintln(c.App.Writer, "Omniledger roster:", reply.IBRoster.List)
 	for ind, sr := range reply.ShardRosters {
 		fmt.Fprintln(c.App.Writer, "Shard "+fmt.Sprint(ind)+" roster:", sr.List)
 	}
-
-	return nil
-}
-
-func darcUpdate(c *cli.Context) error {
 
 	return nil
 }
