@@ -5,20 +5,20 @@ dist: trusty
 node_js:
   - "lts/*"
 
-env:
-  - TEST_DIR=cothority
-  - TEST_DIR=kyber
+# env:
+#   - TEST_DIR=cothority
+#   - TEST_DIR=kyber
 
-install:
-  - gimme 1.11
-  - . $HOME/.gimme/envs/go1.11.env
-  - go get github.com/dedis/Coding || true
-  # Because we are using "language: node_js" the "git clone" is not in the
-  # GOPATH. So make a copy of it over where it is supposed to be.
-  - git clone . `go env GOPATH`/src/github.com/dedis/cothority
-  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
+# install:
+#   - gimme 1.11
+#   - . $HOME/.gimme/envs/go1.11.env
+#   - go get github.com/dedis/Coding || true
+#   # Because we are using "language: node_js" the "git clone" is not in the
+#   # GOPATH. So make a copy of it over where it is supposed to be.
+#   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
+#   - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
-script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
+# script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
 cache:
   directories:
@@ -34,6 +34,7 @@ notifications:
 matrix:
   include:
     - language: go
+      name: "Go Tests"
 
       go:
         - "1.11.x"
@@ -58,8 +59,12 @@ matrix:
         - make test
 
     - language: java
+      name: "Java Tests"
 
       before_install:
+        - gimme "1.10.7"
+        - . $HOME/.gimme/envs/go1.10.7.env
+        - go get github.com/dedis/Coding || true
         - go get github.com/dedis/kyber
         - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/kyber
         - git checkout bn256_available
@@ -69,7 +74,10 @@ matrix:
         - go get github.com/dedis/onet
         - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/onet
         - git checkout service_public_key
+        - cd ${TRAVIS_HOME}/gopath/src/github.com
+        - git clone --depth=50 --branch=blsftcosi_1562 https://github.com/dedis/cothority.git dedis/cothority
         - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/cothority
+        - go get -t ./...
 
       script:
         - make test_java
