@@ -255,6 +255,17 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("skipchain ID is does not exist")
 	}
 
+	latest, err := s.db().GetLatest(gen)
+	if err != nil {
+		if latest == nil {
+			return nil, err
+		}
+		log.Warn("Got block, but with an error:", err)
+	}
+	if i, _ := latest.Roster.Search(s.ServerIdentity().ID); i < 0 {
+		return nil, errors.New("refusing to accept transaction for a chain we're not part of")
+	}
+
 	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
 	if err != nil {
 		return nil, err
@@ -1583,8 +1594,46 @@ clientTransactions:
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			if err = sstTempC.StoreAll(append(scs, counterScs...)); err != nil {
-				log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+
+			// Verify the validity of the state-changes:
+			//  - refuse to update non-existing instances
+			//  - refuse to create existing instances
+			//  - refuse to delete non-existing instances
+			for _, sc := range scs {
+				var reason string
+				switch sc.StateAction {
+				case Create:
+					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v != nil {
+						reason = "tried to create existing instanceID"
+					}
+				case Update:
+					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v == nil {
+						reason = "tried to update non-existing instanceID"
+					}
+				case Remove:
+					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v == nil {
+						reason = "tried to remove non-existing instanceID"
+					}
+				}
+				err = sstTempC.StoreAll(StateChanges{sc})
+				if reason != "" || err != nil {
+					tx.Accepted = false
+					txOut = append(txOut, tx)
+					if err != nil {
+						log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+					} else {
+						_, _, contractID, _, err := sstTempC.GetValues(instr.InstanceID.Slice())
+						if err != nil {
+							log.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(),
+								instr)
+						}
+						log.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+					}
+					continue clientTransactions
+				}
+			}
+			if err = sstTempC.StoreAll(counterScs); err != nil {
+				log.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions
