@@ -28,52 +28,76 @@ public final class NetworkProto {
     com.google.protobuf.ByteString getPublic();
 
     /**
-     * <code>required bytes id = 2;</code>
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> 
+        getServiceIdentitiesList();
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getServiceIdentities(int index);
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    int getServiceIdentitiesCount();
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+        getServiceIdentitiesOrBuilderList();
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder getServiceIdentitiesOrBuilder(
+        int index);
+
+    /**
+     * <code>required bytes id = 3;</code>
      */
     boolean hasId();
     /**
-     * <code>required bytes id = 2;</code>
+     * <code>required bytes id = 3;</code>
      */
     com.google.protobuf.ByteString getId();
 
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     boolean hasAddress();
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     java.lang.String getAddress();
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     com.google.protobuf.ByteString
         getAddressBytes();
 
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     boolean hasDescription();
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     java.lang.String getDescription();
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     com.google.protobuf.ByteString
         getDescriptionBytes();
 
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     boolean hasUrl();
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     java.lang.String getUrl();
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     com.google.protobuf.ByteString
         getUrlBytes();
@@ -92,6 +116,7 @@ public final class NetworkProto {
     }
     private ServerIdentity() {
       public_ = com.google.protobuf.ByteString.EMPTY;
+      serviceIdentities_ = java.util.Collections.emptyList();
       id_ = com.google.protobuf.ByteString.EMPTY;
       address_ = "";
       description_ = "";
@@ -128,23 +153,32 @@ public final class NetworkProto {
               break;
             }
             case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                serviceIdentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              serviceIdentities_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.parser(), extensionRegistry));
+              break;
+            }
+            case 26: {
               bitField0_ |= 0x00000002;
               id_ = input.readBytes();
               break;
             }
-            case 26: {
+            case 34: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
               address_ = bs;
               break;
             }
-            case 34: {
+            case 42: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000008;
               description_ = bs;
               break;
             }
-            case 42: {
+            case 50: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000010;
               url_ = bs;
@@ -165,6 +199,9 @@ public final class NetworkProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          serviceIdentities_ = java.util.Collections.unmodifiableList(serviceIdentities_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -198,31 +235,66 @@ public final class NetworkProto {
       return public_;
     }
 
-    public static final int ID_FIELD_NUMBER = 2;
+    public static final int SERVICEIDENTITIES_FIELD_NUMBER = 2;
+    private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> serviceIdentities_;
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> getServiceIdentitiesList() {
+      return serviceIdentities_;
+    }
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+        getServiceIdentitiesOrBuilderList() {
+      return serviceIdentities_;
+    }
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    public int getServiceIdentitiesCount() {
+      return serviceIdentities_.size();
+    }
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getServiceIdentities(int index) {
+      return serviceIdentities_.get(index);
+    }
+    /**
+     * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder getServiceIdentitiesOrBuilder(
+        int index) {
+      return serviceIdentities_.get(index);
+    }
+
+    public static final int ID_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString id_;
     /**
-     * <code>required bytes id = 2;</code>
+     * <code>required bytes id = 3;</code>
      */
     public boolean hasId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes id = 2;</code>
+     * <code>required bytes id = 3;</code>
      */
     public com.google.protobuf.ByteString getId() {
       return id_;
     }
 
-    public static final int ADDRESS_FIELD_NUMBER = 3;
+    public static final int ADDRESS_FIELD_NUMBER = 4;
     private volatile java.lang.Object address_;
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     public boolean hasAddress() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     public java.lang.String getAddress() {
       java.lang.Object ref = address_;
@@ -239,7 +311,7 @@ public final class NetworkProto {
       }
     }
     /**
-     * <code>required string address = 3;</code>
+     * <code>required string address = 4;</code>
      */
     public com.google.protobuf.ByteString
         getAddressBytes() {
@@ -255,16 +327,16 @@ public final class NetworkProto {
       }
     }
 
-    public static final int DESCRIPTION_FIELD_NUMBER = 4;
+    public static final int DESCRIPTION_FIELD_NUMBER = 5;
     private volatile java.lang.Object description_;
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     public boolean hasDescription() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     public java.lang.String getDescription() {
       java.lang.Object ref = description_;
@@ -281,7 +353,7 @@ public final class NetworkProto {
       }
     }
     /**
-     * <code>required string description = 4;</code>
+     * <code>required string description = 5;</code>
      */
     public com.google.protobuf.ByteString
         getDescriptionBytes() {
@@ -297,16 +369,16 @@ public final class NetworkProto {
       }
     }
 
-    public static final int URL_FIELD_NUMBER = 5;
+    public static final int URL_FIELD_NUMBER = 6;
     private volatile java.lang.Object url_;
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     public boolean hasUrl() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     public java.lang.String getUrl() {
       java.lang.Object ref = url_;
@@ -323,7 +395,7 @@ public final class NetworkProto {
       }
     }
     /**
-     * <code>optional string url = 5;</code>
+     * <code>optional string url = 6;</code>
      */
     public com.google.protobuf.ByteString
         getUrlBytes() {
@@ -362,6 +434,12 @@ public final class NetworkProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      for (int i = 0; i < getServiceIdentitiesCount(); i++) {
+        if (!getServiceIdentities(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -372,17 +450,20 @@ public final class NetworkProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(1, public_);
       }
+      for (int i = 0; i < serviceIdentities_.size(); i++) {
+        output.writeMessage(2, serviceIdentities_.get(i));
+      }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, id_);
+        output.writeBytes(3, id_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, address_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, address_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, description_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, description_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, url_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, url_);
       }
       unknownFields.writeTo(output);
     }
@@ -397,18 +478,22 @@ public final class NetworkProto {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, public_);
       }
+      for (int i = 0; i < serviceIdentities_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, serviceIdentities_.get(i));
+      }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, id_);
+          .computeBytesSize(3, id_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, address_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, address_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, description_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, description_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, url_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, url_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -431,6 +516,8 @@ public final class NetworkProto {
         result = result && getPublic()
             .equals(other.getPublic());
       }
+      result = result && getServiceIdentitiesList()
+          .equals(other.getServiceIdentitiesList());
       result = result && (hasId() == other.hasId());
       if (hasId()) {
         result = result && getId()
@@ -465,6 +552,10 @@ public final class NetworkProto {
       if (hasPublic()) {
         hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
         hash = (53 * hash) + getPublic().hashCode();
+      }
+      if (getServiceIdentitiesCount() > 0) {
+        hash = (37 * hash) + SERVICEIDENTITIES_FIELD_NUMBER;
+        hash = (53 * hash) + getServiceIdentitiesList().hashCode();
       }
       if (hasId()) {
         hash = (37 * hash) + ID_FIELD_NUMBER;
@@ -610,6 +701,7 @@ public final class NetworkProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getServiceIdentitiesFieldBuilder();
         }
       }
       @java.lang.Override
@@ -617,14 +709,20 @@ public final class NetworkProto {
         super.clear();
         public_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        if (serviceIdentitiesBuilder_ == null) {
+          serviceIdentities_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          serviceIdentitiesBuilder_.clear();
+        }
         id_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        address_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
-        description_ = "";
+        address_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
-        url_ = "";
+        description_ = "";
         bitField0_ = (bitField0_ & ~0x00000010);
+        url_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -657,19 +755,28 @@ public final class NetworkProto {
           to_bitField0_ |= 0x00000001;
         }
         result.public_ = public_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (serviceIdentitiesBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            serviceIdentities_ = java.util.Collections.unmodifiableList(serviceIdentities_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.serviceIdentities_ = serviceIdentities_;
+        } else {
+          result.serviceIdentities_ = serviceIdentitiesBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000002;
         }
         result.id_ = id_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000004;
         }
         result.address_ = address_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000008;
         }
         result.description_ = description_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000010;
         }
         result.url_ = url_;
@@ -725,21 +832,47 @@ public final class NetworkProto {
         if (other.hasPublic()) {
           setPublic(other.getPublic());
         }
+        if (serviceIdentitiesBuilder_ == null) {
+          if (!other.serviceIdentities_.isEmpty()) {
+            if (serviceIdentities_.isEmpty()) {
+              serviceIdentities_ = other.serviceIdentities_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureServiceIdentitiesIsMutable();
+              serviceIdentities_.addAll(other.serviceIdentities_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.serviceIdentities_.isEmpty()) {
+            if (serviceIdentitiesBuilder_.isEmpty()) {
+              serviceIdentitiesBuilder_.dispose();
+              serviceIdentitiesBuilder_ = null;
+              serviceIdentities_ = other.serviceIdentities_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              serviceIdentitiesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getServiceIdentitiesFieldBuilder() : null;
+            } else {
+              serviceIdentitiesBuilder_.addAllMessages(other.serviceIdentities_);
+            }
+          }
+        }
         if (other.hasId()) {
           setId(other.getId());
         }
         if (other.hasAddress()) {
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000008;
           address_ = other.address_;
           onChanged();
         }
         if (other.hasDescription()) {
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000010;
           description_ = other.description_;
           onChanged();
         }
         if (other.hasUrl()) {
-          bitField0_ |= 0x00000010;
+          bitField0_ |= 0x00000020;
           url_ = other.url_;
           onChanged();
         }
@@ -761,6 +894,11 @@ public final class NetworkProto {
         }
         if (!hasDescription()) {
           return false;
+        }
+        for (int i = 0; i < getServiceIdentitiesCount(); i++) {
+          if (!getServiceIdentities(i).isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -820,36 +958,276 @@ public final class NetworkProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> serviceIdentities_ =
+        java.util.Collections.emptyList();
+      private void ensureServiceIdentitiesIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          serviceIdentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity>(serviceIdentities_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> serviceIdentitiesBuilder_;
+
       /**
-       * <code>required bytes id = 2;</code>
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
        */
-      public boolean hasId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> getServiceIdentitiesList() {
+        if (serviceIdentitiesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(serviceIdentities_);
+        } else {
+          return serviceIdentitiesBuilder_.getMessageList();
+        }
       }
       /**
-       * <code>required bytes id = 2;</code>
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public int getServiceIdentitiesCount() {
+        if (serviceIdentitiesBuilder_ == null) {
+          return serviceIdentities_.size();
+        } else {
+          return serviceIdentitiesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getServiceIdentities(int index) {
+        if (serviceIdentitiesBuilder_ == null) {
+          return serviceIdentities_.get(index);
+        } else {
+          return serviceIdentitiesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder setServiceIdentities(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity value) {
+        if (serviceIdentitiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.set(index, value);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder setServiceIdentities(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder builderForValue) {
+        if (serviceIdentitiesBuilder_ == null) {
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder addServiceIdentities(ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity value) {
+        if (serviceIdentitiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.add(value);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder addServiceIdentities(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity value) {
+        if (serviceIdentitiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.add(index, value);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder addServiceIdentities(
+          ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder builderForValue) {
+        if (serviceIdentitiesBuilder_ == null) {
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.add(builderForValue.build());
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder addServiceIdentities(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder builderForValue) {
+        if (serviceIdentitiesBuilder_ == null) {
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder addAllServiceIdentities(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity> values) {
+        if (serviceIdentitiesBuilder_ == null) {
+          ensureServiceIdentitiesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, serviceIdentities_);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder clearServiceIdentities() {
+        if (serviceIdentitiesBuilder_ == null) {
+          serviceIdentities_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public Builder removeServiceIdentities(int index) {
+        if (serviceIdentitiesBuilder_ == null) {
+          ensureServiceIdentitiesIsMutable();
+          serviceIdentities_.remove(index);
+          onChanged();
+        } else {
+          serviceIdentitiesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder getServiceIdentitiesBuilder(
+          int index) {
+        return getServiceIdentitiesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder getServiceIdentitiesOrBuilder(
+          int index) {
+        if (serviceIdentitiesBuilder_ == null) {
+          return serviceIdentities_.get(index);  } else {
+          return serviceIdentitiesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+           getServiceIdentitiesOrBuilderList() {
+        if (serviceIdentitiesBuilder_ != null) {
+          return serviceIdentitiesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(serviceIdentities_);
+        }
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder addServiceIdentitiesBuilder() {
+        return getServiceIdentitiesFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder addServiceIdentitiesBuilder(
+          int index) {
+        return getServiceIdentitiesFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServiceIdentity serviceIdentities = 2;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder> 
+           getServiceIdentitiesBuilderList() {
+        return getServiceIdentitiesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder> 
+          getServiceIdentitiesFieldBuilder() {
+        if (serviceIdentitiesBuilder_ == null) {
+          serviceIdentitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder>(
+                  serviceIdentities_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          serviceIdentities_ = null;
+        }
+        return serviceIdentitiesBuilder_;
+      }
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes id = 3;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes id = 3;</code>
        */
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
-       * <code>required bytes id = 2;</code>
+       * <code>required bytes id = 3;</code>
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000004;
         id_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes id = 2;</code>
+       * <code>required bytes id = 3;</code>
        */
       public Builder clearId() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         id_ = getDefaultInstance().getId();
         onChanged();
         return this;
@@ -857,13 +1235,13 @@ public final class NetworkProto {
 
       private java.lang.Object address_ = "";
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public boolean hasAddress() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public java.lang.String getAddress() {
         java.lang.Object ref = address_;
@@ -880,7 +1258,7 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public com.google.protobuf.ByteString
           getAddressBytes() {
@@ -896,36 +1274,36 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public Builder setAddress(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000008;
         address_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public Builder clearAddress() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         address_ = getDefaultInstance().getAddress();
         onChanged();
         return this;
       }
       /**
-       * <code>required string address = 3;</code>
+       * <code>required string address = 4;</code>
        */
       public Builder setAddressBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000008;
         address_ = value;
         onChanged();
         return this;
@@ -933,13 +1311,13 @@ public final class NetworkProto {
 
       private java.lang.Object description_ = "";
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public boolean hasDescription() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public java.lang.String getDescription() {
         java.lang.Object ref = description_;
@@ -956,7 +1334,7 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public com.google.protobuf.ByteString
           getDescriptionBytes() {
@@ -972,36 +1350,36 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public Builder setDescription(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         description_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public Builder clearDescription() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         description_ = getDefaultInstance().getDescription();
         onChanged();
         return this;
       }
       /**
-       * <code>required string description = 4;</code>
+       * <code>required string description = 5;</code>
        */
       public Builder setDescriptionBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         description_ = value;
         onChanged();
         return this;
@@ -1009,13 +1387,13 @@ public final class NetworkProto {
 
       private java.lang.Object url_ = "";
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public boolean hasUrl() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public java.lang.String getUrl() {
         java.lang.Object ref = url_;
@@ -1032,7 +1410,7 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public com.google.protobuf.ByteString
           getUrlBytes() {
@@ -1048,36 +1426,36 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public Builder setUrl(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000020;
         url_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public Builder clearUrl() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         url_ = getDefaultInstance().getUrl();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string url = 5;</code>
+       * <code>optional string url = 6;</code>
        */
       public Builder setUrlBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000010;
+  bitField0_ |= 0x00000020;
         url_ = value;
         onChanged();
         return this;
@@ -1135,11 +1513,703 @@ public final class NetworkProto {
 
   }
 
+  public interface ServiceIdentityOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:network.ServiceIdentity)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required string name = 1;</code>
+     */
+    boolean hasName();
+    /**
+     * <code>required string name = 1;</code>
+     */
+    java.lang.String getName();
+    /**
+     * <code>required string name = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
+
+    /**
+     * <code>required bytes public = 2;</code>
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 2;</code>
+     */
+    com.google.protobuf.ByteString getPublic();
+  }
+  /**
+   * Protobuf type {@code network.ServiceIdentity}
+   */
+  public  static final class ServiceIdentity extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:network.ServiceIdentity)
+      ServiceIdentityOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ServiceIdentity.newBuilder() to construct.
+    private ServiceIdentity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ServiceIdentity() {
+      name_ = "";
+      public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ServiceIdentity(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              name_ = bs;
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServiceIdentity_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServiceIdentity_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.class, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int NAME_FIELD_NUMBER = 1;
+    private volatile java.lang.Object name_;
+    /**
+     * <code>required string name = 1;</code>
+     */
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string name = 1;</code>
+     */
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string name = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PUBLIC_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 2;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes public = 2;</code>
+     */
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, public_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, public_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity other = (ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity) obj;
+
+      boolean result = true;
+      result = result && (hasName() == other.hasName());
+      if (hasName()) {
+        result = result && getName()
+            .equals(other.getName());
+      }
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasName()) {
+        hash = (37 * hash) + NAME_FIELD_NUMBER;
+        hash = (53 * hash) + getName().hashCode();
+      }
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code network.ServiceIdentity}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:network.ServiceIdentity)
+        ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentityOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServiceIdentity_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServiceIdentity_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.class, ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServiceIdentity_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity build() {
+        ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity buildPartial() {
+        ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity result = new ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.name_ = name_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.public_ = public_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity other) {
+        if (other == ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity.getDefaultInstance()) return this;
+        if (other.hasName()) {
+          bitField0_ |= 0x00000001;
+          name_ = other.name_;
+          onChanged();
+        }
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasName()) {
+          return false;
+        }
+        if (!hasPublic()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object name_ = "";
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            name_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public Builder clearName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string name = 1;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 2;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes public = 2;</code>
+       */
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 2;</code>
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 2;</code>
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:network.ServiceIdentity)
+    }
+
+    // @@protoc_insertion_point(class_scope:network.ServiceIdentity)
+    private static final ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity();
+    }
+
+    public static ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ServiceIdentity>
+        PARSER = new com.google.protobuf.AbstractParser<ServiceIdentity>() {
+      @java.lang.Override
+      public ServiceIdentity parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ServiceIdentity(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ServiceIdentity> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ServiceIdentity> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServiceIdentity getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_network_ServerIdentity_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_network_ServerIdentity_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_network_ServiceIdentity_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_network_ServiceIdentity_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1149,11 +2219,13 @@ public final class NetworkProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rnetwork.proto\022\007network\"_\n\016ServerIdenti" +
-      "ty\022\016\n\006public\030\001 \002(\014\022\n\n\002id\030\002 \002(\014\022\017\n\007addres" +
-      "s\030\003 \002(\t\022\023\n\013description\030\004 \002(\t\022\013\n\003url\030\005 \001(" +
-      "\tB\'\n\027ch.epfl.dedis.lib.protoB\014NetworkPro" +
-      "to"
+      "\n\rnetwork.proto\022\007network\"\224\001\n\016ServerIdent" +
+      "ity\022\016\n\006public\030\001 \002(\014\0223\n\021serviceIdentities" +
+      "\030\002 \003(\0132\030.network.ServiceIdentity\022\n\n\002id\030\003" +
+      " \002(\014\022\017\n\007address\030\004 \002(\t\022\023\n\013description\030\005 \002" +
+      "(\t\022\013\n\003url\030\006 \001(\t\"/\n\017ServiceIdentity\022\014\n\004na" +
+      "me\030\001 \002(\t\022\016\n\006public\030\002 \002(\014B\'\n\027ch.epfl.dedi" +
+      "s.lib.protoB\014NetworkProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1172,7 +2244,13 @@ public final class NetworkProto {
     internal_static_network_ServerIdentity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_network_ServerIdentity_descriptor,
-        new java.lang.String[] { "Public", "Id", "Address", "Description", "Url", });
+        new java.lang.String[] { "Public", "ServiceIdentities", "Id", "Address", "Description", "Url", });
+    internal_static_network_ServiceIdentity_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_network_ServiceIdentity_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_network_ServiceIdentity_descriptor,
+        new java.lang.String[] { "Name", "Public", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IdentityTest {
+class IdentityTest {
 
     @Test
-    void instantiateIdentity() throws Exception{
+    void instantiateIdentity() {
         SignerEd25519 owner = new SignerEd25519();
         SignerEd25519 user = new SignerEd25519();
 
@@ -20,7 +20,7 @@ public class IdentityTest {
     }
 
     @Test
-    void serialization() throws Exception{
+    void serialization() {
         SignerEd25519 owner = new SignerEd25519();
         Identity ownerI = IdentityFactory.New(owner);
         DarcProto.Identity proto = ownerI.toProto();
@@ -30,7 +30,7 @@ public class IdentityTest {
     }
 
     @Test
-    void testKeycard() throws Exception{
+    void testKeycard() {
 
     }
 }

@@ -245,7 +245,9 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 	// we need to timeout the children faster than the root timeout to let it
 	// know the subleader is alive, but some children are failing
 	timeout := time.After(p.Timeout / 2)
-	done := 0
+	// If an error happens when sending the announcement, we can assume there
+	// will be a timeout from this node
+	done := len(errs)
 	for done < len(p.Children()) {
 		select {
 		case <-p.closeChan:
@@ -277,6 +279,7 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 				log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
 			}
 		case <-timeout:
+			log.Lvlf3("Subleader reached timeout waiting for children responses: %v", p.ServerIdentity())
 			// Use whatever we received until then to try to finish
 			// the protocol
 			done = len(p.Children())

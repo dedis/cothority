@@ -1,7 +1,7 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.Calypso;
@@ -23,9 +23,11 @@ public class DecryptKeyReply {
      * @param proto the input protobuf
      */
     public DecryptKeyReply(Calypso.DecryptKeyReply proto) {
-        this.Cs = proto.getCsList().stream().map(Ed25519Point::new).collect(Collectors.toList());
-        this.XhatEnc = new Ed25519Point(proto.getXhatenc());
-        this.X = new Ed25519Point(proto.getX());
+        this.Cs = proto.getCsList().stream()
+                .map(cs -> PointFactory.getInstance().fromProto(cs))
+                .collect(Collectors.toList());
+        this.XhatEnc = PointFactory.getInstance().fromProto(proto.getXhatenc());
+        this.X = PointFactory.getInstance().fromProto(proto.getX());
     }
 
     /**

@@ -4,6 +4,8 @@ import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -49,7 +51,7 @@ public class ReadData {
      * @return the public key under which the re-encryption will take place.
      */
     public Point getXc() {
-        return new Ed25519Point(read.getXc());
+        return PointFactory.getInstance().fromProto(read.getXc());
     }
 
     /**
@@ -74,6 +76,7 @@ public class ReadData {
      */
     public static ReadData fromProto(byte[] buf) throws InvalidProtocolBufferException {
         Calypso.Read rd = Calypso.Read.parseFrom(buf);
-        return new ReadData(new InstanceId(rd.getWrite()), new Ed25519Point(rd.getXc()));
+        Point p = PointFactory.getInstance().fromProto(rd.getXc());
+        return new ReadData(new InstanceId(rd.getWrite()), p);
     }
 }

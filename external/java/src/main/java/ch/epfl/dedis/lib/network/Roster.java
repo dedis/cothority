@@ -1,8 +1,9 @@
-package ch.epfl.dedis.lib;
+package ch.epfl.dedis.lib.network;
 
 import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.OnetProto;
 import com.google.protobuf.ByteString;
@@ -41,9 +42,9 @@ public class Roster {
         for (final ServerIdentity serverIdentity : nodes) {
             if (aggregate == null) {
                 // TODO: it will be much better if there is some kind of 'zero' element for Ed25519Point type. Is it possible to use just a new created Ed25519Point
-                aggregate = serverIdentity.Public;
+                aggregate = serverIdentity.getPublic();
             } else {
-                aggregate = aggregate.add(serverIdentity.Public);
+                aggregate = aggregate.add(serverIdentity.getPublic());
             }
         }
     }
@@ -93,9 +94,10 @@ public class Roster {
         List<ServerIdentity> cothority = new ArrayList<>();
         List<Toml> servers = toml.getTables("servers");
 
-        for (Toml s : servers) {
+        for (Toml srvToml : servers) {
             try {
-                cothority.add(new ServerIdentity(s));
+                ServerToml srv = srvToml.to(ServerToml.class);
+                cothority.add(new ServerIdentity(srv));
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }

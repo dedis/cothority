@@ -224,7 +224,7 @@ func (p *BlsFtCosi) checkIntegrity() error {
 	if p.subProtocolName == "" {
 		return fmt.Errorf("sub-protocol name cannot be empty")
 	}
-	if p.Timeout < 10*time.Nanosecond {
+	if p.Timeout < 500*time.Microsecond {
 		return fmt.Errorf("unrealistic timeout")
 	}
 	if p.Threshold > p.Tree().Size() {

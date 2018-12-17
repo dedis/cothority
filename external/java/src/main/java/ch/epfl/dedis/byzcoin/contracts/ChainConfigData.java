@@ -1,8 +1,8 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
 import ch.epfl.dedis.byzcoin.Instance;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
@@ -80,11 +80,11 @@ public class ChainConfigData {
      * @throws CothorityPermissionException    if the new roster is not correctly set up.
      * @throws CothorityCommunicationException if the old roster contained an error.
      */
-    public void setRoster(Roster newRoster) throws CothorityPermissionException, CothorityCommunicationException {
-        Set<ServerIdentity> newSIs = new HashSet(newRoster.getNodes());
+    public void setRoster(Roster newRoster) throws CothorityCommunicationException {
+        Set<ServerIdentity> newSIs = new HashSet<>(newRoster.getNodes());
         Set<ServerIdentity> oldSIs;
         try {
-            oldSIs = new HashSet(new Roster(config.getRoster()).getNodes());
+            oldSIs = new HashSet<>(new Roster(config.getRoster()).getNodes());
         } catch (URISyntaxException e) {
             throw new CothorityCommunicationException("Error in stored roster:" + e.getMessage());
         }
@@ -101,10 +101,10 @@ public class ChainConfigData {
      * @throws CothorityException if something went bad
      */
     private void checkNewRoster(Roster newRoster) throws CothorityException {
-        Set<ServerIdentity> newSIs = new HashSet(newRoster.getNodes());
+        Set<ServerIdentity> newSIs = new HashSet<>(newRoster.getNodes());
         Set<ServerIdentity> oldSIs;
         try {
-            oldSIs = new HashSet(new Roster(config.getRoster()).getNodes());
+            oldSIs = new HashSet<>(new Roster(config.getRoster()).getNodes());
         } catch (URISyntaxException e) {
             throw new CothorityCommunicationException("Error in stored roster:" + e.getMessage());
         }

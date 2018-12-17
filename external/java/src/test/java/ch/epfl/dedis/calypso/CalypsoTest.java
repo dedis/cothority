@@ -1,19 +1,22 @@
 package ch.epfl.dedis.calypso;
 
+import ch.epfl.dedis.byzcoin.ByzCoinRPC;
+import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.SignerCounters;
+import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.byzcoin.ByzCoinRPC;
-import ch.epfl.dedis.byzcoin.Proof;
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.KeyPair;
-import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.darc.Rules;
+import ch.epfl.dedis.lib.darc.Signer;
+import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import static ch.epfl.dedis.integration.TestServerController.*;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -86,6 +89,15 @@ class CalypsoTest {
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), 16, extraData.getBytes(), publisherDarc.getBaseId());
+    }
+
+    @AfterEach
+    void restartNodes() {
+        try {
+            for (int i = 1; i <= 4; i++) {
+                testInstanceController.startConode(i);
+            }
+        } catch (Exception ignored) {}
     }
 
     // This test creates a full cycle with regard to storing and retrieving a document from Calypso.
@@ -297,7 +309,7 @@ class CalypsoTest {
 
         try {
             new WriteInstance(calypso, publisherDarc.getBaseId(),
-                    Arrays.asList(publisher), Collections.singletonList(1L),
+                    Collections.singletonList(publisher), Collections.singletonList(1L),
                     wr);
             logger.info("correctly created write instance");
         } catch (CothorityException e){
@@ -310,7 +322,7 @@ class CalypsoTest {
 
         // Try to write again with 4 nodes
         new WriteInstance(calypso, publisherDarc.getBaseId(),
-                Arrays.asList(publisher), Collections.singletonList(2L),
+                Collections.singletonList(publisher), Collections.singletonList(2L),
                 wr);
     }
 
@@ -438,6 +450,7 @@ class CalypsoTest {
         try {
             // create a new transaction with one more node in the roster
             testInstanceController.startConode(5);
+            ServerIdentity conode5 = testInstanceController.getIdentities().get(4);
             CalypsoRPC.authorise(conode5, calypso.getGenesisBlock().getId());
 
             List<ServerIdentity> newList = calypso.getRoster().getNodes();

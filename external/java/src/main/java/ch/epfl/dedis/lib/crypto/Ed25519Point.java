@@ -9,35 +9,36 @@ import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.PublicKey;
 import java.util.Arrays;
 
 public class Ed25519Point implements Point {
+    final static byte[] marshalID = "ed.point".getBytes();
+
     private final static Logger logger = LoggerFactory.getLogger(Ed25519Point.class);
 
     private GroupElement element;
 
-    public Ed25519Point(ByteString pub) {
-        this(pub.toByteArray());
-    }
+    Ed25519Point(byte[] b) throws CothorityCryptoException {
+        if (b.length != 40 && b.length != 32) {
+            throw new CothorityCryptoException("Wrong Edward25519 format");
+        }
 
-    public Ed25519Point(PublicKey pub) {
-        this(Arrays.copyOfRange(pub.getEncoded(), 12, 44));
-    }
+        if (Arrays.equals(marshalID, Arrays.copyOfRange(b, 0, 8))) {
+            b = Arrays.copyOfRange(b, 8, b.length);
+        }
 
-    public Ed25519Point(String str) {
-        this(Hex.parseHexBinary(str));
-    }
-
-    public Ed25519Point(byte[] b) {
         element = new GroupElement(Ed25519.curve, b);
     }
 
-    public Ed25519Point(Point p) {
+    Ed25519Point(String str) throws CothorityCryptoException {
+        this(Hex.parseHexBinary(str));
+    }
+
+    Ed25519Point(Point p) {
         this(convert(p).element);
     }
 
-    public Ed25519Point(GroupElement e) {
+    Ed25519Point(GroupElement e) {
         element = e;
     }
 
@@ -45,8 +46,13 @@ public class Ed25519Point implements Point {
         return new Ed25519Point(this);
     }
 
-    public boolean equals(Point other) {
-        return Arrays.equals(element.toByteArray(), convert(other).element.toByteArray());
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Ed25519Point)) {
+            return false;
+        }
+
+        return Arrays.equals(element.toByteArray(), convert((Ed25519Point) other).element.toByteArray());
     }
 
     public Point mul(Scalar s) {
@@ -61,7 +67,7 @@ public class Ed25519Point implements Point {
     }
 
     public ByteString toProto() {
-        return ByteString.copyFrom(toBytes());
+        return ByteString.copyFrom(marshalID).concat(ByteString.copyFrom(toBytes()));
     }
 
     public byte[] toBytes() {

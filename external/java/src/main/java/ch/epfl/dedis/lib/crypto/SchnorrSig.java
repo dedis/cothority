@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.crypto;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 
 import java.security.MessageDigest;
@@ -19,7 +20,7 @@ public class SchnorrSig {
         response = kp.scalar.add(xh);
     }
 
-    public SchnorrSig(byte[] data) {
+    public SchnorrSig(byte[] data) throws CothorityCryptoException {
         challenge = new Ed25519Point(Arrays.copyOfRange(data, 0, 32));
         response = new Ed25519Scalar(Arrays.copyOfRange(data, 32, 64));
     }
