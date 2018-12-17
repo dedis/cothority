@@ -310,6 +310,8 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 	// has been requested
 	select {
 	case <-p.closeChan:
+		// ...but still wait for the response so that we don't leak the goroutine
+		<-res
 		return nil
 	case ok := <-res:
 		var r interface{}
