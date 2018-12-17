@@ -56,7 +56,7 @@ matrix:
         - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/cothority
 
       script:
-        - make test
+        - make test_nostable
 
     - language: java
       name: "Java Tests"
