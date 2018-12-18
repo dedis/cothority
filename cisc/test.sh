@@ -3,7 +3,7 @@
 DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
-# DBG_SRV=2
+DBG_SRV=2
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
@@ -518,7 +518,9 @@ EOF
   local n
   for (( n=0; n<$1; n++ ))
   do
-    sed -n "$((14*$n+1)),$((14*($n+1)))p" public.toml >> pop_desc.toml
+    # Takes only part of the public.toml. Each server has currently 15 lines
+    # for the configuration.
+    sed -n "$((15*$n+1)),$((15*($n+1)))p" public.toml >> pop_desc.toml
   done
 }
 
