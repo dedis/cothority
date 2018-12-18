@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.crypto.bn256;
-public class OptAte {
+
+class OptAte {
     private static class result {
         GFp2 a, b, c;
         TwistPoint rOut;

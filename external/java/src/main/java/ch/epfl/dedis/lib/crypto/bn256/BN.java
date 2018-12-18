@@ -13,26 +13,21 @@ public class BN {
         return r;
     }
 
-    public static byte[] bigIntegerToBytes(final BigInteger bigInteger) {
-        byte[] bytes = bigInteger.toByteArray();
-            if(bytes[0] == 0) {
-                return Arrays.copyOfRange(bytes, 1, bytes.length);
-            }
-            return bytes;
+    /**
+     * We have to use this function instead of the BigInteger.toByteArray method because the latter might produce
+     * a leading zero which is different from the Go implementation.
+     */
+    static byte[] bigIntegerToBytes(final BigInteger a) {
+        byte[] bytes = a.toByteArray();
+        if(bytes[0] == 0) {
+            return Arrays.copyOfRange(bytes, 1, bytes.length);
         }
-
-    private final static char[] hexArray = "0123456789abcdef".toCharArray();
-
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
+        return bytes;
     }
 
+    /**
+     * The pair of a G1 point and a scalar that is used to generate it.
+     */
     public static class PairG1 {
         public BigInteger k;
         public G1 p;
@@ -42,6 +37,9 @@ public class BN {
         }
     }
 
+    /**
+     * The pair of a G2 point and a scalar that is used to generate it.
+     */
     public static class PairG2 {
         public BigInteger k;
         public G2 p;
@@ -51,16 +49,32 @@ public class BN {
         }
     }
 
+    /**
+     * A point in G1.
+     */
     public static class G1 {
         CurvePoint p;
+
+        /**
+         * Construct a G1 point. There is no guarantee on its value, please set it later.
+         */
         public G1() {
             this.p = new CurvePoint();
         }
 
+        /**
+         * Construct a G1 point using a given curve point.
+         * @param p is the curve point.
+         */
         public G1(CurvePoint p) {
             this.p = p;
         }
 
+        /**
+         * Generate a random pair of a point and a scalar that is used to create the point.
+         * @param rnd is the random source.
+         * @return a pair of a point and a scalar.
+         */
         public static PairG1 rand(Random rnd) {
             BigInteger k = randPosBigInt(rnd, Constants.order);
             G1 p = new G1().scalarBaseMul(k);
@@ -71,26 +85,52 @@ public class BN {
             return "bn256.G1" + this.p.toString();
         }
 
+        /**
+         * Perform a scalar multiplication with the generator point.
+         * @param k is the scalar.
+         * @return the result which is also this object.
+         */
         public G1 scalarBaseMul(BigInteger k) {
             this.p.mul(CurvePoint.curveGen, k);
             return this;
         }
 
+        /**
+         * Perform a scalar multiplication.
+         * @param a is the point.
+         * @param k is the scalar.
+         * @return the result which is also this object.
+         */
         public G1 scalarMul(G1 a, BigInteger k) {
             this.p.mul(a.p, k);
             return this;
         }
 
+        /**
+         * Perform a point addition.
+         * @param a is a point.
+         * @param b is a point.
+         * @return the resulting point which is also this object.
+         */
         public G1 add(G1 a, G1 b) {
             this.p.add(a.p, b.p);
             return this;
         }
 
+        /**
+         * Perform a point negation.
+         * @param a is the point for negation.
+         * @return the resulting point which is also this object.
+         */
         public G1 neg(G1 a) {
             this.p.negative(a.p);
             return this;
         }
 
+        /**
+         * Turns the point into its byte representation.
+         * @return the marshalled bytes.
+         */
         public byte[] marshal() {
             final int numBytes = 256/8;
 
@@ -110,6 +150,11 @@ public class BN {
             return ret;
         }
 
+        /**
+         * Turns the byte representation to the point.
+         * @param m the input bytes.
+         * @return an unmarshalled point when successful, otherwise null.
+         */
         public G1 unmarshal(byte[] m) {
             final int numBytes = 256/8;
 
@@ -136,16 +181,32 @@ public class BN {
         }
     }
 
+    /**
+     * A point in G2.
+     */
     public static class G2 {
         TwistPoint p;
+
+        /**
+         * Construct a G2 point. We make no guarantee on its value, please set it later.
+         */
         public G2() {
             this.p = new TwistPoint();
         }
 
+        /**
+         * Construct a G2 point from an existing TwistPoint.
+         * @param p is the twist point.
+         */
         public G2(TwistPoint p) {
             this.p = p;
         }
 
+        /**
+         * Generate a random pair of a point and a scalar that is used to create the point.
+         * @param rnd is the random source.
+         * @return a pair of a point and a scalar.
+         */
         public static PairG2 rand(Random rnd) {
             BigInteger k = randPosBigInt(rnd, Constants.order);
             G2 p = new G2().scalarBaseMul(k);
@@ -156,21 +217,42 @@ public class BN {
             return "bn256.G2" + this.p.toString();
         }
 
+        /**
+         * Perform a scalar multiplication with the generator point.
+         * @param k is the scalar.
+         * @return the result which is also this object.
+         */
         public G2 scalarBaseMul(BigInteger k) {
             this.p.mul(TwistPoint.twistGen, k);
             return this;
         }
 
-        public G2 sclarMul(G2 a, BigInteger k) {
+        /**
+         * Perform a scalar multiplication.
+         * @param a is the point.
+         * @param k is the scalar.
+         * @return the result which is also this object.
+         */
+        public G2 scalarMul(G2 a, BigInteger k) {
             this.p.mul(a.p, k);
             return this;
         }
 
+        /**
+         * Perform a point addition.
+         * @param a is a point.
+         * @param b is a point.
+         * @return the resulting point which is also this object.
+         */
         public G2 add(G2 a, G2 b) {
             this.p.add(a.p, b.p);
             return this;
         }
 
+        /**
+         * Turns the point into its byte representation.
+         * @return the marshalled bytes.
+         */
         public byte[] marshal() {
             final int numBytes = 256/8;
 
@@ -194,6 +276,11 @@ public class BN {
             return ret;
         }
 
+        /**
+         * Turns the byte representation to the point.
+         * @param m the input bytes.
+         * @return an unmarshalled point when successful, otherwise null.
+         */
         public G2 unmarshal(byte[] m) {
             final int numBytes = 256 / 8;
 
@@ -227,29 +314,67 @@ public class BN {
         }
     }
 
+    /**
+     * GT represents an element in the GT field.
+     */
     public static class GT {
         GFp12 p;
+
+        /**
+         * Construct a new GT object, we make no guarantee on its value, please set it later.
+         */
         public GT() {
             this.p = new GFp12();
         }
+
+        /**
+         * Construct a new GT object from a GFp12 object.
+         * @param p is the GFp12 object.
+         */
         public GT(GFp12 p) {
             this.p = p;
         }
+
         public String toString() {
             return "bn256.GT" + this.p.toString();
         }
+
+        /**
+         * Perform a scalar multiplication.
+         * @param a is the point.
+         * @param k is the scalar.
+         * @return the result which is also this object.
+         */
         public GT scalarMul(GT a, BigInteger k) {
             this.p.exp(a.p, k);
             return this;
         }
+
+        /**
+         * Perform an addition.
+         * @param a is an element.
+         * @param b is an element.
+         * @return the resulting element which is also this object.
+         */
         public GT add(GT a, GT b) {
             this.p.mul(a.p, b.p);
             return this;
         }
+
+        /**
+         * Perform a negation.
+         * @param a is the element for negation.
+         * @return the resulting element which is also this object.
+         */
         public GT neg(GT a) {
             this.p.invert(a.p);
             return this;
         }
+
+        /**
+         * Turns the element into its byte representation.
+         * @return the marshalled bytes.
+         */
         public byte[] marshal() {
             this.p.minimal();
 
@@ -284,6 +409,12 @@ public class BN {
 
             return ret;
         }
+
+        /**
+         * Turns the byte representation to the element.
+         * @param m the input bytes.
+         * @return an unmarshalled element when successful, otherwise null.
+         */
         public GT unmarshal(byte[] m) {
             final int numBytes = 256 / 8;
 
@@ -309,10 +440,15 @@ public class BN {
             this.p.y.z.y = new BigInteger(1, Arrays.copyOfRange(m,11*numBytes, 12*numBytes));
 
             return this;
-
         }
     }
 
+    /**
+     * Perform the pairing operation.
+     * @param g1 is the G1 point.
+     * @param g2 is the G2 point.
+     * @return the GT point.
+     */
     public static GT pair(G1 g1, G2 g2) {
         return new GT(OptAte.optimalAte(g2.p, g1.p));
     }

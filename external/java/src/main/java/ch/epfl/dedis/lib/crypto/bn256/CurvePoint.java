@@ -162,7 +162,7 @@ class CurvePoint {
 
 
     CurvePoint makeAffine() {
-        byte[] words = this.z.toByteArray();
+        byte[] words = BN.bigIntegerToBytes(this.z);
         if (words.length == 1 && words[0] == 1) {
             return this;
         }

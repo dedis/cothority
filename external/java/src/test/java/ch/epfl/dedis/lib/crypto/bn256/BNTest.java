@@ -192,7 +192,7 @@ class BNTest {
     }
 
     @Test
-    void g2Identyt() {
+    void g2Identity() {
         BN.G2 g = new BN.G2().scalarBaseMul(BigInteger.ZERO);
         assertFalse(!g.p.isInfinity(), "failure");
     }
@@ -214,14 +214,17 @@ class BNTest {
         BN.GT k1 = BN.pair(pb, qc);
         k1.scalarMul(k1, a);
         byte[] k1Bytes = k1.marshal();
+        assertTrue(Arrays.equals(new BN.GT().unmarshal(k1Bytes).marshal(), k1Bytes), "failed to unmarshal GT k1");
 
         BN.GT k2 = BN.pair(pc, qa);
         k2.scalarMul(k2, b);
         byte[] k2Bytes = k2.marshal();
+        assertTrue(Arrays.equals(new BN.GT().unmarshal(k2Bytes).marshal(), k2Bytes), "failed to unmarshal GT k2");
 
         BN.GT k3 = BN.pair(pa, qb);
         k3.scalarMul(k3, c);
         byte[] k3Bytes = k3.marshal();
+        assertTrue(Arrays.equals(new BN.GT().unmarshal(k3Bytes).marshal(), k3Bytes), "failed to unmarshal GT k3");
 
         assertFalse(!Arrays.equals(k1Bytes, k2Bytes) || !Arrays.equals(k2Bytes, k3Bytes), "keys didn't agree");
     }

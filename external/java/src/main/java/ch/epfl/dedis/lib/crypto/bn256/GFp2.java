@@ -59,7 +59,7 @@ class GFp2 {
         if (this.x.signum() != 0) {
             return false;
         }
-        byte[] words = this.y.toByteArray();
+        byte[] words = BN.bigIntegerToBytes(this.y);
         return words.length == 1 && words[0] == 1;
     }
 
