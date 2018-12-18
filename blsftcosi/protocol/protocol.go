@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 const defaultTimeout = 20 * time.Second
@@ -351,9 +352,14 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 				return nil, err
 			}
 
-			numSignature += mask.CountEnabled()
-			numFailure += res.SubtreeCount() + 1 - mask.CountEnabled()
-			responseMap[res.ID] = &res.Response
+			public := searchPublicKey(p.TreeNodeInstance, res.ServerIdentity)
+			_, ok := responseMap[public.String()]
+			if !ok && public != nil {
+				numSignature += mask.CountEnabled()
+				numFailure += res.SubtreeCount() + 1 - mask.CountEnabled()
+
+				responseMap[public.String()] = &res.Response
+			}
 		case err := <-errChan:
 			err = fmt.Errorf("error in getting responses: %s", err)
 			return nil, err
@@ -392,7 +398,7 @@ func (p *BlsFtCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi
 	}
 
 	// fill the map with the Root signature
-	responses[p.TreeNode().ID] = &Response{
+	responses[p.Public().String()] = &Response{
 		Mask:      personalMask.Mask(),
 		Signature: personalSig,
 	}
@@ -421,4 +427,16 @@ func (p *BlsFtCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi
 	log.Lvlf3("%v is done aggregating signatures with total of %d signatures", p.ServerIdentity(), finalMask.CountEnabled())
 
 	return finalSignature, finalMask, err
+}
+
+// searchPublicKey looks for the corresponding server identity in the roster
+// to prevent forged identity to be used
+func searchPublicKey(p *onet.TreeNodeInstance, servID *network.ServerIdentity) kyber.Point {
+	for _, si := range p.Roster().List {
+		if si.Equal(servID) {
+			return p.NodePublic(si)
+		}
+	}
+
+	return nil
 }

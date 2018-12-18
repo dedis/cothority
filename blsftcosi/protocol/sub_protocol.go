@@ -122,7 +122,7 @@ func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
 // Shutdown closes the different channel to stop the current work
 func (p *SubBlsFtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
-		log.Lvlf2("Subprotocol shut down on %v", p.ServerIdentity())
+		log.Lvlf3("Subprotocol shut down on %v", p.ServerIdentity())
 		// Only this channel is closed to cut off expensive operations
 		// and select statements but we let other channels be cleaned
 		// by the GC to avoid sending to closed channel
@@ -232,14 +232,15 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 
 	responses := make(ResponseMap)
 	for _, c := range p.Children() {
+		public := p.NodePublic(c.ServerIdentity)
 		// Accept response for those identities only
-		responses[c.ID] = nil
+		responses[public.String()] = nil
 	}
 
 	own, err := p.makeResponse()
 	if ok := p.verificationFn(p.Msg, p.Data); ok {
 		log.Lvlf3("Subleader %v signed", p.ServerIdentity())
-		responses[p.TreeNode().ID] = own
+		responses[p.Public().String()] = own
 	}
 
 	// we need to timeout the children faster than the root timeout to let it
@@ -253,30 +254,37 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		case <-p.closeChan:
 			return nil
 		case reply, ok := <-p.ChannelResponse:
-			r, ok := responses[reply.ID]
+			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
+			r, ok := responses[public.String()]
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				public := p.NodePublic(reply.ServerIdentity)
-				if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
-					responses[reply.ID] = &reply.Response
+				if public == nil {
+					log.Warnf("Tentative to forge a server identity or unknown node.")
+				} else if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
+					responses[public.String()] = &reply.Response
 					done++
 				}
 			} else {
-				log.Warnf("Duplicate message from %v", reply.ServerIdentity.ID)
+				log.Warnf("Duplicate message from %v", reply.ServerIdentity)
 			}
 		case reply := <-p.ChannelRefusal:
-			_, ok := responses[reply.ID]
+			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
+			r, ok := responses[public.String()]
 			serviceName := onet.ServiceFactory.Name(p.Token().ServiceID)
 
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
-			} else if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
-				// The child gives an empty signature as a mark of refusal
-				responses[reply.ID] = &Response{}
-				done++
+			} else if r == nil {
+				if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
+					// The child gives an empty signature as a mark of refusal
+					responses[public.String()] = &Response{}
+					done++
+				} else {
+					log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
+				}
 			} else {
-				log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
+				log.Warnf("Duplicate refusal from %v", reply.ServerIdentity)
 			}
 		case <-timeout:
 			log.Lvlf3("Subleader reached timeout waiting for children responses: %v", p.ServerIdentity())

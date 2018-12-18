@@ -49,7 +49,6 @@ func signFile(c *cli.Context) error {
 		return fmt.Errorf("Couldn't create signature: %s", err.Error())
 	}
 
-	log.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
