@@ -109,3 +109,12 @@ Optional flags:
  ```
 
  is equivalent to show
+
+ ```
+ $ bcadmin qrcode -out $file.png
+ ```
+
+Generates a PNG QR Code containing the ByzCoin configuration, compatible to be scanned by the PopCoins apps
+
+Optional flags:
+ * -admin                   The QR Code will also contain the admin keypair to allow the user who scans it to manage the ByzCoin
