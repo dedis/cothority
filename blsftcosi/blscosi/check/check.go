@@ -43,7 +43,7 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 	}
 
 	log.Lvlf3("Checking roster %v", group.Roster.List)
-	totalSuccess := true
+	var checkErr error
 	// First check all servers individually and write the working servers
 	// in a list
 	working := []*network.ServerIdentity{}
@@ -57,8 +57,7 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 		if err == nil {
 			working = append(working, e)
 		} else {
-			log.Error(err)
-			totalSuccess = false
+			checkErr = err
 		}
 	}
 
@@ -72,7 +71,10 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 			for i, si := range working {
 				descriptions[permutation[i]] = group.GetDescription(si)
 			}
-			totalSuccess = checkRoster(onet.NewRoster(working), descriptions, detail) == nil && totalSuccess
+			err = checkRoster(onet.NewRoster(working), descriptions, detail)
+			if err != nil {
+				checkErr = err
+			}
 		}
 
 		// Then check pairs of servers if we want to have detail
@@ -85,18 +87,21 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 						desc = []string{d1, group.GetDescription(second)}
 					}
 					es := []*network.ServerIdentity{first, second}
-					totalSuccess = checkRoster(onet.NewRoster(es), desc, detail) == nil && totalSuccess
+					err = checkRoster(onet.NewRoster(es), desc, detail)
+					if err != nil {
+						checkErr = err
+					}
 					es[0], es[1] = es[1], es[0]
 					desc[0], desc[1] = desc[1], desc[0]
-					totalSuccess = checkRoster(onet.NewRoster(es), desc, detail) == nil && totalSuccess
+					err = checkRoster(onet.NewRoster(es), desc, detail)
+					if err != nil {
+						checkErr = err
+					}
 				}
 			}
 		}
 	}
-	if !totalSuccess {
-		return errors.New("At least one of the tests failed")
-	}
-	return nil
+	return checkErr
 }
 
 // checkList sends a message to the cothority defined by list and

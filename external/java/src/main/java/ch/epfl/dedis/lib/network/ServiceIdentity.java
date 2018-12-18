@@ -11,6 +11,7 @@ import com.google.protobuf.ByteString;
 public class ServiceIdentity {
     private final String name;
     private final Point point;
+    private final String suite;
 
     /**
      * Create a service identity from the service name, the suite and the public
@@ -22,6 +23,7 @@ public class ServiceIdentity {
     ServiceIdentity(String name, String suite, String pubkey) {
         this.name = name;
         this.point = PointFactory.getInstance().fromToml(suite, pubkey);
+        this.suite = suite;
     }
 
     /**
@@ -29,9 +31,10 @@ public class ServiceIdentity {
      * @param name service name
      * @param pubkey marshal representation of the point
      */
-    ServiceIdentity(String name, ByteString pubkey) {
+    ServiceIdentity(String name, String suite, ByteString pubkey) {
         this.name = name;
         this.point = PointFactory.getInstance().fromProto(pubkey);
+        this.suite = suite;
     }
 
     /**
@@ -48,5 +51,13 @@ public class ServiceIdentity {
      */
     public Point getPublic() {
         return this.point;
+    }
+
+    /**
+     * Get the name of the suite compatible with the public key
+     * @return the name
+     */
+    public String getSuite() {
+        return suite;
     }
 }

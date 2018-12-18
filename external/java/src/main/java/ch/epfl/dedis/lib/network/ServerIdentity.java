@@ -47,7 +47,7 @@ public class ServerIdentity {
         this.pubkey = PointFactory.getInstance().fromToml(toml.Suite, toml.Public);
 
         for (Map.Entry<String, ServiceToml> entry : toml.Services.entrySet()) {
-            ServiceIdentity srvid = new ServiceIdentity(entry.getKey(), PointFactory.SUITE_BN256, entry.getValue().Public);
+            ServiceIdentity srvid = new ServiceIdentity(entry.getKey(), entry.getValue().Suite, entry.getValue().Public);
             this.serviceIdentities.add(srvid);
         }
     }
@@ -57,7 +57,7 @@ public class ServerIdentity {
 
         this.pubkey = PointFactory.getInstance().fromProto(sid.getPublic());
         this.serviceIdentities = sid.getServiceIdentitiesList().stream()
-            .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getPublic()))
+            .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
             .collect(Collectors.toList());
     }
 
@@ -98,6 +98,7 @@ public class ServerIdentity {
             NetworkProto.ServiceIdentity.Builder data = NetworkProto.ServiceIdentity.newBuilder();
             data.setPublic(srvid.getPublic().toProto());
             data.setName(srvid.getName());
+            data.setSuite(srvid.getSuite());
             si.addServiceIdentities(data.build());
         }
 

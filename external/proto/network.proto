@@ -19,5 +19,6 @@ message ServerIdentity {
 
 message ServiceIdentity {
     required string name = 1;
-    required bytes public = 2;
+    required string suite = 2;
+    required bytes public = 3;
 }

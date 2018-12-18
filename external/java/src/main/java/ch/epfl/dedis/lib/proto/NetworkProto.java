@@ -1532,11 +1532,25 @@ public final class NetworkProto {
         getNameBytes();
 
     /**
-     * <code>required bytes public = 2;</code>
+     * <code>required string suite = 2;</code>
+     */
+    boolean hasSuite();
+    /**
+     * <code>required string suite = 2;</code>
+     */
+    java.lang.String getSuite();
+    /**
+     * <code>required string suite = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getSuiteBytes();
+
+    /**
+     * <code>required bytes public = 3;</code>
      */
     boolean hasPublic();
     /**
-     * <code>required bytes public = 2;</code>
+     * <code>required bytes public = 3;</code>
      */
     com.google.protobuf.ByteString getPublic();
   }
@@ -1554,6 +1568,7 @@ public final class NetworkProto {
     }
     private ServiceIdentity() {
       name_ = "";
+      suite_ = "";
       public_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -1588,7 +1603,13 @@ public final class NetworkProto {
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
+              suite_ = bs;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
               public_ = input.readBytes();
               break;
             }
@@ -1667,16 +1688,58 @@ public final class NetworkProto {
       }
     }
 
-    public static final int PUBLIC_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString public_;
+    public static final int SUITE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object suite_;
     /**
-     * <code>required bytes public = 2;</code>
+     * <code>required string suite = 2;</code>
      */
-    public boolean hasPublic() {
+    public boolean hasSuite() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes public = 2;</code>
+     * <code>required string suite = 2;</code>
+     */
+    public java.lang.String getSuite() {
+      java.lang.Object ref = suite_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          suite_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string suite = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSuiteBytes() {
+      java.lang.Object ref = suite_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        suite_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PUBLIC_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 3;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bytes public = 3;</code>
      */
     public com.google.protobuf.ByteString getPublic() {
       return public_;
@@ -1690,6 +1753,10 @@ public final class NetworkProto {
       if (isInitialized == 0) return false;
 
       if (!hasName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSuite()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1708,7 +1775,10 @@ public final class NetworkProto {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, public_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, suite_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, public_);
       }
       unknownFields.writeTo(output);
     }
@@ -1723,8 +1793,11 @@ public final class NetworkProto {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, suite_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, public_);
+          .computeBytesSize(3, public_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1747,6 +1820,11 @@ public final class NetworkProto {
         result = result && getName()
             .equals(other.getName());
       }
+      result = result && (hasSuite() == other.hasSuite());
+      if (hasSuite()) {
+        result = result && getSuite()
+            .equals(other.getSuite());
+      }
       result = result && (hasPublic() == other.hasPublic());
       if (hasPublic()) {
         result = result && getPublic()
@@ -1766,6 +1844,10 @@ public final class NetworkProto {
       if (hasName()) {
         hash = (37 * hash) + NAME_FIELD_NUMBER;
         hash = (53 * hash) + getName().hashCode();
+      }
+      if (hasSuite()) {
+        hash = (37 * hash) + SUITE_FIELD_NUMBER;
+        hash = (53 * hash) + getSuite().hashCode();
       }
       if (hasPublic()) {
         hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
@@ -1906,8 +1988,10 @@ public final class NetworkProto {
         super.clear();
         name_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
-        public_ = com.google.protobuf.ByteString.EMPTY;
+        suite_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1942,6 +2026,10 @@ public final class NetworkProto {
         result.name_ = name_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
+        }
+        result.suite_ = suite_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
         }
         result.public_ = public_;
         result.bitField0_ = to_bitField0_;
@@ -1998,6 +2086,11 @@ public final class NetworkProto {
           name_ = other.name_;
           onChanged();
         }
+        if (other.hasSuite()) {
+          bitField0_ |= 0x00000002;
+          suite_ = other.suite_;
+          onChanged();
+        }
         if (other.hasPublic()) {
           setPublic(other.getPublic());
         }
@@ -2009,6 +2102,9 @@ public final class NetworkProto {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
+          return false;
+        }
+        if (!hasSuite()) {
           return false;
         }
         if (!hasPublic()) {
@@ -2113,36 +2209,112 @@ public final class NetworkProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      private java.lang.Object suite_ = "";
       /**
-       * <code>required bytes public = 2;</code>
+       * <code>required string suite = 2;</code>
        */
-      public boolean hasPublic() {
+      public boolean hasSuite() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes public = 2;</code>
+       * <code>required string suite = 2;</code>
+       */
+      public java.lang.String getSuite() {
+        java.lang.Object ref = suite_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            suite_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string suite = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSuiteBytes() {
+        java.lang.Object ref = suite_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          suite_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string suite = 2;</code>
+       */
+      public Builder setSuite(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        suite_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string suite = 2;</code>
+       */
+      public Builder clearSuite() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        suite_ = getDefaultInstance().getSuite();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string suite = 2;</code>
+       */
+      public Builder setSuiteBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        suite_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 3;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes public = 3;</code>
        */
       public com.google.protobuf.ByteString getPublic() {
         return public_;
       }
       /**
-       * <code>required bytes public = 2;</code>
+       * <code>required bytes public = 3;</code>
        */
       public Builder setPublic(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000004;
         public_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes public = 2;</code>
+       * <code>required bytes public = 3;</code>
        */
       public Builder clearPublic() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         public_ = getDefaultInstance().getPublic();
         onChanged();
         return this;
@@ -2223,9 +2395,9 @@ public final class NetworkProto {
       "ity\022\016\n\006public\030\001 \002(\014\0223\n\021serviceIdentities" +
       "\030\002 \003(\0132\030.network.ServiceIdentity\022\n\n\002id\030\003" +
       " \002(\014\022\017\n\007address\030\004 \002(\t\022\023\n\013description\030\005 \002" +
-      "(\t\022\013\n\003url\030\006 \001(\t\"/\n\017ServiceIdentity\022\014\n\004na" +
-      "me\030\001 \002(\t\022\016\n\006public\030\002 \002(\014B\'\n\027ch.epfl.dedi" +
-      "s.lib.protoB\014NetworkProto"
+      "(\t\022\013\n\003url\030\006 \001(\t\">\n\017ServiceIdentity\022\014\n\004na" +
+      "me\030\001 \002(\t\022\r\n\005suite\030\002 \002(\t\022\016\n\006public\030\003 \002(\014B" +
+      "\'\n\027ch.epfl.dedis.lib.protoB\014NetworkProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2250,7 +2422,7 @@ public final class NetworkProto {
     internal_static_network_ServiceIdentity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_network_ServiceIdentity_descriptor,
-        new java.lang.String[] { "Name", "Public", });
+        new java.lang.String[] { "Name", "Suite", "Public", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

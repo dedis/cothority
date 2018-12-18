@@ -8,4 +8,8 @@ class ServiceToml {
      * The public key encoded in hexadecimal
      */
     String Public;
+    /**
+     * The name of the suite associated to the public key
+     */
+    String Suite;
 }

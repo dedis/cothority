@@ -16,8 +16,8 @@ import java.util.Map;
  * suite information that must be available.
  */
 public class PointFactory {
-    static public final String SUITE_ED25519 = "Ed25519";
-    static public final String SUITE_BN256 = "Bn256.adapter";
+    static final String SUITE_ED25519 = "Ed25519";
+    static final String SUITE_BN256 = "bn256.adapter";
 
     static private final Logger logger = LoggerFactory.getLogger(Ed25519Point.class);
     static private final PointFactory INSTANCE = new PointFactory();
