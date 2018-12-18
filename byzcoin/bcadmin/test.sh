@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 DBG_SRV=0
 
 NBR_SERVERS=3
