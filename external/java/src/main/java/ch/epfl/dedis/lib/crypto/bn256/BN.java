@@ -63,6 +63,15 @@ public class BN {
         }
 
         /**
+         * Construct a point for a scalar.
+         *
+         * @param k is the scalar that is multiplied to the generator point to create the object.
+         */
+        public G1(BigInteger k) {
+            this.p = new CurvePoint().mul(CurvePoint.curveGen, k);
+        }
+
+        /**
          * Generate a random pair of a point and a scalar that is used to create the point.
          *
          * @param rnd is the random source.
@@ -212,6 +221,15 @@ public class BN {
          */
         public G2(G2 p) {
             this.p = new TwistPoint(p.p);
+        }
+
+        /**
+         * Construct a point for a scalar.
+         *
+         * @param k is the scalar that is multiplied to the generator point to create the object.
+         */
+        public G2(BigInteger k) {
+            this.p = new TwistPoint().mul(TwistPoint.twistGen, k);
         }
 
         /**

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.crypto.bn256;
 
+import ch.epfl.dedis.lib.Hex;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -157,6 +158,29 @@ class BNTest {
 
             assertFalse(!e1.p.isOne(), "bad pairing result: " + e1.toString());
         }
+    }
+
+    /**
+     * This test is to check our implementation against the golang/crypto/bn256 implementation.
+     */
+    @Test
+    void bilinearityReference() {
+        BigInteger a = new BigInteger("12345");
+        BN.G1 p1 = new BN.G1(a);
+        BigInteger b = new BigInteger("67890");
+        BN.G2 p2 = new BN.G2(b);
+        BN.GT e1 = BN.pair(p1, p2);
+
+        BN.GT e2 = BN.pair(new BN.G1(CurvePoint.curveGen), new BN.G2(TwistPoint.twistGen));
+        e2.scalarMul(e2, a);
+        e2.scalarMul(e2, b);
+
+        assertTrue(Arrays.equals(e1.marshal(), Hex.parseHexBinary("2c1660475bb9afe5a514d2ee8a2ff66e449024b0872a30e8d75a297cf6c82a0c79919ee0dd5618ecc6e89042b6ae7f74c9593b74e6e7ae344553af4578c0c6834e9421c990eff3660c4ca488a092eb9434b3c4a25f3585425b409064cc446748357c04ae026baee936e32d3a32489f1d9db346791b88641ef3ef5f2dcf3cebd423e23465a2c96e600ea83eb9cf3c5ffb50beb926560a569ee80d52e165ddcb94817cf8d696d2def79933dc0374ad1ac09b3f4834e17723374babde2f492473d41ca6856b6176795ba662de2f4a1208f1c3b3c5d4138929fa778d2aa2fcec7951457e039854ce6e3ebfcd75f317732abccfa233b5c6443d296bfaa5e7d6398c8d31db50c7ee4fe3ab79f311180711605a3f09f148edc5ffaf00b8bdc90a38702c301cd778cdbab48e375a783283759608a68bc933414f03f04083c12596b0d8ce798e7b670980dfe60a9fdbac4554455b4628e043696210da773b153433f0957b3245a9ba5b23ac3afecd786e692553f2ec42f7a2ff7a6bd4f204c4bf5d708831")));
+
+        BN.GT minusE2 = new BN.GT().neg(e2);
+        e1.add(e1, minusE2);
+
+        assertFalse(!e1.p.isOne(), "bad pairing result: " + e1.toString());
     }
 
     @Test
