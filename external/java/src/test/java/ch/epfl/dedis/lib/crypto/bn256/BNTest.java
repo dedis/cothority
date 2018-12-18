@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Random;
 
 class BNTest {
@@ -158,7 +159,31 @@ class BNTest {
         }
     }
 
-    // TODO marshal test
+    @Test
+    void g1Marshal() {
+        BN.G1 g = new BN.G1().scalarBaseMul(BigInteger.ONE);
+        byte[] from = g.marshal();
+        assertNotNull(new BN.G1().unmarshal(from));
+
+        g.scalarBaseMul(Constants.order);
+        from = g.marshal();
+        BN.G1 g2 = new BN.G1().unmarshal(from);
+        assertNotNull(g2);
+        assertFalse(!g2.p.isInfinity(), "inf marshaled incorrectly");
+    }
+
+    @Test
+    void g2Marshal() {
+        BN.G2 g = new BN.G2().scalarBaseMul(BigInteger.ONE);
+        byte[] from = g.marshal();
+        assertNotNull(new BN.G2().unmarshal(from));
+
+        g.scalarBaseMul(Constants.order);
+        from = g.marshal();
+        BN.G2 g2 = new BN.G2().unmarshal(from);
+        assertNotNull(g2);
+        assertFalse(!g2.p.isInfinity(), "inf marshaled incorrectly");
+    }
 
     @Test
     void g1Identity() {
@@ -174,6 +199,37 @@ class BNTest {
 
     @Test
     void tripartiteDiffieHellman() {
-        // TODO
+        Random rnd = new SecureRandom();
+        BigInteger a = BN.randPosBigInt(rnd, Constants.p);
+        BigInteger b = BN.randPosBigInt(rnd, Constants.p);
+        BigInteger c = BN.randPosBigInt(rnd, Constants.p);
+
+        BN.G1 pa = new BN.G1().unmarshal(new BN.G1().scalarBaseMul(a).marshal());
+        BN.G2 qa = new BN.G2().unmarshal(new BN.G2().scalarBaseMul(a).marshal());
+        BN.G1 pb = new BN.G1().unmarshal(new BN.G1().scalarBaseMul(b).marshal());
+        BN.G2 qb = new BN.G2().unmarshal(new BN.G2().scalarBaseMul(b).marshal());
+        BN.G1 pc = new BN.G1().unmarshal(new BN.G1().scalarBaseMul(c).marshal());
+        BN.G2 qc = new BN.G2().unmarshal(new BN.G2().scalarBaseMul(c).marshal());
+
+        BN.GT k1 = BN.pair(pb, qc);
+        k1.scalarMul(k1, a);
+        byte[] k1Bytes = k1.marshal();
+
+        BN.GT k2 = BN.pair(pc, qa);
+        k2.scalarMul(k2, b);
+        byte[] k2Bytes = k2.marshal();
+
+        BN.GT k3 = BN.pair(pa, qb);
+        k3.scalarMul(k3, c);
+        byte[] k3Bytes = k3.marshal();
+
+        assertFalse(!Arrays.equals(k1Bytes, k2Bytes) || !Arrays.equals(k2Bytes, k3Bytes), "keys didn't agree");
+    }
+
+    @Test
+    void benchmarkPairing() {
+        for (int i = 0; i < 10; i++) {
+            BN.pair(new BN.G1(CurvePoint.curveGen), new BN.G2(TwistPoint.twistGen));
+        }
     }
 }

@@ -13,6 +13,26 @@ public class BN {
         return r;
     }
 
+    public static byte[] bigIntegerToBytes(final BigInteger bigInteger) {
+        byte[] bytes = bigInteger.toByteArray();
+            if(bytes[0] == 0) {
+                return Arrays.copyOfRange(bytes, 1, bytes.length);
+            }
+            return bytes;
+        }
+
+    private final static char[] hexArray = "0123456789abcdef".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     public static class PairG1 {
         public BigInteger k;
         public G1 p;
@@ -80,8 +100,8 @@ public class BN {
 
             this.p.makeAffine();
 
-            byte[] xBytes = this.p.x.mod(Constants.p).toByteArray();
-            byte[] yBytes = this.p.y.mod(Constants.p).toByteArray();
+            byte[] xBytes = bigIntegerToBytes(this.p.x.mod(Constants.p));
+            byte[] yBytes = bigIntegerToBytes(this.p.y.mod(Constants.p));
 
             byte[] ret = new byte[numBytes*2];
             System.arraycopy(xBytes, 0, ret, 1*numBytes-xBytes.length, xBytes.length);
@@ -97,8 +117,8 @@ public class BN {
                 return null;
             }
 
-            this.p.x = new BigInteger(Arrays.copyOfRange(m, 0*numBytes, 1*numBytes));
-            this.p.y = new BigInteger(Arrays.copyOfRange(m, 1*numBytes, 2*numBytes));
+            this.p.x = new BigInteger(1, Arrays.copyOfRange(m, 0*numBytes, 1*numBytes));
+            this.p.y = new BigInteger(1, Arrays.copyOfRange(m, 1*numBytes, 2*numBytes));
 
             if (this.p.x.signum() == 0 && this.p.y.signum() == 0) {
                 this.p.y = BigInteger.ONE;
@@ -160,10 +180,10 @@ public class BN {
 
             this.p.makeAffine();
 
-            byte[] xxBytes = this.p.x.x.mod(Constants.p).toByteArray();
-            byte[] xyBytes = this.p.x.y.mod(Constants.p).toByteArray();
-            byte[] yxBytes = this.p.y.x.mod(Constants.p).toByteArray();
-            byte[] yyBytes = this.p.y.y.mod(Constants.p).toByteArray();
+            byte[] xxBytes = bigIntegerToBytes(this.p.x.x.mod(Constants.p));
+            byte[] xyBytes = bigIntegerToBytes(this.p.x.y.mod(Constants.p));
+            byte[] yxBytes = bigIntegerToBytes(this.p.y.x.mod(Constants.p));
+            byte[] yyBytes = bigIntegerToBytes(this.p.y.y.mod(Constants.p));
 
             byte[] ret = new byte[numBytes*4];
             System.arraycopy(xxBytes, 0, ret, 1*numBytes-xxBytes.length, xxBytes.length);
@@ -175,8 +195,35 @@ public class BN {
         }
 
         public G2 unmarshal(byte[] m) {
-            // TODO
-            return null;
+            final int numBytes = 256 / 8;
+
+            if (m.length != 4*numBytes) {
+                return null;
+            }
+
+            if (this.p == null) {
+                this.p = new TwistPoint();
+            }
+
+            this.p.x.x = new BigInteger(1, Arrays.copyOfRange(m, 0*numBytes, 1*numBytes));
+            this.p.x.y = new BigInteger(1, Arrays.copyOfRange(m, 1*numBytes, 2*numBytes));
+            this.p.y.x = new BigInteger(1, Arrays.copyOfRange(m, 2*numBytes, 3*numBytes));
+            this.p.y.y = new BigInteger(1, Arrays.copyOfRange(m, 3*numBytes, 4*numBytes));
+
+            if (this.p.x.x.signum() == 0 && this.p.x.y.signum() == 0 && this.p.y.x.signum() == 0 && this.p.y.y.signum() == 0) {
+                this.p.y.setOne();
+                this.p.z.setZero();
+                this.p.t.setZero();
+            } else {
+                this.p.z.setOne();
+                this.p.t.setOne();
+
+                if (!this.p.isOnCurve()) {
+                    return null;
+                }
+            }
+
+            return this;
         }
     }
 
@@ -206,18 +253,18 @@ public class BN {
         public byte[] marshal() {
             this.p.minimal();
 
-            byte[] xxxBytes = this.p.x.x.x.toByteArray();
-            byte[] xxyBytes = this.p.x.x.y.toByteArray();
-            byte[] xyxBytes = this.p.x.y.x.toByteArray();
-            byte[] xyyBytes = this.p.x.y.y.toByteArray();
-            byte[] xzxBytes = this.p.x.z.x.toByteArray();
-            byte[] xzyBytes = this.p.x.z.y.toByteArray();
-            byte[] yxxBytes = this.p.y.x.x.toByteArray();
-            byte[] yxyBytes = this.p.y.x.y.toByteArray();
-            byte[] yyxBytes = this.p.y.y.x.toByteArray();
-            byte[] yyyBytes = this.p.y.y.y.toByteArray();
-            byte[] yzxBytes = this.p.y.z.x.toByteArray();
-            byte[] yzyBytes = this.p.y.z.y.toByteArray();
+            byte[] xxxBytes = bigIntegerToBytes(this.p.x.x.x);
+            byte[] xxyBytes = bigIntegerToBytes(this.p.x.x.y);
+            byte[] xyxBytes = bigIntegerToBytes(this.p.x.y.x);
+            byte[] xyyBytes = bigIntegerToBytes(this.p.x.y.y);
+            byte[] xzxBytes = bigIntegerToBytes(this.p.x.z.x);
+            byte[] xzyBytes = bigIntegerToBytes(this.p.x.z.y);
+            byte[] yxxBytes = bigIntegerToBytes(this.p.y.x.x);
+            byte[] yxyBytes = bigIntegerToBytes(this.p.y.x.y);
+            byte[] yyxBytes = bigIntegerToBytes(this.p.y.y.x);
+            byte[] yyyBytes = bigIntegerToBytes(this.p.y.y.y);
+            byte[] yzxBytes = bigIntegerToBytes(this.p.y.z.x);
+            byte[] yzyBytes = bigIntegerToBytes(this.p.y.z.y);
 
             final int numBytes = 256/8;
 
@@ -234,11 +281,35 @@ public class BN {
             System.arraycopy(yyyBytes, 0, ret, 10*numBytes-yyyBytes.length, yyyBytes.length);
             System.arraycopy(yzxBytes, 0, ret, 11*numBytes-yzxBytes.length, yzxBytes.length);
             System.arraycopy(yzyBytes, 0, ret, 12*numBytes-yzyBytes.length, yzyBytes.length);
+
             return ret;
         }
-        public GT unmarshal() {
-            // TODO
-            return null;
+        public GT unmarshal(byte[] m) {
+            final int numBytes = 256 / 8;
+
+            if (m.length != 12*numBytes) {
+                return null;
+            }
+
+            if (this.p == null) {
+                this.p = new GFp12();
+            }
+
+            this.p.x.x.x = new BigInteger(1, Arrays.copyOfRange(m,0*numBytes, 1*numBytes));
+            this.p.x.x.y = new BigInteger(1, Arrays.copyOfRange(m,1*numBytes, 2*numBytes));
+            this.p.x.y.x = new BigInteger(1, Arrays.copyOfRange(m,2*numBytes, 3*numBytes));
+            this.p.x.y.y = new BigInteger(1, Arrays.copyOfRange(m,3*numBytes, 4*numBytes));
+            this.p.x.z.x = new BigInteger(1, Arrays.copyOfRange(m,4*numBytes, 5*numBytes));
+            this.p.x.z.y = new BigInteger(1, Arrays.copyOfRange(m,5*numBytes, 6*numBytes));
+            this.p.y.x.x = new BigInteger(1, Arrays.copyOfRange(m,6*numBytes, 7*numBytes));
+            this.p.y.x.y = new BigInteger(1, Arrays.copyOfRange(m,7*numBytes, 8*numBytes));
+            this.p.y.y.x = new BigInteger(1, Arrays.copyOfRange(m,8*numBytes, 9*numBytes));
+            this.p.y.y.y = new BigInteger(1, Arrays.copyOfRange(m,9*numBytes, 10*numBytes));
+            this.p.y.z.x = new BigInteger(1, Arrays.copyOfRange(m,10*numBytes, 11*numBytes));
+            this.p.y.z.y = new BigInteger(1, Arrays.copyOfRange(m,11*numBytes, 12*numBytes));
+
+            return this;
+
         }
     }
 
