@@ -19,6 +19,9 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+
+	"encoding/json"
+	qrgo "github.com/skip2/go-qrcode"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -149,6 +152,27 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: darcCli,
+	},
+	{
+		Name:    "qrcode",
+		Usage:   "generates a QRCode containing the description of the BC Config",
+		Aliases: []string{"qr"},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config to use (always use)",
+			},
+			cli.StringFlag{
+				Name:  "out",
+				Usage: "the png file in which the QR code is saved",
+			},
+			cli.BoolFlag{
+				Name:  "admin",
+				Usage: "If specified, the QR Code will contain the admin keypair",
+			},
+		},
+		Action: qrcode,
 	},
 }
 
@@ -684,6 +708,47 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func qrcode(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	out := c.String("out")
+	if out == "" {
+		return errors.New("--out flag is required")
+	}
+
+	cfg, _, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	var toWrite []byte
+
+	if c.Bool("admin") {
+		signer, err := lib.LoadKey(cfg.AdminIdentity)
+		if err != nil {
+			return err
+		}
+		sig, err := signer.String()
+		toWrite, err = json.Marshal(lib.AdminConfig{cfg.ByzCoinID, sig})
+	} else {
+		toWrite, err = json.Marshal(lib.BaseConfig{cfg.ByzCoinID})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	err = qrgo.WriteFile(string(toWrite), qrgo.Low, 1024, out)
 	if err != nil {
 		return err
 	}

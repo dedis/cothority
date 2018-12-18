@@ -706,6 +706,11 @@ func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	}
 }
 
+func (s Signer) String() (string, error) {
+	prk, err := s.GetPrivate()
+	return "{Pub:" + s.Identity().String() + ", Priv:" + prk.String() + "}", err
+}
+
 // Equal first checks the type of the two identities, and if they match, it
 // returns true if their data is the same.
 func (id Identity) Equal(id2 *Identity) bool {
