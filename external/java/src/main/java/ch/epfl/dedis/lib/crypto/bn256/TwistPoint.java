@@ -1,4 +1,5 @@
 package ch.epfl.dedis.lib.crypto.bn256;
+
 import java.math.BigInteger;
 
 class TwistPoint {
@@ -35,6 +36,13 @@ class TwistPoint {
         this.t = new GFp2();
     }
 
+    TwistPoint(TwistPoint p) {
+        this.x = new GFp2(p.x);
+        this.y = new GFp2(p.y);
+        this.z = new GFp2(p.z);
+        this.t = new GFp2(p.t);
+    }
+
     private TwistPoint(GFp2 x, GFp2 y, GFp2 z, GFp2 t) {
         this.x = x;
         this.y = y;
@@ -43,7 +51,8 @@ class TwistPoint {
     }
 
     public String toString() {
-        return "(" + this.x.toString() + "," + this.y.toString() + "," + this.z.toString() + ")";
+        TwistPoint c = new TwistPoint(this);
+        return "(" + c.x.toString() + "," + c.y.toString() + "," + c.z.toString() + ")";
     }
 
     void set(TwistPoint a) {

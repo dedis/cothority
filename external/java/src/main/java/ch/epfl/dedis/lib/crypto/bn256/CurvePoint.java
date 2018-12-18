@@ -1,4 +1,5 @@
 package ch.epfl.dedis.lib.crypto.bn256;
+
 import java.math.BigInteger;
 
 class CurvePoint {
@@ -19,6 +20,13 @@ class CurvePoint {
         this.t = BigInteger.ZERO;
     }
 
+    CurvePoint(CurvePoint p) {
+        this.x = p.x;
+        this.y = p.y;
+        this.z = p.z;
+        this.t = p.t;
+    }
+
     private CurvePoint(BigInteger x, BigInteger y, BigInteger z, BigInteger t) {
         this.x = x;
         this.y = y;
@@ -27,8 +35,9 @@ class CurvePoint {
     }
 
     public String toString() {
-        this.makeAffine();
-        return "(" + this.x.toString() + "," + this.y.toString() + ")";
+        CurvePoint c = new CurvePoint(this);
+        c.makeAffine();
+        return "(" + c.x.toString() + "," + c.y.toString() + ")";
     }
 
     void set(CurvePoint a) {
@@ -82,7 +91,7 @@ class CurvePoint {
         BigInteger h = u2.subtract(u1);
         boolean xEqual = h.signum() == 0;
 
-        t  = h.add(h);
+        t = h.add(h);
         BigInteger i = t.multiply(t).mod(p);
         BigInteger j = h.multiply(i).mod(p);
 

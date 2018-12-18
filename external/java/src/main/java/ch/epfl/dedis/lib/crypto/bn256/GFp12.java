@@ -1,4 +1,5 @@
 package ch.epfl.dedis.lib.crypto.bn256;
+
 import java.math.BigInteger;
 
 class GFp12 {

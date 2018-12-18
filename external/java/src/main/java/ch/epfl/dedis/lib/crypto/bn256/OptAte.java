@@ -4,6 +4,7 @@ class OptAte {
     private static class result {
         GFp2 a, b, c;
         TwistPoint rOut;
+
         result(GFp2 a, GFp2 b, GFp2 c, TwistPoint rOut) {
             this.a = a;
             this.b = b;
@@ -11,6 +12,7 @@ class OptAte {
             this.rOut = rOut;
         }
     }
+
     private static result lineFunctionAdd(TwistPoint r, TwistPoint p, CurvePoint q, GFp2 r2) {
         GFp2 a, b, c;
         TwistPoint rOut;
@@ -193,27 +195,27 @@ class OptAte {
             GFp2 b = res.b;
             GFp2 c = res.c;
             TwistPoint newR = res.rOut;
-            if (i != sixuPlus2NAF.length-1) {
+            if (i != sixuPlus2NAF.length - 1) {
                 ret.square(ret);
             }
 
             mulLine(ret, a, b, c);
             r = newR;
 
-            if (sixuPlus2NAF[i-1] == 1) {
+            if (sixuPlus2NAF[i - 1] == 1) {
                 result res1 = lineFunctionAdd(r, aAffine, bAffine, r2);
                 a = res1.a;
                 b = res1.b;
                 c = res1.c;
                 newR = res1.rOut;
-            } else if (sixuPlus2NAF[i-1] == -1) {
+            } else if (sixuPlus2NAF[i - 1] == -1) {
                 result res2 = lineFunctionAdd(r, minusA, bAffine, r2);
                 a = res2.a;
                 b = res2.b;
                 c = res2.c;
                 newR = res2.rOut;
             } else {
-                    continue;
+                continue;
             }
 
             mulLine(ret, a, b, c);
@@ -272,7 +274,9 @@ class OptAte {
         GFp12 fp2 = new GFp12().frobeniusP2(t1);
         GFp12 fp3 = new GFp12().frobenius(fp2);
 
-        GFp12 fu = new GFp12(); GFp12 fu2 = new GFp12(); GFp12 fu3 = new GFp12();
+        GFp12 fu = new GFp12();
+        GFp12 fu2 = new GFp12();
+        GFp12 fu3 = new GFp12();
         fu.exp(t1, Constants.u);
         fu2.exp(fu, Constants.u);
         fu3.exp(fu2, Constants.u);
@@ -286,7 +290,9 @@ class OptAte {
         y0.mul(fp, fp2);
         y0.mul(y0, fp3);
 
-        GFp12 y1 = new GFp12(); GFp12 y4 = new GFp12(); GFp12 y5 = new GFp12();
+        GFp12 y1 = new GFp12();
+        GFp12 y4 = new GFp12();
+        GFp12 y5 = new GFp12();
         y1.conjugate(t1);
         y5.conjugate(fu2);
         y3.conjugate(y3);
