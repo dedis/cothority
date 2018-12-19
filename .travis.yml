@@ -5,20 +5,20 @@ dist: trusty
 node_js:
   - "lts/*"
 
-# env:
+env:
 #   - TEST_DIR=cothority
-#   - TEST_DIR=kyber
+  - TEST_DIR=kyber
 
-# install:
-#   - gimme 1.11
-#   - . $HOME/.gimme/envs/go1.11.env
-#   - go get github.com/dedis/Coding || true
-#   # Because we are using "language: node_js" the "git clone" is not in the
-#   # GOPATH. So make a copy of it over where it is supposed to be.
-#   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
-#   - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
+install:
+  - gimme 1.11
+  - . $HOME/.gimme/envs/go1.11.env
+  - go get github.com/dedis/Coding || true
+  # Because we are using "language: node_js" the "git clone" is not in the
+  # GOPATH. So make a copy of it over where it is supposed to be.
+  - git clone . `go env GOPATH`/src/github.com/dedis/cothority
+  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
-# script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
+script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
 cache:
   directories:
@@ -44,40 +44,13 @@ matrix:
         - go get -t ./...
 
       before_install:
-        - go get github.com/dedis/kyber
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/kyber
-        - git checkout bn256_available
-        - go get github.com/dedis/protobuf
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/protobuf
-        - git checkout interface_marshaler
-        - go get github.com/dedis/onet
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/onet
-        - git checkout service_public_key
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/cothority
+        - cd $TRAVIS_BUILD_DIR
 
       script:
         - make test_nostable
 
     - language: java
       name: "Java Tests"
-
-      before_install:
-        - gimme "1.10.7"
-        - . $HOME/.gimme/envs/go1.10.7.env
-        - go get github.com/dedis/Coding || true
-        - go get github.com/dedis/kyber
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/kyber
-        - git checkout bn256_available
-        - go get github.com/dedis/protobuf
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/protobuf
-        - git checkout interface_marshaler
-        - go get github.com/dedis/onet
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/onet
-        - git checkout service_public_key
-        - cd ${TRAVIS_HOME}/gopath/src/github.com
-        - git clone --depth=50 --branch=blsftcosi_1562 https://github.com/dedis/cothority.git dedis/cothority
-        - cd ${TRAVIS_HOME}/gopath/src/github.com/dedis/cothority
-        - go get -t ./...
 
       script:
         - make test_java
