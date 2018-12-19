@@ -9,12 +9,20 @@ public class BN {
      * The pair of a G1 point and a scalar that is used to generate it.
      */
     public static class PairG1 {
-        public BigInteger k;
-        public G1 p;
+        private BigInteger k;
+        private G1 p;
 
         public PairG1(BigInteger k, G1 p) {
             this.k = k;
             this.p = p;
+        }
+
+        public BigInteger getScalar() {
+            return k;
+        }
+
+        public G1 getPoint() {
+            return p;
         }
     }
 
@@ -22,12 +30,20 @@ public class BN {
      * The pair of a G2 point and a scalar that is used to generate it.
      */
     public static class PairG2 {
-        public BigInteger k;
-        public G2 p;
+        private BigInteger k;
+        private G2 p;
 
         public PairG2(BigInteger k, G2 p) {
             this.k = k;
             this.p = p;
+        }
+
+        public BigInteger getScalar() {
+            return k;
+        }
+
+        public G2 getPoint() {
+            return p;
         }
     }
 

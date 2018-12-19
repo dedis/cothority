@@ -143,10 +143,10 @@ class BNTest {
         for (int i = 0; i < 2; i++) {
             BN.PairG1 pairG1 = BN.G1.rand(rnd);
             BN.PairG2 pairG2 = BN.G2.rand(rnd);
-            BigInteger a = pairG1.k;
-            BN.G1 p1 = pairG1.p;
-            BigInteger b = pairG2.k;
-            BN.G2 p2 = pairG2.p;
+            BigInteger a = pairG1.getScalar();
+            BN.G1 p1 = pairG1.getPoint();
+            BigInteger b = pairG2.getScalar();
+            BN.G2 p2 = pairG2.getPoint();
             BN.GT e1 = BN.pair(p1, p2);
 
             BN.GT e2 = BN.pair(new BN.G1(CurvePoint.curveGen), new BN.G2(TwistPoint.twistGen));
