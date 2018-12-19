@@ -253,20 +253,24 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 		select {
 		case <-p.closeChan:
 			return nil
-		case reply, ok := <-p.ChannelResponse:
+		case reply := <-p.ChannelResponse:
 			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
-			r, ok := responses[public.String()]
-			if !ok {
-				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
-			} else if r == nil {
-				if public == nil {
-					log.Warnf("Tentative to forge a server identity or unknown node.")
-				} else if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
-					responses[public.String()] = &reply.Response
-					done++
+			if public != nil {
+				r, ok := responses[public.String()]
+				if !ok {
+					log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
+				} else if r == nil {
+					if public == nil {
+						log.Warnf("Tentative to forge a server identity or unknown node.")
+					} else if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
+						responses[public.String()] = &reply.Response
+						done++
+					}
+				} else {
+					log.Warnf("Duplicate message from %v", reply.ServerIdentity)
 				}
 			} else {
-				log.Warnf("Duplicate message from %v", reply.ServerIdentity)
+				log.Warnf("Received unknown server identity %v", reply.ServerIdentity)
 			}
 		case reply := <-p.ChannelRefusal:
 			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)

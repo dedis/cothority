@@ -12,7 +12,7 @@ To use the code of this package you need to:
 - Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
 - Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
-To build and install the ftCoSi application, execute:
+To build and install the blsFtCosi application, execute:
 
 ```
 go get -u github.com/dedis/cothority/blsftcosi
@@ -58,19 +58,19 @@ export COTHORITY=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority
 To request a collective signature `file.sig` on a `file` from the DEDIS cothority, use:
 
 ```
-ftcosi sign -g $COTHORITY -o file.sig file
+blscosi sign -g $COTHORITY -o file.sig file
 ```
 
 To verify a collective signature `file.sig` of the `file`, use:
 
 ```
-ftcosi verify -g $COTHORITY -s file.sig file
+blscosi verify -g $COTHORITY -s file.sig file
 ```
 
 To check the status of a collective signing group, use:
 
 ```
-ftcosi check -g $COTHORITY
+blscosi check -g $COTHORITY
 ```
 
 This will first contact each server individually and then check a few random collective signing group constellations. If there are connectivity problems, due to firewalls or bad connections, for example, you will see a "Timeout on signing" or similar error message.
@@ -83,5 +83,5 @@ This will first contact each server individually and then check a few random col
 
 ## Further Information
 
-For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](https://github.com/dedis/cothority/wiki/CoSi).
-The same applies to ftCoSi.
+For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](../../conode/README.md).
+The same applies to blsFtCosi.

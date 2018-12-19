@@ -353,12 +353,13 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 			}
 
 			public := searchPublicKey(p.TreeNodeInstance, res.ServerIdentity)
-			_, ok := responseMap[public.String()]
-			if !ok && public != nil {
-				numSignature += mask.CountEnabled()
-				numFailure += res.SubtreeCount() + 1 - mask.CountEnabled()
+			if public != nil {
+				if _, ok := responseMap[public.String()]; !ok {
+					numSignature += mask.CountEnabled()
+					numFailure += res.SubtreeCount() + 1 - mask.CountEnabled()
 
-				responseMap[public.String()] = &res.Response
+					responseMap[public.String()] = &res.Response
+				}
 			}
 		case err := <-errChan:
 			err = fmt.Errorf("error in getting responses: %s", err)

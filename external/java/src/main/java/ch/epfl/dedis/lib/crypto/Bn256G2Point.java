@@ -2,7 +2,6 @@ package ch.epfl.dedis.lib.crypto;
 
 import ch.epfl.dedis.lib.Hex;
 import com.google.protobuf.ByteString;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
 
@@ -64,7 +63,7 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point mul(Scalar s) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -74,7 +73,7 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point add(Point other) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -112,12 +111,12 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point negate() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public byte[] data() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**

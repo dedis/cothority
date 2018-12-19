@@ -1,14 +1,15 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Building Blocks](../doc/BuildingBlocks.md) ::
-Fault Tolerant Collective Signing
+BLS Fault Tolerant Collective Signing
 
-# Fault Tolerant Collective Signing
+# BLS Fault Tolerant Collective Signing
 
 This package provides functionality to request and verify collective signatures
 as well as run a standalone server for handling collective signing requests.
 It is a fault tolerant version of CoSi, implemented in
-[cosi](../cosi/README.md) package.
+[cosi](../cosi/README.md) package using the Boneh-Lynn-Shacham (BLS) signature
+algorithm.
 
 ## Research Paper
 
@@ -22,7 +23,7 @@ You can read more about BLS signature by refering to
 ## Description
 
 The purpose of this work is to implement a robust and scalable consensus
-algorithm using ftCoSi protocol and handling some exceptions. The ftCoSi tree
+algorithm using blsFtCoSi protocol and handling some exceptions. The tree
 is a three level tree to make a compromise between the two-level tree, making
 the root-node vulnerable to DoS, and a more than three level tree, slowing the
 algorithm because of the RTT between the root node and the leaves.
@@ -39,16 +40,18 @@ the leader is failing, the protocol restarts using another leader. At the
 moment, however, we only handle leaf and sub-leader failure.
 
 ## Implementation
-The protocol has two messages: 
+The protocol has three messages: 
 - Announcement which is sent from the root down the tree and announce the
 proposal. 
 - Response which is sent back up to the root, containing the final aggregated
 signature, then used by the root to sign the proposal.
+- Refusal which is sent back to subleader to let them know the leaf has
+failed the verification.
 
 The protocol uses four files: 
 - `struct.go` defines the messages sent around and the protocol constants.  
 - `protocol.go` defines the root node behavior.
-- `subprotocol.go` defines non-root nodes behavior.
+- `sub_protocol.go` defines non-root nodes behavior.
 - `gen_tree.go` contains the function that generates trees.
 
 Under-the-hood, there are two protocols. A main protocol which only runs on
