@@ -34,6 +34,7 @@ class CurvePoint {
         this.t = t;
     }
 
+    @Override
     public String toString() {
         CurvePoint c = new CurvePoint(this);
         c.makeAffine();

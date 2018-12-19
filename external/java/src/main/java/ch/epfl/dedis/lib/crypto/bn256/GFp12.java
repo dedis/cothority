@@ -15,6 +15,7 @@ class GFp12 {
         this.y = new GFp6(a.y);
     }
 
+    @Override
     public String toString() {
         return "(" + this.x.toString() + "," + this.y.toString() + ")";
     }

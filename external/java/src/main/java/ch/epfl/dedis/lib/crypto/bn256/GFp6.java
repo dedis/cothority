@@ -17,6 +17,7 @@ class GFp6 {
         this.z = new GFp2(a.z);
     }
 
+    @Override
     public String toString() {
         return "(" + this.x.toString() + "," + this.y.toString() + "," + this.z.toString() + ")";
     }

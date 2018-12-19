@@ -83,6 +83,7 @@ public class BN {
             return new PairG1(k, p);
         }
 
+        @Override
         public String toString() {
             return "bn256.G1" + this.p.toString();
         }
@@ -244,6 +245,7 @@ public class BN {
             return new PairG2(k, p);
         }
 
+        @Override
         public String toString() {
             return "bn256.G2" + this.p.toString();
         }
@@ -375,6 +377,7 @@ public class BN {
             this.p = p;
         }
 
+        @Override
         public String toString() {
             return "bn256.GT" + this.p.toString();
         }

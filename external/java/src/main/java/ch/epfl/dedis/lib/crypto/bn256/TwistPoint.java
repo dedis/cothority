@@ -50,6 +50,7 @@ class TwistPoint {
         this.t = t;
     }
 
+    @Override
     public String toString() {
         TwistPoint c = new TwistPoint(this);
         return "(" + c.x.toString() + "," + c.y.toString() + "," + c.z.toString() + ")";

@@ -21,6 +21,7 @@ class GFp2 {
         this.y = y;
     }
 
+    @Override
     public String toString() {
         return "(" + this.x.mod(p).toString() + "," + this.y.mod(p).toString() + ")";
     }
