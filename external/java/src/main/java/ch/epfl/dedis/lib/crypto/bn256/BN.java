@@ -151,6 +151,15 @@ public class BN {
         }
 
         /**
+         * Checks whether the point is an infinity (zero) point.
+         *
+         * @return true if the point is at infinity.
+         */
+        public boolean isInfinity() {
+            return this.p.isInfinity();
+        }
+
+        /**
          * Turns the point into its byte representation.
          *
          * @return the marshalled bytes.
@@ -299,6 +308,26 @@ public class BN {
         public G2 add(G2 a, G2 b) {
             this.p.add(a.p, b.p);
             return this;
+        }
+
+        /**
+         * Perform a point negation.
+         *
+         * @param a is the point to negate.
+         * @return the resulting point which is also this object.
+         */
+        public G2 neg(G2 a) {
+            this.p.negative(a.p);
+            return this;
+        }
+
+        /**
+         * Checks whether the point is an infinity (zero) point.
+         *
+         * @return true if the point is at infinity.
+         */
+        public boolean isInfinity() {
+            return this.p.isInfinity();
         }
 
         /**
