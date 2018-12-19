@@ -25,12 +25,12 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 		return false, errors.New("key is nil")
 	}
 
-	bits := p.binSlice(key)
-	expectedHash := p.Interiors[0].hash() // first one is the root hash
-
 	if len(p.Interiors) == 0 {
 		return false, errors.New("no interior nodes")
 	}
+
+	bits := p.binSlice(key)
+	expectedHash := p.Interiors[0].hash() // first one is the root hash
 
 	var i int
 	for i = range p.Interiors {
