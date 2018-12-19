@@ -1,4 +1,4 @@
-package blsftcosi
+package blscosi
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestService_SignatureRequest(t *testing.T) {
 	service := hosts[0].Service(ServiceName).(*Service)
 
 	// Send a request to the service
-	msg := []byte("hello blsftcosi service")
+	msg := []byte("hello blscosi service")
 	log.Lvl1("Sending request to service...")
 
 	// empty roster should fail

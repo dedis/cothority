@@ -1,4 +1,4 @@
-package blsftcosi
+package blscosi
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestClient_SignatureRequest(t *testing.T) {
 
 	// Send a request to the service to all hosts
 	client := NewClient()
-	msg := []byte("hello blsftcosi service")
+	msg := []byte("hello blscosi service")
 
 	_, err := client.SignatureRequest(&onet.Roster{}, msg)
 	require.Error(t, err)

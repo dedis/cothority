@@ -1,12 +1,12 @@
-// Package blsftcosi implements a service and client that provides an API
+// Package blscosi implements a service and client that provides an API
 // to request a signature to a cothority
-package blsftcosi
+package blscosi
 
 import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
@@ -22,7 +22,7 @@ var suite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 var ServiceID onet.ServiceID
 
 // ServiceName is the name to refer to the CoSi service
-const ServiceName = "blsftCoSiService"
+const ServiceName = "blsCoSiService"
 
 func init() {
 	ServiceID, _ = onet.RegisterNewServiceWithSuite(ServiceName, suite, newCoSiService)
@@ -64,12 +64,12 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		return nil, errors.New("failed to generate tree")
 	}
 
-	// configure the BlsFtCosi protocol
+	// configure the BlsCosi protocol
 	pi, err := s.CreateProtocol(protocol.DefaultProtocolName, tree)
 	if err != nil {
 		return nil, errors.New("Couldn't make new protocol: " + err.Error())
 	}
-	p := pi.(*protocol.BlsFtCosi)
+	p := pi.(*protocol.BlsCosi)
 	p.CreateProtocol = s.CreateProtocol
 	p.Timeout = s.Timeout
 	p.Msg = req.Message
@@ -96,8 +96,8 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	// wait for reply. This will always eventually return.
 	sig := <-p.FinalSignature
 
-	// The hash is the message ftcosi actually signs, we recompute it the
-	// same way as ftcosi and then return it.
+	// The hash is the message blscosi actually signs, we recompute it the
+	// same way as blscosi and then return it.
 	h := s.suite.Hash()
 	h.Write(req.Message)
 	return &SignatureResponse{h.Sum(nil), sig}, nil

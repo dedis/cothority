@@ -16,7 +16,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
@@ -2221,13 +2221,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	// Register the view-change cosi protocols.
 	_, err = s.ProtocolRegister(viewChangeSubFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubBlsFtCosi(n, s.verifyViewChange, pairingSuite)
+		return protocol.NewSubBlsCosi(n, s.verifyViewChange, pairingSuite)
 	})
 	if err != nil {
 		return nil, err
 	}
 	_, err = s.ProtocolRegister(viewChangeFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewBlsFtCosi(n, s.verifyViewChange, viewChangeSubFtCosi, pairingSuite)
+		return protocol.NewBlsCosi(n, s.verifyViewChange, viewChangeSubFtCosi, pairingSuite)
 	})
 	if err != nil {
 		return nil, err

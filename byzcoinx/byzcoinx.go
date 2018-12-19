@@ -11,7 +11,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
@@ -103,7 +103,7 @@ func (bft *ByzCoinX) Start() error {
 	return nil
 }
 
-func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsFtCosi, error) {
+func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 	var name string
 	if phase == phasePrep {
 		name = bft.prepCosiProtoName
@@ -117,7 +117,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsFtCosi, error) 
 	if err != nil {
 		return nil, err
 	}
-	cosiProto := pi.(*protocol.BlsFtCosi)
+	cosiProto := pi.(*protocol.BlsCosi)
 	cosiProto.CreateProtocol = bft.CreateProtocol
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
@@ -221,22 +221,22 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pai
 	protocolMap[protoName] = bftProto
 
 	prepCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewBlsFtCosi(n, vf, prepCosiSubProtoName, suite)
+		return protocol.NewBlsCosi(n, vf, prepCosiSubProtoName, suite)
 	}
 	protocolMap[prepCosiProtoName] = prepCosiProto
 
 	prepCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubBlsFtCosi(n, vf, suite)
+		return protocol.NewSubBlsCosi(n, vf, suite)
 	}
 	protocolMap[prepCosiSubProtoName] = prepCosiSubProto
 
 	commitCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewBlsFtCosi(n, ack, commitCosiSubProtoName, suite)
+		return protocol.NewBlsCosi(n, ack, commitCosiSubProtoName, suite)
 	}
 	protocolMap[commitCosiProtoName] = commitCosiProto
 
 	commitCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubBlsFtCosi(n, ack, suite)
+		return protocol.NewSubBlsCosi(n, ack, suite)
 	}
 	protocolMap[commitCosiSubProtoName] = commitCosiSubProto
 

@@ -20,17 +20,17 @@ const FailureSubProtocolName = "FailureSubProtocol"
 
 func NewFailureProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewBlsFtCosi(n, vf, FailureSubProtocolName, testSuite)
+	return NewBlsCosi(n, vf, FailureSubProtocolName, testSuite)
 }
 func NewFailureSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return false }
-	return NewSubBlsFtCosi(n, vf, testSuite)
+	return NewSubBlsCosi(n, vf, testSuite)
 }
 
 // Used for tests
 var testServiceID onet.ServiceID
 
-const testServiceName = "TestServiceBlsFtCosi"
+const testServiceName = "TestServiceBlsCosi"
 
 var newProtocolMethods = map[string]func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error){
 	DefaultProtocolName:    NewDefaultProtocol,
@@ -97,7 +97,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Rost
 		return nil, nil, err
 	}
 
-	cosiProtocol := pi.(*BlsFtCosi)
+	cosiProtocol := pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
 	cosiProtocol.Timeout = testTimeout
@@ -182,7 +182,7 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) erro
 		return err
 	}
 
-	cosiProtocol := pi.(*BlsFtCosi)
+	cosiProtocol := pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
 	cosiProtocol.Timeout = testTimeout
@@ -236,7 +236,7 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 		return err
 	}
 
-	cosiProtocol := pi.(*BlsFtCosi)
+	cosiProtocol := pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{1, 2, 3}
 	cosiProtocol.Timeout = testTimeout
@@ -280,7 +280,7 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	}
 
 	// missing create protocol
-	cosiProtocol := pi.(*BlsFtCosi)
+	cosiProtocol := pi.(*BlsCosi)
 	cosiProtocol.Msg = []byte{}
 	cosiProtocol.Timeout = testTimeout
 
@@ -298,7 +298,7 @@ func TestProtocol_IntegrityCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error in creation of protocol:", err)
 	}
-	cosiProtocol = pi.(*BlsFtCosi)
+	cosiProtocol = pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Timeout = testTimeout
 	cosiProtocol.SetNbrSubTree(1)
@@ -351,7 +351,7 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error)
 		return time, err
 	}
 
-	cosiProtocol := pi.(*BlsFtCosi)
+	cosiProtocol := pi.(*BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{}
 	cosiProtocol.Timeout = testTimeout
@@ -380,7 +380,7 @@ type testService struct {
 	*onet.ServiceProcessor
 }
 
-func getAndVerifySignature(proto *BlsFtCosi, proposal []byte, policy cosi.Policy) (BlsSignature, error) {
+func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy cosi.Policy) (BlsSignature, error) {
 	var signature BlsSignature
 	log.Lvl3("Waiting for Instance")
 	select {
@@ -418,11 +418,11 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 	}
 	switch tn.ProtocolName() {
 	case DefaultProtocolName, FailureProtocolName:
-		blsftcosi := pi.(*BlsFtCosi)
-		return blsftcosi, nil
+		blscosi := pi.(*BlsCosi)
+		return blscosi, nil
 	case DefaultSubProtocolName, FailureSubProtocolName:
-		subblsftcosi := pi.(*SubBlsFtCosi)
-		return subblsftcosi, nil
+		subblscosi := pi.(*SubBlsCosi)
+		return subblscosi, nil
 	}
 	return nil, errors.New("unknown protocol for this service")
 }

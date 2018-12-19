@@ -30,10 +30,10 @@ func init() {
 	GlobalRegisterDefaultProtocols()
 }
 
-// BlsFtCosi holds the parameters of the protocol.
+// BlsCosi holds the parameters of the protocol.
 // It also defines a channel that will receive the final signature.
 // This protocol should only exist on the root node.
-type BlsFtCosi struct {
+type BlsCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
 	Data           []byte
@@ -45,7 +45,7 @@ type BlsFtCosi struct {
 	FinalSignature chan BlsSignature // final signature that is sent back to client
 
 	stoppedOnce     sync.Once
-	subProtocols    []*SubBlsFtCosi
+	subProtocols    []*SubBlsCosi
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
@@ -54,7 +54,7 @@ type BlsFtCosi struct {
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
-// used in FtCosi protocol for creating sub leader protocols.
+// used in BlsCosi protocol for creating sub leader protocols.
 type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstance, error)
 
 // NewDefaultProtocol is the default protocol function used for registration
@@ -62,7 +62,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // Called by GlobalRegisterDefaultProtocols
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewBlsFtCosi(n, vf, DefaultSubProtocolName, pairing.NewSuiteBn256())
+	return NewBlsCosi(n, vf, DefaultSubProtocolName, pairing.NewSuiteBn256())
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -79,10 +79,10 @@ func DefaultThreshold(n int) int {
 	return n - f
 }
 
-// NewBlsFtCosi method is used to define the ftcosi protocol.
-func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+// NewBlsCosi method is used to define the blscosi protocol.
+func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	nNodes := len(n.Roster().List)
-	c := &BlsFtCosi{
+	c := &BlsCosi{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan BlsSignature, 1),
 		Timeout:          defaultTimeout,
@@ -102,7 +102,7 @@ func NewBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName s
 
 // SetNbrSubTree generates N new subtrees that will be used
 // for the protocol
-func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
+func (p *BlsCosi) SetNbrSubTree(nbr int) error {
 	if nbr > len(p.Roster().List)-1 {
 		return errors.New("Cannot have more subtrees than nodes")
 	}
@@ -121,12 +121,12 @@ func (p *BlsFtCosi) SetNbrSubTree(nbr int) error {
 }
 
 // Shutdown stops the protocol
-func (p *BlsFtCosi) Shutdown() error {
+func (p *BlsCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
-		for _, subFtCosi := range p.subProtocols {
+		for _, subCosi := range p.subProtocols {
 			// we're stopping the root thus it will stop the children
 			// by itself using a broadcasted message
-			subFtCosi.Shutdown()
+			subCosi.Shutdown()
 		}
 		close(p.startChan)
 		close(p.FinalSignature)
@@ -136,7 +136,7 @@ func (p *BlsFtCosi) Shutdown() error {
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
-func (p *BlsFtCosi) Dispatch() error {
+func (p *BlsCosi) Dispatch() error {
 	defer p.Done()
 	if !p.IsRoot() {
 		return nil
@@ -160,7 +160,7 @@ func (p *BlsFtCosi) Dispatch() error {
 	}
 
 	// start all subprotocols
-	p.subProtocols = make([]*SubBlsFtCosi, len(p.subTrees))
+	p.subProtocols = make([]*SubBlsCosi, len(p.subTrees))
 	for i, tree := range p.subTrees {
 		log.Lvlf3("Invoking start sub protocol on %v", tree.Root.ServerIdentity)
 		var err error
@@ -198,7 +198,7 @@ func (p *BlsFtCosi) Dispatch() error {
 
 // Start is done only by root and starts the protocol.
 // It also verifies that the protocol has been correctly parameterized.
-func (p *BlsFtCosi) Start() error {
+func (p *BlsCosi) Start() error {
 	err := p.checkIntegrity()
 	if err != nil {
 		p.Done()
@@ -212,7 +212,7 @@ func (p *BlsFtCosi) Start() error {
 
 // checkIntegrity checks if the protocol has been instantiated with
 // correct parameters
-func (p *BlsFtCosi) checkIntegrity() error {
+func (p *BlsCosi) checkIntegrity() error {
 	if p.Msg == nil {
 		return fmt.Errorf("no proposal msg specified")
 	}
@@ -240,19 +240,19 @@ func (p *BlsFtCosi) checkIntegrity() error {
 
 // checkFailureThreshold returns true when the number of failures
 // is above the threshold
-func (p *BlsFtCosi) checkFailureThreshold(numFailure int) bool {
+func (p *BlsCosi) checkFailureThreshold(numFailure int) bool {
 	return numFailure > len(p.Roster().List)-p.Threshold
 }
 
 // startSubProtocol creates, parametrize and starts a subprotocol on a given tree
 // and returns the started protocol.
-func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
+func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 
 	pi, err := p.CreateProtocol(p.subProtocolName, tree)
 	if err != nil {
 		return nil, err
 	}
-	cosiSubProtocol := pi.(*SubBlsFtCosi)
+	cosiSubProtocol := pi.(*SubBlsCosi)
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
@@ -274,7 +274,7 @@ func (p *BlsFtCosi) startSubProtocol(tree *onet.Tree) (*SubBlsFtCosi, error) {
 
 // Collect signatures from each sub-leader, restart whereever sub-leaders fail to respond.
 // The collected signatures are already aggregated for a particular group
-func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
+func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 	responsesChan := make(chan StructResponse, len(p.subProtocols))
 	errChan := make(chan error, len(p.subProtocols))
 	closeChan := make(chan bool)
@@ -282,7 +282,7 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 	defer func() { close(closeChan) }()
 
 	for i, subProtocol := range p.subProtocols {
-		go func(i int, subProtocol *SubBlsFtCosi) {
+		go func(i int, subProtocol *SubBlsCosi) {
 			for {
 				// this select doesn't have any timeout because a global is used
 				// when aggregating the response. The close channel will act as
@@ -383,7 +383,7 @@ func (p *BlsFtCosi) collectSignatures() (ResponseMap, error) {
 
 // Sign the message with this node and aggregates with all child signatures (in structResponses)
 // Also aggregates the child bitmasks
-func (p *BlsFtCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.Mask, error) {
+func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.Mask, error) {
 	publics := p.Publics()
 
 	//generate personal mask

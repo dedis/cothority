@@ -16,7 +16,7 @@ import (
 
 const (
 	// BinaryName represents the Name of the binary
-	BinaryName = "blsftcosi"
+	BinaryName = "blscosi"
 
 	// Version of the binary
 	Version = "1.00"
@@ -106,7 +106,7 @@ func createApp() *cli.App {
 		// BEGIN SERVER --------
 		{
 			Name:  "server",
-			Usage: "Start blsftcosi server",
+			Usage: "Start blscosi server",
 			Action: func(c *cli.Context) error {
 				runServer(c)
 				return nil

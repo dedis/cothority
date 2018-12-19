@@ -23,8 +23,8 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/blsftcosi"
-	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blscosi"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -33,7 +33,7 @@ import (
 )
 
 func init() {
-	onet.SimulationRegister("BlsFtCosiProtocol", NewSimulationProtocol)
+	onet.SimulationRegister("BlsCosiProtocol", NewSimulationProtocol)
 }
 
 // SimulationProtocol implements onet.Simulation.
@@ -99,7 +99,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 
 				switch msg.(type) {
 				case *protocol.Announcement, *protocol.Response:
-					log.Lvl1("Ignoring blsftcosi message for simulation on ", config.Server.ServerIdentity)
+					log.Lvl1("Ignoring blscosi message for simulation on ", config.Server.ServerIdentity)
 				default:
 					config.Overlay.Process(e)
 				}
@@ -118,17 +118,17 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 	for round := 0; round < s.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		blsftcosiService := config.GetService(blsftcosi.ServiceName).(*blsftcosi.Service)
-		blsftcosiService.NSubtrees = s.NSubtrees
-		blsftcosiService.Threshold = s.Hosts - s.FailingLeafs - s.FailingSubleaders
+		blscosiService := config.GetService(blscosi.ServiceName).(*blscosi.Service)
+		blscosiService.NSubtrees = s.NSubtrees
+		blscosiService.Threshold = s.Hosts - s.FailingLeafs - s.FailingSubleaders
 
-		client := blsftcosi.NewClient()
+		client := blscosi.NewClient()
 		proposal := []byte{0xFF}
-		serviceReq := &blsftcosi.SignatureRequest{
+		serviceReq := &blscosi.SignatureRequest{
 			Roster:  config.Roster,
 			Message: proposal,
 		}
-		serviceReply := &blsftcosi.SignatureResponse{}
+		serviceReply := &blscosi.SignatureResponse{}
 
 		log.Lvl1("Sending request to service...")
 		err := client.SendProtobuf(config.Server.ServerIdentity, serviceReq, serviceReply)
@@ -139,7 +139,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		round.Record()
 
 		suite := client.Suite().(pairing.Suite)
-		publics := config.Roster.ServicePublics(blsftcosi.ServiceName)
+		publics := config.Roster.ServicePublics(blscosi.ServiceName)
 
 		err = serviceReply.Signature.Verify(suite, proposal, publics)
 		if err != nil {

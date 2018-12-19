@@ -7,7 +7,7 @@ Fault Tolerant Collective Signing
 
 *WARNING*: this package is kept here for historical and research purposes. It
 should not be used in other services as it has been deprecated by the
-[blsftcosi](../blsftcosi)
+[blscosi](../blscosi)
 package.
 
 This package provides functionality to request and verify collective signatures

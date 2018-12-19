@@ -21,7 +21,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blsftcosi/blscosi/check"
+	"github.com/dedis/cothority/blscosi/blscosi/check"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/cothority/darc"

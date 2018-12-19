@@ -1,9 +1,9 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Building Blocks](../doc/BuildingBlocks.md) ::
-BLS Fault Tolerant Collective Signing
+BLS Collective Signing
 
-# BLS Fault Tolerant Collective Signing
+# BLS Collective Signing
 
 This package provides functionality to request and verify collective signatures
 as well as run a standalone server for handling collective signing requests.
@@ -23,7 +23,7 @@ You can read more about BLS signature by refering to
 ## Description
 
 The purpose of this work is to implement a robust and scalable consensus
-algorithm using blsFtCoSi protocol and handling some exceptions. The tree
+algorithm using blscosi protocol and handling some exceptions. The tree
 is a three level tree to make a compromise between the two-level tree, making
 the root-node vulnerable to DoS, and a more than three level tree, slowing the
 algorithm because of the RTT between the root node and the leaves.
@@ -33,7 +33,7 @@ each having a sub-leader (second level nodes) and members (leaves). The group
 composition are defined by the leader.
 
 Ideally, we want to handle non-responding nodes, no matter where they are
-in the tree. If a leaf is failing, then it is ignored in the ftCoSi commitment.
+in the tree. If a leaf is failing, then it is ignored in the blscosi commitment.
 If a sub-leader is non-responding, then the leader (root node) recreates the
 group by selecting another sub-leader from the group members. And finally, if
 the leader is failing, the protocol restarts using another leader. At the
@@ -72,5 +72,5 @@ Namely, if there are m sub-leaders, the root will run m sub-protocols. The
 sub- protocols do bulk of the work (collective signatures) and communicates
 the result to the main protocol via channels.
 
-- [BlsFtCosi CLI](blscosi/README.md) is a command line interface for interacting with ftCoSi
-- [BlsFtCoSi protocol](protocol) the protocol used for collective signing
+- [BlsCosi CLI](blscosi/README.md) is a command line interface for interacting with blscosi
+- [BlsCoSi protocol](protocol) the protocol used for collective signing

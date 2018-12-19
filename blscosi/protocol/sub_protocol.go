@@ -22,8 +22,8 @@ func init() {
 // sub_protocol is run by each sub-leader and each node once, and n times by
 // the root leader, where n is the number of sub-leader.
 
-// SubBlsFtCosi holds the different channels used to receive the different protocol messages.
-type SubBlsFtCosi struct {
+// SubBlsCosi holds the different channels used to receive the different protocol messages.
+type SubBlsCosi struct {
 	*onet.TreeNodeInstance
 	Msg            []byte
 	Data           []byte
@@ -50,12 +50,12 @@ type SubBlsFtCosi struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubBlsFtCosi(n, vf, pairing.NewSuiteBn256())
+	return NewSubBlsCosi(n, vf, pairing.NewSuiteBn256())
 }
 
-// NewSubBlsFtCosi is used to define the subprotocol and to register
+// NewSubBlsCosi is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	// tests if it's a three level tree
 	moreThreeLevel := false
 	n.Tree().Root.Visit(0, func(depth int, n *onet.TreeNode) {
@@ -64,10 +64,10 @@ func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing
 		}
 	})
 	if moreThreeLevel {
-		return nil, fmt.Errorf("subBlsFtCosi launched with a more than three level tree")
+		return nil, fmt.Errorf("subBlsCosi launched with a more than three level tree")
 	}
 
-	c := &SubBlsFtCosi{
+	c := &SubBlsCosi{
 		TreeNodeInstance: n,
 		verificationFn:   vf,
 		suite:            suite,
@@ -93,7 +93,7 @@ func NewSubBlsFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing
 
 // Dispatch runs the protocol for each node in the protocol acting according
 // to its type
-func (p *SubBlsFtCosi) Dispatch() error {
+func (p *SubBlsCosi) Dispatch() error {
 	defer p.Done()
 
 	// Send announcement to start sending signatures
@@ -109,7 +109,7 @@ func (p *SubBlsFtCosi) Dispatch() error {
 // HandleStop is called when a Stop message is send to this node.
 // It broadcasts the message to all the nodes in tree and each node will stop
 // the protocol by calling p.Done.
-func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
+func (p *SubBlsCosi) HandleStop(stop StructStop) error {
 	if !stop.TreeNode.Equal(p.Root()) {
 		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
 			"that is not the root, ignored")
@@ -120,7 +120,7 @@ func (p *SubBlsFtCosi) HandleStop(stop StructStop) error {
 }
 
 // Shutdown closes the different channel to stop the current work
-func (p *SubBlsFtCosi) Shutdown() error {
+func (p *SubBlsCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		log.Lvlf3("Subprotocol shut down on %v", p.ServerIdentity())
 		// Only this channel is closed to cut off expensive operations
@@ -133,7 +133,7 @@ func (p *SubBlsFtCosi) Shutdown() error {
 }
 
 // Start is done only by root and starts the subprotocol
-func (p *SubBlsFtCosi) Start() error {
+func (p *SubBlsCosi) Start() error {
 	log.Lvl3(p.ServerIdentity(), "Starting subCoSi")
 	if err := p.checkIntegrity(); err != nil {
 		p.startChan <- false
@@ -146,7 +146,7 @@ func (p *SubBlsFtCosi) Start() error {
 }
 
 // waitAnnouncement waits for an announcement of the right node
-func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
+func (p *SubBlsCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
 	var a *Announcement
 	// Keep looping until the correct announcement to prevent
 	// an attacker from killing the protocol with false message
@@ -171,7 +171,7 @@ func (p *SubBlsFtCosi) waitAnnouncement(parent *onet.TreeNode) *Announcement {
 
 // dispatchRoot takes care of sending announcements to the children and
 // waits for the response with the signatures of the children
-func (p *SubBlsFtCosi) dispatchRoot() error {
+func (p *SubBlsCosi) dispatchRoot() error {
 	defer func() {
 		err := p.Broadcast(&Stop{})
 		if err != nil {
@@ -219,7 +219,7 @@ func (p *SubBlsFtCosi) dispatchRoot() error {
 // dispatchSubLeader takes care of synchronizing the children
 // responses and aggregate them to eventually send that to
 // the root
-func (p *SubBlsFtCosi) dispatchSubLeader() error {
+func (p *SubBlsCosi) dispatchSubLeader() error {
 	a := p.waitAnnouncement(p.Root())
 	if a == nil {
 		return nil
@@ -309,7 +309,7 @@ func (p *SubBlsFtCosi) dispatchSubLeader() error {
 }
 
 // dispatchLeaf prepares the signature and send it to the subleader
-func (p *SubBlsFtCosi) dispatchLeaf() error {
+func (p *SubBlsCosi) dispatchLeaf() error {
 	a := p.waitAnnouncement(p.Root().Children[0])
 	if a == nil {
 		return nil
@@ -347,7 +347,7 @@ func (p *SubBlsFtCosi) dispatchLeaf() error {
 }
 
 // Sign the message and pack it with the mask as a response
-func (p *SubBlsFtCosi) makeResponse() (*Response, error) {
+func (p *SubBlsCosi) makeResponse() (*Response, error) {
 	mask, err := cosi.NewMask(p.suite, p.Publics(), p.Public())
 	if err != nil {
 		log.Error(err)
@@ -367,7 +367,7 @@ func (p *SubBlsFtCosi) makeResponse() (*Response, error) {
 
 // makeRefusal will sign a random nonce so that we can check
 // that the refusal is not forged
-func (p *SubBlsFtCosi) makeRefusal() (*Refusal, error) {
+func (p *SubBlsCosi) makeRefusal() (*Refusal, error) {
 	nonce := make([]byte, 8)
 	_, err := rand.Read(nonce)
 	if err != nil {
@@ -421,13 +421,13 @@ func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses
 
 // makeVerification executes the verification function provided and
 // returns the result in the given channel
-func (p *SubBlsFtCosi) makeVerification(out chan bool) {
+func (p *SubBlsCosi) makeVerification(out chan bool) {
 	out <- p.verificationFn(p.Msg, p.Data)
 }
 
 // checkIntegrity checks that the subprotocol can start with the current
 // parameters
-func (p *SubBlsFtCosi) checkIntegrity() error {
+func (p *SubBlsCosi) checkIntegrity() error {
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
 	}

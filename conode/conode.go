@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blsftcosi/blscosi/check"
+	"github.com/dedis/cothority/blscosi/blscosi/check"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber/util/encoding"

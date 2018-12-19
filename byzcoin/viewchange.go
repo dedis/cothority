@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blsftcosi/protocol"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
@@ -271,7 +271,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	}
 
 	n := len(sb.Roster.List)
-	cosiProto := proto.(*protocol.BlsFtCosi)
+	cosiProto := proto.(*protocol.BlsCosi)
 	cosiProto.Msg = req.Hash()
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol

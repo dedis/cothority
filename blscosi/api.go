@@ -1,4 +1,4 @@
-package blsftcosi
+package blscosi
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ type Client struct {
 	*onet.Client
 }
 
-// NewClient instantiates a new blsftcosi.Client
+// NewClient instantiates a new blscosi.Client
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(suite, ServiceName)}
 }

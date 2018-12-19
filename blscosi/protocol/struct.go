@@ -17,11 +17,11 @@ import (
 // DefaultProtocolName can be used from other packages to refer to this protocol.
 // If this name is used, then the suite used to verify signatures must be
 // the default cothority.Suite.
-const DefaultProtocolName = "blsftCoSiProtoDefault"
+const DefaultProtocolName = "blsCoSiProtoDefault"
 
 // DefaultSubProtocolName the name of the default sub protocol, started by the
 // main protocol.
-const DefaultSubProtocolName = "blsftSubCoSiProtoDefault"
+const DefaultSubProtocolName = "blsSubCoSiProtoDefault"
 
 func init() {
 	network.RegisterMessages(&Announcement{}, &Response{}, &Stop{})
@@ -112,7 +112,7 @@ func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics [
 	return nil
 }
 
-// Announcement is the blsftcosi annoucement message
+// Announcement is the blscosi annoucement message
 type Announcement struct {
 	Msg       []byte // statement to be signed
 	Data      []byte
@@ -127,7 +127,7 @@ type StructAnnouncement struct {
 	Announcement
 }
 
-// Response is the blsftcosi response message
+// Response is the blscosi response message
 type Response struct {
 	Signature BlsSignature
 	Mask      []byte

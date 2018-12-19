@@ -10,8 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/dedis/cothority/blsftcosi"
-	"github.com/dedis/cothority/blsftcosi/blscosi/check"
+	"github.com/dedis/cothority/blscosi"
+	"github.com/dedis/cothority/blscosi/blscosi/check"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
@@ -87,7 +87,7 @@ func verifyFile(c *cli.Context) error {
 }
 
 // writeSigAsJSON - writes the JSON out to a file
-func writeSigAsJSON(res *blsftcosi.SignatureResponse, outW io.Writer) error {
+func writeSigAsJSON(res *blscosi.SignatureResponse, outW io.Writer) error {
 	b, err := json.Marshal(sigHex{
 		Hash:      hex.EncodeToString(res.Hash),
 		Signature: hex.EncodeToString(res.Signature)},
@@ -113,7 +113,7 @@ func writeSigAsJSON(res *blsftcosi.SignatureResponse, outW io.Writer) error {
 }
 
 // sign takes a stream and a toml file defining the servers
-func sign(msg []byte, tomlFileName string) (*blsftcosi.SignatureResponse, error) {
+func sign(msg []byte, tomlFileName string) (*blscosi.SignatureResponse, error) {
 	log.Lvl2("Starting signature")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
@@ -124,7 +124,7 @@ func sign(msg []byte, tomlFileName string) (*blsftcosi.SignatureResponse, error)
 		return nil, err
 	}
 	if len(g.Roster.List) <= 0 {
-		return nil, fmt.Errorf("Empty or invalid blsftcosi group file: %s", tomlFileName)
+		return nil, fmt.Errorf("Empty or invalid blscosi group file: %s", tomlFileName)
 	}
 
 	log.Lvl2("Sending signature to", g.Roster)
@@ -161,7 +161,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 
-	sig := &blsftcosi.SignatureResponse{}
+	sig := &blscosi.SignatureResponse{}
 	sig.Hash, err = hex.DecodeString(sigStr.Hash)
 	if err != nil {
 		return err

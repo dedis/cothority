@@ -12,10 +12,10 @@ To use the code of this package you need to:
 - Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
 - Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
-To build and install the blsFtCosi application, execute:
+To build and install the blscosi application, execute:
 
 ```
-go get -u github.com/dedis/cothority/blsftcosi
+go get -u github.com/dedis/cothority/blscosi
 ```
 
 ## Functionality Overview
@@ -34,7 +34,7 @@ COMMANDS:
      sign, s    Request a collectively signature for a 'file'; signature is written to STDOUT by default
      verify, v  Verify a collective signature of a 'file'; signature is read from STDIN by default
      check, c   Check if the servers in the group definition are up and running
-     server     Start ftcosi server
+     server     Start blscosi server
      help, h    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -84,4 +84,4 @@ This will first contact each server individually and then check a few random col
 ## Further Information
 
 For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](../../conode/README.md).
-The same applies to blsFtCosi.
+The same applies to blscosi.
