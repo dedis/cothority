@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.FrameConsumerResultCallback;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -106,7 +107,12 @@ public class DockerTestServerController extends TestServerController {
                 .withCmd(cmd)
                 .exec();
 
+        FrameConsumerResultCallback fc = new FrameConsumerResultCallback();
+        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
+        fc.addConsumer(OutputFrame.OutputType.STDOUT, logConsumer);
+        fc.addConsumer(OutputFrame.OutputType.STDERR, logConsumer);
+
         dockerClient.execStartCmd(execCreateCmdResponse.getId())
-                .exec(new FrameConsumerResultCallback()).awaitStarted();
+                .exec(fc).awaitStarted();
     }
 }
