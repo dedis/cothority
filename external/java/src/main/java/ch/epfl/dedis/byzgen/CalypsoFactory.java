@@ -1,26 +1,23 @@
 package ch.epfl.dedis.byzgen;
 
-import ch.epfl.dedis.calypso.LTSInstance;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
-import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.calypso.CalypsoRPC;
 import ch.epfl.dedis.calypso.LTSId;
+import ch.epfl.dedis.calypso.LTSInstance;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 public class CalypsoFactory {
     private ArrayList<ServerIdentity> servers = new ArrayList<>();
@@ -52,39 +49,26 @@ public class CalypsoFactory {
         return this;
     }
 
-    /**
-     * @param conode    cothority server address (base address in tls://127.0.0.0:7001 form)
-     * @param publicKey server public symmetricKey hex encoded to a string
-     * @throws IllegalArgumentException when conode address is incorrect
-     * @return the factory
-     */
-    public CalypsoFactory addConode(final URI conode, final String publicKey) {
-        if (!conode.getScheme().equals("tls")) {
+    public CalypsoFactory addConode(ServerIdentity id) {
+        if (!id.getAddress().getScheme().equals("tls")) {
             throw new IllegalArgumentException("conode address must be in tls:// format like \"tls://127.0.0.0:7001\"");
         }
 
-        servers.add(new ServerIdentity(conode, publicKey));
+        servers.add(id);
         return this;
     }
 
     /**
-     * @param conode conode address with public key
-     * @return the factory
+     * @param ids server identities
      * @throws IllegalArgumentException when conode address is incorrect
-     */
-    public CalypsoFactory addConode(final ConodeAddress conode) {
-        return this.addConode(conode.getAddress(), conode.getPublicKey());
-    }
-
-    /**
-     * @param conodes cothority server address with public key
      * @return the factory
-     * @throws IllegalArgumentException when conode address is incorrect
      */
-    public CalypsoFactory addConodes(final Collection<ConodeAddress> conodes) {
-        for (ConodeAddress conodeAddress : conodes) {
-            this.addConode(conodeAddress);
+    public CalypsoFactory addConodes(List<ServerIdentity> ids) {
+        for (ServerIdentity id : ids) {
+            // sanity check is done by this function
+            addConode(id);
         }
+
         return this;
     }
 
@@ -126,23 +110,5 @@ public class CalypsoFactory {
             throw new IllegalStateException("Connection can not be established. No cothority server was specified.");
         }
         return new Roster(servers);
-    }
-
-    public static class ConodeAddress {
-        private final URI address;
-        private final String publicKey;
-
-        public URI getAddress() {
-            return address;
-        }
-
-        public String getPublicKey() {
-            return publicKey;
-        }
-
-        public ConodeAddress(URI address, String publicKey) {
-            this.address = address;
-            this.publicKey = publicKey;
-        }
     }
 }

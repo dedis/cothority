@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.DarcProto;
@@ -15,7 +16,7 @@ public class IdentityEd25519 implements Identity {
      * @param proto the protobuf to parse
      */
     public IdentityEd25519(DarcProto.IdentityEd25519 proto){
-        pub = new Ed25519Point(proto.getPoint());
+        pub = PointFactory.getInstance().fromProto(proto.getPoint());
     }
 
     /**
@@ -31,8 +32,8 @@ public class IdentityEd25519 implements Identity {
      * @param signer the input signer
      */
     public IdentityEd25519(Signer signer) {
-        if (SignerEd25519.class.isInstance(signer)) {
-            pub = new Ed25519Point(signer.getPublic());
+        if (signer instanceof SignerEd25519) {
+            pub = signer.getPublic().copy();
         } else {
             throw new RuntimeException("Wrong signer type: " + signer.toString());
         }
@@ -45,8 +46,12 @@ public class IdentityEd25519 implements Identity {
      * @param signature the signature
      * @return true if the signature is correct
      */
-    public boolean verify(byte[] msg, byte[] signature){
-        return new SchnorrSig(signature).verify(msg, pub);
+    public boolean verify(byte[] msg, byte[] signature) {
+        try {
+            return new SchnorrSig(signature).verify(msg, pub);
+        } catch (CothorityCryptoException e) {
+            return false;
+        }
     }
 
     /**
@@ -58,7 +63,7 @@ public class IdentityEd25519 implements Identity {
     public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
         DarcProto.IdentityEd25519.Builder bed = DarcProto.IdentityEd25519.newBuilder();
-        bed.setPoint(ByteString.copyFrom(pub.toBytes()));
+        bed.setPoint(pub.toProto());
         bid.setEd25519(bed);
         return bid.build();
     }

@@ -7,10 +7,10 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
@@ -343,12 +343,31 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		if err != nil {
 			return nil, err
 		}
-		sis = append(sis, &network.ServerIdentity{
+
+		si := &network.ServerIdentity{
 			Address:     network.Address(s[0]),
 			Description: s[1],
 			ID:          network.ServerIdentityID(uid),
 			Public:      pub,
-		})
+		}
+
+		services := []network.ServiceIdentity{}
+		for i := 4; i < len(s); i += 2 {
+			suite := onet.ServiceFactory.Suite(s[i])
+			if suite != nil {
+				pub, err := encoding.StringHexToPoint(suite, s[i+1])
+				if err != nil {
+					return nil, err
+				}
+				services = append(services, network.ServiceIdentity{
+					Name:   s[i],
+					Public: pub,
+				})
+			}
+		}
+		si.ServiceIdentities = services
+
+		sis = append(sis, si)
 	}
 	rostr := onet.NewRoster(sis)
 	mparties := make([]*ShortDesc, len(descToml.Parties))
@@ -459,11 +478,18 @@ func (fs *FinalStatement) Hash() ([]byte, error) {
 // Verify checks if the collective signature is correct and has been created
 // by the roster. On success, this returns nil.
 func (fs *FinalStatement) Verify() error {
+	return fs.VerifyWithService(Name)
+}
+
+// VerifyWithService will verify the signature using the public keys
+// registered for the given service name
+func (fs *FinalStatement) VerifyWithService(name string) error {
 	h, err := fs.Hash()
 	if err != nil {
 		return err
 	}
-	return eddsa.Verify(fs.Desc.Roster.Aggregate, h, fs.Signature)
+
+	return protocol.BlsSignature(fs.Signature).Verify(pairingSuite, h, fs.Desc.Roster.ServicePublics(name))
 }
 
 // represents a PopDesc in string-version for toml.
@@ -523,6 +549,18 @@ func toToml(r *onet.Roster) ([][]string, error) {
 		}
 		sistr := []string{si.Address.String(), si.Description,
 			uuid.UUID(si.ID).String(), str}
+
+		for _, sid := range si.ServiceIdentities {
+			suite := onet.ServiceFactory.Suite(sid.Name)
+			if suite != nil {
+				pub, err := encoding.PointToStringHex(suite, sid.Public)
+				if err != nil {
+					return nil, err
+				}
+				sistr = append(sistr, sid.Name, pub)
+			}
+		}
+
 		rostr[i] = sistr
 	}
 	return rostr, nil

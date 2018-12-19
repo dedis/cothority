@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Ed25519Test {
     private final static Logger logger = LoggerFactory.getLogger(Ed25519Test.class);
     @Test
-    void point() {
+    void point() throws Exception {
         String point = "3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29";
         Point ed25519Point2 = new Ed25519Point(point);
         assertEquals(point, ed25519Point2.toString());
@@ -122,7 +122,7 @@ class Ed25519Test {
     }
 
     @Test
-    void storeLoad() {
+    void storeLoad() throws Exception {
         Scalar s = new Ed25519Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
         Point S = Ed25519Point.base().mul(s);
 
@@ -133,7 +133,7 @@ class Ed25519Test {
     }
 
     @Test
-    void schnorrVerify() {
+    void schnorrVerify() throws Exception {
         byte[] msg = "Hello Schnorr".getBytes();
         byte[] sigBuf = Hex.parseHexBinary("b95fc52a5fd2e18aa7ace5b2250c2a25e368f75c148ea3403c8f32b5f100781b" +
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");

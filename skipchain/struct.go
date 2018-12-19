@@ -12,10 +12,9 @@ import (
 	"time"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -373,13 +372,15 @@ func NewSkipBlock() *SkipBlock {
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
+	publics := sb.Roster.ServicePublics(ServiceName)
+
 	for _, fl := range sb.ForwardLink {
 		if fl.IsEmpty() {
 			// This means it's an empty forward-link to correctly place a higher-order
 			// forward-link in place.
 			continue
 		}
-		if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
+		if err := fl.Verify(suite, publics); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
 	}
@@ -524,7 +525,7 @@ func (sbs Proof) Verify() error {
 			}
 
 			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
-			if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
+			if err := fl.Verify(pairing.NewSuiteBn256(), sb.Roster.ServicePublics(ServiceName)); err != nil {
 				return err
 			}
 
@@ -606,14 +607,13 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // Verify checks the signature against a list of public keys. The list must
 // correspond to the block roster to match the signature.
 // It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
+func (fl *ForwardLink) Verify(suite *pairing.SuiteBn256, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
 
 	// This calculation must match the one in byzcoinx.
-	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
-		cosi.NewThresholdPolicy(byzcoinx.Threshold(len(pubs))))
+	return fl.Signature.Sig.Verify(suite, fl.Signature.Msg, pubs)
 }
 
 // IsEmpty indicates whether this forwardlink is merely a placeholder for
@@ -695,7 +695,10 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							// Don't overwrite existing forwardlinks and ignore empty links
 							continue
 						}
-						if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
+
+						publics := sbOld.Roster.ServicePublics(ServiceName)
+
+						if err := fl.Verify(suite, publics); err != nil {
 							return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
 						}
 						if err := sbOld.AddForwardLink(fl, i); err != nil {
@@ -956,7 +959,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 		c := tx.Bucket([]byte(db.bucketName)).Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if bytes.HasPrefix(k, match) {
-				_, msg, err := network.Unmarshal(v, cothority.Suite)
+				_, msg, err := network.Unmarshal(v, suite)
 				if err != nil {
 					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
@@ -966,7 +969,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 		}
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if bytes.HasSuffix(k, match) {
-				_, msg, err := network.Unmarshal(v, cothority.Suite)
+				_, msg, err := network.Unmarshal(v, suite)
 				if err != nil {
 					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
@@ -1043,7 +1046,7 @@ func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, err
 	// copying the value into a buffer, there is no SIGSEGV anymore.
 	buf := make([]byte, len(val))
 	copy(buf, val)
-	_, sbMsg, err := network.Unmarshal(buf, cothority.Suite)
+	_, sbMsg, err := network.Unmarshal(buf, suite)
 	if err != nil {
 		return nil, err
 	}
@@ -1060,7 +1063,7 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
-			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			_, sbMsg, err := network.Unmarshal(v, suite)
 			if err != nil {
 				return err
 			}
@@ -1089,7 +1092,7 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
-			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			_, sbMsg, err := network.Unmarshal(v, suite)
 			if err != nil {
 				return err
 			}

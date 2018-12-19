@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/cothority/ftcosi/protocol"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
@@ -64,7 +64,8 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	roster := local.GenRosterFromHost(servers...)
-	srvc := local.GetServices(servers, identityService)[0].(*Service)
+	srvcIdentity := local.GetServices(servers, identityService)[0].(*Service)
+	srvcPop := servers[0].Service(service.Name).(*service.Service)
 	keypairAdmin := key.NewKeyPair(tSuite)
 	keypairUser := key.NewKeyPair(tSuite)
 
@@ -84,37 +85,35 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	// Sign Final
 	protoName := "TestIdentity_StoreKeys"
-	err = registerCosiProtocols(srvc.Context, protoName)
+	// Protocol is created using the pop service so that it
+	// will use the correct key pair (e.i. the pop one)
+	err = registerCosiProtocols(srvcPop.Context, protoName)
 	require.Nil(t, err)
 
-	rooted := roster.NewRosterWithRoot(srvc.ServerIdentity())
+	rooted := roster.NewRosterWithRoot(srvcPop.ServerIdentity())
 	require.NotNil(t, rooted)
 	tree := rooted.GenerateNaryTree(len(roster.List))
 	require.NotNil(t, tree)
-	node, err := srvc.CreateProtocol(protoName, tree)
+	node, err := srvcPop.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	c := node.(*protocol.FtCosi)
+	c := node.(*protocol.BlsCosi)
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
-	c.Threshold = byzcoinx.Threshold(len(tree.List()))
 
 	err = node.Start()
 	require.Nil(t, err)
 
 	final.Signature = <-c.FinalSignature
 	require.NotNil(t, final.Signature)
-	// here we assume the mask is 1 byte long, hence the line below turns
-	// a cosi signature into an eddsa signature
-	final.Signature = final.Signature[0 : len(final.Signature)-1]
-	srvc.Storage.Auth.AdminKeys = append(srvc.Storage.Auth.AdminKeys, keypairAdmin.Public)
+	srvcIdentity.Storage.Auth.AdminKeys = append(srvcIdentity.Storage.Auth.AdminKeys, keypairAdmin.Public)
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	require.Nil(t, err)
-	_, err = srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
+	_, err = srvcIdentity.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, err)
-	require.Equal(t, 1, len(srvc.Storage.Auth.Sets))
+	require.Equal(t, 1, len(srvcIdentity.Storage.Auth.Sets))
 }
 
 func TestIdentity_StoreKeys2(t *testing.T) {
@@ -450,14 +449,14 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 
 func registerCosiProtocols(c *onet.Context, protoName string) error {
 	vf := func(a, b []byte) bool { return true }
-	suite := protocol.EdDSACompatibleCosiSuite
+	suite := pairing.NewSuiteBn256()
 	cosiSubProtoName := protoName + "_sub"
 
 	cosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewFtCosi(n, vf, cosiSubProtoName, suite)
+		return protocol.NewBlsCosi(n, vf, cosiSubProtoName, suite)
 	}
 	cosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubFtCosi(n, vf, suite)
+		return protocol.NewSubBlsCosi(n, vf, suite)
 	}
 
 	if _, err := c.ProtocolRegister(protoName, cosiProto); err != nil {

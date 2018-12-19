@@ -34,3 +34,5 @@ docker:
 
 test_java: docker
 	cd external/java; mvn test
+
+test_nostable: test_fmt test_lint test_goveralls

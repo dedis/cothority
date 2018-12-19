@@ -4,18 +4,18 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 
 public interface Point {
-    public Point copy();
-    public boolean equals(Point other);
+    Point mul(Scalar s);
+    Point add(Point other);
+    boolean isZero();
+    Point negate();
+    byte[] data() throws CothorityCryptoException;
+    Point copy();
+    ByteString toProto();
+    byte[] toBytes();
 
-    public Point mul(Scalar s);
-    public Point add(Point other);
+    @Override
+    String toString();
 
-    public ByteString toProto();
-    public byte[] toBytes();
-    public boolean isZero();
-    public String toString();
-
-    public Point negate();
-    public byte[] data() throws CothorityCryptoException;
-    // public static Point embed(byte[] data) throws CothorityCryptoException;
+    @Override
+    boolean equals(Object other);
 }

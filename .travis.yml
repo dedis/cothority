@@ -6,7 +6,7 @@ node_js:
   - "lts/*"
 
 env:
-  - TEST_DIR=cothority
+#   - TEST_DIR=cothority
   - TEST_DIR=kyber
 
 install:
@@ -34,6 +34,7 @@ notifications:
 matrix:
   include:
     - language: go
+      name: "Go Tests"
 
       go:
         - "1.11.x"
@@ -46,9 +47,10 @@ matrix:
         - cd $TRAVIS_BUILD_DIR
 
       script:
-        - make test
+        - make test_nostable
 
     - language: java
+      name: "Java Tests"
 
       script:
         - make test_java

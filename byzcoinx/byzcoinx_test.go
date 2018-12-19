@@ -10,16 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
 var defaultTimeout = 20 * time.Second
-var testSuite = cothority.Suite
+var testSuite = pairing.NewSuiteBn256()
 
 type Counter struct {
 	veriCount   int
@@ -196,13 +195,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.Nil(t, err)
 
 	// verify signature
-	var policy cosi.Policy
-	if nbrFault == 0 {
-		policy = nil
-	} else {
-		policy = cosi.NewThresholdPolicy(bftCosiProto.Threshold)
-	}
-	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
+	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal)
 	require.Nil(t, err)
 
 	// check the counters
@@ -215,7 +208,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.True(t, nbrHosts-nbrFault <= counter.veriCount)
 }
 
-func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte, policy cosi.Policy) error {
+func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte) error {
 	var sig FinalSignature
 	timeout := defaultTimeout + time.Second
 	select {
@@ -231,7 +224,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if bytes.Compare(sig.Msg, proposal) != 0 {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
-	err := cosi.Verify(testSuite, publics, proposal, sig.Sig, policy)
+	err := sig.Sig.Verify(testSuite, proposal, publics)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

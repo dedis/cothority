@@ -2,7 +2,7 @@ package ch.epfl.dedis.status;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import org.junit.jupiter.api.Test;
 
 class StatusRPCTest {

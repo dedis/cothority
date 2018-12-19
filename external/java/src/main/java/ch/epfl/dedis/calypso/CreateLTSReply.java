@@ -4,6 +4,7 @@ import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.Calypso;
 
@@ -27,7 +28,7 @@ public class CreateLTSReply {
     public CreateLTSReply(Calypso.CreateLTSReply reply) {
         this.byzcoinId = new SkipblockId(reply.getInstanceid());
         this.instanceId = new InstanceId(reply.getInstanceid());
-        this.X = new Ed25519Point(reply.getX());
+        this.X = PointFactory.getInstance().fromProto(reply.getX());
     }
 
     /**

@@ -289,7 +289,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
 		require.Equal(t, links[i], len(search.Links))
 		for _, link := range search.Links[1:] {
-			require.Nil(t, link.Verify(cothority.Suite, sb1.Roster.Publics()))
+			require.Nil(t, link.Verify(suite, sb1.Roster.ServicePublics(ServiceName)))
 		}
 	}
 

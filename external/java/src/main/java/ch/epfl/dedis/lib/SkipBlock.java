@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.InvalidProtocolBufferException;

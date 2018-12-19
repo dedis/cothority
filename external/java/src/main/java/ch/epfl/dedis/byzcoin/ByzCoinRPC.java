@@ -5,8 +5,9 @@ import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
@@ -32,8 +33,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.time.temporal.ChronoUnit.NANOS;
 
 /**
  * Class ByzCoinRPC interacts with the byzcoin service of a conode. It can either start a new byzcoin service
@@ -596,7 +595,7 @@ public class ByzCoinRPC {
         Darc d = new Darc(Arrays.asList(admin.getIdentity()), Arrays.asList(admin.getIdentity()), "Genesis darc".getBytes());
         roster.getNodes().forEach(node -> {
             try {
-                d.addIdentity("view_change", new IdentityEd25519(new Ed25519Point(node.Public)), Rules.OR);
+                d.addIdentity("view_change", new IdentityEd25519((Ed25519Point) node.getPublic()), Rules.OR);
             } catch (CothorityCryptoException e) {
                 logger.warn("didn't find Ed25519 point");
             }

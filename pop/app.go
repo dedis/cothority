@@ -19,17 +19,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blscosi/blscosi/check"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/cothority/ftcosi/check"
 	ph "github.com/dedis/cothority/personhood"
-	"github.com/dedis/protobuf"
-	cli "gopkg.in/urfave/cli.v1"
-
-	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
@@ -40,6 +37,8 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 func init() {
@@ -94,7 +93,7 @@ func main() {
 			Usage:     "Check if the servers in the group definition are up and running",
 			ArgsUsage: "group.toml",
 			Action: func(c *cli.Context) error {
-				return check.Config(c.Args().First(), false)
+				return check.CothorityCheck(c.Args().First(), false)
 			},
 		},
 	}
@@ -240,15 +239,12 @@ func orgProposed(c *cli.Context) error {
 			DateTime: pd.DateTime,
 			Location: pd.Location,
 		}
-		for _, s := range pd.Roster.List {
-			st := &app.ServerToml{
-				Address:     s.Address,
-				Suite:       cothority.Suite.String(),
-				Public:      s.Public.String(),
-				Description: s.Description,
-			}
-			p.Servers = append(p.Servers, st)
+		grp, err := (&app.Group{Roster: pd.Roster}).Toml(cothority.Suite)
+		if err != nil {
+			return err
 		}
+		p.Servers = grp.Servers
+
 		var buf bytes.Buffer
 		err = toml.NewEncoder(&buf).Encode(p)
 		if err != nil {
@@ -1217,7 +1213,7 @@ func decodePopDesc(buf string, desc *service.PopDesc) error {
 	desc.Location = descGroup.Location
 	entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 	for i, s := range descGroup.Servers {
-		en, err := toServerIdentity(s, cothority.Suite)
+		en, err := s.ToServerIdentity()
 		if err != nil {
 			return err
 		}
@@ -1246,7 +1242,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 		desc.Location = descGroup.Location
 		entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 		for j, s := range descGroup.Servers {
-			en, err := toServerIdentity(s, cothority.Suite)
+			en, err := s.ToServerIdentity()
 			if err != nil {
 				return []*service.ShortDesc{}, err
 			}
@@ -1256,16 +1252,4 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 		descs = append(descs, desc)
 	}
 	return descs, nil
-}
-
-// TODO: Needs to be public in app package!!!
-// toServerIdentity converts this ServerToml struct to a ServerIdentity.
-func toServerIdentity(s *app.ServerToml, suite kyber.Group) (*network.ServerIdentity, error) {
-	public, err := encoding.StringHexToPoint(suite, s.Public)
-	if err != nil {
-		return nil, err
-	}
-	si := network.NewServerIdentity(public, s.Address)
-	si.Description = s.Description
-	return si, nil
 }

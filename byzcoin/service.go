@@ -16,11 +16,12 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
-	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -28,6 +29,8 @@ import (
 	"github.com/dedis/protobuf"
 	"gopkg.in/satori/go.uuid.v1"
 )
+
+var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // This is to boost the acceptable timestamp window when dealing with
 // very short block intervals, like in testing. If a production ByzCoin
@@ -65,7 +68,7 @@ var verifyByzCoin = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "ByzCoin"
 
 func init() {
 	var err error
-	ByzCoinID, err = onet.RegisterNewService(ServiceName, newService)
+	ByzCoinID, err = onet.RegisterNewServiceWithSuite(ServiceName, pairingSuite, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
@@ -1911,15 +1914,6 @@ func (s *Service) monitorLeaderFailure() {
 	}()
 }
 
-// getPrivateKey is a hack that creates a temporary TreeNodeInstance and gets
-// the private key out of it. We have to do this because we cannot access the
-// private key from the service.
-func (s *Service) getPrivateKey() kyber.Scalar {
-	tree := onet.NewRoster([]*network.ServerIdentity{s.ServerIdentity()}).GenerateBinaryTree()
-	tni := s.NewTreeNodeInstance(tree, tree.Root, "dummy")
-	return tni.Private()
-}
-
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
 func (s *Service) registerContract(contractID string, c ContractFn) error {
@@ -2227,13 +2221,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	// Register the view-change cosi protocols.
 	_, err = s.ProtocolRegister(viewChangeSubFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return cosiprotocol.NewSubFtCosi(n, s.verifyViewChange, cothority.Suite)
+		return protocol.NewSubBlsCosi(n, s.verifyViewChange, pairingSuite)
 	})
 	if err != nil {
 		return nil, err
 	}
 	_, err = s.ProtocolRegister(viewChangeFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return cosiprotocol.NewFtCosi(n, s.verifyViewChange, viewChangeSubFtCosi, cothority.Suite)
+		return protocol.NewBlsCosi(n, s.verifyViewChange, viewChangeSubFtCosi, pairingSuite)
 	})
 	if err != nil {
 		return nil, err

@@ -1,16 +1,17 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
-import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -51,7 +52,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param ltsId id of the Long Term Secret
      * @throws CothorityCommunicationException
      */
-    private CalypsoRPC(ByzCoinRPC bc, LTSId ltsId) throws CothorityCommunicationException{
+    private CalypsoRPC(ByzCoinRPC bc, LTSId ltsId) throws CothorityCommunicationException, CothorityCryptoException {
         super(bc);
         lts = getLTSReply(ltsId);
     }

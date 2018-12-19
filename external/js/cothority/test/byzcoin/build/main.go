@@ -40,17 +40,8 @@ func main() {
 	_, resp, err := byzcoin.NewLedger(msg, false)
 	log.ErrFatal(err)
 
-	serversToml := make([]*app.ServerToml, n)
-	for i, si := range ro.List {
-		serversToml[i] = app.NewServerToml(
-			cothority.Suite,
-			si.Public,
-			si.Address,
-			si.Description,
-		)
-	}
-	group := app.NewGroupToml(serversToml...)
-	log.ErrFatal(group.Save("public.toml"))
+	group := &app.Group{Roster: ro}
+	log.ErrFatal(group.Save(cothority.Suite, "public.toml"))
 
 	id := hex.EncodeToString(resp.Skipblock.SkipChainID())
 	fd, err := os.Create("genesis.txt")

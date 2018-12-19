@@ -1,13 +1,13 @@
-package ch.epfl.dedis.lib;
+package ch.epfl.dedis.lib.network;
 
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
+import ch.epfl.dedis.lib.UUIDType5;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.moandjiezana.toml.Toml;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
@@ -16,8 +16,12 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /**
  * dedis/lib
@@ -25,28 +29,48 @@ import java.util.concurrent.CountDownLatch;
  * Purpose: The node-definition for a node in a cothority. It contains the IP-address
  * and a description.
  */
-
 public class ServerIdentity {
+    private Point pubkey;
+    private List<ServiceIdentity> serviceIdentities;
     private final URI conodeAddress;
-    public Point Public;
     private final Logger logger = LoggerFactory.getLogger(ServerIdentity.class);
 
-    public ServerIdentity(final URI serverWsAddress, final String publicKey) {
+    public ServerIdentity(final URI serverWsAddress, Point pubkey) {
         this.conodeAddress = serverWsAddress;
-        // TODO: It will be better to use some class for server key and move this conversion outside of this class
-        this.Public = new Ed25519Point(Hex.parseHexBinary(publicKey));
+        this.pubkey = pubkey;
+        this.serviceIdentities = new ArrayList<>();
     }
 
-    public ServerIdentity(Toml siToml) throws URISyntaxException {
-        this(new URI(siToml.getString("Address")), siToml.getString("Public"));
+    public ServerIdentity(ServerToml toml) throws URISyntaxException {
+        this(new URI(toml.Address), null);
+
+        this.pubkey = PointFactory.getInstance().fromToml(toml.Suite, toml.Public);
+
+        for (Map.Entry<String, ServiceToml> entry : toml.Services.entrySet()) {
+            ServiceIdentity srvid = new ServiceIdentity(entry.getKey(), entry.getValue().Suite, entry.getValue().Public);
+            this.serviceIdentities.add(srvid);
+        }
     }
 
     public ServerIdentity(NetworkProto.ServerIdentity sid) throws URISyntaxException {
-        this(new URI(sid.getAddress()), Hex.printHexBinary(sid.getPublic().toByteArray()));
+        this(new URI(sid.getAddress()), null);
+
+        this.pubkey = PointFactory.getInstance().fromProto(sid.getPublic());
+        this.serviceIdentities = sid.getServiceIdentitiesList().stream()
+            .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
+            .collect(Collectors.toList());
     }
 
     public URI getAddress() {
         return conodeAddress;
+    }
+
+    public Point getPublic() {
+        return pubkey;
+    }
+
+    public List<ServiceIdentity> getServiceIdentities() {
+        return serviceIdentities;
     }
 
     public StatusProto.Response GetStatus() throws CothorityCommunicationException {
@@ -63,12 +87,21 @@ public class ServerIdentity {
     public NetworkProto.ServerIdentity toProto() {
         NetworkProto.ServerIdentity.Builder si =
                 NetworkProto.ServerIdentity.newBuilder();
-        si.setPublic(Public.toProto());
-        String pubStr = "https://dedis.epfl.ch/id/" + Public.toString().toLowerCase();
+        si.setPublic(pubkey.toProto());
+        String pubStr = "https://dedis.epfl.ch/id/" + pubkey.toString().toLowerCase();
         byte[] id = UUIDType5.toBytes(UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, pubStr));
         si.setId(ByteString.copyFrom(id));
         si.setAddress(getAddress().toString());
         si.setDescription("");
+
+        for (ServiceIdentity srvid : serviceIdentities) {
+            NetworkProto.ServiceIdentity.Builder data = NetworkProto.ServiceIdentity.newBuilder();
+            data.setPublic(srvid.getPublic().toProto());
+            data.setName(srvid.getName());
+            data.setSuite(srvid.getSuite());
+            si.addServiceIdentities(data.build());
+        }
+
         return si.build();
     }
 
@@ -107,12 +140,12 @@ public class ServerIdentity {
         if (o == null || getClass() != o.getClass()) return false;
         ServerIdentity other = (ServerIdentity) o;
         return other.getAddress().equals(getAddress()) &&
-                other.Public.equals(Public);
+                other.pubkey.equals(pubkey);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(Public.toBytes());
+        return Arrays.hashCode(pubkey.toBytes());
     }
 
     private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
@@ -123,6 +156,15 @@ public class ServerIdentity {
                 servicePath.startsWith("/") ? servicePath : "/".concat(servicePath),
                 conodeAddress.getQuery(),
                 conodeAddress.getFragment());
+    }
+
+    @Override
+    public String toString() {
+        return "ServerIdentitiy {"
+                + "\n\tAddress: "+conodeAddress.toString()
+                + "\n\tPublic: "+pubkey.toString()
+                + "\n\tServices: "+serviceIdentities.toString()
+                + "\n}";
     }
 
     /**

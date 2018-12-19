@@ -38,17 +38,9 @@ func TestCli(t *testing.T) {
 
 	// All this mess is to take the roster we have from onet.NewTCPTest
 	// and get it into a file that create can read.
-	g := &app.GroupToml{
-		Servers: make([]*app.ServerToml, len(roster.List)),
-	}
-	for i, si := range roster.List {
-		g.Servers[i] = &app.ServerToml{
-			Address: si.Address,
-			Public:  si.Public.String(),
-		}
-	}
+	g := &app.Group{Roster: roster}
 	rf := path.Join(dir, "roster.toml")
-	err = g.Save(rf)
+	err = g.Save(cothority.Suite, rf)
 	require.NoError(t, err)
 
 	interval := 100 * time.Millisecond

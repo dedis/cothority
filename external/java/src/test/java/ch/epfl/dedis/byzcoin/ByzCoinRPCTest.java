@@ -6,8 +6,6 @@ import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -16,6 +14,8 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityPermissionException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,16 +30,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static ch.epfl.dedis.integration.TestServerController.*;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ByzCoinRPCTest {
-    static ByzCoinRPC bc;
-
-    static Signer admin;
-    static Darc genesisDarc;
-
+class ByzCoinRPCTest {
+    private ByzCoinRPC bc;
+    private Signer admin;
     private final static Logger logger = LoggerFactory.getLogger(ByzCoinRPCTest.class);
     private TestServerController testInstanceController;
 
@@ -47,7 +43,7 @@ public class ByzCoinRPCTest {
     void initAll() throws Exception {
         testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
-        genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
+        Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
         bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
         if (!bc.checkLiveness()) {
@@ -237,7 +233,7 @@ public class ByzCoinRPCTest {
         // Update the darc and thus create at least one block with at least the interesting clientTransaction
         ClientTransactionId ctxid = bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head() + 1, 10);
 
-        Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(10 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(0, txReceiver.getAllCtxs().size());
         assertEquals(1, txReceiver.getAllCtxs().stream().filter(ctx ->
                 ctx.getId().equals(ctxid)).count());
@@ -274,7 +270,7 @@ public class ByzCoinRPCTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
         counters.increment();
 
-        List<Signer> admins = Arrays.asList(admin);
+        List<Signer> admins = Collections.singletonList(admin);
         assertThrows(CothorityPermissionException.class,
                 () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, counters.getCounters(), 10)
         );
@@ -295,7 +291,7 @@ public class ByzCoinRPCTest {
 
     @Test
     void updateMaxBlockSize() throws Exception {
-        List<Signer> admins = Arrays.asList(admin);
+        List<Signer> admins = Collections.singletonList(admin);
 
         // Get the counter for the admin
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
@@ -366,17 +362,17 @@ public class ByzCoinRPCTest {
 
         // First make sure we correctly refuse invalid new rosters.
         // Too few nodes
-        final Roster newRoster1 = new Roster(Arrays.asList(conode1, conode2));
+        final Roster newRoster1 = new Roster(testInstanceController.getIdentities().subList(0, 2));
         assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster1, admins, counters.getCounters(), 10));
 
         // Too many new nodes
         List<ServerIdentity> newList = bc.getRoster().getNodes();
-        newList.addAll(Arrays.asList(conode4, conode5));
+        newList.addAll(testInstanceController.getIdentities().subList(4, 6));
         final Roster newRoster2 = new Roster(newList);
         assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster2, admins, counters.getCounters(), 10));
 
         // Too many changes
-        final Roster newRoster3 = new Roster(Arrays.asList(conode1, conode2, conode5, conode6));
+        final Roster newRoster3 = new Roster(testInstanceController.getIdentities().subList(0, 6));
         assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster3, admins, counters.getCounters(), 10));
 
         // And finally some real update of the roster
@@ -387,14 +383,14 @@ public class ByzCoinRPCTest {
             testInstanceController.startConode(7);
 
             logger.info("updating real roster");
-            Roster newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5));
+            Roster newRoster = new Roster(testInstanceController.getIdentities().subList(0, 5));
 
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
-            newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6));
+            newRoster = new Roster(testInstanceController.getIdentities().subList(0, 6));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
-            newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6, conode7));
+            newRoster = new Roster(testInstanceController.getIdentities().subList(0, 7));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
             counters.increment();
 
@@ -409,10 +405,8 @@ public class ByzCoinRPCTest {
             try {
                 testInstanceController.killConode(3);
                 testInstanceController.killConode(4);
-                bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+                bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 12);
                 counters.increment();
-            } catch (CothorityException e) {
-                throw e;
             } finally {
                 // Start nodes 3 and 4 again
                 logger.info("Starting conodes to make sure everything's OK for next tests");
@@ -421,8 +415,6 @@ public class ByzCoinRPCTest {
             }
 
             assertEquals(7, bc.getRoster().getNodes().size());
-        } catch (CothorityException e) {
-            throw e;
         } finally {
             logger.info("stopping conode for next tests");
             testInstanceController.killConode(5);

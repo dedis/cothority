@@ -1,7 +1,7 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.proto.Calypso;
 
 import java.net.URISyntaxException;
