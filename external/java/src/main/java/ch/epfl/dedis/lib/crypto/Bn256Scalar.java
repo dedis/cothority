@@ -1,14 +1,19 @@
 package ch.epfl.dedis.lib.crypto;
 
+import ch.epfl.dedis.lib.crypto.bn256.BN;
 import com.google.protobuf.ByteString;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class Bn256Scalar implements Scalar {
     private BigInteger x;
 
     Bn256Scalar(BigInteger x) {
         this.x = x;
+    }
+    Bn256Scalar(byte[] buf) {
+        x = new BigInteger(1, buf);
     }
     public String toString() {
         return x.toString();
@@ -19,12 +24,11 @@ public class Bn256Scalar implements Scalar {
     }
 
     public byte[] toBytes() {
-        return x.toByteArray();
+        return bigIntegerToBytes(this.x);
     }
 
     public Scalar reduce() {
-        // TODO
-        return this;
+        return new Bn256Scalar(this.x.mod(BN.order));
     }
 
     public Scalar copy() {
@@ -40,16 +44,15 @@ public class Bn256Scalar implements Scalar {
     }
 
     public byte[] getBigEndian() {
-        return this.x.toByteArray();
+        return this.toBytes();
     }
 
     public byte[] getLittleEndian() {
-        return Ed25519.reverse(getBigEndian());
+        return getLittleEndianFull();
     }
 
     public byte[] getLittleEndianFull() {
-        // tODO
-        return null;
+        return Ed25519.reverse(getBigEndian());
     }
 
     public Scalar add(Scalar b) {
@@ -64,12 +67,10 @@ public class Bn256Scalar implements Scalar {
     }
 
     public Scalar invert() {
-        // TODO
-        return null;
+        return new Bn256Scalar(this.x.modInverse(BN.order));
     }
     public Scalar negate() {
-        // TODO
-        return null;
+        return new Bn256Scalar(this.x.negate());
     }
 
     public boolean isZero() {
@@ -86,5 +87,17 @@ public class Bn256Scalar implements Scalar {
             throw new IllegalArgumentException(String.format("Error thrown because you are trying to operate an Bn256 with a Scalar implementing class %s", s.getClass().getName()));
         }
         return (Bn256Scalar) s;
+    }
+
+    /**
+     * We have to use this function instead of the BigInteger.toByteArray method because the latter might produce
+     * a leading zero which is different from the Go implementation.
+     */
+    static byte[] bigIntegerToBytes(final BigInteger a) {
+        byte[] bytes = a.toByteArray();
+        if (bytes[0] == 0) {
+            return Arrays.copyOfRange(bytes, 1, bytes.length);
+        }
+        return bytes;
     }
 }

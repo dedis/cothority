@@ -10,9 +10,7 @@ public class Bn256KeyPair {
     public Point point;
 
     public Bn256KeyPair() {
-        BN.PairG2 pair = BN.G2.rand(new SecureRandom());
-        this.point = new Bn256G2Point(pair.getPoint());
-        this.scalar = new Bn256Scalar(pair.getScalar());
+        this(new SecureRandom());
     }
 
     public Bn256KeyPair(Random rnd) {

@@ -1,6 +1,7 @@
 package ch.epfl.dedis.lib.crypto;
 
 import ch.epfl.dedis.lib.crypto.bn256.BN;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -27,12 +28,16 @@ public class BlsSig {
     public boolean verify(byte[] msg, Bn256G2Point X) {
         Bn256G1Point HM = hashToPoint(msg);
         BN.GT left = HM.pair(X);
-        Bn256G1Point s = new Bn256G1Point(sig);
-        if (s.g1 == null) {
+        try {
+            Bn256G1Point s = new Bn256G1Point(sig);
+            if (s.g1 == null) {
+                return false;
+            }
+            BN.GT right = s.pair(new Bn256G2Point(BigInteger.ONE));
+            return Arrays.equals(left.marshal(), right.marshal());
+        } catch (CothorityCryptoException e) {
             return false;
         }
-        BN.GT right = s.pair(new Bn256G2Point(BigInteger.ONE));
-        return Arrays.equals(left.marshal(), right.marshal());
     }
 
     /**

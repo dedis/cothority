@@ -5,6 +5,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class BN {
+
+    /**
+     * The order of the BN groups G1, G2 and GT.
+     */
+    public static BigInteger order = Constants.order;
+
     /**
      * The pair of a G1 point and a scalar that is used to generate it.
      */

@@ -161,7 +161,7 @@ class BNTest {
     }
 
     /**
-     * This test is to check our implementation against the golang/crypto/bn256 implementation.
+     * This an extra test that checks whether our implementation matches the golang/crypto/bn256 implementation.
      */
     @Test
     void bilinearityReference() {
@@ -185,7 +185,8 @@ class BNTest {
 
     @Test
     void g1Marshal() {
-        BN.G1 g = new BN.G1().scalarBaseMul(BigInteger.ONE);
+        BN.G1 g = new BN.G1();
+        g.scalarBaseMul(BigInteger.ONE);
         byte[] from = g.marshal();
         assertNotNull(new BN.G1().unmarshal(from));
 
@@ -198,7 +199,8 @@ class BNTest {
 
     @Test
     void g2Marshal() {
-        BN.G2 g = new BN.G2().scalarBaseMul(BigInteger.ONE);
+        BN.G2 g = new BN.G2();
+        g.scalarBaseMul(BigInteger.ONE);
         byte[] from = g.marshal();
         assertNotNull(new BN.G2().unmarshal(from));
 
@@ -207,6 +209,16 @@ class BNTest {
         BN.G2 g2 = new BN.G2().unmarshal(from);
         assertNotNull(g2);
         assertFalse(!g2.p.isInfinity(), "inf marshaled incorrectly");
+    }
+
+    /**
+     * This is an extra test to check whether our implementation matches the reference implementation.
+     */
+    @Test
+    void g2MarshalReference() {
+        BN.G2 g = new BN.G2();
+        g.scalarBaseMul(new BigInteger("111"));
+        assertTrue(Arrays.equals(Hex.parseHexBinary("21894d547009b7abecedfde89fd4fa82fe9d212d2b9f94a532e2ebfd360569fc4c65fa8eefac21f07c84d54407ec589281f36ba8c96d3114f3f3749d14f8ec0b6bca94f389776dde4597e402942cc184d82d37e81ed38046292c0f3522cf544a20a005ff2de92cf815fa5daa8defd6b064fda2adb1af2f10ee707aa996be98fa"), g.marshal()));
     }
 
     @Test
