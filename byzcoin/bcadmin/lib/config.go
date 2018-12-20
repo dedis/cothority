@@ -30,19 +30,6 @@ type Config struct {
 	AdminIdentity darc.Identity
 }
 
-//BaseConfig is a smaller version of Config containing only the necessary material
-//to export the Config using, for example, a QR code
-type BaseConfig struct {
-	ByzCoinID skipchain.SkipBlockID
-}
-
-//AAdminConfig is a smaller version of Config containing only the necessary material
-//to export the Config with its admin credentials using, for example, a QR code
-type AdminConfig struct {
-	ByzCoinID skipchain.SkipBlockID
-	Admin     string
-}
-
 // LoadKey returns the signer of a given identity. It searches it in the ConfigPath.
 func LoadKey(id darc.Identity) (*darc.Signer, error) {
 	// Find private key file.

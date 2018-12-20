@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=0
 
 NBR_SERVERS=3
@@ -17,6 +17,7 @@ main(){
     run testAddDarcFromOtherOne
     run testAddDarcWithOwner
     run testExpression
+    run testQR
     stopTest
 }
 
@@ -112,6 +113,15 @@ testExpression(){
   testOK ./"$APP" darc rule -replace -rule spawn:darc -identity "$KEY & $KEY2" -darc "$ID" -sign "$KEY"
   testFail ./"$APP" darc add -darc "$ID" -sign "$KEY"
   testFail ./"$APP" darc add -darc "$ID" -sign "$KEY2"
+}
+
+testQR() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" ./"$APP" create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK ./"$APP" qr -admin
 }
 
 main

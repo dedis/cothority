@@ -19,9 +19,10 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/cothority/skipchain"
 
 	"encoding/json"
-	qrgo "github.com/skip2/go-qrcode"
+	"github.com/qantik/qrgo"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -108,7 +109,7 @@ var cmds = cli.Commands{
 			cli.StringFlag{
 				Name:   "bc",
 				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (always use)",
+				Usage:  "the ByzCoin config to use (required)",
 			},
 			cli.StringFlag{
 				Name:  "owner",
@@ -124,11 +125,11 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "identity",
-				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357) (always use with rule, except if deleting))",
+				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357) (required with rule, except if deleting))",
 			},
 			cli.StringFlag{
 				Name:  "rule",
-				Usage: "the rule to be added, updated or deleted (always use with rule)",
+				Usage: "the rule to be added, updated or deleted (required with rule)",
 			},
 			cli.StringFlag{
 				Name:  "out",
@@ -154,18 +155,14 @@ var cmds = cli.Commands{
 		Action: darcCli,
 	},
 	{
-		Name:    "qrcode",
+		Name:    "qr",
 		Usage:   "generates a QRCode containing the description of the BC Config",
-		Aliases: []string{"qr"},
+		Aliases: []string{"qrcode"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:   "bc",
 				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (always use)",
-			},
-			cli.StringFlag{
-				Name:  "out",
-				Usage: "the png file in which the QR code is saved",
+				Usage:  "the ByzCoin config to use (required)",
 			},
 			cli.BoolFlag{
 				Name:  "admin",
@@ -716,14 +713,19 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 }
 
 func qrcode(c *cli.Context) error {
+	 type baseconfig struct {
+		ByzCoinID skipchain.SkipBlockID
+	}
+
+	type adminconfig struct {
+		ByzCoinID skipchain.SkipBlockID
+		Admin     string
+	}
+
+
 	bcArg := c.String("bc")
 	if bcArg == "" {
 		return errors.New("--bc flag is required")
-	}
-
-	out := c.String("out")
-	if out == "" {
-		return errors.New("--out flag is required")
 	}
 
 	cfg, _, err := lib.LoadConfig(bcArg)
@@ -739,19 +741,23 @@ func qrcode(c *cli.Context) error {
 			return err
 		}
 		sig, err := signer.String()
-		toWrite, err = json.Marshal(lib.AdminConfig{cfg.ByzCoinID, sig})
+		toWrite, err = json.Marshal(adminconfig{
+			ByzCoinID: cfg.ByzCoinID,
+			Admin:     sig})
 	} else {
-		toWrite, err = json.Marshal(lib.BaseConfig{cfg.ByzCoinID})
+		toWrite, err = json.Marshal(baseconfig{ByzCoinID: cfg.ByzCoinID})
 	}
 
 	if err != nil {
 		return err
 	}
 
-	err = qrgo.WriteFile(string(toWrite), qrgo.Low, 1024, out)
+	qr, err := qrgo.NewQR(string(toWrite))
 	if err != nil {
 		return err
 	}
+
+	qr.OutputTerminal()
 
 	return nil
 }
