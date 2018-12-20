@@ -108,7 +108,7 @@ public class WriteData {
      */
     private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
         try {
-            KeyPair randkp = new KeyPair();
+            Ed25519KeyPair randkp = new Ed25519KeyPair();
             Scalar r = randkp.scalar;
             Point U = randkp.point;
             wr.setU(U.toProto());
@@ -129,7 +129,7 @@ public class WriteData {
             Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
-            KeyPair skp = new KeyPair();
+            Ed25519KeyPair skp = new Ed25519KeyPair();
             Scalar s = skp.scalar;
             Point w = skp.point;
             Point wBar = gBar.mul(s);

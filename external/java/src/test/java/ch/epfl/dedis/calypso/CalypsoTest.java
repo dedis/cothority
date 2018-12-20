@@ -7,7 +7,7 @@ import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.crypto.KeyPair;
+import ch.epfl.dedis.lib.crypto.Ed25519KeyPair;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -156,7 +156,7 @@ class CalypsoTest {
 
     @Test
     void ephemeralKey() throws CothorityException{
-        KeyPair ephemeral = new KeyPair();
+        Ed25519KeyPair ephemeral = new Ed25519KeyPair();
 
         // Same as above, but shortest possible calls.
         // Create WriteInstance.
@@ -169,7 +169,7 @@ class CalypsoTest {
                 Arrays.asList(reader), Collections.singletonList(1L),
                 ephemeral.point);
 
-        KeyPair wrong = new KeyPair();
+        Ed25519KeyPair wrong = new Ed25519KeyPair();
         // Create new Document from wi and ri using the wrong ephemeral key
         assertThrows(CothorityException.class, ()->
                 Document.fromCalypso(calypso, ri.getInstance().getId(), wrong.scalar));
