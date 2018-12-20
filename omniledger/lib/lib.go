@@ -28,10 +28,14 @@ type ChainConfig struct {
 // have the same nodes already). The fonction must be called multiple
 // times to apply all the changes.
 //
+// The order in the roster is important since the first node is considered leader.
+// Thus, once all new nodes have been added, the roster order is changed such that the new nodes
+// are at the start of the roster.
+//
 // Example:
 // 1st call: oldRoster = {A,B}, newRoster = {C,D}, returned roster = {A,B,C}
 // 2nd call: oldRoster = {A,B,C}, newRoster = {C,D}, returned roster = {A,B,C,D}
-// 3rd call: oldRoster = {A,B,C,D}, newRoster = {C,D}, returned roster = {B,C,D}
+// 3rd call: oldRoster = {A,B,C,D}, newRoster = {C,D}, returned roster = {C,D,B} // Order has changed, C and D are now at the start of the roster
 // 4th call: oldRoster = {B,C,D}, newRoster = {C,D}, returned roster = {C,D}
 //
 // Input:
@@ -61,6 +65,14 @@ func ChangeRoster(oldRoster, newRoster onet.Roster) onet.Roster {
 		newMap[n.ID] = true
 	}
 
+	// Once all new nodes have been added, change the roster order to put new nodes at the start of the list
+	intermList = newList
+	for _, n := range oldRoster.List {
+		if _, ok := newMap[n.ID]; !ok {
+			intermList = append(intermList, n)
+		}
+	}
+
 	// Remove old element of oldRoster, one at the time
 	for i, o := range intermList {
 		if _, ok := newMap[o.ID]; !ok {
@@ -70,7 +82,7 @@ func ChangeRoster(oldRoster, newRoster onet.Roster) onet.Roster {
 	}
 
 	// If oldRoster and newRoster have the same nodes
-	return oldRoster
+	return newRoster
 }
 
 // EncodeDuration encodes a time.Duration into a byte array.

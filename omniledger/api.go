@@ -236,10 +236,12 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 			tx.Instructions[0] = newEpoch
 			tx.SignWith(req.Owner)
 
+			tempRoster = lib.ChangeRoster(tempRoster, newRoster)
+			log.Print(tempRoster.List, newRoster.List)
 			shardClient.AddTransactionAndWait(tx, 5)
 
 			// The client roster must be updated to ensure it will be able to contact a node in the current shard roster state
-			tempRoster = lib.ChangeRoster(tempRoster, newRoster)
+
 			shardClient.Roster = tempRoster
 		}
 	}
