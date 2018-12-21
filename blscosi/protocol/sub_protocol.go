@@ -225,6 +225,13 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		return nil
 	}
 
+	// generate the challenge nonce for potential refusals
+	a.Nonce = make([]byte, 8)
+	_, err := rand.Read(a.Nonce)
+	if err != nil {
+		return err
+	}
+
 	errs := p.SendToChildrenInParallel(a)
 	if len(errs) > 0 {
 		log.Error(errs)
@@ -280,7 +287,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), reply.Nonce, reply.Signature); err == nil {
+				if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), a.Nonce, reply.Signature); err == nil {
 					// The child gives an empty signature as a mark of refusal
 					responses[public.String()] = &Response{}
 					done++
@@ -336,7 +343,7 @@ func (p *SubBlsCosi) dispatchLeaf() error {
 			}
 		} else {
 			log.Lvlf3("Leaf %v refused to sign", p.ServerIdentity())
-			r, err = p.makeRefusal()
+			r, err = p.makeRefusal(a.Nonce)
 			if err != nil {
 				return err
 			}
@@ -367,16 +374,10 @@ func (p *SubBlsCosi) makeResponse() (*Response, error) {
 
 // makeRefusal will sign a random nonce so that we can check
 // that the refusal is not forged
-func (p *SubBlsCosi) makeRefusal() (*Refusal, error) {
-	nonce := make([]byte, 8)
-	_, err := rand.Read(nonce)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *SubBlsCosi) makeRefusal(nonce []byte) (*Refusal, error) {
 	sig, err := bls.Sign(p.suite, p.Private(), nonce)
 
-	return &Refusal{Signature: sig, Nonce: nonce}, err
+	return &Refusal{Signature: sig}, err
 }
 
 // makeAggregateResponse takes all the responses from the children and the subleader to
