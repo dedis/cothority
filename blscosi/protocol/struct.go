@@ -116,6 +116,7 @@ func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics [
 type Announcement struct {
 	Msg       []byte // statement to be signed
 	Data      []byte
+	Nonce     []byte
 	Timeout   time.Duration
 	Threshold int
 }
@@ -143,7 +144,6 @@ type StructResponse struct {
 // Refusal is the signed refusal response from a given node
 type Refusal struct {
 	Signature []byte
-	Nonce     []byte
 }
 
 // StructRefusal contains the refusal and the treenode that sent it
