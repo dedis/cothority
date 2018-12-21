@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
-
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
 )
 
 // Client is a structure to communicate with the eventlog service
@@ -104,6 +103,12 @@ type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
+	return c.LogAndWait(0, ev...)
+}
+
+// LogAndWait sends a request to log the events and waits for N block intervals
+// that the events are added to the ledger
+func (c *Client) LogAndWait(numInterval int, ev ...Event) ([]LogID, error) {
 	if c.signerCtrs == nil {
 		c.RefreshSignerCounters()
 	}
@@ -112,7 +117,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := c.ByzCoin.AddTransaction(*tx); err != nil {
+	if _, err := c.ByzCoin.AddTransactionAndWait(*tx, numInterval); err != nil {
 		return nil, err
 	}
 	return keys, nil

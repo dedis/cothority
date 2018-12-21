@@ -25,27 +25,12 @@ main(){
 	stopTest
 }
 
-# This is necessary becaues el does not remember the current signer counter from invocation
-# to invocation, it always gets it from the server. And so if you call el twice
-# in one block, the second one will use the same counter as the first one did.
-waitBlock(){
-	sleep .5
-}
-
 testLogging(){
 	runCoBG 1 2 3
-	testOK $el log -t test -c 'abc'
-	waitBlock
-	testOK $el log -c 'def'
-	waitBlock
-	waitBlock
-	echo ghi | testOK $el log
-	waitBlock
-	seq 100 | testOK $el log -t seq100
-
-	# Wait two block intervals to be sure they are all committed
-	waitBlock
-	waitBlock
+	testOK $el log -t test -c 'abc' -w 10
+	testOK $el log -c 'def' -w 10
+	echo ghi | testOK $el log -w 10
+	seq 100 | testOK $el log -t seq100 -w 10
 
 	testGrep "abc" $el search -t test
 	testCountLines 103 $el search
