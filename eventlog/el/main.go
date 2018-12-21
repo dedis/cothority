@@ -135,7 +135,7 @@ var cmds = cli.Commands{
 			},
 			cli.IntFlag{
 				Name:  "wait, w",
-				Usage: "wait for block inclusion",
+				Usage: "wait for block inclusion (default: do not wait)",
 				Value: 0,
 			},
 		},
