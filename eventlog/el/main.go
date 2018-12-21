@@ -133,6 +133,11 @@ var cmds = cli.Commands{
 				Name:  "content, c",
 				Usage: "the text of the log",
 			},
+			cli.IntFlag{
+				Name:  "wait, w",
+				Usage: "wait for block inclusion (default: do not wait)",
+				Value: 0,
+			},
 		},
 		Action: doLog,
 	},
@@ -331,17 +336,18 @@ func doLog(c *cli.Context) error {
 
 	t := c.String("topic")
 	content := c.String("content")
+	w := c.Int("wait")
 
 	// Content is set, so one shot log.
 	if content != "" {
-		_, err := cl.Log(eventlog.NewEvent(t, content))
+		_, err := cl.LogAndWait(w, eventlog.NewEvent(t, content))
 		return err
 	}
 
 	// Content is empty, so read from stdin.
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
-		_, err := cl.Log(eventlog.NewEvent(t, s.Text()))
+		_, err := cl.LogAndWait(w, eventlog.NewEvent(t, s.Text()))
 		if err != nil {
 			return err
 		}
