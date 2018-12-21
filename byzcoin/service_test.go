@@ -273,8 +273,11 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
 
-	log.Lvl1("Waiting for new node to be contacted")
-	time.Sleep(testInterval)
+	// force the synchronization as the new node needs to get the propagation
+	// to know about the skipchain but we're not testing that here
+	proof, err := s.service().db().GetProof(s.genesis.Hash)
+	require.NoError(t, err)
+	outside.db().StoreBlocks(proof)
 
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
@@ -1252,27 +1255,26 @@ func TestService_SetConfigInterval(t *testing.T) {
 		intervals = intervals[0:3]
 	}
 
-	lastInterval := testInterval
 	counter := 2
-	for i := 0; i < len(intervals); i++ {
-		for _, interval := range intervals {
-			// The next block should now be in the range of testInterval.
-			log.Lvl1("Setting interval to", interval)
-			start := time.Now()
-			ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, defaultMaxBlockSize, s, counter)
-			counter++
-			// The wait argument here is also used in case no block is received, so
-			// it means: at most 10*blockInterval, or after 10 blocks, whichever comes
-			// first. Putting it to 1 doesn't work, because the actual blockInterval
-			// is bigger, due to dedis/cothority#1409
-			s.sendTxAndWait(t, ctx, 10)
-			dur := time.Now().Sub(start)
-			require.True(t, dur > lastInterval)
-			if interval > lastInterval {
-				require.True(t, dur < interval)
-			}
-			lastInterval = interval
-		}
+	for _, interval := range intervals {
+		// The next block should now be in the range of testInterval.
+		log.Lvl1("Setting interval to", interval)
+		ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, defaultMaxBlockSize, s, counter)
+		counter++
+		// The wait argument here is also used in case no block is received, so
+		// it means: at most 10*blockInterval, or after 10 blocks, whichever comes
+		// first. Putting it to 1 doesn't work, because the actual blockInterval
+		// is bigger, due to dedis/cothority#1409
+		s.sendTxAndWait(t, ctx, 10)
+
+		start := time.Now()
+
+		dummyCtx, _ := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
+		counter++
+		s.sendTxAndWait(t, dummyCtx, 10)
+
+		dur := time.Now().Sub(start)
+		require.InDelta(t, dur, interval, float64(1*time.Second))
 	}
 }
 
