@@ -273,8 +273,11 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
 
-	log.Lvl1("Waiting for new node to be contacted")
-	time.Sleep(testInterval)
+	// force the synchronization as the new node needs to get the propagation
+	// to know about the skipchain but we're not testing that here
+	proof, err := s.service().db().GetProof(s.genesis.Hash)
+	require.NoError(t, err)
+	outside.db().StoreBlocks(proof)
 
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
