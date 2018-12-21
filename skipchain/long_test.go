@@ -1,4 +1,4 @@
-// +target long_test
+// +build long_test
 
 package skipchain
 
@@ -18,10 +18,6 @@ import (
 func TestService_ParallelStoreBlock(t *testing.T) {
 	nbrRoutines := 20
 	numBlocks := 100
-	if testing.Short() {
-		nbrRoutines = 10
-		numBlocks = 20
-	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -74,9 +70,6 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 }
 
 func TestClient_ParallelGetUpdateChain(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Long run not good for Travis")
-	}
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(5, true)
 	defer l.CloseAll()
@@ -101,9 +94,6 @@ func TestClient_ParallelGetUpdateChain(t *testing.T) {
 }
 
 func TestFail(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Stress-test of localtest with premature close")
-	}
 	for i := 0; i < 50; i++ {
 		log.Lvl1("Starting test", i)
 		nbrNodes := 10
