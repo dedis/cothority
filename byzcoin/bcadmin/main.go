@@ -743,9 +743,12 @@ func qrcode(c *cli.Context) error {
 		sig, err := signer.String()
 		toWrite, err = json.Marshal(adminconfig{
 			ByzCoinID: cfg.ByzCoinID,
-			Admin:     sig})
+			Admin:     sig,
+		})
 	} else {
-		toWrite, err = json.Marshal(baseconfig{ByzCoinID: cfg.ByzCoinID})
+		toWrite, err = json.Marshal(baseconfig{
+			ByzCoinID: cfg.ByzCoinID,
+		})
 	}
 
 	if err != nil {
