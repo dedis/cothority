@@ -713,7 +713,7 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 }
 
 func qrcode(c *cli.Context) error {
-	 type baseconfig struct {
+	type baseconfig struct {
 		ByzCoinID skipchain.SkipBlockID
 	}
 
@@ -721,7 +721,6 @@ func qrcode(c *cli.Context) error {
 		ByzCoinID skipchain.SkipBlockID
 		Admin     string
 	}
-
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
