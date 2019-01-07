@@ -79,7 +79,6 @@ public class Bn256Scalar implements Scalar {
         return this.x.equals(BigInteger.ZERO);
     }
 
-
     public Scalar mul(Scalar s) {
         return new Bn256Scalar(this.x.multiply(convert(s).x));
     }

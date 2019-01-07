@@ -288,4 +288,19 @@ class BNTest {
         BN.GT e12 = new BN.GT();
         assertNotEquals(e12, e1);
     }
+
+    @Test
+    void setZero() {
+        Random rnd = new SecureRandom();
+
+        BN.G1 g1 = new BN.G1(BN.randPosBigInt(rnd, Constants.p));
+        assertFalse(g1.isInfinity());
+        g1.setInfinity();
+        assertTrue(g1.isInfinity());
+
+        BN.G2 g2 = new BN.G2(BN.randPosBigInt(rnd, Constants.p));
+        assertFalse(g2.isInfinity());
+        g2.setInfinity();
+        assertTrue(g2.isInfinity());
+    }
 }

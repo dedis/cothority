@@ -167,6 +167,13 @@ class Ed25519Test {
     }
 
     @Test
+    void getZero() {
+        Ed25519KeyPair kp1 = new Ed25519KeyPair();
+        assertFalse(kp1.point.isZero());
+        assertTrue(kp1.point.getZero().isZero());
+    }
+
+    @Test
     void testEncryption() throws Exception {
         byte[] orig = "My cool file".getBytes();
         byte[] symmetricKey = new byte[16];

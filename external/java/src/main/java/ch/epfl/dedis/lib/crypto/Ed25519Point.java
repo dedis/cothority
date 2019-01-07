@@ -26,7 +26,6 @@ public class Ed25519Point implements Point {
         if (Arrays.equals(marshalID, Arrays.copyOfRange(b, 0, 8))) {
             b = Arrays.copyOfRange(b, 8, b.length);
         }
-
         element = new GroupElement(Ed25519.curve, b);
     }
 
@@ -75,7 +74,11 @@ public class Ed25519Point implements Point {
     }
 
     public boolean isZero() {
-        return !element.toP2().getY().isNonZero();
+        return this.element.equals(Ed25519.curve.getZero(GroupElement.Representation.P3));
+    }
+
+    public Point getZero() {
+        return new Ed25519Point(Ed25519.curve.getZero(GroupElement.Representation.P3));
     }
 
     public String toString() {
@@ -100,7 +103,6 @@ public class Ed25519Point implements Point {
         }
         return Arrays.copyOfRange(bytes, 1, len + 1);
     }
-
 
     public static Point embed(byte[] data) throws CothorityCryptoException {
         if (data.length > Ed25519.pubLen) {

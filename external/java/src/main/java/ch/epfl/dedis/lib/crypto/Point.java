@@ -12,6 +12,7 @@ public interface Point {
     Point copy();
     ByteString toProto();
     byte[] toBytes();
+    Point getZero();
 
     @Override
     String toString();
