@@ -5,7 +5,6 @@ import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
-import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
@@ -334,7 +333,8 @@ public class ByzCoinRPC {
 
     /**
      * Fetches the state change for the given version and instance
-     * @param id the instance ID
+     *
+     * @param id      the instance ID
      * @param version the version of the state change
      * @return the state change
      * @throws CothorityCommunicationException if the state change doesn't exist or something went wrong
@@ -357,6 +357,7 @@ public class ByzCoinRPC {
 
     /**
      * Fetches the most recent state change for the given instance
+     *
      * @param id the instance ID
      * @return the state change
      * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
@@ -378,6 +379,7 @@ public class ByzCoinRPC {
 
     /**
      * Fetches all the state changes of the given instance
+     *
      * @param id the instance ID
      * @return the list of state changes
      * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
@@ -402,6 +404,7 @@ public class ByzCoinRPC {
 
     /**
      * Checks if the state change is valid or has been tempered
+     *
      * @param sc the state change
      * @return true if the state change is valid
      * @throws CothorityCommunicationException if something went wrong

@@ -179,8 +179,8 @@ class GFp2 {
     }
 
     GFp2 invert(GFp2 a) {
-        BigInteger t = a.y.multiply(a.y);
-        BigInteger t2 = a.x.multiply(a.x);
+        BigInteger t = a.y.multiply(a.y).mod(p);
+        BigInteger t2 = a.x.multiply(a.x).mod(p);
         t = t.add(t2);
 
         BigInteger inv = t.modInverse(p);

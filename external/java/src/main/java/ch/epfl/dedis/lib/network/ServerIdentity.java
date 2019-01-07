@@ -57,8 +57,8 @@ public class ServerIdentity {
 
         this.pubkey = PointFactory.getInstance().fromProto(sid.getPublic());
         this.serviceIdentities = sid.getServiceIdentitiesList().stream()
-            .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
-            .collect(Collectors.toList());
+                .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
+                .collect(Collectors.toList());
     }
 
     public URI getAddress() {
@@ -68,6 +68,16 @@ public class ServerIdentity {
     public Point getPublic() {
         return pubkey;
     }
+
+    public Point getServicePublic(String serviceName) {
+        for (ServiceIdentity si : this.serviceIdentities) {
+            if (si.getName().equals(serviceName)) {
+                return si.getPublic();
+            }
+        }
+        return null;
+    }
+
 
     public List<ServiceIdentity> getServiceIdentities() {
         return serviceIdentities;
@@ -161,9 +171,9 @@ public class ServerIdentity {
     @Override
     public String toString() {
         return "ServerIdentitiy {"
-                + "\n\tAddress: "+conodeAddress.toString()
-                + "\n\tPublic: "+pubkey.toString()
-                + "\n\tServices: "+serviceIdentities.toString()
+                + "\n\tAddress: " + conodeAddress.toString()
+                + "\n\tPublic: " + pubkey.toString()
+                + "\n\tServices: " + serviceIdentities.toString()
                 + "\n}";
     }
 

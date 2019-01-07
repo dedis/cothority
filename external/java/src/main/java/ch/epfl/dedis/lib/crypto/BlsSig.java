@@ -11,7 +11,7 @@ import java.util.Arrays;
 public class BlsSig {
     private byte[] sig;
 
-    BlsSig(byte[] sig) {
+    public BlsSig(byte[] sig) {
         this.sig = sig;
     }
 

@@ -18,7 +18,7 @@ public class Mask {
      * @param mask is the bit mask, the number of bits must be greater than or equal to the number of public keys.
      * @throws CothorityCryptoException is thrown when the list of public keys is empty.
      */
-    Mask(Point[] publics, byte[] mask) throws CothorityCryptoException {
+    public Mask(Point[] publics, byte[] mask) throws CothorityCryptoException {
         if (publics.length == 0) {
             throw new CothorityCryptoException("no public keys");
         }

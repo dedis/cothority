@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
@@ -10,6 +11,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SkipBlock is a wrapper around the protobuf SkipBlock class. It is mainly used to serialize the genesis block for
@@ -82,6 +84,10 @@ public class SkipBlock {
         return skipBlock.getIndex();
     }
 
+    public int getHeight() {
+        return skipBlock.getHeight();
+    }
+
     /**
      * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
      * if this is the tip of the chain.
@@ -92,6 +98,33 @@ public class SkipBlock {
             ret.add(new ForwardLink(fl));
         });
         return ret;
+    }
+
+    public boolean verifyForwardSignatures() {
+        List<Point> publics;
+        try {
+            publics = new Roster(this.skipBlock.getRoster()).getServicePublics("Skipchain");
+        } catch (URISyntaxException e) {
+            return false;
+        }
+
+        for (ForwardLink fl : this.getForwardLinks()) {
+            if (fl.isEmpty()) {
+                // This means it's an empty forward-link to correctly place a higher-order
+                // forward-link in place.
+                continue;
+            }
+            if (!fl.verify(publics)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public List<SkipblockId> getBackLinks() {
+        return skipBlock.getBacklinksList().stream()
+                .map(bl -> new SkipblockId(bl.toByteArray()))
+                .collect(Collectors.toList());
     }
 
     /**

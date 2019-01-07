@@ -1,5 +1,6 @@
 package ch.epfl.dedis.skipchain;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
@@ -10,6 +11,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementing an interface to the skipchain service.
@@ -44,7 +48,7 @@ public class SkipchainRPC {
      *
      * @return true only if all nodes are OK, else false.
      */
-    public boolean verify() {
+    public boolean checkStatus() {
         boolean ok = true;
         for (ServerIdentity n : roster.getNodes()) {
             logger.info("Testing node {}", n.getAddress());
@@ -59,7 +63,7 @@ public class SkipchainRPC {
     }
 
     /**
-     * Returns the skipblock from the skipchain, given its id.
+     * Returns the skipblock from the skipchain, given its id. Note that the block that is returned is not verified.
      *
      * @param id the id of the skipblock
      * @return the proto-representation of the skipblock.
@@ -74,40 +78,83 @@ public class SkipchainRPC {
 
         try {
             SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
-            //TODO: add verification that the skipblock is valid by hashing and comparing to the id
+            SkipBlock ret = new SkipBlock(sb);
+
+            // simple verification (we do not check the links, just the signature)
+            if (!ret.verifyForwardSignatures()) {
+                throw new CothorityCommunicationException("invalid forward signatures");
+            }
 
             logger.debug("Got the following skipblock: {}", sb);
             logger.info("Successfully read skipblock");
 
-            return new SkipBlock(sb);
+            return ret;
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
 
-    public SkipBlock getLatestSkipblock() throws CothorityCommunicationException {
+    /**
+     * Returns the latest block and verify that the links are correct.
+     *
+     * @return the latest skipblock
+     * @throws CothorityCommunicationException if something goes wrong with communication
+     * @throws CothorityCryptoException if the verification goes wrong
+     */
+    public SkipBlock getLatestSkipblock() throws CothorityCommunicationException, CothorityCryptoException {
         SkipchainProto.GetUpdateChain request =
                 SkipchainProto.GetUpdateChain.newBuilder().setLatestID(ByteString.copyFrom(scID.getId())).build();
 
         ByteString msg = roster.sendMessage("Skipchain/GetUpdateChain",
                 request);
 
+        SkipchainProto.GetUpdateChainReply reply;
         try {
-            SkipchainProto.GetUpdateChainReply reply =
-                    SkipchainProto.GetUpdateChainReply.parseFrom(msg);
-            //TODO: add verification that the skipblock is valid by hashing and comparing to the id
-
-            if (reply.getUpdateCount() == 0){
-                logger.info("didn't find any updates to {}", scID);
-                return null;
-            }
-            SkipBlock sb = new SkipBlock(reply.getUpdate(reply.getUpdateCount() - 1));
-            logger.info("Got the following latest skipblock: {}", sb);
-
-            return sb;
+            reply = SkipchainProto.GetUpdateChainReply.parseFrom(msg);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
+
+        if (reply.getUpdateCount() == 0){
+            logger.info("didn't find any updates to {}", scID);
+            return null;
+        }
+
+        SkipBlock start = new SkipBlock(reply.getUpdateList().get(0));
+        if (!scID.equals(start.getId())) {
+            throw new CothorityCryptoException("first returned block does not match requested hash");
+        }
+
+        /*
+        // Step through the returned blocks one at a time, verifying
+        // the forward links, and that they link correctly backwards.
+        List<SkipBlock> update = new ArrayList<>();
+        for (int j = 0; j < reply.getUpdateCount(); j++) {
+            SkipBlock b = new SkipBlock(reply.getUpdateList().get(j));
+            if (!b.verifyForwardSignatures()) {
+                throw new CothorityCryptoException("forward signature verification failed");
+            }
+            // Cannot check back links until we've confirmed the first one
+            if (update.size() > 0) {
+                if (b.getBackLinks().size() == 0) {
+                    throw new CothorityCryptoException("no backlink");
+                }
+                SkipBlock prevBlock = update.get(update.size() - 1);
+                int link = prevBlock.getHeight();
+                if (link > b.getHeight()) {
+                    link = b.getHeight();
+                }
+                // if (b.getBackLinks().)
+                // TODO
+            }
+            update.add(b);
+        }
+        */
+
+        SkipBlock sb = new SkipBlock(reply.getUpdate(reply.getUpdateCount() - 1));
+        logger.info("Got the following latest skipblock: {}", sb);
+
+        return sb;
     }
 
 

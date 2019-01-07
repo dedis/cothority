@@ -12,6 +12,7 @@ import com.moandjiezana.toml.Toml;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * dedis/lib
@@ -51,6 +52,12 @@ public class Roster {
 
     public List<ServerIdentity> getNodes() {
         return nodes;
+    }
+
+    public List<Point> getServicePublics(String serviceName) {
+        return this.nodes.stream()
+                .map(sid -> sid.getServicePublic(serviceName))
+                .collect(Collectors.toList());
     }
 
     public OnetProto.Roster toProto() {

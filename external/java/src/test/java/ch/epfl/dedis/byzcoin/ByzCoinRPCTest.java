@@ -56,6 +56,32 @@ class ByzCoinRPCTest {
         assertTrue(bc.checkLiveness());
     }
 
+    @Test
+    void getBlocks() throws Exception {
+        // First get the genesis block
+        SkipBlock candidate = bc.getSkipchain().getSkipblock(this.bc.getGenesisBlock().getId());
+        assertEquals(candidate.getId(), this.bc.getGenesisBlock().getId());
+
+        // Update should give us the genesis block
+        assertEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
+
+        // Then make a transaction, and we should see a new block, here it's just a darc evolution
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+
+        // Update again should give us a different block
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        assertNotEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
+
+        // Getting the block should work
+        SkipBlock latest = bc.getSkipchain().getSkipblock(bc.getLatestBlock().getId());
+        assertEquals(latest.getId(), bc.getLatestBlock().getId());
+
+        // Get the genesis block again and it should have at least one forward links
+        SkipBlock newGenesis = bc.getSkipchain().getSkipblock(this.bc.getGenesisBlock().getId());
+        assertTrue(newGenesis.getForwardLinks().size() > 0);
+    }
+
     /**
      * We only give the client the roster and the genesis ID. It should be able to find the configuration, latest block
      * and the genesis darc.
