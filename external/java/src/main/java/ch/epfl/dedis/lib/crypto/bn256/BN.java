@@ -433,6 +433,18 @@ public class BN {
             return "bn256.GT" + this.p.toString();
         }
 
+        @Override
+        public boolean equals(Object obj)  {
+            if (obj == null) {
+                return false;
+            }
+            if (!(obj instanceof BN.GT)) {
+                return false;
+            }
+            BN.GT other = (BN.GT)obj;
+            return other.p.equals(this.p);
+        }
+
         /**
          * Perform a scalar multiplication.
          *

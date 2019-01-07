@@ -26,6 +26,20 @@ class GFp2 {
         return "(" + this.x.mod(p).toString() + "," + this.y.mod(p).toString() + ")";
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof GFp2)) {
+            return false;
+        }
+        GFp2 other = (GFp2)obj;
+        this.minimal();
+        other.minimal();
+        return other.x.equals(this.x) && other.y.equals(this.y);
+    }
+
     GFp2 set(GFp2 a) {
         this.x = a.x;
         this.y = a.y;

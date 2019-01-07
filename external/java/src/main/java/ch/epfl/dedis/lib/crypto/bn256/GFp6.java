@@ -22,6 +22,18 @@ class GFp6 {
         return "(" + this.x.toString() + "," + this.y.toString() + "," + this.z.toString() + ")";
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof GFp6)) {
+            return false;
+        }
+        GFp6 other = (GFp6)obj;
+        return other.x.equals(this.x) && other.y.equals(this.y) && other.z.equals(this.z);
+    }
+
     GFp6 set(GFp6 a) {
         this.x.set(a.x);
         this.y.set(a.y);

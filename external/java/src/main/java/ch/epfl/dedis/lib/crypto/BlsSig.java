@@ -34,7 +34,7 @@ public class BlsSig {
                 return false;
             }
             BN.GT right = s.pair(new Bn256G2Point(BigInteger.ONE));
-            return Arrays.equals(left.marshal(), right.marshal());
+            return left.equals(right);
         } catch (CothorityCryptoException e) {
             return false;
         }

@@ -271,4 +271,21 @@ class BNTest {
             BN.pair(new BN.G1(CurvePoint.curveGen), new BN.G2(TwistPoint.twistGen));
         }
     }
+
+    @Test
+    void equalsGT() {
+        Random rnd = new SecureRandom();
+
+        BN.PairG1 pairG1 = BN.G1.rand(rnd);
+        BN.PairG2 pairG2 = BN.G2.rand(rnd);
+        BN.G1 p1 = pairG1.getPoint();
+        BN.G2 p2 = pairG2.getPoint();
+        BN.GT e1 = BN.pair(p1, p2);
+
+        BN.GT e11 = new BN.GT(e1.p);
+        assertEquals(e11, e1);
+
+        BN.GT e12 = new BN.GT();
+        assertNotEquals(e12, e1);
+    }
 }
