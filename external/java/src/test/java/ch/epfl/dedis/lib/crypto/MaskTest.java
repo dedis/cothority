@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.crypto;
 import ch.epfl.dedis.lib.crypto.bn256.BN;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,5 +96,35 @@ class MaskTest {
 
         mask = new Mask(Arrays.copyOf(publics, n-1), new byte[]{0});
         assertEquals(mask.countTotal(), n-1);
+    }
+
+    @Test
+    void verifySignature() throws Exception {
+        byte[] msg = "hello".getBytes();
+        Random rnd = new SecureRandom();
+
+        List<Bn256KeyPair> pairs = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            pairs.add(new Bn256KeyPair(rnd));
+        }
+
+        List<Point> publics = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            publics.add(pairs.get(i).point);
+        }
+
+        Point aggrSig = new Bn256G1Point(BigInteger.ONE);
+        aggrSig = aggrSig.getZero();
+        for (Bn256KeyPair p : pairs) {
+            aggrSig = aggrSig.add(new Bn256G1Point(BlsSig.sign(p.scalar, msg).getSig()));
+        }
+
+        // pass with the right aggregate
+        Mask mask = new Mask(publics.toArray(new Point[0]), new byte[]{(byte)255, (byte)255});
+        assertTrue(new BlsSig(aggrSig.toBytes()).verify(msg, (Bn256G2Point)mask.getAggregate()));
+
+        // fail with the wrong aggregate
+        mask = new Mask(publics.toArray(new Point[0]), new byte[]{(byte)254, (byte)255});
+        assertFalse(new BlsSig(aggrSig.toBytes()).verify(msg, (Bn256G2Point)mask.getAggregate()));
     }
 }
