@@ -1,7 +1,8 @@
-const kyber = require("../../../index.js");
-const nist = kyber.curve.nist;
 const BN = require("bn.js");
 const assert = require("chai").assert;
+const {
+  curve: { nist }
+} = require("../../../dist/index.js");
 const PRNG = require("../../util").PRNG;
 const nistVectors = require("./ecdh_test.json");
 
@@ -34,7 +35,7 @@ describe("p256", () => {
   describe("point", () => {
     const curve = new nist.Curve(nist.Params.p256);
     // prettier-ignore
-    const bytes = new Uint8Array([4, 86, 136, 95, 219, 46, 44, 21, 129, 228, 251, 109, 189, 14, 233, 39, 200, 61, 230, 250, 80, 93, 166, 150, 168, 69, 80, 207, 81, 252, 111, 247, 159, 50, 200, 1, 128, 38, 107, 124, 61, 43, 130, 195, 203, 232, 91, 139, 88, 232, 48, 229, 188, 47, 236, 127, 85, 30, 29, 69, 170, 227, 163, 245, 197]);
+    const bytes = Buffer.from([4, 86, 136, 95, 219, 46, 44, 21, 129, 228, 251, 109, 189, 14, 233, 39, 200, 61, 230, 250, 80, 93, 166, 150, 168, 69, 80, 207, 81, 252, 111, 247, 159, 50, 200, 1, 128, 38, 107, 124, 61, 43, 130, 195, 203, 232, 91, 139, 88, 232, 48, 229, 188, 47, 236, 127, 85, 30, 29, 69, 170, 227, 163, 245, 197]);
 
     describe("marshalSize", () => {
       it("should return the marshal data length", () => {
@@ -84,9 +85,10 @@ describe("p256", () => {
       });
 
       it("should work with a zero buffer", () => {
-        const bytes = new Uint8Array(curve.pointLen());
+        const bytes = Buffer.alloc(curve.pointLen(), 0);
         bytes[0] = 4;
-        let point = curve.point().unmarshalBinary(bytes);
+        const point = curve.point();
+        point.unmarshalBinary(bytes);
         assert(point.ref.point.isInfinity(), "Point not set to infinity");
       });
 
@@ -264,7 +266,7 @@ describe("p256", () => {
       });
 
       it("should embed data with length < embedLen", () => {
-        let data = new Uint8Array([1, 2, 3, 4, 5, 6]);
+        let data = Buffer.from([1, 2, 3, 4, 5, 6]);
         let point = curve.point().embed(data, randomBytes);
 
         let x = new BN(
@@ -281,7 +283,7 @@ describe("p256", () => {
 
       it("should embed data with length = embedLen", () => {
         // prettier-ignore
-        let data = new Uint8Array([68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83]);
+        let data = Buffer.from([68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83, 68, 69, 68, 73, 83]);
         let point = curve.point().embed(data, randomBytes);
 
         let x = new BN(
@@ -317,7 +319,7 @@ describe("p256", () => {
         setSeed(42);
         randomBytes(65);
         // prettier-ignore
-        let bytes = new Uint8Array([4, 201, 209, 147, 190, 134, 219, 80, 165, 6, 231, 153, 126, 240, 204, 175, 212, 170, 3, 0, 156, 228, 220, 14, 189, 212, 105, 250, 84, 26, 5, 195, 137, 6, 162, 237, 154, 18, 5, 159, 120, 82, 140, 135, 94, 18, 162, 95, 112, 39, 108, 199, 167, 17, 65, 78, 9, 156, 173, 246, 10, 104, 224, 192, 157]);
+        let bytes = Buffer.from([4, 201, 209, 147, 190, 134, 219, 80, 165, 6, 231, 153, 126, 240, 204, 175, 212, 170, 3, 0, 156, 228, 220, 14, 189, 212, 105, 250, 84, 26, 5, 195, 137, 6, 162, 237, 154, 18, 5, 159, 120, 82, 140, 135, 94, 18, 162, 95, 112, 39, 108, 199, 167, 17, 65, 78, 9, 156, 173, 246, 10, 104, 224, 192, 157]);
         let point = curve.point();
         point.unmarshalBinary(bytes);
         assert.throws(() => {
@@ -513,12 +515,6 @@ describe("p256", () => {
         assert.strictEqual(s.ref.arr.fromRed().cmp(target), 0);
       });
 
-      it("should throw TypeError when b is not Uint8Array", () => {
-        assert.throws(() => {
-          curve.scalar().setBytes(1234);
-        }, TypeError);
-      });
-
       it("should reduce to number to mod N", () => {
         // prettier-ignore
         let bytes = new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]);
@@ -576,8 +572,6 @@ describe("p256", () => {
         assert.isFalse(s1.equal(s2), "s1 == s2");
       });
     });
-
-    describe("setInt64", () => {});
 
     describe("add", () => {
       it("should add two scalars", () => {
@@ -710,13 +704,6 @@ describe("p256", () => {
         assert.deepEqual(bytes, b1);
       });
 
-      it("should throw an error if input is not Uint8Array", () => {
-        let s1 = curve.scalar();
-        assert.throws(() => {
-          s1.unmarshalBinary(123);
-        }, TypeError);
-      });
-
       it("should throw an error if input > q", () => {
         let s1 = curve.scalar();
         // prettier-ignore
@@ -728,7 +715,7 @@ describe("p256", () => {
 
       it("should throw an error if input size > marshalSize", () => {
         let s1 = curve.scalar();
-        let data = new Uint8Array(s1.marshalSize() + 1);
+        let data = Buffer.allocUnsafe(s1.marshalSize() + 1);
         assert.throws(() => {
           s1.unmarshalBinary(data);
         }, Error);

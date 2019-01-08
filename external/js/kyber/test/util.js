@@ -8,6 +8,10 @@
 class PRNG {
   constructor(seed) {
     this.seed = seed;
+
+    this.setSeed = this.setSeed.bind(this);
+    this.genByte = this.genByte.bind(this);
+    this.pseudoRandomBytes = this.pseudoRandomBytes.bind(this);
   }
 
   setSeed(seed) {
@@ -22,7 +26,7 @@ class PRNG {
   }
 
   pseudoRandomBytes(n) {
-    let arr = new Uint8Array(n);
+    const arr = Buffer.alloc(n, 0);
     for (let i = 0; i < n; i++) {
       arr[i] = this.genByte();
     }

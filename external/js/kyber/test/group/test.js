@@ -3,7 +3,7 @@
 const chai = require("chai");
 const expect = chai.expect;
 
-const curve = require("../../lib/curve");
+const curve = require("../../dist/curve");
 
 describe("curves", () => {
   it("are all listed", () => {

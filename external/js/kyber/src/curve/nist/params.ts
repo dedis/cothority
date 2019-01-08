@@ -1,8 +1,6 @@
-"use strict";
+import BN = require("bn.js");
 
-const BN = require("bn.js");
-
-module.exports = {
+export default {
   p256: {
     name: "P256",
     bitSize: 256,
