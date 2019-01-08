@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.*;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,7 @@ public class SignerEd25519 implements Signer {
      * Constructor for signer.
      */
     public SignerEd25519() {
-        KeyPair kp = new KeyPair();
+        Ed25519KeyPair kp = new Ed25519KeyPair();
         pub = kp.point;
         priv = kp.scalar;
     }

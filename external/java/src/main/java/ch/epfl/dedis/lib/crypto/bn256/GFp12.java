@@ -26,6 +26,18 @@ class GFp12 {
         return this;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof GFp12)) {
+            return false;
+        }
+        GFp12 other = (GFp12)obj;
+        return other.x.equals(this.x) && other.y.equals(this.y);
+    }
+
     GFp12 setZero() {
         this.x.setZero();
         this.y.setZero();

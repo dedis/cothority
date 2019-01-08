@@ -46,7 +46,7 @@ class Ed25519Test {
 
     @Test
     void toPrivate() {
-        KeyPair kp = new KeyPair();
+        Ed25519KeyPair kp = new Ed25519KeyPair();
 
         Point pub = Ed25519Point.base().mul(kp.scalar);
         assertTrue(pub.equals(kp.point));
@@ -139,7 +139,6 @@ class Ed25519Test {
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");
         SchnorrSig sig = new SchnorrSig(sigBuf);
         Point pub = new Ed25519Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
-        Scalar s = new Ed25519Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
         assertTrue(sig.verify(msg, pub));
         assertFalse(sig.verify(msg, pub.add(pub)));
         assertFalse(sig.verify("Hi Schnorr".getBytes(), pub));
@@ -148,10 +147,10 @@ class Ed25519Test {
     @Test
     void schnorrSig() {
         byte[] msg = "Hello Schnorr".getBytes();
-        KeyPair kp1 = new KeyPair();
+        Ed25519KeyPair kp1 = new Ed25519KeyPair();
         kp1.scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
         kp1.point = Ed25519Point.base().mul(kp1.scalar);
-        KeyPair kp2 = new KeyPair();
+        Ed25519KeyPair kp2 = new Ed25519KeyPair();
         SchnorrSig sig = new SchnorrSig(msg, kp1.scalar);
 
         assertTrue(sig.verify(msg, kp1.point));

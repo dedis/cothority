@@ -1,29 +1,29 @@
 package ch.epfl.dedis.lib.crypto;
 
 import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.crypto.bn256.BN;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
-import ch.epfl.dedis.lib.crypto.bn256.BN;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * The point used as a public key for a Bn256 signature
+ * The point used for mapping a message in Bn256 signature
  */
-public class Bn256G2Point implements Point {
-    static final byte[] marshalID = "bn256.g2".getBytes();
+public class Bn256G1Point implements Point {
+    static final byte[] marshalID = "bn256.g1".getBytes();
 
-    BN.G2 g2;
+    BN.G1 g1;
 
     /**
      * Create a point by multiplying the base point with a scalar.
      *
-     * @param k the scalar to be multiplied to the base point.
+     * @param scalar the scalar used for the multiplication.
      */
-    Bn256G2Point(BigInteger k) {
-        g2 = new BN.G2();
-        g2.scalarBaseMul(k);
+    Bn256G1Point(BigInteger scalar) {
+        this.g1 = new BN.G1();
+        this.g1.scalarBaseMul(scalar);
     }
 
     /**
@@ -31,7 +31,7 @@ public class Bn256G2Point implements Point {
      *
      * @param pubkey - string of the public key in hexadecimal
      */
-    Bn256G2Point(String pubkey) throws CothorityCryptoException {
+    Bn256G1Point(String pubkey) throws CothorityCryptoException {
         this(Hex.parseHexBinary(pubkey));
     }
 
@@ -40,23 +40,23 @@ public class Bn256G2Point implements Point {
      *
      * @param b - marshaling of the point
      */
-    Bn256G2Point(byte[] b) throws CothorityCryptoException {
+    Bn256G1Point(byte[] b) throws CothorityCryptoException {
         if (Arrays.equals(marshalID, Arrays.copyOfRange(b, 0, 8))) {
             b = Arrays.copyOfRange(b, 8, b.length);
         }
-        g2 = new BN.G2();
-        if (g2.unmarshal(b) == null) {
+        g1 = new BN.G1();
+        if (g1.unmarshal(b) == null) {
             throw new CothorityCryptoException("invalid buffer");
         }
     }
 
     /**
-     * Create the point from a BN.G2 point.
+     * Create the point from a BN.G1 point.
      *
-     * @param g2 the G2 point.
+     * @param g1 the BN.G1 point.
      */
-    Bn256G2Point(BN.G2 g2) {
-        this.g2 = new BN.G2(g2);
+    Bn256G1Point(BN.G1 g1) {
+        this.g1 = new BN.G1(g1);
     }
 
     /**
@@ -66,22 +66,22 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point copy() {
-        return new Bn256G2Point(this.g2);
+        return new Bn256G1Point(this.g1);
     }
 
     /**
      * Checks the equality of two points
      *
-     * @param other the other point
-     * @return true when both are the same point
+     * @param other the other point.
+     * @return true when both are the same point.
      */
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof Bn256G2Point)) {
+        if (!(other instanceof Bn256G1Point)) {
             return false;
         }
-        // TODO not super efficient, consider adding an equals method to BN.G2 that checks the underlying bigints.
-        return Arrays.equals(((Bn256G2Point) other).toBytes(), this.toBytes());
+        // TODO not super efficient, consider adding an equals method to BN.G1 that checks the underlying bigints.
+        return Arrays.equals(((Bn256G1Point) other).toBytes(), this.toBytes());
     }
 
     /**
@@ -96,9 +96,9 @@ public class Bn256G2Point implements Point {
             throw new UnsupportedOperationException();
         }
         BigInteger k = new BigInteger(1, s.getBigEndian());
-        BN.G2 p = new BN.G2();
-        p.scalarMul(this.g2, k);
-        return new Bn256G2Point(p);
+        BN.G1 p = new BN.G1();
+        p.scalarMul(this.g1, k);
+        return new Bn256G1Point(p);
     }
 
     /**
@@ -109,12 +109,12 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point add(Point other) {
-        if (!(other instanceof Bn256G2Point)) {
+        if (!(other instanceof Bn256G1Point)) {
             throw new UnsupportedOperationException();
         }
-        BN.G2 p = new BN.G2();
-        p.add(this.g2, ((Bn256G2Point) other).g2);
-        return new Bn256G2Point(p);
+        BN.G1 p = new BN.G1();
+        p.add(this.g1, ((Bn256G1Point) other).g1);
+        return new Bn256G1Point(p);
     }
 
     /**
@@ -136,7 +136,7 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public byte[] toBytes() {
-        return this.g2.marshal();
+        return this.g1.marshal();
     }
 
     /**
@@ -146,7 +146,7 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public boolean isZero() {
-        return g2.isInfinity();
+        return g1.isInfinity();
     }
 
     /**
@@ -156,14 +156,14 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public Point negate() {
-        BN.G2 p = new BN.G2();
-        p.neg(this.g2);
-        return new Bn256G2Point(p);
+        BN.G1 p = new BN.G1();
+        p.neg(this.g1);
+        return new Bn256G1Point(p);
     }
 
     @Override
     public byte[] data() {
-        return this.g2.marshal();
+        return this.g1.marshal();
     }
 
     /**
@@ -173,17 +173,16 @@ public class Bn256G2Point implements Point {
      */
     @Override
     public String toString() {
-        return this.g2.toString();
+        return this.g1.toString();
     }
 
     /**
-     * Perform the pairing operation on this point and G1.
+     * Perform the pairing operation on this point and G2.
      *
-     * @param g1 is a point on G1.
+     * @param g2 is a point on G2.
      * @return result of pairing.
      */
-    public BN.GT pair(Bn256G1Point g1) {
-        return BN.pair(g1.g1, this.g2);
+    public BN.GT pair(Bn256G2Point g2) {
+        return BN.pair(this.g1, g2.g2);
     }
-
 }

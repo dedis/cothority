@@ -12,7 +12,7 @@ public class SchnorrSig {
     public Scalar response;
 
     public SchnorrSig(byte[] msg, Scalar priv) {
-        KeyPair kp = new KeyPair();
+        Ed25519KeyPair kp = new Ed25519KeyPair();
         challenge = kp.point;
 
         Point pub = Ed25519Point.base().mul(priv);

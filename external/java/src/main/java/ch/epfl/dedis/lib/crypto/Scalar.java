@@ -16,7 +16,6 @@ public interface Scalar {
 
     public byte[] getBigEndian();
     public byte[] getLittleEndian();
-    public byte[] getLittleEndianFull();
 
     public Scalar add(Scalar b);
     public Scalar sub(Scalar b);

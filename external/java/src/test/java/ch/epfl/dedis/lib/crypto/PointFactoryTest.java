@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PointFactoryTest {
     static private final String ED25519_POINT = "3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29";
-    static private final String BN256_POINT = "01021817b72430e4ff2178726594c4b3941ab43d055af0fdad605b857fb98849e31" +
+    static private final String BN256_POINT = "021817b72430e4ff2178726594c4b3941ab43d055af0fdad605b857fb98849e31" +
             "e7465981004a9f955397a920bbae310912f2fff7d5df5e11a5a9df325b1acff1f957a894d5f94513830f44d01273bc4f0ac67" +
             "318902ba3722fd799627d8c0ad59bb378cb9ea08e1176ece8860f29d057208ade76fbc88d6d22350772e3776fb";
 

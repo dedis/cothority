@@ -5,6 +5,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class BN {
+
+    /**
+     * The order of the BN groups G1, G2 and GT.
+     */
+    public static BigInteger order = Constants.order;
+
     /**
      * The pair of a G1 point and a scalar that is used to generate it.
      */
@@ -148,6 +154,15 @@ public class BN {
         public G1 neg(G1 a) {
             this.p.negative(a.p);
             return this;
+        }
+
+        /**
+         * Checks whether the point is an infinity (zero) point.
+         *
+         * @return true if the point is at infinity.
+         */
+        public boolean isInfinity() {
+            return this.p.isInfinity();
         }
 
         /**
@@ -302,6 +317,26 @@ public class BN {
         }
 
         /**
+         * Perform a point negation.
+         *
+         * @param a is the point to negate.
+         * @return the resulting point which is also this object.
+         */
+        public G2 neg(G2 a) {
+            this.p.negative(a.p);
+            return this;
+        }
+
+        /**
+         * Checks whether the point is an infinity (zero) point.
+         *
+         * @return true if the point is at infinity.
+         */
+        public boolean isInfinity() {
+            return this.p.isInfinity();
+        }
+
+        /**
          * Turns the point into its byte representation.
          *
          * @return the marshalled bytes.
@@ -396,6 +431,18 @@ public class BN {
         @Override
         public String toString() {
             return "bn256.GT" + this.p.toString();
+        }
+
+        @Override
+        public boolean equals(Object obj)  {
+            if (obj == null) {
+                return false;
+            }
+            if (!(obj instanceof BN.GT)) {
+                return false;
+            }
+            BN.GT other = (BN.GT)obj;
+            return other.p.equals(this.p);
         }
 
         /**
