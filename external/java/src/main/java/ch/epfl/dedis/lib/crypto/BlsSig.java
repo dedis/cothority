@@ -54,6 +54,14 @@ public class BlsSig {
         return new BlsSig(xHM.toBytes());
     }
 
+    /**
+     * Getter for the signature in byte representation.
+     */
+    public byte[] getSig() {
+        return sig;
+    }
+
+
     private static Bn256G1Point hashToPoint(byte[] msg) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

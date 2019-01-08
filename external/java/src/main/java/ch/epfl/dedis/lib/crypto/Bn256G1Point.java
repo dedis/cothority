@@ -177,6 +177,16 @@ public class Bn256G1Point implements Point {
     }
 
     /**
+     * Get the infinity (zero) point.
+     */
+    @Override
+    public Point getZero() {
+        BN.G1 p = new BN.G1();
+        p.setInfinity();
+        return new Bn256G1Point(p);
+    }
+
+    /**
      * Perform the pairing operation on this point and G2.
      *
      * @param g2 is a point on G2.

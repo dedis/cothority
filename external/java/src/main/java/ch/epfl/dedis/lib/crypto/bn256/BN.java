@@ -157,6 +157,14 @@ public class BN {
         }
 
         /**
+         * Set the point to the infinity (zero) point.
+         */
+        public G1 setInfinity() {
+            this.p.setInfinity();
+            return this;
+        }
+
+        /**
          * Checks whether the point is an infinity (zero) point.
          *
          * @return true if the point is at infinity.
@@ -324,6 +332,14 @@ public class BN {
          */
         public G2 neg(G2 a) {
             this.p.negative(a.p);
+            return this;
+        }
+
+        /**
+         * Set the point to the infinity (zero) point.
+         */
+        public G2 setInfinity() {
+            this.p.setInfinity();
             return this;
         }
 
