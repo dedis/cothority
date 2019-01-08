@@ -24,7 +24,13 @@ public class Bn256Scalar implements Scalar {
     }
 
     public byte[] toBytes() {
-        return bigIntegerToBytes(this.x);
+        // We have to use this function instead of the BigInteger.toByteArray method because the latter might produce
+        // a leading zero which is different from the Go implementation.
+        byte[] bytes = this.x.toByteArray();
+        if (bytes[0] == 0) {
+            return Arrays.copyOfRange(bytes, 1, bytes.length);
+        }
+        return bytes;
     }
 
     public Scalar reduce() {
@@ -48,10 +54,6 @@ public class Bn256Scalar implements Scalar {
     }
 
     public byte[] getLittleEndian() {
-        return getLittleEndianFull();
-    }
-
-    public byte[] getLittleEndianFull() {
         return Ed25519.reverse(getBigEndian());
     }
 
@@ -87,17 +89,5 @@ public class Bn256Scalar implements Scalar {
             throw new IllegalArgumentException(String.format("Error thrown because you are trying to operate an Bn256 with a Scalar implementing class %s", s.getClass().getName()));
         }
         return (Bn256Scalar) s;
-    }
-
-    /**
-     * We have to use this function instead of the BigInteger.toByteArray method because the latter might produce
-     * a leading zero which is different from the Go implementation.
-     */
-    static byte[] bigIntegerToBytes(final BigInteger a) {
-        byte[] bytes = a.toByteArray();
-        if (bytes[0] == 0) {
-            return Arrays.copyOfRange(bytes, 1, bytes.length);
-        }
-        return bytes;
     }
 }

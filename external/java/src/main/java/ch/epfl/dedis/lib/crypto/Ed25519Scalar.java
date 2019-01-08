@@ -74,10 +74,6 @@ public class Ed25519Scalar implements Scalar {
         return fieldElement.toByteArray();
     }
 
-    public byte[] getLittleEndianFull() {
-        return Arrays.copyOfRange(getLittleEndian(), 0, 64);
-    }
-
     public Scalar add(Scalar b) {
         Ed25519Scalar other = convert(b);
         return new Ed25519Scalar(fieldElement.add(other.fieldElement));
@@ -117,4 +113,13 @@ public class Ed25519Scalar implements Scalar {
         }
         return (Ed25519Scalar) s;
     }
+
+    /**
+     * Sometimes the scalar is small and getLittleEndian returns fewer than 32 bytes. Which may be a problem for some
+     * methods in this file. This method always fills the little-endian representation to its maximum length with zeros.
+     */
+    private byte[] getLittleEndianFull() {
+        return Arrays.copyOfRange(getLittleEndian(), 0, 64);
+    }
+
 }

@@ -12,8 +12,7 @@ import java.util.Arrays;
  * The point used as a public key for a Bn256 signature
  */
 public class Bn256G2Point implements Point {
-    // TODO consider changing this to "bn256.g2"
-    static final byte[] marshalID = "bn256.pt".getBytes();
+    static final byte[] marshalID = "bn256.g2".getBytes();
 
     BN.G2 g2;
 

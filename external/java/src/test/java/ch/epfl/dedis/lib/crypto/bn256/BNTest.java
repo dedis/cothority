@@ -161,7 +161,7 @@ class BNTest {
     }
 
     /**
-     * This an extra test that checks whether our implementation matches the golang/crypto/bn256 implementation.
+     * This is an extra test that checks whether our implementation matches the golang/crypto/bn256 implementation.
      */
     @Test
     void bilinearityReference() {
