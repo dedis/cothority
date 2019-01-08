@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="dist/bundle.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var nist = kyber.curve.nist;
+      var p256 = new nist.Curve(nist.Params.p256);
+      var randomPoint = p256.point().pick();
+      var randomScalar = p256.scalar().pick();
+      window.onload = function() {
+        var pRef = document.getElementById("point");
+        var sRef = document.getElementById("scalar");
+        var p = document.createTextNode("Point: " + randomPoint.string());
+        var s = document.createTextNode("Scalar: " + randomScalar.string());
+        pRef.appendChild(p);
+        sRef.appendChild(s);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <p id="point"></p>
+      <p id="scalar"></p>
+    </div>
+  </body>
+</html>

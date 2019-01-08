@@ -1,5 +1,5 @@
 {
-  "name": "@dedis/kyber-js",
+  "name": "@dedis/kyber",
   "version": "0.0.10",
   "description": "A javascript implementation of Kyber interfaces",
   "main": "dist/index.js",
@@ -9,7 +9,8 @@
     "test": "tsc && jasmine",
     "cover": "nyc --reporter=html --reporter=text mocha --recursive",
     "coveralls": "nyc --reporter=lcov mocha --recursive && cat ./coverage/lcov.info | coveralls",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "bundle": "node node_modules/.bin/webpack"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,9 @@
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.3",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-preset-env": "^1.7.0",
     "chai": "^4.1.2",
     "coveralls": "^3.0.0",
     "eslint": "^4.19.1",
@@ -42,6 +46,8 @@
     "nyc": "^12.0.2",
     "prettier": "^1.10.2",
     "ts-loader": "^5.3.3",
-    "typescript": "^3.2.2"
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.1",
+    "webpack-cli": "^3.2.1"
   }
 }
