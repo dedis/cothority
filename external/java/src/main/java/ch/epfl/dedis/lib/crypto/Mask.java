@@ -15,7 +15,7 @@ public class Mask {
      * Create a read-only mask from a set of public keys and the given bitmask.
      *
      * @param publics is the set of public keys.
-     * @param mask is the bit mask, the number of bits must be greater or equals to the number of public keys.
+     * @param mask is the bit mask, the number of bits must be greater than or equal to the number of public keys.
      * @throws CothorityCryptoException is thrown when the list of public keys is empty.
      */
     Mask(Point[] publics, byte[] mask) throws CothorityCryptoException {
