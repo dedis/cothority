@@ -82,6 +82,18 @@ class ByzCoinRPCTest {
         assertTrue(newGenesis.getForwardLinks().size() > 0);
     }
 
+    @Test
+    void getProof() throws Exception {
+        // Then make a transaction so we can do something with the proof.
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+
+        // Get one Proof.
+        InstanceId inst = bc.getGenesisDarcInstance().getInstance().getId();
+        Proof p = bc.getProof(inst);
+        assertTrue(p.exists(inst.getId()));
+    }
+
     /**
      * We only give the client the roster and the genesis ID. It should be able to find the configuration, latest block
      * and the genesis darc.

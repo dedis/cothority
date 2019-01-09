@@ -5,6 +5,7 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -27,6 +28,7 @@ import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventlogTest {
@@ -91,6 +93,7 @@ class EventlogTest {
             for (InstanceId key : keys) {
                 try {
                     logger.info("ok");
+                    // this checks the trie proofs.
                     Event event2 = el.get(key);
                     assertEquals(event, event2);
                 } catch (CothorityCryptoException e){
@@ -104,6 +107,10 @@ class EventlogTest {
             }
         }
         assertTrue(allOK, "one of the events failed");
+
+        // check that we can't get an event that doesn't exist
+        InstanceId badKey = new InstanceId(Hex.parseHexBinary("CDC4FB0BDD74CD86410DC80C818E7A0DB3C6452C9161CF7C6FC16D00C5CF0DA7"));
+        assertThrows(CothorityCryptoException.class, () -> el.get(badKey));
     }
 
     @Test

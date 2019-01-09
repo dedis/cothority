@@ -151,6 +151,4 @@ class ValueTest {
         ClientTransactionId ref = txr.get(0).getClientTransaction().getId();
         assertTrue(txr.get(0).getClientTransaction().getId().equals(txid));
     }
-
-
 }

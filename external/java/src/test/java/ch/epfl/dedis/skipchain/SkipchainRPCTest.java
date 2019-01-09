@@ -36,6 +36,7 @@ class SkipchainRPCTest {
     void initAll() throws Exception {
         TestServerController testInstanceController = TestServerInit.getInstance();
         Signer admin = new SignerEd25519();
+        // TODO this is not true anymore
         // use a smaller roster because we're going to evolve it later
         Roster roster = new Roster(testInstanceController.getRoster().getNodes().subList(0, 2));
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
