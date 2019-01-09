@@ -28,11 +28,17 @@ In the browser:
   <body>
   </body>
 </html>
-``` 
+```
 
-In node_js:
+The bundle is compiled using the command:
+
+```
+npm run bundle
+```
+
+In node_js using typescript:
 ```js
-const kyber = require("@dedis/kyber-js");
+import kyber from "@dedis/kyber";
 ```
 
 Dev Setup
@@ -47,12 +53,12 @@ npm install
 Browser Build
 -------------
 
-`npm run build` will output `dist/bundle.min.js` and `dist/bundle.node.min.js`
+`npm run build` will transpile the typescript files of the _src_ folder into _dist_
 
 Running Tests
 -------------
 
-Execute `npm test` to run the unit tests.
+Execute `npm test` to run the unit tests and `npm run cover` to get the coverage
 
 Generate Documentation
 ----------------------

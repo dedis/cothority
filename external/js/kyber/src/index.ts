@@ -83,3 +83,8 @@ export {
   curve,
   sign,
 }
+
+export default {
+  curve,
+  sign,
+}
