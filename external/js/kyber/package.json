@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.3",
+    "@types/jasmine": "^3.3.5",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
@@ -46,6 +47,7 @@
     "nyc": "^12.0.2",
     "prettier": "^1.10.2",
     "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
     "typescript": "^3.2.2",
     "webpack": "^4.28.1",
     "webpack-cli": "^3.2.1"

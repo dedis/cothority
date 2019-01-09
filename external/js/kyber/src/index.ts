@@ -41,6 +41,10 @@ export interface Point {
   marshalBinary(): Buffer;
 
   unmarshalBinary(bytes: Buffer): void;
+
+  marshalSize(): number;
+
+  string(): string;
 }
 
 export interface Scalar {
