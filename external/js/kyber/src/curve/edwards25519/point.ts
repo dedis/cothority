@@ -7,12 +7,8 @@ import Ed25519Scalar from "./scalar";
 export type PointType = number | Buffer | BN
 
 export default class Ed25519Point implements Point {
-    private curve: Ed25519
-    private X: PointType
-    private Y: PointType
-    private Z: PointType
-    private T: PointType
-    private ref: {
+    // TODO: this should be private
+    ref: {
         point: any,
         curve: Ed25519
     }

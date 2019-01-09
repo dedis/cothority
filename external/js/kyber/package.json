@@ -53,12 +53,17 @@
     "webpack-cli": "^3.2.1"
   },
   "nyc": {
+    "all": true,
     "extension": [
       ".ts"
     ],
     "exclude": [
       "spec/**/*",
-      "**/*.d.ts"
+      "**/*.d.ts",
+      "**/*.config.js",
+      "coverage/**/*",
+      "dist/**/*",
+      "spec/**/*"
     ],
     "require": [
       "ts-node/register"
