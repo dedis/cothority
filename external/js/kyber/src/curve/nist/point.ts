@@ -1,5 +1,5 @@
 import BN = require("bn.js");
-import * as crypto from "crypto";
+import { randomBytes } from "crypto";
 import constants from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";
@@ -135,7 +135,7 @@ export default class NistPoint implements Point {
             dl = data.length;
         }
         
-        callback = callback || crypto.randomBytes;
+        callback = callback || randomBytes;
         
         while (true) {
             const bitLen = this.ref.curve.curve.p.bitLength();

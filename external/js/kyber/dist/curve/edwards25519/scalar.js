@@ -1,14 +1,7 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const BN = require("bn.js");
-const crypto = __importStar(require("crypto"));
+const crypto_1 = require("crypto");
 const random_1 = require("../../random");
 class Ed25519Scalar {
     constructor(curve, red) {
@@ -73,7 +66,7 @@ class Ed25519Scalar {
         return this;
     }
     pick(callback) {
-        callback = callback || crypto.randomBytes;
+        callback = callback || crypto_1.randomBytes;
         const bytes = random_1.int(this.ref.curve.curve.n, callback);
         this.ref.arr = new BN(bytes, 16).toRed(this.ref.red);
         return this;

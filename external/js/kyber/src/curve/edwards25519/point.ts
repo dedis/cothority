@@ -1,7 +1,7 @@
 import { Point } from "../../index";
 import Ed25519 from "./curve";
 import BN = require("bn.js");
-import * as crypto from "crypto";
+import { randomBytes } from "crypto";
 import Ed25519Scalar from "./scalar";
 
 export type PointType = number | Buffer | BN
@@ -104,7 +104,7 @@ export default class Ed25519Point implements Point {
             dl = data.length;
         }
 
-        callback = callback || crypto.randomBytes;
+        callback = callback || randomBytes;
 
         let point_obj = new Ed25519Point(this.ref.curve);
         while (true) {

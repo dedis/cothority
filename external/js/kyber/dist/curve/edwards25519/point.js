@@ -1,14 +1,7 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const BN = require("bn.js");
-const crypto = __importStar(require("crypto"));
+const crypto_1 = require("crypto");
 class Ed25519Point {
     constructor(curve, X, Y, Z, T) {
         if (X instanceof Buffer) {
@@ -83,7 +76,7 @@ class Ed25519Point {
         if (dl > data.length) {
             dl = data.length;
         }
-        callback = callback || crypto.randomBytes;
+        callback = callback || crypto_1.randomBytes;
         let point_obj = new Ed25519Point(this.ref.curve);
         while (true) {
             const buff = callback(32);

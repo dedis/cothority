@@ -2,17 +2,10 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const point_1 = __importDefault(require("./point"));
 const scalar_1 = __importDefault(require("./scalar"));
-const crypto = __importStar(require("crypto"));
+const crypto_1 = require("crypto");
 const elliptic_1 = require("elliptic");
 const BN = require("bn.js");
 const ec = new elliptic_1.eddsa("ed25519");
@@ -58,8 +51,8 @@ class Ed25519 {
      * it to be a multiple of 8).
      */
     newKey() {
-        let bytes = crypto.randomBytes(32);
-        let hash = crypto.createHash("sha512");
+        let bytes = crypto_1.randomBytes(32);
+        let hash = crypto_1.createHash("sha512");
         hash.update(bytes);
         let scalar = Buffer.from(hash.digest());
         scalar[0] &= 0xf8;

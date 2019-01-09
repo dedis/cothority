@@ -1,5 +1,5 @@
 import BN = require("bn.js");
-import * as crypto from "crypto";
+import { randomBytes } from "crypto";
 import Ed25519 from "./curve";
 import { int } from "../../random"
 import { Scalar } from "../../index";
@@ -88,7 +88,7 @@ export default class Ed25519Scalar implements Scalar {
         return this;
     }
     pick(callback?: (length: number) => Buffer): Scalar {
-        callback = callback || crypto.randomBytes;
+        callback = callback || randomBytes;
         const bytes = int(this.ref.curve.curve.n, callback);
         this.ref.arr = new BN(bytes, 16).toRed(this.ref.red);
         return this;

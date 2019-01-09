@@ -1,5 +1,5 @@
 import BN = require("bn.js");
-import * as crypto from "crypto"
+import { randomBytes } from "crypto"
 import { int } from "../../random"
 import { Scalar } from "../../index"
 import Weierstrass from "./curve";
@@ -147,7 +147,7 @@ export default class NistScalar implements Scalar {
     * Set to a random scalar
     */
     pick(callback?: (length: number) => Buffer): NistScalar {
-        callback = callback || crypto.randomBytes;
+        callback = callback || randomBytes;
         let bytes = int(this.ref.curve.curve.n, callback);
         this.setBytes(bytes);
         return this;

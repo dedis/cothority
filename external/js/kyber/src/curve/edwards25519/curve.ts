@@ -1,7 +1,7 @@
 import { Group, Scalar, Point } from "../../index";
 import Ed25519Point from "./point";
 import Ed25519Scalar from "./scalar"
-import * as crypto from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { eddsa } from "elliptic";
 import BN = require("bn.js");
 
@@ -57,8 +57,8 @@ export default class Ed25519 implements Group {
      * it to be a multiple of 8).
      */
     newKey(): Scalar {
-        let bytes = crypto.randomBytes(32);
-        let hash = crypto.createHash("sha512");
+        let bytes = randomBytes(32);
+        let hash = createHash("sha512");
         hash.update(bytes);
         let scalar = Buffer.from(hash.digest());
         scalar[0] &= 0xf8;

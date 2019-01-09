@@ -1,17 +1,10 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const BN = require("bn.js");
-const crypto = __importStar(require("crypto"));
+const crypto_1 = require("crypto");
 const constants_1 = __importDefault(require("../../constants"));
 /**
 * Represents a Point on the nist curve
@@ -122,7 +115,7 @@ class NistPoint {
         if (dl > data.length) {
             dl = data.length;
         }
-        callback = callback || crypto.randomBytes;
+        callback = callback || crypto_1.randomBytes;
         while (true) {
             const bitLen = this.ref.curve.curve.p.bitLength();
             const buffLen = bitLen >> 3;
