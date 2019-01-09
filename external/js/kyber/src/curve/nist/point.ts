@@ -11,7 +11,7 @@ export type BNType = number | Buffer | BN;
 * Represents a Point on the nist curve
 *
 * The value of the parameters is expected in little endian form if being
-* passed as a Uint8Array
+* passed as a buffer
 */
 export default class NistPoint implements Point {
     ref: { curve: Weierstrass, point: any}
@@ -122,7 +122,6 @@ export default class NistPoint implements Point {
     /**
     * Returns a Point with data embedded in the y coordinate
     *
-    * @throws {TypeError} if data is not Uint8Array
     * @throws {Error} if data.length > embedLen
     */
     embed(data: Buffer, callback?: (length: number) => Buffer): NistPoint {
@@ -274,15 +273,11 @@ export default class NistPoint implements Point {
     }
     
     /**
-    * Convert a Uint8Array back to a curve point.
+    * Convert a buffer back to a curve point.
     * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
     * @throws {Error} when bytes does not correspond to a valid point
     */
     unmarshalBinary(bytes: Buffer) {
-        if (!(bytes instanceof Buffer)) {
-            throw new TypeError("argument must be of type buffer");
-        }
-
         const byteLen = this.ref.curve.coordLen();
         if (bytes.length != 1 + 2 * byteLen) {
             throw new Error();

@@ -188,10 +188,6 @@ export default class Ed25519Point implements Point {
     }
 
     unmarshalBinary(bytes: Buffer): void {
-        if (!(bytes instanceof Buffer)) {
-            throw new TypeError("argument must be of type buffer");
-        }
-
         // we create a copy because the array might be modified
         const buff = Buffer.from(bytes);
 

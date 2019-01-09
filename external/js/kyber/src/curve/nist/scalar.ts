@@ -121,7 +121,7 @@ export default class NistScalar implements Scalar {
     }
     
     /**
-    * Sets the scalar from big-endian Uint8Array
+    * Sets the scalar from a big-endian buffer
     * and reduces to the appropriate modulus
     */
     setBytes(b: Buffer): NistScalar{

@@ -192,7 +192,7 @@ describe("Ed25519 Point", () => {
 
     it("should throw an Error if data length > embedLen", () => {
         const point = curve.point();
-        const data = new Uint8Array(point.embedLen() + 1);
+        const data = Buffer.allocUnsafe(point.embedLen() + 1);
 
         expect(() => point.embed(data)).toThrow();
     });

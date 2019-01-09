@@ -26,9 +26,9 @@ export interface Point {
 
   embedLen(): number;
 
-  embed(data: Uint8Array, callback?: (length: number) => Buffer): Point;
+  embed(data: Buffer, callback?: (length: number) => Buffer): Point;
 
-  data(): Uint8Array;
+  data(): Buffer;
 
   add(p1: Point, p2: Point): Point;
 

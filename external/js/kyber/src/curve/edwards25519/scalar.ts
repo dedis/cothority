@@ -28,10 +28,6 @@ export default class Ed25519Scalar implements Scalar {
     }
 
     unmarshalBinary(bytes: Buffer): void {
-        if (!(bytes instanceof Buffer)) {
-            throw new TypeError("argument must be of type buffer");
-        }
-
         if (bytes.length > this.marshalSize()) {
             throw new Error("bytes.length > marshalSize");
         }
@@ -99,10 +95,6 @@ export default class Ed25519Scalar implements Scalar {
     }
 
     setBytes(bytes: Buffer): Scalar {
-        if (!(bytes instanceof Buffer)) {
-            throw new TypeError("argument must be of type buffer");
-        }
-
         this.ref.arr = new BN(bytes , 16, "le").toRed(this.ref.red);
         return this;
     }

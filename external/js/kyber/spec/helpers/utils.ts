@@ -42,7 +42,7 @@ export function unhexlify(str: string): Buffer {
     return result;
 }
 
-export function hexToUint8Array(hex: string): Buffer {
+export function hexToBuffer(hex: string): Buffer {
     let bytes = Buffer.allocUnsafe(hex.length >> 1);
     for (let i = 0; i < bytes.length; i++) {
         bytes[i] = parseInt(hex.substr(i << 1, 2), 16);

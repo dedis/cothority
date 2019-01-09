@@ -3,8 +3,8 @@ import BN = require("bn.js");
 import constants from "./constants";
 
 /**
-* bits choses a random Uint8Array with a maximum bitlength
-* If exact is `true`, chose Uint8Array with *exactly* that bitlenght not less
+* bits choses a random buffer with a maximum bitlength
+* If exact is `true`, chose a buffer with *exactly* that bitlenght not less
 */
 export function bits(bitlen: number, exact: boolean, callback: (length: number) => Buffer): Buffer {
     let b = callback((bitlen + 7) >> 3);
@@ -24,7 +24,7 @@ export function bits(bitlen: number, exact: boolean, callback: (length: number) 
 }
 
 /**
-* int choses a random uniform Uint8Array less than given modulus
+* int choses a random uniform buffer less than given modulus
 */
 export function int(mod: BN, callback: (length: number) => Buffer): Buffer {
     let bitlength = mod.bitLength();

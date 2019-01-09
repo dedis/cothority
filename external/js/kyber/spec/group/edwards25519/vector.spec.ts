@@ -2,7 +2,7 @@ import fs from "fs";
 import crypto from "crypto";
 import BN = require('bn.js');
 import Curve from '../../../src/curve/edwards25519/curve';
-import { unhexlify, hexToUint8Array } from "../../helpers/utils";
+import { unhexlify, hexToBuffer } from "../../helpers/utils";
 
 /**
  * Test vectors from http://ed25519.cr.yp.to/python/sign.input
@@ -28,9 +28,9 @@ describe("Ed25519 Test Vector", () => {
             digest[31] &= 0x3f;
             digest[31] |= 0x40;
             const sk = new BN(digest.slice(0, 32), 16, "le");
-            // using hexToUint8Array until
+            // using hexToBuffer until
             // https://github.com/indutny/bn.js/issues/175 is resolved
-            const pk = new BN(hexToUint8Array(parts[1]), 16, "le");
+            const pk = new BN(hexToBuffer(parts[1]), 16, "le");
             const s = curve.scalar();
             s.unmarshalBinary(Buffer.from(sk.toArray("le")));
             const p = curve.point();
