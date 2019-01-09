@@ -58,7 +58,7 @@ public class SkipBlock {
      * genesis block.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public SkipblockId getSkipchainId() throws CothorityCryptoException{
+    public SkipblockId getSkipchainId() throws CothorityCryptoException {
         if (skipBlock.getIndex() == 0){
             return getId();
         }
