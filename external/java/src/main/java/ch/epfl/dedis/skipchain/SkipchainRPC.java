@@ -31,6 +31,9 @@ public class SkipchainRPC {
 
     private final Logger logger = LoggerFactory.getLogger(SkipchainRPC.class);
 
+    // Every service may have a different public key, the SERVICE_NAME is the reference for getting this key.
+    public static final String SERVICE_NANE = "Skipchain";
+
     /**
      * If the skipchain is already initialised, this constructor will only
      * initialise the class. Once it is initialized, you can verify it with
