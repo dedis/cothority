@@ -172,7 +172,11 @@ export default class NistScalar implements Scalar {
     * @throws {Error} if bytes.length != marshalSize
     */
     unmarshalBinary(bytes: Buffer) {
-        let bnObj = new BN(bytes, 16);
+        if (bytes.length != this.marshalSize()) {
+            throw new Error("bytes.length > marshalSize");
+        }
+
+        const bnObj = new BN(bytes, 16);
         if (bnObj.cmp(this.ref.curve.curve.n) > 0) {
             throw new Error("bytes > q");
         }

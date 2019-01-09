@@ -10,6 +10,10 @@ export class PRNG {
         this.pseudoRandomBytes = this.pseudoRandomBytes.bind(this);
     }
 
+    getSeed(): number {
+        return this.seed;
+    }
+
     setSeed(seed) {
         this.seed = seed;
     }

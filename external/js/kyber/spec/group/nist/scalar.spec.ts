@@ -194,7 +194,7 @@ describe("Nist Scalar", () => {
 
     it("should throw an error if input size > marshalSize", () => {
         const s1 = curve.scalar() as NistScalar;
-        const data = Buffer.allocUnsafe(s1.marshalSize() + 1);
+        const data = Buffer.alloc(s1.marshalSize() + 1, 0);
 
         expect(() => s1.unmarshalBinary(data)).toThrow();
     });

@@ -6,6 +6,6 @@
   "helpers": [
     "helpers/**/*"
   ],
-  "stopSpecOnExpectationFailure": true,
+  "stopSpecOnExpectationFailure": false,
   "random": true
 }

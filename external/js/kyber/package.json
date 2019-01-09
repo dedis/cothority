@@ -6,9 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "tsc && jasmine",
-    "cover": "nyc --reporter=html --reporter=text mocha --recursive",
-    "coveralls": "nyc --reporter=lcov mocha --recursive && cat ./coverage/lcov.info | coveralls",
+    "test": "ts-node node_modules/jasmine/bin/jasmine.js",
+    "cover": "nyc node_modules/jasmine/bin/jasmine.js",
+    "coveralls": "nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js && cat ./coverage/lcov.info | coveralls",
     "prepublishOnly": "npm run build",
     "bundle": "node node_modules/.bin/webpack"
   },
@@ -51,5 +51,17 @@
     "typescript": "^3.2.2",
     "webpack": "^4.28.1",
     "webpack-cli": "^3.2.1"
+  },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "exclude": [
+      "spec/**/*",
+      "**/*.d.ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   }
 }
