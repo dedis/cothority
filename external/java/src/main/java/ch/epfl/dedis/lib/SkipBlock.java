@@ -84,6 +84,9 @@ public class SkipBlock {
         return skipBlock.getIndex();
     }
 
+    /**
+     * @return the height of the block.
+     */
     public int getHeight() {
         return skipBlock.getHeight();
     }
@@ -100,6 +103,12 @@ public class SkipBlock {
         return ret;
     }
 
+    /**
+     * This function checks whether all signatures in the forward-links
+     * are correctly signed by the aggregate public key of the roster
+     *
+     * @return true if the signature is ok.
+     */
     public boolean verifyForwardSignatures() {
         List<Point> publics;
         try {
@@ -121,6 +130,9 @@ public class SkipBlock {
         return true;
     }
 
+    /**
+     * Getter for the list of backlinks in the skipblock.
+     */
     public List<SkipblockId> getBackLinks() {
         return skipBlock.getBacklinksList().stream()
                 .map(bl -> new SkipblockId(bl.toByteArray()))

@@ -6,13 +6,33 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
+/**
+ * Class that represents a BLS signature.
+ */
 public class BlsSig {
     private byte[] sig;
 
+    /**
+     * Constructor from an existing signature.
+     *
+     * @param sig is the signature
+     */
     public BlsSig(byte[] sig) {
         this.sig = sig;
+    }
+
+    /**
+     * Constructor that creates a BLS signature S = x * H(m) on a message m using the private
+     * key x. The signature S is a point on curve G1.
+     *
+     * @param msg is the message to be signed.
+     * @param x is the secret.
+     */
+    public BlsSig(byte[] msg, Scalar x) {
+        Bn256G1Point HM = hashToPoint(msg);
+        Point xHM = HM.mul(x);
+        this.sig = xHM.toBytes();
     }
 
     /**
@@ -38,20 +58,6 @@ public class BlsSig {
         } catch (CothorityCryptoException e) {
             return false;
         }
-    }
-
-    /**
-     * Sign creates a BLS signature S = x * H(m) on a message m using the private
-     * key x. The signature S is a point on curve G1.
-     *
-     * @param x is the secret.
-     * @param msg is the message to be signed.
-     * @return the signature.
-     */
-    public static BlsSig sign(Scalar x, byte[] msg) {
-        Bn256G1Point HM = hashToPoint(msg);
-        Point xHM = HM.mul(x);
-        return new BlsSig(xHM.toBytes());
     }
 
     /**

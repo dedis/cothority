@@ -69,6 +69,9 @@ public class ServerIdentity {
         return pubkey;
     }
 
+    /**
+     * Get the public key for the given service name. If the service name does not exist, null is returned.
+     */
     public Point getServicePublic(String serviceName) {
         for (ServiceIdentity si : this.serviceIdentities) {
             if (si.getName().equals(serviceName)) {

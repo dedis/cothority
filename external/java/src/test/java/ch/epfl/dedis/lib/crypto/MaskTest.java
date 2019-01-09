@@ -116,7 +116,7 @@ class MaskTest {
         Point aggrSig = new Bn256G1Point(BigInteger.ONE);
         aggrSig = aggrSig.getZero();
         for (Bn256KeyPair p : pairs) {
-            aggrSig = aggrSig.add(new Bn256G1Point(BlsSig.sign(p.scalar, msg).getSig()));
+            aggrSig = aggrSig.add(new Bn256G1Point(new BlsSig(msg, p.scalar).getSig()));
         }
 
         // pass with the right aggregate

@@ -1,7 +1,5 @@
 package ch.epfl.dedis.skipchain;
 
-import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.crypto.Bn256G2Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
@@ -69,6 +67,12 @@ public class ForwardLink {
         return new ByzcoinSig(forwardLink.getSignature());
     }
 
+    /**
+     * Verifies whether the signature is correctly signed by the given public keys.
+     *
+     * @param publics is the list of public keys used to sign the forward link.
+     * @return true if the signature is ok.
+     */
     public boolean verify(List<Point> publics) {
         return Arrays.equals(this.getByzcoinSig().getMsg(), this.hash()) && this.getByzcoinSig().verify(publics);
     }

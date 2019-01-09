@@ -60,7 +60,7 @@ class CalypsoTest {
 
         try {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());
-            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1500, MILLIS));
             for (ServerIdentity si : bc.getRoster().getNodes()) {
                 CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
             }
