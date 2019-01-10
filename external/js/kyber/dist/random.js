@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const BN = require("bn.js");
+const bn_js_1 = __importDefault(require("bn.js"));
 const constants_1 = __importDefault(require("./constants"));
 /**
 * bits choses a random buffer with a maximum bitlength
@@ -34,7 +34,7 @@ function int(mod, callback) {
     let i;
     while (true) {
         const bytes = bits(bitlength, false, callback);
-        i = new BN(bytes);
+        i = new bn_js_1.default(bytes);
         if (i.cmp(constants_1.default.zeroBN) > 0 && i.cmp(mod) < 0) {
             return bytes;
         }

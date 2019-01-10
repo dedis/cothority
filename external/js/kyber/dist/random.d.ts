@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import BN = require("bn.js");
+import BN from "bn.js";
 /**
 * bits choses a random buffer with a maximum bitlength
 * If exact is `true`, chose a buffer with *exactly* that bitlenght not less

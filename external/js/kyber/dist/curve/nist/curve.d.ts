@@ -1,10 +1,9 @@
-/// <reference types="node" />
+import elliptic from "elliptic";
+import BN, { ReductionContext, BNType } from "bn.js";
 import { Group, Scalar, Point } from "../../index";
-import BN = require("bn.js");
-export declare type BNType = string | Buffer | BN;
 export default class Weierstrass implements Group {
-    curve: any;
-    redN: any;
+    curve: elliptic.curve.short;
+    redN: ReductionContext;
     bitSize: number;
     name: string;
     constructor(config: {
@@ -13,8 +12,8 @@ export default class Weierstrass implements Group {
         gx: BNType;
         gy: BNType;
         p?: BNType;
-        a?: BNType;
-        b?: BNType;
+        a: BNType;
+        b: BNType;
         n: BN;
     });
     coordLen(): number;

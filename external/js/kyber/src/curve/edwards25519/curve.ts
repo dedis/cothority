@@ -3,7 +3,7 @@ import Ed25519Point from "./point";
 import Ed25519Scalar from "./scalar"
 import { randomBytes, createHash } from "crypto";
 import { eddsa } from "elliptic";
-import BN = require("bn.js");
+import BN from 'bn.js';
 
 const ec = new eddsa("ed25519");
 const orderRed = BN.red(ec.curve.n);

@@ -1,9 +1,8 @@
 /// <reference types="node" />
-import BN = require("bn.js");
+import { BNType } from 'bn.js';
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
-export declare type BNType = number | Buffer | BN;
 /**
 * Represents a Point on the nist curve
 *

@@ -1,5 +1,4 @@
-
-import BN = require("bn.js");
+import BN from "bn.js";
 import constants from "./constants";
 
 /**

@@ -1,4 +1,4 @@
-import BN = require("bn.js");
+import BN from 'bn.js';
 import { randomBytes } from "crypto";
 import Ed25519 from "./curve";
 import { int } from "../../random"
@@ -35,7 +35,7 @@ export default class Ed25519Scalar implements Scalar {
     }
 
     equal(s2: Ed25519Scalar): boolean {
-        return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
+        return this.ref.arr.cmp(s2.ref.arr) == 0;
     }
 
     set(a: Ed25519Scalar): Ed25519Scalar {
@@ -45,7 +45,7 @@ export default class Ed25519Scalar implements Scalar {
 
     clone(): Scalar {
         return new Ed25519Scalar(this.ref.curve, this.ref.red).setBytes(
-            Buffer.from(this.ref.arr.fromRed().toArray("le"))
+            Buffer.from(this.ref.arr.toArray("le"))
         );
     }
 
@@ -100,7 +100,7 @@ export default class Ed25519Scalar implements Scalar {
     }
 
     toString(): string {
-        const bytes = this.ref.arr.fromRed().toArray("le", 32);
+        const bytes = this.ref.arr.toArray("le", 32);
         return bytes.map(b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 }

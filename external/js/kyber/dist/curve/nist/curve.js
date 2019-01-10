@@ -12,24 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const elliptic_1 = __importDefault(require("elliptic"));
+const bn_js_1 = __importDefault(require("bn.js"));
 const point_1 = __importDefault(require("./point"));
 const scalar_1 = __importDefault(require("./scalar"));
-const elliptic = require("elliptic");
-const BN = require("bn.js");
 class Weierstrass {
     constructor(config) {
         let { name, bitSize, gx, gy } = config, options = __rest(config, ["name", "bitSize", "gx", "gy"]);
         this.name = name;
-        options["g"] = [new BN(gx, 16, "le"), new BN(gy, 16, "le")];
+        options["g"] = [new bn_js_1.default(gx, 16, "le"), new bn_js_1.default(gy, 16, "le")];
         for (let k in options) {
             if (k === "g") {
                 continue;
             }
-            options[k] = new BN(options[k], 16, "le");
+            options[k] = new bn_js_1.default(options[k], 16, "le");
         }
-        this.curve = new elliptic.curve.short(options);
+        this.curve = new elliptic_1.default.curve.short(options);
         this.bitSize = bitSize;
-        this.redN = BN.red(options.n);
+        this.redN = bn_js_1.default.red(options.n);
     }
     coordLen() {
         return (this.bitSize + 7) >> 3;

@@ -1,3 +1,4 @@
+import BN from "bn.js";
 import Curve from '../../../src/curve/edwards25519/curve';
 import Scalar from '../../../src/curve/edwards25519/scalar';
 import Point from '../../../src/curve/edwards25519/point';
@@ -23,5 +24,13 @@ describe("edwards25519", () => {
   
     it("point should return a point", () => {
       expect(curve.point()).toEqual(jasmine.any(Point));
+    });
+
+    it('should generate a private key multiple of 8', () => {
+      const key = curve.newKey();
+      const eight = curve.scalar().setBytes(new BN(8, 10));
+      const quotient = curve.scalar().div(key, eight);
+
+      expect(curve.scalar().mul(eight, quotient).equal(key)).toBeTruthy();
     });
 });

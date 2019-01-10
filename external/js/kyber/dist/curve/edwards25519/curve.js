@@ -7,9 +7,9 @@ const point_1 = __importDefault(require("./point"));
 const scalar_1 = __importDefault(require("./scalar"));
 const crypto_1 = require("crypto");
 const elliptic_1 = require("elliptic");
-const BN = require("bn.js");
+const bn_js_1 = __importDefault(require("bn.js"));
 const ec = new elliptic_1.eddsa("ed25519");
-const orderRed = BN.red(ec.curve.n);
+const orderRed = bn_js_1.default.red(ec.curve.n);
 class Ed25519 {
     constructor() {
         this.curve = ec.curve;

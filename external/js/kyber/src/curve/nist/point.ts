@@ -1,11 +1,9 @@
-import BN = require("bn.js");
+import BN, { BNType } from 'bn.js';
 import { randomBytes } from "crypto";
 import constants from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
-
-export type BNType = number | Buffer | BN;
 
 /**
 * Represents a Point on the nist curve
@@ -14,7 +12,7 @@ export type BNType = number | Buffer | BN;
 * passed as a buffer
 */
 export default class NistPoint implements Point {
-    ref: { curve: Weierstrass, point: any}
+    ref: { curve: Weierstrass, point: any }
     constructor(curve: Weierstrass, x?: BNType, y?: BNType) {
         if (x instanceof Buffer) {
             x = new BN(x, 16, "le");
@@ -31,11 +29,11 @@ export default class NistPoint implements Point {
         };
     }
 
-    string() {
+    string(): string {
         return this.toString()
     }
 
-    inspect() {
+    inspect(): string {
         return this.toString()
     }
     
@@ -160,11 +158,10 @@ export default class NistPoint implements Point {
             let xRed = x.toRed(this.ref.curve.curve.red);
             let aX = xRed.redMul(this.ref.curve.curve.a);
             // y^2 = x^3 + ax + b
-            let y2 = xRed
-            .redSqr()
-            .redMul(xRed)
-            .redAdd(aX)
-            .redAdd(this.ref.curve.curve.b);
+            let y2 = xRed.redSqr()
+                .redMul(xRed)
+                .redAdd(aX)
+                .redAdd(this.ref.curve.curve.b);
             
             let y = y2.redSqrt();
             
@@ -175,8 +172,8 @@ export default class NistPoint implements Point {
             
             // check if it is a valid point
             let y2t = y.redSqr();
-            if (y2t.fromRed().cmp(y2.fromRed()) === 0) {
-                return new NistPoint(this.ref.curve, xRed.fromRed(), y.fromRed());
+            if (y2t.cmp(y2) === 0) {
+                return new NistPoint(this.ref.curve, xRed, y);
             }
         }
     }
@@ -203,8 +200,8 @@ export default class NistPoint implements Point {
     add(p1: NistPoint, p2: NistPoint): NistPoint {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
-        .point(point.x, point.y)
-        .add(p2.ref.point);
+            .point(point.x, point.y)
+            .add(p2.ref.point);
         return this;
     }
     
@@ -277,7 +274,7 @@ export default class NistPoint implements Point {
     * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
     * @throws {Error} when bytes does not correspond to a valid point
     */
-    unmarshalBinary(bytes: Buffer) {
+    unmarshalBinary(bytes: Buffer): void {
         const byteLen = this.ref.curve.coordLen();
         if (bytes.length != 1 + 2 * byteLen) {
             throw new Error();

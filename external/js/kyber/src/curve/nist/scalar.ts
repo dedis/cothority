@@ -1,4 +1,4 @@
-import BN = require("bn.js");
+import BN from "bn.js";
 import { randomBytes } from "crypto"
 import { int } from "../../random"
 import { Scalar } from "../../index"
@@ -20,11 +20,11 @@ export default class NistScalar implements Scalar {
         };
     }
 
-    string() {
+    string(): string {
         return this.toString()
     }
 
-    inspect() {
+    inspect(): string {
         return this.toString()
     }
     
@@ -136,7 +136,7 @@ export default class NistScalar implements Scalar {
         return Buffer.from(this.ref.arr.fromRed().toArray("be"));
     }
     
-    toString() {
+    toString(): string {
         let bytes = Buffer.from(this.ref.arr.fromRed().toArray("be"));
         return Array.from(bytes, b => {
             return ("0" + (b & 0xff).toString(16)).slice(-2);
@@ -171,7 +171,7 @@ export default class NistScalar implements Scalar {
     * 
     * @throws {Error} if bytes.length != marshalSize
     */
-    unmarshalBinary(bytes: Buffer) {
+    unmarshalBinary(bytes: Buffer): void {
         if (bytes.length != this.marshalSize()) {
             throw new Error("bytes.length > marshalSize");
         }

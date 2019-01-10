@@ -1,7 +1,7 @@
 /// <reference types="node" />
+import BN from "bn.js";
 import { Point } from "../../index";
 import Ed25519 from "./curve";
-import BN = require("bn.js");
 import Ed25519Scalar from "./scalar";
 export declare type PointType = number | Buffer | BN;
 export default class Ed25519Point implements Point {

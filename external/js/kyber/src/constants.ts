@@ -1,4 +1,4 @@
-import BN = require("bn.js");
+import BN from "bn.js";
 
 const constants = {
   zeroBN: new BN(0)

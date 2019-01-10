@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const BN = require("bn.js");
+const bn_js_1 = __importDefault(require("bn.js"));
 const crypto_1 = require("crypto");
 const constants_1 = __importDefault(require("../../constants"));
 /**
@@ -15,10 +15,10 @@ const constants_1 = __importDefault(require("../../constants"));
 class NistPoint {
     constructor(curve, x, y) {
         if (x instanceof Buffer) {
-            x = new BN(x, 16, "le");
+            x = new bn_js_1.default(x, 16, "le");
         }
         if (y instanceof Buffer) {
-            y = new BN(y, 16, "le");
+            y = new bn_js_1.default(y, 16, "le");
         }
         // the point reference is stored in an object to make set()
         // consistent.
@@ -129,15 +129,14 @@ class NistPoint {
                 data.copy(buff, l - dl - 1);
             }
             //console.log(bytes);
-            let x = new BN(buff, 16, "be");
+            let x = new bn_js_1.default(buff, 16, "be");
             if (x.cmp(this.ref.curve.curve.p) > 0) {
                 continue;
             }
             let xRed = x.toRed(this.ref.curve.curve.red);
             let aX = xRed.redMul(this.ref.curve.curve.a);
             // y^2 = x^3 + ax + b
-            let y2 = xRed
-                .redSqr()
+            let y2 = xRed.redSqr()
                 .redMul(xRed)
                 .redAdd(aX)
                 .redAdd(this.ref.curve.curve.b);
@@ -148,8 +147,8 @@ class NistPoint {
             }
             // check if it is a valid point
             let y2t = y.redSqr();
-            if (y2t.fromRed().cmp(y2.fromRed()) === 0) {
-                return new NistPoint(this.ref.curve, xRed.fromRed(), y.fromRed());
+            if (y2t.cmp(y2) === 0) {
+                return new NistPoint(this.ref.curve, xRed, y);
             }
         }
     }
@@ -248,8 +247,8 @@ class NistPoint {
         if (bytes[0] != 4) {
             throw new Error("unmarshalBinary only accepts uncompressed point");
         }
-        let x = new BN(bytes.slice(1, 1 + byteLen), 16);
-        let y = new BN(bytes.slice(1 + byteLen), 16);
+        let x = new bn_js_1.default(bytes.slice(1, 1 + byteLen), 16);
+        let y = new bn_js_1.default(bytes.slice(1 + byteLen), 16);
         if (x.cmp(constants_1.default.zeroBN) === 0 && y.cmp(constants_1.default.zeroBN) === 0) {
             this.ref.point = this.ref.curve.curve.point(null, null);
             return;

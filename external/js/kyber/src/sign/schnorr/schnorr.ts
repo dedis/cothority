@@ -5,7 +5,7 @@ import { createHash } from "crypto"
 *
 * Sign computes a Schnorr signature over the given message.
 * */
-export function sign(suite: Group, privateKey: Scalar, message: Buffer) {
+export function sign(suite: Group, privateKey: Scalar, message: Buffer): Buffer {
     // generate r & R
     const r = suite.scalar().pick();
     const R = suite.point().mul(r, null);
@@ -34,7 +34,7 @@ export function sign(suite: Group, privateKey: Scalar, message: Buffer) {
 * Verify verifies if the signature of the message is valid under the given public
 * key.
 * */
-export function verify(suite: Group, publicKey: Point, message: Buffer, signature: Buffer) {
+export function verify(suite: Group, publicKey: Point, message: Buffer, signature: Buffer): boolean {
     // check the signature size
     const plen = suite.pointLen();
     const slen = suite.scalarLen();
@@ -72,7 +72,7 @@ export function verify(suite: Group, publicKey: Point, message: Buffer, signatur
 *
 * hashSchnorr returns a scalar out of hashing the given inputs.
 **/
-export function hashSchnorr(suite: Group, ...inputs: Buffer[]) {
+export function hashSchnorr(suite: Group, ...inputs: Buffer[]): Scalar {
     const h = createHash("sha512");
     for (let i of inputs) {
         h.update(i);

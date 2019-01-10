@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const BN = require("bn.js");
+const bn_js_1 = __importDefault(require("bn.js"));
 const crypto_1 = require("crypto");
 const random_1 = require("../../random");
 /**
@@ -12,7 +15,7 @@ const random_1 = require("../../random");
 class NistScalar {
     constructor(curve, red) {
         this.ref = {
-            arr: new BN(0, 16).toRed(red),
+            arr: new bn_js_1.default(0, 16).toRed(red),
             red: red,
             curve: curve
         };
@@ -46,7 +49,7 @@ class NistScalar {
     * Set to the additive identity (0)
     */
     zero() {
-        this.ref.arr = new BN(0, 16).toRed(this.ref.red);
+        this.ref.arr = new bn_js_1.default(0, 16).toRed(this.ref.red);
         return this;
     }
     /**
@@ -74,7 +77,7 @@ class NistScalar {
     * Set to the multiplicative identity (1)
     */
     one() {
-        this.ref.arr = new BN(1, 16).toRed(this.ref.red);
+        this.ref.arr = new bn_js_1.default(1, 16).toRed(this.ref.red);
         return this;
     }
     /**
@@ -107,7 +110,7 @@ class NistScalar {
     * and reduces to the appropriate modulus
     */
     setBytes(b) {
-        this.ref.arr = new BN(b, 16, "be").toRed(this.ref.red);
+        this.ref.arr = new bn_js_1.default(b, 16, "be").toRed(this.ref.red);
         return this;
     }
     /**
@@ -149,7 +152,7 @@ class NistScalar {
         if (bytes.length != this.marshalSize()) {
             throw new Error("bytes.length > marshalSize");
         }
-        const bnObj = new BN(bytes, 16);
+        const bnObj = new bn_js_1.default(bytes, 16);
         if (bnObj.cmp(this.ref.curve.curve.n) > 0) {
             throw new Error("bytes > q");
         }

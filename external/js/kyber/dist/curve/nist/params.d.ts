@@ -1,4 +1,4 @@
-import BN = require("bn.js");
+import BN from "bn.js";
 declare const _default: {
     p256: {
         name: string;

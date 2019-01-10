@@ -1,7 +1,7 @@
+import BN from "bn.js";
+import { randomBytes } from "crypto";
 import { Point } from "../../index";
 import Ed25519 from "./curve";
-import BN = require("bn.js");
-import { randomBytes } from "crypto";
 import Ed25519Scalar from "./scalar";
 
 export type PointType = number | Buffer | BN
@@ -168,7 +168,7 @@ export default class Ed25519Point implements Point {
 
     mul(s: Ed25519Scalar, p?: Ed25519Point): Ed25519Point {
         p = p || null;
-        const arr = s.ref.arr.fromRed();
+        const arr = s.ref.arr;
         this.ref.point =
         p !== null ? p.ref.point.mul(arr) : this.ref.curve.curve.g.mul(arr);
         return this;
