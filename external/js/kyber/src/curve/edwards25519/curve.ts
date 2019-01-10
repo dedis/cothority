@@ -2,14 +2,14 @@ import { Group, Scalar, Point } from "../../index";
 import Ed25519Point from "./point";
 import Ed25519Scalar from "./scalar"
 import { randomBytes, createHash } from "crypto";
-import { eddsa } from "elliptic";
+import { eddsa, curve } from "elliptic";
 import BN from 'bn.js';
 
 const ec = new eddsa("ed25519");
 const orderRed = BN.red(ec.curve.n);
 
 export default class Ed25519 implements Group {
-    curve: any;
+    curve: curve.edwards;
 
     constructor() {
         this.curve = ec.curve;
@@ -57,10 +57,10 @@ export default class Ed25519 implements Group {
      * it to be a multiple of 8).
      */
     newKey(): Scalar {
-        let bytes = randomBytes(32);
-        let hash = createHash("sha512");
+        const bytes = randomBytes(32);
+        const hash = createHash("sha512");
         hash.update(bytes);
-        let scalar = Buffer.from(hash.digest());
+        const scalar = Buffer.from(hash.digest());
         scalar[0] &= 0xf8;
         scalar[31] &= 0x3f;
         scalar[31] |= 0x40;

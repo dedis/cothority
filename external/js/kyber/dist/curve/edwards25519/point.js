@@ -23,7 +23,7 @@ class Ed25519Point {
         // consistent.
         this.ref = {
             point: curve.curve.point(X, Y, Z, T),
-            curve: curve
+            curve: curve,
         };
     }
     string() {

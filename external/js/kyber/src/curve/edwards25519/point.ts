@@ -1,10 +1,8 @@
-import BN from "bn.js";
+import BN, { BNType } from "bn.js";
 import { randomBytes } from "crypto";
 import { Point } from "../../index";
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
-
-export type PointType = number | Buffer | BN
 
 export default class Ed25519Point implements Point {
     // TODO: this should be private
@@ -13,7 +11,7 @@ export default class Ed25519Point implements Point {
         curve: Ed25519
     }
 
-    constructor(curve: Ed25519, X?: PointType, Y?: PointType, Z?: PointType, T?: PointType) {
+    constructor(curve: Ed25519, X?: BNType, Y?: BNType, Z?: BNType, T?: BNType) {
         if (X instanceof Buffer) {
             X = new BN(X, 16, "le");
         }
@@ -30,7 +28,7 @@ export default class Ed25519Point implements Point {
         // consistent.
         this.ref = {
             point: curve.curve.point(X, Y, Z, T),
-            curve: curve
+            curve: curve,
         };
     }
 
@@ -44,9 +42,7 @@ export default class Ed25519Point implements Point {
 
     toString(): string {
         const bytes = this.marshalBinary();
-        return Array.from(bytes, b =>
-        ("0" + (b & 0xff).toString(16)).slice(-2)
-        ).join("");
+        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 
     equal(p2: Ed25519Point): boolean {

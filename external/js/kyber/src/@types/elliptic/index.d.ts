@@ -6,7 +6,7 @@ declare module 'elliptic' {
     import BN, { ReductionContext, BNType } from 'bn.js';
 
     export namespace curve {
-        class BaseCurve {
+        abstract class BaseCurve {
             type: string;
             p: BN;
             red: ReductionContext;
@@ -17,7 +17,6 @@ declare module 'elliptic' {
             g: BasePoint;
             redN: BN;
 
-            point(x: BNType, y: BNType, isRed?: boolean): BasePoint;
             validate(point: BasePoint): boolean;
         }
 
@@ -27,6 +26,8 @@ declare module 'elliptic' {
             x: BN;
             y: BN;
 
+            getX(): BN;
+            getY(): BN;
             add(p: BasePoint): BasePoint;
             mul(k: BNType): BasePoint;
         }
@@ -41,11 +42,20 @@ declare module 'elliptic' {
             b: BN;
 
             constructor(conf: ShortCurveConf)
+
+            point(x: BNType, y: BNType, isRed?: boolean): BasePoint;
+        }
+
+        class EdwardsCurveConf {}
+
+        export class edwards extends BaseCurve {
+            point(x: BNType, y: BNType, z?: BNType, t?: BNType): BasePoint;
+            pointFromY(y: BNType, odd: boolean): BasePoint;
         }
     }
 
     export class eddsa {
-        curve: curve.BaseCurve;
+        curve: curve.edwards;
 
         constructor(name: string);
     }

@@ -51,10 +51,10 @@ class Ed25519 {
      * it to be a multiple of 8).
      */
     newKey() {
-        let bytes = crypto_1.randomBytes(32);
-        let hash = crypto_1.createHash("sha512");
+        const bytes = crypto_1.randomBytes(32);
+        const hash = crypto_1.createHash("sha512");
         hash.update(bytes);
-        let scalar = Buffer.from(hash.digest());
+        const scalar = Buffer.from(hash.digest());
         scalar[0] &= 0xf8;
         scalar[31] &= 0x3f;
         scalar[31] |= 0x40;

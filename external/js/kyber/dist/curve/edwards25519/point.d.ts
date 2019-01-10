@@ -1,15 +1,14 @@
 /// <reference types="node" />
-import BN from "bn.js";
+import { BNType } from "bn.js";
 import { Point } from "../../index";
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
-export declare type PointType = number | Buffer | BN;
 export default class Ed25519Point implements Point {
     ref: {
         point: any;
         curve: Ed25519;
     };
-    constructor(curve: Ed25519, X?: PointType, Y?: PointType, Z?: PointType, T?: PointType);
+    constructor(curve: Ed25519, X?: BNType, Y?: BNType, Z?: BNType, T?: BNType);
     string(): string;
     inspect(): string;
     toString(): string;

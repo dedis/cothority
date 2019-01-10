@@ -1,6 +1,7 @@
 import { Group, Scalar, Point } from "../../index";
+import { curve } from "elliptic";
 export default class Ed25519 implements Group {
-    curve: any;
+    curve: curve.edwards;
     constructor();
     /**
      * Return the name of the curve
