@@ -34,8 +34,8 @@ type ChainConfig struct {
 //
 // Example:
 // 1st call: oldRoster = {A,B}, newRoster = {C,D}, returned roster = {A,B,C}
-// 2nd call: oldRoster = {A,B,C}, newRoster = {C,D}, returned roster = {A,B,C,D}
-// 3rd call: oldRoster = {A,B,C,D}, newRoster = {C,D}, returned roster = {C,D,B} // Order has changed, C and D are now at the start of the roster
+// 2nd call: oldRoster = {A,B,C}, newRoster = {C,D}, returned roster = {C,D,A,B} => Order has changed, C and D are now at the start of the roster
+// 3rd call: oldRoster = {C,D,A,B, newRoster = {C,D}, returned roster = {C,D,B}
 // 4th call: oldRoster = {B,C,D}, newRoster = {C,D}, returned roster = {C,D}
 //
 // Input:
@@ -52,24 +52,27 @@ func ChangeRoster(oldRoster, newRoster onet.Roster) onet.Roster {
 		oldMap[o.ID] = true
 	}
 
-	// Add new element of newRoster to oldRoster, one at the time
-	for _, n := range newList {
-		if _, ok := oldMap[n.ID]; !ok {
-			intermList = append(intermList, n)
-			return *onet.NewRoster(intermList)
-		}
-	}
-
 	newMap := make(map[network.ServerIdentityID]bool)
 	for _, n := range newList {
 		newMap[n.ID] = true
 	}
 
-	// Once all new nodes have been added, change the roster order to put new nodes at the start of the list
-	intermList = newList
-	for _, n := range oldRoster.List {
-		if _, ok := newMap[n.ID]; !ok {
+	// Add new element of newRoster to oldRoster, one at the time
+	for ind, n := range newList {
+		if _, ok := oldMap[n.ID]; !ok {
 			intermList = append(intermList, n)
+
+			if ind == len(newList)-1 {
+				// Once all new nodes have been added, change the roster order to put new nodes at the start of the list
+				intermList = newList
+				for _, n := range oldRoster.List {
+					if _, ok := newMap[n.ID]; !ok {
+						intermList = append(intermList, n)
+					}
+				}
+			}
+
+			return *onet.NewRoster(intermList)
 		}
 	}
 
