@@ -62,7 +62,7 @@ public class ByzcoinSig {
         byte[] maskBits = Arrays.copyOfRange(this.getSignature(), lenCom, this.getSignature().length);
         Mask mask;
         try {
-            mask = new Mask(publics.toArray(new Point[0]), maskBits);
+            mask = new Mask(publics, maskBits);
         } catch (CothorityCryptoException e) {
             return false;
         }

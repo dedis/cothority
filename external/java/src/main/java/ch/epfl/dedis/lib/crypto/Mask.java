@@ -3,12 +3,14 @@ package ch.epfl.dedis.lib.crypto;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
+import java.util.List;
+
 /**
  * Mask is a bitmask for a set of points.
  */
 public class Mask {
     private final byte[] mask;
-    private final Point[] publics;
+    private final List<Point> publics;
     private Point aggregate;
 
     /**
@@ -18,23 +20,23 @@ public class Mask {
      * @param mask is the bit mask, the number of bits must be greater than or equal to the number of public keys.
      * @throws CothorityCryptoException is thrown when the list of public keys is empty.
      */
-    public Mask(Point[] publics, byte[] mask) throws CothorityCryptoException {
-        if (publics.length == 0) {
+    public Mask(List<Point> publics, byte[] mask) throws CothorityCryptoException {
+        if (publics.size() == 0) {
             throw new CothorityCryptoException("no public keys");
         }
         this.publics = publics;
-        this.mask = new byte[(this.publics.length + 7) >> 3];
-        this.aggregate = publics[0].getZero();
-        for (int i = 0; i < publics.length; i++) {
+        this.mask = new byte[(this.publics.size() + 7) >> 3];
+        this.aggregate = publics.get(0).getZero();
+        for (int i = 0; i < publics.size(); i++) {
             byte byt = (byte)(i >> 3);
             byte msk = (byte)(1 << (i&7));
             if (((this.mask[byt] & msk) == 0) && ((mask[byt] & msk) != 0)) {
                 this.mask[byt] ^= msk; // flip bit in mask from 0 to 1
-                this.aggregate = this.aggregate.add(this.publics[i]);
+                this.aggregate = this.aggregate.add(this.publics.get(i));
             }
             if (((this.mask[byt] & msk) != 0) && ((mask[byt] & msk) == 0)) {
                 this.mask[byt] ^= msk; // flip bit in mask from 1 to 0
-                this.aggregate = this.aggregate.add(this.publics[i].negate());
+                this.aggregate = this.aggregate.add(this.publics.get(i).negate());
             }
         }
     }
@@ -43,7 +45,7 @@ public class Mask {
      * Gets the length of the mask in bytes.
      */
     public int len() {
-        return (this.publics.length + 7) >> 3;
+        return (this.publics.size() + 7) >> 3;
     }
 
     /**
@@ -60,7 +62,7 @@ public class Mask {
      * @throws IndexOutOfBoundsException when i >= the number of public keys.
      */
     public boolean indexEnabled(int i) throws IndexOutOfBoundsException {
-        if (i >= this.publics.length) {
+        if (i >= this.publics.size()) {
             throw new IndexOutOfBoundsException();
         }
         byte byt = (byte)(i >> 3);
@@ -75,8 +77,8 @@ public class Mask {
      * @throws CothorityCryptoException if the key is not found.
      */
     public boolean keyEnabled(Point p) throws CothorityCryptoException {
-        for (int i = 0; i < this.publics.length; i++) {
-            if (this.publics[i].equals(p)) {
+        for (int i = 0; i < this.publics.size(); i++) {
+            if (this.publics.get(i).equals(p)) {
                 return this.indexEnabled(i);
             }
         }
@@ -89,7 +91,7 @@ public class Mask {
     public int countEnabled() {
         // hw is hamming weight
         int hw = 0;
-        for (int i = 0; i < this.publics.length; i++) {
+        for (int i = 0; i < this.publics.size(); i++) {
             byte byt = (byte)(i >> 3);
             byte msk = (byte)(1 << (i&7));
             if ((this.mask[byt] & msk) != 0) {
@@ -103,7 +105,7 @@ public class Mask {
      * Count the total number of public keys in this mask.
      */
     public int countTotal() {
-        return this.publics.length;
+        return this.publics.size();
     }
 
     @Override
