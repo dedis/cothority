@@ -147,7 +147,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -175,7 +175,7 @@
 					<div class="tsd-signature tsd-kind-icon">ref<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
+							<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -204,13 +204,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#add">add</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L200">curve/nist/point.ts:200</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L175">curve/nist/point.ts:175</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Returns the sum of two points on the curve
-									Modifies the receiver</p>
+									<p>Get the sum of two points</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -223,6 +222,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the new point resulting from the sum</p>
 						</li>
 					</ul>
 				</section>
@@ -237,16 +237,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#base">base</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L104">curve/nist/point.ts:104</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L92">curve/nist/point.ts:92</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the standard base point for this curve
-									Modifies the receiver</p>
+									<p>Make a point set to the standard base for the curve</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the new point</p>
 						</li>
 					</ul>
 				</section>
@@ -261,15 +261,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#clone">clone</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L86">curve/nist/point.ts:86</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L80">curve/nist/point.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Creates a copy of the current point</p>
+									<p>Make a clone of the current point</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the cloned point</p>
 						</li>
 					</ul>
 				</section>
@@ -284,20 +285,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#data">data</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L186">curve/nist/point.ts:186</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L164">curve/nist/point.ts:164</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Extract embedded data from a point</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>{Error} when length of embedded data &gt; embedLen</p>
-									</dd>
-								</dl>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+							<p>the buffer</p>
 						</li>
 					</ul>
 				</section>
@@ -311,17 +308,13 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L125">curve/nist/point.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L107">curve/nist/point.ts:107</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Returns a Point with data embedded in the y coordinate</p>
-								</div>
 								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>{Error} if data.length &gt; embedLen</p>
-									</dd>
+									<dt>inheritdoc</dt>
+									<dd></dd>
 								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -366,15 +359,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#embedlen">embedLen</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L113">curve/nist/point.ts:113</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L99">curve/nist/point.ts:99</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Returns the length (in bytes) of the embedded data</p>
+									<p>Get the size of the buffer after embedding</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+							<p>the length</p>
 						</li>
 					</ul>
 				</section>
@@ -389,12 +383,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#equal">equal</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L60">curve/nist/point.ts:60</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L60">curve/nist/point.ts:60</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Tests for equality between two Points derived from the same group</p>
+									<p>Check if the given point is the same</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -404,6 +398,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+							<p>true when both are equal</p>
 						</li>
 					</ul>
 				</section>
@@ -417,7 +412,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L36">curve/nist/point.ts:36</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L37">curve/nist/point.ts:37</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -435,15 +430,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#marshalbinary">marshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L259">curve/nist/point.ts:259</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L220">curve/nist/point.ts:220</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>converts a point into the form specified in section 4.3.6 of ANSI X9.62.</p>
+									<p>Converts a point into the form specified in section 4.3.6 of ANSI X9.62.</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+							<p>the buffer</p>
 						</li>
 					</ul>
 				</section>
@@ -458,10 +454,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#marshalsize">marshalSize</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L251">curve/nist/point.ts:251</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L214">curve/nist/point.ts:214</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the length of the buffer after marshaling the point</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+							<p>the length as a number</p>
 						</li>
 					</ul>
 				</section>
@@ -476,15 +478,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#mul">mul</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L235">curve/nist/point.ts:235</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L199">curve/nist/point.ts:199</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Multiply point p by scalar s.
-										If p is not passed then multiplies the base point of the curve with
-										scalar s
-									Modifies the receiver</p>
+									<p>Multiply the point by a scalar</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -497,6 +496,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the point resulting from the multiplication</p>
 						</li>
 					</ul>
 				</section>
@@ -511,13 +511,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#neg">neg</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L224">curve/nist/point.ts:224</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L193">curve/nist/point.ts:193</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Finds the negative of a point p
-									Modifies the receiver</p>
+									<p>Get the negative of a point</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -527,6 +526,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the negative point</p>
 						</li>
 					</ul>
 				</section>
@@ -541,16 +541,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#null">null</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L95">curve/nist/point.ts:95</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L86">curve/nist/point.ts:86</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the neutral element for the curve
-									Modifies the receiver</p>
+									<p>Make a point set to the neutral element</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the new point</p>
 						</li>
 					</ul>
 				</section>
@@ -564,13 +564,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L246">curve/nist/point.ts:246</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L208">curve/nist/point.ts:208</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Selects a random point</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -611,12 +612,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#set">set</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L78">curve/nist/point.ts:78</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L74">curve/nist/point.ts:74</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>set Set the current point to be equal to p2</p>
+									<p>Use the given point to set the current one</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -626,6 +627,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the point</p>
 						</li>
 					</ul>
 				</section>
@@ -640,10 +642,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#string">string</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L32">curve/nist/point.ts:32</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L33">curve/nist/point.ts:33</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a string representation of the point</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<p>the string representation</p>
 						</li>
 					</ul>
 				</section>
@@ -658,13 +666,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#sub">sub</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L212">curve/nist/point.ts:212</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L184">curve/nist/point.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Subtract two points
-									Modifies the receiver</p>
+									<p>Subtract two points</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -677,6 +684,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<p>the new point resulting from the subtraction</p>
 						</li>
 					</ul>
 				</section>
@@ -690,7 +698,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L44">curve/nist/point.ts:44</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L46">curve/nist/point.ts:46</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -700,6 +708,7 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<p>the string representation</p>
 						</li>
 					</ul>
 				</section>
@@ -714,19 +723,14 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#unmarshalbinary">unmarshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/point.ts#L277">curve/nist/point.ts:277</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/point.ts#L234">curve/nist/point.ts:234</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Convert a buffer back to a curve point.
-									Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62</p>
+									Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62.</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>{Error} when bytes does not correspond to a valid point</p>
-									</dd>
-								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">

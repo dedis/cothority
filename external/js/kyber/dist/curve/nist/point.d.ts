@@ -15,86 +15,45 @@ export default class NistPoint implements Point {
         point: any;
     };
     constructor(curve: Weierstrass, x?: BNType, y?: BNType);
+    /** @inheritdoc */
     string(): string;
     inspect(): string;
     /**
     * Returns the little endian representation of the y coordinate of
     * the Point
+    * @returns the string representation
     */
     toString(): string;
-    /**
-    * Tests for equality between two Points derived from the same group
-    */
+    /** @inheritdoc */
     equal(p2: NistPoint): boolean;
-    /**
-    * set Set the current point to be equal to p2
-    */
+    /** @inheritdoc */
     set(p2: NistPoint): NistPoint;
-    /**
-    * Creates a copy of the current point
-    */
+    /** @inheritdoc */
     clone(): NistPoint;
-    /**
-    * Set to the neutral element for the curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     null(): NistPoint;
-    /**
-    * Set to the standard base point for this curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     base(): NistPoint;
-    /**
-    * Returns the length (in bytes) of the embedded data
-    */
+    /** @inheritdoc */
     embedLen(): number;
-    /**
-    * Returns a Point with data embedded in the y coordinate
-    *
-    * @throws {Error} if data.length > embedLen
-    */
+    /** @inheritdoc */
     embed(data: Buffer, callback?: (length: number) => Buffer): NistPoint;
-    /**
-    * Extract embedded data from a point
-    *
-    * @throws {Error} when length of embedded data > embedLen
-    */
+    /** @inheritdoc */
     data(): Buffer;
-    /**
-    * Returns the sum of two points on the curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     add(p1: NistPoint, p2: NistPoint): NistPoint;
-    /**
-    * Subtract two points
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     sub(p1: NistPoint, p2: NistPoint): NistPoint;
-    /**
-    * Finds the negative of a point p
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     neg(p: NistPoint): NistPoint;
-    /**
-    * Multiply point p by scalar s.
-    * If p is not passed then multiplies the base point of the curve with
-    * scalar s
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     mul(s: NistScalar, p?: NistPoint): NistPoint;
-    /**
-    * Selects a random point
-    */
+    /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): NistPoint;
+    /** @inheritdoc */
     marshalSize(): number;
-    /**
-    * converts a point into the form specified in section 4.3.6 of ANSI X9.62.
-    */
+    /** @inheritdoc */
     marshalBinary(): Buffer;
-    /**
-    * Convert a buffer back to a curve point.
-    * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
-    * @throws {Error} when bytes does not correspond to a valid point
-    */
+    /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
 }

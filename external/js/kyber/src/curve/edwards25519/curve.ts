@@ -16,38 +16,29 @@ export default class Ed25519 implements Group {
     }
 
     /**
-     * Return the name of the curve
+     * Get the name of the curve
+     * @returns the name
      */
     string(): string {
         return "Ed25519";
     }
 
-    /**
-     * Returns 32, the size in bytes of a Scalar on Ed25519 curve
-     */
+    /** @inheritdoc */
     scalarLen(): number {
         return 32;
     }
 
-    /**
-     * Returns a new Scalar for the prime-order subgroup of Ed25519 curve
-     */
+    /** @inheritdoc */
     scalar(): Scalar {
         return new Ed25519Scalar(this, orderRed);
     }
 
-    /**
-     * Returns 32, the size of a Point on Ed25519 curve
-     *
-     * @returns {number}
-     */
+    /** @inheritdoc */
     pointLen(): number {
         return 32;
     }
 
-    /**
-     * Creates a new point on the Ed25519 curve
-     */
+    /** @inheritdoc */
     point(): Point {
         return new Ed25519Point(this);
     }
@@ -55,6 +46,7 @@ export default class Ed25519 implements Group {
     /**
      * NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring
      * it to be a multiple of 8).
+     * @returns the key as a scalar
      */
     newKey(): Scalar {
         const bytes = randomBytes(32);

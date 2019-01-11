@@ -27,6 +27,7 @@ class NistPoint {
             point: curve.curve.point(x, y)
         };
     }
+    /** @inheritdoc */
     string() {
         return this.toString();
     }
@@ -36,6 +37,7 @@ class NistPoint {
     /**
     * Returns the little endian representation of the y coordinate of
     * the Point
+    * @returns the string representation
     */
     toString() {
         if (this.ref.point.inf) {
@@ -47,9 +49,7 @@ class NistPoint {
             this.ref.point.y.fromRed().toString(10) +
             ")");
     }
-    /**
-    * Tests for equality between two Points derived from the same group
-    */
+    /** @inheritdoc */
     equal(p2) {
         if (this.ref.point.isInfinity() ^ p2.ref.point.isInfinity()) {
             return false;
@@ -60,52 +60,35 @@ class NistPoint {
         return (this.ref.point.x.cmp(p2.ref.point.x) === 0 &&
             this.ref.point.y.cmp(p2.ref.point.y) === 0);
     }
-    // Set point to be equal to p2
-    /**
-    * set Set the current point to be equal to p2
-    */
+    /** @inheritdoc */
     set(p2) {
         this.ref = p2.ref;
         return this;
     }
-    /**
-    * Creates a copy of the current point
-    */
+    /** @inheritdoc */
     clone() {
         const point = this.ref.point;
         return new NistPoint(this.ref.curve, point.x, point.y);
     }
-    /**
-    * Set to the neutral element for the curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     null() {
         this.ref.point = this.ref.curve.curve.point(null, null);
         return this;
     }
-    /**
-    * Set to the standard base point for this curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     base() {
         const g = this.ref.curve.curve.g;
         this.ref.point = this.ref.curve.curve.point(g.x, g.y);
         return this;
     }
-    /**
-    * Returns the length (in bytes) of the embedded data
-    */
+    /** @inheritdoc */
     embedLen() {
         // Reserve the most-significant 8 bits for pseudo-randomness.
         // Reserve the least-significant 8 bits for embedded data length.
         // (Hopefully it's unlikely we'll need >=2048-bit curves soon.)
         return (this.ref.curve.curve.p.bitLength() - 8 - 8) >> 3;
     }
-    /**
-    * Returns a Point with data embedded in the y coordinate
-    *
-    * @throws {Error} if data.length > embedLen
-    */
+    /** @inheritdoc */
     embed(data, callback) {
         let l = this.ref.curve.coordLen();
         let dl = this.embedLen();
@@ -152,11 +135,7 @@ class NistPoint {
             }
         }
     }
-    /**
-    * Extract embedded data from a point
-    *
-    * @throws {Error} when length of embedded data > embedLen
-    */
+    /** @inheritdoc */
     data() {
         const l = this.ref.curve.coordLen();
         let b = Buffer.from(this.ref.point.x.fromRed().toArray("be", l));
@@ -166,10 +145,7 @@ class NistPoint {
         }
         return b.slice(l - dl - 1, l - 1);
     }
-    /**
-    * Returns the sum of two points on the curve
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     add(p1, p2) {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -177,10 +153,7 @@ class NistPoint {
             .add(p2.ref.point);
         return this;
     }
-    /**
-    * Subtract two points
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     sub(p1, p2) {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -188,20 +161,12 @@ class NistPoint {
             .add(p2.ref.point.neg());
         return this;
     }
-    /**
-    * Finds the negative of a point p
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     neg(p) {
         this.ref.point = p.ref.point.neg();
         return this;
     }
-    /**
-    * Multiply point p by scalar s.
-    * If p is not passed then multiplies the base point of the curve with
-    * scalar s
-    * Modifies the receiver
-    */
+    /** @inheritdoc */
     mul(s, p) {
         p = p || null;
         const arr = s.ref.arr.fromRed();
@@ -209,20 +174,17 @@ class NistPoint {
             p !== null ? p.ref.point.mul(arr) : this.ref.curve.curve.g.mul(arr);
         return this;
     }
-    /**
-    * Selects a random point
-    */
+    /** @inheritdoc */
     pick(callback) {
         callback = callback || null;
         return this.embed(Buffer.from([]), callback);
     }
+    /** @inheritdoc */
     marshalSize() {
         // uncompressed ANSI X9.62 representation
         return this.ref.curve.pointLen();
     }
-    /**
-    * converts a point into the form specified in section 4.3.6 of ANSI X9.62.
-    */
+    /** @inheritdoc */
     marshalBinary() {
         const byteLen = this.ref.curve.coordLen();
         const buf = Buffer.allocUnsafe(this.ref.curve.pointLen());
@@ -233,11 +195,7 @@ class NistPoint {
         yBytes.copy(buf, 1 + 2 * byteLen - yBytes.length);
         return buf;
     }
-    /**
-    * Convert a buffer back to a curve point.
-    * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
-    * @throws {Error} when bytes does not correspond to a valid point
-    */
+    /** @inheritdoc */
     unmarshalBinary(bytes) {
         const byteLen = this.ref.curve.coordLen();
         if (bytes.length != 1 + 2 * byteLen) {

@@ -93,7 +93,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/sign/schnorr/schnorr.ts#L75">sign/schnorr/schnorr.ts:75</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/sign/schnorr/schnorr.ts#L84">sign/schnorr/schnorr.ts:84</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -105,12 +105,19 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>suite: <a href="../interfaces/_index_.group.html" class="tsd-signature-type">Group</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the group to use to create the scalar</p>
+									</div>
 								</li>
 								<li>
 									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>inputs: <span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">[]</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the different inputs as buffer</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.scalar.html" class="tsd-signature-type">Scalar</a></h4>
+							<p>the scalar resulting from the hash of the inputs</p>
 						</li>
 					</ul>
 				</section>
@@ -124,22 +131,37 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/sign/schnorr/schnorr.ts#L8">sign/schnorr/schnorr.ts:8</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/sign/schnorr/schnorr.ts#L11">sign/schnorr/schnorr.ts:11</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Sign computes a Schnorr signature over the given message.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>suite: <a href="../interfaces/_index_.group.html" class="tsd-signature-type">Group</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the group to use to sign</p>
+									</div>
 								</li>
 								<li>
 									<h5>privateKey: <a href="../interfaces/_index_.scalar.html" class="tsd-signature-type">Scalar</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the private key</p>
+									</div>
 								</li>
 								<li>
 									<h5>message: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the message that will be signed</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+							<p>the signature as a buffer</p>
 						</li>
 					</ul>
 				</section>
@@ -153,7 +175,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/sign/schnorr/schnorr.ts#L37">sign/schnorr/schnorr.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/sign/schnorr/schnorr.ts#L44">sign/schnorr/schnorr.ts:44</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -166,18 +188,31 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>suite: <a href="../interfaces/_index_.group.html" class="tsd-signature-type">Group</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the group to use to verify</p>
+									</div>
 								</li>
 								<li>
 									<h5>publicKey: <a href="../interfaces/_index_.point.html" class="tsd-signature-type">Point</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the public key</p>
+									</div>
 								</li>
 								<li>
 									<h5>message: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the message signed</p>
+									</div>
 								</li>
 								<li>
 									<h5>signature: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the signature of the message</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+							<p>true when the signature is correct for the given message and public key</p>
 						</li>
 					</ul>
 				</section>

@@ -17,24 +17,17 @@ export default class Weierstrass implements Group {
         n: BN;
     });
     coordLen(): number;
-    /**
-    * Returns the size in bytes of a scalar
-    */
+    /** @inheritdoc */
     scalarLen(): number;
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     scalar(): Scalar;
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     pointLen(): number;
-    /**
-    * Returns a new Point
-    */
+    /** @inheritdoc */
     point(): Point;
     /**
      * Get the name of the curve
+     * @returns the name
      */
     string(): string;
 }

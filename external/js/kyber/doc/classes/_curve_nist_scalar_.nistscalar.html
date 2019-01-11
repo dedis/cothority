@@ -69,22 +69,6 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Scalar</p>
-					</div>
-					<dl class="tsd-comment-tags">
-						<dt>param</dt>
-						<dd></dd>
-						<dt>param</dt>
-						<dd><p>BN.js Reduction context</p>
-						</dd>
-						<dt>constructor</dt>
-						<dd></dd>
-					</dl>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -155,7 +139,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L14">curve/nist/scalar.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L8">curve/nist/scalar.ts:8</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -180,7 +164,7 @@
 					<div class="tsd-signature tsd-kind-icon">ref<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L14">curve/nist/scalar.ts:14</a></li>
+							<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L8">curve/nist/scalar.ts:8</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -212,12 +196,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#add">add</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L66">curve/nist/scalar.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L51">curve/nist/scalar.ts:51</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the modular sums of scalars s1 and s2</p>
+									<p>Get the modular sum of the two scalars</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -230,6 +214,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the new scalar resulting from the sum</p>
 						</li>
 					</ul>
 				</section>
@@ -243,13 +228,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L135">curve/nist/scalar.ts:135</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L99">curve/nist/scalar.ts:99</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Returns a big-endian representation of the scalar</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
 						</li>
@@ -266,15 +252,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#clone">clone</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L49">curve/nist/scalar.ts:49</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L38">curve/nist/scalar.ts:38</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Returns a copy of the scalar</p>
+									<p>Get a copy of the scalar</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>a new clone of the scalar</p>
 						</li>
 					</ul>
 				</section>
@@ -289,7 +276,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#div">div</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L110">curve/nist/scalar.ts:110</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L81">curve/nist/scalar.ts:81</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -307,6 +294,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the new scalar resulting from the division</p>
 						</li>
 					</ul>
 				</section>
@@ -321,7 +309,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#equal">equal</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L34">curve/nist/scalar.ts:34</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L27">curve/nist/scalar.ts:27</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -336,6 +324,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+							<p>true when both are equal</p>
 						</li>
 					</ul>
 				</section>
@@ -349,7 +338,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L27">curve/nist/scalar.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L22">curve/nist/scalar.ts:22</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -367,12 +356,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#inv">inv</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L118">curve/nist/scalar.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L87">curve/nist/scalar.ts:87</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the modular inverse of scalar a</p>
+									<p>Get the modular inverse of a scalar</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -382,6 +371,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the new scalar resulting from the inversion</p>
 						</li>
 					</ul>
 				</section>
@@ -396,7 +386,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#marshalbinary">marshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L163">curve/nist/scalar.ts:163</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L124">curve/nist/scalar.ts:124</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -405,6 +395,7 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+							<p>the buffer</p>
 						</li>
 					</ul>
 				</section>
@@ -418,9 +409,15 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L156">curve/nist/scalar.ts:156</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L119">curve/nist/scalar.ts:119</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
@@ -436,12 +433,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#mul">mul</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L98">curve/nist/scalar.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L75">curve/nist/scalar.ts:75</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the modular products of scalars s1 and s2</p>
+									<p>Get the modular multiplication of two scalars</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -454,6 +451,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the new scalar resulting from the multiplication</p>
 						</li>
 					</ul>
 				</section>
@@ -468,7 +466,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#neg">neg</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L82">curve/nist/scalar.ts:82</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L63">curve/nist/scalar.ts:63</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -483,6 +481,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the negative scalar</p>
 						</li>
 					</ul>
 				</section>
@@ -497,15 +496,16 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#one">one</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L90">curve/nist/scalar.ts:90</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L69">curve/nist/scalar.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the multiplicative identity (1)</p>
+									<p>Get the multiplication identity</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the scalar</p>
 						</li>
 					</ul>
 				</section>
@@ -519,13 +519,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L149">curve/nist/scalar.ts:149</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L111">curve/nist/scalar.ts:111</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Set to a random scalar</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -566,7 +567,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#set">set</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L41">curve/nist/scalar.ts:41</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L32">curve/nist/scalar.ts:32</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -581,6 +582,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the current scalar set to the new value</p>
 						</li>
 					</ul>
 				</section>
@@ -595,13 +597,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#setbytes">setBytes</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L127">curve/nist/scalar.ts:127</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L93">curve/nist/scalar.ts:93</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Sets the scalar from a big-endian buffer
-									and reduces to the appropriate modulus</p>
+									<p>Populate the scalar using the big-endian buffer</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -611,6 +612,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the scalar</p>
 						</li>
 					</ul>
 				</section>
@@ -624,9 +626,15 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L23">curve/nist/scalar.ts:23</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L18">curve/nist/scalar.ts:18</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 						</li>
 					</ul>
@@ -642,12 +650,12 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#sub">sub</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L74">curve/nist/scalar.ts:74</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L57">curve/nist/scalar.ts:57</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set to the modular difference</p>
+									<p>Get the modular difference of the two scalars</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -660,6 +668,7 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the new scalar resulting from the subtraction</p>
 						</li>
 					</ul>
 				</section>
@@ -673,7 +682,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L139">curve/nist/scalar.ts:139</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L103">curve/nist/scalar.ts:103</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -691,18 +700,13 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#unmarshalbinary">unmarshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L174">curve/nist/scalar.ts:174</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L131">curve/nist/scalar.ts:131</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Reads the binary representation (big endian) of scalar</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>{Error} if bytes.length != marshalSize</p>
-									</dd>
-								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -725,7 +729,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.scalar.html">Scalar</a>.<a href="../interfaces/_index_.scalar.html#zero">zero</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bb992c3c/external/js/kyber/src/curve/nist/scalar.ts#L58">curve/nist/scalar.ts:58</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/4d56be26/external/js/kyber/src/curve/nist/scalar.ts#L45">curve/nist/scalar.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -734,6 +738,7 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h4>
+							<p>the scalar</p>
 						</li>
 					</ul>
 				</section>

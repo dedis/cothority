@@ -34,33 +34,26 @@ class Weierstrass {
     coordLen() {
         return (this.bitSize + 7) >> 3;
     }
-    /**
-    * Returns the size in bytes of a scalar
-    */
+    /** @inheritdoc */
     scalarLen() {
         return (this.curve.n.bitLength() + 7) >> 3;
     }
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     scalar() {
         return new scalar_1.default(this, this.redN);
     }
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     pointLen() {
         // ANSI X9.62: 1 header byte plus 2 coords
         return this.coordLen() * 2 + 1;
     }
-    /**
-    * Returns a new Point
-    */
+    /** @inheritdoc */
     point() {
         return new point_1.default(this);
     }
     /**
      * Get the name of the curve
+     * @returns the name
      */
     string() {
         return this.name;

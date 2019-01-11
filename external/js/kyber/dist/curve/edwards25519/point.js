@@ -26,6 +26,7 @@ class Ed25519Point {
             curve: curve,
         };
     }
+    /** @inheritdoc */
     string() {
         return this.toString();
     }
@@ -36,6 +37,7 @@ class Ed25519Point {
         const bytes = this.marshalBinary();
         return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
+    /** @inheritdoc */
     equal(p2) {
         const b1 = this.marshalBinary();
         const b2 = p2.marshalBinary();
@@ -46,31 +48,38 @@ class Ed25519Point {
         }
         return true;
     }
+    /** @inheritdoc */
     null() {
         this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
         return this;
     }
+    /** @inheritdoc */
     base() {
         this.ref.point = this.ref.curve.curve.point(this.ref.curve.curve.g.getX(), this.ref.curve.curve.g.getY());
         return this;
     }
+    /** @inheritdoc */
     pick(callback) {
         return this.embed(Buffer.from([]), callback);
     }
+    /** @inheritdoc */
     set(p) {
         this.ref = p.ref;
         return this;
     }
+    /** @inheritdoc */
     clone() {
         const { point } = this.ref;
         return new Ed25519Point(this.ref.curve, point.x, point.y, point.z, point.t);
     }
+    /** @inheritdoc */
     embedLen() {
         // Reserve the most-significant 8 bits for pseudo-randomness.
         // Reserve the least-significant 8 bits for embedded data length.
         // (Hopefully it's unlikely we'll need >=2048-bit curves soon.)
         return Math.floor((255 - 8 - 8) / 8);
     }
+    /** @inheritdoc */
     embed(data, callback) {
         let dl = this.embedLen();
         if (data.length > dl) {
@@ -107,6 +116,7 @@ class Ed25519Point {
             }
         }
     }
+    /** @inheritdoc */
     data() {
         const bytes = this.marshalBinary();
         const dl = bytes[0];
@@ -115,6 +125,7 @@ class Ed25519Point {
         }
         return bytes.slice(1, dl + 1);
     }
+    /** @inheritdoc */
     add(p1, p2) {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -122,6 +133,7 @@ class Ed25519Point {
             .add(p2.ref.point);
         return this;
     }
+    /** @inheritdoc */
     sub(p1, p2) {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -129,10 +141,12 @@ class Ed25519Point {
             .add(p2.ref.point.neg());
         return this;
     }
+    /** @inheritdoc */
     neg(p) {
         this.ref.point = p.ref.point.neg();
         return this;
     }
+    /** @inheritdoc */
     mul(s, p) {
         p = p || null;
         const arr = s.ref.arr;
@@ -140,15 +154,18 @@ class Ed25519Point {
             p !== null ? p.ref.point.mul(arr) : this.ref.curve.curve.g.mul(arr);
         return this;
     }
+    /** @inheritdoc */
     marshalSize() {
         return 32;
     }
+    /** @inheritdoc */
     marshalBinary() {
         this.ref.point.normalize();
         const buffer = this.ref.point.getY().toArray("le", 32);
         buffer[31] ^= (this.ref.point.x.isOdd() ? 1 : 0) << 7;
         return Buffer.from(buffer);
     }
+    /** @inheritdoc */
     unmarshalBinary(bytes) {
         // we create a copy because the array might be modified
         const buff = Buffer.from(bytes);

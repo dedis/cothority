@@ -6,9 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bn_js_1 = __importDefault(require("bn.js"));
 const constants_1 = __importDefault(require("./constants"));
 /**
-* bits choses a random buffer with a maximum bitlength
-* If exact is `true`, chose a buffer with *exactly* that bitlenght not less
-*/
+ * bits choses a random buffer with a maximum bitlength
+ * If exact is `true`, chose a buffer with *exactly* that bitlenght not less
+ * @param bitlen    maximum size of the resulting buffer
+ * @param exact     when true the buffer has the given length
+ * @param callback  buffer generator function
+ * @returns         randomly filled buffer
+ */
 function bits(bitlen, exact, callback) {
     let b = callback((bitlen + 7) >> 3);
     let highbits = bitlen & 7;
@@ -27,8 +31,11 @@ function bits(bitlen, exact, callback) {
 }
 exports.bits = bits;
 /**
-* int choses a random uniform buffer less than given modulus
-*/
+ * int choses a random uniform buffer less than given modulus
+ * @param mod       modulus
+ * @param callback  buffer generator function
+ * @returns         randomly filled buffer
+ */
 function int(mod, callback) {
     let bitlength = mod.bitLength();
     let i;

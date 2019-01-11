@@ -2,9 +2,13 @@ import BN from "bn.js";
 import constants from "./constants";
 
 /**
-* bits choses a random buffer with a maximum bitlength
-* If exact is `true`, chose a buffer with *exactly* that bitlenght not less
-*/
+ * bits choses a random buffer with a maximum bitlength
+ * If exact is `true`, chose a buffer with *exactly* that bitlenght not less
+ * @param bitlen    maximum size of the resulting buffer
+ * @param exact     when true the buffer has the given length
+ * @param callback  buffer generator function
+ * @returns         randomly filled buffer
+ */
 export function bits(bitlen: number, exact: boolean, callback: (length: number) => Buffer): Buffer {
     let b = callback((bitlen + 7) >> 3);
     let highbits = bitlen & 7;
@@ -23,8 +27,11 @@ export function bits(bitlen: number, exact: boolean, callback: (length: number) 
 }
 
 /**
-* int choses a random uniform buffer less than given modulus
-*/
+ * int choses a random uniform buffer less than given modulus
+ * @param mod       modulus
+ * @param callback  buffer generator function
+ * @returns         randomly filled buffer
+ */
 export function int(mod: BN, callback: (length: number) => Buffer): Buffer {
     let bitlength = mod.bitLength();
     let i;

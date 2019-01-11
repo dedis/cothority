@@ -29,37 +29,30 @@ export default class Weierstrass implements Group {
         return (this.bitSize + 7) >> 3;
     }
     
-    /**
-    * Returns the size in bytes of a scalar
-    */
+    /** @inheritdoc */
     scalarLen(): number {
         return (this.curve.n.bitLength() + 7) >> 3;
     }
     
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     scalar(): Scalar {
         return new NistScalar(this, this.redN);
     }
     
-    /**
-    * Returns the size in bytes of a point
-    */
+    /** @inheritdoc */
     pointLen(): number {
         // ANSI X9.62: 1 header byte plus 2 coords
         return this.coordLen() * 2 + 1;
     }
     
-    /**
-    * Returns a new Point
-    */
+    /** @inheritdoc */
     point(): Point {
         return new NistPoint(this);
     }
 
     /**
      * Get the name of the curve
+     * @returns the name
      */
     string(): string {
         return this.name;

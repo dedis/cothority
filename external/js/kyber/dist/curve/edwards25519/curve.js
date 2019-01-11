@@ -15,40 +15,32 @@ class Ed25519 {
         this.curve = ec.curve;
     }
     /**
-     * Return the name of the curve
+     * Get the name of the curve
+     * @returns the name
      */
     string() {
         return "Ed25519";
     }
-    /**
-     * Returns 32, the size in bytes of a Scalar on Ed25519 curve
-     */
+    /** @inheritdoc */
     scalarLen() {
         return 32;
     }
-    /**
-     * Returns a new Scalar for the prime-order subgroup of Ed25519 curve
-     */
+    /** @inheritdoc */
     scalar() {
         return new scalar_1.default(this, orderRed);
     }
-    /**
-     * Returns 32, the size of a Point on Ed25519 curve
-     *
-     * @returns {number}
-     */
+    /** @inheritdoc */
     pointLen() {
         return 32;
     }
-    /**
-     * Creates a new point on the Ed25519 curve
-     */
+    /** @inheritdoc */
     point() {
         return new point_1.default(this);
     }
     /**
      * NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring
      * it to be a multiple of 8).
+     * @returns the key as a scalar
      */
     newKey() {
         const bytes = crypto_1.randomBytes(32);

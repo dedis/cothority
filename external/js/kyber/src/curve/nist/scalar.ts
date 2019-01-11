@@ -4,12 +4,6 @@ import { int } from "../../random"
 import { Scalar } from "../../index"
 import Weierstrass from "./curve";
 
-/**
-* Scalar
-* @param {module:curves/nist/curve~Weirstrass} curve
-* @param {BN.Red} red - BN.js Reduction context
-* @constructor
-*/
 export default class NistScalar implements Scalar {
     ref: { arr: any, red: any, curve: Weierstrass}
     constructor(curve: Weierstrass, red: any) {
@@ -20,6 +14,7 @@ export default class NistScalar implements Scalar {
         };
     }
 
+    /** @inheritdoc */
     string(): string {
         return this.toString()
     }
@@ -28,110 +23,79 @@ export default class NistScalar implements Scalar {
         return this.toString()
     }
     
-    /**
-    * Equality test for two Scalars derived from the same Group
-    */
+    /** @inheritdoc */
     equal(s2: NistScalar): boolean {
         return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
     }
     
-    /**
-    * Sets the receiver equal to another Scalar a
-    */
+    /** @inheritdoc */
     set(a: NistScalar): NistScalar {
         this.ref = a.ref;
         return this;
     }
     
-    /**
-    * Returns a copy of the scalar
-    */
+    /** @inheritdoc */
     clone(): NistScalar {
         return new NistScalar(this.ref.curve, this.ref.red).setBytes(
             Buffer.from(this.ref.arr.fromRed().toArray("be"))
         );
     }
     
-    /**
-    * Set to the additive identity (0)
-    */
+    /** @inheritdoc */
     zero(): NistScalar {
         this.ref.arr = new BN(0, 16).toRed(this.ref.red);
         return this;
     }
     
-    /**
-    * Set to the modular sums of scalars s1 and s2
-    */
+    /** @inheritdoc */
     add(s1: NistScalar, s2: NistScalar): NistScalar {
         this.ref.arr = s1.ref.arr.redAdd(s2.ref.arr);
         return this;
     }
     
-    /**
-    * Set to the modular difference
-    */
+    /** @inheritdoc */
     sub(s1: NistScalar, s2: NistScalar): NistScalar {
         this.ref.arr = s1.ref.arr.redSub(s2.ref.arr);
         return this;
     }
     
-    /**
-    * Set to the modular negation of scalar a
-    */
+    /** @inheritdoc */
     neg(a: NistScalar): NistScalar {
         this.ref.arr = a.ref.arr.redNeg();
         return this;
     }
     
-    /**
-    * Set to the multiplicative identity (1)
-    */
+    /** @inheritdoc */
     one(): NistScalar {
         this.ref.arr = new BN(1, 16).toRed(this.ref.red);
         return this;
     }
     
-    /**
-    * Set to the modular products of scalars s1 and s2
-    */
+    /** @inheritdoc */
     mul(s1: NistScalar, s2: NistScalar): NistScalar {
         this.ref.arr = s1.ref.arr.redMul(s2.ref.arr);
         return this;
     }
     
-    /**
-    * Set to the modular division of scalar s1 by scalar s2
-    *
-    * @param {module:curves/nist/scalar~Scalar} s1
-    * @param {module:curves/nist/scalar~Scalar} s2
-    * @return {module:curves/nist/scalar~Scalar}
-    */
+    /** @inheritdoc */
     div(s1: NistScalar, s2: NistScalar): NistScalar {
         this.ref.arr = s1.ref.arr.redMul(s2.ref.arr.redInvm());
         return this;
     }
     
-    /**
-    * Set to the modular inverse of scalar a
-    */
+    /** @inheritdoc */
     inv(a: NistScalar): NistScalar {
         this.ref.arr = a.ref.arr.redInvm();
         return this;
     }
     
-    /**
-    * Sets the scalar from a big-endian buffer
-    * and reduces to the appropriate modulus
-    */
+    /** @inheritdoc */
     setBytes(b: Buffer): NistScalar{
         this.ref.arr = new BN(b, 16, "be").toRed(this.ref.red);
         return this;
     }
     
-    /**
-    * Returns a big-endian representation of the scalar
-    */
+    /** @inheritdoc */
     bytes(): Buffer{
         return Buffer.from(this.ref.arr.fromRed().toArray("be"));
     }
@@ -143,9 +107,7 @@ export default class NistScalar implements Scalar {
         }).join("");
     }
     
-    /**
-    * Set to a random scalar
-    */
+    /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): NistScalar {
         callback = callback || randomBytes;
         let bytes = int(this.ref.curve.curve.n, callback);
@@ -153,24 +115,19 @@ export default class NistScalar implements Scalar {
         return this;
     }
     
+    /** @inheritdoc */
     marshalSize(): number {
         return this.ref.curve.scalarLen();
     }
     
-    /**
-    * Returns the binary representation (big endian) of the scalar
-    */
+    /** @inheritdoc */
     marshalBinary(): Buffer {
         return Buffer.from(
             this.ref.arr.fromRed().toArray("be", this.ref.curve.scalarLen())
         );
     }
     
-    /**
-    * Reads the binary representation (big endian) of scalar
-    * 
-    * @throws {Error} if bytes.length != marshalSize
-    */
+    /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void {
         if (bytes.length != this.marshalSize()) {
             throw new Error("bytes.length > marshalSize");

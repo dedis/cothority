@@ -1,10 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
-/*
-*
-* Sign computes a Schnorr signature over the given message.
-* */
+/**
+ * Sign computes a Schnorr signature over the given message.
+ * @param suite         the group to use to sign
+ * @param privateKey    the private key
+ * @param message       the message that will be signed
+ * @returns             the signature as a buffer
+ */
 function sign(suite, privateKey, message) {
     // generate r & R
     const r = suite.scalar().pick();
@@ -26,10 +29,14 @@ function sign(suite, privateKey, message) {
 }
 exports.sign = sign;
 /**
-*
-* Verify verifies if the signature of the message is valid under the given public
-* key.
-* */
+ * Verify verifies if the signature of the message is valid under the given public
+ * key.
+ * @param suite     the group to use to verify
+ * @param publicKey the public key
+ * @param message   the message signed
+ * @param signature the signature of the message
+ * @returns         true when the signature is correct for the given message and public key
+ */
 function verify(suite, publicKey, message, signature) {
     // check the signature size
     const plen = suite.pointLen();
@@ -60,9 +67,11 @@ function verify(suite, publicKey, message, signature) {
 }
 exports.verify = verify;
 /**
-*
-* hashSchnorr returns a scalar out of hashing the given inputs.
-**/
+ * hashSchnorr returns a scalar out of hashing the given inputs.
+ * @param suite     the group to use to create the scalar
+ * @param inputs    the different inputs as buffer
+ * @returns the scalar resulting from the hash of the inputs
+ */
 function hashSchnorr(suite, ...inputs) {
     const h = crypto_1.createHash("sha512");
     for (let i of inputs) {

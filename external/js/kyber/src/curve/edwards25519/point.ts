@@ -32,6 +32,7 @@ export default class Ed25519Point implements Point {
         };
     }
 
+    /** @inheritdoc */
     string(): string {
         return this.toString()
     }
@@ -45,6 +46,7 @@ export default class Ed25519Point implements Point {
         return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 
+    /** @inheritdoc */
     equal(p2: Ed25519Point): boolean {
         const b1 = this.marshalBinary();
         const b2 = p2.marshalBinary();
@@ -56,11 +58,13 @@ export default class Ed25519Point implements Point {
         return true;
     }
 
+    /** @inheritdoc */
     null(): Ed25519Point {
         this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
         return this;
     }
 
+    /** @inheritdoc */
     base(): Ed25519Point {
         this.ref.point = this.ref.curve.curve.point(
             this.ref.curve.curve.g.getX(),
@@ -69,20 +73,24 @@ export default class Ed25519Point implements Point {
         return this;
     }
 
+    /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): Ed25519Point {
         return this.embed(Buffer.from([]), callback);
     }
 
+    /** @inheritdoc */
     set(p: Ed25519Point): Ed25519Point {
         this.ref = p.ref;
         return this;
     }
 
+    /** @inheritdoc */
     clone(): Ed25519Point {
         const { point } = this.ref;
         return new Ed25519Point(this.ref.curve, point.x, point.y, point.z, point.t);
     }
 
+    /** @inheritdoc */
     embedLen(): number {
         // Reserve the most-significant 8 bits for pseudo-randomness.
         // Reserve the least-significant 8 bits for embedded data length.
@@ -90,6 +98,7 @@ export default class Ed25519Point implements Point {
         return Math.floor((255 - 8 - 8) / 8);
     }
 
+    /** @inheritdoc */
     embed(data: Buffer, callback?: (length: number) => Buffer): Ed25519Point {
         let dl = this.embedLen();
         if (data.length > dl) {
@@ -132,6 +141,7 @@ export default class Ed25519Point implements Point {
         }
     }
 
+    /** @inheritdoc */
     data(): Buffer {
         const bytes = this.marshalBinary();
         const dl = bytes[0];
@@ -141,6 +151,7 @@ export default class Ed25519Point implements Point {
         return bytes.slice(1, dl + 1);
     }
 
+    /** @inheritdoc */
     add(p1: Ed25519Point, p2: Ed25519Point): Ed25519Point {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -149,6 +160,7 @@ export default class Ed25519Point implements Point {
         return this;
     }
 
+    /** @inheritdoc */
     sub(p1: Ed25519Point, p2: Ed25519Point): Ed25519Point {
         const point = p1.ref.point;
         this.ref.point = this.ref.curve.curve
@@ -157,11 +169,13 @@ export default class Ed25519Point implements Point {
         return this;
     }
 
+    /** @inheritdoc */
     neg(p: Ed25519Point): Ed25519Point {
         this.ref.point = p.ref.point.neg();
         return this;
     }
 
+    /** @inheritdoc */
     mul(s: Ed25519Scalar, p?: Ed25519Point): Ed25519Point {
         p = p || null;
         const arr = s.ref.arr;
@@ -170,10 +184,12 @@ export default class Ed25519Point implements Point {
         return this;
     }
 
+    /** @inheritdoc */
     marshalSize(): number {
         return 32;
     }
 
+    /** @inheritdoc */
     marshalBinary(): Buffer {
         this.ref.point.normalize();
 
@@ -183,6 +199,7 @@ export default class Ed25519Point implements Point {
         return Buffer.from(buffer);
     }
 
+    /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void {
         // we create a copy because the array might be modified
         const buff = Buffer.from(bytes);
