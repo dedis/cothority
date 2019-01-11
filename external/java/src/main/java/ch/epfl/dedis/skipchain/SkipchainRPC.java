@@ -101,25 +101,31 @@ public class SkipchainRPC {
     }
 
     /**
-     * Returns the latest block and verify that the links are correct. The verification is performed from the genesis block.
+     * Returns a list of blocks  block and verify that the links are correct. The verification is performed from the
+     * genesis block. Query the service and then return the chain of SkipBlocks going from trustedLatest to the most
+     * current SkipBlock of the chain. The returned list of blocks is linked using the highest level links available to
+     * shorten the returned chain.
      *
-     * @return the latest skipblock
+     * @return the chain of blocks
      * @throws CothorityCommunicationException if something goes wrong with communication
      * @throws CothorityCryptoException if the verification goes wrong
      */
-    public SkipBlock getLatestSkipblock() throws CothorityCommunicationException, CothorityCryptoException {
-        return this.getLatestSkipblock(this.scID);
+    public List<SkipBlock> getUpdateChain() throws CothorityCommunicationException, CothorityCryptoException {
+        return this.getUpdateChain(this.scID);
     }
 
     /**
-     * Returns the latest block and verify that the links are correct. The verification is performed from trustedLatest.
+     * Returns a list of blocks  block and verify that the links are correct. The verification is performed from
+     * trustedLatest. Query the service and then return the chain of SkipBlocks going from trustedLatest to the most
+     * current SkipBlock of the chain. The returned list of blocks is linked using the highest level links available to
+     * shorten the returned chain.
      *
      * @param trustedLatest is the latest block ID that the caller trusts, which serves as the source for verification.
-     * @return the latest skipblock
+     * @return the the chain of blocks.
      * @throws CothorityCommunicationException if something goes wrong with communication
      * @throws CothorityCryptoException if the verification goes wrong
      */
-    public SkipBlock getLatestSkipblock(SkipblockId trustedLatest) throws CothorityCommunicationException, CothorityCryptoException {
+    public List<SkipBlock> getUpdateChain(SkipblockId trustedLatest) throws CothorityCommunicationException, CothorityCryptoException {
         List<SkipBlock> update = new ArrayList<>();
         for (;;) {
             // make the request
@@ -146,6 +152,8 @@ public class SkipchainRPC {
             for (int j = 0; j < r2.getUpdateCount(); j++) {
                 SkipBlock b = new SkipBlock(r2.getUpdateList().get(j));
                 if (j == 0 && update.size() > 0) {
+                    // If we are processing the first block, and we've already processed some blocks,
+                    // then make sure this first block is the same as the last block we've already accepted
                     if (Arrays.equals(update.get(update.size()-1).getHash(), b.getHash())) {
                         continue;
                     }
@@ -178,7 +186,7 @@ public class SkipchainRPC {
             // If they updated us to the end of the chain, return.
             if (last.getForwardLinks().size() == 0) {
                 logger.info("Got the following latest skipblock: {}", Hex.printHexBinary(last.getId().getId()));
-                return last;
+                return update;
             }
 
             // Otherwise update the roster and contact the new servers
@@ -186,9 +194,10 @@ public class SkipchainRPC {
             try {
                 Roster tmp = last.getForwardLinks().get(last.getForwardLinks().size() - 1).getNewRoster();
                 if (tmp == null) {
-                    throw new CothorityCryptoException("expect roster in forward-link");
+                    roster = last.getRoster();
+                } else {
+                    roster = last.getForwardLinks().get(last.getForwardLinks().size() - 1).getNewRoster();
                 }
-                roster = last.getForwardLinks().get(last.getForwardLinks().size() - 1).getNewRoster();
             } catch (URISyntaxException e) {
                 throw new CothorityCryptoException(e.getMessage());
             }
@@ -202,5 +211,20 @@ public class SkipchainRPC {
 
     public Roster getRoster() {
         return roster;
+    }
+
+    // for testing, none of the blocks are signed
+    SkipchainProto.StoreSkipBlockReply storeSkipBlock(byte[] targetSkipChainID, SkipchainProto.SkipBlock newBlock) throws CothorityCommunicationException, CothorityCryptoException {
+        try {
+            SkipchainProto.StoreSkipBlock request =
+                    SkipchainProto.StoreSkipBlock.newBuilder()
+                            .setTargetSkipChainID(ByteString.copyFrom(targetSkipChainID))
+                            .setNewBlock(newBlock)
+                            .build();
+            ByteString msg = roster.sendMessage("Skipchain/StoreSkipBlock", request);
+            return SkipchainProto.StoreSkipBlockReply.parseFrom(msg);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCryptoException(e.getMessage());
+        }
     }
 }

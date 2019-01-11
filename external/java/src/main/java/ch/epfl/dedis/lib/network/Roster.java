@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class Roster {
     private List<ServerIdentity> nodes = new ArrayList<>();
-    private Point aggregate; // TODO: can we find better name for it? like aggregatePublicKey or aggregatedKey?
+    private Point aggregate;
 
     public Roster(List<ServerIdentity> servers) {
         nodes.addAll(servers);
@@ -40,13 +40,11 @@ public class Roster {
     }
 
     private void updateAggregate() {
+        if (nodes.size() > 0) {
+            aggregate = nodes.get(0).getPublic().getZero();
+        }
         for (final ServerIdentity serverIdentity : nodes) {
-            if (aggregate == null) {
-                // TODO: it will be much better if there is some kind of 'zero' element for Ed25519Point type. Is it possible to use just a new created Ed25519Point
-                aggregate = serverIdentity.getPublic();
-            } else {
-                aggregate = aggregate.add(serverIdentity.getPublic());
-            }
+            aggregate = aggregate.add(serverIdentity.getPublic());
         }
     }
 
@@ -110,5 +108,19 @@ public class Roster {
             }
         }
         return new Roster(cothority);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        out.append("[");
+        for (int i = 0; i < this.getNodes().size(); i++) {
+            if (i != 0) {
+                out.append(",");
+            }
+            out.append(this.getNodes().get(i).getAddress().toString());
+        }
+        out.append("]");
+        return out.toString();
     }
 }

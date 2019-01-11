@@ -7,6 +7,7 @@ import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
@@ -143,17 +144,17 @@ public class SkipBlock {
     /**
      * Gets the roster from the skipblock.
      * @return the roster responsible for that skipblock
-     * @throws CothorityException if something went wrong
+     * @throws CothorityCryptoException if the roster cannot be parsed
      */
-    public Roster getRoster() throws CothorityException {
+    public Roster getRoster() throws CothorityCryptoException {
         try {
             return new Roster(skipBlock.getRoster());
         } catch (URISyntaxException e) {
-            throw new CothorityException(e);
+            throw new CothorityCryptoException(e.getMessage());
         }
     }
 
-    @java.lang.Override
+    @Override
     public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
             return true;

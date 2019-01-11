@@ -441,6 +441,11 @@ class ByzCoinRPCTest {
             }
 
             assertEquals(7, bc.getRoster().getNodes().size());
+
+            // Check that we can update to the latest block using the skipchain API after roster change.
+            List<SkipBlock> updates = bc.getSkipchain().getUpdateChain();
+            assertEquals(9, updates.get(updates.size() - 1).getIndex());
+
         } finally {
             logger.info("stopping conode for next tests");
             testInstanceController.killConode(5);

@@ -211,9 +211,9 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong if something goes wrong
      */
     public void update() throws CothorityException {
-        SkipBlock sb = skipchain.getLatestSkipblock();
-        if (sb != null) {
-            latest = sb;
+        List<SkipBlock> sbs = skipchain.getUpdateChain();
+        if (sbs != null && sbs.size() > 0) {
+            latest = sbs.get(sbs.size() - 1);
         }
     }
 
@@ -581,8 +581,9 @@ public class ByzCoinRPC {
         bc.skipchain = new SkipchainRPC(roster, skipchainId);
         bc.roster = roster;
         bc.genesis = bc.skipchain.getSkipblock(skipchainId);
-        bc.latest = bc.skipchain.getLatestSkipblock();
         bc.subscription = new Subscription(bc);
+        List<SkipBlock> sbs = bc.skipchain.getUpdateChain();
+        bc.latest = sbs.get(sbs.size() - 1);
         return bc;
     }
 
