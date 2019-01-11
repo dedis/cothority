@@ -73,7 +73,7 @@ func TestLib_ChangeRoster(t *testing.T) {
 
 	r1 = lib.ChangeRoster(r1, r2)
 	assert.True(t, len(r1.List) == i+j-3)
-	// r1 should be D,E,F <=> r1 should contains the same nodes as r2 and have the same order
+	// r1 should be D,E,F <=> r1 should contain the same nodes as r2 and have the same order
 	for k := 0; k < len(r1.List); k++ {
 		assert.True(t, r1.List[k].Equal(r2.List[k]))
 	}
@@ -149,7 +149,7 @@ func TestLib_ChangeRoster3(t *testing.T) {
 
 	r1 = lib.ChangeRoster(r1, r2)
 	assert.True(t, len(r1.List) == i+j-3)
-	// r1 should be D,E,F <=> r1 should contains the same nodes as r2 and have the same order
+	// r1 should be C,D,E <=> r1 should contains the same nodes as r2 and have the same order
 	for k := 0; k < len(r1.List); k++ {
 		assert.True(t, r1.List[k].Equal(r2.List[k]))
 	}
