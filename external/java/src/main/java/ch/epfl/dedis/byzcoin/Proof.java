@@ -75,7 +75,7 @@ public class Proof {
     }
 
     /**
-     * accessor for the skipblock assocaited with this proof.
+     * Getter for the skipblock assocaited with this proof.
      *
      * @return SkipBlock
      */
@@ -84,16 +84,17 @@ public class Proof {
     }
 
     /**
-     * Verifies the proof with regard to the root id. It will follow all
-     * steps and make sure that the hashes work out, starting from the
-     * leaf. At the end it will verify against the root hash to make sure
-     * that the inclusion proof is correct.
+     * Take a skipchain id and verifies that the proof is valid for this
+     * skipchain. It verifies the proof, that the Merkle-root is stored in the
+     * skipblock of the proof and the fact that the skipblock is indeed part of the
+     * skipchain. If all verifications are correct, no exceptions are thrown. It does
+     * not verify whether a certain key/value pair exists in the proof,
+     * use Proof.match or Proof.exists for that.
      *
      * @param scID the skipblock to verify
-     * @return true if all checks verify, false if there is a mismatch in the hashes
-     * @throws CothorityException if something goes wrong
+     * @throws CothorityCryptoException if something goes wrong
      */
-    public void verify(SkipblockId scID) throws CothorityException {
+    public void verify(SkipblockId scID) throws CothorityCryptoException {
         ByzCoinProto.DataHeader header;
         try {
             header = ByzCoinProto.DataHeader.parseFrom(this.latest.getData());
@@ -131,6 +132,9 @@ public class Proof {
         }
     }
 
+    /**
+     * Getter for the Merkle-root, returns null if it doesn't exist.
+     */
     public byte[] getRoot() {
         if (this.proof.getInteriorsCount() == 0) {
             return null;
@@ -139,8 +143,72 @@ public class Proof {
     }
 
     /**
-     * @return true if the proof has the key/value pair stored, false if it
-     * is a proof of absence.
+     * @return the key of the leaf node
+     */
+    public byte[] getKey() {
+        return proof.getLeaf().getKey().toByteArray();
+    }
+
+    /**
+     * @return the list of values in the leaf node.
+     */
+    public StateChangeBody getValues() {
+        return finalStateChangeBody;
+    }
+
+    /**
+     * @return the value of the proof.
+     */
+    public byte[] getValue() {
+        return getValues().getValue();
+    }
+
+    /**
+     * @return the string of the contractID.
+     */
+    public String getContractID() {
+        return new String(getValues().getContractID());
+    }
+
+    /**
+     * @return the darcID defining the access rules to the instance.
+     */
+    public DarcId getDarcID() {
+        return getValues().getDarcId();
+    }
+
+    private static List<Point> getPoints(List<NetworkProto.ServerIdentity> protos) throws CothorityCryptoException {
+        List<ServerIdentity> sids = new ArrayList<>();
+        for (NetworkProto.ServerIdentity sid : protos) {
+            try {
+                sids.add(new ServerIdentity(sid));
+            } catch (URISyntaxException e) {
+                throw new CothorityCryptoException(e.getMessage());
+            }
+        }
+        return sids.stream()
+                .map(sid -> (Bn256G2Point) sid.getServicePublic("Skipchain"))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Checks if the proof is valid and of type expected.
+     *
+     * @param expected the expected contractId
+     * @param id       the Byzcoin id to verify the proof against
+     * @return true if the proof is correct with regard to that Byzcoin id and the contract is of the expected type.
+     * @throws CothorityException if something goes wrong
+     */
+    public boolean isContract(String expected, SkipblockId id) throws CothorityException {
+        verify(id);
+        return getContractID().equals(expected);
+    }
+
+    /**
+     * Check whether the key on the leaf exists.
+     *
+     * @return true if the proof has the key/value pair stored on the leaf, false if it
+     * is a proof of absence or an error has occured.
      */
     public boolean matches() {
         if (proof.getLeaf().getKey().isEmpty()) {
@@ -153,6 +221,13 @@ public class Proof {
         }
     }
 
+    /**
+     * Check whether the key exists in the proof.
+     *
+     * @param key is the value that we want to proof whether it exists or is absent.
+     * @return true if it's an existence proof.
+     * @throws CothorityCryptoException if an unexpected error occurs, an absence proof does not throw an exception.
+     */
     public boolean exists(byte[] key) throws CothorityCryptoException {
         if (key == null) {
             throw new CothorityCryptoException("key is nil");
@@ -262,68 +337,5 @@ public class Proof {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * @return the key of the leaf node
-     */
-    public byte[] getKey() {
-        return proof.getLeaf().getKey().toByteArray();
-    }
-
-    /**
-     * @return the list of values in the leaf node.
-     */
-    public StateChangeBody getValues() {
-        return finalStateChangeBody;
-    }
-
-    /**
-     * @return the value of the proof.
-     */
-    public byte[] getValue() {
-        return getValues().getValue();
-    }
-
-    /**
-     * @return the string of the contractID.
-     */
-    public String getContractID() {
-        return new String(getValues().getContractID());
-    }
-
-    /**
-     * @return the darcID defining the access rules to the instance.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
-     */
-    public DarcId getDarcID() throws CothorityCryptoException {
-        return getValues().getDarcId();
-    }
-
-    private static List<Point> getPoints(List<NetworkProto.ServerIdentity> protos) throws CothorityCryptoException {
-        List<ServerIdentity> sids = new ArrayList<>();
-        for (NetworkProto.ServerIdentity sid : protos) {
-            try {
-                sids.add(new ServerIdentity(sid));
-            } catch (URISyntaxException e) {
-                throw new CothorityCryptoException(e.getMessage());
-            }
-        }
-        return sids.stream()
-                .map(sid -> (Bn256G2Point) sid.getServicePublic("Skipchain"))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Checks if the proof is valid and of type expected.
-     *
-     * @param expected the expected contractId
-     * @param id       the Byzcoin id to verify the proof against
-     * @return true if the proof is correct with regard to that Byzcoin id and the contract is of the expected type.
-     * @throws CothorityException if something goes wrong
-     */
-    public boolean isContract(String expected, SkipblockId id) throws CothorityException {
-        verify(id);
-        return getContractID().equals(expected);
     }
 }

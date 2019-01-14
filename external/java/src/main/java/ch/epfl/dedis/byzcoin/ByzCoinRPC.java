@@ -611,12 +611,13 @@ public class ByzCoinRPC {
 
     /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
+     * The returned proof is not verified. Please call Proof.verify.
      *
      * @param roster      where to contact the cothority
      * @param skipchainId the id of the underlying skipchain
      * @param key         which key we're interested in
      * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if there is an error in getting the proof
      */
     private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException {
         ByzCoinProto.GetProof.Builder configBuilder = ByzCoinProto.GetProof.newBuilder();

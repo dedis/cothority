@@ -42,8 +42,7 @@ public class CalypsoRPC extends ByzCoinRPC {
         LTSInstance inst = new LTSInstance(this, darcId, ltsRoster, signers, signerCtrs);
         Proof proof = inst.getProof();
         // Start the LTS/DKG protocol.
-        CreateLTSReply lts = createLTS(proof);
-        this.lts = lts;
+        this.lts = createLTS(proof);
     }
 
     /**
