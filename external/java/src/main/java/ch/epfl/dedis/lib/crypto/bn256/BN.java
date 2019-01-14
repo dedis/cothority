@@ -58,6 +58,8 @@ public class BN {
      */
     public static class G1 {
         CurvePoint p;
+        public static final int ELEM_SIZE = 256/8;
+        public static final int MARSHAL_SIZE = ELEM_SIZE * 2;
 
         /**
          * Construct a G1 point. There is no guarantee on its value, please set it later.
@@ -179,13 +181,11 @@ public class BN {
          * @return the marshalled bytes.
          */
         public byte[] marshal() {
-            final int numBytes = 256 / 8;
-
             // operate on a copy so that we do not modify the underlying curve during marshal
             BN.G1 c = new BN.G1(this);
 
             if (c.p.isInfinity()) {
-                return new byte[numBytes * 2];
+                return new byte[MARSHAL_SIZE];
             }
 
             c.p.makeAffine();
@@ -193,9 +193,9 @@ public class BN {
             byte[] xBytes = bigIntegerToBytes(c.p.x.mod(Constants.p));
             byte[] yBytes = bigIntegerToBytes(c.p.y.mod(Constants.p));
 
-            byte[] ret = new byte[numBytes * 2];
-            System.arraycopy(xBytes, 0, ret, 1 * numBytes - xBytes.length, xBytes.length);
-            System.arraycopy(yBytes, 0, ret, 2 * numBytes - yBytes.length, yBytes.length);
+            byte[] ret = new byte[MARSHAL_SIZE];
+            System.arraycopy(xBytes, 0, ret, 1 * ELEM_SIZE - xBytes.length, xBytes.length);
+            System.arraycopy(yBytes, 0, ret, 2 * ELEM_SIZE - yBytes.length, yBytes.length);
 
             return ret;
         }
@@ -207,14 +207,12 @@ public class BN {
          * @return an unmarshalled point when successful, otherwise null.
          */
         public G1 unmarshal(byte[] m) {
-            final int numBytes = 256 / 8;
-
-            if (m.length != 2 * numBytes) {
+            if (m.length != MARSHAL_SIZE) {
                 return null;
             }
 
-            this.p.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * numBytes, 1 * numBytes));
-            this.p.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * numBytes, 2 * numBytes));
+            this.p.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * ELEM_SIZE, 1 * ELEM_SIZE));
+            this.p.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * ELEM_SIZE, 2 * ELEM_SIZE));
 
             if (this.p.x.signum() == 0 && this.p.y.signum() == 0) {
                 this.p.y = BigInteger.ONE;
@@ -237,6 +235,9 @@ public class BN {
      */
     public static class G2 {
         TwistPoint p;
+        public static final int ELEM_SIZE = 256 / 8;
+        public static final int MARSHAL_SIZE = ELEM_SIZE * 4;
+
 
         /**
          * Construct a G2 point. We make no guarantee on its value, please set it later.
@@ -358,10 +359,8 @@ public class BN {
          * @return the marshalled bytes.
          */
         public byte[] marshal() {
-            final int numBytes = 256 / 8;
-
             if (this.p.isInfinity()) {
-                return new byte[numBytes * 4];
+                return new byte[MARSHAL_SIZE];
             }
 
             // operate on a copy so that we do not modify the underlying curve during marshal
@@ -374,11 +373,11 @@ public class BN {
             byte[] yxBytes = bigIntegerToBytes(c.p.y.x.mod(Constants.p));
             byte[] yyBytes = bigIntegerToBytes(c.p.y.y.mod(Constants.p));
 
-            byte[] ret = new byte[numBytes * 4];
-            System.arraycopy(xxBytes, 0, ret, 1 * numBytes - xxBytes.length, xxBytes.length);
-            System.arraycopy(xyBytes, 0, ret, 2 * numBytes - xyBytes.length, xyBytes.length);
-            System.arraycopy(yxBytes, 0, ret, 3 * numBytes - yxBytes.length, yxBytes.length);
-            System.arraycopy(yyBytes, 0, ret, 4 * numBytes - yyBytes.length, yyBytes.length);
+            byte[] ret = new byte[MARSHAL_SIZE];
+            System.arraycopy(xxBytes, 0, ret, 1 * ELEM_SIZE - xxBytes.length, xxBytes.length);
+            System.arraycopy(xyBytes, 0, ret, 2 * ELEM_SIZE - xyBytes.length, xyBytes.length);
+            System.arraycopy(yxBytes, 0, ret, 3 * ELEM_SIZE - yxBytes.length, yxBytes.length);
+            System.arraycopy(yyBytes, 0, ret, 4 * ELEM_SIZE - yyBytes.length, yyBytes.length);
 
             return ret;
         }
@@ -390,9 +389,7 @@ public class BN {
          * @return an unmarshalled point when successful, otherwise null.
          */
         public G2 unmarshal(byte[] m) {
-            final int numBytes = 256 / 8;
-
-            if (m.length != 4 * numBytes) {
+            if (m.length != MARSHAL_SIZE) {
                 return null;
             }
 
@@ -400,10 +397,10 @@ public class BN {
                 this.p = new TwistPoint();
             }
 
-            this.p.x.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * numBytes, 1 * numBytes));
-            this.p.x.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * numBytes, 2 * numBytes));
-            this.p.y.x = new BigInteger(1, Arrays.copyOfRange(m, 2 * numBytes, 3 * numBytes));
-            this.p.y.y = new BigInteger(1, Arrays.copyOfRange(m, 3 * numBytes, 4 * numBytes));
+            this.p.x.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * ELEM_SIZE, 1 * ELEM_SIZE));
+            this.p.x.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * ELEM_SIZE, 2 * ELEM_SIZE));
+            this.p.y.x = new BigInteger(1, Arrays.copyOfRange(m, 2 * ELEM_SIZE, 3 * ELEM_SIZE));
+            this.p.y.y = new BigInteger(1, Arrays.copyOfRange(m, 3 * ELEM_SIZE, 4 * ELEM_SIZE));
 
             if (this.p.x.x.signum() == 0 && this.p.x.y.signum() == 0 && this.p.y.x.signum() == 0 && this.p.y.y.signum() == 0) {
                 this.p.y.setOne();
@@ -427,6 +424,8 @@ public class BN {
      */
     public static class GT {
         GFp12 p;
+        public static final int ELEM_SIZE = 256 / 8;
+        public static final int MARSHAL_SIZE = ELEM_SIZE * 12;
 
         /**
          * Construct a new GT object, we make no guarantee on its value, please set it later.
@@ -517,21 +516,19 @@ public class BN {
             byte[] yzxBytes = bigIntegerToBytes(this.p.y.z.x);
             byte[] yzyBytes = bigIntegerToBytes(this.p.y.z.y);
 
-            final int numBytes = 256 / 8;
-
-            byte[] ret = new byte[numBytes * 12];
-            System.arraycopy(xxxBytes, 0, ret, 1 * numBytes - xxxBytes.length, xxxBytes.length);
-            System.arraycopy(xxyBytes, 0, ret, 2 * numBytes - xxyBytes.length, xxyBytes.length);
-            System.arraycopy(xyxBytes, 0, ret, 3 * numBytes - xyxBytes.length, xyxBytes.length);
-            System.arraycopy(xyyBytes, 0, ret, 4 * numBytes - xyyBytes.length, xyyBytes.length);
-            System.arraycopy(xzxBytes, 0, ret, 5 * numBytes - xzxBytes.length, xzxBytes.length);
-            System.arraycopy(xzyBytes, 0, ret, 6 * numBytes - xzyBytes.length, xzyBytes.length);
-            System.arraycopy(yxxBytes, 0, ret, 7 * numBytes - yxxBytes.length, yxxBytes.length);
-            System.arraycopy(yxyBytes, 0, ret, 8 * numBytes - yxyBytes.length, yxyBytes.length);
-            System.arraycopy(yyxBytes, 0, ret, 9 * numBytes - yyxBytes.length, yyxBytes.length);
-            System.arraycopy(yyyBytes, 0, ret, 10 * numBytes - yyyBytes.length, yyyBytes.length);
-            System.arraycopy(yzxBytes, 0, ret, 11 * numBytes - yzxBytes.length, yzxBytes.length);
-            System.arraycopy(yzyBytes, 0, ret, 12 * numBytes - yzyBytes.length, yzyBytes.length);
+            byte[] ret = new byte[MARSHAL_SIZE];
+            System.arraycopy(xxxBytes, 0, ret, 1 * ELEM_SIZE - xxxBytes.length, xxxBytes.length);
+            System.arraycopy(xxyBytes, 0, ret, 2 * ELEM_SIZE - xxyBytes.length, xxyBytes.length);
+            System.arraycopy(xyxBytes, 0, ret, 3 * ELEM_SIZE - xyxBytes.length, xyxBytes.length);
+            System.arraycopy(xyyBytes, 0, ret, 4 * ELEM_SIZE - xyyBytes.length, xyyBytes.length);
+            System.arraycopy(xzxBytes, 0, ret, 5 * ELEM_SIZE - xzxBytes.length, xzxBytes.length);
+            System.arraycopy(xzyBytes, 0, ret, 6 * ELEM_SIZE - xzyBytes.length, xzyBytes.length);
+            System.arraycopy(yxxBytes, 0, ret, 7 * ELEM_SIZE - yxxBytes.length, yxxBytes.length);
+            System.arraycopy(yxyBytes, 0, ret, 8 * ELEM_SIZE - yxyBytes.length, yxyBytes.length);
+            System.arraycopy(yyxBytes, 0, ret, 9 * ELEM_SIZE - yyxBytes.length, yyxBytes.length);
+            System.arraycopy(yyyBytes, 0, ret, 10 * ELEM_SIZE - yyyBytes.length, yyyBytes.length);
+            System.arraycopy(yzxBytes, 0, ret, 11 * ELEM_SIZE - yzxBytes.length, yzxBytes.length);
+            System.arraycopy(yzyBytes, 0, ret, 12 * ELEM_SIZE - yzyBytes.length, yzyBytes.length);
 
             return ret;
         }
@@ -543,9 +540,7 @@ public class BN {
          * @return an unmarshalled element when successful, otherwise null.
          */
         public GT unmarshal(byte[] m) {
-            final int numBytes = 256 / 8;
-
-            if (m.length != 12 * numBytes) {
+            if (m.length != MARSHAL_SIZE) {
                 return null;
             }
 
@@ -553,18 +548,18 @@ public class BN {
                 this.p = new GFp12();
             }
 
-            this.p.x.x.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * numBytes, 1 * numBytes));
-            this.p.x.x.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * numBytes, 2 * numBytes));
-            this.p.x.y.x = new BigInteger(1, Arrays.copyOfRange(m, 2 * numBytes, 3 * numBytes));
-            this.p.x.y.y = new BigInteger(1, Arrays.copyOfRange(m, 3 * numBytes, 4 * numBytes));
-            this.p.x.z.x = new BigInteger(1, Arrays.copyOfRange(m, 4 * numBytes, 5 * numBytes));
-            this.p.x.z.y = new BigInteger(1, Arrays.copyOfRange(m, 5 * numBytes, 6 * numBytes));
-            this.p.y.x.x = new BigInteger(1, Arrays.copyOfRange(m, 6 * numBytes, 7 * numBytes));
-            this.p.y.x.y = new BigInteger(1, Arrays.copyOfRange(m, 7 * numBytes, 8 * numBytes));
-            this.p.y.y.x = new BigInteger(1, Arrays.copyOfRange(m, 8 * numBytes, 9 * numBytes));
-            this.p.y.y.y = new BigInteger(1, Arrays.copyOfRange(m, 9 * numBytes, 10 * numBytes));
-            this.p.y.z.x = new BigInteger(1, Arrays.copyOfRange(m, 10 * numBytes, 11 * numBytes));
-            this.p.y.z.y = new BigInteger(1, Arrays.copyOfRange(m, 11 * numBytes, 12 * numBytes));
+            this.p.x.x.x = new BigInteger(1, Arrays.copyOfRange(m, 0 * ELEM_SIZE, 1 * ELEM_SIZE));
+            this.p.x.x.y = new BigInteger(1, Arrays.copyOfRange(m, 1 * ELEM_SIZE, 2 * ELEM_SIZE));
+            this.p.x.y.x = new BigInteger(1, Arrays.copyOfRange(m, 2 * ELEM_SIZE, 3 * ELEM_SIZE));
+            this.p.x.y.y = new BigInteger(1, Arrays.copyOfRange(m, 3 * ELEM_SIZE, 4 * ELEM_SIZE));
+            this.p.x.z.x = new BigInteger(1, Arrays.copyOfRange(m, 4 * ELEM_SIZE, 5 * ELEM_SIZE));
+            this.p.x.z.y = new BigInteger(1, Arrays.copyOfRange(m, 5 * ELEM_SIZE, 6 * ELEM_SIZE));
+            this.p.y.x.x = new BigInteger(1, Arrays.copyOfRange(m, 6 * ELEM_SIZE, 7 * ELEM_SIZE));
+            this.p.y.x.y = new BigInteger(1, Arrays.copyOfRange(m, 7 * ELEM_SIZE, 8 * ELEM_SIZE));
+            this.p.y.y.x = new BigInteger(1, Arrays.copyOfRange(m, 8 * ELEM_SIZE, 9 * ELEM_SIZE));
+            this.p.y.y.y = new BigInteger(1, Arrays.copyOfRange(m, 9 * ELEM_SIZE, 10 * ELEM_SIZE));
+            this.p.y.z.x = new BigInteger(1, Arrays.copyOfRange(m, 10 * ELEM_SIZE, 11 * ELEM_SIZE));
+            this.p.y.z.y = new BigInteger(1, Arrays.copyOfRange(m, 11 * ELEM_SIZE, 12 * ELEM_SIZE));
 
             return this;
         }

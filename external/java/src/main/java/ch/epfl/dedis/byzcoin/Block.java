@@ -22,6 +22,7 @@ import java.util.List;
 public class Block {
     private ByzCoinProto.DataHeader dataHeader;
     private DataBody dataBody;
+
     private SkipblockId sbId;
 
     /**
@@ -121,8 +122,8 @@ public class Block {
         return dataBody.getTxResults();
     }
 
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
+    @Override
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
@@ -133,4 +134,12 @@ public class Block {
 
         return other.sbId.equals(this.sbId);
     }
+
+    /**
+     * Getter for skipblock ID.
+     */
+    public SkipblockId getId() {
+        return sbId;
+    }
+
 }

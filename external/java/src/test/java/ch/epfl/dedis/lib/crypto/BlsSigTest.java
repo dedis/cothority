@@ -19,7 +19,7 @@ class BlsSigTest {
         BlsSig badSig = new BlsSig("wrong signature".getBytes());
         assertFalse(badSig.verify(msg, (Bn256G2Point)pair.point));
 
-        badSig = BlsSig.sign(pair2.scalar, msg);
+        badSig = new BlsSig(msg, pair2.scalar);
         assertFalse(badSig.verify(msg, (Bn256G2Point)pair.point));
     }
 
@@ -27,7 +27,7 @@ class BlsSigTest {
     void ok() {
         Bn256KeyPair pair = new Bn256KeyPair(rnd);
         byte[] msg = "two legs good four legs better".getBytes();
-        BlsSig goodSig = BlsSig.sign(pair.scalar, msg);
+        BlsSig goodSig = new BlsSig(msg, pair.scalar);
         assertTrue(goodSig.verify(msg, (Bn256G2Point) pair.point));
     }
 
@@ -38,7 +38,7 @@ class BlsSigTest {
             rnd.nextBytes(msg);
 
             Bn256KeyPair pair = new Bn256KeyPair(rnd);
-            BlsSig goodSig = BlsSig.sign(pair.scalar, msg);
+            BlsSig goodSig = new BlsSig(msg, pair.scalar);
             assertTrue(goodSig.verify(msg, (Bn256G2Point) pair.point));
 
             byte[] badMsg = Arrays.copyOfRange(msg, 0, 255);

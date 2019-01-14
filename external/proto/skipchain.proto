@@ -12,6 +12,23 @@ option java_outer_classname = "SkipchainProto";
 
 import "onet.proto";
 
+// StoreSkipBlock - Requests a new skipblock to be appended to the given
+// SkipBlock. If the given TargetSkipChainID is an empty slice, then a genesis
+// block is created.  Otherwise, the new block is added to the skipchain
+// specified by TargetSkipChainID.
+message StoreSkipBlock {
+    required bytes targetSkipChainID = 1;
+	required SkipBlock newBlock = 2;
+	optional bytes signature = 3;
+}
+
+// StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
+// and the previous block if it exists.
+message StoreSkipBlockReply {
+    optional SkipBlock previous = 1;
+    required SkipBlock latest = 2;
+}
+
 // GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
 // of all of the known skipchains.
 message GetAllSkipChainIDs {

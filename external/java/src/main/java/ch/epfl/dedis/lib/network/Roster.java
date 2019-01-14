@@ -12,6 +12,7 @@ import com.moandjiezana.toml.Toml;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * dedis/lib
@@ -22,7 +23,7 @@ import java.util.List;
 
 public class Roster {
     private List<ServerIdentity> nodes = new ArrayList<>();
-    private Point aggregate; // TODO: can we find better name for it? like aggregatePublicKey or aggregatedKey?
+    private Point aggregate;
 
     public Roster(List<ServerIdentity> servers) {
         nodes.addAll(servers);
@@ -39,18 +40,22 @@ public class Roster {
     }
 
     private void updateAggregate() {
+        if (nodes.size() > 0) {
+            aggregate = nodes.get(0).getPublic().getZero();
+        }
         for (final ServerIdentity serverIdentity : nodes) {
-            if (aggregate == null) {
-                // TODO: it will be much better if there is some kind of 'zero' element for Ed25519Point type. Is it possible to use just a new created Ed25519Point
-                aggregate = serverIdentity.getPublic();
-            } else {
-                aggregate = aggregate.add(serverIdentity.getPublic());
-            }
+            aggregate = aggregate.add(serverIdentity.getPublic());
         }
     }
 
     public List<ServerIdentity> getNodes() {
         return nodes;
+    }
+
+    public List<Point> getServicePublics(String serviceName) {
+        return this.nodes.stream()
+                .map(sid -> sid.getServicePublic(serviceName))
+                .collect(Collectors.toList());
     }
 
     public OnetProto.Roster toProto() {
@@ -103,5 +108,19 @@ public class Roster {
             }
         }
         return new Roster(cothority);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        out.append("[");
+        for (int i = 0; i < this.getNodes().size(); i++) {
+            if (i != 0) {
+                out.append(",");
+            }
+            out.append(this.getNodes().get(i).getAddress().toString());
+        }
+        out.append("]");
+        return out.toString();
     }
 }

@@ -79,6 +79,7 @@ type StoreSkipBlock struct {
 }
 
 // StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
+// and the previous block if it exists.
 type StoreSkipBlockReply struct {
 	Previous *SkipBlock
 	Latest   *SkipBlock

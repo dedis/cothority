@@ -1,15 +1,19 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
+import ch.epfl.dedis.skipchain.SkipchainRPC;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * SkipBlock is a wrapper around the protobuf SkipBlock class. It is mainly used to serialize the genesis block for
@@ -56,7 +60,7 @@ public class SkipBlock {
      * genesis block.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public SkipblockId getSkipchainId() throws CothorityCryptoException{
+    public SkipblockId getSkipchainId() throws CothorityCryptoException {
         if (skipBlock.getIndex() == 0){
             return getId();
         }
@@ -83,6 +87,13 @@ public class SkipBlock {
     }
 
     /**
+     * @return the height of the block.
+     */
+    public int getHeight() {
+        return skipBlock.getHeight();
+    }
+
+    /**
      * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
      * if this is the tip of the chain.
      */
@@ -95,19 +106,55 @@ public class SkipBlock {
     }
 
     /**
+     * This function checks whether all signatures in the forward-links
+     * are correctly signed by the aggregate public key of the roster
+     *
+     * @return true if the signature is ok.
+     */
+    public boolean verifyForwardSignatures() {
+        List<Point> publics;
+        try {
+            publics = new Roster(this.skipBlock.getRoster()).getServicePublics(SkipchainRPC.SERVICE_NANE);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+
+        for (ForwardLink fl : this.getForwardLinks()) {
+            if (fl.isEmpty()) {
+                // This means it's an empty forward-link to correctly place a higher-order
+                // forward-link in place.
+                continue;
+            }
+            if (!fl.verify(publics)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Getter for the list of backlinks in the skipblock.
+     */
+    public List<SkipblockId> getBackLinks() {
+        return skipBlock.getBacklinksList().stream()
+                .map(bl -> new SkipblockId(bl.toByteArray()))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Gets the roster from the skipblock.
      * @return the roster responsible for that skipblock
-     * @throws CothorityException if something went wrong
+     * @throws CothorityCryptoException if the roster cannot be parsed
      */
-    public Roster getRoster() throws CothorityException {
+    public Roster getRoster() throws CothorityCryptoException {
         try {
             return new Roster(skipBlock.getRoster());
         } catch (URISyntaxException e) {
-            throw new CothorityException(e);
+            throw new CothorityCryptoException(e.getMessage());
         }
     }
 
-    @java.lang.Override
+    @Override
     public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
             return true;
