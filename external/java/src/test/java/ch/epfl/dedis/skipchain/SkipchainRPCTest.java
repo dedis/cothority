@@ -9,11 +9,13 @@ import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,15 +29,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SkipchainRPCTest {
     private SkipchainRPC sc;
-    private Signer admin;
-    private TestServerController testInstanceController;
     private SkipblockId genesisId;
     private Roster fullRoster;
 
     @BeforeEach
     void initAll() throws Exception {
-        testInstanceController = TestServerInit.getInstance();
-        admin = new SignerEd25519();
+        TestServerController testInstanceController = TestServerInit.getInstance();
+        Signer admin = new SignerEd25519();
         // use a smaller roster because we're going to evolve it later
         Roster roster = new Roster(testInstanceController.getRoster().getNodes().subList(0, 2));
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
@@ -77,8 +77,7 @@ class SkipchainRPCTest {
         for (int i = 1; i < sbCount; i++) {
             Roster roster = new Roster(nodes.subList(i, i+2));
             SkipchainProto.SkipBlock newSB = newSkipBlock(roster);
-            SkipchainRPC sc = new SkipchainRPC(roster, genesisSB.getId());
-            SkipchainProto.StoreSkipBlockReply reply = sc.storeSkipBlock(sbs.get(i-1).getHash(), newSB);
+            SkipchainProto.StoreSkipBlockReply reply = this.storeSkipBlock(roster, sbs.get(i-1).getHash(), newSB);
             sbs.add(new SkipBlock(reply.getLatest()));
         }
 
@@ -112,7 +111,7 @@ class SkipchainRPCTest {
         }
     }
 
-    SkipBlock makeGenesisRosterArgs(Roster roster, SkipblockId parent, List<byte[]> verifierIDs, int base, int maxHeight) throws CothorityException {
+    private SkipBlock makeGenesisRosterArgs(Roster roster, SkipblockId parent, List<byte[]> verifierIDs, int base, int maxHeight) throws CothorityException {
         SkipchainProto.SkipBlock.Builder b = SkipchainProto.SkipBlock.newBuilder();
         b.setRoster(roster.toProto());
         b.setMaxHeight(maxHeight);
@@ -129,7 +128,7 @@ class SkipchainRPCTest {
         b.setData(ByteString.copyFrom(new byte[]{}));
         b.setHash(ByteString.copyFrom(new byte[]{}));
 
-        SkipchainProto.StoreSkipBlockReply reply = sc.storeSkipBlock(new byte[]{}, b.build());
+        SkipchainProto.StoreSkipBlockReply reply = storeSkipBlock(sc.getRoster(), new byte[]{}, b.build());
         return new SkipBlock(reply.getLatest());
     }
 
@@ -144,5 +143,19 @@ class SkipchainRPCTest {
                 .setRoster(roster.toProto())
                 .setHash(ByteString.copyFrom(new byte[]{}))
                 .build();
+    }
+
+    private SkipchainProto.StoreSkipBlockReply storeSkipBlock(Roster roster, byte[] targetSkipChainID, SkipchainProto.SkipBlock newBlock) throws CothorityCommunicationException, CothorityCryptoException {
+        try {
+            SkipchainProto.StoreSkipBlock request =
+                    SkipchainProto.StoreSkipBlock.newBuilder()
+                            .setTargetSkipChainID(ByteString.copyFrom(targetSkipChainID))
+                            .setNewBlock(newBlock)
+                            .build();
+            ByteString msg = roster.sendMessage("Skipchain/StoreSkipBlock", request);
+            return SkipchainProto.StoreSkipBlockReply.parseFrom(msg);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCryptoException(e.getMessage());
+        }
     }
 }

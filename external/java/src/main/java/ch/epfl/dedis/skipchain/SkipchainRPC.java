@@ -204,27 +204,17 @@ public class SkipchainRPC {
         }
     }
 
-
+    /**
+     * Getter for the skipchain ID.
+     */
     public SkipblockId getID() {
         return scID;
     }
 
+    /**
+     * Getter for the roster.
+     */
     public Roster getRoster() {
         return roster;
-    }
-
-    // for testing, none of the blocks are signed
-    SkipchainProto.StoreSkipBlockReply storeSkipBlock(byte[] targetSkipChainID, SkipchainProto.SkipBlock newBlock) throws CothorityCommunicationException, CothorityCryptoException {
-        try {
-            SkipchainProto.StoreSkipBlock request =
-                    SkipchainProto.StoreSkipBlock.newBuilder()
-                            .setTargetSkipChainID(ByteString.copyFrom(targetSkipChainID))
-                            .setNewBlock(newBlock)
-                            .build();
-            ByteString msg = roster.sendMessage("Skipchain/StoreSkipBlock", request);
-            return SkipchainProto.StoreSkipBlockReply.parseFrom(msg);
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
     }
 }
