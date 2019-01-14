@@ -111,6 +111,9 @@ class EventlogTest {
         // check that we can't get an event that doesn't exist
         InstanceId badKey = new InstanceId(Hex.parseHexBinary("CDC4FB0BDD74CD86410DC80C818E7A0DB3C6452C9161CF7C6FC16D00C5CF0DA7"));
         assertThrows(CothorityCryptoException.class, () -> el.get(badKey));
+
+        // Try to reconnect after doing a lot of transactions.
+        ByzCoinRPC.fromByzCoin(bc.getRoster(), bc.getGenesisBlock().getId());
     }
 
     @Test

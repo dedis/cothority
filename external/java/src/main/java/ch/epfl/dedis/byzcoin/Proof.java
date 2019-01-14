@@ -114,16 +114,16 @@ public class Proof {
                 publics = getPoints(this.links.get(i).getNewRoster().getListList());
                 continue;
             }
-            ForwardLink fl = new ForwardLink(this.links.get(i));
-            if (!fl.verify(publics)) {
+            ForwardLink l = new ForwardLink(this.links.get(i));
+            if (!l.verify(publics)) {
                 throw new CothorityCryptoException("stored skipblock is not properly evolved from genesis block");
             }
-            if (!Arrays.equals(fl.getFrom().getId(), sbID.getId())) {
+            if (!Arrays.equals(l.getFrom().getId(), sbID.getId())) {
                 throw new CothorityCryptoException("stored skipblock is not properly evolved from genesis block");
             }
-            sbID = fl.getTo();
+            sbID = l.getTo();
             try {
-                if (fl.getNewRoster() != null) {
+                if (l.getNewRoster() != null) {
                     publics = getPoints(this.links.get(i).getNewRoster().getListList());
                 }
             } catch (URISyntaxException e) {
@@ -175,20 +175,6 @@ public class Proof {
      */
     public DarcId getDarcID() {
         return getValues().getDarcId();
-    }
-
-    private static List<Point> getPoints(List<NetworkProto.ServerIdentity> protos) throws CothorityCryptoException {
-        List<ServerIdentity> sids = new ArrayList<>();
-        for (NetworkProto.ServerIdentity sid : protos) {
-            try {
-                sids.add(new ServerIdentity(sid));
-            } catch (URISyntaxException e) {
-                throw new CothorityCryptoException(e.getMessage());
-            }
-        }
-        return sids.stream()
-                .map(sid -> (Bn256G2Point) sid.getServicePublic("Skipchain"))
-                .collect(Collectors.toList());
     }
 
     /**
@@ -337,5 +323,19 @@ public class Proof {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<Point> getPoints(List<NetworkProto.ServerIdentity> protos) throws CothorityCryptoException {
+        List<ServerIdentity> sids = new ArrayList<>();
+        for (NetworkProto.ServerIdentity sid : protos) {
+            try {
+                sids.add(new ServerIdentity(sid));
+            } catch (URISyntaxException e) {
+                throw new CothorityCryptoException(e.getMessage());
+            }
+        }
+        return sids.stream()
+                .map(sid -> (Bn256G2Point) sid.getServicePublic("Skipchain"))
+                .collect(Collectors.toList());
     }
 }

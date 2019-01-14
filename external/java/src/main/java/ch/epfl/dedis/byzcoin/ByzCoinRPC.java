@@ -564,12 +564,18 @@ public class ByzCoinRPC {
         if (!proof.isContract("config", skipchainId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
         }
+        if (!proof.exists(InstanceId.zero().getId())) {
+            throw new CothorityNotFoundException("config instance does not exist");
+        }
         ByzCoinRPC bc = new ByzCoinRPC();
         bc.config = new Config(proof.getValue());
 
         Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
         if (!proof2.isContract(DarcInstance.ContractId, skipchainId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        if (!proof2.exists(proof.getDarcID().getId())) {
+            throw new CothorityNotFoundException("darc instance does not exist");
         }
         try {
             bc.genesisDarc = new Darc(proof2.getValue());
