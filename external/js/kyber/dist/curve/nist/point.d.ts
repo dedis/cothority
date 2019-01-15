@@ -1,8 +1,9 @@
 /// <reference types="node" />
-import { BNType } from 'bn.js';
+import BN = require('bn.js');
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
+declare type BNType = number | string | number[] | Buffer | BN;
 /**
 * Represents a Point on the nist curve
 *
@@ -57,3 +58,4 @@ export default class NistPoint implements Point {
     /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
 }
+export {};

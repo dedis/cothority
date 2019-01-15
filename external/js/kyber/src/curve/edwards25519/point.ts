@@ -1,8 +1,10 @@
-import BN, { BNType } from "bn.js";
+import BN = require('bn.js');
 import { randomBytes } from "crypto";
 import { Point } from "../../index";
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
+
+type BNType = number | string | number[] | Buffer | BN;
 
 export default class Ed25519Point implements Point {
     // TODO: this should be private

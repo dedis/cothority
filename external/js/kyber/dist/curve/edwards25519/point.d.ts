@@ -1,8 +1,9 @@
 /// <reference types="node" />
-import { BNType } from "bn.js";
+import BN = require('bn.js');
 import { Point } from "../../index";
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
+declare type BNType = number | string | number[] | Buffer | BN;
 export default class Ed25519Point implements Point {
     ref: {
         point: any;
@@ -46,3 +47,4 @@ export default class Ed25519Point implements Point {
     /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
 }
+export {};

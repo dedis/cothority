@@ -1,9 +1,11 @@
-import BN, { BNType } from 'bn.js';
+import BN = require('bn.js');
 import { randomBytes } from "crypto";
 import constants from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
+
+type BNType = number | string | number[] | Buffer | BN;
 
 /**
 * Represents a Point on the nist curve

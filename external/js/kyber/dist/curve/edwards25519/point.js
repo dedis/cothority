@@ -1,23 +1,20 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const bn_js_1 = __importDefault(require("bn.js"));
+const BN = require("bn.js");
 const crypto_1 = require("crypto");
 class Ed25519Point {
     constructor(curve, X, Y, Z, T) {
         if (X instanceof Buffer) {
-            X = new bn_js_1.default(X, 16, "le");
+            X = new BN(X, 16, "le");
         }
         if (Y instanceof Buffer) {
-            Y = new bn_js_1.default(Y, 16, "le");
+            Y = new BN(Y, 16, "le");
         }
         if (Z instanceof Buffer) {
-            Z = new bn_js_1.default(Z, 16, "le");
+            Z = new BN(Z, 16, "le");
         }
         if (T instanceof Buffer) {
-            T = new bn_js_1.default(T, 16, "le");
+            T = new BN(T, 16, "le");
         }
         // the point reference is stored in a Point reference to make set()
         // consistent.
@@ -103,7 +100,7 @@ class Ed25519Point {
                 continue; // try again
             }
             if (dl == 0) {
-                point_obj.ref.point = point_obj.ref.point.mul(new bn_js_1.default(8));
+                point_obj.ref.point = point_obj.ref.point.mul(new BN(8));
                 if (point_obj.ref.point.isInfinity()) {
                     continue; // unlucky
                 }
@@ -171,7 +168,7 @@ class Ed25519Point {
         const buff = Buffer.from(bytes);
         const odd = buff[31] >> 7 === 1;
         buff[31] &= 0x7f;
-        let bnp = new bn_js_1.default(buff, 16, "le");
+        let bnp = new BN(buff, 16, "le");
         if (bnp.cmp(this.ref.curve.curve.p) >= 0) {
             throw new Error("bytes > p");
         }

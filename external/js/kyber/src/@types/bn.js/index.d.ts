@@ -6,64 +6,83 @@
 declare module 'bn.js' {
     type Endianness = 'le' | 'be';
     type IPrimeName = 'k256' | 'p224' | 'p192' | 'p25519';
-    export type BNType = number | string | number[] | Buffer | BN;
-    export type ReductionContext = {};
 
-    export default class BN {
-        constructor(number: BNType, base?: number | 'hex', endian?: Endianness);
+    interface MPrime {
+        name: string;
+        p: BN;
+        n: number;
+        k: BN;
+    }
+
+    interface ReductionContext {
+        m: number;
+        prime: MPrime;
+        [key: string]: any;
+    }
+
+    class BN {
+        constructor(
+            number: number | string | number[] | Buffer | BN,
+            base?: number | 'hex',
+            endian?: Endianness
+        );
+        constructor(
+            number: number | string | number[] | Buffer | BN,
+            endian?: Endianness
+        )
 
         /**
-         * create a reduction context
+         * @description  create a reduction context
          */
-        static red(ctx: BN | IPrimeName): ReductionContext;
+        static red(reductionContext: BN | IPrimeName): ReductionContext;
 
         /**
-         * create a reduction context  with the Montgomery trick.
+         * @description  create a reduction context  with the Montgomery trick.
          */
         static mont(num: BN): ReductionContext;
 
         /**
-         * returns true if the supplied object is a BN.js instance
+         * @description returns true if the supplied object is a BN.js instance
          */
-        static isBN(b: any): boolean;
+        static isBN(b: any): b is BN;
 
         /**
-         * returns the maximum of 2 BN instances.
+         * @description returns the maximum of 2 BN instances.
          */
         static max(left: BN, right: BN): BN;
 
         /**
-         * returns the minimum of 2 BN instances.
+         * @description returns the minimum of 2 BN instances.
          */
         static min(left: BN, right: BN): BN;
 
         /**
-         *  clone number
+         * @description  clone number
          */
         clone(): BN;
 
         /**
-         *  convert to base-string and pad with zeroes
+         * @description  convert to base-string and pad with zeroes
          */
         toString(base?: number | 'hex', length?: number): string;
 
         /**
-         * convert to Javascript Number (limited to 53 bits)
+         * @description convert to Javascript Number (limited to 53 bits)
          */
         toNumber(): number;
 
         /**
-         * convert to JSON compatible hex string (alias of toString(16))
+         * @description convert to JSON compatible hex string (alias of toString(16))
          */
         toJSON(): string;
 
         /**
-         *  convert to byte Array, and optionally zero pad to length, throwing if already exceeding
+         * @description  convert to byte Array, and optionally zero pad to length, throwing if already exceeding
          */
         toArray(endian?: Endianness, length?: number): number[];
 
         /**
-         * convert to an instance of `type`, which must behave like an Array
+         * @description convert to an instance of `type`, which must behave like an Array
          */
         toArrayLike(
             ArrayType: typeof Buffer,
@@ -78,481 +97,487 @@ declare module 'bn.js' {
         ): any[];
 
         /**
-         *  convert to Node.js Buffer (if available). For compatibility with browserify and similar tools, use this instead: a.toArrayLike(Buffer, endian, length)
+         * @description  convert to Node.js Buffer (if available). For compatibility with browserify and similar tools, use this instead: a.toArrayLike(Buffer, endian, length)
          */
         toBuffer(endian?: Endianness, length?: number): Buffer;
 
         /**
-         * get number of bits occupied
+         * @description get number of bits occupied
          */
         bitLength(): number;
 
         /**
-         * return number of less-significant consequent zero bits (example: 1010000 has 4 zero bits)
+         * @description return number of less-significant consequent zero bits (example: 1010000 has 4 zero bits)
          */
         zeroBits(): number;
 
         /**
-         * return number of bytes occupied
+         * @description return number of bytes occupied
          */
         byteLength(): number;
 
         /**
-         *  true if the number is negative
+         * @description  true if the number is negative
          */
         isNeg(): boolean;
 
         /**
-         *  check if value is even
+         * @description  check if value is even
          */
         isEven(): boolean;
 
         /**
-         *   check if value is odd
+         * @description   check if value is odd
          */
         isOdd(): boolean;
 
         /**
-         *  check if value is zero
+         * @description  check if value is zero
          */
         isZero(): boolean;
 
         /**
-         * compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
+         * @description compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
          */
         cmp(b: BN): -1 | 0 | 1;
 
         /**
-         * compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
+         * @description compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
          */
         ucmp(b: BN): -1 | 0 | 1;
 
         /**
-         * compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
+         * @description compare numbers and return `-1 (a < b)`, `0 (a == b)`, or `1 (a > b)` depending on the comparison result
          */
         cmpn(b: number): -1 | 0 | 1;
 
         /**
-         * a less than b
+         * @description a less than b
          */
         lt(b: BN): boolean;
 
         /**
-         * a less than b
+         * @description a less than b
          */
         ltn(b: number): boolean;
 
         /**
-         * a less than or equals b
+         * @description a less than or equals b
          */
         lte(b: BN): boolean;
 
         /**
-         * a less than or equals b
+         * @description a less than or equals b
          */
         lten(b: number): boolean;
 
         /**
-         * a greater than b
+         * @description a greater than b
          */
         gt(b: BN): boolean;
 
         /**
-         * a greater than b
+         * @description a greater than b
          */
         gtn(b: number): boolean;
 
         /**
-         * a greater than or equals b
+         * @description a greater than or equals b
          */
         gte(b: BN): boolean;
 
         /**
-         * a greater than or equals b
+         * @description a greater than or equals b
          */
         gten(b: number): boolean;
 
         /**
-         * a equals b
+         * @description a equals b
          */
         eq(b: BN): boolean;
 
         /**
-         * a equals b
+         * @description a equals b
          */
         eqn(b: number): boolean;
 
         /**
-         * convert to two's complement representation, where width is bit width
+         * @description convert to two's complement representation, where width is bit width
          */
         toTwos(width: number): BN;
 
         /**
-         * convert from two's complement representation, where width is the bit width
+         * @description  convert from two's complement representation, where width is the bit width
          */
         fromTwos(width: number): BN;
 
         /**
-         * negate sign
+         * @description negate sign
          */
         neg(): BN;
 
         /**
-         * negate sign
+         * @description negate sign
          */
         ineg(): BN;
 
         /**
-         * absolute value
+         * @description absolute value
          */
         abs(): BN;
 
         /**
-         * absolute value
+         * @description absolute value
          */
         iabs(): BN;
 
         /**
-         * addition
+         * @description addition
          */
         add(b: BN): BN;
 
         /**
-         *  addition
+         * @description  addition
          */
         iadd(b: BN): BN;
 
         /**
-         * addition
+         * @description addition
          */
         addn(b: number): BN;
 
         /**
-         * addition
+         * @description addition
          */
         iaddn(b: number): BN;
 
         /**
-         * subtraction
+         * @description subtraction
          */
         sub(b: BN): BN;
 
         /**
-         * subtraction
+         * @description subtraction
          */
         isub(b: BN): BN;
 
         /**
-         * subtraction
+         * @description subtraction
          */
         subn(b: number): BN;
 
         /**
-         * subtraction
+         * @description subtraction
          */
         isubn(b: number): BN;
 
         /**
-         * multiply
+         * @description multiply
          */
         mul(b: BN): BN;
 
         /**
-         * multiply
+         * @description multiply
          */
         imul(b: BN): BN;
 
         /**
-         * multiply
+         * @description multiply
          */
         muln(b: number): BN;
 
         /**
-         * multiply
+         * @description multiply
          */
         imuln(b: number): BN;
 
         /**
-         * square
+         * @description square
          */
         sqr(): BN;
 
         /**
-         * square
+         * @description square
          */
         isqr(): BN;
 
         /**
-         * raise `a` to the power of `b`
+         * @description raise `a` to the power of `b`
          */
         pow(b: BN): BN;
 
         /**
-         * divide
+         * @description divide
          */
         div(b: BN): BN;
 
         /**
-         * divide
+         * @description divide
          */
         divn(b: number): BN;
 
         /**
-         * divide
+         * @description divide
          */
         idivn(b: number): BN;
 
         /**
-         * reduct
+         * @description reduct
          */
         mod(b: BN): BN;
 
         /**
-         * reduct
+         * @description reduct
          */
         umod(b: BN): BN;
 
         /**
          * @see API consistency https://github.com/indutny/bn.js/pull/130
-         * reduct
+         * @description reduct
          */
         modn(b: number): number;
 
         /**
-         *  rounded division
+         * @description  rounded division
          */
         divRound(b: BN): BN;
 
         /**
-         * or
+         * @description or
          */
         or(b: BN): BN;
 
         /**
-         * or
+         * @description or
          */
         ior(b: BN): BN;
 
         /**
-         * or
+         * @description or
          */
         uor(b: BN): BN;
 
         /**
-         * or
+         * @description or
          */
         iuor(b: BN): BN;
 
         /**
-         * and
+         * @description and
          */
         and(b: BN): BN;
 
         /**
-         * and
+         * @description and
          */
         iand(b: BN): BN;
 
         /**
-         * and
+         * @description and
          */
         uand(b: BN): BN;
 
         /**
-         * and
+         * @description and
          */
         iuand(b: BN): BN;
 
         /**
-         * and (NOTE: `andln` is going to be replaced with `andn` in future)
+         * @description and (NOTE: `andln` is going to be replaced with `andn` in future)
          */
         andln(b: number): BN;
 
         /**
-         * xor
+         * @description xor
          */
         xor(b: BN): BN;
 
         /**
-         * xor
+         * @description xor
          */
         ixor(b: BN): BN;
 
         /**
-         * xor
+         * @description xor
          */
         uxor(b: BN): BN;
 
         /**
-         * xor
+         * @description xor
          */
         iuxor(b: BN): BN;
 
         /**
-         * set specified bit to 1
+         * @description set specified bit to 1
          */
         setn(b: number): BN;
 
         /**
-         * shift left
+         * @description shift left
          */
         shln(b: number): BN;
 
         /**
-         * shift left
+         * @description shift left
          */
         ishln(b: number): BN;
 
         /**
-         * shift left
+         * @description shift left
          */
         ushln(b: number): BN;
 
         /**
-         * shift left
+         * @description shift left
          */
         iushln(b: number): BN;
 
         /**
-         * shift right
+         * @description shift right
          */
         shrn(b: number): BN;
 
         /**
-         * shift right (unimplemented https://github.com/indutny/bn.js/blob/master/lib/bn.js#L2086)
+         * @description shift right (unimplemented https://github.com/indutny/bn.js/blob/master/lib/bn.js#L2086)
          */
         ishrn(b: number): BN;
 
         /**
-         * shift right
+         * @description shift right
          */
         ushrn(b: number): BN;
-
         /**
-         * shift right
+         * @description shift right
          */
+
         iushrn(b: number): BN;
-
         /**
-         *  test if specified bit is set
+         * @description  test if specified bit is set
          */
+
         testn(b: number): boolean;
-
         /**
-         * clear bits with indexes higher or equal to `b`
+         * @description clear bits with indexes higher or equal to `b`
          */
+
         maskn(b: number): BN;
-
         /**
-         * clear bits with indexes higher or equal to `b`
+         * @description clear bits with indexes higher or equal to `b`
          */
-        imaskn(b: number): BN;
 
+        imaskn(b: number): BN;
         /**
-         * add `1 << b` to the number
+         * @description add `1 << b` to the number
          */
         bincn(b: number): BN;
 
         /**
-         * not (for the width specified by `w`)
+         * @description not (for the width specified by `w`)
          */
         notn(w: number): BN;
 
         /**
-         * not (for the width specified by `w`)
+         * @description not (for the width specified by `w`)
          */
         inotn(w: number): BN;
 
         /**
-         * GCD
+         * @description GCD
          */
         gcd(b: BN): BN;
 
         /**
-         * Extended GCD results `({ a: ..., b: ..., gcd: ... })`
+         * @description Extended GCD results `({ a: ..., b: ..., gcd: ... })`
          */
         egcd(b: BN): { a: BN; b: BN; gcd: BN };
 
         /**
-         * inverse `a` modulo `b`
+         * @description inverse `a` modulo `b`
          */
         invm(b: BN): BN;
 
         /**
-         *  Convert number to red
+         * @description Convert number to red
          */
-        toRed(ctx: ReductionContext): BN;
+        toRed(reductionContext: ReductionContext): RedBN;
+    }
 
+    /**
+     * Big-Number class with additionnal methods that are using modular
+     * operation.
+     */
+    class RedBN extends BN {
         /**
-         * Convert back a number using a reduction context
+         * @description Convert back a number using a reduction context
          */
         fromRed(): BN;
 
-        forceRed(ctx: ReductionContext): BN;
+        /**
+         * @description modular addition
+         */
+        redAdd(b: BN): RedBN;
 
         /**
-         * modular addition
+         * @description in-place modular addition
          */
-        redAdd(b: BN): BN;
+        redIAdd(b: BN): RedBN;
 
         /**
-         * in-place modular addition
+         * @description modular subtraction
          */
-        redIAdd(b: BN): BN;
+        redSub(b: BN): RedBN;
 
         /**
-         * modular subtraction
+         * @description in-place modular subtraction
          */
-        redSub(b: BN): BN;
+        redISub(b: BN): RedBN;
 
         /**
-         * in-place modular subtraction
+         * @description modular shift left
          */
-        redISub(b: BN): BN;
+        redShl(num: number): RedBN;
 
         /**
-         * modular shift left
+         * @description modular multiplication
          */
-        redShl(num: number): BN;
+        redMul(b: BN): RedBN;
 
         /**
-         * modular multiplication
+         * @description in-place modular multiplication
          */
-        redMul(b: BN): BN;
+        redIMul(b: BN): RedBN;
 
         /**
-         * in-place modular multiplication
+         * @description modular square
          */
-        redIMul(b: BN): BN;
+        redSqr(): RedBN;
 
         /**
-         * modular square
+         * @description in-place modular square
          */
-        redSqr(): BN;
+        redISqr(): RedBN;
 
         /**
-         * in-place modular square root
+         * @description modular square root
          */
-        redISqr(): BN;
+        redSqrt(): RedBN;
 
         /**
-         * square root modulo reduction context's prime
+         * @description modular inverse of the number
          */
-        redSqrt(): BN;
+        redInvm(): RedBN;
 
         /**
-         * modular inverse of the number
+         * @description modular negation
          */
-        redInvm(): BN;
+        redNeg(): RedBN;
 
         /**
-         * modular negation
+         * @description modular exponentiation
          */
-        redNeg(): BN;
-
-        /**
-         * modular exponentiation
-         */
-        redPow(b: BN): BN;
+        redPow(b: BN): RedBN;
     }
+
+    export = BN;
+
 }
