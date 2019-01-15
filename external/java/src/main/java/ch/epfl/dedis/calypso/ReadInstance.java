@@ -107,6 +107,11 @@ public class ReadInstance {
     public byte[] decryptKeyMaterial(Scalar reader) throws CothorityException {
         Proof readProof = calypso.getProof(getInstance().getId());
         Proof writeProof = calypso.getProof(getRead().getWriteId());
+
+        if (!readProof.exists(getInstance().getId().getId()) || !writeProof.exists(getRead().getWriteId().getId())) {
+            throw new CothorityCryptoException("proofs are invalid");
+        }
+
         DecryptKeyReply dk = calypso.tryDecrypt(writeProof, readProof);
         return dk.getKeyMaterial(reader);
     }
@@ -168,7 +173,11 @@ public class ReadInstance {
      * @throws CothorityException if something goes wrong
      */
     private static Instance getInstance(CalypsoRPC calypso, InstanceId id) throws CothorityException {
-        Instance inst = calypso.getProof(id).getInstance();
+        Proof p = calypso.getProof(id);
+        if (!p.exists(id.getId())) {
+            throw new CothorityNotFoundException("instance is not in the proof");
+        }
+        Instance inst = p.getInstance();
         if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong contractId: {}", inst.getContractId());
             throw new CothorityNotFoundException("this is not an " + ContractId + " instance");

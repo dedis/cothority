@@ -6,7 +6,6 @@ import ch.epfl.dedis.lib.crypto.Bn256G2Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.NetworkProto;
@@ -31,24 +30,29 @@ import java.util.stream.Collectors;
  * root node.
  */
 public class Proof {
-    private TrieProto.Proof proof;
-    private List<SkipchainProto.ForwardLink> links;
-    private SkipBlock latest;
-
-    private StateChangeBody finalStateChangeBody;
+    private final TrieProto.Proof proof;
+    private final List<SkipchainProto.ForwardLink> links;
+    private final SkipBlock latest;
+    private final StateChangeBody finalStateChangeBody;
 
     /**
-     * Creates a new proof given a protobuf-representation.
+     * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
      *
-     * @param p the protobuf-representation of the proof
+     * @param p    is the protobuf representation
+     * @param scID is the skipchain ID
+     * @throws InvalidProtocolBufferException if the protobuf representation is invalid
+     * @throws CothorityCryptoException       if the verification of the forward links are wrong
      */
-    public Proof(ByzCoinProto.Proof p) throws InvalidProtocolBufferException {
+    public Proof(ByzCoinProto.Proof p, SkipblockId scID) throws InvalidProtocolBufferException, CothorityCryptoException {
         proof = p.getInclusionproof();
         latest = new SkipBlock(p.getLatest());
         links = p.getLinksList();
         if (!proof.getLeaf().getKey().isEmpty()) {
             finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
+        } else {
+            finalStateChangeBody = null;
         }
+        this.verify(scID);
     }
 
     /**
@@ -75,7 +79,7 @@ public class Proof {
     }
 
     /**
-     * Getter for the skipblock assocaited with this proof.
+     * Getter for the skipblock associated with this proof.
      *
      * @return SkipBlock
      */
@@ -84,7 +88,7 @@ public class Proof {
     }
 
     /**
-     * Take a skipchain id and verifies that the proof is valid for this
+     * This function take a skipchain id and verifies that the proof is valid for this
      * skipchain. It verifies the proof, that the Merkle-root is stored in the
      * skipblock of the proof and the fact that the skipblock is indeed part of the
      * skipchain. If all verifications are correct, no exceptions are thrown. It does
@@ -94,7 +98,7 @@ public class Proof {
      * @param scID the skipblock to verify
      * @throws CothorityCryptoException if something goes wrong
      */
-    public void verify(SkipblockId scID) throws CothorityCryptoException {
+    private void verify(SkipblockId scID) throws CothorityCryptoException {
         ByzCoinProto.DataHeader header;
         try {
             header = ByzCoinProto.DataHeader.parseFrom(this.latest.getData());
@@ -178,16 +182,13 @@ public class Proof {
     }
 
     /**
-     * Checks if the proof is valid and of type expected.
+     * Checks whether the contract ID matches the expected ID.
      *
-     * @param expected the expected contractId
-     * @param id       the Byzcoin id to verify the proof against
+     * @param expectedType the expected contractId
      * @return true if the proof is correct with regard to that Byzcoin id and the contract is of the expected type.
-     * @throws CothorityException if something goes wrong
      */
-    public boolean isContract(String expected, SkipblockId id) throws CothorityException {
-        verify(id);
-        return getContractID().equals(expected);
+    public boolean contractIsType(String expectedType) {
+        return getContractID().equals(expectedType);
     }
 
     /**

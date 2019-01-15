@@ -40,7 +40,10 @@ public class CalypsoRPC extends ByzCoinRPC {
         super(byzcoin);
         // Send a transaction to store the LTS roster in ByzCoin
         LTSInstance inst = new LTSInstance(this, darcId, ltsRoster, signers, signerCtrs);
-        Proof proof = inst.getProof();
+        Proof proof = inst.getProofAndVerify();
+        if (!proof.exists(inst.getInstance().getId().getId())) {
+            throw new CothorityCryptoException("instance is not in the proof");
+        }
         // Start the LTS/DKG protocol.
         this.lts = createLTS(proof);
     }

@@ -73,10 +73,11 @@ public class WriteData {
      * @param bc a running Byzcoin service
      * @param id an instanceId of a WriteInstance
      * @throws CothorityNotFoundException if the requested instance cannot be found
-     * @throws CothorityCommunicationException if something went wrong
+     * @throws CothorityCommunicationException if something went wrong with the communication
+     * @throws CothorityCryptoException if there is something wrong with the proof
      * @return the new WriteData
      */
-    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException {
+    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException, CothorityCryptoException {
         return WriteData.fromInstance(Instance.fromByzcoin(bc, id));
     }
 
