@@ -8,7 +8,7 @@ SkipChain Manager
 
 Using the skipchain-manager, you can set up, modify and query skipchains.
 For an actual application using the skipchains, refer
-to [CISC](../cisc/README.md).
+to [ByzCoin](../byzcoin/README.md).
 
 The `scmgr` will be running on your local machine and it will communicate with
 one or more remote conodes. For it to work, you need the `public.toml` of a
@@ -25,7 +25,7 @@ cd cothority/conode
 ```
 
 This will start three conodes locally and create a new `public.toml` that
-you can use with scmgr. In the following examples, we suppose that the
+you can use with `scmgr`. In the following examples, we suppose that the
 `public.toml` file and the `co1`, `co2`, and `co3` directories are in the current
 directory and that you installed `scmgr` using
 

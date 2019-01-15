@@ -139,7 +139,7 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		if err != nil {
 			return nil, nil, errors.New("couldn't marshal target account: " + err.Error())
 		}
-		log.Lvlf1("transferring %d to %x", coinsArg, target)
+		log.Lvlf3("transferring %d to %x", coinsArg, target)
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, byzcoin.NewInstanceID(target),
 			ContractCoinID, targetBuf, did))
 	case "fetch":
