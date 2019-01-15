@@ -1,13 +1,9 @@
 package ch.epfl.dedis.calypso;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import com.google.protobuf.ByteString;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -15,64 +11,80 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class Encryption {
-    public static String algo = "AES/CBC/PKCS5Padding";
-    public static String algoKey = "AES";
-    public static int ivLength = 16;
+    public static final String ALGO = "AES/GCM/NoPadding";
+    public static final String ALGO_KEY = "AES";
+    public static final int KEY_LENGTH = 16;
+    public static final int IV_LENGTH = 12; // standard IV length for GCM
+    public static final int GCM_TLEN = 128;
 
-    public static class keyIv{
-        public byte[] symmetricKey;
-        public byte[] iv;
-        public IvParameterSpec ivSpec;
-        public SecretKeySpec keySpec;
+    /**
+     * KeyIV represents a secret key and an IV.
+     */
+    public static class KeyIv {
+        final byte[] symmetricKey;
+        final byte[] iv;
+        final GCMParameterSpec gcmSpec;
+        final SecretKeySpec keySpec;
 
-        public keyIv(byte[] keyMaterial) throws CothorityCryptoException{
-            int symmetricLength = keyMaterial.length - ivLength;
-            if (symmetricLength <= 0){
-                throw new CothorityCryptoException("too short symmetricKey material");
+        /**
+         * Construct KeyIV from some keyMaterial.
+         *
+         * @param keyMaterial must be 28 bytes, the first 12 bytes is used as the IV, the second 16 bytes is the actual key.
+         * @throws CothorityCryptoException is something goes wrong.
+         */
+        public KeyIv(byte[] keyMaterial) throws CothorityCryptoException {
+            if (keyMaterial.length != KEY_LENGTH + IV_LENGTH)  {
+                throw new CothorityCryptoException("keyMaterial must be 28 bytes");
             }
-            iv = new byte[ivLength];
-            System.arraycopy(keyMaterial, 0, iv, 0, ivLength);
-            ivSpec = new IvParameterSpec(iv);
-            symmetricKey = new byte[keyMaterial.length - ivLength];
-            keySpec = new SecretKeySpec(symmetricKey, algoKey);
+            iv = new byte[IV_LENGTH];
+            System.arraycopy(keyMaterial, 0, iv, 0, IV_LENGTH);
+            gcmSpec = new GCMParameterSpec(GCM_TLEN, iv);
+            symmetricKey = new byte[KEY_LENGTH];
+            keySpec = new SecretKeySpec(symmetricKey, ALGO_KEY);
         }
 
-        public keyIv(int keylength){
-            symmetricKey = new byte[keylength];
-            iv = new byte[ivLength];
+        /**
+         * Construct KeyIV with a random key and IV.
+         */
+        public KeyIv() {
+            symmetricKey = new byte[KEY_LENGTH];
+            iv = new byte[IV_LENGTH];
             new SecureRandom().nextBytes(symmetricKey);
             new SecureRandom().nextBytes(iv);
-            ivSpec = new IvParameterSpec(iv);
-            keySpec = new SecretKeySpec(symmetricKey, algoKey);
+            gcmSpec = new GCMParameterSpec(GCM_TLEN, iv);
+            keySpec = new SecretKeySpec(symmetricKey, ALGO_KEY);
         }
 
-        public byte[] getKeyMaterial(){
-            byte[] keyMaterial = new byte[ivLength + symmetricKey.length];
-            System.arraycopy(iv, 0, keyMaterial, 0, ivLength);
-            System.arraycopy(symmetricKey, 0, keyMaterial, ivLength, symmetricKey.length);
+        /**
+         * Getter for the key material, which is a concatenation of IV and the key.
+         */
+        public byte[] getKeyMaterial() {
+            byte[] keyMaterial = new byte[IV_LENGTH + symmetricKey.length];
+            System.arraycopy(iv, 0, keyMaterial, 0, IV_LENGTH);
+            System.arraycopy(symmetricKey, 0, keyMaterial, IV_LENGTH, symmetricKey.length);
             return keyMaterial;
         }
     }
 
     /**
      * Encrypts the data using the encryption defined in the header.
-     * @param data the data to encrypt
-     * @param keyMaterial random string of length ivLength + keylength.
-     *                    The first ivLength bytes are taken as iv, the
-     *                    rest is taken as the symmetric symmetricKey.
+     *
+     * @param data        the data to encrypt
+     * @param keyMaterial random string of length IV_LENGTH + keylength.
+     *                    The first IV_LENGTH bytes are taken as iv, the
+     *                    rest is taken as the symmetric symmetricKey,
+     *                    which must be at least 16 bytes long.
      * @return a combined
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException{
-        keyIv key = new keyIv(keyMaterial);
-
+    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException {
+        KeyIv key = new KeyIv(keyMaterial);
         try {
-            Cipher cipher = Cipher.getInstance(Encryption.algo);
-            SecretKeySpec secKey = new SecretKeySpec(key.symmetricKey, Encryption.algoKey);
-            cipher.init(Cipher.ENCRYPT_MODE, secKey, key.ivSpec);
+            Cipher cipher = Cipher.getInstance(Encryption.ALGO);
+            cipher.init(Cipher.ENCRYPT_MODE, key.keySpec, key.gcmSpec);
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException |
-                InvalidKeyException | BadPaddingException | IllegalBlockSizeException e){
+                InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
     }
@@ -81,33 +93,20 @@ public class Encryption {
      * This method decrypts the data using the same encryption-method
      * as is defined in the header of this class.
      *
-     * @param dataEnc the encrypted data from the skipchain
+     * @param dataEnc     the encrypted data from the skipchain
      * @param keyMaterial the decrypted keyMaterial
      * @return decrypted data
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
-        keyIv key = new keyIv(keyMaterial);
+    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException {
+        KeyIv key = new KeyIv(keyMaterial);
         try {
-            Cipher cipher = Cipher.getInstance(algo);
-            cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.ivSpec);
+            Cipher cipher = Cipher.getInstance(ALGO);
+            cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.gcmSpec);
             return cipher.doFinal(dataEnc);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
-                InvalidAlgorithmParameterException | BadPaddingException e){
+                InvalidAlgorithmParameterException | BadPaddingException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
     }
-
-    /**
-     * Convenience method for use with googles-protobuf bytestring.
-     *
-     * @param dataEnc as google protobuf bytestring
-     * @param keyMaterial the decrypted keyMaterial
-     * @return decypted data
-     * @throws CothorityCryptoException if there's a problem with the cryptography
-     */
-    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
-        return decryptData(dataEnc.toByteArray(), keyMaterial);
-    }
-
 }

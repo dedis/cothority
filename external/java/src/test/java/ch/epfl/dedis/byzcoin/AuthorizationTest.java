@@ -131,7 +131,7 @@ public class AuthorizationTest {
         documentDarc.addIdentity("spawn:calypsoRead", consumerIdentity, Rules.OR);
         calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, admin, adminCtrs.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         return doc.spawnWrite(calypso, documentDarc.getBaseId(), publisherSigner, publisherSignerCtr);
     }
 

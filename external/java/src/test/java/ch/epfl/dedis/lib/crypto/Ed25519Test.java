@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 
@@ -176,19 +176,19 @@ class Ed25519Test {
     @Test
     void testEncryption() throws Exception {
         byte[] orig = "My cool file".getBytes();
-        byte[] symmetricKey = new byte[16];
-        int ivSize = 16;
+        byte[] symmetricKey = new byte[Encryption.KEY_LENGTH];
+        int ivSize = 12;
         byte[] iv = new byte[ivSize];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(Encryption.GCM_TLEN, iv);
         random.nextBytes(symmetricKey);
-        Cipher cipher = Cipher.getInstance(Encryption.algo);
-        SecretKeySpec key = new SecretKeySpec(symmetricKey, Encryption.algoKey);
-        cipher.init(Cipher.ENCRYPT_MODE, key, ivParameterSpec);
+        Cipher cipher = Cipher.getInstance(Encryption.ALGO);
+        SecretKeySpec key = new SecretKeySpec(symmetricKey, Encryption.ALGO_KEY);
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmParameterSpec);
         byte[] data_enc = cipher.doFinal(orig);
 
-        cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
+        cipher.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
         byte[] data = cipher.doFinal(data_enc);
         assertArrayEquals(orig, data);
     }
@@ -196,7 +196,7 @@ class Ed25519Test {
     @Test
     void testDocumentEncryption()throws Exception{
         byte[] orig = "foo beats bar".getBytes();
-        byte[] keyMaterial = new byte[Encryption.ivLength + 16];
+        byte[] keyMaterial = new byte[Encryption.IV_LENGTH + Encryption.KEY_LENGTH];
         new SecureRandom().nextBytes(keyMaterial);
 
         byte[] dataEnc = Encryption.encryptData(orig, keyMaterial);
