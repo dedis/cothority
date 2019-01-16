@@ -120,7 +120,7 @@ public class WriteData {
 
             Point C = lts.getX().mul(r);
             C = C.add(Ed25519Point.embed(keyMaterial));
-            wr.addCs(C.toProto());
+            wr.setC(C.toProto());
 
             Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);

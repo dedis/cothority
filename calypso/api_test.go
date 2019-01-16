@@ -159,7 +159,7 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
 	keyCopy1, err := DecodeKey(cothority.Suite, calypsoClient.ltsReply.X,
-		dk1.Cs, dk1.XhatEnc, reader1.Ed25519.Secret)
+		dk1.C, dk1.XhatEnc, reader1.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 }

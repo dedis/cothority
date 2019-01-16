@@ -37,7 +37,8 @@ type suite interface {
 //
 // Output:
 //   - write - structure containing the encrypted key U, Cs and the NIZKP of
-//   it containing the reader-darc.
+//   it containing the reader-darc. If it is nil then we failed to embed the
+//   key (it is too long to represent the key using a point)
 func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
 	wr := &Write{LTSID: ltsid}
 	r := suite.Scalar().Pick(suite.RandomStream())
@@ -45,11 +46,11 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	wr.U = suite.Point().Mul(r, nil)
 
 	// Create proof
-	for len(key) > 0 {
-		kp := suite.Point().Embed(key, suite.RandomStream())
-		wr.Cs = append(wr.Cs, suite.Point().Add(C, kp))
-		key = key[min(len(key), kp.EmbedLen()):]
+	if len(key) > suite.Point().EmbedLen() {
+		return nil
 	}
+	kp := suite.Point().Embed(key, suite.RandomStream())
+	wr.C = suite.Point().Add(C, kp)
 
 	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid.Slice()), nil)
 	wr.Ubar = suite.Point().Mul(r, gBar)
@@ -57,9 +58,7 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	w := suite.Point().Mul(s, nil)
 	wBar := suite.Point().Mul(s, gBar)
 	hash := sha256.New()
-	for _, c := range wr.Cs {
-		c.MarshalTo(hash)
-	}
+	wr.C.MarshalTo(hash)
 	wr.U.MarshalTo(hash)
 	wr.Ubar.MarshalTo(hash)
 	w.MarshalTo(hash)
@@ -90,9 +89,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	wBar := suite.Point().Add(gfBar, ueBar)
 
 	hash := sha256.New()
-	for _, c := range wr.Cs {
-		c.MarshalTo(hash)
-	}
+	wr.C.MarshalTo(hash)
 	wr.U.MarshalTo(hash)
 	wr.Ubar.MarshalTo(hash)
 	w.MarshalTo(hash)
@@ -153,7 +150,7 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 // Output:
 //   - key - the re-assembled key
 //   - err - an eventual error when trying to recover the data from the points
-func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber.Point,
+func DecodeKey(suite kyber.Group, X kyber.Point, C kyber.Point, XhatEnc kyber.Point,
 	xc kyber.Scalar) (key []byte, err error) {
 	log.Lvl4("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
@@ -170,17 +167,10 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 	log.Lvl4("XhatInv:", XhatInv)
 
 	// Decrypt Cs to keyPointHat
-	for _, C := range Cs {
-		log.Lvl4("C:", C)
-		keyPointHat := suite.Point().Add(C, XhatInv)
-		log.Lvl4("keyPointHat:", keyPointHat)
-		keyPart, err := keyPointHat.Data()
-		log.Lvl4("keyPart:", keyPart)
-		if err != nil {
-			return nil, err
-		}
-		key = append(key, keyPart...)
-	}
+	log.Lvl4("C:", C)
+	keyPointHat := suite.Point().Add(C, XhatInv)
+	log.Lvl4("keyPointHat:", keyPointHat)
+	key, err = keyPointHat.Data()
 	return
 }
 

@@ -18759,7 +18759,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -18767,7 +18767,7 @@ public final class ByzCoinProto {
     boolean hasVersion();
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19005,7 +19005,7 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19015,7 +19015,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19766,7 +19766,7 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19776,7 +19776,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19786,7 +19786,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19799,7 +19799,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>

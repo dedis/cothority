@@ -27,9 +27,9 @@ message Write {
   // f is the proof - written in uppercase here so it is an exported field,
   // but in the OCS-paper it's lowercase.
   required bytes f = 5;
-  // Cs are the ElGamal parts for the symmetric key material (might
-  // also contain an IV)
-  repeated bytes cs = 6;
+  // C is the ElGamal parts for the symmetric key material (might also
+  // contain an IV)
+  required bytes c = 6;
   // ExtraData is clear text and application-specific
   optional bytes extradata = 7;
   // LTSID points to the identity of the lts group
@@ -97,8 +97,8 @@ message DecryptKey {
 // DecryptKeyReply is returned if the service verified successfully that the
 // decryption request is valid.
 message DecryptKeyReply {
-  // Cs are the secrets re-encrypted under the reader's public key.
-  repeated bytes cs = 1;
+  // C is the secret re-encrypted under the reader's public key.
+  required bytes c = 1;
   // XhatEnc is the random part of the encryption.
   required bytes xhatenc = 2;
   // X is the aggregate public key of the LTS used.
