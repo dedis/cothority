@@ -155,6 +155,57 @@ func TestLib_ChangeRoster3(t *testing.T) {
 	}
 }
 
+func TestLib_ChangeRoster4(t *testing.T) {
+	l := onet.NewLocalTest(cothority.Suite)
+	defer l.CloseAll()
+
+	i := 3
+	j := 3
+
+	_, roster1, _ := l.GenTree(i, true)
+	_, roster2, _ := l.GenTree(j, true)
+
+	// Suppose r1 contains nodes A,B,C and r2 contains nodes D,E,C
+	r1 := *roster1
+	r2 := *roster2
+
+	r2.List[2] = r1.List[2]
+
+	r1 = lib.ChangeRoster(r1, r2)
+	assert.True(t, len(r1.List) == i+1)
+	// r1 should be A,B,C,D
+	assert.True(t, r1.List[0].Equal(roster1.List[0]))
+	assert.True(t, r1.List[1].Equal(roster1.List[1]))
+	assert.True(t, r1.List[2].Equal(roster1.List[2]))
+	assert.True(t, r1.List[3].Equal(roster2.List[0]))
+
+	r1 = lib.ChangeRoster(r1, r2)
+	assert.True(t, len(r1.List) == i+2)
+	// r1 should be C,D,E,A,B
+	assert.True(t, r1.List[0].Equal(roster2.List[0]))
+	assert.True(t, r1.List[1].Equal(roster2.List[1]))
+	assert.True(t, r1.List[2].Equal(roster2.List[2]))
+	assert.True(t, r1.List[3].Equal(roster1.List[0]))
+	assert.True(t, r1.List[4].Equal(roster1.List[1]))
+	fmt.Println(roster1.List, r1.List)
+
+	r1 = lib.ChangeRoster(r1, r2)
+	assert.True(t, len(r1.List) == i+j-2)
+	// r1 should be C,D,E,B
+	assert.True(t, r1.List[0].Equal(roster2.List[0]))
+	assert.True(t, r1.List[1].Equal(roster2.List[1]))
+	assert.True(t, r1.List[2].Equal(roster2.List[2]))
+	assert.True(t, r1.List[3].Equal(roster1.List[1]))
+	fmt.Println(roster1.List, r1.List)
+
+	r1 = lib.ChangeRoster(r1, r2)
+	assert.True(t, len(r1.List) == i+j-3)
+	// r1 should be C,D,E <=> r1 should contains the same nodes as r2 and have the same order
+	for k := 0; k < len(r1.List); k++ {
+		assert.True(t, r1.List[k].Equal(r2.List[k]))
+	}
+}
+
 func TestLib_EncodeDecodeDuration(t *testing.T) {
 	sec := time.Duration(1) * time.Second
 	secBuf := lib.EncodeDuration(sec)

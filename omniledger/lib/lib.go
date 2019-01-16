@@ -58,11 +58,11 @@ func ChangeRoster(oldRoster, newRoster onet.Roster) onet.Roster {
 	}
 
 	// Add new element of newRoster to oldRoster, one at the time
-	for ind, n := range newList {
+	for _, n := range newList {
 		if _, ok := oldMap[n.ID]; !ok {
 			intermList = append(intermList, n)
 
-			if ind == len(newList)-1 {
+			if isSubList(newList, intermList) {
 				// Once all new nodes have been added, change the roster order to put new nodes at the start of the list
 				intermList = newList
 				for _, n := range oldRoster.List {
@@ -178,4 +178,20 @@ func getShardGroups(shardCount int, nodeCount int, permutedIDs []*network.Server
 	}
 
 	return shardGroups
+}
+
+// Returns true if l1 is a sublist of l2, i.e. all elements of l1 are in l2.
+func isSubList(l1, l2 []*network.ServerIdentity) bool {
+	m2 := make(map[*network.ServerIdentity]bool)
+	for _, ele := range l2 {
+		m2[ele] = true
+	}
+
+	for _, ele := range l1 {
+		if _, ok := m2[ele]; !ok {
+			return false
+		}
+	}
+
+	return true
 }
