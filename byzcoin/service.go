@@ -38,7 +38,7 @@ var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 // not trigger, and the acceptable window would be ± 30 sec.
 var minTimestampWindow = 10 * time.Second
 
-// For tests to influence when the whole collection will be downloaded if
+// For tests to influence when the whole trie will be downloaded if
 // some blocks are missing.
 var catchupDownloadAll = 100
 
@@ -130,8 +130,8 @@ type Service struct {
 
 	streamingMan streamingManager
 
-	updateCollectionLock sync.Mutex
-	catchingUp           bool
+	updateTrieLock sync.Mutex
+	catchingUp     bool
 
 	downloadState downloadState
 }
@@ -345,8 +345,8 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 // GetProof searches for a key and returns a proof of the
 // presence or the absence of this key.
 func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
-	s.updateCollectionLock.Lock()
-	defer s.updateCollectionLock.Unlock()
+	s.updateTrieLock.Lock()
+	defer s.updateTrieLock.Unlock()
 	if s.catchingUp {
 		return nil, errors.New("currently catching up on our state")
 	}
@@ -458,8 +458,8 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // DownloadState creates a snapshot of the current state and then returns the
 // instances in small chunks.
 func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse, err error) {
-	s.updateCollectionLock.Lock()
-	defer s.updateCollectionLock.Unlock()
+	s.updateTrieLock.Lock()
+	defer s.updateTrieLock.Unlock()
 	if req.Length <= 0 {
 		return nil, errors.New("length must be bigger than 0")
 	}
@@ -842,9 +842,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 // the full DB over the network.
 func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	defer func() {
-		s.updateCollectionLock.Lock()
+		s.updateTrieLock.Lock()
 		s.catchingUp = false
-		s.updateCollectionLock.Unlock()
+		s.updateTrieLock.Unlock()
 	}()
 
 	// Load the trie.
@@ -882,7 +882,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 			return
 		}
 
-		// This will call updateCollectionCallback with the next block to add
+		// This will call updateTrieCallback with the next block to add
 		_, err = s.db().StoreBlocks(updates)
 		if err != nil {
 			log.Error("Got an invalid, unlinkable block: " + err.Error())
@@ -899,8 +899,8 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
-	s.updateCollectionLock.Lock()
-	defer s.updateCollectionLock.Unlock()
+	s.updateTrieLock.Lock()
+	defer s.updateTrieLock.Unlock()
 
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
@@ -908,7 +908,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return nil
 	}
 
-	defer log.Lvlf4("%s updated collection for %x", s.ServerIdentity(), sbID)
+	defer log.Lvlf4("%s updated trie for %x", s.ServerIdentity(), sbID)
 
 	// Verification it's really a skipchain for us.
 	if !s.hasByzCoinVerification(sbID) {
@@ -967,8 +967,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	trieIndex := st.GetIndex()
 	if sb.Index <= trieIndex {
 		// This is because skipchains will inform us about new forwardLinks, but we
-		// don't need to update the collection in that case.
-		log.Lvlf4("%v updating collection for block %d refused, current collection block is %d", s.ServerIdentity(), sb.Index, trieIndex)
+		// don't need to update the trie in that case.
+		log.Lvlf4("%v updating trie for block %d refused, current trie block is %d", s.ServerIdentity(), sb.Index, trieIndex)
 		return nil
 	} else if sb.Index > trieIndex+1 {
 		if s.catchingUp {
@@ -1007,7 +1007,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
 		// TODO: if this happens, we've now got a corrupted cdb. See issue #1447.
 		// This should never happen...
-		panic(s.ServerIdentity().String() + ": hash of collection doesn't correspond to root hash")
+		panic(s.ServerIdentity().String() + ": hash of trie doesn't correspond to root hash")
 	}
 
 	err = s.stateChangeStorage.append(scs, sb)
@@ -1565,7 +1565,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 	var maxsz, blocksz int
 	_, maxsz, err = s.LoadBlockInfo(scID)
-	// no error or expected noCollection err, so keep going with the
+	// no error or expected "no trie" err, so keep going with the
 	// maxsz we got.
 	err = nil
 

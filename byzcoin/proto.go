@@ -240,7 +240,7 @@ type StateChange struct {
 	Value []byte
 	// DarcID is the Darc controlling access to this key.
 	DarcID darc.ID
-	// Version is the monotonically increased version of the instance
+	// Version is the monotonically increasing version of the instance
 	Version uint64
 }
 
