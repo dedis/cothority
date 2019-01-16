@@ -44,16 +44,15 @@ public class Document {
 
     /**
      * Creates a new document from data, creates a new Darc, a symmetric
-     * symmetricKey and encrypts the data using CBC-RSA.
+     * symmetricKey and encrypts the data using AES-GCM.
      *
      * @param data        any data that will be stored encrypted on the skipchain.
      *                    There is a 10MB-limit on how much data can be stored. If you
      *                    need more, this must be a pointer to an off-chain storage.
      * @param extraData   any public data that will not be encrypted
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Document(byte[] data, byte[] extraData, DarcId publisherId) throws CothorityCryptoException {
+    public Document(byte[] data, byte[] extraData, DarcId publisherId) {
         this(data, new Encryption.KeyIv().getKeyMaterial(), extraData, publisherId);
     }
 
@@ -127,9 +126,8 @@ public class Document {
 
     /**
      * @return the decrypted data stored in this document.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public byte[] getData() throws CothorityCryptoException {
+    public byte[] getData() {
         return data;
     }
 

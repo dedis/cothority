@@ -27,9 +27,12 @@ public class Encryption {
         final SecretKeySpec keySpec;
 
         /**
-         * Construct KeyIV from some keyMaterial.
+         * Construct KeyIV from some keyMaterial, which is the concatenation of IV and Key. The IV must not repeat.
+         * If there is no need to use a specific IV and Key, please use the default constructor, and then use
+         * getKeyMaterial to get the keyMaterial.
          *
-         * @param keyMaterial must be 28 bytes, the first 12 bytes is used as the IV, the second 16 bytes is the actual key.
+         * @param keyMaterial must be 28 bytes, the first 12 bytes is used as the IV, the second 16 bytes is the actual
+         *                    key.
          * @throws CothorityCryptoException is something goes wrong.
          */
         public KeyIv(byte[] keyMaterial) throws CothorityCryptoException {
@@ -44,7 +47,7 @@ public class Encryption {
         }
 
         /**
-         * Construct KeyIV with a random key and IV.
+         * Default construct KeyIV with a random key and IV. Use getKeyMaterial to get the keyMaterial back.
          */
         public KeyIv() {
             symmetricKey = new byte[KEY_LENGTH];
