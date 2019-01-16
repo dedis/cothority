@@ -205,7 +205,7 @@ public class CalypsoRPC extends ByzCoinRPC {
         try {
             Calypso.AuthoriseReply.parseFrom(msg);
         } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
+            throw new CothorityCommunicationException("failed to authorise" + e.getMessage());
         }
     }
 }
