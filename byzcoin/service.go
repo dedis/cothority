@@ -353,6 +353,9 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
+
+	log.Lvlf2("Returning proof for %x from chain '%x'", req.Key, req.ID)
+
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
 		err = errors.New("cannot find skipblock while getting proof")
@@ -373,6 +376,8 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return
 	}
 
+	_, v := proof.InclusionProof.KeyValue()
+	log.Lvlf3("value is %x", v)
 	resp = &GetProofResponse{
 		Version: CurrentVersion,
 		Proof:   *proof,
@@ -1292,7 +1297,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 						" This function should never be called on a skipchain that does not exist.")
 				}
 
-				log.Lvlf2("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, scID)
+				log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, scID)
 				tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
 
 				proto, err := s.CreateProtocol(collectTxProtocol, tree)
@@ -1557,7 +1562,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	var err error
 	merkleRoot, txOut, states, err = s.stateChangeCache.get(scID, txIn.Hash())
 	if err == nil {
-		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
+		log.Lvlf3("%s: loaded state changes %x from cache", s.ServerIdentity(), scID)
 		return
 	}
 	log.Lvl3(s.ServerIdentity(), "state changes from cache: MISS")
@@ -1585,7 +1590,12 @@ clientTransactions:
 		for _, instr := range tx.ClientTransaction.Instructions {
 			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, h)
 			if err != nil {
-				log.Errorf("%s Call to contract returned error: %s", s.ServerIdentity(), err)
+				_, _, cid, _, err2 := sstTempC.GetValues(instr.InstanceID.Slice())
+				if err2 != nil {
+					err = fmt.Errorf("%s - while getting value: %s", err, err2)
+				}
+				log.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(),
+					cid, instr, err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions
@@ -1691,7 +1701,7 @@ clientTransactions:
 func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
-			err = errors.New(re.(string))
+			err = fmt.Errorf("%s", re)
 		}
 	}()
 
@@ -1711,7 +1721,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// If the leader does not have a verifier for this contract, it drops the
 	// transaction.
 	if !exists {
-		err = fmt.Errorf("Leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
+		err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
 		return
 	}
 	// Now we call the contract function with the data of the key.
@@ -1722,7 +1732,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return nil, nil, err
 	}
 	if c == nil {
-		return nil, nil, errors.New("conrtact factory returned nil contract instance")
+		return nil, nil, errors.New("contract factory returned nil contract instance")
 	}
 
 	err = c.VerifyInstruction(st, instr, ctxHash)
@@ -1811,7 +1821,6 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	// failure).
 	ourLatest, err := s.db().GetLatestByID(scID)
 	if err != nil {
-		log.Warn(s.ServerIdentity(), "we do not know about the skipchain ID")
 		return []ClientTransaction{}
 	}
 	latestSB := s.db().GetByID(latestID)
@@ -1893,9 +1902,10 @@ func (s *Service) monitorLeaderFailure() {
 				gen := []byte(key)
 				latest, err := s.db().GetLatestByID(gen)
 				if err != nil {
-					panic("heartbeat monitors are started after " +
-						"the creation of the genesis block, " +
-						"so the block should always exist")
+					log.Error("heartbeat monitors are started after "+
+						"the creation of the genesis block, "+
+						"so the block should always exist: ", err)
+					s.heartbeats.stop(key)
 				}
 				req := viewchange.InitReq{
 					SignerID: s.ServerIdentity().ID,
@@ -1928,7 +1938,7 @@ func (s *Service) startAllChains() error {
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if !s.closed {
-		return errors.New("Can only call startAllChains if the service has been closed before")
+		return errors.New("can only call startAllChains if the service has been closed before")
 	}
 	s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load(storageID)
@@ -1939,7 +1949,7 @@ func (s *Service) startAllChains() error {
 		var ok bool
 		s.storage, ok = msg.(*bcStorage)
 		if !ok {
-			return errors.New("Data of wrong type")
+			return errors.New("data of wrong type")
 		}
 	}
 	s.stateTries = make(map[string]*stateTrie)
@@ -2095,7 +2105,7 @@ func (s *Service) trySyncAll() {
 		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
 		lksb, err := s.skService().GetSingleBlockByIndex(req)
 		if lksb != nil {
-			log.Lvlf2("Start creating state changes for skipchain %x", sb.SkipChainID())
+			log.Lvlf2("Starting to create state changes for skipchain %x", sb.SkipChainID())
 			_, err = s.buildStateChanges(lksb.SkipBlock.Hash, sst, []Coin{})
 			if err != nil {
 				log.Error(s.ServerIdentity(), err)
