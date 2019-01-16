@@ -1011,7 +1011,7 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 			}
 
 			if sb == nil {
-				return errors.New("Couldn't find one of the blocks")
+				return errors.New("couldn't find one of the blocks")
 			}
 
 			sbs = append(sbs, sb)
@@ -1025,6 +1025,42 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 // GetSkipchains returns all latest skipblocks from all skipchains.
 func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
 	return db.getAll()
+}
+
+// RemoveSkipchain removes all block from a given skipchain from the database.
+// If the skipchain is only partial, it can skip missing blocks, as long as the
+// forwardlinks are present.
+func (db *SkipBlockDB) RemoveSkipchain(scid SkipBlockID) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		sb, err := db.getFromTx(tx, scid)
+		if err != nil {
+			return err
+		}
+		for {
+			err := b.Delete(sb.Hash)
+			if err != nil {
+				return err
+			}
+			if len(sb.ForwardLink) == 0 {
+				return nil
+			}
+
+			var next *SkipBlock
+			for _, fl := range sb.ForwardLink {
+				n, err := db.getFromTx(tx, fl.To)
+				if err == nil {
+					next = n
+					break
+				}
+			}
+			if next == nil {
+				log.Error("didn't find next block")
+				return nil
+			}
+			sb = next
+		}
+	})
 }
 
 // storeToTx stores the skipblock into the database.

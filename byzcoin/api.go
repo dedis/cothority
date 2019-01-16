@@ -3,6 +3,8 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
 	"math"
 	"time"
 
@@ -328,6 +330,33 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 		index++
 	}
 	return nil, errors.New("Error while downloading state from nodes")
+}
+
+// Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
+// existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
+func Debug(addr network.Address, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
+	si := &network.ServerIdentity{Address: addr}
+	reply = &DebugResponse{}
+	request := &DebugRequest{}
+	if byzcoinID != nil {
+		request.ByzCoinID = *byzcoinID
+	}
+	err = onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, reply)
+	return
+}
+
+// DebugRemove deletes an existing byzcoin-instance from the conode.
+func DebugRemove(addr network.Address, priv kyber.Scalar, byzcoinID skipchain.SkipBlockID) error {
+	si := &network.ServerIdentity{Address: addr}
+	sig, err := schnorr.Sign(cothority.Suite, priv, byzcoinID)
+	if err != nil {
+		return err
+	}
+	request := &DebugRemoveRequest{
+		ByzCoinID: byzcoinID,
+		Signature: sig,
+	}
+	return onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, nil)
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the

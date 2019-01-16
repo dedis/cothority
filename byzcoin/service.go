@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/byzcoin/trie"
+	"github.com/dedis/kyber/sign/schnorr"
 	"math"
 	"regexp"
 	"strings"
@@ -631,6 +633,126 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		StateChanges: scs,
 		BlockID:      sb.SkipBlock.Hash,
 	}, nil
+}
+
+type leafNode struct {
+	Prefix []bool
+	Key    []byte
+	Value  []byte
+}
+
+// Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
+// existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
+func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
+	resp = &DebugResponse{}
+	if len(req.ByzCoinID) != 32 {
+		rep, err := s.skService().GetAllSkipChainIDs(nil)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, scID := range rep.IDs {
+			latest, err := s.db().GetLatestByID(scID)
+			if err != nil {
+				continue
+			}
+			if !s.hasByzCoinVerification(skipchain.SkipBlockID(latest.SkipChainID())) {
+				continue
+			}
+			genesis := s.db().GetByID(latest.SkipChainID())
+			resp.Byzcoins = append(resp.Byzcoins, DebugResponseByzcoin{
+				ByzCoinID: latest.SkipChainID(),
+				Genesis:   genesis,
+				Latest:    latest,
+			})
+		}
+		return resp, nil
+	}
+	st, err := s.getStateTrie(skipchain.SkipBlockID(req.ByzCoinID))
+	if err != nil {
+		return nil, errors.New("didn't find this byzcoin instance: " + err.Error())
+	}
+	err = st.DB().View(func(b trie.Bucket) error {
+		err := b.ForEach(func(k, v []byte) error {
+			if len(k) == 32 {
+				if v[0] == byte(3) {
+					ln := leafNode{}
+					err = protobuf.Decode(v[1:], &ln)
+					if err != nil {
+						log.Error(err)
+						// Not all key/value pairs are valid statechanges
+						return nil
+					}
+					scb := StateChangeBody{}
+					err = protobuf.Decode(ln.Value, &scb)
+					resp.Dump = append(resp.Dump, DebugResponseState{Key: ln.Key, State: scb})
+				}
+			}
+			return nil
+		})
+		return err
+	})
+	return
+}
+
+// DebugRemove deletes an existing byzcoin-instance from the conode.
+func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
+	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, req.ByzCoinID, req.Signature); err != nil {
+		log.Error("Signature failure:", err)
+		return nil, err
+	}
+	idStr := string(req.ByzCoinID)
+	if s.heartbeats.exists(idStr) {
+		log.Lvl2("Removing heartbeat")
+		s.heartbeats.stop(idStr)
+	}
+
+	s.pollChanMut.Lock()
+	pc, exists := s.pollChan[idStr]
+	if exists {
+		log.Lvl2("Closing polling-channel")
+		close(pc)
+		delete(s.pollChan, idStr)
+	}
+	s.pollChanMut.Unlock()
+
+	s.stateTriesLock.Lock()
+	idStrHex := fmt.Sprintf("%x", req.ByzCoinID)
+	_, exists = s.stateTries[idStrHex]
+	if exists {
+		log.Lvl2("Removing state-trie")
+		db, bn := s.GetAdditionalBucket([]byte(idStrHex))
+		if db == nil {
+			return nil, errors.New("didn't find trie for this byzcoin-ID")
+		}
+		err := db.Update(func(tx *bolt.Tx) error {
+			return tx.DeleteBucket(bn)
+		})
+		if err != nil {
+			return nil, err
+		}
+		delete(s.stateTries, idStr)
+		err = s.db().RemoveSkipchain(req.ByzCoinID)
+		if err != nil {
+			log.Error("couldn't remove the whole chain:", err)
+		}
+	}
+	s.stateTriesLock.Unlock()
+
+	s.darcToScMut.Lock()
+	for k, sc := range s.darcToSc {
+		if sc.Equal(skipchain.SkipBlockID(req.ByzCoinID)) {
+			log.Lvl2("Removing darc-to-skipchain mapping")
+			delete(s.darcToSc, k)
+		}
+	}
+	s.darcToScMut.Unlock()
+
+	log.Lvl2("Stopping view change monitor")
+	s.viewChangeMan.stop(skipchain.SkipBlockID(req.ByzCoinID))
+
+	s.save()
+	return &DebugResponse{}, nil
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
