@@ -212,7 +212,11 @@ public class DarcInstance {
                 throw new CothorityCommunicationException("this is not a correct darc-spawn");
             }
         }
-        return bc.getProof(iid);
+        Proof p = bc.getProof(iid);
+        if (!p.exists(iid.getId())) {
+            throw new CothorityCryptoException("instance is not in proof");
+        }
+        return p;
     }
 
     /**

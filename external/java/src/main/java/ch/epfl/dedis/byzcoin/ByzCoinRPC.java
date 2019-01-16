@@ -162,8 +162,9 @@ public class ByzCoinRPC {
      * @param id is the id of the instance to be fetched
      * @return the proof
      * @throws CothorityCommunicationException if something goes wrong
+     * @throws CothorityCryptoException if the verification fails
      */
-    public Proof getProof(InstanceId id) throws CothorityCommunicationException {
+    public Proof getProof(InstanceId id) throws CothorityCommunicationException, CothorityCryptoException {
         ByzCoinProto.GetProof.Builder request =
                 ByzCoinProto.GetProof.newBuilder();
         request.setVersion(currentVersion);
@@ -175,7 +176,7 @@ public class ByzCoinRPC {
             ByzCoinProto.GetProofResponse reply =
                     ByzCoinProto.GetProofResponse.parseFrom(msg);
             logger.info("Successfully received proof");
-            return new Proof(reply.getProof());
+            return new Proof(reply.getProof(), skipchain.getID());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -561,15 +562,21 @@ public class ByzCoinRPC {
      */
     public static ByzCoinRPC fromByzCoin(Roster roster, SkipblockId skipchainId) throws CothorityException {
         Proof proof = ByzCoinRPC.getProof(roster, skipchainId, InstanceId.zero());
-        if (!proof.isContract("config", skipchainId)) {
+        if (!proof.contractIsType("config")) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        if (!proof.exists(InstanceId.zero().getId())) {
+            throw new CothorityNotFoundException("config instance does not exist");
         }
         ByzCoinRPC bc = new ByzCoinRPC();
         bc.config = new Config(proof.getValue());
 
         Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
-        if (!proof2.isContract(DarcInstance.ContractId, skipchainId)) {
+        if (!proof2.contractIsType(DarcInstance.ContractId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        if (!proof2.exists(proof.getDarcID().getId())) {
+            throw new CothorityNotFoundException("darc instance does not exist");
         }
         try {
             bc.genesisDarc = new Darc(proof2.getValue());
@@ -611,14 +618,16 @@ public class ByzCoinRPC {
 
     /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
+     * The returned proof is not verified. Please call Proof.verify.
      *
      * @param roster      where to contact the cothority
      * @param skipchainId the id of the underlying skipchain
      * @param key         which key we're interested in
      * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if there is an error in getting the proof
+     * @throws CothorityCryptoException if there is an issue with the validity of the proof
      */
-    private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException {
+    private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException, CothorityCryptoException {
         ByzCoinProto.GetProof.Builder configBuilder = ByzCoinProto.GetProof.newBuilder();
         configBuilder.setVersion(currentVersion);
         configBuilder.setId(skipchainId.toProto());
@@ -628,7 +637,7 @@ public class ByzCoinRPC {
 
         try {
             ByzCoinProto.GetProofResponse reply = ByzCoinProto.GetProofResponse.parseFrom(msg);
-            return new Proof(reply.getProof());
+            return new Proof(reply.getProof(), skipchainId);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

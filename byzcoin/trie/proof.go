@@ -34,7 +34,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 
 	var i int
 	for i = range p.Interiors {
-		if !bytes.Equal(p.Interiors[i].hash(), expectedHash) {
+		if !bytes.Equal(expectedHash, p.Interiors[i].hash()) {
 			return false, errors.New("invalid hash chain")
 		}
 		if bits[i] {

@@ -67,10 +67,9 @@ class ByzCoinRPCTest {
 
         // Then make a transaction, and we should see a new block, here it's just a darc evolution
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 10);
 
         // Update again should give us a different block
-        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
 
         // Getting the block should work
@@ -80,6 +79,18 @@ class ByzCoinRPCTest {
         // Get the genesis block again and it should have at least one forward links
         SkipBlock newGenesis = bc.getSkipchain().getSkipblock(this.bc.getGenesisBlock().getId());
         assertTrue(newGenesis.getForwardLinks().size() > 0);
+    }
+
+    @Test
+    void getProof() throws Exception {
+        // Then make a transaction so we can do something with the proof.
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+
+        // Get one Proof.
+        InstanceId inst = bc.getGenesisDarcInstance().getInstance().getId();
+        Proof p = bc.getProof(inst);
+        assertTrue(p.exists(inst.getId()));
     }
 
     /**

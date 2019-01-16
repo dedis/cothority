@@ -438,7 +438,7 @@ class CalypsoTest {
         LTSInstance ltsInst = LTSInstance.fromByzCoin(calypso, calypso.getLTS().getInstanceId());
         ltsInst.reshareLTS(calypso.getRoster(), Collections.singletonList(admin), adminCtrs.getCounters());
         // start the resharing
-        Proof proof = ltsInst.getProof();
+        Proof proof = ltsInst.getProofAndVerify();
         logger.info("starting resharing");
         calypso.reshareLTS(proof);
         // try to write something to make sure it works
@@ -464,7 +464,7 @@ class CalypsoTest {
             ltsInst.reshareLTS(newRoster, Collections.singletonList(admin), adminCtrs.getCounters());
 
             // start the resharing
-            Proof proof = ltsInst.getProof();
+            Proof proof = ltsInst.getProofAndVerify();
             logger.info("starting resharing");
             calypso.reshareLTS(proof);
 

@@ -127,11 +127,8 @@ public class EventLogInstance {
      */
     public Event get(InstanceId key) throws CothorityException {
         Proof p = bc.getProof(key);
-        if (!p.matches()) {
-            throw new CothorityCryptoException("key does not exist");
-        }
-        if (!Arrays.equals(p.getKey(), key.getId())) {
-            throw new CothorityCryptoException("wrong key");
+        if (!p.exists(key.getId())) {
+            throw new CothorityCryptoException("event does not exist");
         }
         StateChangeBody body = p.getValues();
         try {
