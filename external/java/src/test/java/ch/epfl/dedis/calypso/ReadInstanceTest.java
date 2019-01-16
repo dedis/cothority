@@ -58,7 +58,7 @@ class ReadInstanceTest {
         }
 
         String secret = "this is a secret";
-        Document doc = new Document(secret.getBytes(), 16, null, genesisDarc.getBaseId());
+        Document doc = new Document(secret.getBytes(), null, genesisDarc.getBaseId());
         w = new WriteInstance(calypso, genesisDarc.getId(),
                 Arrays.asList(admin), Collections.singletonList(2L),
                 doc.getWriteData(calypso.getLTS()));

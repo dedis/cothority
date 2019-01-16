@@ -88,7 +88,7 @@ class CalypsoTest {
 
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
-        doc = new Document(docData.getBytes(), 16, extraData.getBytes(), publisherDarc.getBaseId());
+        doc = new Document(docData.getBytes(), extraData.getBytes(), publisherDarc.getBaseId());
     }
 
     @AfterEach
@@ -104,7 +104,7 @@ class CalypsoTest {
     @Test
     void fullCycleDocument() throws CothorityException{
         // The document is stored in 'doc' and not encrypted yet.
-        Document doc = new Document(docData.getBytes(), 16, extraData.getBytes(), publisherDarc.getBaseId());
+        Document doc = new Document(docData.getBytes(), extraData.getBytes(), publisherDarc.getBaseId());
 
         // First, create an encrypted version of the document. Alternatively one could create
         // an own WriteData from scratch and hand it an already encrypted document.
@@ -183,7 +183,7 @@ class CalypsoTest {
 
     @Test
     void decryptKey() throws Exception {
-        Document doc1 = new Document("this is secret 1".getBytes(), 16, null, publisherDarc.getBaseId());
+        Document doc1 = new Document("this is secret 1".getBytes(), null, publisherDarc.getBaseId());
         WriteInstance w1 = new WriteInstance(calypso, publisherDarc.getBaseId(),
                 Arrays.asList(publisher), Collections.singletonList(1L),
                 doc1.getWriteData(calypso.getLTS()));
@@ -192,7 +192,7 @@ class CalypsoTest {
         Proof pw1 = calypso.getProof(w1.getInstance().getId());
         Proof pr1 = calypso.getProof(r1.getInstance().getId());
 
-        Document doc2 = new Document("this is secret 2".getBytes(), 16, null, publisherDarc.getBaseId());
+        Document doc2 = new Document("this is secret 2".getBytes(), null, publisherDarc.getBaseId());
         WriteInstance w2 = new WriteInstance(calypso, publisherDarc.getBaseId(),
                 Arrays.asList(publisher), Collections.singletonList(3L),
                 doc2.getWriteData(calypso.getLTS()));
