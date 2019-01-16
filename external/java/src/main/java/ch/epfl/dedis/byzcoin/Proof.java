@@ -230,7 +230,7 @@ public class Proof {
         int i;
         for (i = 0; i < this.proof.getInteriorsCount(); i++) {
             if (!Arrays.equals(expectedHash, hashInterior(this.proof.getInteriors(i)))) {
-                return false;
+                throw new CothorityCryptoException("invalid interior node");
             }
             if (bits[i]) {
                 expectedHash = this.proof.getInteriors(i).getLeft().toByteArray();
@@ -250,7 +250,7 @@ public class Proof {
             }
             return false;
         }
-        return false;
+        throw new CothorityCryptoException("no corresponding leaf/empty node with respect to the interior nodes");
     }
 
     private static Boolean[] binSlice(byte[] buf) {

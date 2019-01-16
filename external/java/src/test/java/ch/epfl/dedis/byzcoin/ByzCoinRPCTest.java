@@ -67,10 +67,9 @@ class ByzCoinRPCTest {
 
         // Then make a transaction, and we should see a new block, here it's just a darc evolution
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 10);
 
         // Update again should give us a different block
-        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
 
         // Getting the block should work
