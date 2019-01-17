@@ -33,12 +33,13 @@ type suite interface {
 //   - ltsid - the id of the LTS id - used to create the second generator
 //   - writeDarc - the id of the darc where this write will be stored
 //   - X - the aggregate public key of the DKG
-//   - key - the symmetric key for the document - it will be encrypted in this method
+//   - key - the symmetric key for the document - it will be encrypted in this
+//   method
 //
 // Output:
-//   - write - structure containing the encrypted key U, Cs and the NIZKP of
+//   - write - structure containing the encrypted key U, C and the NIZKP of
 //   it containing the reader-darc. If it is nil then we failed to embed the
-//   key (it is too long to represent the key using a point)
+//   key because it is too long to represent the key using a point.
 func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
 	wr := &Write{LTSID: ltsid}
 	r := suite.Scalar().Pick(suite.RandomStream())
@@ -116,23 +117,19 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 //
 // Output:
 //   - U - the schnorr commit
-//   - Cs - encrypted key-slices
-func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
+//   - C - encrypted key
+func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, C kyber.Point) {
 	r := suite.Scalar().Pick(suite.RandomStream())
-	C := suite.Point().Mul(r, X)
+	C = suite.Point().Mul(r, X)
 	log.Lvl4("C:", C.String())
 	U = suite.Point().Mul(r, nil)
 	log.Lvl4("U is:", U.String())
 
-	for len(key) > 0 {
-		var kp kyber.Point
-		kp = suite.Point().Embed(key, suite.RandomStream())
-		log.Lvl4("Keypoint:", kp.String())
-		log.Lvl4("X:", X.String())
-		Cs = append(Cs, suite.Point().Add(C, kp))
-		log.Lvl4("Cs:", C.String())
-		key = key[min(len(key), kp.EmbedLen()):]
-	}
+	var kp kyber.Point
+	kp = suite.Point().Embed(key, suite.RandomStream())
+	log.Lvl4("Keypoint:", kp.String())
+	log.Lvl4("X:", X.String())
+	C = suite.Point().Add(C, kp)
 	return
 }
 
@@ -143,7 +140,7 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 // Input:
 //   - suite - the cryptographic suite to use
 //   - X - the aggregate public key of the DKG
-//   - Cs - the encrypted key-slices
+//   - C - the encrypted key-slices
 //   - XhatEnc - the re-encrypted schnorr-commit
 //   - xc - the private key of the reader
 //
@@ -166,7 +163,7 @@ func DecodeKey(suite kyber.Group, X kyber.Point, C kyber.Point, XhatEnc kyber.Po
 	XhatInv := suite.Point().Neg(Xhat)
 	log.Lvl4("XhatInv:", XhatInv)
 
-	// Decrypt Cs to keyPointHat
+	// Decrypt C to keyPointHat
 	log.Lvl4("C:", C)
 	keyPointHat := suite.Point().Add(C, XhatInv)
 	log.Lvl4("keyPointHat:", keyPointHat)

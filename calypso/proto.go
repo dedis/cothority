@@ -23,7 +23,8 @@ import (
 // Write is the data stored in a write instance. It stores a reference to the LTS
 // used and the encrypted secret.
 type Write struct {
-	// Data should be encrypted by the application under the symmetric key in U and Cs
+	// Data should be encrypted by the application under the symmetric key
+	// in U and C
 	Data []byte
 	// U is the encrypted random value for the ElGamal encryption
 	U kyber.Point
@@ -34,8 +35,8 @@ type Write struct {
 	Ubar kyber.Point
 	// E is the non-interactive challenge as scalar
 	E kyber.Scalar
-	// f is the proof - written in uppercase here so it is an exported field,
-	// but in the OCS-paper it's lowercase.
+	// f is the proof - written in uppercase here so it is an exported
+	// field, but in the OCS-paper it's lowercase.
 	F kyber.Scalar
 	// C is the ElGamal parts for the symmetric key material (might also
 	// contain an IV)
