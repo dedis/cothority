@@ -40,15 +40,18 @@ public class Proof {
      *
      * @param p    is the protobuf representation
      * @param scID is the skipchain ID
-     * @throws InvalidProtocolBufferException if the protobuf representation is invalid
      * @throws CothorityCryptoException       if the verification of the forward links are wrong
      */
-    public Proof(ByzCoinProto.Proof p, SkipblockId scID) throws InvalidProtocolBufferException, CothorityCryptoException {
+    public Proof(ByzCoinProto.Proof p, SkipblockId scID) throws CothorityCryptoException {
         proof = p.getInclusionproof();
         latest = new SkipBlock(p.getLatest());
         links = p.getLinksList();
-        if (!proof.getLeaf().getKey().isEmpty()) {
-            finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
+        if (proof.hasLeaf() && proof.getLeaf().hasValue()) {
+            try {
+                finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
+            } catch (InvalidProtocolBufferException e) {
+                throw new CothorityCryptoException("failed to decode state change body because: " + e.getMessage());
+            }
         } else {
             finalStateChangeBody = null;
         }
