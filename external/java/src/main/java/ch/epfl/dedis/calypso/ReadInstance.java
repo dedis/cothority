@@ -113,7 +113,7 @@ public class ReadInstance {
         }
 
         DecryptKeyReply dk = calypso.tryDecrypt(writeProof, readProof);
-        return dk.getKeyMaterial(reader);
+        return dk.extractKeyMaterial(reader);
     }
 
     /**

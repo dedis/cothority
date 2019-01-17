@@ -15,9 +15,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A WriteData is the data that is sent to the calypsoWrite contract store a write request with the encrypted document.
@@ -113,7 +110,7 @@ public class WriteData {
             throw new CothorityCryptoException("invalid keyMaterial length, got " + keyMaterial.length + " but it must be " + Encryption.KEYMATERIAL_LEN);
         }
         try {
-            Ed25519KeyPair randkp = new Ed25519KeyPair();
+            Ed25519Pair randkp = new Ed25519Pair();
             Scalar r = randkp.scalar;
             Point U = randkp.point;
             wr.setU(U.toProto());
@@ -125,7 +122,7 @@ public class WriteData {
             Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
-            Ed25519KeyPair skp = new Ed25519KeyPair();
+            Ed25519Pair skp = new Ed25519Pair();
             Scalar s = skp.scalar;
             Point w = skp.point;
             Point wBar = gBar.mul(s);

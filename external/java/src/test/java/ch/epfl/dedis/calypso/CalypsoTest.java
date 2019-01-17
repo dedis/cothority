@@ -7,7 +7,7 @@ import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.crypto.Ed25519KeyPair;
+import ch.epfl.dedis.lib.crypto.Ed25519Pair;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -127,7 +127,7 @@ class CalypsoTest {
         // Get the re-encrypted symmetric key from Calypso:
         DecryptKeyReply dkr = calypso.tryDecrypt(calypso.getProof(wi.getInstance().getId()), calypso.getProof(ri.getInstance().getId()));
         // And derive the symmetric key, using the user's private key to decrypt it:
-        byte[] keyMaterial = dkr.getKeyMaterial(reader.getPrivate());
+        byte[] keyMaterial = dkr.extractKeyMaterial(reader.getPrivate());
 
         // Finally get the document back:
         Document doc2 = Document.fromWriteInstance(wi, keyMaterial);
@@ -156,7 +156,7 @@ class CalypsoTest {
 
     @Test
     void ephemeralKey() throws CothorityException{
-        Ed25519KeyPair ephemeral = new Ed25519KeyPair();
+        Ed25519Pair ephemeral = new Ed25519Pair();
 
         // Same as above, but shortest possible calls.
         // Create WriteInstance.
@@ -169,7 +169,7 @@ class CalypsoTest {
                 Arrays.asList(reader), Collections.singletonList(1L),
                 ephemeral.point);
 
-        Ed25519KeyPair wrong = new Ed25519KeyPair();
+        Ed25519Pair wrong = new Ed25519Pair();
         // Create new Document from wi and ri using the wrong ephemeral key
         assertThrows(CothorityException.class, ()->
                 Document.fromCalypso(calypso, ri.getInstance().getId(), wrong.scalar));
@@ -215,12 +215,12 @@ class CalypsoTest {
 
         logger.info("trying decrypt 1, pk: " + publisher.getPublic().toString());
         DecryptKeyReply dkr1 = calypso.tryDecrypt(pw1, pr1);
-        byte[] km1 = dkr1.getKeyMaterial(publisher.getPrivate());
+        byte[] km1 = dkr1.extractKeyMaterial(publisher.getPrivate());
         assertTrue(Arrays.equals(doc1.getData(), Encryption.decryptData(w1.getWrite().getDataEnc(), km1)));
 
         logger.info("trying decrypt 2, pk: " + publisher.getPublic().toString());
         DecryptKeyReply dkr2 = calypso.tryDecrypt(pw2, pr2);
-        byte[] km2 = dkr2.getKeyMaterial(publisher.getPrivate());
+        byte[] km2 = dkr2.extractKeyMaterial(publisher.getPrivate());
         assertTrue(Arrays.equals(doc2.getData(), Encryption.decryptData(w2.getWrite().getDataEnc(), km2)));
     }
 
