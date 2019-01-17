@@ -1587,6 +1587,7 @@ clientTransactions:
 		// (via cdbTemp = cdbI.c), otherwise dump it.
 		sstTempC := sstTemp.Clone()
 		h := tx.ClientTransaction.Instructions.Hash()
+		var statesTemp StateChanges
 		for _, instr := range tx.ClientTransaction.Instructions {
 			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, h)
 			if err != nil {
@@ -1651,8 +1652,8 @@ clientTransactions:
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			states = append(states, scs...)
-			states = append(states, counterScs...)
+			statesTemp = append(statesTemp, scs...)
+			statesTemp = append(statesTemp, counterScs...)
 			cin = cout
 		}
 
@@ -1688,6 +1689,7 @@ clientTransactions:
 		tx.Accepted = true
 		txOut = append(txOut, tx)
 		blocksz += txsz
+		states = append(states, statesTemp...)
 	}
 
 	// Store the result in the cache before returning.
