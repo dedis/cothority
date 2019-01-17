@@ -16,7 +16,7 @@ public class SignerEd25519 implements Signer {
      * Constructor for signer.
      */
     public SignerEd25519() {
-        Ed25519KeyPair kp = new Ed25519KeyPair();
+        Ed25519Pair kp = new Ed25519Pair();
         pub = kp.point;
         priv = kp.scalar;
     }

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -103,9 +102,9 @@ class MaskTest {
         byte[] msg = "hello".getBytes();
         Random rnd = new SecureRandom();
 
-        List<Bn256KeyPair> pairs = new ArrayList<>();
+        List<Bn256Pair> pairs = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            pairs.add(new Bn256KeyPair(rnd));
+            pairs.add(new Bn256Pair(rnd));
         }
 
         List<Point> publics = new ArrayList<>();
@@ -115,7 +114,7 @@ class MaskTest {
 
         Point aggrSig = new Bn256G1Point(BigInteger.ONE);
         aggrSig = aggrSig.getZero();
-        for (Bn256KeyPair p : pairs) {
+        for (Bn256Pair p : pairs) {
             aggrSig = aggrSig.add(new Bn256G1Point(new BlsSig(msg, p.scalar).getSig()));
         }
 

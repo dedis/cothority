@@ -36,7 +36,7 @@ public class DecryptKeyReply {
      * @return the key material
      * @throws CothorityCryptoException if something went wrong with decoding the point
      */
-    public byte[] getKeyMaterial(Scalar reader) throws CothorityCryptoException {
+    public byte[] extractKeyMaterial(Scalar reader) throws CothorityCryptoException {
         // Use our private key to decrypt the re-encryption key and use it
         // to recover the symmetric key.
         Scalar xc = reader.reduce();
