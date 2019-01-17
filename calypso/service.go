@@ -429,7 +429,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if err != nil {
 		return nil, err
 	}
-	reply.Cs = write.Cs
+	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")
 	return
 }

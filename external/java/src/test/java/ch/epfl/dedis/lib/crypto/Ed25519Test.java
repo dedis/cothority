@@ -176,7 +176,7 @@ class Ed25519Test {
     @Test
     void testEncryption() throws Exception {
         byte[] orig = "My cool file".getBytes();
-        byte[] symmetricKey = new byte[Encryption.KEY_LENGTH];
+        byte[] symmetricKey = new byte[Encryption.KEY_LEN];
         int ivSize = 12;
         byte[] iv = new byte[ivSize];
         SecureRandom random = new SecureRandom();
@@ -196,7 +196,7 @@ class Ed25519Test {
     @Test
     void testDocumentEncryption()throws Exception{
         byte[] orig = "foo beats bar".getBytes();
-        byte[] keyMaterial = new byte[Encryption.IV_LENGTH + Encryption.KEY_LENGTH];
+        byte[] keyMaterial = new byte[Encryption.IV_LEN + Encryption.KEY_LEN];
         new SecureRandom().nextBytes(keyMaterial);
 
         byte[] dataEnc = Encryption.encryptData(orig, keyMaterial);

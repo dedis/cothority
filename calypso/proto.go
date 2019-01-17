@@ -23,7 +23,8 @@ import (
 // Write is the data stored in a write instance. It stores a reference to the LTS
 // used and the encrypted secret.
 type Write struct {
-	// Data should be encrypted by the application under the symmetric key in U and Cs
+	// Data should be encrypted by the application under the symmetric key
+	// in U and C
 	Data []byte
 	// U is the encrypted random value for the ElGamal encryption
 	U kyber.Point
@@ -34,12 +35,12 @@ type Write struct {
 	Ubar kyber.Point
 	// E is the non-interactive challenge as scalar
 	E kyber.Scalar
-	// f is the proof - written in uppercase here so it is an exported field,
-	// but in the OCS-paper it's lowercase.
+	// f is the proof - written in uppercase here so it is an exported
+	// field, but in the OCS-paper it's lowercase.
 	F kyber.Scalar
-	// Cs are the ElGamal parts for the symmetric key material (might
-	// also contain an IV)
-	Cs []kyber.Point
+	// C is the ElGamal parts for the symmetric key material (might also
+	// contain an IV)
+	C kyber.Point
 	// ExtraData is clear text and application-specific
 	ExtraData []byte `protobuf:"opt"`
 	// LTSID points to the identity of the lts group
@@ -107,8 +108,8 @@ type DecryptKey struct {
 // DecryptKeyReply is returned if the service verified successfully that the
 // decryption request is valid.
 type DecryptKeyReply struct {
-	// Cs are the secrets re-encrypted under the reader's public key.
-	Cs []kyber.Point
+	// C is the secret re-encrypted under the reader's public key.
+	C kyber.Point
 	// XhatEnc is the random part of the encryption.
 	XhatEnc kyber.Point
 	// X is the aggregate public key of the LTS used.

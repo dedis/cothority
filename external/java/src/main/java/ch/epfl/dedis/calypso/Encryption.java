@@ -13,9 +13,10 @@ import java.security.SecureRandom;
 public class Encryption {
     public static final String ALGO = "AES/GCM/NoPadding";
     public static final String ALGO_KEY = "AES";
-    public static final int KEY_LENGTH = 16;
-    public static final int IV_LENGTH = 12; // standard IV length for GCM
+    public static final int KEY_LEN = 16;
+    public static final int IV_LEN = 12; // standard IV length for GCM
     public static final int GCM_TLEN = 128;
+    public static final int KEYMATERIAL_LEN = IV_LEN + KEY_LEN;
 
     /**
      * KeyIV represents a secret key and an IV.
@@ -36,13 +37,13 @@ public class Encryption {
          * @throws CothorityCryptoException is something goes wrong.
          */
         public KeyIv(byte[] keyMaterial) throws CothorityCryptoException {
-            if (keyMaterial.length != KEY_LENGTH + IV_LENGTH)  {
+            if (keyMaterial.length != KEYMATERIAL_LEN)  {
                 throw new CothorityCryptoException("keyMaterial must be 28 bytes");
             }
-            iv = new byte[IV_LENGTH];
-            System.arraycopy(keyMaterial, 0, iv, 0, IV_LENGTH);
+            iv = new byte[IV_LEN];
+            System.arraycopy(keyMaterial, 0, iv, 0, IV_LEN);
             gcmSpec = new GCMParameterSpec(GCM_TLEN, iv);
-            symmetricKey = new byte[KEY_LENGTH];
+            symmetricKey = new byte[KEY_LEN];
             keySpec = new SecretKeySpec(symmetricKey, ALGO_KEY);
         }
 
@@ -50,8 +51,8 @@ public class Encryption {
          * Default construct KeyIV with a random key and IV. Use getKeyMaterial to get the keyMaterial back.
          */
         public KeyIv() {
-            symmetricKey = new byte[KEY_LENGTH];
-            iv = new byte[IV_LENGTH];
+            symmetricKey = new byte[KEY_LEN];
+            iv = new byte[IV_LEN];
             new SecureRandom().nextBytes(symmetricKey);
             new SecureRandom().nextBytes(iv);
             gcmSpec = new GCMParameterSpec(GCM_TLEN, iv);
@@ -62,9 +63,9 @@ public class Encryption {
          * Getter for the key material, which is a concatenation of IV and the key.
          */
         public byte[] getKeyMaterial() {
-            byte[] keyMaterial = new byte[IV_LENGTH + symmetricKey.length];
-            System.arraycopy(iv, 0, keyMaterial, 0, IV_LENGTH);
-            System.arraycopy(symmetricKey, 0, keyMaterial, IV_LENGTH, symmetricKey.length);
+            byte[] keyMaterial = new byte[KEYMATERIAL_LEN];
+            System.arraycopy(iv, 0, keyMaterial, 0, IV_LEN);
+            System.arraycopy(symmetricKey, 0, keyMaterial, IV_LEN, KEY_LEN);
             return keyMaterial;
         }
     }
@@ -73,8 +74,8 @@ public class Encryption {
      * Encrypts the data using the encryption defined in the header.
      *
      * @param data        the data to encrypt
-     * @param keyMaterial random string of length IV_LENGTH + keylength.
-     *                    The first IV_LENGTH bytes are taken as iv, the
+     * @param keyMaterial random string of length IV_LEN + keylength.
+     *                    The first IV_LEN bytes are taken as iv, the
      *                    rest is taken as the symmetric symmetricKey,
      *                    which must be at least 16 bytes long.
      * @return a combined

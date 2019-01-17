@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * The response of the DecryptKey RPC call.
  */
 public class DecryptKeyReply {
-    private List<Point> Cs;
+    private Point C;
     private Point XhatEnc;
     private Point X;
 
@@ -23,9 +23,7 @@ public class DecryptKeyReply {
      * @param proto the input protobuf
      */
     public DecryptKeyReply(Calypso.DecryptKeyReply proto) {
-        this.Cs = proto.getCsList().stream()
-                .map(cs -> PointFactory.getInstance().fromProto(cs))
-                .collect(Collectors.toList());
+        this.C = PointFactory.getInstance().fromProto(proto.getC());
         this.XhatEnc = PointFactory.getInstance().fromProto(proto.getXhatenc());
         this.X = PointFactory.getInstance().fromProto(proto.getX());
     }
@@ -47,15 +45,7 @@ public class DecryptKeyReply {
         Point Xhat = XhatEnc.add(XhatDec);
         Point XhatInv = Xhat.negate();
 
-        byte[] keyMaterial = "".getBytes();
-        for (Point C : this.Cs) {
-            Point keyPointHat = C.add(XhatInv);
-            byte[] keyPart = keyPointHat.data();
-            int lastpos = keyMaterial.length;
-            keyMaterial = Arrays.copyOfRange(keyMaterial, 0, keyMaterial.length + keyPart.length);
-            System.arraycopy(keyPart, 0, keyMaterial, lastpos, keyPart.length);
-        }
-
-        return keyMaterial;
+        Point keyPointHat = this.C.add(XhatInv);
+        return keyPointHat.data();
     }
 }
