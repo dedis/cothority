@@ -64,8 +64,8 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong
      */
     public ByzCoinRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
-        if (d.getExpression("invoke:" + ChainConfigInstance.ContractId + ".view_change") == null) {
-            throw new CothorityCommunicationException("need a view change rule.");
+        if (d.getExpression("invoke:view_change") == null) {
+            throw new CothorityCommunicationException("need a 'invoke:view_change' rule.");
         }
         ByzCoinProto.CreateGenesisBlock.Builder request =
                 ByzCoinProto.CreateGenesisBlock.newBuilder();

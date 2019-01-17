@@ -85,7 +85,7 @@ class CalypsoTest {
         publisherDarc.setRule("spawn:calypsoWrite", publisher.getIdentity().toString().getBytes());
         publisherDarc.addIdentity("spawn:calypsoRead", publisher.getIdentity(), Rules.OR);
         publisherDarc.addIdentity("spawn:calypsoRead", readerDarc.getIdentity(), Rules.OR);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin,  3L,10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin, 3L, 10);
 
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
@@ -100,12 +100,13 @@ class CalypsoTest {
             for (int i = 1; i <= 4; i++) {
                 testInstanceController.startConode(i);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     // This test creates a full cycle with regard to storing and retrieving a document from Calypso.
     @Test
-    void fullCycleDocument() throws CothorityException{
+    void fullCycleDocument() throws CothorityException {
         // The document is stored in 'doc' and not encrypted yet.
         Document doc = new Document(docData.getBytes(), extraData.getBytes(), publisherDarc.getBaseId());
 
@@ -152,7 +153,7 @@ class CalypsoTest {
     }
 
     @Test
-    void fullCycleDocumentShort() throws CothorityException{
+    void fullCycleDocumentShort() throws CothorityException {
         // Same as above, but shortest possible calls.
         // Create WriteInstance.
         WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(),
@@ -214,7 +215,7 @@ class CalypsoTest {
 
     @Test
     void getSharedPublicKey() throws Exception {
-        assertThrows(CothorityCommunicationException.class, ()-> calypso.getLTSReply(new LTSId(new byte[32])));
+        assertThrows(CothorityCommunicationException.class, () -> calypso.getLTSReply(new LTSId(new byte[32])));
         CreateLTSReply lts2 = calypso.getLTSReply(calypso.getLTS().getLTSID());
         assertNotNull(lts2.getX());
         assertTrue(calypso.getLTSX().equals(lts2.getX()));
@@ -272,7 +273,7 @@ class CalypsoTest {
         SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         Darc userDarc = new Darc(Arrays.asList(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")).getIdentity()), null, null);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head() + 1, 10);
 
         ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc2.getRoster().getNodes()) {
@@ -300,7 +301,7 @@ class CalypsoTest {
                     Collections.singletonList(publisher), Collections.singletonList(1L),
                     wr);
             logger.info("correctly created write instance");
-        } catch (CothorityException e){
+        } catch (CothorityException e) {
             fail("should not fail to create write instance with one missing node");
         } finally {
             // bring the conode backup for future tests and make sure we have 4 conodes running
@@ -322,7 +323,7 @@ class CalypsoTest {
         try{
             new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
             fail("read-request of unauthorized reader should fail");
-        } catch (CothorityException e){
+        } catch (CothorityException e) {
             logger.info("correct refusal of invalid read-request");
         }
 
@@ -383,7 +384,7 @@ class CalypsoTest {
     }
 
     @Test
-    void multiLTS() throws CothorityException{
+    void multiLTS() throws CothorityException {
         CalypsoRPC calypso2 = new CalypsoRPC(calypso, calypso.getGenesisDarc().getBaseId(), calypso.getRoster(),
                 Collections.singletonList(admin), Collections.singletonList(4L));
         assertFalse(calypso2.getLTSId().equals(calypso.getLTS().getLTSID()));
@@ -393,10 +394,12 @@ class CalypsoTest {
     void reConnect() throws CothorityException, InterruptedException, IOException {
         WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
-        for (int i=1; i<=3; i++){
+        for (int i = 1; i <= 3; i++) {
+            logger.info("Killing node {}", i);
             testInstanceController.killConode(i);
         }
-        for (int i=1; i<=3; i++){
+
+        for (int i = 1; i <= 3; i++) {
             testInstanceController.startConode(i);
         }
 
