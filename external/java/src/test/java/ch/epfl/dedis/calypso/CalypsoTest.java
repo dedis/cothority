@@ -13,6 +13,7 @@ import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
@@ -34,16 +35,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class CalypsoTest {
     static CalypsoRPC calypso;
 
-    static Signer admin;
-    static Darc genesisDarc;
-    static Signer publisher;
-    static Darc publisherDarc;
-    static Signer reader;
-    static Darc readerDarc;
+    private static Signer admin;
+    private static Darc genesisDarc;
+    private static Signer publisher;
+    private static Darc publisherDarc;
+    private static Signer reader;
+    private static Darc readerDarc;
+    private static Ed25519Pair ephemeralPair;
 
-    static Document doc;
-    static String docData;
-    static String extraData;
+    private static Document doc;
+    private static String docData;
+    private static String extraData;
 
     private final static Logger logger = LoggerFactory.getLogger(WriteInstanceTest.class);
     private TestServerController testInstanceController;
@@ -89,6 +91,8 @@ class CalypsoTest {
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), extraData.getBytes(), publisherDarc.getBaseId());
+
+        ephemeralPair = new Ed25519Pair();
     }
 
     @AfterEach
@@ -121,19 +125,31 @@ class CalypsoTest {
 
         // To read it, first proof that we have the right to read by creating a ReadInstance:
         ReadInstance ri = new ReadInstance(calypso, wi,
-                Arrays.asList(reader), Collections.singletonList(1L));
+                Arrays.asList(reader), Collections.singletonList(1L), ephemeralPair.point);
         // If successful (no exceptions), Byzcoin holds a proof that we are allowed to read the document.
 
         // Get the re-encrypted symmetric key from Calypso:
         DecryptKeyReply dkr = calypso.tryDecrypt(calypso.getProof(wi.getInstance().getId()), calypso.getProof(ri.getInstance().getId()));
-        // And derive the symmetric key, using the user's private key to decrypt it:
-        byte[] keyMaterial = dkr.extractKeyMaterial(reader.getPrivate());
+        // And derive the symmetric key, using the ephemeral scalar (the private part) to decrypt it:
+        byte[] keyMaterial = dkr.extractKeyMaterial(ephemeralPair.scalar);
 
         // Finally get the document back:
         Document doc2 = Document.fromWriteInstance(wi, keyMaterial);
 
         // And check it's the same.
-        assertTrue(doc.equals(doc2));
+        assertEquals(doc, doc2);
+
+        // If we provide the wrong scalar, then the document should be different.
+        // The following might (or might not) throw during key extraction due to invalid point.
+        // If it doesn't throw, then we make it throw ourselves when the two documents are equal.
+        Ed25519Pair badEphemeralPair = new Ed25519Pair();
+        assertThrows(CothorityCryptoException.class, () -> {
+            byte[] badKeyMaterial = dkr.extractKeyMaterial(badEphemeralPair.scalar);
+            Document badDoc2 = Document.fromWriteInstance(wi, badKeyMaterial);
+            if (doc.equals(badDoc2)) {
+                throw new CothorityCryptoException("documents should not be equal");
+            }
+        });
     }
 
     @Test
@@ -145,37 +161,10 @@ class CalypsoTest {
                 doc.getWriteData(calypso.getLTS()));
 
         // Get ReadInstance with 'reader'
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader), Collections.singletonList(1L));
+        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader), Collections.singletonList(1L), ephemeralPair.point);
 
         // Create new Document from wi and ri
-        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader.getPrivate());
-
-        // Should be the same
-        assertTrue(doc.equals(doc2));
-    }
-
-    @Test
-    void ephemeralKey() throws CothorityException{
-        Ed25519Pair ephemeral = new Ed25519Pair();
-
-        // Same as above, but shortest possible calls.
-        // Create WriteInstance.
-        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(),
-                Arrays.asList(publisher), Collections.singletonList(1L),
-                doc.getWriteData(calypso.getLTS()));
-
-        // Get ReadInstance with 'reader'
-        ReadInstance ri = new ReadInstance(calypso, wi,
-                Arrays.asList(reader), Collections.singletonList(1L),
-                ephemeral.point);
-
-        Ed25519Pair wrong = new Ed25519Pair();
-        // Create new Document from wi and ri using the wrong ephemeral key
-        assertThrows(CothorityException.class, ()->
-                Document.fromCalypso(calypso, ri.getInstance().getId(), wrong.scalar));
-
-        // Create new Document from wi and ri using the correct ephemeral key
-        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), ephemeral.scalar);
+        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), ephemeralPair.scalar);
 
         // Should be the same
         assertTrue(doc.equals(doc2));
@@ -188,7 +177,7 @@ class CalypsoTest {
                 Arrays.asList(publisher), Collections.singletonList(1L),
                 doc1.getWriteData(calypso.getLTS()));
         ReadInstance r1 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w1.getInstance().getId()),
-                Arrays.asList(publisher), Collections.singletonList(2L));
+                Arrays.asList(publisher), Collections.singletonList(2L), ephemeralPair.point);
         Proof pw1 = calypso.getProof(w1.getInstance().getId());
         Proof pr1 = calypso.getProof(r1.getInstance().getId());
 
@@ -197,7 +186,7 @@ class CalypsoTest {
                 Arrays.asList(publisher), Collections.singletonList(3L),
                 doc2.getWriteData(calypso.getLTS()));
         ReadInstance r2 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w2.getInstance().getId()),
-                Arrays.asList(publisher), Collections.singletonList(4L));
+                Arrays.asList(publisher), Collections.singletonList(4L), ephemeralPair.point);
         Proof pw2 = calypso.getProof(w2.getInstance().getId());
         Proof pr2 = calypso.getProof(r2.getInstance().getId());
 
@@ -215,12 +204,12 @@ class CalypsoTest {
 
         logger.info("trying decrypt 1, pk: " + publisher.getPublic().toString());
         DecryptKeyReply dkr1 = calypso.tryDecrypt(pw1, pr1);
-        byte[] km1 = dkr1.extractKeyMaterial(publisher.getPrivate());
+        byte[] km1 = dkr1.extractKeyMaterial(ephemeralPair.scalar);
         assertTrue(Arrays.equals(doc1.getData(), Encryption.decryptData(w1.getWrite().getDataEnc(), km1)));
 
         logger.info("trying decrypt 2, pk: " + publisher.getPublic().toString());
         DecryptKeyReply dkr2 = calypso.tryDecrypt(pw2, pr2);
-        byte[] km2 = dkr2.extractKeyMaterial(publisher.getPrivate());
+        byte[] km2 = dkr2.extractKeyMaterial(ephemeralPair.scalar);
         assertTrue(Arrays.equals(doc2.getData(), Encryption.decryptData(w2.getWrite().getDataEnc(), km2)));
     }
 
@@ -247,21 +236,21 @@ class CalypsoTest {
         WriteInstance writeInstance = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
         Signer reader2 = new SignerEd25519();
         try {
-            readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L));
+            readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
             fail("a wrong read-signature should not pass");
         } catch (CothorityCommunicationException e) {
             logger.info("correctly failed with wrong signature");
         }
         logger.debug("publisherdarc.ic = " + readerDarc.getBaseId().toString());
         logger.debug("publisherdarc.proto = " + readerDarc.toProto().toString());
-        readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L));
+        readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L), ephemeralPair.point);
         assertNotNull(readInstance);
     }
 
     @Test
     void readDocument() throws Exception {
         readRequest();
-        byte[] keyMaterial = readInstance.decryptKeyMaterial(reader.getPrivate());
+        byte[] keyMaterial = readInstance.decryptKeyMaterial(ephemeralPair.scalar);
         assertNotNull(keyMaterial);
         byte[] data = Encryption.decryptData(doc.getWriteData(calypso.getLTS()).getDataEnc(), keyMaterial);
         assertArrayEquals(docData.getBytes(), data);
@@ -332,7 +321,7 @@ class CalypsoTest {
 
         Signer reader2 = new SignerEd25519();
         try{
-            new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L));
+            new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
             fail("read-request of unauthorized reader should fail");
         } catch (CothorityException e){
             logger.info("correct refusal of invalid read-request");
@@ -342,16 +331,16 @@ class CalypsoTest {
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         rd.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L));
-        byte[] keyMaterial = ri.decryptKeyMaterial(reader2.getPrivate());
+        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
+        byte[] keyMaterial = ri.decryptKeyMaterial(ephemeralPair.scalar);
         assertArrayEquals(doc.getKeyMaterial(), keyMaterial);
     }
 
     @Test
     void getDocument() throws CothorityException {
         WriteInstance wi = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
-        ReadInstance ri = wi.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L));
-        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader.getPrivate());
+        ReadInstance ri = wi.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L), ephemeralPair.point);
+        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc2));
 
         // Add another reader
@@ -360,8 +349,8 @@ class CalypsoTest {
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
-        ReadInstance ri2 = wi.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L));
-        Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), reader2.getPrivate());
+        ReadInstance ri2 = wi.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
+        Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc3));
     }
 
@@ -373,24 +362,24 @@ class CalypsoTest {
         Signer reader2 = new SignerEd25519();
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
-        ReadInstance ri = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(1L));
-        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader2.getPrivate());
+        ReadInstance ri = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
+        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc2));
 
         // kill the conode co3 and try to make a request
         testInstanceController.killConode(4);
         assertEquals(3, testInstanceController.countRunningConodes());
 
-        ReadInstance ri2 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(2L));
-        Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), reader2.getPrivate());
+        ReadInstance ri2 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(2L), ephemeralPair.point);
+        Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc3));
 
         // restart the conode and try the same
         testInstanceController.startConode(4);
         assertEquals(4, testInstanceController.countRunningConodes());
 
-        ReadInstance ri3 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(3L));
-        Document doc4 = Document.fromCalypso(calypso, ri3.getInstance().getId(), reader2.getPrivate());
+        ReadInstance ri3 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(3L), ephemeralPair.point);
+        Document doc4 = Document.fromCalypso(calypso, ri3.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc4));
     }
 
@@ -425,8 +414,8 @@ class CalypsoTest {
         DarcInstance di = DarcInstance.fromByzCoin(calypso2, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
-        ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2), Collections.singletonList(1L));
-        Document doc2 = Document.fromCalypso(calypso2, ri.getInstance().getId(), reader2.getPrivate());
+        ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
+        Document doc2 = Document.fromCalypso(calypso2, ri.getInstance().getId(), ephemeralPair.scalar);
         assertTrue(doc.equals(doc2));
     }
 

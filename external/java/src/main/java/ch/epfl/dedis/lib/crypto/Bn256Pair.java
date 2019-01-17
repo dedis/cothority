@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 /**
- * This class is a pair of BN256 scalar x and point X such that X = g * x where g is the generator.
+ * This class is a pair of BN256 G2 scalar x and point X such that X = g * x where g is the generator.
  */
 public class Bn256Pair {
     public final Scalar scalar;

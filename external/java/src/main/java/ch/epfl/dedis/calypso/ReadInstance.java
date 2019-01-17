@@ -33,35 +33,22 @@ public class ReadInstance {
     /**
      * Create a new ReadInstance to request access to an encrypted document. This call
      * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
-     * The key to re-encrypt to is taken as the public key of the first signer.
-     *
-     * @param calypso    The CalypsoRPC object.
-     * @param write      The write instance where a new read instance should be spawned from.
-     * @param signers    Signers who are allowed to spawn a new instance.
-     * @param signerCtrs a list of monotonically increasing counter for every signer
-     * @throws CothorityException if something goes wrong
-     */
-    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signers, signerCtrs, signers.get(0).getPublic());
-        calypso.sendTransactionAndWait(ctx, 10);
-        instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
-    }
-
-    /**
-     * Create a new ReadInstance to request access to an encrypted document. This call
-     * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
      * The key to re-encrypt to is taken in an argument
      *
      * @param calypso    The CalypsoRPC object.
      * @param write      The write instance where a new read instance should be spawned from.
      * @param signers    Signers who are allowed to spawn a new instance.
      * @param signerCtrs a list of monotonically increasing counter for every signer
-     * @param Xc         is the key to which the dataEnc will be re-encrypted to
+     * @param Xc         is the key to which the dataEnc will be re-encrypted to, it must not be one of the signers
      * @throws CothorityException if something goes wrong
      */
     public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs, Point Xc) throws CothorityException {
         this.calypso = calypso;
+        for (Signer s : signers) {
+            if (s.getPublic().equals(Xc)) {
+                throw new CothorityCryptoException("ephemeral public key (for encryption) must not be one of the signers");
+            }
+        }
         ClientTransaction ctx = createCTX(write, signers, signerCtrs, Xc);
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
@@ -69,9 +56,6 @@ public class ReadInstance {
 
     /**
      * Private constructor for already existing CalypsoRead instance.
-     *
-     * @param calypso
-     * @param inst
      */
     private ReadInstance(CalypsoRPC calypso, Instance inst) {
         this.calypso = calypso;

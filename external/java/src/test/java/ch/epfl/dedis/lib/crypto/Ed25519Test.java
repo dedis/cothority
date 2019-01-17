@@ -147,13 +147,12 @@ class Ed25519Test {
     @Test
     void schnorrSig() {
         byte[] msg = "Hello Schnorr".getBytes();
-        Ed25519Pair kp1 = new Ed25519Pair();
-        kp1.scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
-        kp1.point = Ed25519Point.base().mul(kp1.scalar);
+        Scalar scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
+        Point point = Ed25519Point.base().mul(scalar);
         Ed25519Pair kp2 = new Ed25519Pair();
-        SchnorrSig sig = new SchnorrSig(msg, kp1.scalar);
+        SchnorrSig sig = new SchnorrSig(msg, scalar);
 
-        assertTrue(sig.verify(msg, kp1.point));
+        assertTrue(sig.verify(msg, point));
         assertFalse(sig.verify(msg, kp2.point));
     }
 
