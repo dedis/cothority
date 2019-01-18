@@ -98,6 +98,10 @@ class CalypsoTest {
     void restartNodes() {
         try {
             for (int i = 1; i <= 4; i++) {
+                testInstanceController.killConode(i);
+            }
+            Thread.sleep(1000);
+            for (int i = 1; i <= 4; i++) {
                 testInstanceController.startConode(i);
             }
         } catch (Exception ignored) {
