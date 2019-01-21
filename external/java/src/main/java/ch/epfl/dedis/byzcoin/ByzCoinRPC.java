@@ -175,10 +175,11 @@ public class ByzCoinRPC {
         try {
             ByzCoinProto.GetProofResponse reply =
                     ByzCoinProto.GetProofResponse.parseFrom(msg);
-            logger.info("Successfully received proof");
-            return new Proof(reply.getProof(), skipchain.getID());
+            Proof p = new Proof(reply.getProof(), skipchain.getID());
+            logger.info("Successfully received and created proof");
+            return p;
         } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
+            throw new CothorityCommunicationException("failed to get proof: " + e.getMessage());
         }
     }
 

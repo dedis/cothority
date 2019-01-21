@@ -30,35 +30,35 @@ notifications:
 
 matrix:
   include:
-    - language: go
-      name: "Go Tests"
-
-      go:
-        - "1.11.x"
-
-      install:
-        - go get github.com/dedis/Coding || true
-        - go get -t ./...
-
-      before_install:
-        - cd $TRAVIS_BUILD_DIR
-
-      script:
-        - make test_nostable
-
+      #     - language: go
+      #       name: "Go Tests"
+      # 
+      #       go:
+      #         - "1.11.x"
+      # 
+      #       install:
+      #         - go get github.com/dedis/Coding || true
+      #         - go get -t ./...
+      # 
+      #       before_install:
+      #         - cd $TRAVIS_BUILD_DIR
+      # 
+      #       script:
+      #         - make test_nostable
+      # 
     - language: java
       name: "Java Tests"
 
       script:
         - make test_java
 
-    - language: node_js
-      name: "kyber-js Tests"
-  
-      script:
-        - cd $TRAVIS_BUILD_DIR/external/js/kyber
-        - npm install
-        - npm run test
-        - npm run build
-
+      #     - language: node_js
+      #       name: "kyber-js Tests"
+      #   
+      #       script:
+      #         - cd $TRAVIS_BUILD_DIR/external/js/kyber
+      #         - npm install
+      #         - npm run test
+      #         - npm run build
+      # 
 

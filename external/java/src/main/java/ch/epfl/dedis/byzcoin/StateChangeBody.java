@@ -1,6 +1,8 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.lib.Sha256id;
 import ch.epfl.dedis.lib.darc.DarcId;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 
 /**
@@ -16,11 +18,14 @@ public class StateChangeBody {
     /**
      * Construct a StateChangeBody object from its protobuf representation.
      */
-    public StateChangeBody(ByzCoinProto.StateChangeBody proto) {
+    public StateChangeBody(ByzCoinProto.StateChangeBody proto) throws CothorityCryptoException {
         stateAction = proto.getStateaction();
         contractID = proto.getContractid().toByteArray();
         value = proto.getValue().toByteArray();
         version = proto.getVersion();
+        if (proto.getDarcid().toByteArray().length != Sha256id.length) {
+            throw new CothorityCryptoException("darc ID is empty");
+        }
         darcId = new DarcId(proto.getDarcid());
     }
 

@@ -46,16 +46,18 @@ public class Proof {
         proof = p.getInclusionproof();
         latest = new SkipBlock(p.getLatest());
         links = p.getLinksList();
-        if (proof.hasLeaf() && proof.getLeaf().hasValue()) {
+        this.verify(scID);
+        // we need to call matches to check that the leaf is correct before parsing it
+        // otherwise we might throw an exception
+        if (this.matches()) {
             try {
                 finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
             } catch (InvalidProtocolBufferException e) {
-                throw new CothorityCryptoException("failed to decode state change body because: " + e.getMessage());
+                throw new CothorityCryptoException("failed to decode state change body: " + e.getMessage());
             }
         } else {
             finalStateChangeBody = null;
         }
-        this.verify(scID);
     }
 
     /**
@@ -201,6 +203,9 @@ public class Proof {
      * is a proof of absence or an error has occured.
      */
     public boolean matches() {
+        if (!proof.hasLeaf()) {
+            return false;
+        }
         if (proof.getLeaf().getKey().isEmpty()) {
             return false;
         }
