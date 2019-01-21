@@ -9,7 +9,7 @@ import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
+import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -76,8 +76,8 @@ class DarcTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         // Evolve to give kcsigner the evolve permission
-        SignerX509EC kcsigner = new TestSignerX509EC();
-        SignerX509EC kcsigner2 = new TestSignerX509EC();
+        SignerX509EC kcsigner = new SignerX509ECTest();
+        SignerX509EC kcsigner2 = new SignerX509ECTest();
         Darc adminDarc2 = genesisDarc.copyRulesAndVersion();
         adminDarc2.setRule(Darc.RuleEvolve, kcsigner.getIdentity().toString().getBytes());
         DarcInstance di = DarcInstance.fromByzCoin(bc, genesisDarc);

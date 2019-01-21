@@ -12,6 +12,8 @@ import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.bouncycastle.crypto.Xof;
+import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -119,7 +121,7 @@ public class WriteData {
             C = C.add(Ed25519Point.embed(keyMaterial));
             wr.setC(C.toProto());
 
-            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
+            Point gBar = Ed25519Point.embed(lts.getLTSID().getId(), getXof(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
             Ed25519Pair skp = new Ed25519Pair();
@@ -141,6 +143,13 @@ public class WriteData {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Hashing-error: " + e.getMessage());
         }
+    }
+
+    // Used for when we need to embed the point deterministically with a seed.
+    private static Xof getXof(byte[] seed) {
+        SHAKEDigest d = new SHAKEDigest(256);
+        d.update(seed, 0, seed.length);
+        return d;
     }
 
     /**

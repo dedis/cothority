@@ -3,8 +3,7 @@ package ch.epfl.dedis.lib.darc;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,8 +43,8 @@ public class SignerTest {
 
     @Test
     void keycard() throws Exception {
-        SignerX509EC signer = new TestSignerX509EC("secp256k1-pkcs8.der", "secp256k1-pub.der");
-        SignerX509EC signer2 = new TestSignerX509EC("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerX509EC signer = new SignerX509ECTest("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerX509EC signer2 = new SignerX509ECTest("secp256k1-pkcs8.der", "secp256k1-pub.der");
 
         assertThrows(RuntimeException.class, () -> signer.getPrivate());
         assertThrows(IllegalStateException.class, () -> signer.serialize());

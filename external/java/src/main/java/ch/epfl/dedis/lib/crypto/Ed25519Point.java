@@ -6,6 +6,8 @@ import com.google.protobuf.ByteString;
 import net.i2p.crypto.eddsa.EdDSAPublicKey;
 import net.i2p.crypto.eddsa.math.GroupElement;
 import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec;
+import org.bouncycastle.crypto.Xof;
+import org.bouncycastle.crypto.digests.SHAKEDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,11 +109,10 @@ public class Ed25519Point implements Point {
     }
 
     /**
-     *
      * Embed data into a point. If the data is longer than 29 bytes then the extra bytes are ignored.
      *
-     * @param data is the data to embed
-     * @return the embedded point
+     * @param data is the data to embed.
+     * @return the embedded point.
      */
     public static Point embed(byte[] data) {
         return embed(data, new SecureRandom());
@@ -120,11 +121,29 @@ public class Ed25519Point implements Point {
     /**
      * Embed data into a point. If the data is longer than 29 bytes then the extra bytes are ignored.
      *
-     * @param data is the data to embed
-     * @param rand is the randomness used to generate candidate points
-     * @return the embedded point
+     * @param data is the data to embed.
+     * @param rand is the source of randomness to generate missing bytes in the point
+     * @return the embedded point.
      */
     public static Point embed(byte[] data, Random rand) {
+        SHAKEDigest d = new SHAKEDigest(256);
+        // 128 is picked as the size of the seed because the Reseed function in the Go implementation is also 128
+        byte[] buf = new byte[128];
+
+        rand.nextBytes(buf);
+        d.update(buf, 0, 128);
+
+        return embed(data, d);
+    }
+
+    /**
+     * Embed data into a point. If the data is longer than 29 bytes then the extra bytes are ignored.
+     *
+     * @param data is the data to embed
+     * @param xof is the extendable output function used to fill the missing bytes in the point.
+     * @return the embedded point.
+     */
+    public static Point embed(byte[] data, Xof xof) {
         int dataLen = 0;
         if (data != null) {
             dataLen = data.length;
@@ -135,7 +154,7 @@ public class Ed25519Point implements Point {
         }
         for (;;) {
             byte[] bytes = new byte[32];
-            rand.nextBytes(bytes);
+            xof.doOutput(bytes, 0, 32);
             if (dataLen > 0) {
                 bytes[0] = (byte) embedLen;
                 System.arraycopy(data, 0, bytes, 1, embedLen);
