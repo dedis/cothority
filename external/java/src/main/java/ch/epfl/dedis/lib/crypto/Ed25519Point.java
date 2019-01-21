@@ -125,27 +125,46 @@ public class Ed25519Point implements Point {
      * @return the embedded point
      */
     public static Point embed(byte[] data, Random rand) {
-        int dataLen = (255 - 8 - 8) / 8;
-        if (dataLen > data.length) {
+        int dataLen = 0;
+        if (data != null) {
             dataLen = data.length;
         }
-        byte[] bytes = new byte[32];
+        int embedLen = (255 - 8 - 8) / 8;
+        if (embedLen > dataLen) {
+            embedLen = dataLen;
+        }
         for (;;) {
+            byte[] bytes = new byte[32];
             rand.nextBytes(bytes);
-            bytes[0] = (byte) data.length;
-            System.arraycopy(data, 0, bytes, 1, dataLen);
+            if (dataLen > 0) {
+                bytes[0] = (byte) embedLen;
+                System.arraycopy(data, 0, bytes, 1, embedLen);
+            }
+
+            Point P;
             try {
-                Ed25519Point e = new Ed25519Point(bytes);
-                if (!e.mul(Ed25519.prime_order).isZero()) {
-                    continue;
-                }
-                return e;
+                P = new Ed25519Point(bytes);
             } catch (IllegalArgumentException e) {
-                // Will fail in about 87.5%, so try again.
+                // not a valid point, try again
+                continue;
             } catch (CothorityCryptoException e) {
                 // this exception only throws if the byte array representation of the point has a wrong length,
                 // but we set it statically so it cannot happen
                 throw new RuntimeException(e.getMessage());
+            }
+
+            if (dataLen == 0) {
+                P = P.mul(Ed25519.cofactor);
+                if (P.isZero()) {
+                    continue;
+                }
+                return P;
+            }
+
+            Point Q = P.copy();
+            Q = Q.mul(Ed25519.prime_order);
+            if (Q.isZero()) {
+                return P;
             }
         }
     }
