@@ -7,13 +7,29 @@ import {
 } from './constants';
 import GfP from './gfp';
 
+/**
+ * Group field of size p^6
+ * This object acts as an immutable and then any modification will instantiate
+ * a new object.
+ */
 export default class GfP6 {
-    static zero(): GfP6 {
-        return new GfP6();
+    private static ZERO = new GfP6();
+    private static ONE = new GfP6(GfP2.zero(), GfP2.zero(), GfP2.one());
+
+    /**
+     * Get the addition identity for this group field
+     * @returns the element
+     */
+    public static zero(): GfP6 {
+        return GfP6.ZERO;
     }
 
-    static one(): GfP6 {
-        return new GfP6(GfP2.zero(), GfP2.zero(), GfP2.one());
+    /**
+     * Get the multiplication identity for this group field
+     * @returns the element
+     */
+    public static one(): GfP6 {
+        return GfP6.ONE;
     }
 
     private x: GfP2;
@@ -26,26 +42,50 @@ export default class GfP6 {
         this.z = z || GfP2.zero();
     }
 
+    /**
+     * Get the x value of the group field element
+     * @returns the x element
+     */
     getX(): GfP2 {
         return this.x;
     }
 
+    /**
+     * Get the y value of the group field element
+     * @returns the y element
+     */
     getY(): GfP2 {
         return this.y;
     }
 
+    /**
+     * Get the z value of the group field element
+     * @returns the z element
+     */
     getZ(): GfP2 {
         return this.z;
     }
 
+    /**
+     * Check if the element is zero
+     * @returns true when zero, false otherwise
+     */
     isZero(): boolean {
         return this.x.isZero() && this.y.isZero() && this.z.isZero();
     }
 
+    /**
+     * Check if the element is one
+     * @returns true when one, false otherwise
+     */
     isOne(): boolean {
         return this.x.isZero() && this.y.isZero() && this.z.isOne();
     }
 
+    /**
+     * Get the negative of the element
+     * @returns the new element
+     */
     neg(): GfP6 {
         const x = this.x.negative();
         const y = this.y.negative();
@@ -66,20 +106,35 @@ export default class GfP6 {
         return new GfP6(x, y, this.z);
     }
 
-    add(a: GfP6): GfP6 {
-        const x = this.x.add(a.x);
-        const y = this.y.add(a.y);
-        const z = this.z.add(a.z);
+    /**
+     * Add b to the current element
+     * @param b the element to add
+     * @returns the new element
+     */
+    add(b: GfP6): GfP6 {
+        const x = this.x.add(b.x);
+        const y = this.y.add(b.y);
+        const z = this.z.add(b.z);
         return new GfP6(x, y, z);
     }
 
-    sub(a: GfP6): GfP6 {
-        const x = this.x.sub(a.x);
-        const y = this.y.sub(a.y);
-        const z = this.z.sub(a.z);
+    /**
+     * Subtract b to the current element
+     * @param b the element to subtract
+     * @returns the new element
+     */
+    sub(b: GfP6): GfP6 {
+        const x = this.x.sub(b.x);
+        const y = this.y.sub(b.y);
+        const z = this.z.sub(b.z);
         return new GfP6(x, y, z);
     }
 
+    /**
+     * Multiply the current element by b
+     * @param b the element to multiply with
+     * @returns the new element
+     */
     mul(b: GfP6): GfP6 {
         const v0 = this.z.mul(b.z);
         const v1 = this.y.mul(b.y);
@@ -104,6 +159,11 @@ export default class GfP6 {
         return new GfP6(tx, ty, tz);
     }
 
+    /**
+     * Multiply the current element by a scalar
+     * @param b the scalar
+     * @returns the new element
+     */
     mulScalar(b: GfP2): GfP6 {
         const x = this.x.mul(b);
         const y = this.y.mul(b);
@@ -111,6 +171,11 @@ export default class GfP6 {
         return new GfP6(x, y, z);
     }
 
+    /**
+     * Multiply the current element by a GFp element
+     * @param b the GFp element
+     * @returns the new element
+     */
     mulGfP(b: GfP): GfP6 {
         const x = this.x.mulScalar(b);
         const y = this.y.mulScalar(b);
@@ -124,6 +189,10 @@ export default class GfP6 {
         return new GfP6(this.y, this.z, tz);
     }
 
+    /**
+     * Get the square of the current element
+     * @returns the new element
+     */
     square(): GfP6 {
         const v0 = this.z.square();
         const v1 = this.y.square();
@@ -136,6 +205,10 @@ export default class GfP6 {
         return new GfP6(c2, c1, c0);
     }
 
+    /**
+     * Get the inverse of the element
+     * @returns the new element
+     */
     invert(): GfP6 {
         const A = this.z.square().sub(this.x.mul(this.y).mulXi());
         const B = this.x.square().mulXi().sub(this.y.mul(this.z));
@@ -145,14 +218,19 @@ export default class GfP6 {
         return new GfP6(C.mul(F), B.mul(F), A.mul(F));
     }
 
-    clone(): GfP6 {
-        return new GfP6(this.x, this.y, this.z);
-    }
-
+    /**
+     * Check the equality with the other object
+     * @param o the other object
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is GfP6 {
         return this.x.equals(o.x) && this.y.equals(o.y) && this.z.equals(o.z);
     }
 
+    /**
+     * Get the string representation of the element
+     * @returns a string representation
+     */
     toString(): string {
         return `(${this.x.toString()}, ${this.y.toString()}, ${this.z.toString()})`;
     }

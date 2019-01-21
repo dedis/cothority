@@ -4,8 +4,11 @@ import { p } from './constants';
 
 type BNType = Buffer | string | number | BN;
 
-const curveB = new GfP(new BN(3));
+const curveB = new GfP(3);
 
+/**
+ * Point class used by G1
+ */
 export default class CurvePoint {
     static generator = new CurvePoint(1, -2, 1, 0);
     
@@ -21,14 +24,26 @@ export default class CurvePoint {
         this.t = new GfP(t || 0);
     }
 
+    /**
+     * Get the x element of the point
+     * @returns the x element
+     */
     getX(): GfP {
         return this.x;
     }
 
+    /**
+     * Get the y element of the point
+     * @returns the y element
+     */
     getY(): GfP {
         return this.y;
     }
 
+    /**
+     * Check if the point is valid by checking if it is on the curve
+     * @returns true when the point is valid, false otherwise
+     */
     isOnCurve(): boolean {
         let yy = this.y.sqr();
         const xxx = this.x.pow(new BN(3));
@@ -42,6 +57,9 @@ export default class CurvePoint {
         return yy.signum() == 0;
     }
 
+    /**
+     * Set the point to the infinity
+     */
     setInfinity(): void {
         this.x = new GfP(0);
         this.y = new GfP(1);
@@ -49,10 +67,19 @@ export default class CurvePoint {
         this.t = new GfP(0);
     }
 
+    /**
+     * Check if the point is the infinity
+     * @returns true when infinity, false otherwise
+     */
     isInfinity(): boolean {
         return this.z.isZero();
     }
 
+    /**
+     * Add a to b and set the value to the point
+     * @param a the first point
+     * @param b the second point
+     */
     add(a: CurvePoint, b: CurvePoint): void {
         if (a.isInfinity()) {
             this.copy(b)
@@ -108,6 +135,10 @@ export default class CurvePoint {
         this.z = t4.mul(h).mod(p);
     }
 
+    /**
+     * Compute the double of a and set the value to the point
+     * @param a the point to double
+     */
     dbl(a: CurvePoint): void {
         const A = a.x.sqr().mod(p);
         const B = a.y.sqr().mod(p);
@@ -136,6 +167,11 @@ export default class CurvePoint {
         this.z = t.add(t).mod(p);
     }
 
+    /**
+     * Multiply a by a scalar
+     * @param a      the point to multiply
+     * @param scalar the scalar
+     */
     mul(a: CurvePoint, scalar: BN): void {
         const sum = new CurvePoint();
         sum.setInfinity();
@@ -153,6 +189,9 @@ export default class CurvePoint {
         this.copy(sum);
     }
 
+    /**
+     * Normalize the point coordinates
+     */
     makeAffine(): void {
         if (this.z.isOne()) {
             return;
@@ -171,6 +210,10 @@ export default class CurvePoint {
         this.t = new GfP(1);
     }
 
+    /**
+     * Compute the negative of a and set the value to the point
+     * @param a the point to negate
+     */
     negative(a: CurvePoint): void {
         this.x = a.x;
         this.y = a.y.negate();
@@ -178,13 +221,22 @@ export default class CurvePoint {
         this.t = new GfP(0);
     }
 
+    /**
+     * Fill the point with the values of a
+     * @param p the point to copy
+     */
     copy(p: CurvePoint): void {
-        this.x = p.x.clone();
-        this.y = p.y.clone();
-        this.z = p.z.clone();
-        this.t = p.t.clone();
+        // immutable objects so we can copy them
+        this.x = p.x;
+        this.y = p.y;
+        this.z = p.z;
+        this.t = p.t;
     }
 
+    /**
+     * Get a clone of the current point
+     * @returns a clone of the point
+     */
     clone(): CurvePoint {
         const p = new CurvePoint();
         p.copy(this);
@@ -192,6 +244,11 @@ export default class CurvePoint {
         return p;
     }
 
+    /**
+     * Check the equality between the point and the object
+     * @param o the object
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is CurvePoint {
         if (!(o instanceof CurvePoint)) {
             return false;
@@ -206,6 +263,10 @@ export default class CurvePoint {
         return a.x.equals(b.x) && a.y.equals(b.y) && a.z.equals(b.z) && a.t.equals(b.t);
     }
 
+    /**
+     * Get the string representation of the point
+     * @returns the string representation
+     */
     toString(): string {
         const p = this.clone();
         p.makeAffine();

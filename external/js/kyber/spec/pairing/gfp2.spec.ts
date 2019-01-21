@@ -61,14 +61,6 @@ describe('GfP2', () => {
         expect(a.equals(b)).toBeTruthy();
     });
 
-    it('should clone', () => {
-        const a = new GfP2('23423492374', '12934872398472394827398479');
-        const b = a.clone();
-
-        expect(a).not.toBe(b);
-        expect(a.equals(b)).toBeTruthy();
-    });
-
     it('should stringify', () => {
         const one = GfP2.one();
 

@@ -6,6 +6,9 @@ const twistB = new GfP2(
     '45500384786952622612957507119651934019977750675336102500314001518804928850249'
 );
 
+/**
+ * Point class used by G2
+ */
 export default class TwistPoint {
     static generator = new TwistPoint(
         new GfP2(
@@ -32,22 +35,42 @@ export default class TwistPoint {
         this.t = t || GfP2.zero();
     }
 
+    /**
+     * Get the x element of the point
+     * @returns the x element
+     */
     getX(): GfP2 {
         return this.x;
     }
 
+    /**
+     * Get the y element of the point
+     * @returns the y element
+     */
     getY(): GfP2 {
         return this.y;
     }
 
+    /**
+     * Get the z element of the point
+     * @returns the z element
+     */
     getZ(): GfP2 {
         return this.z;
     }
 
+    /**
+     * Get the t element of the point
+     * @returns the t element
+     */
     getT(): GfP2 {
         return this.t;
     }
 
+    /**
+     * Check if the point is on the curve, meaning it's a valid point
+     * @returns true for a valid point, false otherwise
+     */
     isOnCurve(): boolean {
         const cpy = this.clone();
         cpy.makeAffine();
@@ -61,6 +84,9 @@ export default class TwistPoint {
         return yy.equals(xxx);
     }
 
+    /**
+     * Set the point to the infinity value
+     */
     setInfinity(): void {
         this.x = GfP2.zero();
         this.y = GfP2.one();
@@ -68,10 +94,19 @@ export default class TwistPoint {
         this.t = GfP2.zero();
     }
 
+    /**
+     * Check if the point is the infinity
+     * @returns true when the infinity, false otherwise
+     */
     isInfinity(): boolean {
         return this.z.isZero();
     }
 
+    /**
+     * Add a to b and set the value to the point
+     * @param a first point
+     * @param b second point
+     */
     add(a: TwistPoint, b: TwistPoint): void {
         if (a.isInfinity()) {
             this.copy(b);
@@ -126,6 +161,10 @@ export default class TwistPoint {
         this.z = t4.mul(h);
     }
 
+    /**
+     * Compute the double of the given point and set the value
+     * @param a the point
+     */
     double(a: TwistPoint): void {
         const A = a.x.square();
         const B = a.y.square();
@@ -154,6 +193,11 @@ export default class TwistPoint {
         this.z = t.add(t);
     }
 
+    /**
+     * Multiply a point by a scalar and set the value to the point
+     * @param a the point
+     * @param k the scalar
+     */
     mul(a: TwistPoint, k: BN): void {
         const sum = new TwistPoint();
         const t = new TwistPoint();
@@ -170,6 +214,9 @@ export default class TwistPoint {
         this.copy(sum);
     }
 
+    /**
+     * Normalize the point coordinates
+     */
     makeAffine(): void {
         if (this.z.isOne()) {
             return;
@@ -187,6 +234,10 @@ export default class TwistPoint {
         this.t = GfP2.one();
     }
 
+    /**
+     * Compute the negative of a and set the value to the point
+     * @param a the point
+     */
     neg(a: TwistPoint): void {
         this.x = a.x;
         this.y = a.y.negative();
@@ -194,6 +245,10 @@ export default class TwistPoint {
         this.t = GfP2.zero();
     }
 
+    /**
+     * Fill the point with the values of a
+     * @param a the point
+     */
     copy(a: TwistPoint): void {
         this.x = a.x;
         this.y = a.y;
@@ -201,10 +256,18 @@ export default class TwistPoint {
         this.t = a.t;
     }
 
+    /**
+     * Get the a clone of the current point
+     * @returns a copy of the point
+     */
     clone(): TwistPoint {
         return new TwistPoint(this.x, this.y, this.z, this.t);
     }
 
+    /**
+     * Check the equality between two points
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is TwistPoint {
         if (!(o instanceof TwistPoint)) {
             return false;
@@ -219,6 +282,10 @@ export default class TwistPoint {
         return a.x.equals(b.x) && a.y.equals(b.y) && a.z.equals(b.z) && a.t.equals(b.t);
     }
 
+    /**
+     * Get the string representation of the point
+     * @returns the string representation
+     */
     toString(): string {
         const cpy = this.clone();
         cpy.makeAffine();

@@ -41,10 +41,4 @@ describe('GfP6', () => {
         expect(n.equals(a)).toBeFalsy();
         expect(n.neg().equals(a)).toBeTruthy();
     });
-
-    it('should clone', () => {
-        const c = a.clone();
-
-        expect(c.equals(a)).toBeTruthy();
-    });
 });

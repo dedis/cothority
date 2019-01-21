@@ -9,6 +9,9 @@ import GfP from "./gfp";
 
 const sixuPlus2NAF = [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 1, 0, -1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 1];
 
+/**
+ * Results from the line functions
+ */
 interface Result {
     a: GfP2,
     b: GfP2,
@@ -16,6 +19,10 @@ interface Result {
     rOut: TwistPoint,
 }
 
+/**
+ * See the mixed addition algorithm from "Faster Computation of the
+ * Tate Pairing", http://arxiv.org/pdf/0904.0854v3.pdf
+ */
 function lineFunctionAdd(r: TwistPoint, p: TwistPoint, q: CurvePoint, r2: GfP2): Result {
     const B = p.getX().mul(r.getT());
     const D = p.getY().add(r.getZ()).square().sub(r2).sub(r.getT()).mul(r.getT());
@@ -56,6 +63,10 @@ function lineFunctionAdd(r: TwistPoint, p: TwistPoint, q: CurvePoint, r2: GfP2):
     };
 }
 
+/**
+ * See the doubling algorithm for a=0 from "Faster Computation of the
+ * Tate Pairing", http://arxiv.org/pdf/0904.0854v3.pdf
+ */
 function lineFunctionDouble(r: TwistPoint, q: CurvePoint): Result {
     const A = r.getX().square();
     const B = r.getY().square();
@@ -107,6 +118,10 @@ function mulLine(ret: GfP12, res: Result): GfP12 {
     return new GfP12(tx, ty);
 }
 
+/**
+ * miller implements the Miller loop for calculating the Optimal Ate pairing.
+ * See algorithm 1 from http://cryptojedi.org/papers/dclxvi-20100714.pdf
+ */
 function miller(q: TwistPoint, p: CurvePoint): GfP12 {
     let ret = GfP12.one();
 
@@ -167,6 +182,11 @@ function miller(q: TwistPoint, p: CurvePoint): GfP12 {
     return mulLine(ret, res2);
 }
 
+/**
+ * finalExponentiation computes the (p¹²-1)/Order-th power of an element of
+ * GF(p¹²) to obtain an element of GT (steps 13-15 of algorithm 1 from
+ * http://cryptojedi.org/papers/dclxvi-20100714.pdf)
+ */
 function finalExponentiation(a: GfP12): GfP12 {
     let t1 = a.conjugate();
 
@@ -202,6 +222,13 @@ function finalExponentiation(a: GfP12): GfP12 {
     return t0.square().mul(t1);
 }
 
+/**
+ * Compute the pairing between a point in G1 and a point in G2
+ * using the Optimal Ate algorithm
+ * @param g1 the point in G1
+ * @param g2 the point in G2
+ * @returns the resulting point in GT
+ */
 export function optimalAte(g1: G1, g2: G2): GT {
     const e = miller(g2.getPoint(), g1.getPoint());
     const ret = finalExponentiation(e);

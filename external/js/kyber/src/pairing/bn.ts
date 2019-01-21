@@ -8,6 +8,10 @@ import { optimalAte } from './opt-ate';
 
 export type BNType = number | string | number[] | Buffer | BN;
 
+/**
+ * Wrapper around the basic curve point. It acts as a mutable object and
+ * then every modification is done in-place.
+ */
 export class G1 {
     private static ELEM_SIZE = 256/8;
     private static MARSHAL_SIZE = G1.ELEM_SIZE * 2;
@@ -22,34 +26,67 @@ export class G1 {
         }
     }
 
+    /**
+     * Get the curve point
+     * @returns the point
+     */
     getPoint(): CurvePoint {
         return this.p;
     }
 
+    /**
+     * Set the point to infinity
+     */
     setInfinity(): void {
         this.p.setInfinity();
     }
 
+    /**
+     * Check if the point is the infinity
+     * @returns true when infinity, false otherwise
+     */
     isInfinity(): boolean {
         return this.p.isInfinity();
     }
 
+    /**
+     * Multiply the generator by the scalar k and set the value
+     * @param k the scalar
+     */
     scalarBaseMul(k: BN): void {
         this.p.mul(CurvePoint.generator, k);
     }
 
+    /**
+     * Multiply a by the scalar k and set the value
+     * @param a the point
+     * @param k the scalar
+     */
     scalarMul(a: G1, k: BN): void {
         this.p.mul(a.p, k);
     }
 
+    /**
+     * Add a to b and set the value
+     * @param a the first point
+     * @param b the second point
+     */
     add(a: G1, b: G1): void {
         this.p.add(a.p, b.p);
     }
 
+    /**
+     * Compute the negative of a and set the value
+     * @param the point to negate
+     */
     neg(a: G1): void {
         this.p.negative(a.p);
     }
 
+    /**
+     * Serialize the point into bytes
+     * @returns the buffer
+     */
     marshal(): Buffer {
         const p = this.p.clone();
         const buf = Buffer.alloc(G1.MARSHAL_SIZE, 0);
@@ -66,6 +103,10 @@ export class G1 {
         return Buffer.concat([xBytes, yBytes]);
     }
 
+    /**
+     * Take a buffer to deserialize a point
+     * @param bytes the buffer
+     */
     unmarshal(bytes: Buffer): void {
         if (bytes.length != G1.MARSHAL_SIZE) {
             throw new Error('wrong buffer size for a G1 point');
@@ -83,6 +124,11 @@ export class G1 {
         }
     }
 
+    /**
+     * Check the equality between the point and the object
+     * @param o the object
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is G1 {
         if (!(o instanceof G1)) {
             return false;
@@ -91,11 +137,19 @@ export class G1 {
         return this.p.equals(o.p);
     }
 
+    /**
+     * Get the string representation of the point
+     * @returns the string representation
+     */
     toString(): string {
         return `bn256.G1${this.p.toString()}`;
     }
 }
 
+/**
+ * Wrapper around the twist point. It acts as a mutable object and
+ * then every modification is done in-place.
+ */
 export class G2 {
     p: TwistPoint;
 
@@ -110,34 +164,67 @@ export class G2 {
         }
     }
 
+    /**
+     * Get the twist point
+     * @returns the point
+     */
     getPoint(): TwistPoint {
         return this.p;
     }
 
+    /**
+     * Set the point to the infinity
+     */
     setInfinity(): void {
         this.p.setInfinity();
     }
 
+    /**
+     * Check if the point is the infinity
+     * @returns true when infinity, false otherwise
+     */
     isInfinity(): boolean {
         return this.p.isInfinity();
     }
 
+    /**
+     * Mutliply the generator by a scalar k and set the value
+     * @param k the scalar
+     */
     scalarBaseMul(k?: BN): void {
         this.p.mul(TwistPoint.generator, k);
     }
 
+    /**
+     * Multiply a by a scalar k and set the value
+     * @param a the point
+     * @param k the scalar
+     */
     scalarMul(a: G2, k: BN): void {
         this.p.mul(a.p, k);
     }
 
+    /**
+     * Add a to b and set the value
+     * @param a the first point
+     * @param b the second point
+     */
     add(a: G2, b: G2): void {
         this.p.add(a.p, b.p);
     }
 
+    /**
+     * Compute the negative of a and set the value
+     * @param a the point
+     */
     neg(a: G2) {
         this.p.neg(a.p);
     }
 
+    /**
+     * Serialize the point into bytes
+     * @returns the buffer
+     */
     marshal(): Buffer {
         if (this.isInfinity()) {
             return Buffer.alloc(G2.MARSHAL_SIZE, 0);
@@ -154,6 +241,10 @@ export class G2 {
         return Buffer.concat([xxBytes, xyBytes, yxBytes, yyBytes]);
     }
 
+    /**
+     * Take a buffer and deserialize a point
+     * @param bytes the buffer
+     */
     unmarshal(bytes: Buffer): void {
         if (bytes.length !== G2.MARSHAL_SIZE) {
             throw new Error('wrong buffer size for G2 point');
@@ -181,6 +272,10 @@ export class G2 {
         }
     }
 
+    /**
+     * Get a clone of G2
+     * @returns the clone
+     */
     clone(): G2 {
         const t = new G2();
         t.p = this.p.clone();
@@ -188,6 +283,11 @@ export class G2 {
         return t;
     }
 
+    /**
+     * Check the equality of the current point and the object
+     * @param o the object
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is G2 {
         if (!(o instanceof G2)) {
             return false;
@@ -196,11 +296,19 @@ export class G2 {
         return this.p.equals(o.p);
     }
 
+    /**
+     * Get the string representation of the point
+     * @returns the string representation
+     */
     toString(): string {
         return `bn256.G2${this.p.toString()}`;
     }
 }
 
+/**
+ * Wrapper around the result of pairing of G1 and G2. It acts as a mutable
+ * object and then every modification is done in-place.
+ */
 export class GT {
     private static ELEM_SIZE = 256 / 8;
     private static MARSHAL_SIZE = GT.ELEM_SIZE * 12;
@@ -219,22 +327,44 @@ export class GT {
         this.g = g || new GfP12();
     }
 
+    /**
+     * Check if the point is one
+     * @returns true when one, false otherwise
+     */
     isOne(): boolean {
         return this.g.isOne();
     }
 
+    /**
+     * Multiply the point a by a scalar k and set the value
+     * @param a the point
+     * @param k the scalar
+     */
     scalarMul(a: GT, k: BN): void {
         this.g = a.g.exp(k);
     }
 
+    /**
+     * Add two points a and b and set the value
+     * @param a the first point
+     * @param b the second point
+     */
     add(a: GT, b: GT): void {
         this.g = a.g.mul(b.g);
     }
 
+    /**
+     * Compute the negative of a and set the value
+     * @param a the point
+     */
     neg(a: GT): void {
         this.g = a.g.invert();
     }
 
+    /**
+     * Serialize the point into bytes
+     * @returns the buffer
+     */
     marshal(): Buffer {
         const xxxBytes = this.g.getX().getX().getX().toBytes();
         const xxyBytes = this.g.getX().getX().getY().toBytes();
@@ -257,6 +387,10 @@ export class GT {
         ]);
     }
 
+    /**
+     * Take a buffer and deserialize a point
+     * @param bytes the buffer
+     */
     unmarshal(bytes: Buffer): void {
         if (bytes.length !== GT.MARSHAL_SIZE) {
             throw new Error('wrong buffer size for a GT point');
@@ -282,6 +416,11 @@ export class GT {
         );
     }
 
+    /**
+     * Check the equality of the point and an object
+     * @param o the object
+     * @returns true when both are equal, false otherwise
+     */
     equals(o: any): o is GT {
         if (!(o instanceof GT)) {
             return false;
@@ -290,6 +429,10 @@ export class GT {
         return this.g.equals(o.g);
     }
 
+    /**
+     * Get the string representation of the point
+     * @returns the string representation
+     */
     toString(): string {
         return `bn256.GT${this.g.toString()}`;
     }
