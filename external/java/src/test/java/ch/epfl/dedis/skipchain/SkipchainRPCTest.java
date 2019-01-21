@@ -19,12 +19,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SkipchainRPCTest {
@@ -37,7 +36,7 @@ class SkipchainRPCTest {
         TestServerController testInstanceController = TestServerInit.getInstance();
         Signer admin = new SignerEd25519();
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
-        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }

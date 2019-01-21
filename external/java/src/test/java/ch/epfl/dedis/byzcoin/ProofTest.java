@@ -16,13 +16,12 @@ import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProofTest {
@@ -35,7 +34,7 @@ class ProofTest {
         admin = new SignerEd25519();
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }

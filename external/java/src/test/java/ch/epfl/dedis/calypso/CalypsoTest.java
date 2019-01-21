@@ -24,12 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CalypsoTest {
@@ -62,7 +61,7 @@ class CalypsoTest {
 
         try {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());
-            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(2000, MILLIS));
+            ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
             for (ServerIdentity si : bc.getRoster().getNodes()) {
                 CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
             }
@@ -275,7 +274,7 @@ class CalypsoTest {
         Darc userDarc = new Darc(Arrays.asList(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")).getIdentity()), null, null);
         calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
 
-        ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, Duration.ofMillis(500));
+        ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc2.getRoster().getNodes()) {
             CalypsoRPC.authorise(si, bc2.getGenesisBlock().getId());
         }

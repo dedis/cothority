@@ -13,13 +13,12 @@ import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,14 +39,14 @@ public class RestartTest {
     void Step1() throws CothorityException {
         Signer admin = new SignerEd25519();
         Darc adminDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
-        ByzCoinRPC bc = new ByzCoinRPC(roster, adminDarc, Duration.ofMillis(500));
+        ByzCoinRPC bc = new ByzCoinRPC(roster, adminDarc, BLOCK_INTERVAL);
         assertTrue(bc.checkLiveness());
         listBlocks(bc);
         bcStr = bc.getGenesisBlock().getId().toString();
     }
 
     @Test
-    void Step2() throws CothorityException, InvalidProtocolBufferException {
+    void Step2() throws CothorityException {
         SkipblockId bcid = new SkipblockId(Hex.parseHexBinary(bcStr));
         ByzCoinRPC bc = ByzCoinRPC.fromByzCoin(roster, bcid);
         assertTrue(bc.checkLiveness());
