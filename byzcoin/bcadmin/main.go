@@ -22,6 +22,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"encoding/json"
+
 	"github.com/qantik/qrgo"
 	cli "gopkg.in/urfave/cli.v1"
 )
@@ -713,13 +714,17 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 }
 
 func qrcode(c *cli.Context) error {
+	type pair struct {
+		Priv string
+		Pub  string
+	}
 	type baseconfig struct {
 		ByzCoinID skipchain.SkipBlockID
 	}
 
 	type adminconfig struct {
 		ByzCoinID skipchain.SkipBlockID
-		Admin     string
+		Admin     pair
 	}
 
 	bcArg := c.String("bc")
@@ -739,10 +744,18 @@ func qrcode(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		sig, err := signer.String()
+
+		priv, err := signer.GetPrivate()
+		if err != nil {
+			return err
+		}
+
 		toWrite, err = json.Marshal(adminconfig{
 			ByzCoinID: cfg.ByzCoinID,
-			Admin:     sig,
+			Admin: pair{
+				Priv: priv.String(),
+				Pub:  signer.Identity().String(),
+			},
 		})
 	} else {
 		toWrite, err = json.Marshal(baseconfig{
