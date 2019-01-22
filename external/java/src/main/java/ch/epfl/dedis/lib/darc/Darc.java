@@ -63,7 +63,6 @@ public class Darc {
         this.rules = rules;
         this.signatures = new ArrayList<>();
         this.verificationDarcs = new ArrayList<>();
-
     }
 
     /**
@@ -79,6 +78,7 @@ public class Darc {
 
     /**
      * Convenience constructor
+     *
      * @param proto proto representation of the darc
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
@@ -100,9 +100,10 @@ public class Darc {
 
     /**
      * Convenience constructure
+     *
      * @param buf byte representation of protobuf representation
      * @throws InvalidProtocolBufferException if the Darc cannot be parsed
-     * @throws CothorityCryptoException if there's a problem with the cryptography
+     * @throws CothorityCryptoException       if there's a problem with the cryptography
      */
     public Darc(byte[] buf) throws InvalidProtocolBufferException, CothorityCryptoException {
         this(DarcProto.Darc.parseFrom(buf));
@@ -112,7 +113,7 @@ public class Darc {
      * Sets a rule to be the action/expression pair. This will overwrite an
      * existing rule or create a new one.
      *
-     * @param action the action
+     * @param action     the action
      * @param expression the expression
      */
     public void setRule(String action, byte[] expression) {
@@ -127,7 +128,7 @@ public class Darc {
         }
     }
 
-    public void addIdentity(String action, Identity id, String link) throws CothorityCryptoException{
+    public void addIdentity(String action, Identity id, String link) throws CothorityCryptoException {
         ByteArrayOutputStream newExpr = new ByteArrayOutputStream();
         try {
             if (rules.contains(action)) {
@@ -136,7 +137,7 @@ public class Darc {
             }
             newExpr.write(id.toString().getBytes());
             setRule(action, newExpr.toByteArray());
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
     }
@@ -195,7 +196,7 @@ public class Darc {
     public DarcProto.Darc toProto() {
         DarcProto.Darc.Builder b = DarcProto.Darc.newBuilder();
         b.setVersion(this.version);
-        if (this.description != null){
+        if (this.description != null) {
             b.setDescription(ByteString.copyFrom(this.description));
         } else {
             b.setDescription(ByteString.EMPTY);
@@ -251,9 +252,8 @@ public class Darc {
 
     /**
      * @param d the previous darc
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public void setPrevId(Darc d) throws CothorityCryptoException {
+    public void setPrevId(Darc d) {
         setPrevId(d.getId());
     }
 
@@ -261,9 +261,8 @@ public class Darc {
      * Gets the base-ID of the darc, i.e. the ID before any evolution.
      *
      * @return base-ID
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public DarcId getBaseId() throws CothorityCryptoException {
+    public DarcId getBaseId() {
         if (version == 0) {
             return getId();
         }
@@ -284,7 +283,6 @@ public class Darc {
     /**
      * @return a copy of the darc with the same version number, rules and description.
      * The prevID and baseID are initiated to null, which must be set afterwards if the darc is to be used.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc copyRulesAndVersion() {
         Rules rs = new Rules(this.rules);
@@ -294,45 +292,27 @@ public class Darc {
     }
 
     /**
-     * @return a copy of the darc with the next version number and prevId and baseId set up.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
-     */
-    public Darc copyEvolve() throws CothorityCryptoException {
-        Rules rs = new Rules(this.rules);
-        Darc c = new Darc(rs, description.clone());
-        c.version = version + 1;
-        c.prevID = getId();
-        c.baseID = getBaseId();
-        return c;
-    }
-
-    /**
      * @return the corresponding identityDarc
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Identity getIdentity() throws CothorityCryptoException{
+    public Identity getIdentity() {
         return IdentityFactory.New(this);
     }
 
     public String toString() {
-        try {
-            String base = Hex.printHexBinary(getBaseId().getId());
-            if (baseID != null) {
-                base = String.format("stored: %s", Hex.printHexBinary(baseID.getId()));
-            }
-            String ret = String.format("Base: %s\nId: %s\nPrevId: %s\nVersion: %d\nRules:",
-                    base,
-                    Hex.printHexBinary(getId().getId()),
-                    Hex.printHexBinary(getPrevID().getId()),
-                    version);
-            for (Rule r : rules.getAllRules()) {
-                ret += String.format("\n%s - %s", r.getAction(), new String(r.getExpr()));
-            }
-            ret += String.format("\nDescription: %s", Hex.printHexBinary(description));
-            return ret;
-        } catch (CothorityException e) {
-            throw new RuntimeException(e);
+        String base = Hex.printHexBinary(getBaseId().getId());
+        if (baseID != null) {
+            base = String.format("stored: %s", Hex.printHexBinary(baseID.getId()));
         }
+        String ret = String.format("Base: %s\nId: %s\nPrevId: %s\nVersion: %d\nRules:",
+                base,
+                Hex.printHexBinary(getId().getId()),
+                Hex.printHexBinary(getPrevID().getId()),
+                version);
+        for (Rule r : rules.getAllRules()) {
+            ret += String.format("\n%s - %s", r.getAction(), new String(r.getExpr()));
+        }
+        ret += String.format("\nDescription: %s", Hex.printHexBinary(description));
+        return ret;
     }
 
     /**
@@ -378,13 +358,9 @@ public class Darc {
         if (other == null) return false;
         if (other == this) return true;
         if (!(other instanceof Darc)) return false;
-        Darc otherDarc = (Darc)other;
-        try {
-            return getBaseId().equals(otherDarc.getBaseId()) &&
-                    version == otherDarc.version;
-        } catch (CothorityCryptoException e){
-            return false;
-        }
+        Darc otherDarc = (Darc) other;
+        return getBaseId().equals(otherDarc.getBaseId()) &&
+                version == otherDarc.version;
     }
 
     private static byte[] longToArr8(long x) {
