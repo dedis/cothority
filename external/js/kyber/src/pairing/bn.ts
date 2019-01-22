@@ -35,6 +35,13 @@ export class G1 {
     }
 
     /**
+     * Set the point to the generator of the curve
+     */
+    setBase(): void {
+        this.p = CurvePoint.generator.clone();
+    }
+
+    /**
      * Set the point to infinity
      */
     setInfinity(): void {
@@ -81,6 +88,14 @@ export class G1 {
      */
     neg(a: G1): void {
         this.p.negative(a.p);
+    }
+
+    /**
+     * Get the buffer size after marshaling
+     * @returns the length
+     */
+    marshalSize(): number {
+        return G1.MARSHAL_SIZE;
     }
 
     /**
@@ -138,6 +153,16 @@ export class G1 {
     }
 
     /**
+     * Get a clone of the element
+     * @returns the new element
+     */
+    clone(): G1 {
+        const g = new G1();
+        g.p = this.p.clone();
+        return g;
+    }
+
+    /**
      * Get the string representation of the point
      * @returns the string representation
      */
@@ -170,6 +195,13 @@ export class G2 {
      */
     getPoint(): TwistPoint {
         return this.p;
+    }
+
+    /**
+     * Set to the generator of the curve
+     */
+    setBase(): void {
+        this.p = TwistPoint.generator.clone();
     }
 
     /**
@@ -219,6 +251,14 @@ export class G2 {
      */
     neg(a: G2) {
         this.p.neg(a.p);
+    }
+
+    /**
+     * Get the size of the buffer after marshaling
+     * @returns the size
+     */
+    marshalSize(): number {
+        return G2.MARSHAL_SIZE;
     }
 
     /**

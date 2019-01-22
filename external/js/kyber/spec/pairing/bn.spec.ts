@@ -14,7 +14,7 @@ function getRandomInt(): number {
 }
 
 describe('BN curve', () => {
-    it('should add an multiply', () => {
+    it('should add and multiply', () => {
         const p = new G1(123);
 
         const pp = new G1();
