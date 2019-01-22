@@ -136,13 +136,14 @@ func newRootNode(b Bucket, nonce []byte) error {
 func (t *Trie) GetRoot() []byte {
 	var root []byte
 	t.db.View(func(b Bucket) error {
-		root = clone(t.getRoot(b))
+		root = clone(t.GetRootWithBucket(b))
 		return nil
 	})
 	return root
 }
 
-func (t *Trie) getRoot(b Bucket) []byte {
+// GetRootWithBucket returns the root of the trie in an existing bucket.
+func (t *Trie) GetRootWithBucket(b Bucket) []byte {
 	return b.Get([]byte(entryKey))
 }
 
@@ -190,7 +191,7 @@ func (t *Trie) BatchWithBucket(pairs []KVPair, b Bucket) error {
 // SetWithBucket sets or overwrites a key-value pair. It must be called inside
 // a DB.Update transaction.
 func (t *Trie) SetWithBucket(key []byte, value []byte, b Bucket) error {
-	newRoot, err := t.set(t.getRoot(b), t.binSlice(key), 0, key, value, b)
+	newRoot, err := t.set(t.GetRootWithBucket(b), t.binSlice(key), 0, key, value, b)
 	if err != nil {
 		return err
 	}
@@ -378,7 +379,7 @@ func (t *Trie) Delete(key []byte) error {
 // DeleteWithBucket deletes the key-value pair, an error is returned if the key
 // does not. It must be called inside an DB.Update transaction.
 func (t *Trie) DeleteWithBucket(key []byte, b Bucket) error {
-	rootKey := t.getRoot(b)
+	rootKey := t.GetRootWithBucket(b)
 	if rootKey == nil {
 		return errors.New("no root key")
 	}
@@ -410,7 +411,7 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 // GetWithBucket looks up whether a value exists for the given key, it must be
 // executed in a valid transaction.
 func (t *Trie) GetWithBucket(key []byte, b Bucket) ([]byte, error) {
-	rootKey := t.getRoot(b)
+	rootKey := t.GetRootWithBucket(b)
 	if rootKey == nil {
 		return nil, errors.New("no root key")
 	}
@@ -564,7 +565,7 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket)
 func (t *Trie) IsValid() error {
 	p := countNodeProcessor{}
 	err := t.db.View(func(b Bucket) error {
-		rootKey := t.getRoot(b)
+		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
 			return errors.New("no root key")
 		}

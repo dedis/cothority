@@ -27,7 +27,7 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
-	"gopkg.in/satori/go.uuid.v1"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
@@ -1006,13 +1006,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
-	if err = st.StoreAll(scs, sb.Index); err != nil {
+	if err = st.VerifiedStoreAll(scs, sb.Index, header.TrieRoot); err != nil {
 		return err
-	}
-	if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
-		// TODO: if this happens, we've now got a corrupted cdb. See issue #1447.
-		// This should never happen...
-		panic(s.ServerIdentity().String() + ": hash of trie doesn't correspond to root hash")
 	}
 
 	err = s.stateChangeStorage.append(scs, sb)
