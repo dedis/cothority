@@ -7,7 +7,7 @@ import { p } from '../../src/pairing/constants';
  * Unsecure pseudo random generator
  * @returns a big number between 0 and p
  */
-function getRandomInt(): number {
+function getRandomInt(): BN {
     const buf = randomBytes(p.bitLength());
     
     return new BN(buf).mod(p);
@@ -209,9 +209,9 @@ describe('BN curve', () => {
     });
 
     it('should go through a tripartite DH protocol', () => {
-        const a = new BN(getRandomInt());
-        const b = new BN(getRandomInt());
-        const c = new BN(getRandomInt());
+        const a = getRandomInt();
+        const b = getRandomInt();
+        const c = getRandomInt();
 
         const pa = new G1();
         pa.scalarBaseMul(a);
