@@ -129,7 +129,7 @@ public class ServerIdentity {
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
         SyncSendMessage ssm = new SyncSendMessage(path, data);
         if (ssm.response == null) {
-            throw new CothorityCommunicationException("Error while retrieving response - try again. Error-string is: " + ssm.error);
+            throw new CothorityCommunicationException("Error while retrieving response for " + path + " - try again. Error-string is: " + ssm.error);
         }
         return ssm.response.array();
     }
@@ -307,8 +307,8 @@ public class ServerIdentity {
                 throw new CothorityCommunicationException(e.toString());
             }
             if (error != null) {
-                logger.error("error: {}", error);
-                throw new CothorityCommunicationException(error);
+                logger.error("error sending to {}: {}", path, error);
+                throw new CothorityCommunicationException("sending of " + path + "failed with error: " + error);
             }
         }
     }

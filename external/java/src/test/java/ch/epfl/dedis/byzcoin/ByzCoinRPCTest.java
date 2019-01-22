@@ -33,7 +33,9 @@ import java.util.stream.Stream;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ByzCoinRPCTest {
+public class ByzCoinRPCTest {
+    public final static Duration BLOCK_INTERVAL = Duration.of(1000, MILLIS);
+
     private ByzCoinRPC bc;
     private Signer admin;
     private final static Logger logger = LoggerFactory.getLogger(ByzCoinRPCTest.class);
@@ -45,7 +47,7 @@ class ByzCoinRPCTest {
         admin = new SignerEd25519();
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -316,10 +318,10 @@ class ByzCoinRPCTest {
         ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
 
         // Need to set the blockInterval manually, else it will complain.
-        logger.info("Setting interval back to 500 milliseconds");
+        logger.info("Setting interval back to default");
         Instant now = Instant.now();
         // The value is in nanoseconds.
-        newCCD.setBlockinterval(500 * 1000 * 1000);
+        newCCD.setBlockinterval(BLOCK_INTERVAL.toNanos());
 
         counters.increment();
         ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
