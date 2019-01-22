@@ -10,8 +10,10 @@ import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -24,9 +26,11 @@ import java.util.stream.Collectors;
 public class Roster {
     private List<ServerIdentity> nodes = new ArrayList<>();
     private Point aggregate;
+    private Random rand;
 
     public Roster(List<ServerIdentity> servers) {
         nodes.addAll(servers);
+        rand = new SecureRandom();
         this.updateAggregate();
     }
 
@@ -36,6 +40,7 @@ public class Roster {
             sids.add(new ServerIdentity(sid));
         }
         nodes.addAll(sids);
+        rand = new SecureRandom();
         this.updateAggregate();
     }
 
@@ -68,7 +73,7 @@ public class Roster {
     }
 
     /**
-     * Synchronously sends a message.
+     * Synchronously sends a message to a random node in the roster.
      *
      * @param path  The API endpoint.
      * @param proto The protobuf encoded request.
@@ -76,8 +81,20 @@ public class Roster {
      * @throws CothorityCommunicationException if something went wrong
      */
     public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
-        // TODO - fetch a random node.
-        return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
+        return sendMessage(path, proto, rand.nextInt(nodes.size()));
+    }
+
+    /**
+     * Synchronously sends a message to a node specified by the index.
+     *
+     * @param path  The API endpoint.
+     * @param proto The protobuf encoded request.
+     * @param idx   The index in the roster.
+     * @return the response
+     * @throws CothorityCommunicationException if something went wrong
+     */
+    public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto, int idx) throws CothorityCommunicationException {
+        return ByteString.copyFrom(nodes.get(idx).SendMessage(path, proto.toByteArray()));
     }
 
     /**
@@ -90,8 +107,21 @@ public class Roster {
      * @throws CothorityCommunicationException if something went wrong
      */
     public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
-        // TODO - fetch a random node.
-        return nodes.get(0).MakeStreamingConnection(path, proto.toByteArray(), h);
+        return makeStreamingConn(path, proto, h, rand.nextInt(nodes.size()));
+    }
+
+    /**
+     * Sends a request to initialise a streaming connection to a node specified by the index.
+     *
+     * @param path  The API endpoint, note that this endpoint must support streaming (registered using RegisterStreamingRequest in the Go side).
+     * @param proto The protobuf encoded request.
+     * @param h     The handler for handling responses.
+     * @param idx   The index in the roster.
+     * @return the streaming connection.
+     * @throws CothorityCommunicationException if something went wrong
+     */
+    public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h, int idx) throws CothorityCommunicationException {
+        return nodes.get(idx).MakeStreamingConnection(path, proto.toByteArray(), h);
     }
 
     public static Roster FromToml(String groupToml) {
