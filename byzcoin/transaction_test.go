@@ -81,7 +81,7 @@ func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signe
 }
 
 func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
-	instr := createInstr(dID, kind, "data", value)
+	instr := createSpawnInstr(dID, kind, "data", value)
 	instr.SignerCounter = []uint64{counter}
 	t := ClientTransaction{
 		Instructions: []Instruction{instr},
@@ -96,9 +96,9 @@ func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer
 }
 
 func createClientTxWithTwoInstrWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
-	instr1 := createInstr(dID, kind, "", value)
+	instr1 := createSpawnInstr(dID, kind, "", value)
 	instr1.SignerCounter = []uint64{counter}
-	instr2 := createInstr(dID, kind, "", value)
+	instr2 := createSpawnInstr(dID, kind, "", value)
 	instr2.SignerCounter = []uint64{counter + 1}
 	t := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
@@ -112,7 +112,7 @@ func createClientTxWithTwoInstrWithCounter(dID darc.ID, kind string, value []byt
 	return t, nil
 }
 
-func createInstr(dID darc.ID, contractID string, argName string, value []byte) Instruction {
+func createSpawnInstr(dID darc.ID, contractID string, argName string, value []byte) Instruction {
 	return Instruction{
 		InstanceID: NewInstanceID(dID),
 		Spawn: &Spawn{
@@ -120,6 +120,16 @@ func createInstr(dID darc.ID, contractID string, argName string, value []byte) I
 			Args:       Arguments{{Name: argName, Value: value}},
 		},
 		SignerCounter: []uint64{1},
+	}
+}
+
+func createInvokeInstr(dID InstanceID, cmd, argName string, value []byte) Instruction {
+	return Instruction{
+		InstanceID: dID,
+		Invoke: &Invoke{
+			Command: cmd,
+			Args:    Arguments{{Name: argName, Value: value}},
+		},
 	}
 }
 

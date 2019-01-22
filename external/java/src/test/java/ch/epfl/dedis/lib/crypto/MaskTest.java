@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -14,16 +13,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MaskTest {
 
-    private Point[] publics;
+    private List<Point> publics;
     private Random rnd = new SecureRandom();
     private int n = 9;
 
     MaskTest() {
-        List<Point> ps = new ArrayList<>();
+        publics = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            ps.add(new Bn256G2Point(BN.G2.rand(rnd).getPoint()));
+            publics.add(new Bn256G2Point(BN.G2.rand(rnd).getPoint()));
         }
-        publics = ps.toArray(new Point[0]);
     }
 
     @Test
@@ -39,7 +37,7 @@ class MaskTest {
 
         mask = new Mask(publics, new byte[]{1, 0});
         assertFalse(mask.getAggregate().isZero(),"aggregate should not be zero");
-        assertEquals(publics[0], mask.getAggregate());
+        assertEquals(publics.get(0), mask.getAggregate());
 
         mask = new Mask(publics, new byte[]{(byte)255, (byte)255});
         assertFalse(mask.getAggregate().isZero(),"aggregate should not be zero");
@@ -48,11 +46,11 @@ class MaskTest {
     @Test
     void indexEnabled() throws Exception {
         Mask mask = new Mask(publics, new byte[]{(byte)255, (byte)255});
-        for (int i = 0; i < this.publics.length; i++) {
+        for (int i = 0; i < this.publics.size(); i++) {
             assertTrue(mask.indexEnabled(i), "not enabled: " + i);
         }
         mask = new Mask(publics, new byte[]{0,0});
-        for (int i = 0; i < this.publics.length; i++) {
+        for (int i = 0; i < this.publics.size(); i++) {
             assertFalse(mask.indexEnabled(i), "should be enabled: " + i);
         }
     }
@@ -94,7 +92,8 @@ class MaskTest {
         Mask mask = new Mask(publics, new byte[]{0,0});
         assertEquals(mask.countTotal(), n);
 
-        mask = new Mask(Arrays.copyOf(publics, n-1), new byte[]{0});
+
+        mask = new Mask(publics.subList(0, n-1), new byte[]{0});
         assertEquals(mask.countTotal(), n-1);
     }
 
@@ -103,9 +102,9 @@ class MaskTest {
         byte[] msg = "hello".getBytes();
         Random rnd = new SecureRandom();
 
-        List<Bn256KeyPair> pairs = new ArrayList<>();
+        List<Bn256Pair> pairs = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            pairs.add(new Bn256KeyPair(rnd));
+            pairs.add(new Bn256Pair(rnd));
         }
 
         List<Point> publics = new ArrayList<>();
@@ -115,16 +114,16 @@ class MaskTest {
 
         Point aggrSig = new Bn256G1Point(BigInteger.ONE);
         aggrSig = aggrSig.getZero();
-        for (Bn256KeyPair p : pairs) {
-            aggrSig = aggrSig.add(new Bn256G1Point(BlsSig.sign(p.scalar, msg).getSig()));
+        for (Bn256Pair p : pairs) {
+            aggrSig = aggrSig.add(new Bn256G1Point(new BlsSig(msg, p.scalar).getSig()));
         }
 
         // pass with the right aggregate
-        Mask mask = new Mask(publics.toArray(new Point[0]), new byte[]{(byte)255, (byte)255});
+        Mask mask = new Mask(publics, new byte[]{(byte)255, (byte)255});
         assertTrue(new BlsSig(aggrSig.toBytes()).verify(msg, (Bn256G2Point)mask.getAggregate()));
 
         // fail with the wrong aggregate
-        mask = new Mask(publics.toArray(new Point[0]), new byte[]{(byte)254, (byte)255});
+        mask = new Mask(publics, new byte[]{(byte)254, (byte)255});
         assertFalse(new BlsSig(aggrSig.toBytes()).verify(msg, (Bn256G2Point)mask.getAggregate()));
     }
 }

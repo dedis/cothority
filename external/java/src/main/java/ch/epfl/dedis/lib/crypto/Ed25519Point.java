@@ -9,7 +9,9 @@ import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Ed25519Point implements Point {
     final static byte[] marshalID = "ed.point".getBytes();
@@ -104,26 +106,67 @@ public class Ed25519Point implements Point {
         return Arrays.copyOfRange(bytes, 1, len + 1);
     }
 
-    public static Point embed(byte[] data) throws CothorityCryptoException {
-        if (data.length > Ed25519.pubLen) {
-            throw new CothorityCryptoException("too much data for point");
-        }
+    /**
+     *
+     * Embed data into a point. If the data is longer than 29 bytes then the extra bytes are ignored.
+     *
+     * @param data is the data to embed
+     * @return the embedded point
+     */
+    public static Point embed(byte[] data) {
+        return embed(data, new SecureRandom());
+    }
 
-        byte[] bytes = new byte[32];
-        bytes[0] = (byte) data.length;
-        System.arraycopy(data, 0, bytes, 1, data.length);
-        for (bytes[31] = (byte) 0; bytes[31] < (byte) 127; bytes[31]++) {
+    /**
+     * Embed data into a point. If the data is longer than 29 bytes then the extra bytes are ignored.
+     *
+     * @param data is the data to embed
+     * @param rand is the randomness used to generate candidate points
+     * @return the embedded point
+     */
+    public static Point embed(byte[] data, Random rand) {
+        int dataLen = 0;
+        if (data != null) {
+            dataLen = data.length;
+        }
+        int embedLen = (255 - 8 - 8) / 8;
+        if (embedLen > dataLen) {
+            embedLen = dataLen;
+        }
+        for (;;) {
+            byte[] bytes = new byte[32];
+            rand.nextBytes(bytes);
+            if (dataLen > 0) {
+                bytes[0] = (byte) embedLen;
+                System.arraycopy(data, 0, bytes, 1, embedLen);
+            }
+
+            Point P;
             try {
-                Ed25519Point e = new Ed25519Point(bytes);
-                if (!e.mul(Ed25519.prime_order).isZero()) {
+                P = new Ed25519Point(bytes);
+            } catch (IllegalArgumentException e) {
+                // not a valid point, try again
+                continue;
+            } catch (CothorityCryptoException e) {
+                // this exception only throws if the byte array representation of the point has a wrong length,
+                // but we set it statically so it cannot happen
+                throw new RuntimeException(e.getMessage());
+            }
+
+            if (dataLen == 0) {
+                P = P.mul(Ed25519.cofactor);
+                if (P.isZero()) {
                     continue;
                 }
-                return e;
-            } catch (IllegalArgumentException e) {
-                // Will fail in about 87.5%, so try again.
+                return P;
+            }
+
+            Point Q = P.copy();
+            Q = Q.mul(Ed25519.prime_order);
+            if (Q.isZero()) {
+                return P;
             }
         }
-        throw new CothorityCryptoException("did not find matching point!?!");
     }
 
     public static Point base() {

@@ -19,10 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Collections;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,7 +43,7 @@ class WriteInstanceTest {
         genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
         genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
-        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc.getRoster().getNodes()) {
             CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
         }
@@ -55,7 +54,7 @@ class WriteInstanceTest {
         }
 
         String secret = "this is a secret";
-        Document doc = new Document(secret.getBytes(), 16, null, genesisDarc.getBaseId());
+        Document doc = new Document(secret.getBytes(), null, genesisDarc.getBaseId());
         w = new WriteInstance(calypso, genesisDarc.getId(),
                 Collections.singletonList(admin), Collections.singletonList(2L),
                 doc.getWriteData(calypso.getLTS()));

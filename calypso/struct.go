@@ -33,11 +33,13 @@ type suite interface {
 //   - ltsid - the id of the LTS id - used to create the second generator
 //   - writeDarc - the id of the darc where this write will be stored
 //   - X - the aggregate public key of the DKG
-//   - key - the symmetric key for the document - it will be encrypted in this method
+//   - key - the symmetric key for the document - it will be encrypted in this
+//   method
 //
 // Output:
-//   - write - structure containing the encrypted key U, Cs and the NIZKP of
-//   it containing the reader-darc.
+//   - write - structure containing the encrypted key U, C and the NIZKP of
+//   it containing the reader-darc. If it is nil then we failed to embed the
+//   key because it is too long to represent the key using a point.
 func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X kyber.Point, key []byte) *Write {
 	wr := &Write{LTSID: ltsid}
 	r := suite.Scalar().Pick(suite.RandomStream())
@@ -45,11 +47,11 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	wr.U = suite.Point().Mul(r, nil)
 
 	// Create proof
-	for len(key) > 0 {
-		kp := suite.Point().Embed(key, suite.RandomStream())
-		wr.Cs = append(wr.Cs, suite.Point().Add(C, kp))
-		key = key[min(len(key), kp.EmbedLen()):]
+	if len(key) > suite.Point().EmbedLen() {
+		return nil
 	}
+	kp := suite.Point().Embed(key, suite.RandomStream())
+	wr.C = suite.Point().Add(C, kp)
 
 	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid.Slice()), nil)
 	wr.Ubar = suite.Point().Mul(r, gBar)
@@ -57,9 +59,7 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	w := suite.Point().Mul(s, nil)
 	wBar := suite.Point().Mul(s, gBar)
 	hash := sha256.New()
-	for _, c := range wr.Cs {
-		c.MarshalTo(hash)
-	}
+	wr.C.MarshalTo(hash)
 	wr.U.MarshalTo(hash)
 	wr.Ubar.MarshalTo(hash)
 	w.MarshalTo(hash)
@@ -90,9 +90,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	wBar := suite.Point().Add(gfBar, ueBar)
 
 	hash := sha256.New()
-	for _, c := range wr.Cs {
-		c.MarshalTo(hash)
-	}
+	wr.C.MarshalTo(hash)
 	wr.U.MarshalTo(hash)
 	wr.Ubar.MarshalTo(hash)
 	w.MarshalTo(hash)
@@ -119,23 +117,19 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 //
 // Output:
 //   - U - the schnorr commit
-//   - Cs - encrypted key-slices
-func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
+//   - C - encrypted key
+func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, C kyber.Point) {
 	r := suite.Scalar().Pick(suite.RandomStream())
-	C := suite.Point().Mul(r, X)
+	C = suite.Point().Mul(r, X)
 	log.Lvl4("C:", C.String())
 	U = suite.Point().Mul(r, nil)
 	log.Lvl4("U is:", U.String())
 
-	for len(key) > 0 {
-		var kp kyber.Point
-		kp = suite.Point().Embed(key, suite.RandomStream())
-		log.Lvl4("Keypoint:", kp.String())
-		log.Lvl4("X:", X.String())
-		Cs = append(Cs, suite.Point().Add(C, kp))
-		log.Lvl4("Cs:", C.String())
-		key = key[min(len(key), kp.EmbedLen()):]
-	}
+	var kp kyber.Point
+	kp = suite.Point().Embed(key, suite.RandomStream())
+	log.Lvl4("Keypoint:", kp.String())
+	log.Lvl4("X:", X.String())
+	C = suite.Point().Add(C, kp)
 	return
 }
 
@@ -146,14 +140,14 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 // Input:
 //   - suite - the cryptographic suite to use
 //   - X - the aggregate public key of the DKG
-//   - Cs - the encrypted key-slices
+//   - C - the encrypted key-slices
 //   - XhatEnc - the re-encrypted schnorr-commit
 //   - xc - the private key of the reader
 //
 // Output:
 //   - key - the re-assembled key
 //   - err - an eventual error when trying to recover the data from the points
-func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber.Point,
+func DecodeKey(suite kyber.Group, X kyber.Point, C kyber.Point, XhatEnc kyber.Point,
 	xc kyber.Scalar) (key []byte, err error) {
 	log.Lvl4("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
@@ -169,18 +163,11 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 	XhatInv := suite.Point().Neg(Xhat)
 	log.Lvl4("XhatInv:", XhatInv)
 
-	// Decrypt Cs to keyPointHat
-	for _, C := range Cs {
-		log.Lvl4("C:", C)
-		keyPointHat := suite.Point().Add(C, XhatInv)
-		log.Lvl4("keyPointHat:", keyPointHat)
-		keyPart, err := keyPointHat.Data()
-		log.Lvl4("keyPart:", keyPart)
-		if err != nil {
-			return nil, err
-		}
-		key = append(key, keyPart...)
-	}
+	// Decrypt C to keyPointHat
+	log.Lvl4("C:", C)
+	keyPointHat := suite.Point().Add(C, XhatInv)
+	log.Lvl4("keyPointHat:", keyPointHat)
+	key, err = keyPointHat.Data()
 	return
 }
 

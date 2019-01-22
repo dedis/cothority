@@ -3,7 +3,6 @@ package ch.epfl.dedis.byzcoin;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 
 import java.util.List;
@@ -20,12 +19,13 @@ public class Instance {
 
     /**
      * Creates a new instance from its basic parameters.
-     * @param id the id of the instance
-     * @param cid the contractId, a string
-     * @param did the darcId responsible for this instance
+     *
+     * @param id   the id of the instance
+     * @param cid  the contractId, a string
+     * @param did  the darcId responsible for this instance
      * @param data the data stored in this instance
      */
-    private Instance(InstanceId id, String cid, DarcId did, byte[] data){
+    private Instance(InstanceId id, String cid, DarcId did, byte[] data) {
         this.id = id;
         contractId = cid;
         darcId = did;
@@ -36,11 +36,11 @@ public class Instance {
      * Creates an instance from a proof received from ByzCoin.
      *
      * @param p the proof for the instance
-     * @throws CothorityNotFoundException if the proof is not found
      * @return a new Instance
+     * @throws CothorityNotFoundException if the proof is not found
      */
     public static Instance fromProof(Proof p) throws CothorityNotFoundException {
-        if (!p.matches()){
+        if (!p.matches()) {
             throw new CothorityNotFoundException("this is a proof of absence");
         }
         StateChangeBody body = p.getValues();
@@ -54,10 +54,15 @@ public class Instance {
      * @param id a valid instance id
      * @return a new Instance
      * @throws CothorityCommunicationException if something goes wrong
-     * @throws CothorityNotFoundException if the requested instance cannot be found
+     * @throws CothorityNotFoundException      if the requested instance cannot be found
+     * @throws CothorityCryptoException        if something is wrong with the proof
      */
-    public static Instance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityCommunicationException, CothorityNotFoundException{
-        return fromProof(bc.getProof(id));
+    public static Instance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityCommunicationException, CothorityNotFoundException, CothorityCryptoException {
+        Proof p = bc.getProof(id);
+        if (!p.exists(id.getId())) {
+            throw new CothorityCryptoException("instance is not in proof");
+        }
+        return fromProof(p);
     }
 
     /**
@@ -77,7 +82,9 @@ public class Instance {
     /**
      * @return the darcid of this instance
      */
-    public DarcId getDarcId() { return darcId; }
+    public DarcId getDarcId() {
+        return darcId;
+    }
 
     /**
      * @return the data of this instance.

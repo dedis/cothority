@@ -34,7 +34,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 
 	var i int
 	for i = range p.Interiors {
-		if !bytes.Equal(p.Interiors[i].hash(), expectedHash) {
+		if !bytes.Equal(expectedHash, p.Interiors[i].hash()) {
 			return false, errors.New("invalid hash chain")
 		}
 		if bits[i] {
@@ -107,7 +107,7 @@ func (p *Proof) Get(key []byte) []byte {
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
 	err := t.db.View(func(b Bucket) error {
-		rootKey := t.getRoot(b)
+		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
 			return errors.New("no root key")
 		}

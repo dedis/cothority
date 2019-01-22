@@ -291,14 +291,14 @@ func TestService_DecryptKey(t *testing.T) {
 	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
-	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.Cs, dk1.XhatEnc, s.signer.Ed25519.Secret)
+	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.C, dk1.XhatEnc, s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 
 	dk2, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe2, Write: *prWr2})
 	require.Nil(t, err)
 	require.True(t, dk2.X.Equal(s.ltsReply.X))
-	keyCopy2, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk2.Cs, dk2.XhatEnc, s.signer.Ed25519.Secret)
+	keyCopy2, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk2.C, dk2.XhatEnc, s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key2, keyCopy2)
 }
@@ -319,7 +319,7 @@ func TestService_DecryptEphemeralKey(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 
-	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.Cs, dk1.XhatEnc, ephemeral.Private)
+	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.C, dk1.XhatEnc, ephemeral.Private)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 }

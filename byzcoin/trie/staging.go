@@ -176,7 +176,7 @@ func (t *StagingTrie) GetRoot() []byte {
 				return errors.New("invalid instruction during get root")
 			}
 		}
-		root = clone(t.source.getRoot(b))
+		root = clone(t.source.GetRootWithBucket(b))
 		return nil
 	})
 	if err != nil {
@@ -205,7 +205,7 @@ func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
 			}
 		}
 		// create the proof
-		rootKey := t.source.getRoot(b)
+		rootKey := t.source.GetRootWithBucket(b)
 		if rootKey == nil {
 			return errors.New("no root key")
 		}

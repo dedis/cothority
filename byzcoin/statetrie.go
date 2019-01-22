@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 
@@ -127,6 +128,30 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int) error {
 		indexBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 		return t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b)
+	})
+}
+
+// VerifiedStoreAll stores the state changes, the index as metadata. It checks
+// whether the expectedRoot hash matches the computed root hash and returns an
+// error if it doesn't.
+func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, expectedRoot []byte) error {
+	pairs := make([]trie.KVPair, len(scs))
+	for i := range pairs {
+		pairs[i] = &scs[i]
+	}
+	return t.DB().Update(func(b trie.Bucket) error {
+		if err := t.BatchWithBucket(pairs, b); err != nil {
+			return err
+		}
+		indexBuf := make([]byte, 4)
+		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
+		if err := t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b); err != nil {
+			return err
+		}
+		if !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
+			return errors.New("root verfication failed")
+		}
+		return nil
 	})
 }
 

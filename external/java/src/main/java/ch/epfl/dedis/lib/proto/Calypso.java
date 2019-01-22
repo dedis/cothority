@@ -113,31 +113,22 @@ public final class Calypso {
 
     /**
      * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
+     * C is the ElGamal parts for the symmetric key material (might also
+     * contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 6;</code>
+     * <code>required bytes c = 6;</code>
      */
-    java.util.List<com.google.protobuf.ByteString> getCsList();
+    boolean hasC();
     /**
      * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
+     * C is the ElGamal parts for the symmetric key material (might also
+     * contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 6;</code>
+     * <code>required bytes c = 6;</code>
      */
-    int getCsCount();
-    /**
-     * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
-     * </pre>
-     *
-     * <code>repeated bytes cs = 6;</code>
-     */
-    com.google.protobuf.ByteString getCs(int index);
+    com.google.protobuf.ByteString getC();
 
     /**
      * <pre>
@@ -196,7 +187,7 @@ public final class Calypso {
       ubar_ = com.google.protobuf.ByteString.EMPTY;
       e_ = com.google.protobuf.ByteString.EMPTY;
       f_ = com.google.protobuf.ByteString.EMPTY;
-      cs_ = java.util.Collections.emptyList();
+      c_ = com.google.protobuf.ByteString.EMPTY;
       extradata_ = com.google.protobuf.ByteString.EMPTY;
       ltsid_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -251,20 +242,17 @@ public final class Calypso {
               break;
             }
             case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-                cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
-                mutable_bitField0_ |= 0x00000020;
-              }
-              cs_.add(input.readBytes());
+              bitField0_ |= 0x00000020;
+              c_ = input.readBytes();
               break;
             }
             case 58: {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               extradata_ = input.readBytes();
               break;
             }
             case 66: {
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000080;
               ltsid_ = input.readBytes();
               break;
             }
@@ -283,9 +271,6 @@ public final class Calypso {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-          cs_ = java.util.Collections.unmodifiableList(cs_);
-        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -427,41 +412,29 @@ public final class Calypso {
       return f_;
     }
 
-    public static final int CS_FIELD_NUMBER = 6;
-    private java.util.List<com.google.protobuf.ByteString> cs_;
+    public static final int C_FIELD_NUMBER = 6;
+    private com.google.protobuf.ByteString c_;
     /**
      * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
+     * C is the ElGamal parts for the symmetric key material (might also
+     * contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 6;</code>
+     * <code>required bytes c = 6;</code>
      */
-    public java.util.List<com.google.protobuf.ByteString>
-        getCsList() {
-      return cs_;
+    public boolean hasC() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
+     * C is the ElGamal parts for the symmetric key material (might also
+     * contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 6;</code>
+     * <code>required bytes c = 6;</code>
      */
-    public int getCsCount() {
-      return cs_.size();
-    }
-    /**
-     * <pre>
-     * Cs are the ElGamal parts for the symmetric key material (might
-     * also contain an IV)
-     * </pre>
-     *
-     * <code>repeated bytes cs = 6;</code>
-     */
-    public com.google.protobuf.ByteString getCs(int index) {
-      return cs_.get(index);
+    public com.google.protobuf.ByteString getC() {
+      return c_;
     }
 
     public static final int EXTRADATA_FIELD_NUMBER = 7;
@@ -474,7 +447,7 @@ public final class Calypso {
      * <code>optional bytes extradata = 7;</code>
      */
     public boolean hasExtradata() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <pre>
@@ -497,7 +470,7 @@ public final class Calypso {
      * <code>required bytes ltsid = 8;</code>
      */
     public boolean hasLtsid() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <pre>
@@ -537,6 +510,10 @@ public final class Calypso {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasC()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (!hasLtsid()) {
         memoizedIsInitialized = 0;
         return false;
@@ -563,13 +540,13 @@ public final class Calypso {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeBytes(5, f_);
       }
-      for (int i = 0; i < cs_.size(); i++) {
-        output.writeBytes(6, cs_.get(i));
-      }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeBytes(7, extradata_);
+        output.writeBytes(6, c_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, extradata_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeBytes(8, ltsid_);
       }
       unknownFields.writeTo(output);
@@ -601,20 +578,15 @@ public final class Calypso {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, f_);
       }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < cs_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeBytesSizeNoTag(cs_.get(i));
-        }
-        size += dataSize;
-        size += 1 * getCsList().size();
-      }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, c_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(7, extradata_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, ltsid_);
       }
@@ -659,8 +631,11 @@ public final class Calypso {
         result = result && getF()
             .equals(other.getF());
       }
-      result = result && getCsList()
-          .equals(other.getCsList());
+      result = result && (hasC() == other.hasC());
+      if (hasC()) {
+        result = result && getC()
+            .equals(other.getC());
+      }
       result = result && (hasExtradata() == other.hasExtradata());
       if (hasExtradata()) {
         result = result && getExtradata()
@@ -702,9 +677,9 @@ public final class Calypso {
         hash = (37 * hash) + F_FIELD_NUMBER;
         hash = (53 * hash) + getF().hashCode();
       }
-      if (getCsCount() > 0) {
-        hash = (37 * hash) + CS_FIELD_NUMBER;
-        hash = (53 * hash) + getCsList().hashCode();
+      if (hasC()) {
+        hash = (37 * hash) + C_FIELD_NUMBER;
+        hash = (53 * hash) + getC().hashCode();
       }
       if (hasExtradata()) {
         hash = (37 * hash) + EXTRADATA_FIELD_NUMBER;
@@ -862,7 +837,7 @@ public final class Calypso {
         bitField0_ = (bitField0_ & ~0x00000008);
         f_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
-        cs_ = java.util.Collections.emptyList();
+        c_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000020);
         extradata_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000040);
@@ -916,17 +891,16 @@ public final class Calypso {
           to_bitField0_ |= 0x00000010;
         }
         result.f_ = f_;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
-          cs_ = java.util.Collections.unmodifiableList(cs_);
-          bitField0_ = (bitField0_ & ~0x00000020);
-        }
-        result.cs_ = cs_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000020;
+        }
+        result.c_ = c_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
         }
         result.extradata_ = extradata_;
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000040;
+          to_bitField0_ |= 0x00000080;
         }
         result.ltsid_ = ltsid_;
         result.bitField0_ = to_bitField0_;
@@ -993,15 +967,8 @@ public final class Calypso {
         if (other.hasF()) {
           setF(other.getF());
         }
-        if (!other.cs_.isEmpty()) {
-          if (cs_.isEmpty()) {
-            cs_ = other.cs_;
-            bitField0_ = (bitField0_ & ~0x00000020);
-          } else {
-            ensureCsIsMutable();
-            cs_.addAll(other.cs_);
-          }
-          onChanged();
+        if (other.hasC()) {
+          setC(other.getC());
         }
         if (other.hasExtradata()) {
           setExtradata(other.getExtradata());
@@ -1029,6 +996,9 @@ public final class Calypso {
           return false;
         }
         if (!hasF()) {
+          return false;
+        }
+        if (!hasC()) {
           return false;
         }
         if (!hasLtsid()) {
@@ -1328,109 +1298,57 @@ public final class Calypso {
         return this;
       }
 
-      private java.util.List<com.google.protobuf.ByteString> cs_ = java.util.Collections.emptyList();
-      private void ensureCsIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
-          cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(cs_);
-          bitField0_ |= 0x00000020;
-         }
+      private com.google.protobuf.ByteString c_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * C is the ElGamal parts for the symmetric key material (might also
+       * contain an IV)
+       * </pre>
+       *
+       * <code>required bytes c = 6;</code>
+       */
+      public boolean hasC() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
+       * C is the ElGamal parts for the symmetric key material (might also
+       * contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 6;</code>
+       * <code>required bytes c = 6;</code>
        */
-      public java.util.List<com.google.protobuf.ByteString>
-          getCsList() {
-        return java.util.Collections.unmodifiableList(cs_);
+      public com.google.protobuf.ByteString getC() {
+        return c_;
       }
       /**
        * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
+       * C is the ElGamal parts for the symmetric key material (might also
+       * contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 6;</code>
+       * <code>required bytes c = 6;</code>
        */
-      public int getCsCount() {
-        return cs_.size();
-      }
-      /**
-       * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
-       * </pre>
-       *
-       * <code>repeated bytes cs = 6;</code>
-       */
-      public com.google.protobuf.ByteString getCs(int index) {
-        return cs_.get(index);
-      }
-      /**
-       * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
-       * </pre>
-       *
-       * <code>repeated bytes cs = 6;</code>
-       */
-      public Builder setCs(
-          int index, com.google.protobuf.ByteString value) {
+      public Builder setC(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureCsIsMutable();
-        cs_.set(index, value);
+  bitField0_ |= 0x00000020;
+        c_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
+       * C is the ElGamal parts for the symmetric key material (might also
+       * contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 6;</code>
+       * <code>required bytes c = 6;</code>
        */
-      public Builder addCs(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureCsIsMutable();
-        cs_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
-       * </pre>
-       *
-       * <code>repeated bytes cs = 6;</code>
-       */
-      public Builder addAllCs(
-          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
-        ensureCsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, cs_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Cs are the ElGamal parts for the symmetric key material (might
-       * also contain an IV)
-       * </pre>
-       *
-       * <code>repeated bytes cs = 6;</code>
-       */
-      public Builder clearCs() {
-        cs_ = java.util.Collections.emptyList();
+      public Builder clearC() {
         bitField0_ = (bitField0_ & ~0x00000020);
+        c_ = getDefaultInstance().getC();
         onChanged();
         return this;
       }
@@ -6595,28 +6513,20 @@ public final class Calypso {
 
     /**
      * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
+     * C is the secret re-encrypted under the reader's public key.
      * </pre>
      *
-     * <code>repeated bytes cs = 1;</code>
+     * <code>required bytes c = 1;</code>
      */
-    java.util.List<com.google.protobuf.ByteString> getCsList();
+    boolean hasC();
     /**
      * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
+     * C is the secret re-encrypted under the reader's public key.
      * </pre>
      *
-     * <code>repeated bytes cs = 1;</code>
+     * <code>required bytes c = 1;</code>
      */
-    int getCsCount();
-    /**
-     * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
-     * </pre>
-     *
-     * <code>repeated bytes cs = 1;</code>
-     */
-    com.google.protobuf.ByteString getCs(int index);
+    com.google.protobuf.ByteString getC();
 
     /**
      * <pre>
@@ -6670,7 +6580,7 @@ public final class Calypso {
       super(builder);
     }
     private DecryptKeyReply() {
-      cs_ = java.util.Collections.emptyList();
+      c_ = com.google.protobuf.ByteString.EMPTY;
       xhatenc_ = com.google.protobuf.ByteString.EMPTY;
       x_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -6700,20 +6610,17 @@ public final class Calypso {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              cs_.add(input.readBytes());
+              bitField0_ |= 0x00000001;
+              c_ = input.readBytes();
               break;
             }
             case 18: {
-              bitField0_ |= 0x00000001;
+              bitField0_ |= 0x00000002;
               xhatenc_ = input.readBytes();
               break;
             }
             case 26: {
-              bitField0_ |= 0x00000002;
+              bitField0_ |= 0x00000004;
               x_ = input.readBytes();
               break;
             }
@@ -6732,9 +6639,6 @@ public final class Calypso {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          cs_ = java.util.Collections.unmodifiableList(cs_);
-        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -6753,38 +6657,27 @@ public final class Calypso {
     }
 
     private int bitField0_;
-    public static final int CS_FIELD_NUMBER = 1;
-    private java.util.List<com.google.protobuf.ByteString> cs_;
+    public static final int C_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString c_;
     /**
      * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
+     * C is the secret re-encrypted under the reader's public key.
      * </pre>
      *
-     * <code>repeated bytes cs = 1;</code>
+     * <code>required bytes c = 1;</code>
      */
-    public java.util.List<com.google.protobuf.ByteString>
-        getCsList() {
-      return cs_;
+    public boolean hasC() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
+     * C is the secret re-encrypted under the reader's public key.
      * </pre>
      *
-     * <code>repeated bytes cs = 1;</code>
+     * <code>required bytes c = 1;</code>
      */
-    public int getCsCount() {
-      return cs_.size();
-    }
-    /**
-     * <pre>
-     * Cs are the secrets re-encrypted under the reader's public key.
-     * </pre>
-     *
-     * <code>repeated bytes cs = 1;</code>
-     */
-    public com.google.protobuf.ByteString getCs(int index) {
-      return cs_.get(index);
+    public com.google.protobuf.ByteString getC() {
+      return c_;
     }
 
     public static final int XHATENC_FIELD_NUMBER = 2;
@@ -6797,7 +6690,7 @@ public final class Calypso {
      * <code>required bytes xhatenc = 2;</code>
      */
     public boolean hasXhatenc() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
@@ -6820,7 +6713,7 @@ public final class Calypso {
      * <code>required bytes x = 3;</code>
      */
     public boolean hasX() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <pre>
@@ -6840,6 +6733,10 @@ public final class Calypso {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (!hasC()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (!hasXhatenc()) {
         memoizedIsInitialized = 0;
         return false;
@@ -6855,13 +6752,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      for (int i = 0; i < cs_.size(); i++) {
-        output.writeBytes(1, cs_.get(i));
-      }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(2, xhatenc_);
+        output.writeBytes(1, c_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, xhatenc_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
@@ -6873,20 +6770,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      {
-        int dataSize = 0;
-        for (int i = 0; i < cs_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeBytesSizeNoTag(cs_.get(i));
-        }
-        size += dataSize;
-        size += 1 * getCsList().size();
-      }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, c_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, xhatenc_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, x_);
       }
@@ -6906,8 +6798,11 @@ public final class Calypso {
       ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply other = (ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply) obj;
 
       boolean result = true;
-      result = result && getCsList()
-          .equals(other.getCsList());
+      result = result && (hasC() == other.hasC());
+      if (hasC()) {
+        result = result && getC()
+            .equals(other.getC());
+      }
       result = result && (hasXhatenc() == other.hasXhatenc());
       if (hasXhatenc()) {
         result = result && getXhatenc()
@@ -6929,9 +6824,9 @@ public final class Calypso {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (getCsCount() > 0) {
-        hash = (37 * hash) + CS_FIELD_NUMBER;
-        hash = (53 * hash) + getCsList().hashCode();
+      if (hasC()) {
+        hash = (37 * hash) + C_FIELD_NUMBER;
+        hash = (53 * hash) + getC().hashCode();
       }
       if (hasXhatenc()) {
         hash = (37 * hash) + XHATENC_FIELD_NUMBER;
@@ -7079,7 +6974,7 @@ public final class Calypso {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        cs_ = java.util.Collections.emptyList();
+        c_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         xhatenc_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -7113,17 +7008,16 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          cs_ = java.util.Collections.unmodifiableList(cs_);
-          bitField0_ = (bitField0_ & ~0x00000001);
-        }
-        result.cs_ = cs_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
+        }
+        result.c_ = c_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
         }
         result.xhatenc_ = xhatenc_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000002;
+          to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
         result.bitField0_ = to_bitField0_;
@@ -7175,15 +7069,8 @@ public final class Calypso {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply other) {
         if (other == ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply.getDefaultInstance()) return this;
-        if (!other.cs_.isEmpty()) {
-          if (cs_.isEmpty()) {
-            cs_ = other.cs_;
-            bitField0_ = (bitField0_ & ~0x00000001);
-          } else {
-            ensureCsIsMutable();
-            cs_.addAll(other.cs_);
-          }
-          onChanged();
+        if (other.hasC()) {
+          setC(other.getC());
         }
         if (other.hasXhatenc()) {
           setXhatenc(other.getXhatenc());
@@ -7198,6 +7085,9 @@ public final class Calypso {
 
       @java.lang.Override
       public final boolean isInitialized() {
+        if (!hasC()) {
+          return false;
+        }
         if (!hasXhatenc()) {
           return false;
         }
@@ -7227,102 +7117,53 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private java.util.List<com.google.protobuf.ByteString> cs_ = java.util.Collections.emptyList();
-      private void ensureCsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(cs_);
-          bitField0_ |= 0x00000001;
-         }
+      private com.google.protobuf.ByteString c_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * C is the secret re-encrypted under the reader's public key.
+       * </pre>
+       *
+       * <code>required bytes c = 1;</code>
+       */
+      public boolean hasC() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
+       * C is the secret re-encrypted under the reader's public key.
        * </pre>
        *
-       * <code>repeated bytes cs = 1;</code>
+       * <code>required bytes c = 1;</code>
        */
-      public java.util.List<com.google.protobuf.ByteString>
-          getCsList() {
-        return java.util.Collections.unmodifiableList(cs_);
+      public com.google.protobuf.ByteString getC() {
+        return c_;
       }
       /**
        * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
+       * C is the secret re-encrypted under the reader's public key.
        * </pre>
        *
-       * <code>repeated bytes cs = 1;</code>
+       * <code>required bytes c = 1;</code>
        */
-      public int getCsCount() {
-        return cs_.size();
-      }
-      /**
-       * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
-       * </pre>
-       *
-       * <code>repeated bytes cs = 1;</code>
-       */
-      public com.google.protobuf.ByteString getCs(int index) {
-        return cs_.get(index);
-      }
-      /**
-       * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
-       * </pre>
-       *
-       * <code>repeated bytes cs = 1;</code>
-       */
-      public Builder setCs(
-          int index, com.google.protobuf.ByteString value) {
+      public Builder setC(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureCsIsMutable();
-        cs_.set(index, value);
+  bitField0_ |= 0x00000001;
+        c_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
+       * C is the secret re-encrypted under the reader's public key.
        * </pre>
        *
-       * <code>repeated bytes cs = 1;</code>
+       * <code>required bytes c = 1;</code>
        */
-      public Builder addCs(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureCsIsMutable();
-        cs_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
-       * </pre>
-       *
-       * <code>repeated bytes cs = 1;</code>
-       */
-      public Builder addAllCs(
-          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
-        ensureCsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, cs_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Cs are the secrets re-encrypted under the reader's public key.
-       * </pre>
-       *
-       * <code>repeated bytes cs = 1;</code>
-       */
-      public Builder clearCs() {
-        cs_ = java.util.Collections.emptyList();
+      public Builder clearC() {
         bitField0_ = (bitField0_ & ~0x00000001);
+        c_ = getDefaultInstance().getC();
         onChanged();
         return this;
       }
@@ -8745,22 +8586,22 @@ public final class Calypso {
   static {
     java.lang.String[] descriptorData = {
       "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\032" +
-      "\nonet.proto\"r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
+      "\nonet.proto\"q\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
       "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
-      "\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsi" +
-      "d\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002" +
-      "(\014\"\036\n\tAuthorise\022\021\n\tbyzcoinid\030\001 \002(\014\"\020\n\016Au" +
-      "thoriseReply\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\013" +
-      "2\016.byzcoin.Proof\"B\n\016CreateLTSReply\022\021\n\tby" +
-      "zcoinid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003" +
-      " \002(\014\"+\n\nReshareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzc" +
-      "oin.Proof\"\021\n\017ReshareLTSReply\"I\n\nDecryptK" +
-      "ey\022\034\n\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005writ" +
-      "e\030\002 \002(\0132\016.byzcoin.Proof\"9\n\017DecryptKeyRep" +
-      "ly\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002" +
-      "(\014\"\034\n\013GetLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsI" +
-      "nstanceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.Roste" +
-      "rB\"\n\027ch.epfl.dedis.lib.protoB\007Calypso"
+      "\014\022\t\n\001c\030\006 \002(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsid" +
+      "\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(" +
+      "\014\"\036\n\tAuthorise\022\021\n\tbyzcoinid\030\001 \002(\014\"\020\n\016Aut" +
+      "horiseReply\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\0132" +
+      "\016.byzcoin.Proof\"B\n\016CreateLTSReply\022\021\n\tbyz" +
+      "coinid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003 " +
+      "\002(\014\"+\n\nReshareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzco" +
+      "in.Proof\"\021\n\017ReshareLTSReply\"I\n\nDecryptKe" +
+      "y\022\034\n\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write" +
+      "\030\002 \002(\0132\016.byzcoin.Proof\"8\n\017DecryptKeyRepl" +
+      "y\022\t\n\001c\030\001 \002(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014" +
+      "\"\034\n\013GetLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsIns" +
+      "tanceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB" +
+      "\"\n\027ch.epfl.dedis.lib.protoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8781,7 +8622,7 @@ public final class Calypso {
     internal_static_calypso_Write_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_Write_descriptor,
-        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "Cs", "Extradata", "Ltsid", });
+        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "C", "Extradata", "Ltsid", });
     internal_static_calypso_Read_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_calypso_Read_fieldAccessorTable = new
@@ -8835,7 +8676,7 @@ public final class Calypso {
     internal_static_calypso_DecryptKeyReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_DecryptKeyReply_descriptor,
-        new java.lang.String[] { "Cs", "Xhatenc", "X", });
+        new java.lang.String[] { "C", "Xhatenc", "X", });
     internal_static_calypso_GetLTSReply_descriptor =
       getDescriptor().getMessageTypes().get(10);
     internal_static_calypso_GetLTSReply_fieldAccessorTable = new

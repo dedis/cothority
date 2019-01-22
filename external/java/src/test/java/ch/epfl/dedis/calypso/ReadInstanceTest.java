@@ -7,23 +7,25 @@ import ch.epfl.dedis.byzcoin.transaction.Spawn;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.crypto.Ed25519Pair;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadInstanceTest {
@@ -46,7 +48,7 @@ class ReadInstanceTest {
         genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
         genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
-        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc.getRoster().getNodes()) {
             CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
         }
@@ -58,13 +60,18 @@ class ReadInstanceTest {
         }
 
         String secret = "this is a secret";
-        Document doc = new Document(secret.getBytes(), 16, null, genesisDarc.getBaseId());
+        Document doc = new Document(secret.getBytes(), null, genesisDarc.getBaseId());
         w = new WriteInstance(calypso, genesisDarc.getId(),
                 Arrays.asList(admin), Collections.singletonList(2L),
                 doc.getWriteData(calypso.getLTS()));
         assertTrue(calypso.getProof(w.getInstance().getId()).matches());
 
-        r = new ReadInstance(calypso, w, Arrays.asList(admin), Collections.singletonList(3L));
+        // ephemeral key cannot be the same as one of the signers
+        assertThrows(CothorityCryptoException.class, () -> {
+            r = new ReadInstance(calypso, w, Arrays.asList(admin), Collections.singletonList(3L), admin.getPublic());
+        });
+        Ed25519Pair ephemeralPair = new Ed25519Pair();
+        r = new ReadInstance(calypso, w, Arrays.asList(admin), Collections.singletonList(3L), ephemeralPair.point);
         assertTrue(calypso.getProof(r.getInstance().getId()).matches());
     }
 

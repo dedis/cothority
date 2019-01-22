@@ -47,7 +47,7 @@ public class GrantAccessTest {
         SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
@@ -74,7 +74,7 @@ public class GrantAccessTest {
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
                 superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
@@ -108,7 +108,7 @@ public class GrantAccessTest {
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
                 superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));

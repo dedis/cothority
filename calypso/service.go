@@ -58,7 +58,7 @@ var calypsoID onet.ServiceID
 const ServiceName = "Calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
-const propagationTimeout = 10 * time.Second
+const propagationTimeout = 20 * time.Second
 
 const calypsoReshareProto = "calypso_reshare_proto"
 
@@ -429,7 +429,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if err != nil {
 		return nil, err
 	}
-	reply.Cs = write.Cs
+	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")
 	return
 }

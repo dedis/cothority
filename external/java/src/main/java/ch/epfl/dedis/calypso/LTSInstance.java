@@ -83,12 +83,18 @@ public class LTSInstance {
     }
 
     /**
-     * Retrieves the proof for this instance.
+     * Retrieves and verifies the proof for this instance.
+     *
      * @return the proof
-     * @throws CothorityCommunicationException when something goes wrong
+     * @throws CothorityCommunicationException when the communication fails
+     * @throws CothorityCryptoException when the proof cannot be verified or the instance is not in the proof
      */
-    public Proof getProof() throws CothorityCommunicationException  {
-        return this.calypso.getProof(this.instance.getId());
+    public Proof getProofAndVerify() throws CothorityCommunicationException, CothorityCryptoException  {
+        Proof p = this.calypso.getProof(this.instance.getId());
+        if (!p.exists(this.instance.getId().getId())) {
+            throw new CothorityCryptoException("instance is not in proof");
+        }
+        return p;
     }
 
     private static ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
@@ -114,7 +120,11 @@ public class LTSInstance {
     }
 
     private static Instance getInstance(CalypsoRPC calypso, InstanceId id) throws CothorityException {
-        Instance inst = calypso.getProof(id).getInstance();
+        Proof p = calypso.getProof(id);
+        if (!p.exists(id.getId())) {
+            throw new CothorityNotFoundException("instance is not in the proof");
+        }
+        Instance inst = p.getInstance();
         if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong contractId: {}", inst.getContractId());
             throw new CothorityNotFoundException("this is not an " + ContractId + " instance");

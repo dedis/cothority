@@ -220,7 +220,7 @@ message StateChange {
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
   required bytes darcid = 5;
-  // Version is the monotonically increased version of the instance
+  // Version is the monotonically increasing version of the instance
   required uint64 version = 6;
 }
 

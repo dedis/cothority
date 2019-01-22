@@ -5,7 +5,6 @@ import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
-import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
@@ -163,8 +162,9 @@ public class ByzCoinRPC {
      * @param id is the id of the instance to be fetched
      * @return the proof
      * @throws CothorityCommunicationException if something goes wrong
+     * @throws CothorityCryptoException if the verification fails
      */
-    public Proof getProof(InstanceId id) throws CothorityCommunicationException {
+    public Proof getProof(InstanceId id) throws CothorityCommunicationException, CothorityCryptoException {
         ByzCoinProto.GetProof.Builder request =
                 ByzCoinProto.GetProof.newBuilder();
         request.setVersion(currentVersion);
@@ -175,10 +175,11 @@ public class ByzCoinRPC {
         try {
             ByzCoinProto.GetProofResponse reply =
                     ByzCoinProto.GetProofResponse.parseFrom(msg);
-            logger.info("Successfully received proof");
-            return new Proof(reply.getProof());
+            Proof p = new Proof(reply.getProof(), skipchain.getID());
+            logger.info("Successfully received and created proof");
+            return p;
         } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
+            throw new CothorityCommunicationException("failed to get proof: " + e.getMessage());
         }
     }
 
@@ -212,9 +213,9 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong if something goes wrong
      */
     public void update() throws CothorityException {
-        SkipBlock sb = skipchain.getLatestSkipblock();
-        if (sb != null) {
-            latest = sb;
+        List<SkipBlock> sbs = skipchain.getUpdateChain();
+        if (sbs != null && sbs.size() > 0) {
+            latest = sbs.get(sbs.size() - 1);
         }
     }
 
@@ -334,7 +335,8 @@ public class ByzCoinRPC {
 
     /**
      * Fetches the state change for the given version and instance
-     * @param id the instance ID
+     *
+     * @param id      the instance ID
      * @param version the version of the state change
      * @return the state change
      * @throws CothorityCommunicationException if the state change doesn't exist or something went wrong
@@ -357,6 +359,7 @@ public class ByzCoinRPC {
 
     /**
      * Fetches the most recent state change for the given instance
+     *
      * @param id the instance ID
      * @return the state change
      * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
@@ -378,6 +381,7 @@ public class ByzCoinRPC {
 
     /**
      * Fetches all the state changes of the given instance
+     *
      * @param id the instance ID
      * @return the list of state changes
      * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
@@ -402,6 +406,7 @@ public class ByzCoinRPC {
 
     /**
      * Checks if the state change is valid or has been tempered
+     *
      * @param sc the state change
      * @return true if the state change is valid
      * @throws CothorityCommunicationException if something went wrong
@@ -558,15 +563,21 @@ public class ByzCoinRPC {
      */
     public static ByzCoinRPC fromByzCoin(Roster roster, SkipblockId skipchainId) throws CothorityException {
         Proof proof = ByzCoinRPC.getProof(roster, skipchainId, InstanceId.zero());
-        if (!proof.isContract("config", skipchainId)) {
+        if (!proof.contractIsType("config")) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        if (!proof.exists(InstanceId.zero().getId())) {
+            throw new CothorityNotFoundException("config instance does not exist");
         }
         ByzCoinRPC bc = new ByzCoinRPC();
         bc.config = new Config(proof.getValue());
 
         Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
-        if (!proof2.isContract(DarcInstance.ContractId, skipchainId)) {
+        if (!proof2.contractIsType(DarcInstance.ContractId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        if (!proof2.exists(proof.getDarcID().getId())) {
+            throw new CothorityNotFoundException("darc instance does not exist");
         }
         try {
             bc.genesisDarc = new Darc(proof2.getValue());
@@ -578,8 +589,9 @@ public class ByzCoinRPC {
         bc.skipchain = new SkipchainRPC(roster, skipchainId);
         bc.roster = roster;
         bc.genesis = bc.skipchain.getSkipblock(skipchainId);
-        bc.latest = bc.skipchain.getLatestSkipblock();
         bc.subscription = new Subscription(bc);
+        List<SkipBlock> sbs = bc.skipchain.getUpdateChain();
+        bc.latest = sbs.get(sbs.size() - 1);
         return bc;
     }
 
@@ -607,14 +619,16 @@ public class ByzCoinRPC {
 
     /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
+     * The returned proof is not verified. Please call Proof.verify.
      *
      * @param roster      where to contact the cothority
      * @param skipchainId the id of the underlying skipchain
      * @param key         which key we're interested in
      * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if there is an error in getting the proof
+     * @throws CothorityCryptoException if there is an issue with the validity of the proof
      */
-    private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException {
+    private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException, CothorityCryptoException {
         ByzCoinProto.GetProof.Builder configBuilder = ByzCoinProto.GetProof.newBuilder();
         configBuilder.setVersion(currentVersion);
         configBuilder.setId(skipchainId.toProto());
@@ -624,7 +638,7 @@ public class ByzCoinRPC {
 
         try {
             ByzCoinProto.GetProofResponse reply = ByzCoinProto.GetProofResponse.parseFrom(msg);
-            return new Proof(reply.getProof());
+            return new Proof(reply.getProof(), skipchainId);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

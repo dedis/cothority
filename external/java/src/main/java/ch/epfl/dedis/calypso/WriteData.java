@@ -15,9 +15,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A WriteData is the data that is sent to the calypsoWrite contract store a write request with the encrypted document.
@@ -73,10 +70,11 @@ public class WriteData {
      * @param bc a running Byzcoin service
      * @param id an instanceId of a WriteInstance
      * @throws CothorityNotFoundException if the requested instance cannot be found
-     * @throws CothorityCommunicationException if something went wrong
+     * @throws CothorityCommunicationException if something went wrong with the communication
+     * @throws CothorityCryptoException if there is something wrong with the proof
      * @return the new WriteData
      */
-    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException {
+    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException, CothorityCryptoException {
         return WriteData.fromInstance(Instance.fromByzcoin(bc, id));
     }
 
@@ -103,41 +101,34 @@ public class WriteData {
      *
      * @param wr          the Write.Builder where the encrypted key will be stored
      * @param lts         the Long Term Secret to use
-     * @param keyMaterial what should be threshold encrypted in the blockchain
+     * @param keyMaterial what should be threshold encrypted in the blockchain, it must be 28 bytes,
+     *                    see Encryption.java for details.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
+        if (keyMaterial.length != Encryption.KEYMATERIAL_LEN) {
+            throw new CothorityCryptoException("invalid keyMaterial length, got " + keyMaterial.length + " but it must be " + Encryption.KEYMATERIAL_LEN);
+        }
         try {
-            Ed25519KeyPair randkp = new Ed25519KeyPair();
+            Ed25519Pair randkp = new Ed25519Pair();
             Scalar r = randkp.scalar;
             Point U = randkp.point;
             wr.setU(U.toProto());
 
             Point C = lts.getX().mul(r);
-            List<Point> Cs = new ArrayList<>();
-            for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
-                int to = from + Ed25519.pubLen;
-                if (to > keyMaterial.length) {
-                    to = keyMaterial.length;
-                }
-                Point keyEd25519Point = Ed25519Point.embed(Arrays.copyOfRange(keyMaterial, from, to));
-                Point Ckey = C.add(keyEd25519Point);
-                Cs.add(Ckey);
-                wr.addCs(Ckey.toProto());
-            }
+            C = C.add(Ed25519Point.embed(keyMaterial));
+            wr.setC(C.toProto());
 
             Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
-            Ed25519KeyPair skp = new Ed25519KeyPair();
+            Ed25519Pair skp = new Ed25519Pair();
             Scalar s = skp.scalar;
             Point w = skp.point;
             Point wBar = gBar.mul(s);
 
             MessageDigest hash = MessageDigest.getInstance("SHA-256");
-            for (Point c : Cs) {
-                hash.update(c.toBytes());
-            }
+            hash.update(C.toBytes());
             hash.update(U.toBytes());
             hash.update(Ubar.toBytes());
             hash.update(w.toBytes());

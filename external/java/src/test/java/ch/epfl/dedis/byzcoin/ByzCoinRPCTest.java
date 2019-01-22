@@ -33,7 +33,9 @@ import java.util.stream.Stream;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ByzCoinRPCTest {
+public class ByzCoinRPCTest {
+    public final static Duration BLOCK_INTERVAL = Duration.of(1000, MILLIS);
+
     private ByzCoinRPC bc;
     private Signer admin;
     private final static Logger logger = LoggerFactory.getLogger(ByzCoinRPCTest.class);
@@ -45,7 +47,7 @@ class ByzCoinRPCTest {
         admin = new SignerEd25519();
         Darc genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -54,6 +56,43 @@ class ByzCoinRPCTest {
     @Test
     void ping() {
         assertTrue(bc.checkLiveness());
+    }
+
+    @Test
+    void getBlocks() throws Exception {
+        // First get the genesis block
+        SkipBlock candidate = bc.getSkipchain().getSkipblock(this.bc.getGenesisBlock().getId());
+        assertEquals(candidate.getId(), this.bc.getGenesisBlock().getId());
+
+        // Update should give us the genesis block
+        assertEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
+
+        // Then make a transaction, and we should see a new block, here it's just a darc evolution
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 10);
+
+        // Update again should give us a different block
+        assertNotEquals(bc.getLatestBlock().getId(), this.bc.getGenesisBlock().getId());
+
+        // Getting the block should work
+        SkipBlock latest = bc.getSkipchain().getSkipblock(bc.getLatestBlock().getId());
+        assertEquals(latest.getId(), bc.getLatestBlock().getId());
+
+        // Get the genesis block again and it should have at least one forward links
+        SkipBlock newGenesis = bc.getSkipchain().getSkipblock(this.bc.getGenesisBlock().getId());
+        assertTrue(newGenesis.getForwardLinks().size() > 0);
+    }
+
+    @Test
+    void getProof() throws Exception {
+        // Then make a transaction so we can do something with the proof.
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+
+        // Get one Proof.
+        InstanceId inst = bc.getGenesisDarcInstance().getInstance().getId();
+        Proof p = bc.getProof(inst);
+        assertTrue(p.exists(inst.getId()));
     }
 
     /**
@@ -279,10 +318,10 @@ class ByzCoinRPCTest {
         ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
 
         // Need to set the blockInterval manually, else it will complain.
-        logger.info("Setting interval back to 500 milliseconds");
+        logger.info("Setting interval back to default");
         Instant now = Instant.now();
         // The value is in nanoseconds.
-        newCCD.setBlockinterval(500 * 1000 * 1000);
+        newCCD.setBlockinterval(BLOCK_INTERVAL.toNanos());
 
         counters.increment();
         ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
@@ -415,6 +454,11 @@ class ByzCoinRPCTest {
             }
 
             assertEquals(7, bc.getRoster().getNodes().size());
+
+            // Check that we can update to the latest block using the skipchain API after roster change.
+            List<SkipBlock> updates = bc.getSkipchain().getUpdateChain();
+            assertEquals(9, updates.get(updates.size() - 1).getIndex());
+
         } finally {
             logger.info("stopping conode for next tests");
             testInstanceController.killConode(5);

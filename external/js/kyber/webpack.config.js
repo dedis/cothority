@@ -1,34 +1,7 @@
 const path = require("path");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
-const nodeConfig = {
-  target: "node",
-  entry: "./index.js",
-  output: {
-    filename: "bundle.node.min.js",
-    path: path.resolve(__dirname, "dist"),
-    libraryTarget: "commonjs2"
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: "babel-loader",
-          options: {
-            presets: ["env"],
-	    plugins: [ require("babel-plugin-transform-object-rest-spread") ],
-          }
-        }
-      }
-    ]
-  },
-  plugins: [new UglifyJsPlugin()]
-};
-
-const browserConfig = {
-  entry: "./index.js",
+module.exports = {
+  entry: "./src/index.ts",
   output: {
     filename: "bundle.min.js",
     path: path.resolve(__dirname, "dist"),
@@ -39,18 +12,30 @@ const browserConfig = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /(node_modules|bower_components)/,
+        exclude: /node_modules/,
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["env"],
-	    plugins: [ require("babel-plugin-transform-object-rest-spread") ],
+            presets: ["env"]
           }
         }
+      },
+      {
+        test: /\.ts?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              presets: ["env"]
+            }
+          },
+          "ts-loader"
+        ]
       }
     ]
   },
-  plugins: [new UglifyJsPlugin()]
+  resolve: {
+    extensions: [".ts", ".js"]
+  }
 };
-
-module.exports = [nodeConfig, browserConfig];

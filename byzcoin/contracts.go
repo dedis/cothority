@@ -325,7 +325,7 @@ func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Co
 	// Pass nil into the contract factory here because this instance does not exist yet.
 	// So the factory will make a zero-value instance, and then calling Spawn on it
 	// will give it a chance to encode it's zero state and emit one or more StateChanges to put itself
-	// into the collection.
+	// into the trie.
 	c2, err := cfact(nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)

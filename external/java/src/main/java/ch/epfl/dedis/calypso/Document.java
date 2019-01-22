@@ -34,9 +34,8 @@ public class Document {
      *                    This will be encrypted before the transmission to the skipchain.
      * @param extraData   any public data that will be stored unencrypted on the skipchain.
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Document(byte[] data, byte[] keyMaterial, byte[] extraData, DarcId publisherId) throws CothorityCryptoException {
+    public Document(byte[] data, byte[] keyMaterial, byte[] extraData, DarcId publisherId) {
         this.data = data;
         this.keyMaterial = keyMaterial;
         this.publisherId = publisherId;
@@ -45,19 +44,16 @@ public class Document {
 
     /**
      * Creates a new document from data, creates a new Darc, a symmetric
-     * symmetricKey and encrypts the data using CBC-RSA.
+     * symmetricKey and encrypts the data using AES-GCM.
      *
      * @param data        any data that will be stored encrypted on the skipchain.
      *                    There is a 10MB-limit on how much data can be stored. If you
      *                    need more, this must be a pointer to an off-chain storage.
-     * @param keylen      how long the symmetric symmetricKey should be, in bytes. 16 bytes
-     *                    should be a safe guess for the moment.
      * @param extraData   any public data that will not be encrypted
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Document(byte[] data, int keylen, byte[] extraData, DarcId publisherId) throws CothorityCryptoException {
-        this(data, new Encryption.keyIv(keylen).getKeyMaterial(), extraData, publisherId);
+    public Document(byte[] data, byte[] extraData, DarcId publisherId) {
+        this(data, new Encryption.KeyIv().getKeyMaterial(), extraData, publisherId);
     }
 
     /**
@@ -130,9 +126,8 @@ public class Document {
 
     /**
      * @return the decrypted data stored in this document.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public byte[] getData() throws CothorityCryptoException {
+    public byte[] getData() {
         return data;
     }
 

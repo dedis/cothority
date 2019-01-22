@@ -57,8 +57,8 @@ public class ServerIdentity {
 
         this.pubkey = PointFactory.getInstance().fromProto(sid.getPublic());
         this.serviceIdentities = sid.getServiceIdentitiesList().stream()
-            .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
-            .collect(Collectors.toList());
+                .map(srvid -> new ServiceIdentity(srvid.getName(), srvid.getSuite(), srvid.getPublic()))
+                .collect(Collectors.toList());
     }
 
     public URI getAddress() {
@@ -68,6 +68,19 @@ public class ServerIdentity {
     public Point getPublic() {
         return pubkey;
     }
+
+    /**
+     * Get the public key for the given service name. If the service name does not exist, null is returned.
+     */
+    public Point getServicePublic(String serviceName) {
+        for (ServiceIdentity si : this.serviceIdentities) {
+            if (si.getName().equals(serviceName)) {
+                return si.getPublic();
+            }
+        }
+        return null;
+    }
+
 
     public List<ServiceIdentity> getServiceIdentities() {
         return serviceIdentities;
@@ -116,7 +129,7 @@ public class ServerIdentity {
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
         SyncSendMessage ssm = new SyncSendMessage(path, data);
         if (ssm.response == null) {
-            throw new CothorityCommunicationException("Error while retrieving response - try again. Error-string is: " + ssm.error);
+            throw new CothorityCommunicationException("Error while retrieving response for " + path + " - try again. Error-string is: " + ssm.error);
         }
         return ssm.response.array();
     }
@@ -161,9 +174,9 @@ public class ServerIdentity {
     @Override
     public String toString() {
         return "ServerIdentitiy {"
-                + "\n\tAddress: "+conodeAddress.toString()
-                + "\n\tPublic: "+pubkey.toString()
-                + "\n\tServices: "+serviceIdentities.toString()
+                + "\n\tAddress: " + conodeAddress.toString()
+                + "\n\tPublic: " + pubkey.toString()
+                + "\n\tServices: " + serviceIdentities.toString()
                 + "\n}";
     }
 
@@ -294,8 +307,8 @@ public class ServerIdentity {
                 throw new CothorityCommunicationException(e.toString());
             }
             if (error != null) {
-                logger.error("error: {}", error);
-                throw new CothorityCommunicationException(error);
+                logger.error("error sending to {}: {}", path, error);
+                throw new CothorityCommunicationException("sending of " + path + "failed with error: " + error);
             }
         }
     }
