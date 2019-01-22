@@ -1,5 +1,4 @@
+/// <reference types="node" />
 import BN from "bn.js";
-declare const constants: {
-    zeroBN: BN;
-};
-export default constants;
+export declare type BNType = number | string | number[] | Buffer | BN;
+export declare const zeroBN: BN;

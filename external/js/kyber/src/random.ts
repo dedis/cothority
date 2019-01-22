@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import constants from "./constants";
+import { zeroBN } from "./constants";
 
 /**
  * bits choses a random buffer with a maximum bitlength
@@ -38,7 +38,7 @@ export function int(mod: BN, callback: (length: number) => Buffer): Buffer {
     while (true) {
         const bytes = bits(bitlength, false, callback);
         i = new BN(bytes);
-        if (i.cmp(constants.zeroBN) > 0 && i.cmp(mod) < 0) {
+        if (i.cmp(zeroBN) > 0 && i.cmp(mod) < 0) {
             return bytes;
         }
     }

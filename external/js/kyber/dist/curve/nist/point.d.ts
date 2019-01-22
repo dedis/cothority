@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { BNType } from 'bn.js';
+import { BNType } from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";

@@ -1,6 +1,7 @@
-import BN, { BNType } from "bn.js";
+import BN from "bn.js";
 import { randomBytes } from "crypto";
 import { Point } from "../../index";
+import { BNType } from '../../constants';
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
 
