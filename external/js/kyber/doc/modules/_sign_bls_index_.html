@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Group | @dedis/kyber</title>
+	<title>&quot;sign/bls/index&quot; | @dedis/kyber</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,141 +56,152 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_index_.html">&quot;index&quot;</a>
-				</li>
-				<li>
-					<a href="_index_.group.html">Group</a>
+					<a href="_sign_bls_index_.html">&quot;sign/bls/index&quot;</a>
 				</li>
 			</ul>
-			<h1>Interface Group</h1>
+			<h1>External module &quot;sign/bls/index&quot;</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-hierarchy">
-				<h3>Hierarchy</h3>
-				<ul class="tsd-hierarchy">
-					<li>
-						<span class="target">Group</span>
-					</li>
-				</ul>
-			</section>
-			<section class="tsd-panel">
-				<h3>Implemented by</h3>
-				<ul class="tsd-hierarchy">
-					<li><a href="../classes/_curve_edwards25519_curve_.ed25519.html" class="tsd-signature-type">Ed25519</a></li>
-					<li><a href="../classes/_curve_nist_curve_.weierstrass.html" class="tsd-signature-type">Weierstrass</a></li>
-				</ul>
-			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Methods</h3>
+							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_index_.group.html#point" class="tsd-kind-icon">point</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_index_.group.html#pointlen" class="tsd-kind-icon">point<wbr>Len</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_index_.group.html#scalar" class="tsd-kind-icon">scalar</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_index_.group.html#scalarlen" class="tsd-kind-icon">scalar<wbr>Len</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_sign_bls_index_.html#blssignature" class="tsd-kind-icon">Bls<wbr>Signature</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_sign_bls_index_.html#hashtopoint" class="tsd-kind-icon">hash<wbr>ToPoint</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_sign_bls_index_.html#sign" class="tsd-kind-icon">sign</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_sign_bls_index_.html#verify" class="tsd-kind-icon">verify</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="point" class="tsd-anchor"></a>
-					<h3>point</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">point<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_index_.point.html" class="tsd-signature-type">Point</a></li>
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
+					<a name="blssignature" class="tsd-anchor"></a>
+					<h3>Bls<wbr>Signature</h3>
+					<div class="tsd-signature tsd-kind-icon">Bls<wbr>Signature<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/sign/bls/index.ts#L5">sign/bls/index.ts:5</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="hashtopoint" class="tsd-anchor"></a>
+					<h3>hash<wbr>ToPoint</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">hash<wbr>ToPoint<span class="tsd-signature-symbol">(</span>msg<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_pairing_point_.bn256g1point.html" class="tsd-signature-type">BN256G1Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/index.ts#L27">index.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/sign/bls/index.ts#L7">sign/bls/index.ts:7</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Make a point compatible with this group</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_index_.point.html" class="tsd-signature-type">Point</a></h4>
-							<p>the new point</p>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>msg: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_pairing_point_.bn256g1point.html" class="tsd-signature-type">BN256G1Point</a></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="pointlen" class="tsd-anchor"></a>
-					<h3>point<wbr>Len</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">point<wbr>Len<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="sign" class="tsd-anchor"></a>
+					<h3>sign</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">sign<span class="tsd-signature-symbol">(</span>msg<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, secret<span class="tsd-signature-symbol">: </span><a href="../classes/_pairing_scalar_.bn256scalar.html" class="tsd-signature-type">BN256Scalar</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_sign_bls_index_.html#blssignature" class="tsd-signature-type">BlsSignature</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/index.ts#L21">index.ts:21</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/sign/bls/index.ts#L21">sign/bls/index.ts:21</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get the length of the buffer after marshaling the point</p>
+									<p>Sign the message with the given secret key</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
-							<p>the length</p>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>msg: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the message to sign</p>
+									</div>
+								</li>
+								<li>
+									<h5>secret: <a href="../classes/_pairing_scalar_.bn256scalar.html" class="tsd-signature-type">BN256Scalar</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the private key</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_sign_bls_index_.html#blssignature" class="tsd-signature-type">BlsSignature</a></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="scalar" class="tsd-anchor"></a>
-					<h3>scalar</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">scalar<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_index_.scalar.html" class="tsd-signature-type">Scalar</a></li>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="verify" class="tsd-anchor"></a>
+					<h3>verify</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">verify<span class="tsd-signature-symbol">(</span>msg<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, pub<span class="tsd-signature-symbol">: </span><a href="../classes/_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a>, sig<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/index.ts#L15">index.ts:15</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/sign/bls/index.ts#L34">sign/bls/index.ts:34</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Make a scalar compatible with this group</p>
+									<p>Verify the signature of the message with the public key</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_index_.scalar.html" class="tsd-signature-type">Scalar</a></h4>
-							<p>the new scalar</p>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="scalarlen" class="tsd-anchor"></a>
-					<h3>scalar<wbr>Len</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">scalar<wbr>Len<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/index.ts#L9">index.ts:9</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Get the length of the buffer after marshaling the scalar</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
-							<p>the length</p>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>msg: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the message</p>
+									</div>
+								</li>
+								<li>
+									<h5>pub: <a href="../classes/_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the public key as a point</p>
+									</div>
+								</li>
+								<li>
+									<h5>sig: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the signature as a buffer</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -203,38 +214,23 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/_index_.html">"index"</a>
+						<a href="_sign_bls_index_.html">"sign/bls/index"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_index_.group.html" class="tsd-kind-icon">Group</a>
-						<ul>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_index_.group.html#point" class="tsd-kind-icon">point</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_index_.group.html#pointlen" class="tsd-kind-icon">point<wbr>Len</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_index_.group.html#scalar" class="tsd-kind-icon">scalar</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_index_.group.html#scalarlen" class="tsd-kind-icon">scalar<wbr>Len</a>
-							</li>
-						</ul>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
+						<a href="_sign_bls_index_.html#blssignature" class="tsd-kind-icon">Bls<wbr>Signature</a>
 					</li>
-				</ul>
-				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_index_.point.html" class="tsd-kind-icon">Point</a>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_sign_bls_index_.html#hashtopoint" class="tsd-kind-icon">hash<wbr>ToPoint</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_index_.scalar.html" class="tsd-kind-icon">Scalar</a>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_sign_bls_index_.html#sign" class="tsd-kind-icon">sign</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_sign_bls_index_.html#verify" class="tsd-kind-icon">verify</a>
 					</li>
 				</ul>
 			</nav>

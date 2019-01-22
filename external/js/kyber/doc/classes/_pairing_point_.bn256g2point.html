@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>NistPoint | @dedis/kyber</title>
+	<title>BN256G2Point | @dedis/kyber</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_curve_nist_point_.html">&quot;curve/nist/point&quot;</a>
+					<a href="../modules/_pairing_point_.html">&quot;pairing/point&quot;</a>
 				</li>
 				<li>
-					<a href="_curve_nist_point_.nistpoint.html">NistPoint</a>
+					<a href="_pairing_point_.bn256g2point.html">BN256G2Point</a>
 				</li>
 			</ul>
-			<h1>Class NistPoint</h1>
+			<h1>Class BN256G2Point</h1>
 		</div>
 	</div>
 </header>
@@ -72,17 +72,15 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Represents a Point on the nist curve</p>
+						<p>Implementation of the point interface for G2</p>
 					</div>
-					<p>The value of the parameters is expected in little endian form if being
-					passed as a buffer</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">NistPoint</span>
+						<span class="target">BN256G2Point</span>
 					</li>
 				</ul>
 			</section>
@@ -99,37 +97,37 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section ">
+						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#ref" class="tsd-kind-icon">ref</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_pairing_point_.bn256g2point.html#g2" class="tsd-kind-icon">g2</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#add" class="tsd-kind-icon">add</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#base" class="tsd-kind-icon">base</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#clone" class="tsd-kind-icon">clone</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#data" class="tsd-kind-icon">data</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#embed" class="tsd-kind-icon">embed</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#embedlen" class="tsd-kind-icon">embed<wbr>Len</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#equal" class="tsd-kind-icon">equal</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#inspect" class="tsd-kind-icon">inspect</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#marshalbinary" class="tsd-kind-icon">marshal<wbr>Binary</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#marshalsize" class="tsd-kind-icon">marshal<wbr>Size</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#mul" class="tsd-kind-icon">mul</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#neg" class="tsd-kind-icon">neg</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#null" class="tsd-kind-icon">null</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#pick" class="tsd-kind-icon">pick</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#set" class="tsd-kind-icon">set</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#string" class="tsd-kind-icon">string</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#sub" class="tsd-kind-icon">sub</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_curve_nist_point_.nistpoint.html#unmarshalbinary" class="tsd-kind-icon">unmarshal<wbr>Binary</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#add" class="tsd-kind-icon">add</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#base" class="tsd-kind-icon">base</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#clone" class="tsd-kind-icon">clone</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#data" class="tsd-kind-icon">data</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#embed" class="tsd-kind-icon">embed</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#embedlen" class="tsd-kind-icon">embed<wbr>Len</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#equal" class="tsd-kind-icon">equal</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#getelement" class="tsd-kind-icon">get<wbr>Element</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#marshalbinary" class="tsd-kind-icon">marshal<wbr>Binary</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#marshalsize" class="tsd-kind-icon">marshal<wbr>Size</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#mul" class="tsd-kind-icon">mul</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#neg" class="tsd-kind-icon">neg</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#null" class="tsd-kind-icon">null</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#pair" class="tsd-kind-icon">pair</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#pick" class="tsd-kind-icon">pick</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#set" class="tsd-kind-icon">set</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#string" class="tsd-kind-icon">string</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#sub" class="tsd-kind-icon">sub</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_pairing_point_.bn256g2point.html#unmarshalbinary" class="tsd-kind-icon">unmarshal<wbr>Binary</a></li>
 							</ul>
 						</section>
 					</div>
@@ -141,54 +139,37 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Nist<wbr>Point<span class="tsd-signature-symbol">(</span>curve<span class="tsd-signature-symbol">: </span><a href="_curve_nist_curve_.weierstrass.html" class="tsd-signature-type">Weierstrass</a>, x<span class="tsd-signature-symbol">?: </span><a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a>, y<span class="tsd-signature-symbol">?: </span><a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">new BN256<wbr>G2Point<span class="tsd-signature-symbol">(</span>k<span class="tsd-signature-symbol">?: </span><a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L135">pairing/point.ts:135</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>curve: <a href="_curve_nist_curve_.weierstrass.html" class="tsd-signature-type">Weierstrass</a></h5>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> x: <a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a></h5>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> y: <a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> k: <a href="../modules/_constants_.html#bntype" class="tsd-signature-type">BNType</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group ">
+			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="ref" class="tsd-anchor"></a>
-					<h3>ref</h3>
-					<div class="tsd-signature tsd-kind-icon">ref<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="g2" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> g2</h3>
+					<div class="tsd-signature tsd-kind-icon">g2<span class="tsd-signature-symbol">:</span> <a href="_pairing_bn_.g2.html" class="tsd-signature-type">G2</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L15">curve/nist/point.ts:15</a></li>
+							<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L135">pairing/point.ts:135</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>curve<span class="tsd-signature-symbol">: </span><a href="_curve_nist_curve_.weierstrass.html" class="tsd-signature-type">Weierstrass</a></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>point<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></h5>
-							</li>
-						</ul>
-					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -197,32 +178,31 @@
 					<a name="add" class="tsd-anchor"></a>
 					<h3>add</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>p1<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a>, p2<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>p1<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a>, p2<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#add">add</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L175">curve/nist/point.ts:175</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L199">pairing/point.ts:199</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Get the sum of two points</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>p1: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p1: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 								<li>
-									<h5>p2: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p2: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
-							<p>the new point resulting from the sum</p>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -230,14 +210,14 @@
 					<a name="base" class="tsd-anchor"></a>
 					<h3>base</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">base<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">base<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#base">base</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L92">curve/nist/point.ts:92</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L156">pairing/point.ts:156</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -245,7 +225,7 @@
 									<p>Make a point set to the standard base for the curve</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 							<p>the new point</p>
 						</li>
 					</ul>
@@ -254,14 +234,14 @@
 					<a name="clone" class="tsd-anchor"></a>
 					<h3>clone</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">clone<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">clone<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#clone">clone</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L80">curve/nist/point.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L177">pairing/point.ts:177</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -269,7 +249,7 @@
 									<p>Make a clone of the current point</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 							<p>the cloned point</p>
 						</li>
 					</ul>
@@ -285,7 +265,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#data">data</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L164">curve/nist/point.ts:164</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L194">pairing/point.ts:194</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -302,13 +282,13 @@
 					<a name="embed" class="tsd-anchor"></a>
 					<h3>embed</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">embed<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">embed<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L107">curve/nist/point.ts:107</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L189">pairing/point.ts:189</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -344,7 +324,7 @@
 									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -359,7 +339,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#embedlen">embedLen</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L99">curve/nist/point.ts:99</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L184">pairing/point.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -376,46 +356,51 @@
 					<a name="equal" class="tsd-anchor"></a>
 					<h3>equal</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">equal<span class="tsd-signature-symbol">(</span>p2<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">equal<span class="tsd-signature-symbol">(</span>p2<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#equal">equal</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L60">curve/nist/point.ts:60</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L246">pairing/point.ts:246</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Check if the given point is the same</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>p2: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p2: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-							<p>true when both are equal</p>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="inspect" class="tsd-anchor"></a>
-					<h3>inspect</h3>
+					<a name="getelement" class="tsd-anchor"></a>
+					<h3>get<wbr>Element</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">inspect<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Element<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_bn_.g2.html" class="tsd-signature-type">G2</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L37">curve/nist/point.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L145">pairing/point.ts:145</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the element of the point</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_bn_.g2.html" class="tsd-signature-type">G2</a></h4>
+							<p>the element</p>
 						</li>
 					</ul>
 				</section>
@@ -430,7 +415,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#marshalbinary">marshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L220">curve/nist/point.ts:220</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L231">pairing/point.ts:231</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -454,7 +439,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#marshalsize">marshalSize</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L214">curve/nist/point.ts:214</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L241">pairing/point.ts:241</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -471,32 +456,31 @@
 					<a name="mul" class="tsd-anchor"></a>
 					<h3>mul</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">mul<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">: </span><a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a>, p<span class="tsd-signature-symbol">?: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">mul<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">: </span><a href="_pairing_scalar_.bn256scalar.html" class="tsd-signature-type">BN256Scalar</a>, p<span class="tsd-signature-symbol">?: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#mul">mul</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L199">curve/nist/point.ts:199</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L216">pairing/point.ts:216</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Multiply the point by a scalar</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>s: <a href="_curve_nist_scalar_.nistscalar.html" class="tsd-signature-type">NistScalar</a></h5>
+									<h5>s: <a href="_pairing_scalar_.bn256scalar.html" class="tsd-signature-type">BN256Scalar</a></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> p: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> p: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
-							<p>the point resulting from the multiplication</p>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -504,29 +488,28 @@
 					<a name="neg" class="tsd-anchor"></a>
 					<h3>neg</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">neg<span class="tsd-signature-symbol">(</span>p<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">neg<span class="tsd-signature-symbol">(</span>p<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#neg">neg</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L193">curve/nist/point.ts:193</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L210">pairing/point.ts:210</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Get the negative of a point</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>p: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
-							<p>the negative point</p>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -534,14 +517,14 @@
 					<a name="null" class="tsd-anchor"></a>
 					<h3>null</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">null<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">null<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#null">null</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L86">curve/nist/point.ts:86</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L150">pairing/point.ts:150</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -549,8 +532,38 @@
 									<p>Make a point set to the neutral element</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 							<p>the new point</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="pair" class="tsd-anchor"></a>
+					<h3>pair</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">pair<span class="tsd-signature-symbol">(</span>g1<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g1point.html" class="tsd-signature-type">BN256G1Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_bn_.gt.html" class="tsd-signature-type">GT</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L226">pairing/point.ts:226</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Compute the pairing between the current point and
+									the provided G1 point</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>g1: <a href="_pairing_point_.bn256g1point.html" class="tsd-signature-type">BN256G1Point</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_bn_.gt.html" class="tsd-signature-type">GT</a></h4>
+							<p>the resulting GT point</p>
 						</li>
 					</ul>
 				</section>
@@ -558,13 +571,13 @@
 					<a name="pick" class="tsd-anchor"></a>
 					<h3>pick</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">pick<span class="tsd-signature-symbol">(</span>callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">pick<span class="tsd-signature-symbol">(</span>callback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L208">curve/nist/point.ts:208</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L162">pairing/point.ts:162</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -597,7 +610,7 @@
 									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -605,29 +618,28 @@
 					<a name="set" class="tsd-anchor"></a>
 					<h3>set</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">set<span class="tsd-signature-symbol">(</span>p2<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">set<span class="tsd-signature-symbol">(</span>p<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#set">set</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L74">curve/nist/point.ts:74</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L171">pairing/point.ts:171</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Use the given point to set the current one</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>p2: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
-							<p>the point</p>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -642,7 +654,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#string">string</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L33">curve/nist/point.ts:33</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L251">pairing/point.ts:251</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -659,56 +671,31 @@
 					<a name="sub" class="tsd-anchor"></a>
 					<h3>sub</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">sub<span class="tsd-signature-symbol">(</span>p1<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a>, p2<span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></li>
+						<li class="tsd-signature tsd-kind-icon">sub<span class="tsd-signature-symbol">(</span>p1<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a>, p2<span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#sub">sub</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L184">curve/nist/point.ts:184</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L205">pairing/point.ts:205</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Subtract two points</p>
-								</div>
+								<dl class="tsd-comment-tags">
+									<dt>inheritdoc</dt>
+									<dd></dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>p1: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p1: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 								<li>
-									<h5>p2: <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h5>
+									<h5>p2: <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_curve_nist_point_.nistpoint.html" class="tsd-signature-type">NistPoint</a></h4>
-							<p>the new point resulting from the subtraction</p>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="tostring" class="tsd-anchor"></a>
-					<h3>to<wbr>String</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">to<wbr>String<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L46">curve/nist/point.ts:46</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Returns the little endian representation of the y coordinate of
-									the Point</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-							<p>the string representation</p>
+							<h4 class="tsd-returns-title">Returns <a href="_pairing_point_.bn256g2point.html" class="tsd-signature-type">BN256G2Point</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -723,7 +710,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/_index_.point.html">Point</a>.<a href="../interfaces/_index_.point.html#unmarshalbinary">unmarshalBinary</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/curve/nist/point.ts#L234">curve/nist/point.ts:234</a></li>
+									<li>Defined in <a href="https://github.com/dedis/cothority/blob/bd367f46/external/js/kyber/src/pairing/point.ts#L236">pairing/point.ts:236</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -751,79 +738,82 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/_curve_nist_point_.html">"curve/nist/point"</a>
+						<a href="../modules/_pairing_point_.html">"pairing/point"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_pairing_point_.bn256g1point.html" class="tsd-kind-icon">BN256<wbr>G1Point</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_curve_nist_point_.nistpoint.html" class="tsd-kind-icon">Nist<wbr>Point</a>
+						<a href="_pairing_point_.bn256g2point.html" class="tsd-kind-icon">BN256<wbr>G2Point</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="_pairing_point_.bn256g2point.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#ref" class="tsd-kind-icon">ref</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#add" class="tsd-kind-icon">add</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_pairing_point_.bn256g2point.html#g2" class="tsd-kind-icon">g2</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#base" class="tsd-kind-icon">base</a>
+								<a href="_pairing_point_.bn256g2point.html#add" class="tsd-kind-icon">add</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#clone" class="tsd-kind-icon">clone</a>
+								<a href="_pairing_point_.bn256g2point.html#base" class="tsd-kind-icon">base</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#data" class="tsd-kind-icon">data</a>
+								<a href="_pairing_point_.bn256g2point.html#clone" class="tsd-kind-icon">clone</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#embed" class="tsd-kind-icon">embed</a>
+								<a href="_pairing_point_.bn256g2point.html#data" class="tsd-kind-icon">data</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#embedlen" class="tsd-kind-icon">embed<wbr>Len</a>
+								<a href="_pairing_point_.bn256g2point.html#embed" class="tsd-kind-icon">embed</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#equal" class="tsd-kind-icon">equal</a>
+								<a href="_pairing_point_.bn256g2point.html#embedlen" class="tsd-kind-icon">embed<wbr>Len</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#inspect" class="tsd-kind-icon">inspect</a>
+								<a href="_pairing_point_.bn256g2point.html#equal" class="tsd-kind-icon">equal</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#marshalbinary" class="tsd-kind-icon">marshal<wbr>Binary</a>
+								<a href="_pairing_point_.bn256g2point.html#getelement" class="tsd-kind-icon">get<wbr>Element</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#marshalsize" class="tsd-kind-icon">marshal<wbr>Size</a>
+								<a href="_pairing_point_.bn256g2point.html#marshalbinary" class="tsd-kind-icon">marshal<wbr>Binary</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#mul" class="tsd-kind-icon">mul</a>
+								<a href="_pairing_point_.bn256g2point.html#marshalsize" class="tsd-kind-icon">marshal<wbr>Size</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#neg" class="tsd-kind-icon">neg</a>
+								<a href="_pairing_point_.bn256g2point.html#mul" class="tsd-kind-icon">mul</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#null" class="tsd-kind-icon">null</a>
+								<a href="_pairing_point_.bn256g2point.html#neg" class="tsd-kind-icon">neg</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#pick" class="tsd-kind-icon">pick</a>
+								<a href="_pairing_point_.bn256g2point.html#null" class="tsd-kind-icon">null</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#set" class="tsd-kind-icon">set</a>
+								<a href="_pairing_point_.bn256g2point.html#pair" class="tsd-kind-icon">pair</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#string" class="tsd-kind-icon">string</a>
+								<a href="_pairing_point_.bn256g2point.html#pick" class="tsd-kind-icon">pick</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#sub" class="tsd-kind-icon">sub</a>
+								<a href="_pairing_point_.bn256g2point.html#set" class="tsd-kind-icon">set</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
+								<a href="_pairing_point_.bn256g2point.html#string" class="tsd-kind-icon">string</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_curve_nist_point_.nistpoint.html#unmarshalbinary" class="tsd-kind-icon">unmarshal<wbr>Binary</a>
+								<a href="_pairing_point_.bn256g2point.html#sub" class="tsd-kind-icon">sub</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_pairing_point_.bn256g2point.html#unmarshalbinary" class="tsd-kind-icon">unmarshal<wbr>Binary</a>
 							</li>
 						</ul>
 					</li>
