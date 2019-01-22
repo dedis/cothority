@@ -12,14 +12,14 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class TestSignerX509EC extends SignerX509EC {
+public class SignerX509ECTest extends SignerX509EC {
     private final PublicKey publicKey;
     private final PrivateKey privateKey;
 
     /**
      * this constructor create internally random key
      */
-    public TestSignerX509EC() {
+    public SignerX509ECTest() {
         this("secp256r1");
     }
 
@@ -28,15 +28,15 @@ public class TestSignerX509EC extends SignerX509EC {
      *
      * @param keyType type of curve can be one of "secp256r1", "secp384r1", "secp521r1"
      */
-    public TestSignerX509EC(String keyType) {
+    public SignerX509ECTest(String keyType) {
         this(createKeyPair(keyType));
     }
 
-    public TestSignerX509EC(java.security.KeyPair keyPair) {
+    public SignerX509ECTest(java.security.KeyPair keyPair) {
         this(keyPair.getPublic(), keyPair.getPrivate());
     }
 
-    public TestSignerX509EC(PublicKey publicKey, PrivateKey privateKey) {
+    public SignerX509ECTest(PublicKey publicKey, PrivateKey privateKey) {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }
@@ -69,7 +69,7 @@ public class TestSignerX509EC extends SignerX509EC {
      * @param publicKeyResourceName resource name of a public key x509 der format
      * @throws IOException when key pair can not be read
      */
-    public TestSignerX509EC(String privateKeyResourceName, String publicKeyResourceName) throws IOException {
+    public SignerX509ECTest(String privateKeyResourceName, String publicKeyResourceName) throws IOException {
         try {
             publicKey = readPublicKey(getClass().getClassLoader().getResourceAsStream(publicKeyResourceName));
             privateKey = readPrivateKey(getClass().getClassLoader().getResourceAsStream(privateKeyResourceName));

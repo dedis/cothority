@@ -7,7 +7,7 @@ import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.calypso.*;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
+import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +19,9 @@ import java.util.Collections;
 public class GrantAccessTest {
     static final String SUPERADMIN_SCALAR = "AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D";
     private static final SignerEd25519 superadmin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
-    private final SignerX509EC consumerSigner = new TestSignerX509EC();
-    private final SignerX509EC publisherSigner = new TestSignerX509EC();
-    private final SignerX509EC consumerPublicPart = new TestLimitedSignerX509EC(consumerSigner);
+    private final SignerX509EC consumerSigner = new SignerX509ECTest();
+    private final SignerX509EC publisherSigner = new SignerX509ECTest();
+    private final SignerX509EC consumerPublicPart = new LimitedSignerX509ECTest(consumerSigner);
     private TestServerController testServerController;
     private CalypsoRPC calypso;
 
@@ -166,8 +166,8 @@ public class GrantAccessTest {
         di.evolveDarcAndWait(newGenesis, superadmin, counters.head()+1, 10);
     }
 
-    private class TestLimitedSignerX509EC extends TestSignerX509EC {
-        public TestLimitedSignerX509EC(SignerX509EC consumerKeys) {
+    private class LimitedSignerX509ECTest extends SignerX509ECTest {
+        public LimitedSignerX509ECTest(SignerX509EC consumerKeys) {
             super(consumerKeys.getPublicKey(), null);
         }
 

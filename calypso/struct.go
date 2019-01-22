@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
+	"github.com/dedis/kyber/xof/keccak"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
@@ -53,7 +54,7 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	kp := suite.Point().Embed(key, suite.RandomStream())
 	wr.C = suite.Point().Add(C, kp)
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(ltsid.Slice()), nil)
+	gBar := suite.Point().Embed(ltsid.Slice(), keccak.New(ltsid.Slice()))
 	wr.Ubar = suite.Point().Mul(r, gBar)
 	s := suite.Scalar().Pick(suite.RandomStream())
 	w := suite.Point().Mul(s, nil)
@@ -84,7 +85,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	ue := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.U)
 	w := suite.Point().Add(gf, ue)
 
-	gBar := suite.Point().Mul(suite.Scalar().SetBytes(wr.LTSID.Slice()), nil)
+	gBar := suite.Point().Embed(wr.LTSID.Slice(), keccak.New(wr.LTSID.Slice()))
 	gfBar := suite.Point().Mul(wr.F, gBar)
 	ueBar := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.Ubar)
 	wBar := suite.Point().Add(gfBar, ueBar)
