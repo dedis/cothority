@@ -179,16 +179,6 @@ public class Darc {
     }
 
     /**
-     * Updates the version of the darc and clears any eventual signatures from previous
-     * evolutions.
-     */
-    public void increaseVersion() {
-        version++;
-        signatures = new ArrayList<>();
-        verificationDarcs = new ArrayList<>();
-    }
-
-    /**
      * Creates the protobuf representation of the darc.
      *
      * @return The protobuf representation.
@@ -281,14 +271,14 @@ public class Darc {
     }
 
     /**
-     * @return a copy of the darc with the same version number, rules and description.
-     * The prevID and baseID are initiated to null, which must be set afterwards if the darc is to be used.
+     * Returns a partial copy of the Darc where the rules and the description stay the same but the other attributes are
+     * uninitialised. This is useful for preparing the Darc for an evolution.
+     *
+     * @return the partial copy
      */
-    public Darc copyRulesAndVersion() {
+    public Darc partialCopy() {
         Rules rs = new Rules(this.rules);
-        Darc c = new Darc(rs, description.clone());
-        c.version = version;
-        return c;
+        return new Darc(rs, description.clone());
     }
 
     /**
@@ -361,6 +351,13 @@ public class Darc {
         Darc otherDarc = (Darc) other;
         return getBaseId().equals(otherDarc.getBaseId()) &&
                 version == otherDarc.version;
+    }
+
+    /**
+     * Setter for the version number.
+     */
+    public void setVersion(long version) {
+        this.version = version;
     }
 
     private static byte[] longToArr8(long x) {

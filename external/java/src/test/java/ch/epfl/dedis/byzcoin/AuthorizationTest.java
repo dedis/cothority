@@ -188,7 +188,7 @@ public class AuthorizationTest {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
         SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
+        Darc newGenesis = ocs.getGenesisDarc().partialCopy();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 

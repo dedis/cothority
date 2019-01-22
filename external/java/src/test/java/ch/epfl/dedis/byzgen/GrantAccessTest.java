@@ -81,7 +81,7 @@ public class GrantAccessTest {
 
         //when
         Identity identityX509EC = new IdentityX509EC(consumerPublicPart);
-        Darc newDarc = documentDarc.copyRulesAndVersion();
+        Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", identityX509EC, Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
@@ -114,7 +114,7 @@ public class GrantAccessTest {
                 doc.getWriteData(calypso.getLTS()));
 
         //when
-        Darc newDarc = documentDarc.copyRulesAndVersion();
+        Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", new IdentityDarc(consumerId), Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
@@ -157,7 +157,7 @@ public class GrantAccessTest {
     }
 
     private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
-        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
+        Darc newGenesis = ocs.getGenesisDarc().partialCopy();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 

@@ -58,7 +58,7 @@ class ValueTest {
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
@@ -101,7 +101,7 @@ class ValueTest {
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
