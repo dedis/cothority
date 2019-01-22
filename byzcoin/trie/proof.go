@@ -107,7 +107,7 @@ func (p *Proof) Get(key []byte) []byte {
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
 	err := t.db.View(func(b Bucket) error {
-		rootKey := t.getRoot(b)
+		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
