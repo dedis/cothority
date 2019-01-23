@@ -315,7 +315,7 @@ func newS(t *testing.T) (s *sStruct) {
 	s.signer = darc.NewSignerEd25519(nil, nil)
 	var err error
 	s.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:popParty", "invoke:Finalize"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:popParty", "invoke:" + pop.ContractPopParty + ".Finalize"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gMsg.BlockInterval = 500 * time.Millisecond
 
@@ -463,7 +463,8 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: s.popI,
 			Invoke: &byzcoin.Invoke{
-				Command: "Finalize",
+				ContractID: pop.ContractPopParty,
+				Command:    "Finalize",
 				Args: byzcoin.Arguments{
 					{
 						Name:  "FinalStatement",
@@ -578,7 +579,8 @@ func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins 
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: from,
 			Invoke: &byzcoin.Invoke{
-				Command: "transfer",
+				ContractID: contracts.ContractCoinID,
+				Command:    "transfer",
 				Args: []byzcoin.Argument{{
 					Name:  "coins",
 					Value: cBuf,

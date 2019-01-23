@@ -24,6 +24,7 @@ import (
 	"github.com/dedis/cothority/blscosi/blscosi/check"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
+	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	ph "github.com/dedis/cothority/personhood"
@@ -883,7 +884,8 @@ func bcFinalize(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
 			Invoke: &byzcoin.Invoke{
-				Command: "Finalize",
+				ContractID: service.ContractPopCoinAccount,
+				Command:    "Finalize",
 				Args: byzcoin.Arguments{
 					byzcoin.Argument{
 						Name:  "FinalStatement",
@@ -1091,7 +1093,8 @@ func bcCoinTransfer(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(srcAddr),
 			Invoke: &byzcoin.Invoke{
-				Command: "transfer",
+				ContractID: contracts.ContractCoinID,
+				Command:    "transfer",
 				Args: byzcoin.Arguments{{
 					Name:  "coins",
 					Value: amountBuf,
