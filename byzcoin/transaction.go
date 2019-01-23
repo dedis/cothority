@@ -101,9 +101,11 @@ func (instr Instruction) Hash() []byte {
 		args = instr.Spawn.Args
 	case InvokeType:
 		h.Write([]byte{1})
+		h.Write([]byte(instr.Invoke.ContractID))
 		args = instr.Invoke.Args
 	case DeleteType:
 		h.Write([]byte{2})
+		h.Write([]byte(instr.Delete.ContractID))
 	}
 	for _, a := range args {
 		h.Write([]byte(a.Name))
@@ -172,9 +174,9 @@ func (instr Instruction) Action() string {
 	case SpawnType:
 		a = "spawn:" + instr.Spawn.ContractID
 	case InvokeType:
-		a = "invoke:" + instr.Invoke.Command
+		a = "invoke:" + instr.Invoke.ContractID + "." + instr.Invoke.Command
 	case DeleteType:
-		a = "delete"
+		a = "delete:" + instr.Delete.ContractID
 	}
 	return a
 }

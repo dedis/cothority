@@ -233,7 +233,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		for _, p := range newConfig.Roster.Publics() {
 			rules = append(rules, "ed25519:"+p.String())
 		}
-		genesisDarc.Rules.UpdateRule("invoke:view_change", expression.InitOrExpr(rules...))
+		genesisDarc.Rules.UpdateRule("invoke:config.view_change", expression.InitOrExpr(rules...))
 		var genesisBuf []byte
 		genesisBuf, err = genesisDarc.ToProto()
 		if err != nil {

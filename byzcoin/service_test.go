@@ -309,7 +309,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
-	instr1 := createInvokeInstr(NewInstanceID(dcID), "evolve", "data", dcID)
+	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
 	instr2.SignerCounter = []uint64{3}
@@ -332,7 +332,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
-	instr1 = createInvokeInstr(NewInstanceID(dcID), "evolve", "data", dcID)
+	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	dcID2 := random.Bits(256, true, random.New())
 	instr2 = createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID2)
@@ -493,7 +493,9 @@ func TestService_Depending(t *testing.T) {
 	// Second instruction: delete the value we just spawned.
 	in2 := Instruction{
 		InstanceID: NewInstanceID(in1.Hash()),
-		Delete:     &Delete{},
+		Delete: &Delete{
+			ContractID: dummyContract,
+		},
 	}
 	in2.SignerCounter = []uint64{2}
 
@@ -1250,12 +1252,12 @@ func TestService_CheckAuthorization(t *testing.T) {
 	ca.Identities[0] = darc.NewIdentityEd25519(s.roster.List[0].Public)
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("invoke:view_change"))
+	require.Contains(t, resp.Actions, darc.Action("invoke:config.view_change"))
 
 	ca.Identities = append(ca.Identities, darc.NewIdentityEd25519(s.roster.List[1].Public))
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("invoke:view_change"))
+	require.Contains(t, resp.Actions, darc.Action("invoke:config.view_change"))
 
 	log.Lvl1("Check delegation of darcs")
 	ca.DarcID = darc2.GetID()
@@ -1445,7 +1447,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		require.Nil(t, err)
 		d, err := darc.NewFromProtobuf(val)
 		require.Nil(t, err)
-		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:view_change"))), " | ")
+		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:config.view_change"))), " | ")
 		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
 
@@ -2221,7 +2223,8 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 	instr := Instruction{
 		InstanceID: NewInstanceID(nil),
 		Invoke: &Invoke{
-			Command: "update_config",
+			ContractID: ContractConfigID,
+			Command:    "update_config",
 			Args: []Argument{{
 				Name:  "config",
 				Value: configBuf,
@@ -2239,7 +2242,8 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
 	invoke := Invoke{
-		Command: "evolve",
+		ContractID: ContractDarcID,
+		Command:    "evolve",
 		Args: []Argument{
 			Argument{
 				Name:  "darc",
@@ -2375,7 +2379,16 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateChangeCacheTest", "delete"}, s.signer.Identity())
+		[]string{
+			"spawn:dummy",
+			"spawn:invalid",
+			"spawn:panic",
+			"spawn:darc",
+			"invoke:config.update_config",
+			"spawn:slow",
+			"spawn:stateChangeCacheTest",
+			"delete:dummy",
+		}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 

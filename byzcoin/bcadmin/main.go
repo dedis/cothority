@@ -358,7 +358,8 @@ func add(c *cli.Context) error {
 	}
 
 	invoke := byzcoin.Invoke{
-		Command: "evolve",
+		ContractID: byzcoin.ContractDarcID,
+		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{
 				Name:  "darc",
@@ -642,7 +643,8 @@ func darcRule(c *cli.Context, d *darc.Darc, update bool, delete bool, cfg lib.Co
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
 	invoke := byzcoin.Invoke{
-		Command: "evolve",
+		ContractID: byzcoin.ContractDarcID,
+		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{
 				Name:  "darc",
@@ -687,7 +689,8 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
 	invoke := byzcoin.Invoke{
-		Command: "evolve",
+		ContractID: byzcoin.ContractDarcID,
+		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{
 				Name:  "darc",

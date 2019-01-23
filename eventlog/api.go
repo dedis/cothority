@@ -173,8 +173,9 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 		tx.Instructions[i] = byzcoin.Instruction{
 			InstanceID: c.Instance,
 			Invoke: &byzcoin.Invoke{
-				Command: contractName,
-				Args:    []byzcoin.Argument{argEvent},
+				ContractID: contractName,
+				Command:    contractName,
+				Args:       []byzcoin.Argument{argEvent},
 			},
 			SignerCounter: c.incrementCtrs(),
 		}

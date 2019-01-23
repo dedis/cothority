@@ -48,7 +48,7 @@ var catchupFetchBlocks = 10
 // How many DB-entries to download in one go.
 var catchupFetchDBEntries = 100
 
-const invokeEvolve darc.Action = darc.Action("invoke:evolve")
+const invokeEvolve darc.Action = darc.Action("invoke:darc.evolve")
 
 var rotationWindow time.Duration = 10
 

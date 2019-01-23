@@ -346,7 +346,7 @@ func newSer(t *testing.T) (*ser, *Client) {
 
 	var err error
 	s.req, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
-		[]string{"spawn:darc", "spawn:eventlog", "invoke:eventlog"}, s.owner.Identity())
+		[]string{"spawn:darc", "spawn:eventlog", "invoke:eventlog.eventlog"}, s.owner.Identity())
 	if err != nil {
 		t.Fatal(err)
 	}
