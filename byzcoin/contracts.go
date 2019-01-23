@@ -90,16 +90,16 @@ func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []Stat
 //
 
 // ContractConfigID denotes a config-contract
-var ContractConfigID = "config"
+const ContractConfigID = "config"
 
 // ContractDarcID denotes a darc-contract
-var ContractDarcID = "darc"
+const ContractDarcID = "darc"
 
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = InstanceID{}
 
 // CmdDarcEvolve is needed to evolve a darc.
-var CmdDarcEvolve = "evolve"
+const CmdDarcEvolve = "evolve"
 
 type contractConfig struct {
 	BasicContract
@@ -233,7 +233,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		for _, p := range newConfig.Roster.Publics() {
 			rules = append(rules, "ed25519:"+p.String())
 		}
-		genesisDarc.Rules.UpdateRule("invoke:config.view_change", expression.InitOrExpr(rules...))
+		genesisDarc.Rules.UpdateRule("invoke:"+ContractConfigID+".view_change", expression.InitOrExpr(rules...))
 		var genesisBuf []byte
 		genesisBuf, err = genesisDarc.ToProto()
 		if err != nil {

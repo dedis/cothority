@@ -63,8 +63,8 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong
      */
     public ByzCoinRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
-        if (d.getExpression("view_change") == null) {
-            throw new CothorityCommunicationException("need a 'view_change' rule.");
+        if (d.getExpression("invoke:" + ChainConfigInstance.ContractId + ".view_change") == null) {
+            throw new CothorityCommunicationException("need a view change rule.");
         }
         ByzCoinProto.CreateGenesisBlock.Builder request =
                 ByzCoinProto.CreateGenesisBlock.newBuilder();
@@ -607,13 +607,13 @@ public class ByzCoinRPC {
         Darc d = new Darc(Arrays.asList(admin.getIdentity()), Arrays.asList(admin.getIdentity()), "Genesis darc".getBytes());
         roster.getNodes().forEach(node -> {
             try {
-                d.addIdentity("view_change", new IdentityEd25519((Ed25519Point) node.getPublic()), Rules.OR);
+                d.addIdentity("invoke:"  + ChainConfigInstance.ContractId + ".view_change", new IdentityEd25519((Ed25519Point) node.getPublic()), Rules.OR);
             } catch (CothorityCryptoException e) {
                 logger.warn("didn't find Ed25519 point");
             }
         });
         d.addIdentity("spawn:darc", admin.getIdentity(), Rules.OR);
-        d.addIdentity("invoke:update_config", admin.getIdentity(), Rules.OR);
+        d.addIdentity("invoke:" + ChainConfigInstance.ContractId + ".update_config", admin.getIdentity(), Rules.OR);
         return d;
     }
 

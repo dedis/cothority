@@ -12102,6 +12102,12 @@ public final class ByzCoinProto {
           return false;
         }
       }
+      if (hasDelete()) {
+        if (!getDelete().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       for (int i = 0; i < getSignaturesCount(); i++) {
         if (!getSignatures(i).isInitialized()) {
           memoizedIsInitialized = 0;
@@ -12609,6 +12615,11 @@ public final class ByzCoinProto {
         }
         if (hasInvoke()) {
           if (!getInvoke().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasDelete()) {
+          if (!getDelete().isInitialized()) {
             return false;
           }
         }
@@ -14796,10 +14807,36 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    boolean hasContractid();
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    java.lang.String getContractid();
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getContractidBytes();
+
+    /**
+     * <pre>
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     boolean hasCommand();
     /**
@@ -14807,7 +14844,7 @@ public final class ByzCoinProto {
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     java.lang.String getCommand();
     /**
@@ -14815,7 +14852,7 @@ public final class ByzCoinProto {
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     com.google.protobuf.ByteString
         getCommandBytes();
@@ -14825,7 +14862,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> 
         getArgsList();
@@ -14834,7 +14871,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index);
     /**
@@ -14842,7 +14879,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     int getArgsCount();
     /**
@@ -14850,7 +14887,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList();
@@ -14859,7 +14896,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
         int index);
@@ -14882,6 +14919,7 @@ public final class ByzCoinProto {
       super(builder);
     }
     private Invoke() {
+      contractid_ = "";
       command_ = "";
       args_ = java.util.Collections.emptyList();
     }
@@ -14913,13 +14951,19 @@ public final class ByzCoinProto {
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              command_ = bs;
+              contractid_ = bs;
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              command_ = bs;
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                 args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>();
-                mutable_bitField0_ |= 0x00000002;
+                mutable_bitField0_ |= 0x00000004;
               }
               args_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.parser(), extensionRegistry));
@@ -14940,7 +14984,7 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
           args_ = java.util.Collections.unmodifiableList(args_);
         }
         this.unknownFields = unknownFields.build();
@@ -14961,24 +15005,78 @@ public final class ByzCoinProto {
     }
 
     private int bitField0_;
-    public static final int COMMAND_FIELD_NUMBER = 1;
+    public static final int CONTRACTID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object contractid_;
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public boolean hasContractid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public java.lang.String getContractid() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          contractid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getContractidBytes() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        contractid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int COMMAND_FIELD_NUMBER = 2;
     private volatile java.lang.Object command_;
     /**
      * <pre>
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     public boolean hasCommand() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     public java.lang.String getCommand() {
       java.lang.Object ref = command_;
@@ -14999,7 +15097,7 @@ public final class ByzCoinProto {
      * Command is interpreted by the contract.
      * </pre>
      *
-     * <code>required string command = 1;</code>
+     * <code>required string command = 2;</code>
      */
     public com.google.protobuf.ByteString
         getCommandBytes() {
@@ -15015,14 +15113,14 @@ public final class ByzCoinProto {
       }
     }
 
-    public static final int ARGS_FIELD_NUMBER = 2;
+    public static final int ARGS_FIELD_NUMBER = 3;
     private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_;
     /**
      * <pre>
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
       return args_;
@@ -15032,7 +15130,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
         getArgsOrBuilderList() {
@@ -15043,7 +15141,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     public int getArgsCount() {
       return args_.size();
@@ -15053,7 +15151,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
       return args_.get(index);
@@ -15063,7 +15161,7 @@ public final class ByzCoinProto {
      * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
-     * <code>repeated .byzcoin.Argument args = 2;</code>
+     * <code>repeated .byzcoin.Argument args = 3;</code>
      */
     public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
         int index) {
@@ -15077,6 +15175,10 @@ public final class ByzCoinProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (!hasContractid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (!hasCommand()) {
         memoizedIsInitialized = 0;
         return false;
@@ -15095,10 +15197,13 @@ public final class ByzCoinProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, command_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, command_);
       }
       for (int i = 0; i < args_.size(); i++) {
-        output.writeMessage(2, args_.get(i));
+        output.writeMessage(3, args_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -15110,11 +15215,14 @@ public final class ByzCoinProto {
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, command_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, command_);
       }
       for (int i = 0; i < args_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, args_.get(i));
+          .computeMessageSize(3, args_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -15132,6 +15240,11 @@ public final class ByzCoinProto {
       ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke) obj;
 
       boolean result = true;
+      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid()) {
+        result = result && getContractid()
+            .equals(other.getContractid());
+      }
       result = result && (hasCommand() == other.hasCommand());
       if (hasCommand()) {
         result = result && getCommand()
@@ -15150,6 +15263,10 @@ public final class ByzCoinProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasContractid()) {
+        hash = (37 * hash) + CONTRACTID_FIELD_NUMBER;
+        hash = (53 * hash) + getContractid().hashCode();
+      }
       if (hasCommand()) {
         hash = (37 * hash) + COMMAND_FIELD_NUMBER;
         hash = (53 * hash) + getCommand().hashCode();
@@ -15297,11 +15414,13 @@ public final class ByzCoinProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        command_ = "";
+        contractid_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
+        command_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
         if (argsBuilder_ == null) {
           args_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
+          bitField0_ = (bitField0_ & ~0x00000004);
         } else {
           argsBuilder_.clear();
         }
@@ -15336,11 +15455,15 @@ public final class ByzCoinProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
+        result.contractid_ = contractid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.command_ = command_;
         if (argsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
             args_ = java.util.Collections.unmodifiableList(args_);
-            bitField0_ = (bitField0_ & ~0x00000002);
+            bitField0_ = (bitField0_ & ~0x00000004);
           }
           result.args_ = args_;
         } else {
@@ -15395,8 +15518,13 @@ public final class ByzCoinProto {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke other) {
         if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.getDefaultInstance()) return this;
-        if (other.hasCommand()) {
+        if (other.hasContractid()) {
           bitField0_ |= 0x00000001;
+          contractid_ = other.contractid_;
+          onChanged();
+        }
+        if (other.hasCommand()) {
+          bitField0_ |= 0x00000002;
           command_ = other.command_;
           onChanged();
         }
@@ -15404,7 +15532,7 @@ public final class ByzCoinProto {
           if (!other.args_.isEmpty()) {
             if (args_.isEmpty()) {
               args_ = other.args_;
-              bitField0_ = (bitField0_ & ~0x00000002);
+              bitField0_ = (bitField0_ & ~0x00000004);
             } else {
               ensureArgsIsMutable();
               args_.addAll(other.args_);
@@ -15417,7 +15545,7 @@ public final class ByzCoinProto {
               argsBuilder_.dispose();
               argsBuilder_ = null;
               args_ = other.args_;
-              bitField0_ = (bitField0_ & ~0x00000002);
+              bitField0_ = (bitField0_ & ~0x00000004);
               argsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getArgsFieldBuilder() : null;
@@ -15433,6 +15561,9 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
+        if (!hasContractid()) {
+          return false;
+        }
         if (!hasCommand()) {
           return false;
         }
@@ -15464,23 +15595,123 @@ public final class ByzCoinProto {
       }
       private int bitField0_;
 
+      private java.lang.Object contractid_ = "";
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public boolean hasContractid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public java.lang.String getContractid() {
+        java.lang.Object ref = contractid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            contractid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getContractidBytes() {
+        java.lang.Object ref = contractid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          contractid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder setContractid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        contractid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder clearContractid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        contractid_ = getDefaultInstance().getContractid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder setContractidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        contractid_ = value;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object command_ = "";
       /**
        * <pre>
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public boolean hasCommand() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public java.lang.String getCommand() {
         java.lang.Object ref = command_;
@@ -15501,7 +15732,7 @@ public final class ByzCoinProto {
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public com.google.protobuf.ByteString
           getCommandBytes() {
@@ -15521,14 +15752,14 @@ public final class ByzCoinProto {
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public Builder setCommand(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  bitField0_ |= 0x00000002;
         command_ = value;
         onChanged();
         return this;
@@ -15538,10 +15769,10 @@ public final class ByzCoinProto {
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public Builder clearCommand() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         command_ = getDefaultInstance().getCommand();
         onChanged();
         return this;
@@ -15551,14 +15782,14 @@ public final class ByzCoinProto {
        * Command is interpreted by the contract.
        * </pre>
        *
-       * <code>required string command = 1;</code>
+       * <code>required string command = 2;</code>
        */
       public Builder setCommandBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  bitField0_ |= 0x00000002;
         command_ = value;
         onChanged();
         return this;
@@ -15567,9 +15798,9 @@ public final class ByzCoinProto {
       private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> args_ =
         java.util.Collections.emptyList();
       private void ensureArgsIsMutable() {
-        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
           args_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument>(args_);
-          bitField0_ |= 0x00000002;
+          bitField0_ |= 0x00000004;
          }
       }
 
@@ -15581,7 +15812,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> getArgsList() {
         if (argsBuilder_ == null) {
@@ -15595,7 +15826,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public int getArgsCount() {
         if (argsBuilder_ == null) {
@@ -15609,7 +15840,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument getArgs(int index) {
         if (argsBuilder_ == null) {
@@ -15623,7 +15854,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder setArgs(
           int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
@@ -15644,7 +15875,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder setArgs(
           int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
@@ -15662,7 +15893,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder addArgs(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
         if (argsBuilder_ == null) {
@@ -15682,7 +15913,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder addArgs(
           int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument value) {
@@ -15703,7 +15934,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder addArgs(
           ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
@@ -15721,7 +15952,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder addArgs(
           int index, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder builderForValue) {
@@ -15739,7 +15970,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder addAllArgs(
           java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.Argument> values) {
@@ -15758,12 +15989,12 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder clearArgs() {
         if (argsBuilder_ == null) {
           args_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
+          bitField0_ = (bitField0_ & ~0x00000004);
           onChanged();
         } else {
           argsBuilder_.clear();
@@ -15775,7 +16006,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public Builder removeArgs(int index) {
         if (argsBuilder_ == null) {
@@ -15792,7 +16023,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder getArgsBuilder(
           int index) {
@@ -15803,7 +16034,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder getArgsOrBuilder(
           int index) {
@@ -15817,7 +16048,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder> 
            getArgsOrBuilderList() {
@@ -15832,7 +16063,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder addArgsBuilder() {
         return getArgsFieldBuilder().addBuilder(
@@ -15843,7 +16074,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder addArgsBuilder(
           int index) {
@@ -15855,7 +16086,7 @@ public final class ByzCoinProto {
        * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
-       * <code>repeated .byzcoin.Argument args = 2;</code>
+       * <code>repeated .byzcoin.Argument args = 3;</code>
        */
       public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder> 
            getArgsBuilderList() {
@@ -15868,7 +16099,7 @@ public final class ByzCoinProto {
           argsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.ByzCoinProto.Argument, ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ArgumentOrBuilder>(
                   args_,
-                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  ((bitField0_ & 0x00000004) == 0x00000004),
                   getParentForChildren(),
                   isClean());
           args_ = null;
@@ -15931,6 +16162,32 @@ public final class ByzCoinProto {
   public interface DeleteOrBuilder extends
       // @@protoc_insertion_point(interface_extends:byzcoin.Delete)
       com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    boolean hasContractid();
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    java.lang.String getContractid();
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getContractidBytes();
   }
   /**
    * <pre>
@@ -15950,6 +16207,7 @@ public final class ByzCoinProto {
       super(builder);
     }
     private Delete() {
+      contractid_ = "";
     }
 
     @java.lang.Override
@@ -15965,6 +16223,7 @@ public final class ByzCoinProto {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -15975,6 +16234,12 @@ public final class ByzCoinProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              contractid_ = bs;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -16007,6 +16272,61 @@ public final class ByzCoinProto {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.class, ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.Builder.class);
     }
 
+    private int bitField0_;
+    public static final int CONTRACTID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object contractid_;
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public boolean hasContractid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public java.lang.String getContractid() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          contractid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * ContractID represents the kind of contract that needs to be spawn.
+     * </pre>
+     *
+     * <code>required string contractid = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getContractidBytes() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        contractid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -16014,6 +16334,10 @@ public final class ByzCoinProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (!hasContractid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -16021,6 +16345,9 @@ public final class ByzCoinProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, contractid_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -16030,6 +16357,9 @@ public final class ByzCoinProto {
       if (size != -1) return size;
 
       size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, contractid_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -16046,6 +16376,11 @@ public final class ByzCoinProto {
       ch.epfl.dedis.lib.proto.ByzCoinProto.Delete other = (ch.epfl.dedis.lib.proto.ByzCoinProto.Delete) obj;
 
       boolean result = true;
+      result = result && (hasContractid() == other.hasContractid());
+      if (hasContractid()) {
+        result = result && getContractid()
+            .equals(other.getContractid());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -16057,6 +16392,10 @@ public final class ByzCoinProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasContractid()) {
+        hash = (37 * hash) + CONTRACTID_FIELD_NUMBER;
+        hash = (53 * hash) + getContractid().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -16195,6 +16534,8 @@ public final class ByzCoinProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        contractid_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -16221,6 +16562,13 @@ public final class ByzCoinProto {
       @java.lang.Override
       public ch.epfl.dedis.lib.proto.ByzCoinProto.Delete buildPartial() {
         ch.epfl.dedis.lib.proto.ByzCoinProto.Delete result = new ch.epfl.dedis.lib.proto.ByzCoinProto.Delete(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.contractid_ = contractid_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -16269,6 +16617,11 @@ public final class ByzCoinProto {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.Delete other) {
         if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.getDefaultInstance()) return this;
+        if (other.hasContractid()) {
+          bitField0_ |= 0x00000001;
+          contractid_ = other.contractid_;
+          onChanged();
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -16276,6 +16629,9 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
+        if (!hasContractid()) {
+          return false;
+        }
         return true;
       }
 
@@ -16295,6 +16651,107 @@ public final class ByzCoinProto {
             mergeFrom(parsedMessage);
           }
         }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object contractid_ = "";
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public boolean hasContractid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public java.lang.String getContractid() {
+        java.lang.Object ref = contractid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            contractid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getContractidBytes() {
+        java.lang.Object ref = contractid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          contractid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder setContractid(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        contractid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder clearContractid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        contractid_ = getDefaultInstance().getContractid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ContractID represents the kind of contract that needs to be spawn.
+       * </pre>
+       *
+       * <code>required string contractid = 1;</code>
+       */
+      public Builder setContractidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        contractid_ = value;
+        onChanged();
         return this;
       }
       @java.lang.Override
@@ -21732,7 +22189,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Nonce is 0 for a new download, else it must be
-     * equal to the nonce returned in DDownloadStateResponse.
+     * equal to the nonce returned in DownloadStateResponse.
      * In case Nonce is non-zero, but doesn't correspond
      * to the current session, an error is returned,
      * as only one download-session can be active at
@@ -21745,7 +22202,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Nonce is 0 for a new download, else it must be
-     * equal to the nonce returned in DDownloadStateResponse.
+     * equal to the nonce returned in DownloadStateResponse.
      * In case Nonce is non-zero, but doesn't correspond
      * to the current session, an error is returned,
      * as only one download-session can be active at
@@ -21898,7 +22355,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Nonce is 0 for a new download, else it must be
-     * equal to the nonce returned in DDownloadStateResponse.
+     * equal to the nonce returned in DownloadStateResponse.
      * In case Nonce is non-zero, but doesn't correspond
      * to the current session, an error is returned,
      * as only one download-session can be active at
@@ -21913,7 +22370,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Nonce is 0 for a new download, else it must be
-     * equal to the nonce returned in DDownloadStateResponse.
+     * equal to the nonce returned in DownloadStateResponse.
      * In case Nonce is non-zero, but doesn't correspond
      * to the current session, an error is returned,
      * as only one download-session can be active at
@@ -22398,7 +22855,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Nonce is 0 for a new download, else it must be
-       * equal to the nonce returned in DDownloadStateResponse.
+       * equal to the nonce returned in DownloadStateResponse.
        * In case Nonce is non-zero, but doesn't correspond
        * to the current session, an error is returned,
        * as only one download-session can be active at
@@ -22413,7 +22870,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Nonce is 0 for a new download, else it must be
-       * equal to the nonce returned in DDownloadStateResponse.
+       * equal to the nonce returned in DownloadStateResponse.
        * In case Nonce is non-zero, but doesn't correspond
        * to the current session, an error is returned,
        * as only one download-session can be active at
@@ -22428,7 +22885,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Nonce is 0 for a new download, else it must be
-       * equal to the nonce returned in DDownloadStateResponse.
+       * equal to the nonce returned in DownloadStateResponse.
        * In case Nonce is non-zero, but doesn't correspond
        * to the current session, an error is returned,
        * as only one download-session can be active at
@@ -22446,7 +22903,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Nonce is 0 for a new download, else it must be
-       * equal to the nonce returned in DDownloadStateResponse.
+       * equal to the nonce returned in DownloadStateResponse.
        * In case Nonce is non-zero, but doesn't correspond
        * to the current session, an error is returned,
        * as only one download-session can be active at
@@ -31839,9 +32296,10 @@ public final class ByzCoinProto {
       "\017.byzcoin.Delete\022\031\n\rsignercounter\030\005 \003(\004B" +
       "\002\020\001\022#\n\nsignatures\030\006 \003(\0132\017.darc.Signature" +
       "\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 " +
-      "\003(\0132\021.byzcoin.Argument\":\n\006Invoke\022\017\n\007comm" +
-      "and\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argume" +
-      "nt\"\010\n\006Delete\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r" +
+      "\003(\0132\021.byzcoin.Argument\"N\n\006Invoke\022\022\n\ncont" +
+      "ractid\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022\037\n\004args\030\003 " +
+      "\003(\0132\021.byzcoin.Argument\"\034\n\006Delete\022\022\n\ncont" +
+      "ractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r" +
       "\n\005value\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014in" +
       "structions\030\001 \003(\0132\024.byzcoin.Instruction\"S" +
       "\n\010TxResult\0225\n\021clienttransaction\030\001 \002(\0132\032." +
@@ -31985,13 +32443,13 @@ public final class ByzCoinProto {
     internal_static_byzcoin_Invoke_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Invoke_descriptor,
-        new java.lang.String[] { "Command", "Args", });
+        new java.lang.String[] { "Contractid", "Command", "Args", });
     internal_static_byzcoin_Delete_descriptor =
       getDescriptor().getMessageTypes().get(15);
     internal_static_byzcoin_Delete_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Delete_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "Contractid", });
     internal_static_byzcoin_Argument_descriptor =
       getDescriptor().getMessageTypes().get(16);
     internal_static_byzcoin_Argument_fieldAccessorTable = new

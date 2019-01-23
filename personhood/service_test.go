@@ -315,7 +315,7 @@ func newS(t *testing.T) (s *sStruct) {
 	s.signer = darc.NewSignerEd25519(nil, nil)
 	var err error
 	s.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:popParty", "invoke:" + pop.ContractPopParty + ".Finalize"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:" + pop.ContractPopParty, "invoke:" + pop.ContractPopParty + ".Finalize"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gMsg.BlockInterval = 500 * time.Millisecond
 

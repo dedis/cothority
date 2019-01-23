@@ -15,7 +15,7 @@ import (
 // Client is a structure to communicate with the eventlog service
 type Client struct {
 	ByzCoin *byzcoin.Client
-	// The DarcID with "invoke:eventlog" permission on it.
+	// The DarcID with "invoke:eventlog.eventlog" permission on it.
 	DarcID darc.ID
 	// Signers are the Darc signers that will sign transactions sent with this client.
 	Signers    []darc.Signer

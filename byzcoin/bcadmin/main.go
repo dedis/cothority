@@ -493,7 +493,7 @@ func darcAdd(c *cli.Context, dGen *darc.Darc, cfg lib.Config, cl *byzcoin.Client
 		identity = newSigner.Identity()
 	}
 
-	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:evolve")
+	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:"+byzcoin.ContractDarcID+".evolve")
 	d := darc.NewDarc(rules, random.Bits(32, true, random.New()))
 
 	dBuf, err := d.ToProto()

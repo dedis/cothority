@@ -348,7 +348,7 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	for i, sid := range r.List {
 		rosterPubs[i] = darc.NewIdentityEd25519(sid.Public).String()
 	}
-	d.Rules.AddRule(darc.Action("invoke:config.view_change"), expression.InitOrExpr(rosterPubs...))
+	d.Rules.AddRule(darc.Action("invoke:"+ContractConfigID+".view_change"), expression.InitOrExpr(rosterPubs...))
 
 	m := CreateGenesisBlock{
 		Version:       v,

@@ -736,10 +736,10 @@ func bcStore(c *cli.Context) error {
 		exprSlice = append(exprSlice, id.String())
 	}
 	// The master signer has the right to create a new party.
-	rules.AddRule("spawn:popParty", expression.Expr(signer.Identity().String()))
+	rules.AddRule(darc.Action("spawn:"+service.ContractPopParty), expression.Expr(signer.Identity().String()))
 	// We allow any of the organizers to update the proposed configuration. The contract
 	// will make sure that it is correctly signed.
-	rules.AddRule("invoke:Finalize", expression.Expr(strings.Join(exprSlice, " | ")))
+	rules.AddRule(darc.Action("invoke:"+service.ContractPopParty+".Finalize"), expression.Expr(strings.Join(exprSlice, " | ")))
 	orgDarc := darc.NewDarc(rules, []byte("For party "+fsString))
 	orgDarcBuf, err := orgDarc.ToProto()
 	if err != nil {

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityAlreadyExistsException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
  */
 public class Darc {
     public final static String RuleSignature = "_sign";
-    public final static String RuleEvolve = "invoke:evolve";
+    public final static String RuleEvolve = "invoke:" + DarcInstance.ContractId + ".evolve";
 
     private long version;
     private byte[] description;
@@ -128,6 +129,14 @@ public class Darc {
         }
     }
 
+    /**
+     * Add a rule to the Darc.
+     *
+     * @param action is the action in the rule.
+     * @param id     is the identity that is authorised for the action
+     * @param link   is how the identity should be combined with the existing identities, if they exist
+     * @throws CothorityCryptoException if something goes wrong
+     */
     public void addIdentity(String action, Identity id, String link) throws CothorityCryptoException {
         ByteArrayOutputStream newExpr = new ByteArrayOutputStream();
         try {
@@ -319,7 +328,7 @@ public class Darc {
         if (owners != null && owners.size() > 0) {
             List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
             try {
-                rs.addRule("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
+                rs.addRule("invoke:" + DarcInstance.ContractId + ".evolve", String.join(" & ", ownerIDs).getBytes());
             } catch (CothorityAlreadyExistsException e) {
                 throw new RuntimeException("this should never happen because we are adding a rule to a new object");
             }

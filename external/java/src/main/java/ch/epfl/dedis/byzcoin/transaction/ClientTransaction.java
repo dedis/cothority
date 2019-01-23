@@ -25,7 +25,7 @@ public class ClientTransaction {
     }
 
     public ClientTransaction(ByzCoinProto.ClientTransaction proto) throws CothorityCryptoException {
-        instructions = new ArrayList<Instruction>();
+        instructions = new ArrayList<>();
         for (ByzCoinProto.Instruction i : proto.getInstructionsList()) {
             instructions.add(new Instruction(i));
         }

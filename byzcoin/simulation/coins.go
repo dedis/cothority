@@ -73,7 +73,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Create the ledger
 	gm, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, config.Roster,
-		[]string{"spawn:coin", "invoke:coin.mint", "invoke:coin.transfer"}, signer.Identity())
+		[]string{"spawn:" + contracts.ContractCoinID, "invoke:" + contracts.ContractCoinID + ".mint", "invoke:" + contracts.ContractCoinID + ".transfer"}, signer.Identity())
 	if err != nil {
 		return errors.New("couldn't setup genesis message: " + err.Error())
 	}

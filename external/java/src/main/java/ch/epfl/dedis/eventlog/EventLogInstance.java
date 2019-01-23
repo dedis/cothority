@@ -231,7 +231,7 @@ public class EventLogInstance {
         for (Event e : events) {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
-            Invoke invoke = new Invoke(ContractId, args);
+            Invoke invoke = new Invoke(ContractId, ContractId, args);
             Instruction instr = new Instruction(instance.getId(), new ArrayList<>(signerCtrs), invoke);
             instrs.add(instr);
             signerCtrs = incrementCtrs(signerCtrs);

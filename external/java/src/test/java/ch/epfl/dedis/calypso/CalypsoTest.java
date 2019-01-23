@@ -56,8 +56,8 @@ class CalypsoTest {
         reader = new SignerEd25519();
         testInstanceController = TestServerInit.getInstance();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
-        genesisDarc.addIdentity("spawn:"+LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
-        genesisDarc.addIdentity("invoke:"+LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("spawn:" + LTSInstance.ContractId, admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("invoke:" + LTSInstance.ContractId + "." + LTSInstance.InvokeCommand, admin.getIdentity(), Rules.OR);
 
         try {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());

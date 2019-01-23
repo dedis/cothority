@@ -24,7 +24,7 @@ public class Spawn {
 
     public Spawn(ByzCoinProto.Spawn proto) {
         contractId = proto.getContractid();
-        arguments = new ArrayList<Argument>();
+        arguments = new ArrayList<>();
         for (ByzCoinProto.Argument a : proto.getArgsList()) {
             arguments.add(new Argument(a));
         }

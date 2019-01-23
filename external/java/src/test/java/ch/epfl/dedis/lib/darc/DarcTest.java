@@ -20,16 +20,16 @@ public class DarcTest {
     private final static Logger logger = LoggerFactory.getLogger(Darc.class);
 
     @BeforeAll
-    static void initAll() throws CothorityCryptoException {
+    static void initAll() {
         owner = new SignerEd25519();
         user = new SignerEd25519();
         darc = new Darc(Arrays.asList(owner.getIdentity()), null, null);
     }
 
     @Test
-    void rules() throws Exception {
+    void rules() {
         // List rules.
-        String evolve = "invoke:evolve";
+        String evolve = "invoke:darc.evolve";
         assertEquals(evolve, darc.getActions().get(0));
         byte[] rule = darc.getExpression(evolve);
 

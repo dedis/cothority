@@ -45,7 +45,7 @@ class EventlogTest {
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
         genesisDarc.addIdentity("spawn:eventlog", admin.getIdentity(), Rules.OR);
-        genesisDarc.addIdentity("invoke:eventlog", admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("invoke:" + EventLogInstance.ContractId + ".eventlog", admin.getIdentity(), Rules.OR);
 
         bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {

@@ -27,10 +27,13 @@ import (
 )
 
 var tSuite = suites.MustFind("Ed25519")
-var dummyContract = "dummy"
-var slowContract = "slow"
-var invalidContract = "invalid"
 var testInterval = 500 * time.Millisecond
+
+const dummyContract = "dummy"
+const slowContract = "slow"
+const panicContract = "panic"
+const invalidContract = "invalid"
+const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -785,7 +788,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	defer s.local.CloseAll()
 
 	for i := range s.hosts {
-		RegisterContract(s.hosts[i], "panic", adaptor(panicContractFunc))
+		RegisterContract(s.hosts[i], panicContract, adaptor(panicContractFunc))
 	}
 
 	// tx0 uses the panicing contract, so it should _not_ be stored.
@@ -1252,12 +1255,12 @@ func TestService_CheckAuthorization(t *testing.T) {
 	ca.Identities[0] = darc.NewIdentityEd25519(s.roster.List[0].Public)
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("invoke:config.view_change"))
+	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	ca.Identities = append(ca.Identities, darc.NewIdentityEd25519(s.roster.List[1].Public))
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("invoke:config.view_change"))
+	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	log.Lvl1("Check delegation of darcs")
 	ca.DarcID = darc2.GetID()
@@ -1447,7 +1450,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		require.Nil(t, err)
 		d, err := darc.NewFromProtobuf(val)
 		require.Nil(t, err)
-		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:config.view_change"))), " | ")
+		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:"+ContractConfigID+".view_change"))), " | ")
 		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
 
@@ -2109,7 +2112,6 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	defer s.local.CloseAll()
 
 	n := 5
-	contractID := "stateChangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the state trie is created from the known global state
 		iid := inst.Hash()
@@ -2120,7 +2122,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		sc1 := StateChange{
 			StateAction: Update,
 			InstanceID:  iid,
-			ContractID:  []byte(contractID),
+			ContractID:  []byte(stateChangeCacheContract),
 			Version:     ver + 1,
 		}
 		if err != nil {
@@ -2129,13 +2131,13 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		return []StateChange{sc1}, []Coin{}, nil
 	}
 	for _, s := range s.hosts {
-		RegisterContract(s, contractID, adaptorNoVerify(contract))
+		RegisterContract(s, stateChangeCacheContract, adaptorNoVerify(contract))
 	}
 
 	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
 		instr := Instruction{
 			InstanceID:    NewInstanceID(iid),
-			Spawn:         &Spawn{ContractID: contractID},
+			Spawn:         &Spawn{ContractID: stateChangeCacheContract},
 			SignerCounter: []uint64{counter},
 		}
 		tx := ClientTransaction{Instructions: Instructions{instr}}
@@ -2380,14 +2382,14 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
 		[]string{
-			"spawn:dummy",
-			"spawn:invalid",
-			"spawn:panic",
-			"spawn:darc",
-			"invoke:config.update_config",
-			"spawn:slow",
-			"spawn:stateChangeCacheTest",
-			"delete:dummy",
+			"spawn:" + dummyContract,
+			"spawn:" + invalidContract,
+			"spawn:" + panicContract,
+			"spawn:" + ContractDarcID,
+			"invoke:" + ContractConfigID + ".update_config",
+			"spawn:" + slowContract,
+			"spawn:" + stateChangeCacheContract,
+			"delete:" + dummyContract,
 		}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
