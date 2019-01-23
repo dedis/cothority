@@ -1,4 +1,2 @@
-package-lock.json
-node_modules/
-dist/
-.idea/
+.idea
+node_modules
