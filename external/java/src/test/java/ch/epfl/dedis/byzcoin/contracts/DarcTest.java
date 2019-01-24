@@ -55,7 +55,7 @@ class DarcTest {
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
-        Darc newDarc = genesisDarc.copyRulesAndVersion();
+        Darc newDarc = genesisDarc.partialCopy();
         newDarc.setRule("spawn:darc", "all".getBytes());
 
         Instruction instr = dc.evolveDarcInstruction(newDarc, counters.head()+1);
@@ -78,7 +78,7 @@ class DarcTest {
         // Evolve to give kcsigner the evolve permission
         SignerX509EC kcsigner = new SignerX509ECTest();
         SignerX509EC kcsigner2 = new SignerX509ECTest();
-        Darc adminDarc2 = genesisDarc.copyRulesAndVersion();
+        Darc adminDarc2 = genesisDarc.partialCopy();
         adminDarc2.setRule(Darc.RuleEvolve, kcsigner.getIdentity().toString().getBytes());
         DarcInstance di = DarcInstance.fromByzCoin(bc, genesisDarc);
         di.evolveDarcAndWait(adminDarc2, admin, counters.head()+1, 10);
@@ -86,7 +86,7 @@ class DarcTest {
         assertEquals(1, di.getDarc().getVersion());
         assertTrue(new String(di.getDarc().getExpression(Darc.RuleEvolve)).contains(kcsigner.getIdentity().toString()));
 
-        final Darc adminDarc3 = adminDarc2.copyRulesAndVersion();
+        final Darc adminDarc3 = adminDarc2.partialCopy();
         assertThrows(Exception.class, () -> {
                     logger.info("Trying to evolve darc with wrong signer: " + kcsigner2.getIdentity().toString());
                     adminDarc3.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
@@ -97,7 +97,7 @@ class DarcTest {
         assertEquals(1, di.getDarc().getVersion());
 
         // Evolve to give kcsigner2 the permission
-        final Darc adminDarc3bis = adminDarc2.copyRulesAndVersion();
+        final Darc adminDarc3bis = adminDarc2.partialCopy();
         adminDarc3bis.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
         logger.info("Updating darc with new signer: " + kcsigner.getIdentity().toString());
         di.evolveDarcAndWait(adminDarc3bis, kcsigner, 1L, 10);
@@ -111,7 +111,7 @@ class DarcTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, counters.head()+1, 10);
 

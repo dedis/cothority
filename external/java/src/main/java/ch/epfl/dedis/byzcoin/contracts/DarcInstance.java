@@ -93,25 +93,18 @@ public class DarcInstance {
     /**
      * Creates an instruction to evolve the darc in byzcoin. The signer must have its identity in the current
      * darc as "Invoke_Evolve" rule.
-     * <p>
      * TODO: allow for evolution if the expression has more than one identity.
      *
-     * @param newDarc   the darc to replace the old darc.
+     * @param newDarc   the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
+     *                  automatically by this function
      * @param signerCtr is the monotonically increasing counter which must match the signer who will eventually
      *                  sign the returned instruction.
      * @return Instruction to be sent to byzcoin
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr) throws CothorityCryptoException {
-        newDarc.increaseVersion();
+    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr) {
+        newDarc.setVersion(this.getDarc().getVersion() + 1);
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
-        if (!newDarc.getBaseId().equals(darc.getBaseId())) {
-            throw new CothorityCryptoException("not darc with same baseID");
-        }
-        if (newDarc.getVersion() != darc.getVersion() + 1) {
-            throw new CothorityCryptoException("not darc with next version");
-        }
         Invoke inv = new Invoke("evolve", ContractId, newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
         return new Instruction(new InstanceId(d), Collections.singletonList(signerCtr), inv);
@@ -121,7 +114,8 @@ public class DarcInstance {
      * Takes a new darc, increases its version, creates an instruction and sends it to ByzCoin, without
      * waiting an acknowledgement.
      *
-     * @param newDarc  the new darc, it should have the same version as the current darc
+     * @param newDarc  the new darc, the version, prevID and baseID attributes are ignored and set
+     *                 automatically by this function
      * @param owner    a signer allowed to evolve the darc
      * @param ownerCtr a monotonically increasing counter which must map to the owners
      * @throws CothorityException if something goes wrong
@@ -135,7 +129,8 @@ public class DarcInstance {
      * been stored in the global state.
      * TODO: check if there has been an error in the transaction!
      *
-     * @param newDarc  is the new darc to replace the old one
+     * @param newDarc  the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
+     *                 automatically by this function
      * @param owner    is the owner that can sign to evolve the darc
      * @param ownerCtr a monotonically increasing counter which must map to the owners
      * @param wait     the maximum number of blocks to wait
@@ -158,10 +153,8 @@ public class DarcInstance {
      * @param signerCtr  the next counter which the signer should use
      * @param args       arguments to give to the contract
      * @return the instruction to be added to the ClientTransaction
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction spawnInstanceInstruction(String contractID, Long signerCtr, List<Argument> args)
-            throws CothorityCryptoException {
+    public Instruction spawnInstanceInstruction(String contractID, Long signerCtr, List<Argument> args) {
         Spawn sp = new Spawn(contractID, args);
         return new Instruction(new InstanceId(darc.getBaseId().getId()), Collections.singletonList(signerCtr), sp);
     }
@@ -243,17 +236,15 @@ public class DarcInstance {
 
     /**
      * @return the id of the darc being held
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public DarcId getId() throws CothorityCryptoException {
+    public DarcId getId() {
         return darc.getId();
     }
 
     /**
      * @return the darc of this instance.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Darc getDarc() throws CothorityCryptoException {
+    public Darc getDarc() {
         return darc;
     }
 
