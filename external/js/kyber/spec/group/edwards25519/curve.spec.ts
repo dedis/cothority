@@ -28,7 +28,7 @@ describe("edwards25519", () => {
 
     it('should generate a private key multiple of 8', () => {
       const key = curve.newKey();
-      const eight = curve.scalar().setBytes(new BN(8, 10));
+      const eight = curve.scalar().setBytes(new BN(8).toBuffer());
       const quotient = curve.scalar().div(key, eight);
 
       expect(curve.scalar().mul(eight, quotient).equal(key)).toBeTruthy();

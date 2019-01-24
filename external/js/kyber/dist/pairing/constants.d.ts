@@ -1,0 +1,12 @@
+import BN from "bn.js";
+import GfP2 from "./gfp2";
+export declare const u: BN;
+export declare const p: BN;
+export declare const order: BN;
+export declare const xiToPMinus1Over6: GfP2;
+export declare const xiToPMinus1Over3: GfP2;
+export declare const xiToPMinus1Over2: GfP2;
+export declare const xiToPSquaredMinus1Over3: BN;
+export declare const xiTo2PSquaredMinus2Over3: BN;
+export declare const xiToPSquaredMinus1Over6: BN;
+export declare const xiTo2PMinus2Over3: GfP2;

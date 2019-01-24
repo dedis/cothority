@@ -1,7 +1,7 @@
-import Constants from '../src/constants'
+import { zeroBN } from '../src/constants'
 
 describe('Kyber constants', () => {
     it('should provide the 0 constant using big number', () => {
-        expect(Constants.zeroBN).toBeDefined();
+        expect(zeroBN).toBeDefined();
     });
 });

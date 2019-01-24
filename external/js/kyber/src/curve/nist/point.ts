@@ -1,6 +1,6 @@
-import BN, { BNType } from 'bn.js';
+import BN from 'bn.js';
 import { randomBytes } from "crypto";
-import constants from "../../constants";
+import { zeroBN, BNType } from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";
 import NistScalar from "./scalar";
@@ -138,12 +138,12 @@ export default class NistPoint implements Point {
             }
             
             let xRed = x.toRed(this.ref.curve.curve.red);
-            let aX = xRed.redMul(this.ref.curve.curve.a);
+            let aX = xRed.redMul(new BN(this.ref.curve.curve.a));
             // y^2 = x^3 + ax + b
             let y2 = xRed.redSqr()
                 .redMul(xRed)
                 .redAdd(aX)
-                .redAdd(this.ref.curve.curve.b);
+                .redAdd(new BN(this.ref.curve.curve.b));
             
             let y = y2.redSqrt();
             
@@ -242,7 +242,7 @@ export default class NistPoint implements Point {
         }
         let x = new BN(bytes.slice(1, 1 + byteLen), 16);
         let y = new BN(bytes.slice(1 + byteLen), 16);
-        if (x.cmp(constants.zeroBN) === 0 && y.cmp(constants.zeroBN) === 0) {
+        if (x.cmp(zeroBN) === 0 && y.cmp(zeroBN) === 0) {
             this.ref.point = this.ref.curve.curve.point(null, null);
             return;
         }

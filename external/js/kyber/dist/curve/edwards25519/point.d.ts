@@ -1,6 +1,6 @@
 /// <reference types="node" />
-import { BNType } from "bn.js";
 import { Point } from "../../index";
+import { BNType } from '../../constants';
 import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
 export default class Ed25519Point implements Point {

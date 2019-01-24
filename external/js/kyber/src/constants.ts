@@ -1,7 +1,5 @@
 import BN from "bn.js";
 
-const constants = {
-  zeroBN: new BN(0)
-};
+export type BNType = number | string | number[] | Buffer | BN;
 
-export default constants;
+export const zeroBN = new BN(0);

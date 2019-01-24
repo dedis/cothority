@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const bn_js_1 = __importDefault(require("bn.js"));
-const constants_1 = __importDefault(require("./constants"));
+const constants_1 = require("./constants");
 /**
  * bits choses a random buffer with a maximum bitlength
  * If exact is `true`, chose a buffer with *exactly* that bitlenght not less
@@ -42,7 +42,7 @@ function int(mod, callback) {
     while (true) {
         const bytes = bits(bitlength, false, callback);
         i = new bn_js_1.default(bytes);
-        if (i.cmp(constants_1.default.zeroBN) > 0 && i.cmp(mod) < 0) {
+        if (i.cmp(constants_1.zeroBN) > 0 && i.cmp(mod) < 0) {
             return bytes;
         }
     }

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const bn_js_1 = __importDefault(require("bn.js"));
 const crypto_1 = require("crypto");
-const constants_1 = __importDefault(require("../../constants"));
+const constants_1 = require("../../constants");
 /**
 * Represents a Point on the nist curve
 *
@@ -117,12 +117,12 @@ class NistPoint {
                 continue;
             }
             let xRed = x.toRed(this.ref.curve.curve.red);
-            let aX = xRed.redMul(this.ref.curve.curve.a);
+            let aX = xRed.redMul(new bn_js_1.default(this.ref.curve.curve.a));
             // y^2 = x^3 + ax + b
             let y2 = xRed.redSqr()
                 .redMul(xRed)
                 .redAdd(aX)
-                .redAdd(this.ref.curve.curve.b);
+                .redAdd(new bn_js_1.default(this.ref.curve.curve.b));
             let y = y2.redSqrt();
             let b = callback(1);
             if ((b[0] & 0x80) !== 0) {
@@ -207,7 +207,7 @@ class NistPoint {
         }
         let x = new bn_js_1.default(bytes.slice(1, 1 + byteLen), 16);
         let y = new bn_js_1.default(bytes.slice(1 + byteLen), 16);
-        if (x.cmp(constants_1.default.zeroBN) === 0 && y.cmp(constants_1.default.zeroBN) === 0) {
+        if (x.cmp(constants_1.zeroBN) === 0 && y.cmp(constants_1.zeroBN) === 0) {
             this.ref.point = this.ref.curve.curve.point(null, null);
             return;
         }
