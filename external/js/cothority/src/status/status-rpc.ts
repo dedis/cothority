@@ -1,58 +1,25 @@
-import { Roster, ServerIdentity } from "../network/roster";
+import { Roster } from "../network/proto";
 import { Connection, WebSocketConnection } from "../network/connection";
-import { Message } from "protobufjs";
-import { registerMessage } from "../protobuf";
-
-class StatusRequest extends Message<StatusRequest> {}
-
-class Status extends Message<Status> {
-    private field: { [k: string]: string };
-
-    getValue(k: string): string {
-        return this.field[k];
-    }
-
-    toString(): string {
-        return Object.keys(this.field).sort().map(k => `${k}: ${this.field[k]}`).join('\n');
-    }
-}
-
-class StatusResponse extends Message<StatusResponse> {
-    private status: { [k: string]: Status };
-    private serveridentity: ServerIdentity;
-
-    getStatus(key: string): Status {
-        return this.status[key];
-    }
-
-    get serverIdentity(): ServerIdentity {
-        return this.serveridentity;
-    }
-
-    toString(): string {
-        return Object.keys(this.status).sort().map(k => `[${k}]\n${this.status[k].toString()}`).join('\n\n');
-    }
-}
-
-registerMessage('Request', StatusRequest);
-registerMessage('Response', StatusResponse);
-registerMessage('Status', Status);
+import { StatusRequest, StatusResponse } from './proto';
 
 /**
  * RPC to talk with the status service of the conodes
  */
-export default class SkipchainRPC {
-    private conn: Connection;
+export default class StatusRPC {
+    public static ServiceName = 'Status';
+
+    private conn: Connection[];
 
     constructor(roster: Roster) {
-        const addr = roster.list[0].address;
-
-        this.conn = new WebSocketConnection(addr, 'Status');
+        this.conn = roster.list
+            .map(srvid => new WebSocketConnection(srvid.getWebSocketAddress(), StatusRPC.ServiceName));
     }
 
-    async getStatus(): Promise<StatusResponse> {
-        const buf = await this.conn.send(new StatusRequest());
+    async getStatus(index: number = 0): Promise<StatusResponse> {
+        if (index >= this.conn.length) {
+            throw new Error('Index out of bound for the roster');
+        }
 
-        return StatusResponse.decode(buf);
+        return this.conn[index].send(new StatusRequest(), StatusResponse);
     }
 }

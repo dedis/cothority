@@ -1,10 +1,11 @@
 const shuffle = require("shuffle-array");
 import WebSocket from 'isomorphic-ws';
-import { Roster } from "./roster";
-import { Message } from 'protobufjs';
+import { Roster } from "./proto";
+import { Message, util } from 'protobufjs';
 
 export interface Connection {
-    send(message: Message): Promise<Buffer>;
+    send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
+    getURL(): string;
 }
 
 /**
@@ -20,9 +21,12 @@ export class WebSocketConnection implements Connection {
     private service: string;
 
     constructor(addr: string, service: string) {
-        //this.url = addr;
-        this.url = 'ws://127.0.0.1:7003'
+        this.url = addr;
         this.service = service;
+    }
+
+    getURL(): string {
+        return this.url;
     }
 
     /**
@@ -33,7 +37,11 @@ export class WebSocketConnection implements Connection {
      *
      * @returns {object} Promise with response message on success, and an error on failure
      */
-    async send(message: Message): Promise<Buffer> {
+    async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
+        if (!reply.$type) {
+            return Promise.reject(new Error('Message is not registered.'));
+        }
+
         return new Promise((resolve, reject) => {
             const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, '');
             console.log("Socket: new WebSocket(" + path + ")");
@@ -53,7 +61,18 @@ export class WebSocketConnection implements Connection {
             ws.onmessage = (evt: any): any => {
                 const buf = Buffer.from(evt.data);
                 console.log("Getting message with length:", buf.length);
-                resolve(buf);
+
+                try {
+                    const ret = reply.decode(buf) as T;
+
+                    resolve(ret);
+                } catch (err) {
+                    if (err instanceof util.ProtocolError) {
+                        reject(err);
+                    } else {
+                        reject(new Error('Error when trying to decode the message'));
+                    }
+                }
 
                 ws.close(1000);
             };
@@ -83,7 +102,7 @@ export class RosterWSConnection extends WebSocketConnection {
 
     constructor(r: Roster, service: string) {
         super('', service);
-        this.addresses = r.list.map(conode => conode.toWebsocket(""));
+        this.addresses = r.list.map(conode => conode.getWebSocketAddress());
     }
 
     /**
@@ -95,7 +114,7 @@ export class RosterWSConnection extends WebSocketConnection {
      * @param {Object} data javascript object representing the request
      * @returns {Promise} holds the returned data in case of success.
      */
-    async send(message: Message): Promise<Buffer> {
+    async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         const addresses = this.addresses.slice();
         shuffle(addresses);
 
@@ -105,7 +124,7 @@ export class RosterWSConnection extends WebSocketConnection {
                 continue;
             }
             try {
-                return super.send(message);
+                return super.send(message, reply);
             } catch (err) {
                 console.log(err);
             }

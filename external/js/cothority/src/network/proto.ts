@@ -5,40 +5,50 @@ import { Point, curve } from '@dedis/kyber';
 import { Message, Properties } from 'protobufjs';
 import { registerMessage } from '../protobuf';
 
+// TODO: point factory
 const ed25519 = new curve.edwards25519.Curve();
 
 export class Roster extends Message<Roster> {
-    id: Buffer;
-    list: ServerIdentity[];
-    aggregate: string;
+    readonly id: Buffer;
+    readonly list: ServerIdentity[];
+    readonly aggregate: Buffer;
+
+    private _agg: Point;
 
     constructor(properties?: Properties<Roster>) {
         super(properties);
 
+        if (!properties) {
+            return;
+        }
+
         const { id, list, aggregate } = properties;
 
-        this.id = id;
-        this.list = list;
-        this.aggregate = aggregate;
+        if (!id || !aggregate) {
+            const h = createHash("sha256");
+            list.forEach((srvid) => {
+                h.update(srvid.getPublic().marshalBinary());
+
+                if (!this._agg) {
+                    this._agg = srvid.getPublic();
+                } else {
+                    this._agg.add(this._agg, srvid.getPublic());
+                }
+            });
+
+            // protobuf fields need to be initialized if we want to encode later
+            this.aggregate = this._agg.marshalBinary();
+            this.id = new UUID(5, "ns:URL", h.digest().toString('hex')).export();
+        }
     }
 
-    /*
-    constructor(list: ServerIdentity[]) {
-        super();
-        this.list = list;
-        const h = createHash("sha256");
-        list.forEach((l) => {
-            h.update(l.public.marshalBinary());
-
-            if (!this.aggregate) {
-                this.aggregate = l.public;
-            } else {
-                this.aggregate.add(this.aggregate, l.public);
-            }
-        });
-        this.id = new UUID(5, "ns:URL", h.digest().toString('hex')).export();
+    get length(): number {
+        return this.list.length;
     }
-    */
+
+    slice(start: number, end?: number): Roster {
+        return new Roster({ list: this.list.slice(start, end) });
+    }
 
     /**
      * Parse cothority roster toml string into a Roster object.
@@ -65,8 +75,21 @@ export class Roster extends Message<Roster> {
     static fromTOML(data: string | Buffer, wss: boolean = false): any {
         const roster = toml.parse(data);
         const list = roster.servers.map((server: any) => {
-            const { Public, Address, Description } = server;
-            return new ServerIdentity({ public: Public, address: Address, description: Description });
+            const { Public, Address, Description, Services } = server;
+            const pub = Buffer.from(Public, 'hex');
+
+            return new ServerIdentity({
+                public: pub,
+                address: Address,
+                description: Description,
+                serviceIdentities: Object.keys(Services).map((key) => {
+                    const { Public, Suite: suite } = Services[key];
+                    // TODO: use a point factory to get the correct buffer
+                    const pub = Buffer.concat([Buffer.from('bn256.g2'), Buffer.from(Public, 'hex')]);
+
+                    return new ServiceIdentity({ name: key, public: pub, suite });
+                }),
+            });
         });
 
         return new Roster({ list });
@@ -74,10 +97,14 @@ export class Roster extends Message<Roster> {
 }
 
 export class ServerIdentity extends Message<ServerIdentity> {
-    readonly public: string;
+    readonly public: Buffer;
     readonly id: Buffer;
     readonly address: string;
     readonly description: string;
+    readonly serviceIdentities: ServiceIdentity[];
+    readonly url: string;
+
+    private _point: Point;
 
     constructor(properties?: Properties<ServerIdentity>) {
         super(properties);
@@ -87,20 +114,25 @@ export class ServerIdentity extends Message<ServerIdentity> {
         }
 
         if (!properties.id) {
-            this.id = new UUID(5, 'ns:URL', `https://dedis.epfl.ch/id/${this.public}`).export();
+            const hex = this.public.toString('hex');
+            this.id = new UUID(5, 'ns:URL', `https://dedis.epfl.ch/id/${hex}`).export();
         }
     }
 
-    getPoint(): Point {
-        const buf = Buffer.from(this.public);
+    getPublic(): Point {
+        if (this._point) {
+            // cache the point to avoid multiple unmarshaling
+            return this._point;
+        }
+
         const pub = ed25519.point();
-        pub.unmarshalBinary(buf);
+        pub.unmarshalBinary(this.public);
+        this._point = pub;
         return pub;
     }
 
-    toWebsocket(path: string): string {
-        return ServerIdentity.addressToWebsocket(this.address, path);
-        //.replace("pop.dedis.ch", "192.168.0.1");
+    getWebSocketAddress(): string {
+        return ServerIdentity.addressToWebsocket(this.address, '');
     }
 
     /**
@@ -145,4 +177,16 @@ export class ServerIdentity extends Message<ServerIdentity> {
     }
 }
 
+export class ServiceIdentity extends Message<ServiceIdentity> {
+    readonly name: string;
+    readonly suite: string;
+    readonly public: Buffer;
+
+    constructor(properties: Properties<ServiceIdentity>) {
+        super(properties);
+    }
+}
+
+registerMessage('Roster', Roster);
 registerMessage('ServerIdentity', ServerIdentity);
+registerMessage('ServiceIdentity', ServiceIdentity);
