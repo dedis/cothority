@@ -3,7 +3,7 @@
 DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
-# DBG_SRV=2
+DBG_SRV=2
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
@@ -23,10 +23,10 @@ main(){
   addr[2]=localhost:2004
   addr[3]=localhost:2006
   buildKeys
-  buildConode github.com/dedis/cothority/cosi/service $PACKAGE_IDEN $PACKAGE_POP_GO/service
+  buildConode $PACKAGE_IDEN $PACKAGE_POP_GO/service
   build $PACKAGE_POP
   build $PACKAGE_SCMGR
-  createFinal 2 > /dev/null
+  createFinal 2
   createToken 2
 
   run testBuild
@@ -351,7 +351,7 @@ testScCreate(){
 
   testOK runCl 1 skipchain create public.toml
 
-  testOK $scmgr link add co1/private.toml
+  testOK $scmgr -c scmgr-config.bin link add co1/private.toml
   testOK runCl 1 skipchain create public.toml
 
   # run out of skipchain creation limit
@@ -516,9 +516,11 @@ DateTime = "2017-08-08 15:00 UTC"
 Location = "Earth, City"
 EOF
   local n
-  for (( n=1; n<=$1; n++ ))
+  for (( n=0; n<$1; n++ ))
   do
-    sed -n "$((5*$n-4)),$((5*$n))p" public.toml >> pop_desc.toml
+    # Takes only part of the public.toml. Each server has currently 15 lines
+    # for the configuration.
+    sed -n "$((15*$n+1)),$((15*($n+1)))p" public.toml >> pop_desc.toml
   done
 }
 

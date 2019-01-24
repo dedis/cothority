@@ -12,12 +12,11 @@ import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.bouncycastle.crypto.Xof;
+import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * A WriteData is the data that is sent to the calypsoWrite contract store a write request with the encrypted document.
@@ -44,7 +43,7 @@ public class WriteData {
      * @param publisher   The darc with a rule for calypsoWrite and calypsoRead.
      * @throws CothorityException if something went wrong
      */
-    public WriteData(LTS lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
+    public WriteData(CreateLTSReply lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
         if (dataEnc.length > 8000000) {
             throw new CothorityException("data length too long");
         }
@@ -53,7 +52,7 @@ public class WriteData {
         if (extraData != null) {
             wr.setExtradata(ByteString.copyFrom(extraData));
         }
-        wr.setLtsid(lts.getLtsId().toProto());
+        wr.setLtsid(lts.getLTSID().toProto());
         encryptKey(wr, lts, keyMaterial, publisher);
         write = wr.build();
     }
@@ -73,10 +72,11 @@ public class WriteData {
      * @param bc a running Byzcoin service
      * @param id an instanceId of a WriteInstance
      * @throws CothorityNotFoundException if the requested instance cannot be found
-     * @throws CothorityCommunicationException if something went wrong
+     * @throws CothorityCommunicationException if something went wrong with the communication
+     * @throws CothorityCryptoException if there is something wrong with the proof
      * @return the new WriteData
      */
-    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException {
+    public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException, CothorityCryptoException {
         return WriteData.fromInstance(Instance.fromByzcoin(bc, id));
     }
 
@@ -103,41 +103,34 @@ public class WriteData {
      *
      * @param wr          the Write.Builder where the encrypted key will be stored
      * @param lts         the Long Term Secret to use
-     * @param keyMaterial what should be threshold encrypted in the blockchain
+     * @param keyMaterial what should be threshold encrypted in the blockchain, it must be 28 bytes,
+     *                    see Encryption.java for details.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    private void encryptKey(Calypso.Write.Builder wr, LTS lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
+    private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
+        if (keyMaterial.length != Encryption.KEYMATERIAL_LEN) {
+            throw new CothorityCryptoException("invalid keyMaterial length, got " + keyMaterial.length + " but it must be " + Encryption.KEYMATERIAL_LEN);
+        }
         try {
-            KeyPair randkp = new KeyPair();
+            Ed25519Pair randkp = new Ed25519Pair();
             Scalar r = randkp.scalar;
             Point U = randkp.point;
             wr.setU(U.toProto());
 
             Point C = lts.getX().mul(r);
-            List<Point> Cs = new ArrayList<>();
-            for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
-                int to = from + Ed25519.pubLen;
-                if (to > keyMaterial.length) {
-                    to = keyMaterial.length;
-                }
-                Point keyEd25519Point = Ed25519Point.embed(Arrays.copyOfRange(keyMaterial, from, to));
-                Point Ckey = C.add(keyEd25519Point);
-                Cs.add(Ckey);
-                wr.addCs(Ckey.toProto());
-            }
+            C = C.add(Ed25519Point.embed(keyMaterial));
+            wr.setC(C.toProto());
 
-            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(lts.getLtsId().getId()));
+            Point gBar = Ed25519Point.embed(lts.getLTSID().getId(), getXof(lts.getLTSID().getId()));
             Point Ubar = gBar.mul(r);
             wr.setUbar(Ubar.toProto());
-            KeyPair skp = new KeyPair();
+            Ed25519Pair skp = new Ed25519Pair();
             Scalar s = skp.scalar;
             Point w = skp.point;
             Point wBar = gBar.mul(s);
 
             MessageDigest hash = MessageDigest.getInstance("SHA-256");
-            for (Point c : Cs) {
-                hash.update(c.toBytes());
-            }
+            hash.update(C.toBytes());
             hash.update(U.toBytes());
             hash.update(Ubar.toBytes());
             hash.update(w.toBytes());
@@ -150,6 +143,13 @@ public class WriteData {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Hashing-error: " + e.getMessage());
         }
+    }
+
+    // Used for when we need to embed the point deterministically with a seed.
+    private static Xof getXof(byte[] seed) {
+        SHAKEDigest d = new SHAKEDigest(256);
+        d.update(seed, 0, seed.length);
+        return d;
     }
 
     /**
@@ -168,7 +168,17 @@ public class WriteData {
         return write.getExtradata().toByteArray();
     }
 
-    public Calypso.Write getWrite() {
+    public Calypso.Write toProto() {
         return write;
+    }
+
+    /**
+     * Takes a byte array as an input to parse into the protobuf representation of WriteData.
+     * @param buf the protobuf data
+     * @return WriteData
+     * @throws InvalidProtocolBufferException if the protobuf data is invalid.
+     */
+    public static WriteData fromProto(byte[] buf) throws InvalidProtocolBufferException {
+        return new WriteData(Calypso.Write.parseFrom(buf));
     }
 }

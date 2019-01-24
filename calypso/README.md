@@ -56,10 +56,26 @@ every `blockInterval` seconds.
 
 ## CreateLTS
 
-The CreateLTS endpoint is currently unsecured. It takes a list of nodes as
-input and then asks all these nodes to create a distributed key using DKG. For
-this operation, all nodes must be online. Per default, a threshold of 2/3 of
-the nodes must be present for the decryption.
+The CreateLTS endpoint is only usable when connecting to the conode
+via localhost. It is possible to relax this restriction, but it should
+only be done in testing environments; see `service.go`'s `init()` function
+for how.
+
+The client that initiates `CreateLTS` should hold two rosters. One roster for
+storing the secret shares of LTS (long term secret), the other for a ByzCoin
+instance for storing the LTS roster (using the LTS contract).
+
+If the LTS roster does not exist on ByzCoin, the client is responsible for
+creating it. Which can be done by sending a ByzCoin transaction. The
+transaction should spawn a new LTS instance.
+
+After the LTS roster is on ByzCoin but before the creation of LTS shares. The
+client should make a `CreateLTS` request to a node in the LTS roster. The
+request should contain the instance ID that contains the LTS roster. Then,
+every Calypso node should check that the instance ID that holds the LTS roster
+exists before starting the DKG. For this operation, all nodes must be online.
+By default, a threshold of 2/3 of the nodes must be present for the
+decryption.
 
 The CreateLTS service endpoint returns a `LTSID` in the form of a 32 byte
 slice. This ID represents the group that created the distributed key. Any node
@@ -81,3 +97,19 @@ as a target an existing instance.
 The read contract verifies that the request is valid and points to the write
 instance. It stores the reader's public key in the instance, so that the
 secret-management cothority can re-encrypt to this reader's public key.
+
+## Resharing LTS
+
+It is possible that the roster might change and the LTS shares must be
+re-distributed but without changing the LTS itself. We accomplish this in two
+steps.
+
+1. The authorised client(s) must update the LTS roster in the blockchain (an
+   instance of the LTS smart contract).
+2. Then, the client instructs the calypso conodes to run the resharing
+   protocol. The nodes in the new roster find and check the proof of
+   roster-change in ByzCoin, and then start the protocol to reshare the secret
+   between themselves.
+
+For this operation, all nodes must be online. By default, a threshold of 2/3 of
+the nodes must be present for the decryption.

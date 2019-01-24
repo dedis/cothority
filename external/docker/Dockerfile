@@ -15,4 +15,4 @@ COPY co7/*.toml co7/
 # 2 - debug-level: 0 - none .. 5 - a lot
 # -wait - don't return from script when all nodes are started
 RUN cp ./conode /usr/local/bin/
-CMD ["env", "GODEBUG=gctrace=0", "DEBUG_TIME=true", "./run_conode.sh", "local",  "4", "2", "-wait", "-nobuild" ]
+CMD ["env", "GODEBUG=gctrace=0", "DEBUG_TIME=true", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "./run_nodes.sh", "4", "2" ]

@@ -31,6 +31,12 @@ func TestStateTrie(t *testing.T) {
 		Version:     version,
 		DarcID:      darcID,
 	}
+	// store with bad expected root hash should fail, value should not be inside
+	require.Error(t, st.VerifiedStoreAll([]StateChange{sc}, 5, []byte("badhash")))
+	_, _, _, _, err = st.GetValues(key)
+	require.Equal(t, errKeyNotSet, err)
+
+	// store the state changes normally using StoreAll and it should work
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 5))
 	require.Equal(t, st.GetIndex(), 5)
 

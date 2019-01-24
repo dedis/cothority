@@ -115,8 +115,7 @@ message CheckAuthorizationResponse {
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It
-// will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-// GenesisDarcID is the value of GenesisReferenceID.
+// will be stored under the key [32]byte{} in the tree.
 message ChainConfig {
   required sint64 blockinterval = 1;
   required onet.Roster roster = 2;
@@ -221,7 +220,7 @@ message StateChange {
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
   required bytes darcid = 5;
-  // Version is the monotonically increased version of the instance
+  // Version is the monotonically increasing version of the instance
   required uint64 version = 6;
 }
 

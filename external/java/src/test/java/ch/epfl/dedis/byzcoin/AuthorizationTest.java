@@ -131,7 +131,7 @@ public class AuthorizationTest {
         documentDarc.addIdentity("spawn:calypsoRead", consumerIdentity, Rules.OR);
         calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, admin, adminCtrs.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         return doc.spawnWrite(calypso, documentDarc.getBaseId(), publisherSigner, publisherSignerCtr);
     }
 
@@ -188,7 +188,7 @@ public class AuthorizationTest {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
         SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
+        Darc newGenesis = ocs.getGenesisDarc().partialCopy();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 

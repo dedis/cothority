@@ -15,7 +15,6 @@ import ch.epfl.dedis.byzcoin.transaction.TxResult;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
-import ch.epfl.dedis.eventlog.EventLogInstance;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,17 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ValueTest {
     private static ByzCoinRPC bc;
-    private static EventLogInstance el;
     private static Signer admin;
     private static Darc genesisDarc;
 
@@ -46,7 +43,7 @@ class ValueTest {
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -61,7 +58,7 @@ class ValueTest {
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
@@ -104,7 +101,7 @@ class ValueTest {
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
@@ -151,6 +148,4 @@ class ValueTest {
         ClientTransactionId ref = txr.get(0).getClientTransaction().getId();
         assertTrue(txr.get(0).getClientTransaction().getId().equals(txid));
     }
-
-
 }

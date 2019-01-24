@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
@@ -91,9 +92,11 @@ func TestClient_Streaming(t *testing.T) {
 			value := []byte{5, 6, 7, 8}
 			kind := "dummy"
 			tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+1)
-			require.Nil(t, err)
+			// Need log.ErrFatal here, else it races with the rest of the code that
+			// uses 't'.
+			log.ErrFatal(err)
 			_, err = c.AddTransaction(tx)
-			require.Nil(t, err)
+			log.ErrFatal(err)
 
 			// sleep for a block interval so we create multiple blocks
 			time.Sleep(msg.BlockInterval)

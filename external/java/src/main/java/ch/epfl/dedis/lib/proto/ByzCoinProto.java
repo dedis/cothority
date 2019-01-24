@@ -9187,8 +9187,7 @@ public final class ByzCoinProto {
   /**
    * <pre>
    * ChainConfig stores all the configuration information for one skipchain. It
-   * will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-   * GenesisDarcID is the value of GenesisReferenceID.
+   * will be stored under the key [32]byte{} in the tree.
    * </pre>
    *
    * Protobuf type {@code byzcoin.ChainConfig}
@@ -9551,8 +9550,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * ChainConfig stores all the configuration information for one skipchain. It
-     * will be stored under the key "GenesisDarcID || OneNonce", in the trie. The
-     * GenesisDarcID is the value of GenesisReferenceID.
+     * will be stored under the key [32]byte{} in the tree.
      * </pre>
      *
      * Protobuf type {@code byzcoin.ChainConfig}
@@ -18761,7 +18759,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -18769,7 +18767,7 @@ public final class ByzCoinProto {
     boolean hasVersion();
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19007,7 +19005,7 @@ public final class ByzCoinProto {
     private long version_;
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19017,7 +19015,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * Version is the monotonically increased version of the instance
+     * Version is the monotonically increasing version of the instance
      * </pre>
      *
      * <code>required uint64 version = 6;</code>
@@ -19768,7 +19766,7 @@ public final class ByzCoinProto {
       private long version_ ;
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19778,7 +19776,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19788,7 +19786,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>
@@ -19801,7 +19799,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Version is the monotonically increased version of the instance
+       * Version is the monotonically increasing version of the instance
        * </pre>
        *
        * <code>required uint64 version = 6;</code>

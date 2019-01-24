@@ -50,9 +50,9 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
@@ -61,11 +61,13 @@ import (
 	"github.com/dedis/onet/network"
 )
 
+var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
+
 func init() {
 	// This service depends on EDDSA signatures, so it must not
 	// be instantiated with other suites.
 	if cothority.Suite == suites.MustFind("Ed25519") {
-		onet.RegisterNewService(Name, newService)
+		onet.RegisterNewServiceWithSuite(Name, pairingSuite, newService)
 		network.RegisterMessage(&saveData{})
 		checkConfigID = network.RegisterMessage(CheckConfig{})
 		checkConfigReplyID = network.RegisterMessage(CheckConfigReply{})
@@ -953,7 +955,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	select {
 	case sig := <-root.FinalSignatureChan:
 		if len(sig.Sig) >= SignatureSize {
-			final.Signature = sig.Sig[:SignatureSize]
+			final.Signature = sig.Sig
 		} else {
 			final.Signature = []byte{}
 		}
@@ -965,9 +967,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 	if len(final.Signature) <= 0 {
 		log.Error("Signing failed")
-		return errors.New(
-			"signing failed")
-
+		return errors.New("signing failed")
 	}
 
 	replies, err := s.propagateFinalize(final.Desc.Roster, final, 10*time.Second)
@@ -985,8 +985,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 // Receives Replies, updates info about global merge party
 // When all merge party's info is saved, merge it and starts global sighning process
 // After all, sends StoreConfig request to other conodes of own party
-func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
-	error) {
+func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement, error) {
 	if m.distrib {
 		// Used not to start merge process 2 times, when one is on run.
 		log.Lvl2(s.ServerIdentity(), "Not enter merge")
@@ -1199,11 +1198,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+	if err := byzcoinx.InitBFTCoSiProtocol(pairingSuite, s.Context,
 		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
 		return nil, err
 	}
-	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+	if err := byzcoinx.InitBFTCoSiProtocol(pairingSuite, s.Context,
 		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}

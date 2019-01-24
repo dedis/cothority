@@ -1,8 +1,28 @@
 # This file contains your private key.
 # Do not give it away lightly!
 Suite = "Ed25519"
-Public = "9bb51090e716c717a7fba22b42beba4be13f28636c93cdfa52a7e20df2d950a2"
-Private = "8f2df2f9093a16132dcedcfbdd4897745bff479ff6be38b4b51d960da432190d"
-Address = "tls://localhost:7010"
+Public = "762c0e55ac5e62ca7a28ce7e4c7ac380768c8ef60707cf8df8cefac0bcb685b3"
+Private = "dd9d1236e4be271c9f6362ff3640651380f9d998a99f495d3bab1d765fc3d405"
+Address = "tls://127.0.0.1:7010"
 ListenAddress = ""
 Description = "Conode_5"
+WebSocketTLSCertificate = ""
+WebSocketTLSCertificateKey = ""
+
+[Services]
+  [Services.ByzCoin]
+    Suite = "bn256.adapter"
+    Public = "5dde9f03faf79795df2468cd68997e8a86b8c5090e0f69f082aec7e7500d971c12ecf480ad8310fbd8a33c5c1a6ebea21392ac39fc4162113c9a5c600b34dd775a99928152b0fa7d2c659e5fbbb2a5bc8099b40f8c0dc8919d6f00e411e14d3228b54f8a4883f8838b641c10a41e13dc5fac4bda943484d20230d4d77a924cbf"
+    Private = "529dcc6f1d1cd5e390cba049ae803d662abf338d6ae11822070aabbd6fcffef8"
+  [Services.PoPServer]
+    Suite = "bn256.adapter"
+    Public = "6be73294b77c0a85cabad3456320e80e5ceeed4f7092da6498d06f23140f15c16565d7415fce6a8696f9e6370f86616302dbd9f5f4039aadf59bea381093425e55729de7449c73ee0c05257f903f84c41a656cc2e14f8230f7e8696e851f5be13350829460a6ded26a437b002fc5bd23337a78e0448ecfde812abb522fb5db3d"
+    Private = "638b7ceb1df253b350946993c0731fef19cd951e79f1326f97f3d092161bc70c"
+  [Services.Skipchain]
+    Suite = "bn256.adapter"
+    Public = "78e342cb7d7d500adb601948d6970c74e506211b07657f41a22ecd93b607b692182137220bfe454cc35440a22f6adf96fb2ab8b45d7f46bdc3f142d8d4701200285e6d28fe9c7e19bd5f23fd0ec358c188a04be9ed021d4944c3f33710cfdaa6614a74c695e9a7b2a3bd08ceaf0a4b2064fc04f282ec1e9b4f100ea82fb51eb0"
+    Private = "466b2a8fbb6b798d5557eb1b5aa4937ad3f1cc739d69ab10ee3a3e4e142cc9bd"
+  [Services.blsCoSiService]
+    Suite = "bn256.adapter"
+    Public = "402038ed29b8e40d0867ed853aea80e4d48b3eaa87b4f210ec2e3700f3a3c2d2134026d75cddc94687459cfba9618e9f62f343ffc9fe9915835b232ca554ab5182772acb2a5f51cf562dc0251baa1c21d430453606d78ef542f5804c06093d2376c66bc3de3010b4acbe2ce2374005a2f6ecaf52d93ce3283d2d24454f4dc317"
+    Private = "12fd6605c16d96fce6b739eba2f3c0c1c461710932b2385d339a6890d2c52d04"

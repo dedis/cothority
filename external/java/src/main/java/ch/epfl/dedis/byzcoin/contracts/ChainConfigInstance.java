@@ -52,8 +52,9 @@ public class ChainConfigInstance {
      *
      * @throws CothorityNotFoundException      if the chainConfiguration couldn't be found in ByzCoin
      * @throws CothorityCommunicationException if there was an communication error
+     * @throws CothorityCryptoException        if there is something wrong with the proof
      */
-    public void update() throws CothorityCommunicationException, CothorityNotFoundException {
+    public void update() throws CothorityCommunicationException, CothorityNotFoundException, CothorityCryptoException {
         instance = Instance.fromByzcoin(bc, instance.getId());
         chainConfig = new ChainConfigData(instance);
     }
@@ -136,8 +137,9 @@ public class ChainConfigInstance {
      * @return the new ValueInstance
      * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
      * @throws CothorityCommunicationException if the communication throws an error
+     * @throws CothorityCryptoException        if there is something wrong with the proof
      */
-    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc) throws CothorityNotFoundException, CothorityCommunicationException {
+    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc) throws CothorityNotFoundException, CothorityCommunicationException, CothorityCryptoException {
         return new ChainConfigInstance(bc, Instance.fromByzcoin(bc, new InstanceId(new byte[32])));
     }
 
@@ -147,10 +149,9 @@ public class ChainConfigInstance {
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance
      * @return the new ValueInstance
-     * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
-     * @throws CothorityCommunicationException if the communication throws an error
+     * @throws CothorityNotFoundException if the configuration is not where it is supposed to be
      */
-    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException, CothorityCommunicationException {
+    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException {
         return new ChainConfigInstance(bc, Instance.fromProof(p));
     }
 }

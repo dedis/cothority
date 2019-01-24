@@ -2,15 +2,16 @@ package ch.epfl.dedis.calypso;
 
 import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Spawn;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class WriteInstance {
     public static String ContractId = "calypsoWrite";
     private Instance instance;
     private CalypsoRPC calypso;
-    private LTS lts;
+    private CreateLTSReply lts;
 
     private final static Logger logger = LoggerFactory.getLogger(WriteInstance.class);
 
@@ -64,7 +65,7 @@ public class WriteInstance {
      *
      * @return the LTS
      */
-    public LTS getLts() {
+    public CreateLTSReply getLts() {
         return lts;
     }
 
@@ -95,11 +96,12 @@ public class WriteInstance {
      * @param calypso    an existing calypso object
      * @param readers    one or more readers that can sign the read spawn instruction
      * @param readerCtrs a list of monotonically increasing counter for every reader
+     * @param Xc         is the key to which the dataEnc will be re-encrypted to, it must not be one of the signers
      * @return ReadInstance if successful
      * @throws CothorityException if something goes wrong
      */
-    public ReadInstance spawnCalypsoRead(CalypsoRPC calypso, List<Signer> readers, List<Long> readerCtrs) throws CothorityException {
-        return new ReadInstance(calypso, this, readers, readerCtrs);
+    public ReadInstance spawnCalypsoRead(CalypsoRPC calypso, List<Signer> readers, List<Long> readerCtrs, Point Xc) throws CothorityException {
+        return new ReadInstance(calypso, this, readers, readerCtrs, Xc);
     }
 
     /**
@@ -118,7 +120,7 @@ public class WriteInstance {
      * Create a spawn instruction with a spawnCalypsoWrite request and send it to the ledger.
      */
     private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        Argument arg = new Argument("write", req.getWrite().toByteArray());
+        Argument arg = new Argument("write", req.toProto().toByteArray());
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
         Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
 
@@ -131,7 +133,11 @@ public class WriteInstance {
 
     // TODO same as what's in EventLogInstance, make a super class?
     private Instance getInstance(InstanceId id) throws CothorityException {
-        Instance inst = calypso.getProof(id).getInstance();
+        Proof p = calypso.getProof(id);
+        if (!p.exists(id.getId())) {
+            throw new CothorityNotFoundException("instance is not in the proof");
+        }
+        Instance inst = p.getInstance();
         if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong contractId: {}", inst.getContractId());
             throw new CothorityNotFoundException("this is not an " + ContractId + " instance");

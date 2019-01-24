@@ -81,7 +81,7 @@ public class EventLogInstance {
      * @param id the contract ID, it must be already initialised and stored on byzcoin
      * @throws CothorityException if something goes wrong
      */
-    private EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+    public EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         this.bc = bc;
         this.setInstance(id);
     }
@@ -127,11 +127,8 @@ public class EventLogInstance {
      */
     public Event get(InstanceId key) throws CothorityException {
         Proof p = bc.getProof(key);
-        if (!p.matches()) {
-            throw new CothorityCryptoException("key does not exist");
-        }
-        if (!Arrays.equals(p.getKey(), key.getId())) {
-            throw new CothorityCryptoException("wrong key");
+        if (!p.exists(key.getId())) {
+            throw new CothorityCryptoException("event does not exist");
         }
         StateChangeBody body = p.getValues();
         try {

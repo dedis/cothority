@@ -23,6 +23,20 @@ type SharedSecret struct {
 	Commits []kyber.Point
 }
 
+// Clone makes a clone of the shared secret.
+func (ss *SharedSecret) Clone() *SharedSecret {
+	commits := make([]kyber.Point, len(ss.Commits))
+	for i := range ss.Commits {
+		commits[i] = ss.Commits[i].Clone()
+	}
+	return &SharedSecret{
+		Index:   ss.Index,
+		V:       ss.V.Clone(),
+		X:       ss.X.Clone(),
+		Commits: commits,
+	}
+}
+
 // Init asks all nodes to set up a private/public key pair. It is sent to
 // all nodes from the root-node. If Wait is true, at the end of the setup
 // an additional message is sent to wait for all nodes to be set up.

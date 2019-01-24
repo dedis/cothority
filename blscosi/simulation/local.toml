@@ -1,0 +1,16 @@
+Simulation = "BlsCosiProtocol"
+Servers = 8
+Bf = 4
+Rounds = 1
+RunWait = "600s"
+Suite = "bn256.adapter"
+
+Hosts, NSubtrees, FailingSubleaders,FailingLeafs
+  4,  1, 0,  0
+  4,  1, 0,  1
+  4,  3, 0,  0
+ 10,  3, 0,  0
+ 10,  3, 2,  0
+ 10,  3, 0,  3
+ 20,  5, 0,  0
+ 20,  5, 1,  5

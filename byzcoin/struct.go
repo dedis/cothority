@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/big"
 	"sort"
 	"sync"
 	"time"
@@ -13,6 +12,7 @@ import (
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 )
 
@@ -47,6 +47,20 @@ func (sces StateChangeEntries) Less(i, j int) bool {
 
 func (sces StateChangeEntries) Swap(i, j int) {
 	sces[i], sces[j] = sces[j], sces[i]
+}
+
+// Copy creates a deep copy of the statechange, so that tests
+// can correctly work on those copies.
+func (sc StateChange) Copy() StateChange {
+	c := StateChange{
+		StateAction: sc.StateAction,
+		Version:     sc.Version,
+	}
+	c.InstanceID = append([]byte{}, sc.InstanceID...)
+	c.ContractID = append([]byte{}, sc.ContractID...)
+	c.Value = append([]byte{}, sc.Value...)
+	c.DarcID = append([]byte{}, sc.DarcID...)
+	return c
 }
 
 // keyTime stores information to keep track of the age of the
@@ -91,6 +105,7 @@ type stateChangeStorage struct {
 	maxNbrBlock    int
 	sortedKeys     keyTimeArray
 	sortedKeysLock sync.Mutex
+	accessLock     sync.Mutex
 }
 
 // Create a storage with a default maximum size
@@ -332,6 +347,8 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, err
 // this will clean the oldest state changes until there is enough
 // space left and append the new ones
 func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) error {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	// Run a cleaning procedure first to insure we're not above the limit
 	err := s.cleanBySize()
 	if err != nil {
@@ -408,6 +425,8 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 
 // This will return the list of state changes for the given instance
 func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entries []StateChangeEntry, err error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	if len(iid) != prefixLength {
 		return nil, errLengthInstanceID
 	}
@@ -440,6 +459,8 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 // Use the bool returned value to check if the version exists
 func (s *stateChangeStorage) getByVersion(iid []byte,
 	ver uint64, sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
@@ -476,6 +497,8 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 // getByBlock looks for the state changes associated with a given
 // skipblock
 func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (entries StateChangeEntries, err error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	err = s.db.View(func(tx *bolt.Tx) error {
 		b := s.getBucket(tx, sid)
 
@@ -506,6 +529,8 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 // getLast looks for the last version of a given instance and return the entry. Use
 // the bool value to know if there is a hit or not.
 func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
@@ -516,12 +541,11 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		c := b.Cursor()
 
 		// Seek the next instance ID and take a step back
-		// to reach the newest version
-		key := new(big.Int)
-		key.SetBytes(iid)
-		key.Add(key, new(big.Int).SetInt64(1))
-
-		c.Seek(key.Bytes())
+		// to reach the newest version.
+		// By appending 2^64-1 to the key, we get the last
+		// possible key.
+		key := append(iid, []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}...)
+		c.Seek(key)
 		k, v := c.Prev()
 
 		if bytes.HasPrefix(k, iid) {
@@ -532,7 +556,23 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 
 			ok = true
 		}
+		return nil
+	})
 
+	return
+}
+
+func (s *stateChangeStorage) dumpAll(sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := s.getBucket(tx, sid)
+		c := b.Cursor()
+		k, _ := c.First()
+		for k != nil {
+			log.Lvlf1("%x", k)
+			k, _ = c.Next()
+		}
 		return nil
 	})
 
@@ -540,6 +580,8 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 }
 
 func (s *stateChangeStorage) getStateTrie(scid skipchain.SkipBlockID) (*stagingStateTrie, error) {
+	s.accessLock.Lock()
+	defer s.accessLock.Unlock()
 	nonce := GenNonce()
 	sst, err := newMemStagingStateTrie(nonce[:])
 	if err != nil {

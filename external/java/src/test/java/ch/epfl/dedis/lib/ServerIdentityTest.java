@@ -2,27 +2,30 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.network.ServerIdentity;
+import ch.epfl.dedis.lib.network.ServerToml;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
-import com.google.protobuf.ByteString;
+import com.moandjiezana.toml.Toml;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.URL;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
     private final static Logger logger = LoggerFactory.getLogger(ServerIdentityTest.class);
-    private TestServerController testServerController;
     private ServerIdentity si;
 
     @BeforeEach
     void initConodes() {
-        testServerController = TestServerInit.getInstance();
-        si = new ServerIdentity(testServerController.getMasterConode().getAddress(),
-                testServerController.getMasterConode().getPublicKey());
+        TestServerController testServerController = TestServerInit.getInstance();
+        si = testServerController.getMasterConode();
     }
 
     @Test
@@ -37,16 +40,22 @@ class ServerIdentityTest {
     }
 
     @Test
-    void testCreate() {
-        // TODO: there is not much value in this test
-        assertEquals(testServerController.getMasterConode().getAddress().toString(), si.getAddress().toString());
-        assertNotEquals(null, si.Public);
+    void testProto(){
+        NetworkProto.ServerIdentity si_proto = si.toProto();
+        assertEquals(16, si_proto.getId().size());
     }
 
     @Test
-    void testProto(){
-        NetworkProto.ServerIdentity si_proto = si.toProto();
-        byte[] id = Hex.parseHexBinary("482FB9CFC2B55AB68C5F811C1D47B9E1");
-        assertArrayEquals(ByteString.copyFrom(id).toByteArray(), si_proto.getId().toByteArray());
+    void testToml() throws Exception {
+        ClassLoader loader = getClass().getClassLoader();
+        URL filepath = loader.getResource("public.toml");
+        assertNotNull(filepath);
+
+        Toml toml = new Toml().read(new File(filepath.getFile()));
+        ServerIdentity si = new ServerIdentity(toml.getTables("servers").get(0).to(ServerToml.class));
+        assertNotNull(si);
+        assertNotNull(si.getAddress());
+        assertNotNull(si.getPublic());
+        assertTrue(si.getServiceIdentities().size() > 0);
     }
 }

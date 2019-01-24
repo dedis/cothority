@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -219,8 +220,29 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		if err = newConfig.sanityCheck(oldConfig); err != nil {
 			return
 		}
+		var val []byte
+		val, _, _, _, err = rst.GetValues(darcID)
+		if err != nil {
+			return
+		}
+		var genesisDarc *darc.Darc
+		genesisDarc, err = darc.NewFromProtobuf(val)
+		if err != nil {
+			return
+		}
+		var rules []string
+		for _, p := range newConfig.Roster.Publics() {
+			rules = append(rules, "ed25519:"+p.String())
+		}
+		genesisDarc.Rules.UpdateRule("invoke:view_change", expression.InitOrExpr(rules...))
+		var genesisBuf []byte
+		genesisBuf, err = genesisDarc.ToProto()
+		if err != nil {
+			return
+		}
 		sc = []StateChange{
 			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
+			NewStateChange(Update, NewInstanceID(darcID), ContractDarcID, genesisBuf, darcID),
 		}
 		return
 	case "view_change":
@@ -232,8 +254,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		// If everything is correctly signed, then we trust it, no need
 		// to do additional verification.
 		sigBuf := inst.Invoke.Args.Search("multisig")
-		err = cosi.Verify(cothority.Suite, req.Roster.Publics(),
-			req.Hash(), sigBuf, cosi.NewThresholdPolicy(len(req.Roster.List)-len(req.Roster.List)/3))
+		err = protocol.BlsSignature(sigBuf).Verify(pairingSuite, req.Hash(), req.Roster.ServicePublics(ServiceName))
 		if err != nil {
 			return
 		}
@@ -339,7 +360,7 @@ func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Co
 	// Pass nil into the contract factory here because this instance does not exist yet.
 	// So the factory will make a zero-value instance, and then calling Spawn on it
 	// will give it a chance to encode it's zero state and emit one or more StateChanges to put itself
-	// into the collection.
+	// into the trie.
 	c2, err := cfact(nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)

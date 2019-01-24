@@ -5,6 +5,7 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -19,14 +20,14 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventlogTest {
@@ -46,7 +47,7 @@ class EventlogTest {
         genesisDarc.addIdentity("spawn:eventlog", admin.getIdentity(), Rules.OR);
         genesisDarc.addIdentity("invoke:eventlog", admin.getIdentity(), Rules.OR);
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -91,6 +92,7 @@ class EventlogTest {
             for (InstanceId key : keys) {
                 try {
                     logger.info("ok");
+                    // this checks the trie proofs.
                     Event event2 = el.get(key);
                     assertEquals(event, event2);
                 } catch (CothorityCryptoException e){
@@ -104,6 +106,13 @@ class EventlogTest {
             }
         }
         assertTrue(allOK, "one of the events failed");
+
+        // check that we can't get an event that doesn't exist
+        InstanceId badKey = new InstanceId(Hex.parseHexBinary("CDC4FB0BDD74CD86410DC80C818E7A0DB3C6452C9161CF7C6FC16D00C5CF0DA7"));
+        assertThrows(CothorityCryptoException.class, () -> el.get(badKey));
+
+        // Try to reconnect after doing a lot of transactions.
+        ByzCoinRPC.fromByzCoin(bc.getRoster(), bc.getGenesisBlock().getId());
     }
 
     @Test

@@ -51,8 +51,11 @@ type link struct {
 	Conode  *network.ServerIdentity
 }
 
-func main() {
+func init() {
 	network.RegisterMessages(&config{}, &values{})
+}
+
+func main() {
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"

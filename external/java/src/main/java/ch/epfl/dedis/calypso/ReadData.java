@@ -4,6 +4,8 @@ import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.PointFactory;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.Calypso;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -17,6 +19,7 @@ public class ReadData {
 
     /**
      * Construct a read request given the ID of the corresponding write request and the reader's public key.
+     *
      * @param writeId  the instance of the write request
      * @param readerPk the reader's public key
      */
@@ -29,16 +32,17 @@ public class ReadData {
 
     /**
      * Creates a new ReadData from an existing instance.
+     *
      * @param inst the instance
      * @throws CothorityNotFoundException if the read request in the instance is corrupt
      */
-    public ReadData(Instance inst) throws CothorityNotFoundException{
-        if (!inst.getContractId().equals(ReadInstance.ContractId)){
+    public ReadData(Instance inst) throws CothorityNotFoundException {
+        if (!inst.getContractId().equals(ReadInstance.ContractId)) {
             throw new CothorityNotFoundException("wrong contract type in instance");
         }
         try {
             read = Calypso.Read.parseFrom(inst.getData());
-        } catch (InvalidProtocolBufferException e){
+        } catch (InvalidProtocolBufferException e) {
             throw new CothorityNotFoundException("couldn't decode the data: " + e.getMessage());
         }
     }
@@ -46,14 +50,14 @@ public class ReadData {
     /**
      * @return the public key under which the re-encryption will take place.
      */
-    public Point getXc(){
-        return new Ed25519Point(read.getXc());
+    public Point getXc() {
+        return PointFactory.getInstance().fromProto(read.getXc());
     }
 
     /**
      * @return the instanceId of the corresponding Write Instance.
      */
-    public InstanceId getWriteId(){
+    public InstanceId getWriteId() {
         return new InstanceId(read.getWrite());
     }
 
@@ -62,5 +66,17 @@ public class ReadData {
      */
     public Calypso.Read toProto() {
         return read;
+    }
+
+    /**
+     * Takes a byte array as an input to parse into the protobuf representation of ReadData.
+     * @param buf the protobuf data
+     * @return ReadData
+     * @throws InvalidProtocolBufferException if the protobuf data is invalid.
+     */
+    public static ReadData fromProto(byte[] buf) throws InvalidProtocolBufferException {
+        Calypso.Read rd = Calypso.Read.parseFrom(buf);
+        Point p = PointFactory.getInstance().fromProto(rd.getXc());
+        return new ReadData(new InstanceId(rd.getWrite()), p);
     }
 }

@@ -3,11 +3,11 @@ IMAGE_NAME = dedis/$(CONTAINER)
 DATA_DIR = $(shell pwd)/conode_data
 VERSION = dev
 OUTPUT_DIR = conode-$(VERSION)
-TAG = $(VERSION)-$(shell date +%y%m%d)
-
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
-ifneq ($(GITUNTRACKEDCHANGES),)
-	VERSION := $(VERSION)-dirty
+TAG = $(VERSION)-$(shell date +%y%m%d)
+GIT_TAG = $(shell git tag -l --points-at HEAD )
+ifneq ($(GIT_TAG),)
+  TAG = $(VERSION)-$(GIT_TAG)
 endif
 
 # -s -w are for smaller binaries

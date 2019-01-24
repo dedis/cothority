@@ -1,5 +1,18 @@
 [[servers]]
-  Address = "tls://localhost:7014"
+  Address = "tls://127.0.0.1:7014"
   Suite = "Ed25519"
-  Public = "72642f4db36d8c25df04698ab16988c3ab3d798bb5d1d4a985e3e2ceb3ba0869"
+  Public = "8032764c1ebb0bca31a32e6af3aed014ad89c050165cfd8ac85139f9f3d4d698"
   Description = "Conode_7"
+  [servers.Services]
+    [servers.Services.ByzCoin]
+      Public = "42e625f9cfc775be5e13d10a319089d000bf233afa0165ce25b27e0bd5e935854884b5b8a19126d7eab3b12662fd52ee36ae132ca6a20b1a2dbd61a773125c5324ac2447fef288bdd766bf001a63977e5b94d2a53c7d77afefffe323d11559523f0440e65ae03c72c98f58d50bfd47ed7d278ce88ddd33c7601bf526adb71ab3"
+      Suite = "bn256.adapter"
+    [servers.Services.PoPServer]
+      Public = "6545b7f85c5d4e170066fa8924abf05fab1badf27fdd31e539d81e173280f8205f8d3bd049863d6254b3783c8e58fb5461a4e621cec2b519c6eb407b66db1271368ae5c25d149fe69d9ea1783de45029c68a0c82aa96f16e52599b1595a5e1815963b12b9752a975d7aed4643fb1dc03ae260da9411cde33c546636237743a24"
+      Suite = "bn256.adapter"
+    [servers.Services.Skipchain]
+      Public = "23a2e085248c2d98cb7d406820b411cb0303cc56a2c8e08ffac295476966e0221975eed31db76fc5ae8844a91fa8ea21910080212335e3f78e0475dfe6168b6d78f099efe85006407f34e58082cbee0fbd7f9ea6f09f0036eea15becd9c8d5ab44001b1248b10e774d9245d0bdacb46ecb4e6962077f36d07e0c22602b7c52d9"
+      Suite = "bn256.adapter"
+    [servers.Services.blsCoSiService]
+      Public = "39d1e1cd1281bbaaadbce7662254d8a4a610ee28744d23520c5df29eb8ae613b0f7408576fdf35a589320f11f42abfd536947aa709e041a6c2a0b920043f433a1fc1b9fc390757e8ef7b0d5ff4ff381b175ab1730ae74364d80a6c2e7b9fc3de3f0148d1bcef3133af2882d1256e16da6eadc3255241a519eedbfdc16ff881f2"
+      Suite = "bn256.adapter"

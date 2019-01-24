@@ -1,6 +1,6 @@
 package ch.epfl.dedis.integration;
 
-import ch.epfl.dedis.byzgen.CalypsoFactory;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import org.slf4j.Logger;
@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.FrameConsumerResultCallback;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -24,7 +25,8 @@ public class DockerTestServerController extends TestServerController {
 
     private final GenericContainer<?> blockchainContainer;
 
-    protected DockerTestServerController() {
+    DockerTestServerController() {
+        super();
         logger.warn("local docker will be started for tests.");
         logger.info("This test run assumes that image " + TEST_SERVER_IMAGE_NAME + " is available in your system.");
         logger.info("To build such image you should run `make docker docker_test` - such run will create base image and image with test keys.");
@@ -47,13 +49,6 @@ public class DockerTestServerController extends TestServerController {
                     "7012:7012", "7013:7013",
                     "7014:7014", "7015:7015"));
             blockchainContainer.withExposedPorts(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009);
-            blockchainContainer.withExtraHost("conode1", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode2", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode3", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode4", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode5", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode6", "127.0.0.1");
-            blockchainContainer.withExtraHost("conode7", "127.0.0.1");
             blockchainContainer.waitingFor(Wait.forListeningPort());
             blockchainContainer.start();
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
@@ -72,7 +67,7 @@ public class DockerTestServerController extends TestServerController {
             throw new InterruptedException("Node numbering starts at 1!");
         }
         logger.info("Starting container co{}/private.toml", nodeNumber);
-        runCmdInBackground(blockchainContainer, "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
+        runCmdInBackground(blockchainContainer, "env", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
         // Wait a bit for the server to actually start.
         Thread.sleep(1000);
     }
@@ -93,13 +88,13 @@ public class DockerTestServerController extends TestServerController {
         }
     }
 
+    /**
+     * We only get 4 conodes because the run_conode.sh file (from the Dockerfile) only starts 4 conodes.
+     * The other conodes (5 to 7) are used for testing roster changes.
+     */
     @Override
-    public List<CalypsoFactory.ConodeAddress> getConodes() {
-        return Arrays.asList(
-                new CalypsoFactory.ConodeAddress(buildURI("tls://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
-                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7004"), CONODE_PUB_2),
-                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7006"), CONODE_PUB_3),
-                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7008"), CONODE_PUB_4));
+    public List<ServerIdentity> getConodes() {
+        return getIdentities().subList(0, 4);
     }
 
     private void runCmdInBackground(GenericContainer container, String... cmd) throws InterruptedException {
@@ -112,7 +107,12 @@ public class DockerTestServerController extends TestServerController {
                 .withCmd(cmd)
                 .exec();
 
+        FrameConsumerResultCallback fc = new FrameConsumerResultCallback();
+        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
+        fc.addConsumer(OutputFrame.OutputType.STDOUT, logConsumer);
+        fc.addConsumer(OutputFrame.OutputType.STDERR, logConsumer);
+
         dockerClient.execStartCmd(execCreateCmdResponse.getId())
-                .exec(new FrameConsumerResultCallback()).awaitStarted();
+                .exec(fc).awaitStarted();
     }
 }

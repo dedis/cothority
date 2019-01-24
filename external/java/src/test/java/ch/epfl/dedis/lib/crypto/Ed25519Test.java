@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Ed25519Test {
     private final static Logger logger = LoggerFactory.getLogger(Ed25519Test.class);
     @Test
-    void point() {
+    void point() throws Exception {
         String point = "3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29";
         Point ed25519Point2 = new Ed25519Point(point);
         assertEquals(point, ed25519Point2.toString());
@@ -46,7 +46,7 @@ class Ed25519Test {
 
     @Test
     void toPrivate() {
-        KeyPair kp = new KeyPair();
+        Ed25519Pair kp = new Ed25519Pair();
 
         Point pub = Ed25519Point.base().mul(kp.scalar);
         assertTrue(pub.equals(kp.point));
@@ -122,7 +122,7 @@ class Ed25519Test {
     }
 
     @Test
-    void storeLoad() {
+    void storeLoad() throws Exception {
         Scalar s = new Ed25519Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
         Point S = Ed25519Point.base().mul(s);
 
@@ -133,13 +133,12 @@ class Ed25519Test {
     }
 
     @Test
-    void schnorrVerify() {
+    void schnorrVerify() throws Exception {
         byte[] msg = "Hello Schnorr".getBytes();
         byte[] sigBuf = Hex.parseHexBinary("b95fc52a5fd2e18aa7ace5b2250c2a25e368f75c148ea3403c8f32b5f100781b" +
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");
         SchnorrSig sig = new SchnorrSig(sigBuf);
         Point pub = new Ed25519Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
-        Scalar s = new Ed25519Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
         assertTrue(sig.verify(msg, pub));
         assertFalse(sig.verify(msg, pub.add(pub)));
         assertFalse(sig.verify("Hi Schnorr".getBytes(), pub));
@@ -148,13 +147,12 @@ class Ed25519Test {
     @Test
     void schnorrSig() {
         byte[] msg = "Hello Schnorr".getBytes();
-        KeyPair kp1 = new KeyPair();
-        kp1.scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
-        kp1.point = Ed25519Point.base().mul(kp1.scalar);
-        KeyPair kp2 = new KeyPair();
-        SchnorrSig sig = new SchnorrSig(msg, kp1.scalar);
+        Scalar scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
+        Point point = Ed25519Point.base().mul(scalar);
+        Ed25519Pair kp2 = new Ed25519Pair();
+        SchnorrSig sig = new SchnorrSig(msg, scalar);
 
-        assertTrue(sig.verify(msg, kp1.point));
+        assertTrue(sig.verify(msg, point));
         assertFalse(sig.verify(msg, kp2.point));
     }
 
@@ -168,21 +166,28 @@ class Ed25519Test {
     }
 
     @Test
+    void getZero() {
+        Ed25519Pair kp1 = new Ed25519Pair();
+        assertFalse(kp1.point.isZero());
+        assertTrue(kp1.point.getZero().isZero());
+    }
+
+    @Test
     void testEncryption() throws Exception {
         byte[] orig = "My cool file".getBytes();
-        byte[] symmetricKey = new byte[16];
-        int ivSize = 16;
+        byte[] symmetricKey = new byte[Encryption.KEY_LEN];
+        int ivSize = 12;
         byte[] iv = new byte[ivSize];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(Encryption.GCM_TLEN, iv);
         random.nextBytes(symmetricKey);
-        Cipher cipher = Cipher.getInstance(Encryption.algo);
-        SecretKeySpec key = new SecretKeySpec(symmetricKey, Encryption.algoKey);
-        cipher.init(Cipher.ENCRYPT_MODE, key, ivParameterSpec);
+        Cipher cipher = Cipher.getInstance(Encryption.ALGO);
+        SecretKeySpec key = new SecretKeySpec(symmetricKey, Encryption.ALGO_KEY);
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmParameterSpec);
         byte[] data_enc = cipher.doFinal(orig);
 
-        cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
+        cipher.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
         byte[] data = cipher.doFinal(data_enc);
         assertArrayEquals(orig, data);
     }
@@ -190,7 +195,7 @@ class Ed25519Test {
     @Test
     void testDocumentEncryption()throws Exception{
         byte[] orig = "foo beats bar".getBytes();
-        byte[] keyMaterial = new byte[Encryption.ivLength + 16];
+        byte[] keyMaterial = new byte[Encryption.IV_LEN + Encryption.KEY_LEN];
         new SecureRandom().nextBytes(keyMaterial);
 
         byte[] dataEnc = Encryption.encryptData(orig, keyMaterial);

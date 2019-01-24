@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
@@ -87,10 +88,10 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 			// The first forward link is a pointer from []byte{} to the genesis
 			// block and holds the roster of the genesis block.
 			sbID = scID
-			publics = l.NewRoster.Publics()
+			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 			continue
 		}
-		if err = l.Verify(cothority.Suite, publics); err != nil {
+		if err = l.Verify(pairing.NewSuiteBn256(), publics); err != nil {
 			return ErrorVerifySkipchain
 		}
 		if !l.From.Equal(sbID) {
@@ -98,7 +99,7 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 		}
 		sbID = l.To
 		if l.NewRoster != nil {
-			publics = l.NewRoster.Publics()
+			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 		}
 	}
 	return nil

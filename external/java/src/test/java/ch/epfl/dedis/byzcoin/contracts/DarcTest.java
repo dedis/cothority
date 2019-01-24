@@ -9,7 +9,7 @@ import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
+import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -18,13 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DarcTest {
@@ -42,7 +41,7 @@ class DarcTest {
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -56,7 +55,7 @@ class DarcTest {
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
-        Darc newDarc = genesisDarc.copyRulesAndVersion();
+        Darc newDarc = genesisDarc.partialCopy();
         newDarc.setRule("spawn:darc", "all".getBytes());
 
         Instruction instr = dc.evolveDarcInstruction(newDarc, counters.head()+1);
@@ -77,9 +76,9 @@ class DarcTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         // Evolve to give kcsigner the evolve permission
-        SignerX509EC kcsigner = new TestSignerX509EC();
-        SignerX509EC kcsigner2 = new TestSignerX509EC();
-        Darc adminDarc2 = genesisDarc.copyRulesAndVersion();
+        SignerX509EC kcsigner = new SignerX509ECTest();
+        SignerX509EC kcsigner2 = new SignerX509ECTest();
+        Darc adminDarc2 = genesisDarc.partialCopy();
         adminDarc2.setRule(Darc.RuleEvolve, kcsigner.getIdentity().toString().getBytes());
         DarcInstance di = DarcInstance.fromByzCoin(bc, genesisDarc);
         di.evolveDarcAndWait(adminDarc2, admin, counters.head()+1, 10);
@@ -87,7 +86,7 @@ class DarcTest {
         assertEquals(1, di.getDarc().getVersion());
         assertTrue(new String(di.getDarc().getExpression(Darc.RuleEvolve)).contains(kcsigner.getIdentity().toString()));
 
-        final Darc adminDarc3 = adminDarc2.copyRulesAndVersion();
+        final Darc adminDarc3 = adminDarc2.partialCopy();
         assertThrows(Exception.class, () -> {
                     logger.info("Trying to evolve darc with wrong signer: " + kcsigner2.getIdentity().toString());
                     adminDarc3.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
@@ -98,7 +97,7 @@ class DarcTest {
         assertEquals(1, di.getDarc().getVersion());
 
         // Evolve to give kcsigner2 the permission
-        final Darc adminDarc3bis = adminDarc2.copyRulesAndVersion();
+        final Darc adminDarc3bis = adminDarc2.partialCopy();
         adminDarc3bis.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
         logger.info("Updating darc with new signer: " + kcsigner.getIdentity().toString());
         di.evolveDarcAndWait(adminDarc3bis, kcsigner, 1L, 10);
@@ -112,7 +111,7 @@ class DarcTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
-        Darc darc2 = genesisDarc.copyRulesAndVersion();
+        Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, counters.head()+1, 10);
 

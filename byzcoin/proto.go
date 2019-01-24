@@ -240,7 +240,7 @@ type StateChange struct {
 	Value []byte
 	// DarcID is the Darc controlling access to this key.
 	DarcID darc.ID
-	// Version is the monotonically increased version of the instance
+	// Version is the monotonically increasing version of the instance
 	Version uint64
 }
 
@@ -272,7 +272,7 @@ type DownloadState struct {
 	// ByzCoinID of the state to download
 	ByzCoinID skipchain.SkipBlockID
 	// Nonce is 0 for a new download, else it must be
-	// equal to the nonce returned in DDownloadStateResponse.
+	// equal to the nonce returned in DownloadStateResponse.
 	// In case Nonce is non-zero, but doesn't correspond
 	// to the current session, an error is returned,
 	// as only one download-session can be active at

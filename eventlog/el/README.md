@@ -10,25 +10,28 @@ Here are some examples of how to use el.
 
 ## Make a new key pair
 
-Using the `bcadmin` tool, you can create a key pair:
+Using the `el` tool, you can create a key pair:
 
 ```
-$ bcadmin keys
+$ el key
 ```
 
-The keys are printed on the stdout. You will give the public key to the
-ByzCoin administrator to use with the "bcadmin add" command to give your
-private key the right to make new event logs.
+The keys are printed on stdout. You will give the public key to the
+ByzCoin administrator who will use the "bcadmin add" command to give your
+private key the right to make new event logs (add "spawn:eventlog"
+and "invoke:eventlog" rules to a Darc).
+
+You can now make the event log like this:
 
 ```
-$ PRIVATE_KEY=$priv el create -bc $file
+$ PRIVATE_KEY=$priv el create -bc $file -darc $darcID
 ```
 
-The ByzCoin admin will give you a ByzCoin config file, which you will
-use with the -bc argument, or you can set the BC environment variable to the
-name of the ByzCoin config file. A new event log will be spawned, and the
-event log ID will be printed. Set the EL environment variable to communicate
-it to future calls to the `el` program.
+The ByzCoin admin will give you a ByzCoin config file, which you will use with
+the -bc argument, or you can set the BC environment variable to the name of the
+ByzCoin config file. He/she will also give you a DarcID to use.  A new event log
+will be spawned, and the event log ID will be printed. Set the EL environment
+variable to communicate it to future calls to the `el` program.
 
 You need to give the private key from above, using the PRIVATE_KEY environment
 variable or the `-priv` argument.
@@ -60,12 +63,10 @@ $ el search -config 2 -topic Topic -from 12:00 -to 13:00 -count 5
 $ el search -config 2 -topic Topic -from 12:00 -for 1h
 ```
 
-The exit code tells you if the search was truncated or not. (TODO: Should
-we make the CLI re-search up to N times upon detecting truncation?)
+The exit code tells you if the search was truncated or not.
 
 If `-topic` is not set, it defaults to the empty string. If you give
-`-for`, then you must not give `-to`. The default for `-from` is 1
-hours ago.
+`-for`, then you must not give `-to`.
 
 ## OpenID authentication
 

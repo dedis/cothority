@@ -1,6 +1,28 @@
 # This file contains your private key.
 # Do not give it away lightly!
-Public = "d750a30daa44713d1a4b44ca4ef31142b3b53c0c36a558c0d610cc4108bb4ecb"
-Private = "c5b00b6df8c83c5aac4018679cb6636c53841b915f2d72386412209d069d100a"
+Suite = "Ed25519"
+Public = "37c546db52e2380fde48b84aeb9503815dccf19a1ae24924b78cc2d07650eff9"
+Private = "4c0b1159a8b59517ac7450736750e9d9d0dbda14c957a67ce376f3708c887702"
 Address = "tls://127.0.0.1:7004"
+ListenAddress = ""
 Description = "Conode_2"
+WebSocketTLSCertificate = ""
+WebSocketTLSCertificateKey = ""
+
+[Services]
+  [Services.ByzCoin]
+    Suite = "bn256.adapter"
+    Public = "7e8f640c93ad63e00ed84146e34ceb158eab0e43754654a14c7faef4336ef5c842b8aeadccc76e583e6c77a4b4dd6cac62e37fedc242cff006b2d55e2bd9871f1eaccdeeea072d5ae77e7fd8d35610e3381a20cd8b539a08df0c2740862340d143cff1fcd63400fde2c1c1a37c7bd6d3e30f3dad56941011a70a6b0eaf435d0a"
+    Private = "784fb1a60d9df1e9300edb7a1a58dd6abf2570dfde8b5abf05fb4bfba4b2b923"
+  [Services.PoPServer]
+    Suite = "bn256.adapter"
+    Public = "42db53e7d755c024b9494c27d550a035bf258ab5c94f9da4270cf6a187b8cc18405072a0ecebe6814bbcc7d0490cd492c64bffcc0f14de654dee1ca9ce0840964f35987d0bdb0f7621fd6701ed91f58c82917dbb6394f4fa42ed2c3eca0deaae58ee27645f7122863dda900c3b0e0d2aa296a68324785d1fa5b198a75d2ee83a"
+    Private = "333676069329e0a9d4b91f325049e2bc0d8c2315c9c0a7d8ceddcdaeee20a521"
+  [Services.Skipchain]
+    Suite = "bn256.adapter"
+    Public = "2ab73b8165fd23162209744ac9f292f145454059241471922f263326eac33ffc8eefafb6ef155af65b2912da2e0b1d0b033d611ad225bca687ed2a363f9727bf6cb249986f49cc85c294c5c1b6843cecd153516eb0bfd2e8117f5e09e7e4f1e87641d474b4b9d67064a495b836f7d999b09eaa041f0b1ae884d2809ef8d20937"
+    Private = "210374b06abbf1a239e98066510bb82da43ec9804114df7622ff0e90e327c09b"
+  [Services.blsCoSiService]
+    Suite = "bn256.adapter"
+    Public = "5841a8f9969864a6e2e49ca52c6276f85f7835f81e13174f4d31cbc59bdc0bb23edb9db3cf9ba9b020903896b37fa77fa910e920050368ffff07f6ddb8141c2440cf7cdb8cfc8f524110fb0cda913d209d1bffab92668df710dc991ea76ce4e76bba0ec76cc58a7e59da4d46fa15ac208f842147c32c827d921e3e67042f6a0f"
+    Private = "79229a86cecab3aecd87f7da329452ca0a53168af85299965eba0f3ded98d217"

@@ -1,7 +1,9 @@
 package ch.epfl.dedis.skipchain;
 
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -10,6 +12,11 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Implementing an interface to the skipchain service.
@@ -23,6 +30,9 @@ public class SkipchainRPC {
     protected Roster roster;
 
     private final Logger logger = LoggerFactory.getLogger(SkipchainRPC.class);
+
+    // Every service may have a different public key, the SERVICE_NAME is the reference for getting this key.
+    public static final String SERVICE_NANE = "Skipchain";
 
     /**
      * If the skipchain is already initialised, this constructor will only
@@ -44,7 +54,7 @@ public class SkipchainRPC {
      *
      * @return true only if all nodes are OK, else false.
      */
-    public boolean verify() {
+    public boolean checkStatus() {
         boolean ok = true;
         for (ServerIdentity n : roster.getNodes()) {
             logger.info("Testing node {}", n.getAddress());
@@ -59,7 +69,7 @@ public class SkipchainRPC {
     }
 
     /**
-     * Returns the skipblock from the skipchain, given its id.
+     * Returns the skipblock from the skipchain, given its id. Note that the block that is returned is not verified.
      *
      * @param id the id of the skipblock
      * @return the proto-representation of the skipblock.
@@ -74,47 +84,136 @@ public class SkipchainRPC {
 
         try {
             SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
-            //TODO: add verification that the skipblock is valid by hashing and comparing to the id
+            SkipBlock ret = new SkipBlock(sb);
+
+            // simple verification (we do not check the links, just the signature)
+            if (!ret.verifyForwardSignatures()) {
+                throw new CothorityCommunicationException("invalid forward signatures");
+            }
 
             logger.debug("Got the following skipblock: {}", sb);
             logger.info("Successfully read skipblock");
 
-            return new SkipBlock(sb);
+            return ret;
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
 
-    public SkipBlock getLatestSkipblock() throws CothorityCommunicationException {
-        SkipchainProto.GetUpdateChain request =
-                SkipchainProto.GetUpdateChain.newBuilder().setLatestID(ByteString.copyFrom(scID.getId())).build();
+    /**
+     * Returns a list of blocks  block and verify that the links are correct. The verification is performed from the
+     * genesis block. Query the service and then return the chain of SkipBlocks going from trustedLatest to the most
+     * current SkipBlock of the chain. The returned list of blocks is linked using the highest level links available to
+     * shorten the returned chain.
+     *
+     * @return the chain of blocks
+     * @throws CothorityCommunicationException if something goes wrong with communication
+     * @throws CothorityCryptoException if the verification goes wrong
+     */
+    public List<SkipBlock> getUpdateChain() throws CothorityCommunicationException, CothorityCryptoException {
+        return this.getUpdateChain(this.scID);
+    }
 
-        ByteString msg = roster.sendMessage("Skipchain/GetUpdateChain",
-                request);
-
-        try {
-            SkipchainProto.GetUpdateChainReply reply =
-                    SkipchainProto.GetUpdateChainReply.parseFrom(msg);
-            //TODO: add verification that the skipblock is valid by hashing and comparing to the id
-
-            if (reply.getUpdateCount() == 0){
-                logger.info("didn't find any updates to {}", scID);
-                return null;
+    /**
+     * Returns a list of blocks  block and verify that the links are correct. The verification is performed from
+     * trustedLatest. Query the service and then return the chain of SkipBlocks going from trustedLatest to the most
+     * current SkipBlock of the chain. The returned list of blocks is linked using the highest level links available to
+     * shorten the returned chain.
+     *
+     * @param trustedLatest is the latest block ID that the caller trusts, which serves as the source for verification.
+     * @return the the chain of blocks.
+     * @throws CothorityCommunicationException if something goes wrong with communication
+     * @throws CothorityCryptoException if the verification goes wrong
+     */
+    public List<SkipBlock> getUpdateChain(SkipblockId trustedLatest) throws CothorityCommunicationException, CothorityCryptoException {
+        List<SkipBlock> update = new ArrayList<>();
+        for (;;) {
+            // make the request
+            SkipchainProto.GetUpdateChainReply r2;
+            try {
+                SkipchainProto.GetUpdateChain request =
+                        SkipchainProto.GetUpdateChain.newBuilder()
+                                .setLatestID(ByteString.copyFrom(trustedLatest.getId()))
+                                .build();
+                ByteString msg = roster.sendMessage("Skipchain/GetUpdateChain",
+                        request);
+                r2 = SkipchainProto.GetUpdateChainReply.parseFrom(msg);
+            } catch (InvalidProtocolBufferException e) {
+                throw new CothorityCommunicationException(e);
             }
-            SkipBlock sb = new SkipBlock(reply.getUpdate(reply.getUpdateCount() - 1));
-            logger.info("Got the following latest skipblock: {}", sb);
 
-            return sb;
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
+            SkipBlock start = new SkipBlock(r2.getUpdateList().get(0));
+            if (!trustedLatest.equals(start.getId())) {
+                throw new CothorityCryptoException("first returned block does not match requested hash");
+            }
+
+            // Step through the returned blocks one at a time, verifying
+            // the forward links, and that they link correctly backwards.
+            for (int j = 0; j < r2.getUpdateCount(); j++) {
+                SkipBlock b = new SkipBlock(r2.getUpdateList().get(j));
+                if (j == 0 && update.size() > 0) {
+                    // If we are processing the first block, and we've already processed some blocks,
+                    // then make sure this first block is the same as the last block we've already accepted
+                    if (Arrays.equals(update.get(update.size()-1).getHash(), b.getHash())) {
+                        continue;
+                    }
+                }
+                if (!b.verifyForwardSignatures()) {
+                    throw new CothorityCryptoException("forward signature verification failed");
+                }
+                // Cannot check back links until we've confirmed the first one
+                if (update.size() > 0) {
+                    if (b.getBackLinks().size() == 0) {
+                        throw new CothorityCryptoException("no backlink");
+                    }
+                    SkipBlock prevBlock = update.get(update.size() - 1);
+                    int link = prevBlock.getHeight();
+                    if (link > b.getHeight()) {
+                        link = b.getHeight();
+                    }
+                    if (!b.getBackLinks().get(link-1).equals(prevBlock.getId())) {
+                        throw new CothorityCryptoException("corresponding backlink doesn't point to previous block");
+                    }
+                    if (!prevBlock.getForwardLinks().get(link-1).getTo().equals(b.getId())) {
+                        throw new CothorityCryptoException("corresponding forwardlink doesn't point to next block");
+                    }
+                }
+                update.add(b);
+            }
+
+            SkipBlock last = update.get(update.size()-1);
+
+            // If they updated us to the end of the chain, return.
+            if (last.getForwardLinks().size() == 0) {
+                logger.info("Got the following latest skipblock: {}", Hex.printHexBinary(last.getId().getId()));
+                return update;
+            }
+
+            // Otherwise update the roster and contact the new servers
+            // to continue following the chain.
+            try {
+                Roster tmp = last.getForwardLinks().get(last.getForwardLinks().size() - 1).getNewRoster();
+                if (tmp == null) {
+                    roster = last.getRoster();
+                } else {
+                    roster = last.getForwardLinks().get(last.getForwardLinks().size() - 1).getNewRoster();
+                }
+            } catch (URISyntaxException e) {
+                throw new CothorityCryptoException(e.getMessage());
+            }
         }
     }
 
-
+    /**
+     * Getter for the skipchain ID.
+     */
     public SkipblockId getID() {
         return scID;
     }
 
+    /**
+     * Getter for the roster.
+     */
     public Roster getRoster() {
         return roster;
     }

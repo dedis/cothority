@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
-	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -270,13 +271,18 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	}
 
 	n := len(sb.Roster.List)
-	cosiProto := proto.(*cosiprotocol.FtCosi)
+	cosiProto := proto.(*protocol.BlsCosi)
 	cosiProto.Msg = req.Hash()
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol
 	cosiProto.Timeout = interval * 2
 	cosiProto.Threshold = n - n/3
-	cosiProto.NSubtrees = int(math.Pow(float64(n), 1.0/3.0))
+
+	err = cosiProto.SetNbrSubTree(int(math.Pow(float64(n), 1.0/3.0)))
+	if err != nil {
+		return nil, err
+	}
+
 	if err := cosiProto.Start(); err != nil {
 		return nil, err
 	}
@@ -289,7 +295,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	// Parse message and check hash.
 	var req viewchange.NewViewReq
-	if err := protobuf.DecodeWithConstructors(data, &req, network.DefaultConstructors(cothority.Suite)); err != nil {
+	if err := protobuf.Decode(data, &req); err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
 	}
@@ -403,6 +409,13 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 
 	_, err = s.createNewBlock(req.GetGen(), rotateRoster(sb.Roster, req.GetView().LeaderIndex), []TxResult{TxResult{ctx, false}})
 	return err
+}
+
+// getPrivateKey returns the default private key of the server
+// that is used to sign schnorr signatures for the view change
+// protocol
+func (s *Service) getPrivateKey() kyber.Scalar {
+	return s.ServerIdentity().GetPrivate()
 }
 
 func rotateRoster(roster *onet.Roster, i int) *onet.Roster {

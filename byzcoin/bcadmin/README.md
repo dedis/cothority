@@ -108,4 +108,13 @@ Optional flags:
  $ bcadmin darc
  ```
 
- is equivalent to show
+ is equivalent to `show`.
+
+ ```
+ $ bcadmin qr
+ ```
+
+Displays a QR Code containing the ByzCoin configuration, compatible to be scanned by the PopCoins apps
+
+Optional flags:
+ * -admin   The QR Code will also contain the admin keypair to allow the user who scans it to manage the ByzCoin

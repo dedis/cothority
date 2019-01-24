@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/eddsa"
+	"github.com/dedis/kyber/sign/bls"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -62,8 +62,8 @@ func TestFinalStatement_ToToml(t *testing.T) {
 }
 
 func TestFinalStatement_Verify(t *testing.T) {
-	eddsa := eddsa.NewEdDSA(random.New())
-	si := network.NewServerIdentity(eddsa.Public, network.NewAddress(network.PlainTCP, "0:2000"))
+	kp := key.NewKeyPair(pairingSuite)
+	si := network.NewServerIdentity(kp.Public, network.NewAddress(network.PlainTCP, "0:2000"))
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{
 		Desc: &PopDesc{
@@ -71,15 +71,15 @@ func TestFinalStatement_Verify(t *testing.T) {
 			DateTime: "yesterday",
 			Roster:   roster,
 		},
-		Attendees: []kyber.Point{eddsa.Public},
+		Attendees: []kyber.Point{kp.Public},
 	}
 	require.NotNil(t, fs.Verify())
 	h, err := fs.Hash()
 	log.ErrFatal(err)
-	fs.Signature, err = eddsa.Sign(h)
+	fs.Signature, err = bls.Sign(pairingSuite, kp.Private, h)
 	log.ErrFatal(err)
 	require.Nil(t, fs.Verify())
-	fs.Attendees = append(fs.Attendees, eddsa.Public)
+	fs.Attendees = append(fs.Attendees, kp.Public)
 	require.NotNil(t, fs.Verify())
 }
 

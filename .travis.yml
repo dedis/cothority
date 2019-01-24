@@ -6,19 +6,16 @@ node_js:
   - "lts/*"
 
 env:
-  - TEST_DIR=cothority
   - TEST_DIR=kyber
 
 install:
-  - gimme 1.9
-  - . $HOME/.gimme/envs/go1.9.env
+  - gimme 1.11
+  - . $HOME/.gimme/envs/go1.11.env
   - go get github.com/dedis/Coding || true
   # Because we are using "language: node_js" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
   - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
-
-script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
 cache:
   directories:
@@ -34,21 +31,32 @@ notifications:
 matrix:
   include:
     - language: go
+      name: "Go Tests"
 
       go:
         - "1.11.x"
 
       install:
-        - go get -t ./...
         - go get github.com/dedis/Coding || true
+        - go get -t ./...
 
       before_install:
         - cd $TRAVIS_BUILD_DIR
 
       script:
-        - make test
+        - make test_nostable
 
     - language: java
+      name: "Java Tests"
 
       script:
         - make test_java
+
+    - language: node_js
+      name: "kyber-js Tests"
+  
+      script:
+        - cd $TRAVIS_BUILD_DIR/external/js/kyber
+        - npm install
+        - npm run test
+        - npm run build

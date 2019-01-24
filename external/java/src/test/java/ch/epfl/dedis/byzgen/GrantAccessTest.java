@@ -7,7 +7,7 @@ import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.calypso.*;
-import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
+import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +19,9 @@ import java.util.Collections;
 public class GrantAccessTest {
     static final String SUPERADMIN_SCALAR = "AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D";
     private static final SignerEd25519 superadmin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
-    private final SignerX509EC consumerSigner = new TestSignerX509EC();
-    private final SignerX509EC publisherSigner = new TestSignerX509EC();
-    private final SignerX509EC consumerPublicPart = new TestLimitedSignerX509EC(consumerSigner);
+    private final SignerX509EC consumerSigner = new SignerX509ECTest();
+    private final SignerX509EC publisherSigner = new SignerX509ECTest();
+    private final SignerX509EC consumerPublicPart = new LimitedSignerX509ECTest(consumerSigner);
     private TestServerController testServerController;
     private CalypsoRPC calypso;
 
@@ -47,7 +47,7 @@ public class GrantAccessTest {
         SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
@@ -74,14 +74,14 @@ public class GrantAccessTest {
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
                 superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
 
         //when
         Identity identityX509EC = new IdentityX509EC(consumerPublicPart);
-        Darc newDarc = documentDarc.copyRulesAndVersion();
+        Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", identityX509EC, Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
@@ -108,13 +108,13 @@ public class GrantAccessTest {
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
                 superadmin, counters.head()+1, 10);
 
-        Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
+        Document doc = new Document("ala ma kota".getBytes(), "extra data".getBytes(), documentDarc.getBaseId());
         WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
                 Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
 
         //when
-        Darc newDarc = documentDarc.copyRulesAndVersion();
+        Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", new IdentityDarc(consumerId), Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
@@ -157,7 +157,7 @@ public class GrantAccessTest {
     }
 
     private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
-        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
+        Darc newGenesis = ocs.getGenesisDarc().partialCopy();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 
@@ -166,8 +166,8 @@ public class GrantAccessTest {
         di.evolveDarcAndWait(newGenesis, superadmin, counters.head()+1, 10);
     }
 
-    private class TestLimitedSignerX509EC extends TestSignerX509EC {
-        public TestLimitedSignerX509EC(SignerX509EC consumerKeys) {
+    private class LimitedSignerX509ECTest extends SignerX509ECTest {
+        public LimitedSignerX509ECTest(SignerX509EC consumerKeys) {
             super(consumerKeys.getPublicKey(), null);
         }
 

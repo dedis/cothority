@@ -18,6 +18,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
@@ -110,7 +111,8 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 				"Invalid request")
 
 		}
-		if err := req.Final.Verify(); err != nil {
+
+		if err := req.Final.VerifyWithService(service.Name); err != nil {
 			log.Error(s.ServerIdentity(), "Invalid FinalStatement: ", err)
 			return nil, errors.New(
 				"Signature of final statement is invalid: " + err.Error())

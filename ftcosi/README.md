@@ -5,6 +5,11 @@ Fault Tolerant Collective Signing
 
 # Fault Tolerant Collective Signing
 
+*WARNING*: this package is kept here for historical and research purposes. It
+should not be used in other services as it has been deprecated by the
+[blscosi](../blscosi)
+package.
+
 This package provides functionality to request and verify collective signatures
 as well as run a standalone server for handling collective signing requests.
 It is a fault tolerant version of CoSi, implemented in

@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=0
+
+# Use 3 servers, use all of them, don't leave one down.
+NBR=3
+NBR_SERVERS_GROUP=$NBR
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
@@ -23,37 +27,35 @@ main(){
 
 testLogging(){
 	runCoBG 1 2 3
-	testOK $el log -t test -c 'abc'
-	testOK $el log -c 'def'
-	echo ghi | testOK $el log 
-	seq 100 | testOK $el log -t seq100
-
-	# two block intervals (2 * 0.5s)
-	sleep 1
+	testOK $el log -t test -c 'abc' -w 10
+	testOK $el log -c 'def' -w 10
+	echo ghi | testOK $el log -w 10
+	seq 100 | testOK $el log -t seq100 -w 10
 
 	testGrep "abc" $el search -t test
 	testCountLines 103 $el search
 
 	testCountLines 0 $el search -t test -from '0s ago'
-	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d`
-	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d`
+	# The first form of relative date is for MacOS, the second for Linux.
+	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d || date -d yesterday +%Y-%m-%d`
+	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d || date -d tomorrow +%Y-%m-%d`
 }
 
 testCreate(){
-	runGrepSed "export PRIVATE_KEY=" "" ./bcadmin keys
+	runGrepSed "export PRIVATE_KEY=" "" ./el key
 	eval $SED
 	[ -z "$PRIVATE_KEY" ] && exit 1
 	ID=`awk '/^Identity: / { print $2}' < $RUNOUT`
 	[ -z "$ID" ] && exit 1
-	
+
 	runCoBG 1 2 3
-	runGrepSed "export BC=" "" ./bcadmin create --roster public.toml --interval 0.5s
+	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 0.5s
 	eval $SED
 	[ -z "$BC" ] && exit 1
 	
-	testOK ./bcadmin add spawn:eventlog -identity $ID
-	testOK ./bcadmin add invoke:eventlog -identity $ID
-	testGrep $ID ./bcadmin show
+	testOK ./bcadmin -c . add spawn:eventlog -identity $ID
+	testOK ./bcadmin -c . add invoke:eventlog -identity $ID
+	testGrep $ID ./bcadmin -c . show
 
 	runGrepSed "export EL=" "" $el create
 	eval $SED

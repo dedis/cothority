@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewTCPTest(suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
@@ -58,7 +57,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 }
 
 func TestSkipBlock_VerifySignatures(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewTCPTest(suite)
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
@@ -98,7 +97,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 }
 
 func TestSkipBlock_Hash2(t *testing.T) {
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTest(suite)
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()

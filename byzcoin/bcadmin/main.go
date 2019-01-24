@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
@@ -20,6 +21,9 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 
+	"encoding/json"
+
+	"github.com/qantik/qrgo"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -106,7 +110,7 @@ var cmds = cli.Commands{
 			cli.StringFlag{
 				Name:   "bc",
 				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (always use)",
+				Usage:  "the ByzCoin config to use (required)",
 			},
 			cli.StringFlag{
 				Name:  "owner",
@@ -122,11 +126,11 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "identity",
-				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357) (always use with rule, except if deleting))",
+				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357) (required with rule, except if deleting))",
 			},
 			cli.StringFlag{
 				Name:  "rule",
-				Usage: "the rule to be added, updated or deleted (always use with rule)",
+				Usage: "the rule to be added, updated or deleted (required with rule)",
 			},
 			cli.StringFlag{
 				Name:  "out",
@@ -150,6 +154,23 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: darcCli,
+	},
+	{
+		Name:    "qr",
+		Usage:   "generates a QRCode containing the description of the BC Config",
+		Aliases: []string{"qrcode"},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config to use (required)",
+			},
+			cli.BoolFlag{
+				Name:  "admin",
+				Usage: "If specified, the QR Code will contain the admin keypair",
+			},
+		},
+		Action: qrcode,
 	},
 }
 
@@ -372,7 +393,10 @@ func add(c *cli.Context) error {
 
 func key(c *cli.Context) error {
 	newSigner := darc.NewSignerEd25519(nil, nil)
-	lib.SaveKey(newSigner)
+	err := lib.SaveKey(newSigner)
+	if err != nil {
+		return err
+	}
 
 	var fo io.Writer
 
@@ -685,6 +709,70 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func qrcode(c *cli.Context) error {
+	type pair struct {
+		Priv string
+		Pub  string
+	}
+	type baseconfig struct {
+		ByzCoinID skipchain.SkipBlockID
+	}
+
+	type adminconfig struct {
+		ByzCoinID skipchain.SkipBlockID
+		Admin     pair
+	}
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	cfg, _, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	var toWrite []byte
+
+	if c.Bool("admin") {
+		signer, err := lib.LoadKey(cfg.AdminIdentity)
+		if err != nil {
+			return err
+		}
+
+		priv, err := signer.GetPrivate()
+		if err != nil {
+			return err
+		}
+
+		toWrite, err = json.Marshal(adminconfig{
+			ByzCoinID: cfg.ByzCoinID,
+			Admin: pair{
+				Priv: priv.String(),
+				Pub:  signer.Identity().String(),
+			},
+		})
+	} else {
+		toWrite, err = json.Marshal(baseconfig{
+			ByzCoinID: cfg.ByzCoinID,
+		})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	qr, err := qrgo.NewQR(string(toWrite))
+	if err != nil {
+		return err
+	}
+
+	qr.OutputTerminal()
 
 	return nil
 }
