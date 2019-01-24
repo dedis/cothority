@@ -54,7 +54,7 @@ testCreate(){
 	[ -z "$BC" ] && exit 1
 	
 	testOK ./bcadmin -c . add spawn:eventlog -identity $ID
-	testOK ./bcadmin -c . add invoke:eventlog -identity $ID
+	testOK ./bcadmin -c . add invoke:eventlog.eventlog -identity $ID
 	testGrep $ID ./bcadmin -c . show
 
 	runGrepSed "export EL=" "" $el create

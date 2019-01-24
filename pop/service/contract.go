@@ -23,10 +23,7 @@ import (
 
 // ContractPopParty represents a pop-party that holds either a configuration
 // or a final statement.
-var ContractPopParty = "popParty"
-
-// ContractPopCoinAccount holds popcoins of an attendee or a service.
-var ContractPopCoinAccount = "popCoinAccount"
+const ContractPopParty = "popParty"
 
 // PoPCoinName is the identifier of the popcoins.
 var PoPCoinName byzcoin.InstanceID

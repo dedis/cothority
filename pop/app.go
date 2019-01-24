@@ -884,7 +884,7 @@ func bcFinalize(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
 			Invoke: &byzcoin.Invoke{
-				ContractID: service.ContractPopCoinAccount,
+				ContractID: service.ContractPopParty,
 				Command:    "Finalize",
 				Args: byzcoin.Arguments{
 					byzcoin.Argument{
