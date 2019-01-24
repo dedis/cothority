@@ -1,17 +1,5 @@
-import { randomBytes } from 'crypto';
 import BN from 'bn.js';
 import { G1, G2, GT } from '../../src/pairing/bn';
-import { p } from '../../src/pairing/constants';
-
-/**
- * Unsecure pseudo random generator
- * @returns a big number between 0 and p
- */
-function getRandomInt(): BN {
-    const buf = randomBytes(p.bitLength());
-    
-    return new BN(buf).mod(p);
-}
 
 describe('BN curve', () => {
     it('should add and multiply', () => {
@@ -209,9 +197,9 @@ describe('BN curve', () => {
     });
 
     it('should go through a tripartite DH protocol', () => {
-        const a = getRandomInt();
-        const b = getRandomInt();
-        const c = getRandomInt();
+        const a = new BN(123);
+        const b = new BN(456);
+        const c = new BN(789);
 
         const pa = new G1();
         pa.scalarBaseMul(a);
