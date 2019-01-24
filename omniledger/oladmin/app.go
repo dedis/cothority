@@ -94,7 +94,7 @@ func createSharding(c *cli.Context) error {
 	es := time.Duration(c.Int("epoch")) * time.Millisecond
 	if es == 0 {
 		return errors.New(`--epoch flag is required 
-			and its value must be greather than 0`)
+			and its value must be greater than 0`)
 	}
 
 	// Parse, open and read roster file
@@ -103,6 +103,8 @@ func createSharding(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("Could not open roster %v, %v", rosterPath, err)
 	}
+	defer fp.Close()
+
 	roster, err := readRoster(fp)
 	if err != nil {
 		return err
