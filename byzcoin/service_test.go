@@ -1083,7 +1083,44 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	d2 := s.darc.Copy()
 	require.Nil(t, d2.EvolveFrom(s.darc))
 
-	// first we create a bad request, i.e., with an invalid version number
+	// first try to evolve with the wrong contract ID
+	{
+		counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
+			SignerIDs:   []string{s.signer.Identity().String()},
+			SkipchainID: s.genesis.SkipChainID(),
+		})
+
+		d2Buf, err := d2.ToProto()
+		require.Nil(t, err)
+		invoke := Invoke{
+			// ContractID: ContractDarcID,
+			Command: "evolve",
+			Args: []Argument{
+				Argument{
+					Name:  "darc",
+					Value: d2Buf,
+				},
+			},
+		}
+		instr := Instruction{
+			InstanceID:    NewInstanceID(d2.GetBaseID()),
+			Invoke:        &invoke,
+			SignerCounter: []uint64{counterResponse.Counters[0] + 1},
+		}
+		ctx, err := combineInstrsAndSign(s.signer, instr)
+		require.NoError(t, err)
+
+		// send it
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   ctx,
+			InclusionWait: 10,
+		})
+		require.Error(t, err)
+	}
+
+	// then we create a bad request, i.e., with an invalid version number
 	d2.Version = 11
 	pr := s.testDarcEvolution(t, *d2, true)
 
@@ -2240,7 +2277,7 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 	return ctx, config
 }
 
-func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
+func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) ClientTransaction {
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
 	invoke := Invoke{
@@ -2256,7 +2293,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 	instr := Instruction{
 		InstanceID:    NewInstanceID(d2.GetBaseID()),
 		Invoke:        &invoke,
-		SignerCounter: []uint64{1},
+		SignerCounter: []uint64{ctr},
 	}
 	ctx, err := combineInstrsAndSign(signer, instr)
 	require.NoError(t, err)
@@ -2338,7 +2375,13 @@ func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait
 
 // caller gives us a darc, and we try to make an evolution request.
 func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proof) {
-	ctx := darcToTx(t, d2, s.signer)
+	counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.genesis.SkipChainID(),
+	})
+	require.NoError(t, err)
+
+	ctx := darcToTx(t, d2, s.signer, counterResponse.Counters[0]+1)
 	s.sendTx(t, ctx)
 	for i := 0; i < 10; i++ {
 		resp, err := s.service().GetProof(&GetProof{
