@@ -1668,6 +1668,7 @@ clientTransactions:
 		// part of planning which transactions fit into one block.
 		if timeout != noTimeout {
 			if time.Now().After(deadline) {
+				log.Warnf("%s ran out of time after %v", s.ServerIdentity(), timeout)
 				return
 			}
 
