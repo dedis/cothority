@@ -1,59 +1,22 @@
-const curve = require("@dedis/kyber-js").curve.newCurve("edwards25519");
-const Schnorr = require("@dedis/kyber-js").sign.schnorr;
-import {Identity} from "~/lib/cothority/darc/Identity";
+import { curve, sign, Point } from '@dedis/kyber';
+import {Identity} from "./Identity";
+import { Message } from 'protobufjs';
+
+const { schnorr } = sign;
+
+const ed25519 = curve.newCurve('edwards25519');
 
 /**
  * @extends Identity
  */
-export class IdentityEd25519 extends Identity {
-  _pub: any;
+export class IdentityEd25519 extends Message<IdentityEd25519> implements Identity {
+  readonly point: Buffer;
 
-  /**
-   * @param {Point}pub
-   */
-  constructor(pub) {
-    super();
-    this._pub = pub;
-  }
+  get public(): Point {
+    const p = ed25519.point();
+    p.unmarshalBinary(this.point);
 
-  /**
-   * Creates an IdentityEd25519 from a protobuf representation.
-
-   * @param {Object} proto
-   * @return {IdentityEd25519}
-   */
-  static fromProtobuf(proto) {
-    let point = curve.point();
-    point.unmarshalBinary(proto.point);
-    return new IdentityEd25519(point);
-  }
-
-  /**
-   * Creates an identity from a public key
-   * @param {Uint8Array} publicKey - the key
-   * @return {IdentityEd25519} - the identity
-   */
-  static fromPublicKey(publicKey) {
-    let point = curve.point();
-    point.unmarshalBinary(publicKey);
-    return new IdentityEd25519(point);
-  }
-
-  /**
-   * @return {Uint8Array} - the public key, in a byte array format
-   */
-  get public() {
-    return this._pub.marshalBinary();
-  }
-
-  /**
-   * Creates an IdentityEd25519 from a SignerEd25519.
-
-   * @param {Signer} signer
-   * @return {IdentityEd25519}
-   */
-  static fromSigner(signer) {
-    return new IdentityEd25519(signer.public);
+    return p;
   }
 
   /**
@@ -63,30 +26,19 @@ export class IdentityEd25519 extends Identity {
    * @param signature
    * @return {boolean}
    */
-  verify(msg, signature) {
-    return Schnorr.verify(curve, this._pub, msg, signature);
+  verify(msg: Buffer, signature: Buffer): boolean {
+    return schnorr.verify(ed25519, this.public, msg, signature);
   }
 
   toString() {
-    return this.typeString() + ":" + this._pub.toString().toLowerCase();
+    return this.typeString() + ":" + this.public.toString().toLowerCase();
+  }
+
+  toBytes(): Buffer {
+    return this.point;
   }
 
   typeString() {
     return "ed25519";
-  }
-
-  /**
-   * Create an object with all the necessary field needed to be a valid message
-   * in the sense of protobufjs. This object can then be used with the "create"
-   * method of protobuf
-   *
-   * @return {Object}
-   */
-  toObject(): object {
-    return {
-      ed25519: {
-        point: this._pub.marshalBinary()
-      }
-    };
   }
 }

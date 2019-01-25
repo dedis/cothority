@@ -1,18 +1,7 @@
 /**
  * Identitiy is an abstract class for all the Darcs's identities
  */
-export class Identity {
-  constructor() {
-  }
-
-  /**
-   * Returns a serialized version of the public key
-   * @return {Uint8Array}
-   */
-  get public() {
-    throw new Error("Not implemented");
-  }
-
+export interface Identity {
   /**
    * Returns true if the verification of signature on the sha-256 of msg is
    * successful or false if not.
@@ -21,32 +10,17 @@ export class Identity {
    * @param {Uint8Array} signature
    * @return {boolean}
    */
-  verify(msg, signature) {
-    throw new Error("Not implemented");
-  }
+  verify(msg: Buffer, signature: Buffer): boolean;
 
   /**
    * @return {string}
    */
-  toString() {
-    throw new Error("Not implemented");
-  }
+  toString(): string;
+
+  toBytes(): Buffer;
 
   /**
    * @return {string}
    */
-  typeString() {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Create an object with all the necessary field needed to be a valid message
-   * in the sense of protobufjs. This object can then be used with the "create"
-   * method of protobuf
-   *
-   * @return {Object}
-   */
-  toObject(): object {
-    throw new Error("Not implemented");
-  }
+  typeString(): string;
 }

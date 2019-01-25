@@ -1,11 +1,7 @@
-import * as Long from "long";
-
-const crypto = require("crypto-browserify");
-
-import {Signer} from "~/lib/cothority/darc/Signer";
-import {Signature} from "~/lib/cothority/darc/Signature";
-import {ByzCoinRPC} from "~/lib/cothority/byzcoin/ByzCoinRPC";
-import {Log} from "~/lib/Log";
+import {Signer} from "../darc/Signer";
+import {Signature} from "../darc/Signature";
+import ByzCoinRPC from "./byzcoin-rpc";
+import { createHash } from "crypto";
 
 export class ClientTransaction {
     instructions: Instruction[];
@@ -17,7 +13,6 @@ export class ClientTransaction {
     async signBy(ss: Signer[][], bc: ByzCoinRPC = null) {
         try {
             if (bc != null) {
-                Log.lvl3("Updating signature counters");
                 for (let i = 0; i < ss.length; i++) {
                     let ids = ss[i].map(s => s.identity);
                     this.instructions[i].signerCounter =
@@ -32,12 +27,12 @@ export class ClientTransaction {
                     })
             })
         } catch (e) {
-            Log.catch(e);
+            console.log(e);
         }
     }
 
     hash(): Buffer {
-        let h = crypto.createHash("sha256");
+        let h = createHash("sha256");
         this.instructions.forEach(i => h.update(i.hash()));
         return h.digest();
     }
@@ -55,7 +50,7 @@ export class Instruction {
     delete: Delete;
 
     constructor(public instanceID: InstanceID,
-                public signerCounter: Long[] = [],
+                public signerCounter: number[] = [],
                 public signatures: Signature[] = []) {
     }
 
@@ -71,7 +66,7 @@ export class Instruction {
     }
 
     hash(): Buffer {
-        let h = crypto.createHash("sha256");
+        let h = createHash("sha256");
         h.update(this.instanceID.iid);
         h.update(Buffer.from([this.getType()]));
         let args: Argument[] = [];
@@ -88,8 +83,10 @@ export class Instruction {
             h.update(arg.name);
             h.update(arg.value)
         });
+        const buf = Buffer.allocUnsafe(4);
         this.signerCounter.forEach(sc => {
-            h.update(Buffer.from(sc.toBytesLE()));
+            buf.writeUInt32LE(sc, 0);
+            h.update(buf);
         });
         return h.digest();
     }
@@ -108,7 +105,7 @@ export class Instruction {
     }
 
     deriveId(what: string = ""): Buffer {
-        let h = crypto.createHash("sha256");
+        let h = createHash("sha256");
         h.update(this.hash());
         let b = Buffer.alloc(4);
         b.writeUInt32LE(this.signatures.length, 0);

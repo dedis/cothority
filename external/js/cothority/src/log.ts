@@ -1,5 +1,4 @@
 const util = require("util");
-const application = require("application");
 
 const defaultLvl = 2;
 
@@ -8,11 +7,11 @@ const lvlStr = ["E ", "W ", "I ", "!4", "!3", "!2", "!1", "P ", " 1", " 2", " 3"
 export class LogC {
     _lvl: number;
 
-    constructor(lvl) {
+    constructor(lvl: number) {
         this._lvl = lvl === undefined ? defaultLvl : lvl;
     }
 
-    joinArgs(args) {
+    joinArgs(args: any[]) {
         return args.map((a) => {
             if (typeof a === "string") {
                 return a;
@@ -47,18 +46,14 @@ export class LogC {
         }).join(" ");
     }
 
-    printCaller(err, i) {
+    printCaller(err: Error, i: number): string {
         try {
             const stack = err.stack.split("\n");
             let method = [];
-            if (application.android) {
-                method = stack[i].trim().replace(/^at */, "").split("(");
-            } else {
-                method = stack[i - 1].trim().split("@");
-                if (method.length === 1) {
-                    method.push(method[0]);
-                    method[0] = "?";
-                }
+            method = stack[i - 1].trim().split("@");
+            if (method.length === 1) {
+                method.push(method[0]);
+                method[0] = "?";
             }
             let module = "unknown";
             let file = method[0].replace(/^.*\//g, "");
@@ -74,7 +69,7 @@ export class LogC {
         }
     }
 
-    printLvl(l, args) {
+    printLvl(l: number, args: any[]) {
         let indent = Math.abs(l);
         indent = indent >= 5 ? 0 : indent;
         if (l <= this._lvl) {
@@ -83,55 +78,55 @@ export class LogC {
         }
     }
 
-    print(...args) {
+    print(...args: any[]) {
         this.printLvl(0, args);
     }
 
-    lvl1(...args) {
+    lvl1(...args: any[]) {
         this.printLvl(1, args);
     }
 
-    lvl2(...args) {
+    lvl2(...args: any[]) {
         this.printLvl(2, args);
     }
 
-    lvl3(...args) {
+    lvl3(...args: any[]) {
         this.printLvl(3, args);
     }
 
-    lvl4(...args) {
+    lvl4(...args: any[]) {
         this.printLvl(4, args);
     }
 
-    llvl1(...args) {
+    llvl1(...args: any[]) {
         this.printLvl(-1, args);
     }
 
-    llvl2(...args) {
+    llvl2(...args: any[]) {
         this.printLvl(-2, args);
     }
 
-    llvl3(...args) {
+    llvl3(...args: any[]) {
         this.printLvl(-3, args);
     }
 
-    llvl4(...args) {
+    llvl4(...args: any[]) {
         this.printLvl(-4, args);
     }
 
-    info(...args) {
+    info(...args: any[]) {
         this.printLvl(-5, args);
     }
 
-    warn(...args) {
+    warn(...args: any[]) {
         this.printLvl(-6, args);
     }
 
-    error(...args) {
+    error(...args: any[]) {
         this.printLvl(-7, args);
     }
 
-    catch(e, ...args) {
+    catch(e: any, ...args: any[]) {
         let errMsg = e;
         if (e.message) {
             errMsg = e.message;
@@ -150,7 +145,7 @@ export class LogC {
         }
     }
 
-    rcatch(e, ...args): Promise<string> {
+    rcatch(e: any, ...args: any[]): Promise<string> {
         let errMsg = e;
         if (e.message) {
             errMsg = e.message;

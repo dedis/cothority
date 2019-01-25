@@ -1,38 +1,43 @@
-import {Proof} from "~/lib/cothority/byzcoin/Proof";
+import { createHash } from 'crypto';
+import {Identity} from "../darc/Identity";
+import { Message, Properties } from "protobufjs";
 
-const crypto = require("crypto-browserify");
-
-import {Log} from "~/lib/Log";
-import {objToProto, Root} from "~/lib/cothority/protobuf/Root";
-import {Identity} from "~/lib/cothority/darc/Identity";
-import {DarcInstance} from "~/lib/cothority/byzcoin/contracts/DarcInstance";
-
-export class Rule {
+export class Rule extends Message<Rule> {
     action: string;
     expr: Buffer;
-
-    constructor(a: string, e: Buffer) {
-        this.action = a;
-        this.expr = e;
-    }
 
     toString(): string {
         return this.action + " - " + this.expr.toString();
     }
 
     static fromIdentities(r: string, ids: Identity[], operator: string): Rule {
-        let e = ids.map(id => {
-            return id.toString();
-        }).join(" " + operator + " ");
-        return new Rule(r, new Buffer(e));
+        const e = ids.map(id => id.toString()).join(" " + operator + " ");
+
+        return new Rule({ action: r, expr: new Buffer(e) });
     }
 }
 
-export class Rules {
-    list: Rule[];
+export class Rules extends Message<Rules> {
+    public static OR = '|';
 
-    constructor() {
-        this.list = [];
+    readonly list: Rule[];
+
+    constructor(properties?: Properties<Rules>) {
+        super(properties);
+
+        if (!this.list) {
+            this.list = [];
+        }
+    }
+
+    appendToRule(action: string, identity: Identity, op: string): void {
+        const rule = this.list.find(r => r.action === action);
+
+        if (rule) {
+            rule.expr = Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]);
+        } else {
+            this.list.push(new Rule({ action, expr: Buffer.from(identity.toString()) }));
+        }
     }
 
     toString(): string {
@@ -49,26 +54,15 @@ export class Rules {
     }
 }
 
-export class Darc {
-    version: number;
-    description: Buffer;
-    baseid: Buffer;
-    previd: Buffer;
-    rules: Rules;
-
-    constructor(buf: any) {
-        this.version = buf.version;
-        this.description = buf.description;
-        this.baseid = buf.baseid;
-        this.previd = buf.previd;
-        this.rules = new Rules();
-        buf.rules.list.forEach(r => {
-            this.rules.list.push(new Rule(r.action, r.expr));
-        })
-    }
+export class Darc extends Message<Darc> {
+    readonly version: number;
+    readonly description: Buffer;
+    readonly baseid: Buffer;
+    readonly previd: Buffer;
+    readonly rules: Rules;
 
     getId(): Buffer {
-        let h = crypto.createHash("sha256");
+        let h = createHash("sha256");
         let versionBuf = new Buffer(8);
         versionBuf.writeUInt32LE(this.version, 0);
         h.update(versionBuf);
@@ -94,6 +88,10 @@ export class Darc {
         }
     }
 
+    addIdentity(rule: string, identity: Identity, op: string): void {
+        this.rules.appendToRule(rule, identity, op);
+    }
+
     toString(): string {
         return "ID: " + this.getId().toString('hex') + "\n" +
             "Base: " + this.getBaseId().toString('hex') + "\n" +
@@ -102,22 +100,15 @@ export class Darc {
             "Rules: " + this.rules;
     }
 
-    toProto(): Buffer {
-        return objToProto(this, "Darc");
-    }
-
-    static fromProto(buf: Buffer): Darc {
-        const requestModel = Root.lookup("Darc");
-        return new Darc(requestModel.decode(buf));
-    }
-
-    static fromRulesDesc(r: Rules, desc: string) {
-        return new Darc({
+    public static newDarc(owners: Identity[], signers: Identity[], desc: Buffer): Darc {
+        const darc = new Darc({
             version: 0,
-            description: new Buffer(desc),
-            rules: r,
+            description: desc,
             baseid: new Buffer(0),
-            previd: crypto.createHash("sha256").digest(),
+            previd: createHash('sha256').digest(),
+            rules: new Rules(),
         });
+
+        return darc;
     }
 }

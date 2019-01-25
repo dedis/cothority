@@ -1,10 +1,10 @@
-import {ByzCoinRPC} from "../ByzCoinRPC";
-import {Darc} from "../../darc/Darc";
-import {Argument, ClientTransaction, InstanceID, Instruction} from "../../byzcoin/ClientTransaction";
-import {Proof} from "../../byzcoin/Proof";
-import {Signer} from "../../darc/Signer";
-import {Log} from "../../log";
-import {BasicInstance} from "./Instance";
+import ByzCoinRPC from "../byzcoin-rpc";
+import { Darc } from "../../darc/Darc";
+import { Argument, ClientTransaction, InstanceID, Instruction } from "../../byzcoin/ClientTransaction";
+import { Proof } from "../../byzcoin/Proof";
+import { Signer } from "../../darc/Signer";
+import { Log } from "../../log";
+import { BasicInstance } from "./Instance";
 
 export class DarcInstance extends BasicInstance {
     static readonly contractID = "darc";
@@ -22,14 +22,8 @@ export class DarcInstance extends BasicInstance {
      */
     async update(): Promise<DarcInstance> {
         let proof = await this.bc.getProof(new InstanceID(this.darc.getBaseId()));
-        this.darc = Darc.fromProto(proof.value);
+        this.darc = Darc.decode(proof.value);
         return this;
-    }
-
-    toObject(): object {
-        let o = super.toObject();
-        o.darc = this.darc.toProto();
-        return o;
     }
 
     static fromObject(bc: ByzCoinRPC, obj: any): DarcInstance {
@@ -39,7 +33,7 @@ export class DarcInstance extends BasicInstance {
     static async create(bc: ByzCoinRPC, iid: InstanceID, signers: Signer[], d: Darc): Promise<DarcInstance> {
         let inst = Instruction.createSpawn(iid,
             this.contractID,
-            [new Argument("darc", d.toProto())]);
+            [new Argument("darc", Buffer.from(Darc.encode(d).finish()))]);
         let ctx = new ClientTransaction([inst]);
         await ctx.signBy([signers], bc);
         await bc.sendTransactionAndWait(ctx, 5);
@@ -65,6 +59,6 @@ export class DarcInstance extends BasicInstance {
             Log.error("Got non-darc proof: " + p.contractID);
             return null;
         }
-        return Darc.fromProto(p.value);
+        return Darc.decode(p.value);
     }
 }

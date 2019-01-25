@@ -1,8 +1,7 @@
-import {ForwardLink} from "~/lib/cothority/skipchain/Structures";
-import {SkipBlock} from "~/lib/cothority/skipchain/SkipBlock";
-import {objToProto, Root} from "~/lib/cothority/protobuf/Root";
-import {Log} from "~/lib/Log";
-import {InstanceID} from "~/lib/cothority/byzcoin/ClientTransaction";
+import { Log } from "../log";
+import { InstanceID } from "./ClientTransaction";
+import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
+import { Message } from "protobufjs";
 
 /**
  * The proof class represents a proof that a given instance with its data is either present or absent in the global
@@ -15,41 +14,13 @@ import {InstanceID} from "~/lib/cothority/byzcoin/ClientTransaction";
  * As the element that is proven is always an instance, this class also has convenience methods to access the
  * instance data in case it is a proof of existence. For absence proofs, these methods will throw an error.
  */
-export class Proof {
+export class Proof extends Message<Proof> {
     inclusionproof: InclusionProof;
     latest: SkipBlock;
     links: ForwardLink[];
-    stateChangeBody: StateChangeBody;
-    matches: boolean;
-    reqIID: InstanceID;
 
-    /**
-     * The constructor is only called from the `fromProto` method. It will interpret the data of the instance
-     * in case of a proof of existence.
-     *
-     * @param p the object returned form the protobuf decoder
-     * @param iid the instanceID that this proof represents
-     */
-    constructor(p: any, iid: InstanceID) {
-        this.reqIID = iid;
-        if (p == null){
-            // This is for testing
-            return;
-        }
-        this.inclusionproof = new InclusionProof(p.inclusionproof);
-        this.latest = p.latest;
-        this.links = p.links;
-        this.matches = iid.iid.equals(this.inclusionproof.key);
-        if (this.matches){
-            this.stateChangeBody = StateChangeBody.fromProto(this.inclusionproof.value);
-        }
-    }
-
-    /**
-     * Returns the instanceID this proof has been generated for.
-     */
-    get requestedIID(): InstanceID {
-        return this.reqIID;
+    get stateChangeBody(): StateChange {
+        return StateChange.decode(this.inclusionproof.value);
     }
 
     /**
@@ -57,10 +28,6 @@ export class Proof {
      * is a proof of absence.
      */
     get contractID(): string {
-        if (!this.matches){
-            Log.error("not a matching proof");
-            return "";
-        }
         return this.stateChangeBody.contractID;
     }
 
@@ -69,10 +36,6 @@ export class Proof {
      * @throws an error if it is a proof of absence.
      */
     get darcID(): InstanceID {
-        if (!this.matches){
-            Log.error("not a matching proof");
-            return null;
-        }
         return new InstanceID(this.stateChangeBody.darcID);
     }
 
@@ -83,10 +46,6 @@ export class Proof {
      * @throws an error if it is a proof of absence.
      */
     get value(): Buffer {
-        if (!this.matches){
-            Log.error("not a matching proof");
-            return null;
-        }
         return this.stateChangeBody.value;
     }
 
@@ -95,10 +54,6 @@ export class Proof {
      * @throws an error if it is a proof of absence.
      */
     get version(): number {
-        if (!this.matches){
-            Log.error("not a matching proof");
-            return -1;
-        }
         return this.stateChangeBody.version;
     }
 
@@ -108,10 +63,6 @@ export class Proof {
      * @throws an error if it doesn't match.
      */
     matchOrFail(cid: string = ""): Promise<boolean> {
-        // Differentiate the two cases for easier debugging if something fails.
-        if (!this.matches) {
-            return Promise.reject("cannot get instanceID of non-matching proof");
-        }
         if (!this.matchContract(cid)) {
             return Promise.reject("proof for '" + this.contractID + "' instead of '" + cid + "'");
         }
@@ -123,35 +74,16 @@ export class Proof {
      * @return {boolean} true if it is a proof of existence and the given type of contract matches.
      */
     matchContract(cid: string): boolean {
-        return this.matches && this.stateChangeBody.contractID == cid;
-    }
-
-    /**
-     * @return {Buffer} a protobuf representation of this proof.
-     */
-    toProto(): Buffer {
-        return objToProto(this, "Proof");
+        return this.stateChangeBody.contractID == cid;
     }
 
     /**
      * @return {string} a nicely formatted representation of the proof.
      */
     toString(): string {
-        if (!this.matches){
-            return "A non-matching proof for " + this.reqIID.iid.toString('hex');
-        }
         let str = "Proof for contractID(" + this.contractID + ") for "
             + this.inclusionproof.key.toString('hex');
         return str;
-    }
-
-    /**
-     * Static method to create a proof from a protobuf representation.
-     * @param buf the buffer received from the server (or stored on disk)
-     * @param iid the instanceID this proof should represent
-     */
-    static fromProto(buf: Buffer, iid: InstanceID): Proof {
-        return new Proof(Root.lookup('byzcoin.Proof').decode(buf), iid);
     }
 }
 
@@ -213,22 +145,19 @@ export class InclusionProof {
 /**
  * StateChangeBody represents the
  */
-export class StateChangeBody {
-    stateAction: number;
-    contractID: string;
-    value: Buffer;
-    version: number;
-    darcID: Buffer;
+export class StateChange extends Message<StateChange> {
+    readonly stateaction: number;
+    readonly instanceid: number;
+    readonly contractid: string;
+    readonly value: Buffer;
+    readonly darcid: Buffer;
+    readonly version: number;
 
-    constructor(obj: any) {
-        this.stateAction = obj.stateAction;
-        this.contractID = Buffer.from(obj.contractid).toString();
-        this.value = Buffer.from(obj.value);
-        this.version = obj.version;
-        this.darcID = Buffer.from(obj.darcid);
+    get contractID(): string {
+        return this.contractid;
     }
 
-    static fromProto(buf: Buffer): StateChangeBody {
-        return new StateChangeBody(Root.lookup("byzcoin.StateChangeBody").decode(buf));
+    get darcID(): Buffer {
+        return this.darcid;
     }
 }

@@ -1,7 +1,7 @@
-import {InstanceID} from "~/lib/cothority/byzcoin/ClientTransaction";
-import {Proof} from "~/lib/cothority/byzcoin/Proof";
-import {ByzCoinRPC} from "~/lib/cothority/byzcoin/ByzCoinRPC";
-import {Coin, CoinInstance} from "~/lib/cothority/byzcoin/contracts/CoinInstance";
+import {InstanceID} from "../ClientTransaction";
+import {Proof} from "../Proof";
+import ByzCoinRPC from "../byzcoin-rpc";
+import {Coin, CoinInstance} from "./CoinInstance";
 
 export interface Instance {
     // These fields are available for every instance.
@@ -20,11 +20,11 @@ export class BasicInstance implements Instance {
     public darcID: InstanceID;
     public data: Buffer;
 
-    constructor(public bc: ByzCoinRPC, public contractID: string, p: Proof | object = null) {
+    constructor(public bc: ByzCoinRPC, public contractID: string, p: Proof | { [k: string]: any }) {
         if (p) {
-            if (p.matchContract) {
+            if (p instanceof Proof) {
                 if (p.matchContract(contractID)){
-                    this.iid = p.requestedIID;
+                    //this.iid = p.requestedIID;
                     this.darcID = p.darcID;
                     this.data = p.value;
                 }

@@ -1,4 +1,5 @@
 import Docker from 'dockerode';
+import fs from 'fs';
 
 const docker = new Docker();
 
@@ -19,7 +20,9 @@ export async function startConodes(): Promise<void> {
         }
     }
 
-    docker.run('dedis/conode-test', [], process.stdout, {
+    const s = fs.createWriteStream('./output.log');
+
+    docker.run('dedis/conode-test', [], s, {
         name: CONTAINER_NAME,
         Hostname: 'localhost',
         ExposedPorts: {

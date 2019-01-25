@@ -39,7 +39,7 @@ export class WebSocketConnection implements Connection {
      */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         if (!reply.$type) {
-            return Promise.reject(new Error('Message is not registered.'));
+            return Promise.reject(new Error(`Message "${reply}" is not registered`));
         }
 
         return new Promise((resolve, reject) => {
