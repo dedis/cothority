@@ -7,9 +7,9 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 )
 
 // We need to register all messages so the network knows how to handle them.

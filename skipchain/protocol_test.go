@@ -6,10 +6,10 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/sign/schnorr"
 )
 
 const tsName = "tsName"

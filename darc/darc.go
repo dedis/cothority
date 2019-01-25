@@ -45,12 +45,12 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/eddsa"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/eddsa"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/key"
 )
 
 const evolve = "_evolve"

@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
 )
 
 // Make this variable so we can set it to 100ms in the tests.

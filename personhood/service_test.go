@@ -12,16 +12,16 @@ import (
 	"github.com/dedis/cothority/darc"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var tSuite = suites.MustFind("Ed25519")

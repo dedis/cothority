@@ -1,12 +1,12 @@
 package lib
 
 import (
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/proof"
-	"github.com/dedis/kyber/share/dkg/rabin"
-	"github.com/dedis/kyber/shuffle"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/proof"
+	"go.dedis.ch/kyber/share/dkg/rabin"
+	"go.dedis.ch/kyber/shuffle"
+	"go.dedis.ch/kyber/util/random"
 
 	"github.com/dedis/cothority"
 )

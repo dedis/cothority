@@ -51,14 +51,14 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)

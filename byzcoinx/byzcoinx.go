@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/pairing"
 )
 
 // ByzCoinX contains the state used in the execution of the BFTCoSi

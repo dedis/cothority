@@ -2,9 +2,9 @@ package main
 
 import (
 	p "github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
 )
 
 /*

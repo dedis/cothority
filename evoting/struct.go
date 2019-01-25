@@ -1,9 +1,9 @@
 package evoting
 
 import (
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"

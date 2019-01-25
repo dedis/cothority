@@ -11,14 +11,14 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/sign/dss"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
+	"go.dedis.ch/kyber/sign/dss"
+	"go.dedis.ch/kyber/suites"
 )
 
 // ServiceName is the name of the Authentication Proxy service.

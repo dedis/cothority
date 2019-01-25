@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
 )
 
 var tSuite = cothority.Suite

@@ -21,14 +21,14 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/encoding"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/util/encoding"
+	"go.dedis.ch/kyber/util/key"
 	"gopkg.in/urfave/cli.v1"
 )
 

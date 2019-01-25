@@ -9,11 +9,11 @@ import (
 
 	"github.com/dedis/cothority"
 	status "github.com/dedis/cothority/status/service"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
 )
 
 // Client is a structure to communicate with the Skipchain

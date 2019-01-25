@@ -13,11 +13,11 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 const defaultN = 5

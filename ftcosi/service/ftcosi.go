@@ -9,10 +9,10 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/protocol"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to

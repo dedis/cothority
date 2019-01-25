@@ -10,11 +10,11 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/suites"
 )
 
 var tSuite = suites.MustFind("Ed25519")

@@ -10,10 +10,10 @@ import (
 	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
 )
 
 // This file holds the contracts for the pop-party. The following contracts

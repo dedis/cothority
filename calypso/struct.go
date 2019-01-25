@@ -6,11 +6,11 @@ import (
 
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/xof/keccak"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/xof/keccak"
 )
 
 func init() {

@@ -12,14 +12,14 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/key"
 	"gopkg.in/satori/go.uuid.v1"
 )
 

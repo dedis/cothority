@@ -12,12 +12,12 @@ import (
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
 )
 
 type viewChangeManager struct {

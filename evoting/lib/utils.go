@@ -3,9 +3,9 @@ package lib
 import (
 	"errors"
 
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share/dkg/rabin"
-	"github.com/dedis/kyber/util/random"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share/dkg/rabin"
+	"go.dedis.ch/kyber/util/random"
 
 	"github.com/dedis/cothority"
 )

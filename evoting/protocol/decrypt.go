@@ -5,10 +5,10 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
 
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"

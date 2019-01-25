@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/util/key"
 )
 
 func TestMain(m *testing.M) {

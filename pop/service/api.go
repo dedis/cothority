@@ -10,12 +10,12 @@ import (
 	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/encoding"
 	"gopkg.in/satori/go.uuid.v1"
 )
 

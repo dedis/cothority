@@ -3,11 +3,11 @@ package protocol
 import (
 	"fmt"
 
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 // aggregateCommitments returns an aggregated commitment and an aggregated mask
