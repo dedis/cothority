@@ -6,14 +6,14 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/bls"
-	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/bls"
+	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var tSuite = cothority.Suite

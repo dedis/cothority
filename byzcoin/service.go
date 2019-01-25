@@ -20,13 +20,13 @@ import (
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/random"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 

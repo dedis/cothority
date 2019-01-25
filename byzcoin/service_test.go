@@ -15,15 +15,15 @@ import (
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/sign/eddsa"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/sign/eddsa"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var tSuite = suites.MustFind("Ed25519")

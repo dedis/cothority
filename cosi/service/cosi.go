@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 	"gopkg.in/satori/go.uuid.v1"
 )
 

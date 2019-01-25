@@ -25,11 +25,11 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/blscosi"
 	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
+	"go.dedis.ch/kyber/pairing"
 )
 
 func init() {

@@ -8,8 +8,8 @@ import (
 	"sort"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 )
 
 // We need to register all messages so the network knows how to handle them.

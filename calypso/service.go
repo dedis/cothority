@@ -41,14 +41,14 @@ import (
 	"github.com/dedis/cothority/darc"
 	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
-	dkg "github.com/dedis/kyber/share/dkg/pedersen"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
+	dkg "go.dedis.ch/kyber/share/dkg/pedersen"
+	"go.dedis.ch/kyber/util/key"
 )
 
 // Used for tests

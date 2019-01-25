@@ -9,14 +9,14 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
-	dkg "github.com/dedis/kyber/share/dkg/pedersen"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
+	dkg "go.dedis.ch/kyber/share/dkg/pedersen"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var suite = suites.MustFind("Ed25519")

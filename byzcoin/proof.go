@@ -7,10 +7,10 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/pairing"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/pairing"
 )
 
 // NewProof creates a proof for key in the skipchain with the given id. It uses

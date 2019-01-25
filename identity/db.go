@@ -5,13 +5,13 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/anon"
+	"go.dedis.ch/kyber/util/key"
 )
 
 const dbVersion = 1

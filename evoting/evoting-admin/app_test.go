@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"go.dedis.ch/kyber/util/random"
 )
 
 func TestMain(m *testing.M) {

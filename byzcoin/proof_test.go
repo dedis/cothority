@@ -9,14 +9,14 @@ import (
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/sign/bls"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/sign/bls"
+	"go.dedis.ch/kyber/util/key"
 )
 
 func TestNewProof(t *testing.T) {

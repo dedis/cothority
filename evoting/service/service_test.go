@@ -10,16 +10,16 @@ import (
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/proof"
-	"github.com/dedis/kyber/shuffle"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/proof"
+	"go.dedis.ch/kyber/shuffle"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/kyber/util/random"
 )
 
 var defaultTimeout = 20 * time.Second

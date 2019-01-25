@@ -2,8 +2,8 @@ package darc
 
 import (
 	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 )
 
 func init() {

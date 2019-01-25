@@ -10,16 +10,16 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/blscosi/protocol"
 	"github.com/dedis/cothority/pop/service"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/sign/anon"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/util/key"
 )
 
 var tSuite = cothority.Suite

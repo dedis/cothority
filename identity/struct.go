@@ -10,10 +10,10 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
 )
 
 // How many msec to wait before a timeout is generated in the propagation

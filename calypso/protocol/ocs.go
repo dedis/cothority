@@ -13,10 +13,10 @@ import (
 
 	"github.com/dedis/cothority"
 	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
 )
 
 func init() {

@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/ftcosi/service"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.

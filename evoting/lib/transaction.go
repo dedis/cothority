@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/schnorr"
 
 	uuid "github.com/satori/go.uuid"
 

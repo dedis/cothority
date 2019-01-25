@@ -9,14 +9,14 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/sign/dss"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
+	"go.dedis.ch/kyber/sign/dss"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/suites"
 )
 
 func TestMain(m *testing.M) {

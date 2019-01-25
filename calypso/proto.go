@@ -3,8 +3,8 @@ package calypso
 import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
+	"go.dedis.ch/kyber"
 )
 
 // PROTOSTART

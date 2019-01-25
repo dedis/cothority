@@ -26,11 +26,11 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/protocol"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 func init() {

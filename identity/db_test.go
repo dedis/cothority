@@ -5,9 +5,9 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/util/key"
 )
 
 func init() {

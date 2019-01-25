@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/cosi"
 )
 
 const FailureProtocolName = "FailureProtocol"

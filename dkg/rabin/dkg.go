@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	dkgrabin "github.com/dedis/kyber/share/dkg/rabin"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	dkgrabin "go.dedis.ch/kyber/share/dkg/rabin"
+	"go.dedis.ch/kyber/util/key"
 )
 
 // Name is the protocol identifier string.

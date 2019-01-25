@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/kyber/pairing"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/suites"
 )
 
 const protocolTimeout = 10 * time.Second

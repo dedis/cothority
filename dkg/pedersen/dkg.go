@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/util/key"
 
-	dkgpedersen "github.com/dedis/kyber/share/dkg/pedersen"
+	dkgpedersen "go.dedis.ch/kyber/share/dkg/pedersen"
 )
 
 // Name is the protocol identifier string.

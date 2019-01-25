@@ -11,13 +11,13 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/authprox"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/share"
 	cli "gopkg.in/urfave/cli.v1"
 )
 

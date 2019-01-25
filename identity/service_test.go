@@ -3,14 +3,14 @@ package identity
 import (
 	"testing"
 
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/sign/anon"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/kyber/util/random"
 )
 
 func TestMain(m *testing.M) {

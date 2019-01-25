@@ -12,11 +12,11 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/util/key"
 )
 
 var (

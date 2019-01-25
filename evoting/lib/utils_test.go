@@ -3,7 +3,7 @@ package lib
 import (
 	"testing"
 
-	"github.com/dedis/kyber"
+	"go.dedis.ch/kyber"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -4,13 +4,13 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber/proof"
-	"github.com/dedis/kyber/shuffle"
-	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"go.dedis.ch/kyber/proof"
+	"go.dedis.ch/kyber/shuffle"
+	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/kyber/util/random"
 
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"

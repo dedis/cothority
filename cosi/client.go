@@ -14,10 +14,10 @@ import (
 	"github.com/dedis/cothority/cosi/check"
 	"github.com/dedis/cothority/cosi/crypto"
 	s "github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"go.dedis.ch/kyber"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -6,9 +6,9 @@ import (
 
 	"github.com/dedis/cothority/byzcoin"
 	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	dkg "github.com/dedis/kyber/share/dkg/pedersen"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	dkg "go.dedis.ch/kyber/share/dkg/pedersen"
 )
 
 const dbVersion = 1
