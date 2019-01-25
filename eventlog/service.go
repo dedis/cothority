@@ -17,6 +17,7 @@ var ServiceName = "EventLog"
 var sid onet.ServiceID
 
 const contractName = "eventlog"
+const logCmd = "log"
 
 // Set a relatively low time for bucketMaxAge: during peak message arrival
 // this will pretect the buckets from getting too big. During low message
@@ -171,7 +172,10 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 		return nil, nil, err
 	}
 	if cid != contractName {
-		return nil, nil, fmt.Errorf("expected contract ID to be %s but got %s", contractName, cid)
+		return nil, nil, fmt.Errorf("expected contract ID to be \"%s\" but got \"%s\"", contractName, cid)
+	}
+	if inst.Invoke.Command != logCmd {
+		return nil, nil, fmt.Errorf("invalid command, got \"%s\" but need \"%s\"", inst.Invoke.Command, logCmd)
 	}
 
 	eventBuf := inst.Invoke.Args.Search("event")

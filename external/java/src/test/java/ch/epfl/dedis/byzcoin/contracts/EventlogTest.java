@@ -30,13 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EventlogTest {
+class EventLogTest {
     private static ByzCoinRPC bc;
     private static EventLogInstance el;
     private static Signer admin;
     private static Darc genesisDarc;
 
-    private final static Logger logger = LoggerFactory.getLogger(EventlogTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(EventLogTest.class);
     private TestServerController testInstanceController;
 
     @BeforeEach
@@ -45,7 +45,7 @@ class EventlogTest {
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
         genesisDarc.addIdentity("spawn:eventlog", admin.getIdentity(), Rules.OR);
-        genesisDarc.addIdentity("invoke:" + EventLogInstance.ContractId + ".eventlog", admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("invoke:" + EventLogInstance.ContractId + "." + EventLogInstance.LogCmd, admin.getIdentity(), Rules.OR);
 
         bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {

@@ -1093,7 +1093,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 		d2Buf, err := d2.ToProto()
 		require.Nil(t, err)
 		invoke := Invoke{
-			// ContractID: ContractDarcID,
+			// Because field ContractID is missing, this Invoke should fail.
 			Command: "evolve",
 			Args: []Argument{
 				Argument{

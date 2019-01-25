@@ -46,6 +46,7 @@ import java.util.List;
  */
 public class EventLogInstance {
     public static String ContractId = "eventlog";
+    public static String LogCmd = "log";
     private Instance instance;
     private ByzCoinRPC bc;
 
@@ -92,7 +93,7 @@ public class EventLogInstance {
      * get function to verify that the event is actually stored.
      *
      * @param events     a list of events to log
-     * @param signers    a list of signers with the permission "invoke:eventlog"
+     * @param signers    a list of signers with the permission "invoke:eventlog.log"
      * @param signerCtrs a list of monotonically increasing counter for every signer
      * @return a list of keys which can be used to retrieve the logged events
      * @throws CothorityException if something goes wrong
@@ -109,7 +110,7 @@ public class EventLogInstance {
      * that the event is actually stored.
      *
      * @param event      the event to log
-     * @param signers    a list of signers that has the "invoke:eventlog" permission
+     * @param signers    a list of signers that has the "invoke:eventlog.log" permission
      * @param signerCtrs a list of monotonically increasing counter for every signer
      * @return the key which can be used to retrieve the event later
      * @throws CothorityException if something goes wrong
@@ -231,7 +232,7 @@ public class EventLogInstance {
         for (Event e : events) {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
-            Invoke invoke = new Invoke(ContractId, ContractId, args);
+            Invoke invoke = new Invoke(ContractId, LogCmd, args);
             Instruction instr = new Instruction(instance.getId(), new ArrayList<>(signerCtrs), invoke);
             instrs.add(instr);
             signerCtrs = incrementCtrs(signerCtrs);

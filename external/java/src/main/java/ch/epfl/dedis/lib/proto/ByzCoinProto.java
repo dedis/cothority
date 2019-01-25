@@ -13671,7 +13671,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -13679,7 +13679,7 @@ public final class ByzCoinProto {
     boolean hasContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -13687,7 +13687,7 @@ public final class ByzCoinProto {
     java.lang.String getContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -13839,7 +13839,7 @@ public final class ByzCoinProto {
     private volatile java.lang.Object contractid_;
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -13849,7 +13849,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -13870,7 +13870,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being spawned.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -14340,7 +14340,7 @@ public final class ByzCoinProto {
       private java.lang.Object contractid_ = "";
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14350,7 +14350,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14371,7 +14371,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14391,7 +14391,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14408,7 +14408,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14421,7 +14421,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being spawned.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -14807,7 +14807,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -14815,7 +14815,7 @@ public final class ByzCoinProto {
     boolean hasContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -14823,7 +14823,7 @@ public final class ByzCoinProto {
     java.lang.String getContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -15009,7 +15009,7 @@ public final class ByzCoinProto {
     private volatile java.lang.Object contractid_;
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -15019,7 +15019,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -15040,7 +15040,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being invoked.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -15598,7 +15598,7 @@ public final class ByzCoinProto {
       private java.lang.Object contractid_ = "";
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -15608,7 +15608,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -15629,7 +15629,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -15649,7 +15649,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -15666,7 +15666,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -15679,7 +15679,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being invoked.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16165,7 +16165,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16173,7 +16173,7 @@ public final class ByzCoinProto {
     boolean hasContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16181,7 +16181,7 @@ public final class ByzCoinProto {
     java.lang.String getContractid();
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16277,7 +16277,7 @@ public final class ByzCoinProto {
     private volatile java.lang.Object contractid_;
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16287,7 +16287,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16308,7 +16308,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * ContractID represents the kind of contract that needs to be spawn.
+     * ContractID represents the kind of contract that is being deleted.
      * </pre>
      *
      * <code>required string contractid = 1;</code>
@@ -16658,7 +16658,7 @@ public final class ByzCoinProto {
       private java.lang.Object contractid_ = "";
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16668,7 +16668,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16689,7 +16689,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16709,7 +16709,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16726,7 +16726,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
@@ -16739,7 +16739,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * ContractID represents the kind of contract that needs to be spawn.
+       * ContractID represents the kind of contract that is being deleted.
        * </pre>
        *
        * <code>required string contractid = 1;</code>
