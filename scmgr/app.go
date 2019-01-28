@@ -17,19 +17,19 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/identity"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/cfgpath"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/util/encoding"
-	"go.dedis.ch/kyber/util/key"
-	"gopkg.in/urfave/cli.v1"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/identity"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/util/encoding"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/cfgpath"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	bbolt "go.etcd.io/bbolt"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 var bucketName = []byte("skipblocks")
@@ -695,11 +695,11 @@ func loadConfig(c *cli.Context) (*config, error) {
 	_, err = os.Stat(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			db, err := bolt.Open(cfgPath, 0600, nil)
+			db, err := bbolt.Open(cfgPath, 0600, nil)
 			if err != nil {
 				return nil, err
 			}
-			db.Update(func(tx *bolt.Tx) error {
+			db.Update(func(tx *bbolt.Tx) error {
 				_, err := tx.CreateBucket(bucketName)
 				if err != nil {
 					return fmt.Errorf("create bucket: %s", err)
@@ -715,12 +715,12 @@ func loadConfig(c *cli.Context) (*config, error) {
 		}
 		return nil, fmt.Errorf("Could not open file %s", cfgPath)
 	}
-	db, err := bolt.Open(cfgPath, 0600, nil)
+	db, err := bbolt.Open(cfgPath, 0600, nil)
 	if err != nil {
 		return nil, err
 	}
 	cfg.Db = skipchain.NewSkipBlockDB(db, bucketName)
-	err = cfg.Db.View(func(tx *bolt.Tx) error {
+	err = cfg.Db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("values"))
 		if v != nil {
@@ -746,7 +746,7 @@ func (cfg *config) save(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = cfg.Db.Update(func(tx *bolt.Tx) error {
+	err = cfg.Db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		err := b.Put([]byte("values"), buf)
 		return err

@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = cothority.Suite

@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 // This file holds the contracts for the pop-party. The following contracts

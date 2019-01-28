@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	bbolt "go.etcd.io/bbolt"
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
@@ -151,7 +151,7 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 	sb1.Data = []byte{1}
 	sb1.Hash = []byte{2, 3, 4, 1, 5}
 
-	db.Update(func(tx *bolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		err := db.storeToTx(tx, sb0)
 		require.Nil(t, err)
 
@@ -229,7 +229,7 @@ func TestGetProof(t *testing.T) {
 	require.Equal(t, 2, len(blocks))
 	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
 
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		return tx.Bucket(db.bucketName).Delete(sb2.Hash)
 	})
 	require.Nil(t, err)
@@ -246,10 +246,10 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	fname := f.Name()
 	require.Nil(t, f.Close())
 
-	db, err := bolt.Open(fname, 0600, nil)
+	db, err := bbolt.Open(fname, 0600, nil)
 	require.Nil(t, err)
 
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket([]byte("skipblock-test"))
 		return err
 	})

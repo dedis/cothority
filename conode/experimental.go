@@ -6,12 +6,12 @@ stable branch.
 */
 
 import (
-	_ "github.com/dedis/cothority/authprox"
-	_ "github.com/dedis/cothority/byzcoin"
-	_ "github.com/dedis/cothority/byzcoin/contracts"
-	_ "github.com/dedis/cothority/calypso"
-	_ "github.com/dedis/cothority/eventlog"
-	_ "github.com/dedis/cothority/evoting/service"
-	_ "github.com/dedis/cothority/identity"
-	_ "github.com/dedis/cothority/personhood"
+	_ "go.dedis.ch/cothority/v3/authprox"
+	_ "go.dedis.ch/cothority/v3/byzcoin"
+	_ "go.dedis.ch/cothority/v3/byzcoin/contracts"
+	_ "go.dedis.ch/cothority/v3/calypso"
+	_ "go.dedis.ch/cothority/v3/eventlog"
+	_ "go.dedis.ch/cothority/v3/evoting/service"
+	_ "go.dedis.ch/cothority/v3/identity"
+	_ "go.dedis.ch/cothority/v3/personhood"
 )

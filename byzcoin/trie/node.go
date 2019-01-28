@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/protobuf"
 )
 
 type nodeType int

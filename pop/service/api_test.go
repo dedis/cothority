@@ -3,17 +3,17 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/bls"
-	"go.dedis.ch/kyber/util/key"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/bls"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 var tSuite = cothority.Suite

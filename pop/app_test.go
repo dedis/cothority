@@ -6,8 +6,8 @@ import (
 
 	"os"
 
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func TestConfigNew(t *testing.T) {

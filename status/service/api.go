@@ -1,9 +1,9 @@
 package status
 
 import (
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // Client is a structure to communicate with status service

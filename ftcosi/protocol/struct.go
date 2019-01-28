@@ -13,11 +13,11 @@ import (
 	"hash"
 	"time"
 
-	"github.com/dedis/onet"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/group/edwards25519"
-	"go.dedis.ch/kyber/sign/cosi"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/group/edwards25519"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
 )
 
 // DefaultProtocolName can be used from other packages to refer to this protocol.

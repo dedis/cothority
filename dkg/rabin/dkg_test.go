@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 func TestMain(m *testing.M) {

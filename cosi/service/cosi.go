@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3/cosi/protocol"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"gopkg.in/satori/go.uuid.v1"
 )
 

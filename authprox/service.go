@@ -9,16 +9,16 @@ import (
 	"errors"
 	"fmt"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share"
-	"go.dedis.ch/kyber/sign/dss"
-	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/sign/dss"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 )
 
 // ServiceName is the name of the Authentication Proxy service.
@@ -30,7 +30,7 @@ type service struct {
 	*onet.ServiceProcessor
 	ctx        context.Context
 	validators map[string]Validator
-	db         *bolt.DB
+	db         *bbolt.DB
 	bucket     []byte
 }
 
@@ -87,7 +87,7 @@ func (s *service) find(typ, issuer string) (*dssConfig, error) {
 		return nil, err
 	}
 	var buf []byte
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
 			return errors.New("nil bucket")
@@ -119,7 +119,7 @@ func (s *service) find(typ, issuer string) (*dssConfig, error) {
 // an enrollment is returned if any of the list items match.
 func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, error) {
 	var resp EnrollmentsResponse
-	err := s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
 			return errors.New("nil bucket")
@@ -217,7 +217,7 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	}
 
 	// Write the type/claim -> dssConfg into the database.
-	err = s.db.Update(func(tx *bolt.Tx) error {
+	err = s.db.Update(func(tx *bbolt.Tx) error {
 		// Need to do the find inside of the Update tx, or else it is racy
 		// with respect to other writers.
 		b := tx.Bucket(s.bucket)

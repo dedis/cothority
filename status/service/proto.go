@@ -1,8 +1,8 @@
 package status
 
 import (
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // PROTOSTART

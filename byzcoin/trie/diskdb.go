@@ -3,19 +3,19 @@ package trie
 import (
 	"errors"
 
-	bolt "github.com/coreos/bbolt"
+	bbolt "go.etcd.io/bbolt"
 )
 
 var errDryRun = errors.New("this is a dry-run")
 
 // diskDB is the DB implementation for boltdb.
 type diskDB struct {
-	db     *bolt.DB
+	db     *bbolt.DB
 	bucket []byte
 }
 
 // NewDiskDB creates a new boltdb-backed database.
-func NewDiskDB(db *bolt.DB, bucket []byte) DB {
+func NewDiskDB(db *bbolt.DB, bucket []byte) DB {
 	disk := diskDB{
 		db:     db,
 		bucket: bucket,
@@ -24,7 +24,7 @@ func NewDiskDB(db *bolt.DB, bucket []byte) DB {
 }
 
 func (r *diskDB) Update(f func(Bucket) error) error {
-	return r.db.Update(func(tx *bolt.Tx) error {
+	return r.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -34,7 +34,7 @@ func (r *diskDB) Update(f func(Bucket) error) error {
 }
 
 func (r *diskDB) View(f func(Bucket) error) error {
-	return r.db.View(func(tx *bolt.Tx) error {
+	return r.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -48,7 +48,7 @@ func (r *diskDB) View(f func(Bucket) error) error {
 // called). It is useful for seeing the intermediate values. If they need to be
 // used after doing the dry-run, they should be copied.
 func (r *diskDB) UpdateDryRun(f func(Bucket) error) error {
-	err := r.db.Update(func(tx *bolt.Tx) error {
+	err := r.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -69,7 +69,7 @@ func (r *diskDB) Close() error {
 }
 
 type diskBucket struct {
-	b *bolt.Bucket
+	b *bbolt.Bucket
 }
 
 func (r *diskBucket) Delete(k []byte) error {

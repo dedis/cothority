@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/cothority/darc"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	bbolt "go.etcd.io/bbolt"
 )
 
 var errKeyNotSet = errors.New("key not set")
@@ -93,7 +93,7 @@ type stateTrie struct {
 
 // loadStateTrie loads an existing StateTrie, an error is returned if no trie
 // exists in db
-func loadStateTrie(db *bolt.DB, bucket []byte) (*stateTrie, error) {
+func loadStateTrie(db *bbolt.DB, bucket []byte) (*stateTrie, error) {
 	t, err := trie.LoadTrie(trie.NewDiskDB(db, bucket))
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func loadStateTrie(db *bolt.DB, bucket []byte) (*stateTrie, error) {
 
 // newStateTrie creates a new, disk-based trie.Trie, an error is returned if
 // the db already contains a trie.
-func newStateTrie(db *bolt.DB, bucket, nonce []byte) (*stateTrie, error) {
+func newStateTrie(db *bbolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 	t, err := trie.NewTrie(trie.NewDiskDB(db, bucket), nonce)
 	if err != nil {
 		return nil, err

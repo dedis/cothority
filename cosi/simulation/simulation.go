@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/simul/monitor"
 )
 
 func init() {

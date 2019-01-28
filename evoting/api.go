@@ -3,9 +3,9 @@
 package evoting
 
 import (
-	"github.com/dedis/onet"
+	"go.dedis.ch/onet/v3"
 
-	"github.com/dedis/cothority"
+	"go.dedis.ch/cothority/v3"
 )
 
 // ServiceName is the identifier of the service (application name).

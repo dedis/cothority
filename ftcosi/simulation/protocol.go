@@ -24,13 +24,13 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/ftcosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/onet/simul/monitor"
-	"go.dedis.ch/kyber/sign/cosi"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/ftcosi/protocol"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v3/simul/monitor"
 )
 
 func init() {

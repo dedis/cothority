@@ -3,11 +3,11 @@ package identity
 import (
 	"testing"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3/network"
 )
 
 func init() {

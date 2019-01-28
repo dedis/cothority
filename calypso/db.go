@@ -4,11 +4,11 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/dedis/cothority/byzcoin"
-	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	dkg "go.dedis.ch/kyber/share/dkg/pedersen"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 const dbVersion = 1

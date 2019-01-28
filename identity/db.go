@@ -3,15 +3,15 @@ package identity
 import (
 	"sync"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/anon"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/anon"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 const dbVersion = 1

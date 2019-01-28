@@ -15,20 +15,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share"
-	"go.dedis.ch/kyber/sign/schnorr"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 
-	"github.com/dedis/cothority"
-	dkgprotocol "github.com/dedis/cothority/dkg/rabin"
-	"github.com/dedis/cothority/evoting"
-	"github.com/dedis/cothority/evoting/lib"
-	"github.com/dedis/cothority/evoting/protocol"
-	"github.com/dedis/cothority/skipchain"
+	"go.dedis.ch/cothority/v3"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/rabin"
+	"go.dedis.ch/cothority/v3/evoting"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/evoting/protocol"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 var errOnlyLeader = errors.New("operation only allowed on the leader node")

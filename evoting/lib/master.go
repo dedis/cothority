@@ -3,11 +3,11 @@ package lib
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 
-	"github.com/dedis/cothority/skipchain"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 func init() {

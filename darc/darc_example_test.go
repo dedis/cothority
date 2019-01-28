@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/darc/expression"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
 )
 
 func Example() {

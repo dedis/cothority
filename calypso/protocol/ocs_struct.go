@@ -5,10 +5,10 @@ OCS_struct holds all messages for the onchain-secret protocol.
 */
 
 import (
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // NameOCS can be used from other packages to refer to this protocol.

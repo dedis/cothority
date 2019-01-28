@@ -3,10 +3,10 @@ package identity
 import (
 	"sync"
 
-	"github.com/dedis/cothority/pop/service"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3/pop/service"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
 )
 
 // PROTOSTART

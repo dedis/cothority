@@ -29,7 +29,7 @@ On Linux, the following files need to be backed up:
 1. `$HOME/.config/conode/private.toml`
 2. `$HOME/.local/share/conode/$PUBLIC_KEY.db`
 
-The DB file is a [BoltDB](https://github.com/coreos/bbolt) file, and more
+The DB file is a [BoltDB](https://github.com/etcd-io/bbolt) file, and more
 information about considerations while backing them up is in [Database
 backup](https://github.com/dedis/onet/tree/master/Database-backup-and-recovery.md).
 

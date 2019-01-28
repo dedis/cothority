@@ -10,14 +10,14 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/check"
-	"github.com/dedis/cothority/cosi/crypto"
-	s "github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/cosi/check"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	s "go.dedis.ch/cothority/v3/cosi/service"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

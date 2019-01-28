@@ -3,10 +3,10 @@ package personhood
 import (
 	"sync"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 const dbVersion = 1

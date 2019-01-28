@@ -1,9 +1,9 @@
 package contracts
 
 import (
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // This service is only used because we need to register our contracts to

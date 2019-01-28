@@ -1,6 +1,6 @@
 // Package byzcoinx implements a PBFT-like protocol using collective signing.
 //
-// Please see https://github.com/dedis/cothority/blob/master/byzcoinx/README.md
+// Please see https://go.dedis.ch/cothority/v3/blob/master/byzcoinx/README.md
 // for details.
 //
 package byzcoinx
@@ -11,11 +11,11 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // ByzCoinX contains the state used in the execution of the BFTCoSi

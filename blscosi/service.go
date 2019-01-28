@@ -6,12 +6,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber/pairing"
-	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 const protocolTimeout = 10 * time.Second

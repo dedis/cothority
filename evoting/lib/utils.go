@@ -3,11 +3,11 @@ package lib
 import (
 	"errors"
 
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share/dkg/rabin"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share/dkg/rabin"
+	"go.dedis.ch/kyber/v3/util/random"
 
-	"github.com/dedis/cothority"
+	"go.dedis.ch/cothority/v3"
 )
 
 // RandomKeyPair creates a random public/private Diffie-Hellman key pair.

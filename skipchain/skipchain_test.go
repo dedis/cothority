@@ -10,17 +10,17 @@ import (
 	"testing"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/schnorr"
-	"go.dedis.ch/kyber/util/key"
-	"gopkg.in/satori/go.uuid.v1"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	bbolt "go.etcd.io/bbolt"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 func init() {
@@ -1306,7 +1306,7 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 
 		// nuke it
 		log.Lvl2("nuking block", sb.Index)
-		err := db.Update(func(tx *bolt.Tx) error {
+		err := db.Update(func(tx *bbolt.Tx) error {
 			err := tx.Bucket([]byte(db.bucketName)).Delete(where)
 			if err != nil {
 				log.Fatal("delete error", err)

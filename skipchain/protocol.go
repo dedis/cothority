@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // ProtocolExtendRoster asks a remote node if he would accept to participate

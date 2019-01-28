@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var defaultTimeout = 20 * time.Second

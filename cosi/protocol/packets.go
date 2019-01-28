@@ -3,9 +3,9 @@ package cosi
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 func init() {

@@ -3,8 +3,8 @@ package contracts
 import (
 	"errors"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/darc"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
 )
 
 // The value contract can simply store a value in an instance and serves

@@ -7,17 +7,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/cothority/byzcoin/viewchange"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/schnorr"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 type viewChangeManager struct {

@@ -3,10 +3,10 @@ package status
 import (
 	"testing"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
-	"go.dedis.ch/kyber/suites"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = suites.MustFind("Ed25519")

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 type Counter struct {

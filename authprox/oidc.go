@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/coreos/go-oidc"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/onet/v3/log"
 )
 
 type oidcValidator struct {

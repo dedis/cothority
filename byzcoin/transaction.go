@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 // An InstanceID is a unique identifier for one instance of a contract.

@@ -11,13 +11,13 @@ import (
 	"sync"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -629,7 +629,7 @@ func (fl *ForwardLink) IsEmpty() bool {
 // This is used for verification, so that all links can be followed.
 // It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
-	*bolt.DB
+	*bbolt.DB
 	bucketName []byte
 	// latestBlocks is used as a simple caching mechanism
 	latestBlocks map[string]SkipBlockID
@@ -638,7 +638,7 @@ type SkipBlockDB struct {
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
-func NewSkipBlockDB(db *bolt.DB, bn []byte) *SkipBlockDB {
+func NewSkipBlockDB(db *bbolt.DB, bn []byte) *SkipBlockDB {
 	return &SkipBlockDB{
 		DB:           db,
 		bucketName:   bn,
@@ -649,7 +649,7 @@ func NewSkipBlockDB(db *bolt.DB, bn []byte) *SkipBlockDB {
 // GetStatus is a function that returns the status report of the db.
 func (db *SkipBlockDB) GetStatus() *onet.Status {
 	out := make(map[string]string)
-	err := db.DB.View(func(tx *bolt.Tx) error {
+	err := db.DB.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		s := b.Stats()
 		out["Blocks"] = strconv.Itoa(s.KeyN)
@@ -668,7 +668,7 @@ func (db *SkipBlockDB) GetStatus() *onet.Status {
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	var result *SkipBlock
-	err := db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		sb, err := db.getFromTx(tx, sbID)
 		if err != nil {
 			return err
@@ -687,7 +687,7 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 // so that the db is consistent at every moment.
 func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	var result []SkipBlockID
-	err := db.Update(func(tx *bolt.Tx) error {
+	err := db.Update(func(tx *bbolt.Tx) error {
 		for i, sb := range blocks {
 			sbOld, err := db.getFromTx(tx, sb.Hash)
 			if err != nil {
@@ -813,7 +813,7 @@ func (db *SkipBlockDB) latestUpdate(sb *SkipBlock) {
 // Length returns the actual length using mutexes
 func (db *SkipBlockDB) Length() int {
 	var i int
-	_ = db.View(func(tx *bolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		i = b.Stats().KeyN
 		return nil
@@ -962,7 +962,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 	}
 
 	var sb *SkipBlock
-	err = db.View(func(tx *bolt.Tx) error {
+	err = db.View(func(tx *bbolt.Tx) error {
 		c := tx.Bucket([]byte(db.bucketName)).Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if bytes.HasPrefix(k, match) {
@@ -994,7 +994,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 	sbs = make([]*SkipBlock, 0)
 
-	err = db.View(func(tx *bolt.Tx) error {
+	err = db.View(func(tx *bbolt.Tx) error {
 		sb, err := db.getFromTx(tx, sid)
 		if err != nil {
 			return err
@@ -1030,7 +1030,7 @@ func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
 // storeToTx stores the skipblock into the database.
 // An error is returned on failure.
 // The caller must ensure that this function is called from within a valid transaction.
-func (db *SkipBlockDB) storeToTx(tx *bolt.Tx, sb *SkipBlock) error {
+func (db *SkipBlockDB) storeToTx(tx *bbolt.Tx, sb *SkipBlock) error {
 	key := sb.Hash
 	val, err := network.Marshal(sb)
 	if err != nil {
@@ -1043,7 +1043,7 @@ func (db *SkipBlockDB) storeToTx(tx *bolt.Tx, sb *SkipBlock) error {
 // nil is returned if the key does not exist.
 // An error is thrown if marshalling fails.
 // The caller must ensure that this function is called from within a valid transaction.
-func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
+func (db *SkipBlockDB) getFromTx(tx *bbolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
 	val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
 	if val == nil {
 		return nil, nil
@@ -1067,7 +1067,7 @@ func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, err
 // database that is consistent at the time of the function call.
 func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	data := map[string]*SkipBlock{}
-	err := db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
 			_, sbMsg, err := network.Unmarshal(v, suite)
@@ -1096,7 +1096,7 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 	// Loop over all blocks. If we see a new genesis block we
 	// have not seen, remember it. If we see a higher Index than what
 	// we have, replace it.
-	err := db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
 			_, sbMsg, err := network.Unmarshal(v, suite)

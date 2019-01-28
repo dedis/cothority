@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 func TestViewChange_Normal1(t *testing.T) {

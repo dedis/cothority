@@ -3,8 +3,8 @@ package byzcoin
 import (
 	"testing"
 
-	"github.com/dedis/cothority/darc"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/darc"
 )
 
 func TestReplayGuard(t *testing.T) {

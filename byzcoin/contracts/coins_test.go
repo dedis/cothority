@@ -6,13 +6,13 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 )
 
 var ciZero, ciOne, ciTwo []byte
