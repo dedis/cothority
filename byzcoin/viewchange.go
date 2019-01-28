@@ -250,7 +250,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) {
 }
 
 func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error) {
-	defer log.Lvl2(s.ServerIdentity(), "finished view-change ftcosi")
+	defer log.Lvl2(s.ServerIdentity(), "finished view-change blscosi")
 	sb := s.db().GetByID(req.GetView().ID)
 	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
 	if !newRoster.List[0].Equal(s.ServerIdentity()) {
@@ -388,7 +388,8 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(nil),
 			Invoke: &Invoke{
-				Command: "view_change",
+				ContractID: ContractConfigID,
+				Command:    "view_change",
 				Args: []Argument{
 					{
 						Name:  "newview",

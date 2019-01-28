@@ -15,7 +15,7 @@ import (
 // Client is a structure to communicate with the eventlog service
 type Client struct {
 	ByzCoin *byzcoin.Client
-	// The DarcID with "invoke:eventlog" permission on it.
+	// The DarcID with "invoke:eventlog.log" permission on it.
 	DarcID darc.ID
 	// Signers are the Darc signers that will sign transactions sent with this client.
 	Signers    []darc.Signer
@@ -173,8 +173,9 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 		tx.Instructions[i] = byzcoin.Instruction{
 			InstanceID: c.Instance,
 			Invoke: &byzcoin.Invoke{
-				Command: contractName,
-				Args:    []byzcoin.Argument{argEvent},
+				ContractID: contractName,
+				Command:    logCmd,
+				Args:       []byzcoin.Argument{argEvent},
 			},
 			SignerCounter: c.incrementCtrs(),
 		}

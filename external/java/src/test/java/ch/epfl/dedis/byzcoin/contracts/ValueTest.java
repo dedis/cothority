@@ -60,7 +60,7 @@ class ValueTest {
 
         Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
-        darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
+        darc2.setRule("invoke:" + ValueInstance.ContractId + ".update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
 
         byte[] myvalue = "314159".getBytes();

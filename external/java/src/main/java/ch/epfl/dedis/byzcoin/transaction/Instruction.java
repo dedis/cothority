@@ -126,9 +126,11 @@ public class Instruction {
                 args = this.spawn.getArguments();
             } else if (this.invoke != null) {
                 digest.update((byte) (1));
+                digest.update(this.invoke.getContractId().getBytes());
                 args = this.invoke.getArguments();
             } else if (this.delete != null) {
                 digest.update((byte) (2));
+                digest.update(this.delete.getContractId().getBytes());
             }
             for (Argument a : args) {
                 digest.update(a.getName().getBytes());
@@ -179,9 +181,9 @@ public class Instruction {
         if (this.spawn != null) {
             a = "spawn:" + this.spawn.getContractId();
         } else if (this.invoke != null) {
-            a = "invoke:" + this.invoke.getCommand();
+            a = "invoke:" + this.invoke.getContractId() + "." + this.invoke.getCommand();
         } else if (this.delete != null) {
-            a = "delete";
+            a = "delete:" + this.delete.getContractId();
         }
         return a;
     }

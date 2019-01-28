@@ -69,7 +69,7 @@ public class ChainConfigInstance {
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Long> ownerCtrs) {
-        Invoke inv = new Invoke("update_config", ContractId, newConfig.toProto().toByteArray());
+        Invoke inv = new Invoke(ContractId, "update_config", ContractId, newConfig.toProto().toByteArray());
         return new Instruction(instance.getId(), ownerCtrs, inv);
     }
 

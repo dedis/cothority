@@ -123,12 +123,13 @@ func createSpawnInstr(dID darc.ID, contractID string, argName string, value []by
 	}
 }
 
-func createInvokeInstr(dID InstanceID, cmd, argName string, value []byte) Instruction {
+func createInvokeInstr(dID InstanceID, contractID, cmd, argName string, value []byte) Instruction {
 	return Instruction{
 		InstanceID: dID,
 		Invoke: &Invoke{
-			Command: cmd,
-			Args:    Arguments{{Name: argName, Value: value}},
+			ContractID: contractID,
+			Command:    cmd,
+			Args:       Arguments{{Name: argName, Value: value}},
 		},
 	}
 }

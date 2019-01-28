@@ -24,6 +24,7 @@ import (
 	"github.com/dedis/cothority/blscosi/blscosi/check"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
+	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	ph "github.com/dedis/cothority/personhood"
@@ -735,10 +736,10 @@ func bcStore(c *cli.Context) error {
 		exprSlice = append(exprSlice, id.String())
 	}
 	// The master signer has the right to create a new party.
-	rules.AddRule("spawn:popParty", expression.Expr(signer.Identity().String()))
+	rules.AddRule(darc.Action("spawn:"+service.ContractPopParty), expression.Expr(signer.Identity().String()))
 	// We allow any of the organizers to update the proposed configuration. The contract
 	// will make sure that it is correctly signed.
-	rules.AddRule("invoke:Finalize", expression.Expr(strings.Join(exprSlice, " | ")))
+	rules.AddRule(darc.Action("invoke:"+service.ContractPopParty+".Finalize"), expression.Expr(strings.Join(exprSlice, " | ")))
 	orgDarc := darc.NewDarc(rules, []byte("For party "+fsString))
 	orgDarcBuf, err := orgDarc.ToProto()
 	if err != nil {
@@ -883,7 +884,8 @@ func bcFinalize(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
 			Invoke: &byzcoin.Invoke{
-				Command: "Finalize",
+				ContractID: service.ContractPopParty,
+				Command:    "Finalize",
 				Args: byzcoin.Arguments{
 					byzcoin.Argument{
 						Name:  "FinalStatement",
@@ -1091,7 +1093,8 @@ func bcCoinTransfer(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(srcAddr),
 			Invoke: &byzcoin.Invoke{
-				Command: "transfer",
+				ContractID: contracts.ContractCoinID,
+				Command:    "transfer",
 				Args: byzcoin.Arguments{{
 					Name:  "coins",
 					Value: amountBuf,

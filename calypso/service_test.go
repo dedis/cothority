@@ -60,7 +60,8 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 			{
 				InstanceID: s.ltsReply.InstanceID,
 				Invoke: &byzcoin.Invoke{
-					Command: "reshare",
+					ContractID: ContractLongTermSecretID,
+					Command:    "reshare",
 					Args: []byzcoin.Argument{
 						{
 							Name:  "lts_instance_info",
@@ -99,7 +100,8 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 					{
 						InstanceID: s.ltsReply.InstanceID,
 						Invoke: &byzcoin.Invoke{
-							Command: "reshare",
+							ContractID: ContractLongTermSecretID,
+							Command:    "reshare",
 							Args: []byzcoin.Argument{
 								{
 									Name:  "lts_instance_info",
@@ -169,7 +171,8 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 					{
 						InstanceID: s.ltsReply.InstanceID,
 						Invoke: &byzcoin.Invoke{
-							Command: "reshare",
+							ContractID: ContractLongTermSecretID,
+							Command:    "reshare",
 							Args: []byzcoin.Argument{
 								{
 									Name:  "lts_instance_info",
@@ -443,7 +446,7 @@ func (s *ts) createGenesis(t *testing.T) {
 		[]string{"spawn:" + ContractWriteID,
 			"spawn:" + ContractReadID,
 			"spawn:" + ContractLongTermSecretID,
-			"invoke:" + "reshare"},
+			"invoke:" + ContractLongTermSecretID + ".reshare"},
 		s.signer.Identity())
 	require.Nil(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc

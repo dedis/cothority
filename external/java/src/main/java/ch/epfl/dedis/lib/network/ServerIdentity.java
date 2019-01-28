@@ -308,7 +308,7 @@ public class ServerIdentity {
             }
             if (error != null) {
                 logger.error("error sending to {}: {}", path, error);
-                throw new CothorityCommunicationException("sending of " + path + "failed with error: " + error);
+                throw new CothorityCommunicationException("sending of " + path + " failed with error: " + error);
             }
         }
     }

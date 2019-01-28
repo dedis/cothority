@@ -12,6 +12,7 @@ import (
 	"sort"
 
 	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -227,7 +228,8 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(partyCoin.Sum(nil)),
 			Invoke: &byzcoin.Invoke{
-				Command: "transfer",
+				ContractID: contracts.ContractCoinID,
+				Command:    "transfer",
 				Args: []byzcoin.Argument{{
 					Name:  "coins",
 					Value: cBuf,

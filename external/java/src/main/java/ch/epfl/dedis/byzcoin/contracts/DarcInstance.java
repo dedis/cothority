@@ -105,7 +105,7 @@ public class DarcInstance {
         newDarc.setVersion(this.getDarc().getVersion() + 1);
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
-        Invoke inv = new Invoke("evolve", ContractId, newDarc.toProto().toByteArray());
+        Invoke inv = new Invoke(ContractId, "evolve", ContractId, newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
         return new Instruction(new InstanceId(d), Collections.singletonList(signerCtr), inv);
     }

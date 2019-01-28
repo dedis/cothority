@@ -185,7 +185,7 @@ type Instruction struct {
 
 // Spawn is called upon an existing instance that will spawn a new instance.
 type Spawn struct {
-	// ContractID represents the kind of contract that needs to be spawn.
+	// ContractID represents the kind of contract that is being spawned.
 	ContractID string
 	// Args holds all data necessary to spawn the new instance.
 	Args Arguments
@@ -194,6 +194,8 @@ type Spawn struct {
 // Invoke calls a method of an existing instance which will update its internal
 // state.
 type Invoke struct {
+	// ContractID represents the kind of contract that is being invoked.
+	ContractID string
 	// Command is interpreted by the contract.
 	Command string
 	// Args holds all data necessary for the successful execution of the command.
@@ -203,6 +205,8 @@ type Invoke struct {
 // Delete removes the instance. The contract might enforce conditions that
 // must be true before a Delete is executed.
 type Delete struct {
+	// ContractID represents the kind of contract that is being deleted.
+	ContractID string
 }
 
 // Argument is a name/value pair that will be passed to the contract.

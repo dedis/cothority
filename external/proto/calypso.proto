@@ -13,7 +13,8 @@ option java_outer_classname = "Calypso";
 // Write is the data stored in a write instance. It stores a reference to the LTS
 // used and the encrypted secret.
 message Write {
-  // Data should be encrypted by the application under the symmetric key in U and Cs
+  // Data should be encrypted by the application under the symmetric key
+  // in U and C
   required bytes data = 1;
   // U is the encrypted random value for the ElGamal encryption
   required bytes u = 2;
@@ -24,8 +25,8 @@ message Write {
   required bytes ubar = 3;
   // E is the non-interactive challenge as scalar
   required bytes e = 4;
-  // f is the proof - written in uppercase here so it is an exported field,
-  // but in the OCS-paper it's lowercase.
+  // f is the proof - written in uppercase here so it is an exported
+  // field, but in the OCS-paper it's lowercase.
   required bytes f = 5;
   // C is the ElGamal parts for the symmetric key material (might also
   // contain an IV)

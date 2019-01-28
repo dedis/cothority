@@ -23,10 +23,7 @@ import (
 
 // ContractPopParty represents a pop-party that holds either a configuration
 // or a final statement.
-var ContractPopParty = "popParty"
-
-// ContractPopCoinAccount holds popcoins of an attendee or a service.
-var ContractPopCoinAccount = "popCoinAccount"
+const ContractPopParty = "popParty"
 
 // PoPCoinName is the identifier of the popcoins.
 var PoPCoinName byzcoin.InstanceID
@@ -172,7 +169,7 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc byzcoin.StateChange, err error) {
 	id := darc.NewIdentityEd25519(pub)
 	rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
-	rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
+	rules.AddRule(darc.Action("invoke:"+contracts.ContractCoinID+".transfer"), expression.Expr(id.String()))
 	d = darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
 	darcBuf, err := d.ToProto()
 	if err != nil {

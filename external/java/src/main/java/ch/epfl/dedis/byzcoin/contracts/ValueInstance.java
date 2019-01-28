@@ -91,7 +91,7 @@ public class ValueInstance {
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Instruction evolveValueInstruction(byte[] newValue, Long signerCtr) {
-        Invoke inv = new Invoke("update", ContractId, newValue);
+        Invoke inv = new Invoke(ContractId, "update", ContractId, newValue);
         return new Instruction(instance.getId(), Collections.singletonList(signerCtr), inv);
     }
 

@@ -65,7 +65,7 @@ func TestClient_Calypso(t *testing.T) {
 		[]string{"spawn:darc", "spawn:" + ContractLongTermSecretID},
 		admin.Identity())
 
-	msg.BlockInterval = 100 * time.Millisecond
+	msg.BlockInterval = 500 * time.Millisecond
 	require.Nil(t, err)
 	// The darc inside it should be valid.
 	gDarc := msg.GenesisDarc

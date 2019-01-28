@@ -20,7 +20,8 @@ public final class Calypso {
 
     /**
      * <pre>
-     * Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key
+     * in U and C
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -28,7 +29,8 @@ public final class Calypso {
     boolean hasData();
     /**
      * <pre>
-     * Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key
+     * in U and C
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -94,8 +96,8 @@ public final class Calypso {
 
     /**
      * <pre>
-     * f is the proof - written in uppercase here so it is an exported field,
-     * but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported
+     * field, but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -103,8 +105,8 @@ public final class Calypso {
     boolean hasF();
     /**
      * <pre>
-     * f is the proof - written in uppercase here so it is an exported field,
-     * but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported
+     * field, but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -293,7 +295,8 @@ public final class Calypso {
     private com.google.protobuf.ByteString data_;
     /**
      * <pre>
-     * Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key
+     * in U and C
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -303,7 +306,8 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key
+     * in U and C
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -391,8 +395,8 @@ public final class Calypso {
     private com.google.protobuf.ByteString f_;
     /**
      * <pre>
-     * f is the proof - written in uppercase here so it is an exported field,
-     * but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported
+     * field, but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -402,8 +406,8 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * f is the proof - written in uppercase here so it is an exported field,
-     * but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported
+     * field, but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1030,7 +1034,8 @@ public final class Calypso {
       private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key
+       * in U and C
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -1040,7 +1045,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key
+       * in U and C
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -1050,7 +1056,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key
+       * in U and C
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -1066,7 +1073,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key
+       * in U and C
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -1246,8 +1254,8 @@ public final class Calypso {
       private com.google.protobuf.ByteString f_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * f is the proof - written in uppercase here so it is an exported field,
-       * but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported
+       * field, but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -1257,8 +1265,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * f is the proof - written in uppercase here so it is an exported field,
-       * but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported
+       * field, but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -1268,8 +1276,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * f is the proof - written in uppercase here so it is an exported field,
-       * but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported
+       * field, but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -1285,8 +1293,8 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * f is the proof - written in uppercase here so it is an exported field,
-       * but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported
+       * field, but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>

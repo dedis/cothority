@@ -112,7 +112,7 @@ public class LTSInstance {
         byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
-        Invoke invoke = new Invoke(InvokeCommand, args);
+        Invoke invoke = new Invoke(ContractId, InvokeCommand, args);
         Instruction inst = new Instruction(instanceId, signerCtrs, invoke);
         ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
         ctx.signWith(signers);

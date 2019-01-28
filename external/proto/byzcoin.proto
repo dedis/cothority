@@ -165,7 +165,7 @@ message Instruction {
 
 // Spawn is called upon an existing instance that will spawn a new instance.
 message Spawn {
-  // ContractID represents the kind of contract that needs to be spawn.
+  // ContractID represents the kind of contract that is being spawned.
   required string contractid = 1;
   // Args holds all data necessary to spawn the new instance.
   repeated Argument args = 2;
@@ -174,15 +174,19 @@ message Spawn {
 // Invoke calls a method of an existing instance which will update its internal
 // state.
 message Invoke {
+  // ContractID represents the kind of contract that is being invoked.
+  required string contractid = 1;
   // Command is interpreted by the contract.
-  required string command = 1;
+  required string command = 2;
   // Args holds all data necessary for the successful execution of the command.
-  repeated Argument args = 2;
+  repeated Argument args = 3;
 }
 
 // Delete removes the instance. The contract might enforce conditions that
 // must be true before a Delete is executed.
 message Delete {
+  // ContractID represents the kind of contract that is being deleted.
+  required string contractid = 1;
 }
 
 // Argument is a name/value pair that will be passed to the contract.
@@ -252,7 +256,7 @@ message DownloadState {
   // ByzCoinID of the state to download
   required bytes byzcoinid = 1;
   // Nonce is 0 for a new download, else it must be
-  // equal to the nonce returned in DDownloadStateResponse.
+  // equal to the nonce returned in DownloadStateResponse.
   // In case Nonce is non-zero, but doesn't correspond
   // to the current session, an error is returned,
   // as only one download-session can be active at
