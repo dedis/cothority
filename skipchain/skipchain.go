@@ -8,7 +8,7 @@
 // all the methods defined on it to interact with a skipchain.
 //
 // Please consult the README for more information
-// https://go.dedis.ch/cothority/v3/blob/master/skipchain/README.md.
+// https://github.com/dedis/cothority/blob/master/skipchain/README.md.
 package skipchain
 
 import (

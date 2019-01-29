@@ -2,5 +2,5 @@
 // specialised broadcast and propagation protocols easier.
 //
 // For more information, please see
-// https://go.dedis.ch/cothority/v3/blob/master/messaging/README.md.
+// https://github.com/dedis/cothority/blob/master/messaging/README.md.
 package messaging

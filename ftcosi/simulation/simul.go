@@ -2,7 +2,7 @@
 // needed to run it.
 //
 // Please see
-// https://go.dedis.ch/cothority/v3/blob/master/ftcosi/simulation/README.md
+// https://github.com/dedis/cothority/blob/master/ftcosi/simulation/README.md
 // for instruction on how to run the simulation.
 package main
 

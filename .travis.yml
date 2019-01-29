@@ -24,19 +24,19 @@ matrix:
       script:
         - env GO111MODULE=on make test
 
-    # - language: java
-    #   name: "Java Tests"
+    - language: java
+      name: "Java Tests"
 
-    #   # This is needed because the "language: java" builder
-    #   # defaults to Go 1.8 and does not respect the go version
-    #   # specifier.
-    #   install:
-    #     - gimme 1.11
-    #     - . $HOME/.gimme/envs/go1.11.env
-    #     - env GO111MODULE=off go get github.com/dedis/Coding || true
+      # This is needed because the "language: java" builder
+      # defaults to Go 1.8 and does not respect the go version
+      # specifier.
+      install:
+        - gimme 1.11
+        - . $HOME/.gimme/envs/go1.11.env
+        - env GO111MODULE=off go get github.com/dedis/Coding || true
 
-    #   script:
-    #     - make test_java
+      script:
+        - make test_java
 
     - language: node_js
       name: "kyber-js Tests"
