@@ -1,8 +1,13 @@
 {
   "name": "@dedis/cothority",
-  "version": "0.0.1",
+  "version": "1.2.0",
   "description": "A typescript implementation of the cothority",
   "main": "dist/index.js",
+  "browser": "dist/bundle.min.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dedis/cothority.git"
+  },
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -14,9 +19,12 @@
     "prepublishOnly": "npm run build && npm run bundle && npm run doc",
     "protobuf": "node scripts/build_proto.js"
   },
+  "keywords": [
+    "cothority",
+    "network"
+  ],
   "author": "DEDIS",
-  "license": "AGPL-3.0",
-  "repository": "https://github.com/dedis/cothority.git",
+  "license": "ISC",
   "dependencies": {
     "@stablelib/blake2xs": "^0.10.4",
     "@types/crypto-js": "^3.1.43",
@@ -44,6 +52,11 @@
     "ts-node": "^8.0.1",
     "typescript": "^3.1.6"
   },
+  "files": [
+    "dist",
+    "doc",
+    "index.html"
+  ],
   "nyc": {
     "all": true,
     "extension": [
