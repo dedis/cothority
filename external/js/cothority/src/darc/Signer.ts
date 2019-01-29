@@ -1,9 +1,9 @@
-import {Identity} from "~/lib/cothority/darc/Identity";
-import {Signature} from "~/lib/cothority/darc/Signature";
+import { Identity } from "./Identity";
+import { Signature } from "./Signature";
+import { Scalar, Point } from "@dedis/kyber";
 
 export class Signer {
-    constructor() {
-    }
+    constructor() { }
 
     /**
      * Signs the sha256 hash of the message. It must return
@@ -12,7 +12,7 @@ export class Signer {
 
      * @param {Uint8Array} msg
      */
-    sign(msg): Signature {
+    sign(msg: Buffer): Signature {
         throw new Error("Not implemented");
     }
 
@@ -21,7 +21,7 @@ export class Signer {
      *
      * @return {Scalar}
      */
-    get private(): any {
+    get private(): Scalar {
         throw new Error("Not implemented");
     }
 
@@ -30,7 +30,7 @@ export class Signer {
      *
      * @return {Point}
      */
-    get public(): any {
+    get public(): Point {
         throw new Error("Not implemented");
     }
 

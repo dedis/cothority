@@ -3,7 +3,7 @@ import { ClientTransaction } from "./ClientTransaction";
 import { Roster } from "../network/proto";
 import { Darc } from "../darc/Darc";
 import { SkipBlock } from "../skipchain/skipblock";
-import { Proof } from "./Proof";
+import { Proof, InclusionProof, StateChangeBody } from "./Proof";
 import { registerMessage } from "../protobuf";
 
 export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
@@ -79,8 +79,15 @@ export class GetSignerCounters extends Message<GetSignerCounters> {
 }
 
 export class GetSignerCountersResponse extends Message<GetSignerCountersResponse> {
-    readonly counters: number[];
+    readonly counters: Long[];
 }
+
+// Add the registration here because the Proof module is optimized
+// during compilation and is ignored because we use Proof only as
+// a type definition
+registerMessage('byzcoin.Proof', Proof);
+registerMessage('trie.Proof', InclusionProof);
+registerMessage('StateChangeBody', StateChangeBody);
 
 registerMessage('CreateGenesisBlock', CreateGenesisBlock);
 registerMessage('CreateGenesisBlockResponse', CreateGenesisBlockResponse);

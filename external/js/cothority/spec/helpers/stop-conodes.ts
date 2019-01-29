@@ -5,4 +5,4 @@ afterAll(async (done) => {
     await stopConodes();
 
     done();
-}, 30 * 1000);
+});

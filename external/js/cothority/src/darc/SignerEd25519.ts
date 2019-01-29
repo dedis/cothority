@@ -1,44 +1,44 @@
-import {Signer} from "~/lib/cothority/darc/Signer";
-import {IdentityEd25519} from "~/lib/cothority/darc/IdentityEd25519";
-import {Signature} from "~/lib/cothority/darc/Signature";
-import {Identity} from "~/lib/cothority/darc/Identity";
-import {Log} from "~/lib/Log";
+import { Signer } from "./Signer";
+import { IdentityEd25519 } from "./IdentityEd25519";
+import { Signature } from "./Signature";
+import { Identity } from "./Identity";
+import { curve, sign, Point, Scalar } from "@dedis/kyber";
 
-const curve = require("@dedis/kyber-js").curve.newCurve("edwards25519");
-const Schnorr = require("@dedis/kyber-js").sign.schnorr;
+const ed25519 = curve.newCurve("edwards25519");
+const { schnorr } = sign;
 
-/**
- * @extends Signer
- */
-export class SignerEd25519 extends Signer {
-    _pub: any;
-    _priv: any;
+export default class SignerEd25519 extends Signer {
+    private pub: Point;
+    private priv: Scalar;
 
-    constructor(pub, priv) {
+    constructor(pub: Point, priv: Scalar) {
         super();
-        this._pub = pub;
-        this._priv = priv;
+        this.pub = pub;
+        this.priv = priv;
     }
 
-    static fromByteArray(bytes): SignerEd25519 {
-        const priv = curve.scalar();
+    static fromBytes(bytes: Buffer): SignerEd25519 {
+        const priv = ed25519.scalar();
         priv.unmarshalBinary(bytes);
-        return new SignerEd25519(curve.point().base().mul(priv), priv);
+        return new SignerEd25519(ed25519.point().base().mul(priv), priv);
     }
 
-    get private(): any {
-        return this._priv;
+    get private(): Scalar {
+        return this.priv;
     }
 
-    get public(): any {
-        return this._pub;
+    get public(): Point {
+        return this.pub;
     }
 
     get identity(): Identity {
-        return new IdentityEd25519(this._pub);
+        return new IdentityEd25519({ point: this.pub.marshalBinary() });
     }
 
-    sign(msg): Signature {
-        return new Signature(Schnorr.sign(curve, this._priv, new Uint8Array(msg)), this.identity);
+    sign(msg: Buffer): Signature {
+        return new Signature({
+            signature: schnorr.sign(ed25519, this.priv, msg), 
+            signer: this.identity.toWrapper(),
+        });
     }
 }

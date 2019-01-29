@@ -1,25 +1,12 @@
-import {Identity} from "~/lib/cothority/darc/Identity";
+import { Identity } from "./Identity";
+import { Message } from "protobufjs";
+import { IdentityEd25519 } from "./IdentityEd25519";
 
-export class Signature {
-  /**
-   *
-   * @param {Uint8Array} [signature]
-   * @param {Identity} signer
-   */
-  constructor(public signature: Buffer, public signer: Identity) {
-  }
+export class IdentityWrapper extends Message<IdentityWrapper> {
+  readonly ed25519: IdentityEd25519;
+}
 
-  /**
-   * Create an object with all the necessary field needed to be a valid message
-   * in the sense of protobufjs. This object can then be used with the "create"
-   * method of protobuf
-   *
-   * @return {Object}
-   */
-  toObject(): object {
-    return {
-      signature: this.signature,
-      signer: this.signer.toObject()
-    };
-  }
+export class Signature extends Message<Signature> {
+  readonly signature: Buffer;
+  readonly signer: IdentityWrapper;
 }

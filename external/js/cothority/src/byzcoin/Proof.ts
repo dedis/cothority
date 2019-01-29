@@ -1,5 +1,3 @@
-import { Log } from "../log";
-import { InstanceID } from "./ClientTransaction";
 import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
 import { Message } from "protobufjs";
 
@@ -19,15 +17,15 @@ export class Proof extends Message<Proof> {
     latest: SkipBlock;
     links: ForwardLink[];
 
-    get stateChangeBody(): StateChange {
-        return StateChange.decode(this.inclusionproof.value);
+    get stateChangeBody(): StateChangeBody {
+        return StateChangeBody.decode(this.inclusionproof.value);
     }
 
     /**
      * Returns the contractID this proof represents. Throws an error if it
      * is a proof of absence.
      */
-    get contractID(): string {
+    get contractID(): Buffer {
         return this.stateChangeBody.contractID;
     }
 
@@ -35,8 +33,8 @@ export class Proof extends Message<Proof> {
      * @return {InstanceID} the darcID responsible for the instanceID this proof represents.
      * @throws an error if it is a proof of absence.
      */
-    get darcID(): InstanceID {
-        return new InstanceID(this.stateChangeBody.darcID);
+    get darcID(): Buffer {
+        return this.stateChangeBody.darcID;
     }
 
     /**
@@ -53,20 +51,17 @@ export class Proof extends Message<Proof> {
      * @return {number} the version of the instance this proof represents.
      * @throws an error if it is a proof of absence.
      */
-    get version(): number {
+    get version(): Long {
         return this.stateChangeBody.version;
     }
 
-    /**
-     * Checks whether it is a proof of existence and throws an error if not.
-     * @param {string=""} cid optional parameter to check for this type of contract
-     * @throws an error if it doesn't match.
-     */
-    matchOrFail(cid: string = ""): Promise<boolean> {
-        if (!this.matchContract(cid)) {
-            return Promise.reject("proof for '" + this.contractID + "' instead of '" + cid + "'");
-        }
-        return Promise.resolve(true);
+    get key(): Buffer {
+        return this.inclusionproof.key;
+    }
+
+    exists(key: Buffer): boolean {
+        // TODO
+        return true;
     }
 
     /**
@@ -74,7 +69,7 @@ export class Proof extends Message<Proof> {
      * @return {boolean} true if it is a proof of existence and the given type of contract matches.
      */
     matchContract(cid: string): boolean {
-        return this.stateChangeBody.contractID == cid;
+        return this.stateChangeBody.contractID.toString() == cid;
     }
 
     /**
@@ -90,7 +85,7 @@ export class Proof extends Message<Proof> {
 /**
  * InclusionProof represents the proof that an instance is present or not in the global state trie.
  */
-export class InclusionProof {
+export class InclusionProof extends Message<InclusionProof> {
     interiors: [];
     leaf: any;
     empty: any;
@@ -98,23 +93,11 @@ export class InclusionProof {
     nohashkey: boolean;
 
     /**
-     * Constructs a new inclusionproof given an object from a decoded protobuf.
-     * @param ip
-     */
-    constructor(ip: any) {
-        this.interiors = ip.interiors;
-        this.leaf = ip.leaf;
-        this.empty = ip.empty;
-        this.nonce = ip.nonce;
-        this.nohashkey = ip.nohashkey;
-    }
-
-    /**
      * @param {InstanceID} iid the instanceID this proof should represent
      * @return {boolean} true if it is a proof of existence.
      */
-    matches(iid: InstanceID): boolean {
-        return Buffer.from(this.leaf.key).equals(iid.iid);
+    matches(iid: Buffer): boolean {
+        return Buffer.from(this.leaf.key).equals(iid);
     }
 
     /**
@@ -145,15 +128,14 @@ export class InclusionProof {
 /**
  * StateChangeBody represents the
  */
-export class StateChange extends Message<StateChange> {
+export class StateChangeBody extends Message<StateChangeBody> {
     readonly stateaction: number;
-    readonly instanceid: number;
-    readonly contractid: string;
+    readonly contractid: Buffer;
     readonly value: Buffer;
+    readonly version: Long;
     readonly darcid: Buffer;
-    readonly version: number;
 
-    get contractID(): string {
+    get contractID(): Buffer {
         return this.contractid;
     }
 

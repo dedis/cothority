@@ -1,3 +1,5 @@
+import { IdentityWrapper } from "./Signature";
+
 /**
  * Identitiy is an abstract class for all the Darcs's identities
  */
@@ -17,6 +19,15 @@ export interface Identity {
    */
   toString(): string;
 
+  /**
+   * Get the wrapper used to encode the identity
+   */
+  toWrapper(): IdentityWrapper;
+
+  /**
+   * Get the byte array representation of the public key of the identity
+   * @returns the public key as buffer
+   */
   toBytes(): Buffer;
 
   /**

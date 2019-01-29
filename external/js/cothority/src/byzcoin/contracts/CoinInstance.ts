@@ -24,7 +24,7 @@ export class CoinInstance {
     async transfer(coins:Long, to: InstanceID, signers: Signer[]) {
         let args = [];
 
-        args.push(new Argument("coins", new Buffer(coins.toBytesLE())));
+        args.push(new Argument("coins", Buffer.from(coins.toBytesLE())));
         args.push(new Argument("destination", to.iid));
 
         let inst = Instruction.createInvoke(this.iid, "transfer", args);

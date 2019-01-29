@@ -21,8 +21,7 @@ import {Contact} from "~/lib/Contact";
 import {Log} from "~/lib/Log";
 import {RoPaSciInstance, RoPaSciStruct} from "~/lib/cothority/byzcoin/contracts/RoPaSciInstance";
 
-let coinName = new Buffer(32);
-coinName.write("SpawnerCoin");
+let coinName = Buffer.from('SpawnerCoin');
 export let SpawnerCoin = new InstanceID(coinName);
 
 export class SpawnerInstance {

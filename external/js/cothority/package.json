@@ -26,6 +26,7 @@
     "file": "^0.2.2",
     "isomorphic-ws": "^4.0.1",
     "lodash": "^4.17.11",
+    "long": "^4.0.0",
     "os": "^0.1.1",
     "protobufjs": "^6.8.8",
     "pure-uuid": "^1.5.5",

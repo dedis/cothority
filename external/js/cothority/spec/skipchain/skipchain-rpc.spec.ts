@@ -11,7 +11,7 @@ describe('SkipchainRPC Tests', () => {
 
     beforeAll(async () => {
         await startConodes();
-    }, 30 * 1000);
+    });
 
     it('should create a skipchain and add blocks to it', async () => {
         const rpc = new SkipchainRPC(roster);

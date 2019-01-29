@@ -1,17 +1,25 @@
 import ByzCoinRPC from "../byzcoin-rpc";
 import { Darc } from "../../darc/Darc";
-import { Argument, ClientTransaction, InstanceID, Instruction } from "../../byzcoin/ClientTransaction";
+import { Argument, ClientTransaction, Instruction } from "../../byzcoin/ClientTransaction";
 import { Proof } from "../../byzcoin/Proof";
 import { Signer } from "../../darc/Signer";
-import { Log } from "../../log";
-import { BasicInstance } from "./Instance";
+import { Instance } from "../Instance";
 
-export class DarcInstance extends BasicInstance {
+export class DarcInstance {
     static readonly contractID = "darc";
-    public darc: Darc;
 
-    constructor(public bc: ByzCoinRPC, p: Proof | object = null) {
-        super(bc, DarcInstance.contractID, p);
+    private instance: Instance;
+    public darc: Darc;
+    private rpc: ByzCoinRPC;
+
+    constructor(rpc: ByzCoinRPC, instance: Instance) {
+        if (instance.contractID.toString() !== DarcInstance.contractID) {
+            throw new Error(`mismatch contract name: ${instance.contractID} vs ${DarcInstance.contractID}`);
+        }
+
+        this.rpc = rpc;
+        this.instance = instance;
+        this.darc = Darc.decode(instance.data);
     }
 
     /**
@@ -21,28 +29,67 @@ export class DarcInstance extends BasicInstance {
      * is up-to-date
      */
     async update(): Promise<DarcInstance> {
-        let proof = await this.bc.getProof(new InstanceID(this.darc.getBaseId()));
-        this.darc = Darc.decode(proof.value);
+        const proof = await this.rpc.getProof(this.darc.baseID);
+        this.darc = Darc.fromProof(proof);
         return this;
     }
 
-    static fromObject(bc: ByzCoinRPC, obj: any): DarcInstance {
-        return new DarcInstance(bc, obj);
+    async evolveDarcAndWait(newDarc: Darc, signer: Signer, wait: number): Promise<Proof> {
+        const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(newDarc).finish()) })];
+        const instr = Instruction.createInvoke(this.darc.baseID, 'evolve', args);
+        const ctx = new ClientTransaction({ instructions: [instr] });
+
+        const counters = await this.rpc.getSignerCounters([signer.identity], 1);
+        instr.signerCounter = counters;
+
+        ctx.signWith([signer]);
+
+        await this.rpc.sendTransactionAndWait(ctx, wait);
+
+        const proof = await this.rpc.getProof(this.darc.baseID);
+        if (!proof.exists(this.darc.baseID)) {
+            throw new Error('instance is not in proof');
+        }
+
+        return proof;
     }
 
-    static async create(bc: ByzCoinRPC, iid: InstanceID, signers: Signer[], d: Darc): Promise<DarcInstance> {
-        let inst = Instruction.createSpawn(iid,
-            this.contractID,
-            [new Argument("darc", Buffer.from(Darc.encode(d).finish()))]);
-        let ctx = new ClientTransaction([inst]);
-        await ctx.signBy([signers], bc);
-        await bc.sendTransactionAndWait(ctx, 5);
-        return new DarcInstance(bc, d);
+    async spawnInstanceAndWait(contractID: string, signer: Signer, args: Argument[], wait: number): Promise<Proof> {
+        const instr = Instruction.createSpawn(this.darc.baseID, DarcInstance.contractID, args);
+        const ctx = new ClientTransaction({ instructions: [instr] });
+
+        // Get the counters before the signature
+        const counters = await this.rpc.getSignerCounters([signer.identity], 1);
+        instr.signerCounter = counters;
+
+        ctx.signWith([signer]);
+
+        await this.rpc.sendTransactionAndWait(ctx, wait);
+
+        let iid = instr.deriveId();
+        if (contractID === DarcInstance.contractID) {
+            const d = Darc.decode(args[0].value);
+            iid = d.baseID;
+        }
+
+        const proof = await this.rpc.getProof(iid);
+        if (!proof.exists(iid)) {
+            throw new Error('instance is not in proof');
+        }
+
+        return proof;
     }
 
-    static async fromProof(bc: ByzCoinRPC, p: Proof): Promise<DarcInstance> {
-        await p.matchOrFail(DarcInstance.contractID);
-        return new DarcInstance(bc, p);
+    async spawnDarcAndWait(d: Darc, signer: Signer, wait: number = 0): Promise<DarcInstance> {
+        const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(d).finish()) })];
+
+        const p = await this.spawnInstanceAndWait(DarcInstance.contractID, signer, args, wait);
+
+        return DarcInstance.fromProof(this.rpc, p);
+    }
+
+    static fromProof(bc: ByzCoinRPC, p: Proof): DarcInstance {
+        return new DarcInstance(bc, Instance.fromProof(p));
     }
 
     /**
@@ -50,15 +97,8 @@ export class DarcInstance extends BasicInstance {
      * @param bc
      * @param instID
      */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<DarcInstance> {
-        return new DarcInstance(bc, await bc.getProof(iid));
-    }
-
-    static darcFromProof(p: Proof): Darc {
-        if (p.contractID != DarcInstance.contractID) {
-            Log.error("Got non-darc proof: " + p.contractID);
-            return null;
-        }
-        return Darc.decode(p.value);
+    static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<DarcInstance> {
+        const p = await bc.getProof(iid);
+        return new DarcInstance(bc, Instance.fromProof(p));
     }
 }

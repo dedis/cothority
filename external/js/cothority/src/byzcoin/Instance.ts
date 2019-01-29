@@ -1,15 +1,24 @@
-import {Proof} from "~/lib/cothority/byzcoin/Proof";
-import {InstanceID} from "~/lib/cothority/byzcoin/ClientTransaction";
+import { Proof } from "./Proof";
+import ByzCoinRPC from "./byzcoin-rpc";
 
-export class Instance{
-    data: Buffer;
+export class Instance {
+    protected constructor(
+        readonly id: Buffer,
+        readonly contractID: Buffer,
+        readonly darcID: Buffer,
+        readonly data: Buffer,
+    ) {}
 
-    constructor(){}
-
-    get id(): InstanceID{
-        return new InstanceID(new Buffer(32));
+    public static fromProof(p: Proof): Instance {
+        return new Instance(p.key, p.contractID, p.darcID, p.value);
     }
-    static fromProof(p: Proof): Instance{
-        return new Instance();
+
+    public static async fromByzCoin(rpc: ByzCoinRPC, id: Buffer): Promise<Instance> {
+        const p = await rpc.getProof(id);
+        if (!p || !p.exists(id)) {
+            throw new Error('instance is not in proof');
+        }
+
+        return Instance.fromProof(p);
     }
 }

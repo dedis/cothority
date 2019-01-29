@@ -1,34 +1,16 @@
-import {Signer} from "../darc/Signer";
-import {Signature} from "../darc/Signature";
-import ByzCoinRPC from "./byzcoin-rpc";
+import { Signer } from "../darc/Signer";
+import { Signature } from "../darc/Signature";
 import { createHash } from "crypto";
+import { Message } from "protobufjs";
+import Long from 'long';
 
-export class ClientTransaction {
-    instructions: Instruction[];
+export class ClientTransaction extends Message<ClientTransaction> {
+    readonly instructions: Instruction[];
 
-    constructor(inst: Instruction[]) {
-        this.instructions = inst;
-    }
+    signWith(signers: Signer[]) {
+        const ctxHash = this.hash();
 
-    async signBy(ss: Signer[][], bc: ByzCoinRPC = null) {
-        try {
-            if (bc != null) {
-                for (let i = 0; i < ss.length; i++) {
-                    let ids = ss[i].map(s => s.identity);
-                    this.instructions[i].signerCounter =
-                        await bc.getSignerCounters(ids, 1);
-                }
-            }
-            let ctxHash = this.hash();
-            ss.forEach((signers, i) => {
-                this.instructions[i].signatures =
-                    signers.map(signer => {
-                        return signer.sign(ctxHash);
-                    })
-            })
-        } catch (e) {
-            console.log(e);
-        }
+        this.instructions.forEach((instr) => instr.signWith(ctxHash, signers));
     }
 
     hash(): Buffer {
@@ -36,43 +18,50 @@ export class ClientTransaction {
         this.instructions.forEach(i => h.update(i.hash()));
         return h.digest();
     }
-
-    toObject(): object {
-        return {
-            instructions: this.instructions.map(inst => inst.toObject()),
-        };
-    }
 }
 
-export class Instruction {
-    spawn: Spawn;
-    invoke: Invoke;
-    delete: Delete;
+export class Instruction extends Message<Instruction> {
+    private instanceid: Buffer;
+    readonly spawn: Spawn;
+    readonly invoke: Invoke;
+    readonly delete: Delete;
+    private signercounter: Long[];
 
-    constructor(public instanceID: InstanceID,
-                public signerCounter: number[] = [],
-                public signatures: Signature[] = []) {
+    private _signatures: Signature[];
+
+    get instanceID(): Buffer {
+        return this.instanceid;
     }
 
-    toObject(): object {
-        return {
-            instanceid: this.instanceID.iid,
-            spawn: this.spawn ? this.spawn.toObject() : null,
-            invoke: this.invoke ? this.invoke.toObject() : null,
-            delete: this.delete ? this.delete.toObject() : null,
-            signercounter: this.signerCounter,
-            signatures: this.signatures.map(sig => sig.toObject()),
-        }
+    set instanceID(v: Buffer) {
+        this.instanceid = v;
+    }
+
+    get signerCounter(): Long[] {
+        return this.signercounter;
+    }
+
+    set signerCounter(v: Long[]) {
+        this.signercounter = v;
+    }
+
+    get signatures(): Signature[] {
+        // readonly access with internal modification via signWith
+        return this._signatures;
+    }
+
+    signWith(ctxHash: Buffer, signers: Signer[]): void {
+        this._signatures = signers.map(s => s.sign(ctxHash));
     }
 
     hash(): Buffer {
         let h = createHash("sha256");
-        h.update(this.instanceID.iid);
+        h.update(this.instanceid);
         h.update(Buffer.from([this.getType()]));
         let args: Argument[] = [];
         switch (this.getType()) {
             case 0:
-                h.update(Buffer.from(this.spawn.contractID));
+                h.update(this.spawn.contractID);
                 args = this.spawn.args;
                 break;
             case 1:
@@ -81,12 +70,10 @@ export class Instruction {
         }
         args.forEach(arg => {
             h.update(arg.name);
-            h.update(arg.value)
+            h.update(arg.value);
         });
-        const buf = Buffer.allocUnsafe(4);
         this.signerCounter.forEach(sc => {
-            buf.writeUInt32LE(sc, 0);
-            h.update(buf);
+            h.update(Buffer.from(sc.toBytesLE()));
         });
         return h.digest();
     }
@@ -119,68 +106,55 @@ export class Instruction {
         return h.digest();
     }
 
-    static createSpawn(iid: InstanceID, contractID: string, args: Argument[]): Instruction {
-        let inst = new Instruction(iid);
-        inst.spawn = new Spawn(contractID, args);
-        return inst;
+    static createSpawn(iid: Buffer, contractID: string, args: Argument[]): Instruction {
+        return new Instruction({
+            instanceID: iid,
+            spawn: new Spawn({ contractID, args }),
+            signerCounter: [],
+        });
     }
 
-    static createInvoke(iid: InstanceID, cmd: string, args: Argument[]): Instruction {
-        let inst = new Instruction(iid);
-        inst.invoke = new Invoke(cmd, args);
-        return inst;
+    static createInvoke(iid: Buffer, command: string, args: Argument[]): Instruction {
+        return new Instruction({
+            instanceID: iid,
+            invoke: new Invoke({ command, args }),
+            signerCounter: [],
+        });
     }
 
-    static createDelete(iid: InstanceID): Instruction {
-        let inst = new Instruction(iid);
-        inst.delete = new Delete();
-        return inst;
-    }
-}
-
-export class Argument {
-    name: string;
-    value: Buffer;
-
-    toObject(): object {
-        return {
-            name: this.name,
-            value: this.value,
-        };
-    }
-
-    constructor(n: string, v: Buffer) {
-        this.name = n;
-        this.value = v;
+    static createDelete(iid: Buffer): Instruction {
+        return new Instruction({
+            instanceID: iid,
+            delete: new Delete(),
+            signerCounter: [],
+        });
     }
 }
 
-export class Spawn {
-    constructor(public contractID: string, public args: Argument[]) {
+export class Argument extends Message<Argument> {
+    readonly name: string;
+    readonly value: Buffer;
+}
+
+export class Spawn extends Message<Spawn> {
+    private contractid: string;
+    readonly args: Argument[];
+
+    get contractID(): string {
+        return this.contractid;
     }
 
-    toObject(): object {
-        return {
-            contractid: this.contractID,
-            args: this.args.map(arg => arg.toObject()),
-        };
+    set contractID(v: string) {
+        this.contractid = v;
     }
 }
 
-export class Invoke {
-    constructor(public command: string, public args: Argument[]) {
-    }
-
-    toObject(): object {
-        return this;
-    }
+export class Invoke extends Message<Invoke> {
+    readonly command: string;
+    readonly args: Argument[];
 }
 
-export class Delete {
-    toObject(): object {
-        return {};
-    }
-}
+export class Delete extends Message<Delete> { }
 
 export class InstanceID {
     iid: Buffer;
@@ -197,7 +171,7 @@ export class InstanceID {
     }
 
     toObject(): any {
-        return {IID: this.iid};
+        return { IID: this.iid };
     }
 
     static fromHex(str: string): InstanceID {

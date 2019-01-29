@@ -1,6 +1,8 @@
 import { curve, sign, Point } from '@dedis/kyber';
 import {Identity} from "./Identity";
 import { Message } from 'protobufjs';
+import { registerMessage } from '../protobuf';
+import { IdentityWrapper } from './Signature';
 
 const { schnorr } = sign;
 
@@ -34,6 +36,10 @@ export class IdentityEd25519 extends Message<IdentityEd25519> implements Identit
     return this.typeString() + ":" + this.public.toString().toLowerCase();
   }
 
+  toWrapper() {
+    return new IdentityWrapper({ ed25519: this });
+  }
+
   toBytes(): Buffer {
     return this.point;
   }
@@ -42,3 +48,5 @@ export class IdentityEd25519 extends Message<IdentityEd25519> implements Identit
     return "ed25519";
   }
 }
+
+registerMessage('IdentityEd25519', IdentityEd25519);
