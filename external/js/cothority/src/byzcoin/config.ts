@@ -1,6 +1,6 @@
 import { Message, Properties } from "protobufjs";
 import { Roster } from "../network/proto";
-import { Proof } from "./Proof";
+import Proof from "./proof";
 
 export default class ChainConfig extends Message<ChainConfig> {
     readonly roster: Roster;

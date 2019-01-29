@@ -1,10 +1,10 @@
 import {BasicInstance} from "../../byzcoin/contracts/Instance";
 import {ByzCoinRPC} from "../../byzcoin/ByzCoinRPC";
-import {Proof} from "../../byzcoin/Proof";
+import Proof from "../proof";
 import {Coin, CoinInstance} from "../../byzcoin/contracts/CoinInstance";
-import {Argument, ClientTransaction, InstanceID, Instruction} from "../../byzcoin/ClientTransaction";
+import ClientTransaction, {Argument, InstanceID, Instruction} from "../client-transaction";
 import {objToProto, Root} from "../../protobuf/Root";
-import {Signer} from "../../darc/Signer";
+import Signer from "../../darc/signer";
 import {Buffer} from "buffer";
 import {Log} from "~/lib/Log";
 import {Spawner} from "../../byzcoin/contracts/SpawnerInstance";

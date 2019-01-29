@@ -1,11 +1,11 @@
 import ByzCoinRPC from "../byzcoin-rpc";
-import { Darc } from "../../darc/Darc";
-import { Argument, ClientTransaction, Instruction } from "../../byzcoin/ClientTransaction";
-import { Proof } from "../../byzcoin/Proof";
-import { Signer } from "../../darc/Signer";
-import { Instance } from "../Instance";
+import Darc from "../../darc/darc";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
+import Proof from "../proof";
+import Signer from "../../darc/signer";
+import Instance from "../instance";
 
-export class DarcInstance {
+export default class DarcInstance {
     static readonly contractID = "darc";
 
     private instance: Instance;

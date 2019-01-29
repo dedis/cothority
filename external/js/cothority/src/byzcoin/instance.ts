@@ -1,7 +1,7 @@
-import { Proof } from "./Proof";
+import Proof from "./proof";
 import ByzCoinRPC from "./byzcoin-rpc";
 
-export class Instance {
+export default class Instance {
     protected constructor(
         readonly id: Buffer,
         readonly contractID: Buffer,

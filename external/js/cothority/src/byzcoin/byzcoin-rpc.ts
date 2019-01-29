@@ -1,15 +1,15 @@
-import { Darc, Rules } from "../darc/Darc";
-import { Proof } from "./Proof";
-import { Signer } from "../darc/Signer";
+import Darc from "../darc/darc";
+import Proof from "./proof";
+import Signer from "../darc/signer";
 import { Roster } from "../network/proto";
-import { ClientTransaction } from "./ClientTransaction";
-import { DarcInstance } from "./contracts/DarcInstance";
-import { Identity } from "../darc/Identity";
+import ClientTransaction from "./client-transaction";
+import Identity from "../darc/identity";
 import { Connection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { AddTxRequest, AddTxResponse, CreateGenesisBlock, CreateGenesisBlockResponse, GetProof, GetProofResponse, GetSignerCounters, GetSignerCountersResponse } from "./proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import ChainConfig from "./config";
-import { IdentityEd25519 } from "../darc/IdentityEd25519";
+import IdentityEd25519 from "../darc/identity-ed25519";
+import Rules from "../darc/rules";
 
 export const currentVersion = 1;
 

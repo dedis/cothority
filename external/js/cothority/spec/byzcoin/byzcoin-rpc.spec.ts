@@ -2,8 +2,8 @@ import fs from 'fs';
 import { Roster } from '../../src/network/proto';
 import { startConodes } from '../support/conondes';
 import ByzCoinRPC from '../../src/byzcoin/byzcoin-rpc';
-import SignerEd25519 from '../../src/darc/SignerEd25519';
-import { DarcInstance } from '../../src/byzcoin/contracts/DarcInstance';
+import SignerEd25519 from '../../src/darc/signer-ed25519';
+import DarcInstance from '../../src/byzcoin/contracts/darc-instance';
 
 const data = fs.readFileSync(process.cwd() + '/spec/support/public.toml');
 

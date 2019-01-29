@@ -1,26 +1,27 @@
-import { IdentityWrapper } from "./Signature";
+import IdentityWrapper from "./identity-wrapper";
 
 /**
  * Identitiy is an abstract class for all the Darcs's identities
  */
-export interface Identity {
+export default interface Identity {
   /**
    * Returns true if the verification of signature on the sha-256 of msg is
    * successful or false if not.
-
-   * @param {Uint8Array} msg
-   * @param {Uint8Array} signature
-   * @return {boolean}
+   * @param msg       the message to verify
+   * @param signature the signature to verify
+   * @returns true when the signature matches the message, false otherwise
    */
   verify(msg: Buffer, signature: Buffer): boolean;
 
   /**
-   * @return {string}
+   * Get the type of the identity
+   * @returns the type of the identity as a string
    */
-  toString(): string;
+  typeString(): string;
 
   /**
    * Get the wrapper used to encode the identity
+   * @returns the wrapper
    */
   toWrapper(): IdentityWrapper;
 
@@ -31,7 +32,8 @@ export interface Identity {
   toBytes(): Buffer;
 
   /**
-   * @return {string}
+   * Get the string representation of the identity
+   * @return a string representation
    */
-  typeString(): string;
+  toString(): string;
 }

@@ -1,10 +1,10 @@
-import { Signer } from "../darc/Signer";
-import { Signature } from "../darc/Signature";
+import Signer from "../darc/signer";
+import Signature from "../darc/signature";
 import { createHash } from "crypto";
 import { Message } from "protobufjs";
 import Long from 'long';
 
-export class ClientTransaction extends Message<ClientTransaction> {
+export default class ClientTransaction extends Message<ClientTransaction> {
     readonly instructions: Instruction[];
 
     signWith(signers: Signer[]) {

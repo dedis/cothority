@@ -1,51 +1,18 @@
-import { createHash } from 'crypto';
-import {Identity} from "../darc/Identity";
-import { Message, Properties } from "protobufjs";
-import { registerMessage } from '../protobuf';
-import { Proof } from '../byzcoin/Proof';
-import { DarcInstance } from '../byzcoin/contracts/DarcInstance';
 import Long from 'long';
+import { createHash } from 'crypto';
+import { Message } from "protobufjs";
+import Identity from "./identity";
+import { registerMessage } from '../protobuf';
+import Proof from '../byzcoin/proof';
+import DarcInstance from '../byzcoin/contracts/darc-instance';
+import Rules from './rules';
 
-export class Rule extends Message<Rule> {
-    action: string;
-    expr: Buffer;
-
-    toString(): string {
-        return this.action + " - " + this.expr.toString();
-    }
-}
-
-export class Rules extends Message<Rules> {
-    public static OR = '|';
-    public static AND = '&';
-
-    readonly list: Rule[];
-
-    constructor(properties?: Properties<Rules>) {
-        super(properties);
-
-        if (!properties || !this.list) {
-            this.list = [];
-        }
-    }
-
-    appendToRule(action: string, identity: Identity, op: string): void {
-        const rule = this.list.find(r => r.action === action);
-
-        if (rule) {
-            rule.expr = Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]);
-        } else {
-            this.list.push(new Rule({ action, expr: Buffer.from(identity.toString()) }));
-        }
-    }
-
-    toString(): string {
-        return this.list.map(l => {
-            return l.toString();
-        }).join("\n");
-    }
-}
-
+/**
+ * Create a list of rules with basic permissions for owners and signers
+ * @param owners those allow to evolve the darc
+ * @param signers those allow to sign
+ * @returns the list of rules
+ */
 function initRules(owners: Identity[], signers: Identity[]): Rules {
     const rules = new Rules();
 
@@ -55,13 +22,20 @@ function initRules(owners: Identity[], signers: Identity[]): Rules {
     return rules;
 }
 
-export class Darc extends Message<Darc> {
+/**
+ * Distributed Access Right Controls
+ */
+export default class Darc extends Message<Darc> {
     readonly version: Long;
     readonly description: Buffer;
-    private baseid: Buffer;
+    readonly baseid: Buffer;
     readonly previd: Buffer;
     readonly rules: Rules;
 
+    /**
+     * Get the id of the darc
+     * @returns the id as a buffer
+     */
     get id(): Buffer {
         let h = createHash("sha256");
         let versionBuf = Buffer.from(this.version.toBytesLE());
@@ -80,6 +54,10 @@ export class Darc extends Message<Darc> {
         return h.digest();
     }
 
+    /**
+     * Get the id of the genesis darc
+     * @returns the id as a buffer
+     */
     get baseID(): Buffer {
         if (this.version.eq(0)) {
             return this.id;
@@ -87,28 +65,41 @@ export class Darc extends Message<Darc> {
             return this.baseid;
         }
     }
-
-    set baseID(id: Buffer) {
-        this.baseid = id;
+    
+    get prevID(): Buffer {
+        return this.previd;
     }
 
+    /**
+     * Append an identity to a rule using the given operator when
+     * it already exists
+     * @param rule      the name of the rule
+     * @param identity  the identity to append to the rule
+     * @param op        the operator to use if necessary
+     */
     addIdentity(rule: string, identity: Identity, op: string): void {
         this.rules.appendToRule(rule, identity, op);
     }
 
     /**
-     * Copy and evolve the darc to the next version
+     * Copy and evolve the darc to the next version so that it can be
+     * changed and proposed to byzcoin.
+     * @returns a new darc
      */
     evolve(): Darc {
         return new Darc({
             version: this.version.add(1),
             description: this.description,
-            baseID: this.baseID,
+            baseid: this.baseID,
             previd: this.id,
             rules: this.rules,
         });
     }
 
+    /**
+     * Get a string representation of the darc
+     * @returns the string representation
+     */
     toString(): string {
         return "ID: " + this.id.toString('hex') + "\n" +
             "Base: " + this.baseID.toString('hex') + "\n" +
@@ -117,11 +108,19 @@ export class Darc extends Message<Darc> {
             "Rules: " + this.rules;
     }
 
+    /**
+     * Create a genesis darc using the owners and signers to populate the
+     * rules
+     * @param owners    those you can evolve the darc
+     * @param signers   those you can sign
+     * @param desc      the description of the darc
+     * @returns the new darc
+     */
     public static newDarc(owners: Identity[], signers: Identity[], desc: Buffer): Darc {
         const darc = new Darc({
             version: Long.fromNumber(0, true),
             description: desc,
-            baseID: Buffer.from([]),
+            baseid: Buffer.from([]),
             previd: createHash('sha256').digest(),
             rules: initRules(owners, signers),
         });
@@ -129,6 +128,11 @@ export class Darc extends Message<Darc> {
         return darc;
     }
 
+    /**
+     * Instantiate a darc using a proof
+     * @param p the proof to use
+     * @returns the darc when compatible
+     */
     public static fromProof(p: Proof): Darc {
         if (!p.matchContract(DarcInstance.contractID)) {
             throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID.toString()}`);
@@ -138,6 +142,4 @@ export class Darc extends Message<Darc> {
     }
 }
 
-registerMessage('Rule', Rule);
-registerMessage('Rules', Rules);
 registerMessage('Darc', Darc);

@@ -1,5 +1,6 @@
-import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
 import { Message } from "protobufjs";
+import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
+import { registerMessage } from "../protobuf";
 
 /**
  * The proof class represents a proof that a given instance with its data is either present or absent in the global
@@ -12,11 +13,16 @@ import { Message } from "protobufjs";
  * As the element that is proven is always an instance, this class also has convenience methods to access the
  * instance data in case it is a proof of existence. For absence proofs, these methods will throw an error.
  */
-export class Proof extends Message<Proof> {
+export default class Proof extends Message<Proof> {
     inclusionproof: InclusionProof;
     latest: SkipBlock;
     links: ForwardLink[];
 
+    /**
+     * Get the state change stored in the inclusion proof
+     * 
+     * @returns the state change body
+     */
     get stateChangeBody(): StateChangeBody {
         return StateChangeBody.decode(this.inclusionproof.value);
     }
@@ -24,14 +30,17 @@ export class Proof extends Message<Proof> {
     /**
      * Returns the contractID this proof represents. Throws an error if it
      * is a proof of absence.
+     * 
+     * @returns the contract ID as a buffer
      */
     get contractID(): Buffer {
         return this.stateChangeBody.contractID;
     }
 
     /**
-     * @return {InstanceID} the darcID responsible for the instanceID this proof represents.
-     * @throws an error if it is a proof of absence.
+     * Get the darc ID of the instance
+     * 
+     * @returns the darcID responsible for the instanceID this proof represents.
      */
     get darcID(): Buffer {
         return this.stateChangeBody.darcID;
@@ -40,40 +49,50 @@ export class Proof extends Message<Proof> {
     /**
      * The value of the instance is different from the value stored in the global state.
      *
-     * @return {Buffer} the value of the instance this proof represents.
-     * @throws an error if it is a proof of absence.
+     * @returns the value of the instance this proof represents.
      */
     get value(): Buffer {
         return this.stateChangeBody.value;
     }
 
     /**
-     * @return {number} the version of the instance this proof represents.
-     * @throws an error if it is a proof of absence.
+     * Get the version of the instance
+     * 
+     * @returns the version of the instance this proof represents.
      */
     get version(): Long {
         return this.stateChangeBody.version;
     }
 
+    /**
+     * Get the instance ID for the proof
+     * 
+     * @returns the instance ID as a buffer
+     */
     get key(): Buffer {
         return this.inclusionproof.key;
     }
 
+    /**
+     * Check if the key exists in the proof
+     * 
+     * @returns true when it exists, false otherwise
+     */
     exists(key: Buffer): boolean {
         // TODO
         return true;
     }
 
     /**
-     * @param cid {string} contractID to check
-     * @return {boolean} true if it is a proof of existence and the given type of contract matches.
+     * @param cid contractID to check
+     * @return true if it is a proof of existence and the given type of contract matches.
      */
     matchContract(cid: string): boolean {
         return this.stateChangeBody.contractID.toString() == cid;
     }
 
     /**
-     * @return {string} a nicely formatted representation of the proof.
+     * @return a nicely formatted representation of the proof.
      */
     toString(): string {
         let str = "Proof for contractID(" + this.contractID + ") for "
@@ -85,7 +104,7 @@ export class Proof extends Message<Proof> {
 /**
  * InclusionProof represents the proof that an instance is present or not in the global state trie.
  */
-export class InclusionProof extends Message<InclusionProof> {
+class InclusionProof extends Message<InclusionProof> {
     interiors: [];
     leaf: any;
     empty: any;
@@ -125,10 +144,7 @@ export class InclusionProof extends Message<InclusionProof> {
     }
 }
 
-/**
- * StateChangeBody represents the
- */
-export class StateChangeBody extends Message<StateChangeBody> {
+class StateChangeBody extends Message<StateChangeBody> {
     readonly stateaction: number;
     readonly contractid: Buffer;
     readonly value: Buffer;
@@ -142,4 +158,10 @@ export class StateChangeBody extends Message<StateChangeBody> {
     get darcID(): Buffer {
         return this.darcid;
     }
+}
+
+export function registerProofMessages() {
+    registerMessage('byzcoin.Proof', Proof);
+    registerMessage('trie.Proof', InclusionProof);
+    registerMessage('StateChangeBody', StateChangeBody);
 }
