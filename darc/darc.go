@@ -293,6 +293,20 @@ func (r Rules) Copy() Rules {
 	return rCopy
 }
 
+// IsSubset checks whether the receiver is a subset of the given actions set.
+func (r Rules) IsSubset(superset Rules) bool {
+	supersetMap := make(map[Action]bool)
+	for _, x := range superset.List {
+		supersetMap[x.Action] = true
+	}
+	for _, x := range r.List {
+		if _, ok := supersetMap[x.Action]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 func (r Rules) exists(a Action) int {
 	for i, rule := range r.List {
 		if rule.Action == a {
