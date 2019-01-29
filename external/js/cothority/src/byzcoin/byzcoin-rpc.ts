@@ -47,12 +47,18 @@ export default class ByzCoinRPC {
     async updateConfig(): Promise<void> {
         let configIID = Buffer.alloc(32, 0);
         let pr = await this.getProof(configIID);
-        ByzCoinRPC.checkProof(pr, configIID, "config");
+        if (!pr.matches()) {
+            throw new Error('failed to get a matching proof');
+        }
+
         this.config = ChainConfig.fromProof(pr);
 
-        let darcIID = pr.stateChangeBody.darcID;
-        let genesisDarcProof = await this.getProof(darcIID);
-        ByzCoinRPC.checkProof(genesisDarcProof, darcIID, "darc");
+        const darcIID = pr.stateChangeBody.darcID;
+        const genesisDarcProof = await this.getProof(darcIID);
+        if (!genesisDarcProof.matches()) {
+            throw new Error('failed to get a matching proof');
+        }
+        
         this.genesisDarc = Darc.fromProof(genesisDarcProof);
     }
 
@@ -85,23 +91,6 @@ export default class ByzCoinRPC {
         return rep.counters.map(c => c.add(add));
     }
 
-    /**
-     * Check the validity of the proof
-     *
-     * @param {Proof} proof
-     * @param {string} expectedContract
-     * @throws {Error} if the proof is not valid
-     */
-    static checkProof(proof: Proof, iid: Buffer, expectedContract: string) {
-        if (!proof.inclusionproof.matches(iid)) {
-            throw "it is a proof of absence";
-        }
-        let contract = proof.stateChangeBody.contractID;
-        if (!proof.matchContract(expectedContract)) {
-            throw "contract name is not " + expectedContract + ", got " + contract;
-        }
-    }
-
     static makeGenesisDarc(signers: Identity[], roster: Roster, description?: string): Darc {
         if (signers.length == 0) {
             throw new Error("no identities");
@@ -125,9 +114,17 @@ export default class ByzCoinRPC {
         rpc.conn = new RosterWSConnection(roster, 'ByzCoin');
 
         const ccProof = await rpc.getProof(Buffer.alloc(32, 0));
+        if (!ccProof.matches()) {
+            throw new Error('fail to get a matching proof for the config instance');
+        }
+
         rpc.config = ChainConfig.fromProof(ccProof);
 
         const gdProof = await rpc.getProof(ccProof.stateChangeBody.darcID);
+        if (!gdProof.matches()) {
+            throw new Error('fail to get a matching proof for the darc instance');
+        }
+
         rpc.genesisDarc = Darc.fromProof(gdProof);
 
         return new ByzCoinRPC();

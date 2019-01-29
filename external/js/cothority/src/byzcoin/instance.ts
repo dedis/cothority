@@ -15,7 +15,7 @@ export default class Instance {
 
     public static async fromByzCoin(rpc: ByzCoinRPC, id: Buffer): Promise<Instance> {
         const p = await rpc.getProof(id);
-        if (!p || !p.exists(id)) {
+        if (!p.matches()) {
             throw new Error('instance is not in proof');
         }
 

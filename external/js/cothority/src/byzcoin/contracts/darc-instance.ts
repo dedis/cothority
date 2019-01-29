@@ -30,6 +30,10 @@ export default class DarcInstance {
      */
     async update(): Promise<DarcInstance> {
         const proof = await this.rpc.getProof(this.darc.baseID);
+        if (!proof.matches()) {
+            throw new Error('fail to get a matching proof');
+        }
+
         this.darc = Darc.fromProof(proof);
         return this;
     }
@@ -47,7 +51,7 @@ export default class DarcInstance {
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
         const proof = await this.rpc.getProof(this.darc.baseID);
-        if (!proof.exists(this.darc.baseID)) {
+        if (!proof.matches()) {
             throw new Error('instance is not in proof');
         }
 
@@ -73,7 +77,7 @@ export default class DarcInstance {
         }
 
         const proof = await this.rpc.getProof(iid);
-        if (!proof.exists(iid)) {
+        if (!proof.matches()) {
             throw new Error('instance is not in proof');
         }
 
@@ -99,6 +103,10 @@ export default class DarcInstance {
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<DarcInstance> {
         const p = await bc.getProof(iid);
+        if (!p.matches()) {
+            throw new Error('fail to get a matching proof');
+        }
+
         return new DarcInstance(bc, Instance.fromProof(p));
     }
 }
