@@ -2,7 +2,7 @@
 // to run it.
 //
 // Please see
-// https://go.dedis.ch/cothority/v3/blob/master/cosi/simulation/README.md for
+// https://github.com/dedis/cothority/blob/master/cosi/simulation/README.md for
 // instruction on how to run the simulation.
 package main
 

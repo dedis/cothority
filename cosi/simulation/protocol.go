@@ -20,7 +20,7 @@ func init() {
 }
 
 // VRType defines what verifications are done
-// see https://go.dedis.ch/cothority/v3/issues/260
+// see https://github.com/dedis/cothority/issues/260
 type VRType int
 
 const (

@@ -1,7 +1,7 @@
 // This is the command line interface to communicate with the pop service.
 //
-// More details can be found here -
-// https://go.dedis.ch/cothority/v3/blob/master/pop/README.md.
+// More details can be found here:
+// https://github.com/dedis/cothority/blob/master/pop/README.md
 package main
 
 import (

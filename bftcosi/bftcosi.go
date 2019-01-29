@@ -6,7 +6,7 @@
 // indicates the willingness of the rounds to sign the message, and the second
 // round is only started if at least a 'threshold' number of nodes signed off
 // in the first round. Please see
-// https://go.dedis.ch/cothority/v3/blob/master/bftcosi/README.md for
+// https://github.com/dedis/cothority/blob/master/bftcosi/README.md for
 // details.
 //
 // DEPRECATED: this package is kept here for historical and research purposes.
