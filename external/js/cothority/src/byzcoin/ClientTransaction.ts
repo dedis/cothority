@@ -65,7 +65,11 @@ export class Instruction extends Message<Instruction> {
                 args = this.spawn.args;
                 break;
             case 1:
+                h.update(this.invoke.contractID);
                 args = this.invoke.args;
+                break;
+            case 2:
+                h.update(this.delete.contractID);
                 break;
         }
         args.forEach(arg => {
@@ -114,18 +118,18 @@ export class Instruction extends Message<Instruction> {
         });
     }
 
-    static createInvoke(iid: Buffer, command: string, args: Argument[]): Instruction {
+    static createInvoke(iid: Buffer, contractID: string, args: Argument[]): Instruction {
         return new Instruction({
             instanceID: iid,
-            invoke: new Invoke({ command, args }),
+            invoke: new Invoke({ command: 'evolve', contractID, args }),
             signerCounter: [],
         });
     }
 
-    static createDelete(iid: Buffer): Instruction {
+    static createDelete(iid: Buffer, contractID: string): Instruction {
         return new Instruction({
             instanceID: iid,
-            delete: new Delete(),
+            delete: new Delete({ contractID }),
             signerCounter: [],
         });
     }
@@ -150,11 +154,30 @@ export class Spawn extends Message<Spawn> {
 }
 
 export class Invoke extends Message<Invoke> {
+    private contractid: string;
     readonly command: string;
     readonly args: Argument[];
+
+    get contractID(): string {
+        return this.contractid;
+    }
+
+    set contractID(v: string) {
+        this.contractid = v;
+    }
 }
 
-export class Delete extends Message<Delete> { }
+export class Delete extends Message<Delete> {
+    private contractid: string;
+
+    get contractID(): string {
+        return this.contractid;
+    }
+
+    set contractID(v: string) {
+        this.contractid = v;
+    }
+}
 
 export class InstanceID {
     iid: Buffer;

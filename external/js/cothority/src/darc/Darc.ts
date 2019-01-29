@@ -49,7 +49,7 @@ export class Rules extends Message<Rules> {
 function initRules(owners: Identity[], signers: Identity[]): Rules {
     const rules = new Rules();
 
-    owners.forEach((o) => rules.appendToRule('invoke:evolve', o, Rules.AND));
+    owners.forEach((o) => rules.appendToRule('invoke:darc.evolve', o, Rules.AND));
     signers.forEach(s => rules.appendToRule('_sign', s, Rules.OR));
 
     return rules;

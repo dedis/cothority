@@ -36,7 +36,7 @@ export class DarcInstance {
 
     async evolveDarcAndWait(newDarc: Darc, signer: Signer, wait: number): Promise<Proof> {
         const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(newDarc).finish()) })];
-        const instr = Instruction.createInvoke(this.darc.baseID, 'evolve', args);
+        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, args);
         const ctx = new ClientTransaction({ instructions: [instr] });
 
         const counters = await this.rpc.getSignerCounters([signer.identity], 1);
