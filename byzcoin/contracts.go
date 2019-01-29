@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
+	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -259,6 +260,40 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		sc, err = updateRosterScs(rst, darcID, req.Roster)
+		return
+	case "new_epoch":
+		// Decode instruction's arguments
+		shardIndBuf := inst.Invoke.Args.Search("shard-index")
+		shardInd, _ := binary.Varint(shardIndBuf)
+
+		proofBuf := inst.Invoke.Args.Search("epoch")
+		proof := &Proof{}
+		err = protobuf.DecodeWithConstructors(proofBuf, proof, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return
+		}
+
+		// Retrieve new roster in the IB instance from the proof
+		omniCC := &lib.ChainConfig{}
+		err = proof.VerifyAndDecode(cothority.Suite, "omniledgerepoch", omniCC)
+		if err != nil {
+			return
+		}
+		targetRoster := omniCC.ShardRosters[shardInd]
+
+		// Get the current instance to find the roster of the shard
+		conf := &ChainConfig{}
+		conf, err = loadConfigFromTrie(rst)
+		if err != nil {
+			return
+		}
+		oldRoster := conf.Roster
+
+		// Compute the roster resulting from the next change,
+		// then apply the changes
+		tempRoster := lib.ChangeRoster(oldRoster, targetRoster)
+		sc, err = updateRosterScs(rst, darcID, tempRoster)
+		log.Print("UPDATED SHARD", tempRoster.List, targetRoster.List)
 		return
 	default:
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
