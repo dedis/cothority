@@ -23,13 +23,13 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/blscosi"
-	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/onet/simul/monitor"
-	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/cothority/v3/blscosi"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v3/simul/monitor"
 )
 
 func init() {

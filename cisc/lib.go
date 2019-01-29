@@ -16,13 +16,13 @@ import (
 
 	"path/filepath"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/identity"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/identity"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -4,10 +4,10 @@ package cosi
 import (
 	"sync"
 
-	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Name can be used to reference the registered protocol.

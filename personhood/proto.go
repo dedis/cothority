@@ -1,10 +1,10 @@
 package personhood
 
 import (
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/darc"
-	pop "github.com/dedis/cothority/pop/service"
-	"github.com/dedis/cothority/skipchain"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	pop "go.dedis.ch/cothority/v3/pop/service"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 // PROTOSTART

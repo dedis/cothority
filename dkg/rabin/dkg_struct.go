@@ -10,10 +10,10 @@ so that it can find out who sent the message.
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
-	dkgrabin "go.dedis.ch/kyber/share/dkg/rabin"
+	"go.dedis.ch/kyber/v3"
+	dkgrabin "go.dedis.ch/kyber/v3/share/dkg/rabin"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 func init() {

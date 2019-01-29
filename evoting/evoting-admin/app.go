@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/evoting"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var (

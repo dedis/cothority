@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
-	dkgrabin "go.dedis.ch/kyber/share/dkg/rabin"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3"
+	dkgrabin "go.dedis.ch/kyber/v3/share/dkg/rabin"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Name is the protocol identifier string.

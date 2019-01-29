@@ -8,49 +8,35 @@ node_js:
 env:
   - TEST_DIR=kyber
 
-install:
-  - gimme 1.11
-  - . $HOME/.gimme/envs/go1.11.env
-  - go get github.com/dedis/Coding || true
-  # Because we are using "language: node_js" the "git clone" is not in the
-  # GOPATH. So make a copy of it over where it is supposed to be.
-  - git clone . `go env GOPATH`/src/github.com/dedis/cothority
-  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
-
-cache:
-  directories:
-    - $HOME/.cache/go-build
-    - $HOME/.m2
-
-after_success:
-  - npm run coveralls
-
-notifications:
-  email: false
-
 matrix:
   include:
     - language: go
       name: "Go Tests"
 
+      go_import_path: go.dedis.ch/cothority/v3
+ 
       go:
         - "1.11.x"
 
       install:
         - go get github.com/dedis/Coding || true
-        - go get -t ./...
-
-      before_install:
-        - cd $TRAVIS_BUILD_DIR
 
       script:
-        - make test
+        - env GO111MODULE=on make test
 
-    - language: java
-      name: "Java Tests"
+    # - language: java
+    #   name: "Java Tests"
 
-      script:
-        - make test_java
+    #   # This is needed because the "language: java" builder
+    #   # defaults to Go 1.8 and does not respect the go version
+    #   # specifier.
+    #   install:
+    #     - gimme 1.11
+    #     - . $HOME/.gimme/envs/go1.11.env
+    #     - env GO111MODULE=off go get github.com/dedis/Coding || true
+
+    #   script:
+    #     - make test_java
 
     - language: node_js
       name: "kyber-js Tests"
@@ -60,3 +46,15 @@ matrix:
         - npm install
         - npm run test
         - npm run build
+
+after_success:
+  - npm run coveralls
+
+notifications:
+  email: false
+
+cache:
+  directories:
+    - $HOME/.m2
+    - $HOME/.cache/go-build
+    - $GOPATH/pkg/mod

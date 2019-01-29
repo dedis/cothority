@@ -1,11 +1,11 @@
 package pedersen
 
 import (
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 
-	dkgpedersen "go.dedis.ch/kyber/share/dkg/pedersen"
+	dkgpedersen "go.dedis.ch/kyber/v3/share/dkg/pedersen"
 )
 
 func init() {

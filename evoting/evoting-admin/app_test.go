@@ -3,10 +3,10 @@ package main
 import (
 	"testing"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func TestMain(m *testing.M) {

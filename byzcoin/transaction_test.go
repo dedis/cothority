@@ -4,10 +4,10 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/protobuf"
 )
 
 func TestTransaction_Signing(t *testing.T) {

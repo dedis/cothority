@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 )
 
 // ContractCoinID denotes a contract that can store and transfer coins.

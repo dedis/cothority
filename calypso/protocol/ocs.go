@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority"
-	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share"
+	"go.dedis.ch/cothority/v3"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func init() {

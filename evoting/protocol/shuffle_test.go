@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/onet"
+	"go.dedis.ch/onet/v3"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting/lib"
-	"github.com/dedis/cothority/skipchain"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/evoting/lib"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 var shuffleServiceID onet.ServiceID

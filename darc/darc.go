@@ -43,14 +43,14 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/eddsa"
-	"go.dedis.ch/kyber/sign/schnorr"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/eddsa"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 )
 
 const evolve = "_evolve"

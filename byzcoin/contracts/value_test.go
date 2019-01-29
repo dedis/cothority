@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
 )
 
 func TestValue_Spawn(t *testing.T) {

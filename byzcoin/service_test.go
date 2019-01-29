@@ -10,20 +10,20 @@ import (
 	"testing"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/darc/expression"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/sign/eddsa"
-	"go.dedis.ch/kyber/suites"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/sign/eddsa"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 )
 
 var tSuite = suites.MustFind("Ed25519")
@@ -2201,7 +2201,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	createTx(instr.Hash(), uint64(n), 2)
 
 	// Remove some entries to check it will recreate them
-	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
+	err := s.service().stateChangeStorage.db.Update(func(tx *bbolt.Tx) error {
 		b := s.service().stateChangeStorage.getBucket(tx, s.genesis.SkipChainID())
 		if b == nil {
 			return errors.New("missing bucket")

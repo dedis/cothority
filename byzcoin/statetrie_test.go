@@ -3,8 +3,8 @@ package byzcoin
 import (
 	"testing"
 
-	"github.com/dedis/cothority/darc"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/darc"
 )
 
 // TestStateTrie is a sanity check for setting and retrieving keys, values and

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/dedis/cothority/skipchain"
+	"go.dedis.ch/cothority/v3/skipchain"
 )
 
 // stateChangeCache is a simple struct that maintains a cache of state changes

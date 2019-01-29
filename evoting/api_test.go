@@ -6,15 +6,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting"
-	_ "github.com/dedis/cothority/evoting/service"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/evoting"
+	_ "go.dedis.ch/cothority/v3/evoting/service"
 )
 
 func TestMain(m *testing.M) {

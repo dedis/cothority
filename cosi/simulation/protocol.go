@@ -1,10 +1,10 @@
 package main
 
 import (
-	p "github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
+	p "go.dedis.ch/cothority/v3/cosi/protocol"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 /*
@@ -20,7 +20,7 @@ func init() {
 }
 
 // VRType defines what verifications are done
-// see https://github.com/dedis/cothority/issues/260
+// see https://go.dedis.ch/cothority/v3/issues/260
 type VRType int
 
 const (

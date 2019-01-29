@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 )
 
 // Checks that the size of the storage is correctly restored
@@ -32,7 +32,7 @@ func TestStateChangeStorage_Init(t *testing.T) {
 
 	// Put random values and increment the block indices to
 	// check the size and indices initialisation
-	err := scs.db.Update(func(tx *bolt.Tx) error {
+	err := scs.db.Update(func(tx *bbolt.Tx) error {
 		for i := 0; i < n; i++ {
 			b := tx.Bucket(scs.bucket)
 
@@ -297,11 +297,11 @@ func generateDB(t *testing.T) (*stateChangeStorage, string) {
 	require.Nil(t, err)
 	tmpDB.Close()
 
-	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	db, err := bbolt.Open(tmpDB.Name(), 0600, nil)
 	require.Nil(t, err)
 
 	scs := stateChangeStorage{db: db, bucket: []byte("scstest")}
-	db.Update(func(tx *bolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket(scs.bucket)
 		return err
 	})

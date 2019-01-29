@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/darc"
+	"go.dedis.ch/cothority/v3/darc"
 )
 
 // getSignerCounter returns 0 if the key is not set, otherwise it loads the

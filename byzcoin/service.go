@@ -14,19 +14,19 @@ import (
 	"sync"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blscosi/protocol"
-	"github.com/dedis/cothority/byzcoin/viewchange"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber/pairing"
-	"go.dedis.ch/kyber/suites"
-	"go.dedis.ch/kyber/util/random"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -487,7 +487,7 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 		go func(ds downloadState) {
 			idStr := fmt.Sprintf("%x", ds.id)
 			db, bucketName := s.GetAdditionalBucket([]byte(idStr))
-			err := db.View(func(tx *bolt.Tx) error {
+			err := db.View(func(tx *bbolt.Tx) error {
 				bucket := tx.Bucket(bucketName)
 				return bucket.ForEach(func(k []byte, v []byte) error {
 					key := make([]byte, len(k))
@@ -759,7 +759,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			if err == nil {
 				// Suppose we _do_ have a statetrie
 				db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
-				err := db.Update(func(tx *bolt.Tx) error {
+				err := db.Update(func(tx *bbolt.Tx) error {
 					return tx.DeleteBucket(stBucket)
 				})
 				if err != nil {
@@ -772,7 +772,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 
 			// Then start downloading the stateTrie over the network.
 			cl := NewClient(sb.SkipChainID(), *roster)
-			var db *bolt.DB
+			var db *bbolt.DB
 			var bucketName []byte
 			var nonce uint64
 			for {
@@ -785,7 +785,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 					return errors.New("cannot download trie: " + err.Error())
 				}
 				// And store all entries in our local database.
-				err = db.Update(func(tx *bolt.Tx) error {
+				err = db.Update(func(tx *bbolt.Tx) error {
 					bucket := tx.Bucket(bucketName)
 					for _, kv := range resp.KeyValues {
 						err := bucket.Put(kv.Key, kv.Value)
@@ -2252,7 +2252,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		db, _ := s.GetAdditionalBucket([]byte("check-db-version"))
 
 		// Look for a bucket that has a byzcoin database in it.
-		err := db.View(func(tx *bolt.Tx) error {
+		err := db.View(func(tx *bbolt.Tx) error {
 			c := tx.Cursor()
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
 				log.Lvlf4("looking for old ByzCoin data in bucket %v", string(k))

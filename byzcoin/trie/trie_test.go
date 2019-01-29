@@ -8,8 +8,8 @@ import (
 	"testing"
 	"testing/quick"
 
-	bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
+	bbolt "go.etcd.io/bbolt"
 )
 
 const testDBName = "test_trie.db"
@@ -501,9 +501,9 @@ func TestCopy(t *testing.T) {
 }
 
 func newDiskDB(t *testing.T) DB {
-	db, err := bolt.Open(testDBName, 0600, nil)
+	db, err := bbolt.Open(testDBName, 0600, nil)
 	require.NoError(t, err)
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucketName))
 		return err
 	})

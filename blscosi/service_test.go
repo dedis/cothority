@@ -3,11 +3,11 @@ package blscosi
 import (
 	"testing"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/pairing"
-	"go.dedis.ch/kyber/sign/cosi"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var testSuite = pairing.NewSuiteBn256()

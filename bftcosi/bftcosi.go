@@ -6,7 +6,7 @@
 // indicates the willingness of the rounds to sign the message, and the second
 // round is only started if at least a 'threshold' number of nodes signed off
 // in the first round. Please see
-// https://github.com/dedis/cothority/blob/master/bftcosi/README.md for
+// https://go.dedis.ch/cothority/v3/blob/master/bftcosi/README.md for
 // details.
 //
 // DEPRECATED: this package is kept here for historical and research purposes.
@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"go.dedis.ch/kyber"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Make this variable so we can set it to 100ms in the tests.

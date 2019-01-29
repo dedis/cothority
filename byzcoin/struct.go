@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 )
 
 const defaultMaxSize = 2 * 1024 * 1024 * 1024 // 2GB
@@ -98,7 +98,7 @@ func (kt keyTimeArray) Swap(i, j int) {
 // cleaning always removes the oldest version but chooses the instance by the
 // oldest state change added (it will be the same if ordered).
 type stateChangeStorage struct {
-	db             *bolt.DB
+	db             *bbolt.DB
 	bucket         []byte
 	size           int
 	maxSize        int
@@ -124,7 +124,7 @@ func (s *stateChangeStorage) loadFromDB() (map[string]int, error) {
 	s.size = 0
 	indices := make(map[string]int)
 
-	err := s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
 			return errors.New("Missing bucket")
@@ -165,7 +165,7 @@ func (s *stateChangeStorage) loadFromDB() (map[string]int, error) {
 }
 
 // getBucket gets the bucket for the given skipchain
-func (s *stateChangeStorage) getBucket(tx *bolt.Tx, sid skipchain.SkipBlockID) *bolt.Bucket {
+func (s *stateChangeStorage) getBucket(tx *bbolt.Tx, sid skipchain.SkipBlockID) *bbolt.Bucket {
 	b := tx.Bucket(s.bucket)
 	if b == nil {
 		panic("Bucket has not been created. This is a programmer error.")
@@ -211,7 +211,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 	sortedKeys := make(keyTimeArray, len(s.sortedKeys))
 	copy(sortedKeys, s.sortedKeys)
 
-	err := s.db.Update(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bbolt.Tx) error {
 		// We make enough space to not have to do it everytime
 		// we append state changes
 		thres := int(float64(s.maxSize) * cleanThreshold)
@@ -278,7 +278,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 	thres := int64(sb.Index - s.maxNbrBlock)
 	size := s.size
 
-	err := s.db.Update(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sb.SkipChainID())
 
 		// Prevent from cleaning the same instance twice
@@ -363,7 +363,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 	sortedKeys := make(keyTimeArray, len(s.sortedKeys))
 	copy(sortedKeys, s.sortedKeys)
 
-	err = s.db.Update(func(tx *bolt.Tx) error {
+	err = s.db.Update(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sb.SkipChainID())
 
 		// append each list of state changes (or create the entry)
@@ -431,7 +431,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 		return nil, errLengthInstanceID
 	}
 
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
 		if b == nil {
 			// Nothing yet stored for this instance
@@ -474,7 +474,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 	// Only the instance ID and the version is known
 	prefix := key[:prefixLength+versionLength]
 
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
 
 		c := b.Cursor()
@@ -499,7 +499,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (entries StateChangeEntries, err error) {
 	s.accessLock.Lock()
 	defer s.accessLock.Unlock()
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
 
 		var suffix bytes.Buffer
@@ -536,7 +536,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		return
 	}
 
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
 		c := b.Cursor()
 
@@ -565,7 +565,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 func (s *stateChangeStorage) dumpAll(sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
 	s.accessLock.Lock()
 	defer s.accessLock.Unlock()
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
 		c := b.Cursor()
 		k, _ := c.First()
@@ -588,7 +588,7 @@ func (s *stateChangeStorage) getStateTrie(scid skipchain.SkipBlockID) (*stagingS
 		return nil, err
 	}
 
-	err = s.db.View(func(tx *bolt.Tx) error {
+	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, scid)
 		if b == nil {
 			// nothing so we return an empty trie

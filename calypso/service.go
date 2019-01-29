@@ -6,7 +6,7 @@
 // distributed key and to request a re-encryption
 //
 // For more details, see
-// https://github.com/dedis/cothority/tree/master/calypso/README.md
+// https://go.dedis.ch/cothority/v3/tree/master/calypso/README.md
 //
 // There are two contracts implemented by this package:
 //
@@ -35,20 +35,20 @@ import (
 	"os"
 	"time"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/calypso/protocol"
-	"github.com/dedis/cothority/darc"
-	dkgprotocol "github.com/dedis/cothority/dkg/pedersen"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/share"
-	dkg "go.dedis.ch/kyber/share/dkg/pedersen"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/calypso/protocol"
+	"go.dedis.ch/cothority/v3/darc"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/share"
+	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 )
 
 // Used for tests

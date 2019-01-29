@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/simul/monitor"
+	"go.dedis.ch/protobuf"
 )
 
 func init() {

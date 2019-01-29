@@ -11,10 +11,10 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Used for tests

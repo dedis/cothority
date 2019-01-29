@@ -3,10 +3,10 @@ package byzcoin
 import (
 	"time"
 
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
 )
 
 // PROTOSTART

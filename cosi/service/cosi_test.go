@@ -3,12 +3,12 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/crypto"
-	cosi "github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/cosi/crypto"
+	cosi "go.dedis.ch/cothority/v3/cosi/protocol"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = cothority.Suite

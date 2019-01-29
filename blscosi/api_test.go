@@ -3,9 +3,9 @@ package blscosi
 import (
 	"testing"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func TestClient_SignatureRequest(t *testing.T) {

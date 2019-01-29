@@ -6,17 +6,17 @@ import (
 	"io/ioutil"
 	"testing"
 
-	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/pairing"
-	"go.dedis.ch/kyber/sign/bls"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/bls"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	bbolt "go.etcd.io/bbolt"
 )
 
 func TestNewProof(t *testing.T) {
@@ -75,10 +75,10 @@ func createSC(t *testing.T) (s sc) {
 	fname := f.Name()
 	require.Nil(t, f.Close())
 
-	db, err := bolt.Open(fname, 0600, nil)
+	db, err := bbolt.Open(fname, 0600, nil)
 	require.Nil(t, err)
 
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket(bnsc)
 		return err
 	})
@@ -86,7 +86,7 @@ func createSC(t *testing.T) (s sc) {
 	s.s = skipchain.NewSkipBlockDB(db, bnsc)
 
 	bucketName := []byte("a testing string")
-	err = db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucket(bucketName)
 		return err
 	})

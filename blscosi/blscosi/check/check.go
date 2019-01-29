@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dedis/cothority/blscosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"go.dedis.ch/kyber/pairing"
+	"go.dedis.ch/cothority/v3/blscosi"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // RequestTimeOut defines when the client stops waiting for the CoSi group to

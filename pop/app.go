@@ -1,7 +1,7 @@
 // This is the command line interface to communicate with the pop service.
 //
 // More details can be found here -
-// https://github.com/dedis/cothority/blob/master/pop/README.md.
+// https://go.dedis.ch/cothority/v3/blob/master/pop/README.md.
 package main
 
 import (
@@ -20,25 +20,25 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/blscosi/blscosi/check"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/darc"
-	"github.com/dedis/cothority/darc/expression"
-	ph "github.com/dedis/cothority/personhood"
-	"github.com/dedis/cothority/pop/service"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/cfgpath"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/protobuf"
-	"go.dedis.ch/kyber"
-	"go.dedis.ch/kyber/sign/anon"
-	"go.dedis.ch/kyber/util/encoding"
-	"go.dedis.ch/kyber/util/key"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	ph "go.dedis.ch/cothority/v3/personhood"
+	"go.dedis.ch/cothority/v3/pop/service"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/anon"
+	"go.dedis.ch/kyber/v3/util/encoding"
+	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/cfgpath"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
 	cli "gopkg.in/urfave/cli.v1"
 )
 

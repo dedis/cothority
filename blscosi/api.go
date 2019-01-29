@@ -3,8 +3,8 @@ package blscosi
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Client is a structure to communicate with the CoSi

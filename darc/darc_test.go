@@ -3,8 +3,8 @@ package darc
 import (
 	"testing"
 
-	"github.com/dedis/cothority/darc/expression"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/darc/expression"
 )
 
 func TestRules(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/protobuf"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/protobuf"
 )
 
 var errIndexMissing = errors.New("index does not exist")

@@ -6,9 +6,9 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	_ "github.com/dedis/cothority/cosi/protocol"
-	_ "github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/onet/app"
+	_ "go.dedis.ch/cothority/v3/cosi/protocol"
+	_ "go.dedis.ch/cothority/v3/cosi/service"
+	"go.dedis.ch/onet/v3/app"
 )
 
 func runServer(ctx *cli.Context) {
