@@ -44,6 +44,10 @@ message CreateGenesisBlock {
   required sint64 blockinterval = 4;
   // Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
   optional sint32 maxblocksize = 5;
+  // DarcContracts is the set of contracts that can be parsed as a DARC.
+  // If it is not given, then the set contains on element and it's
+  // "darc".
+  repeated string darccontractids = 6;
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
@@ -120,6 +124,7 @@ message ChainConfig {
   required sint64 blockinterval = 1;
   required onet.Roster roster = 2;
   required sint32 maxblocksize = 3;
+  repeated string darccontractids = 4;
 }
 
 // Proof represents everything necessary to verify a given

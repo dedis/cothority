@@ -355,6 +355,9 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		Roster:        *r,
 		GenesisDarc:   *d,
 		BlockInterval: defaultInterval,
+		// usually we'd use contracts.ContractSecureDarcID, but there's
+		// an import cycle so we hard-code it
+		DarcContractIDs: []string{"secure_darc", ContractDarcID},
 	}
 	return &m, nil
 }

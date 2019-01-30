@@ -286,7 +286,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
 	require.Nil(t, err)
 	_, err = outside.AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // Tests what happens if a transaction with two instructions is sent: one valid and one invalid
@@ -2252,9 +2252,10 @@ func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTra
 
 func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser, counter int) (ClientTransaction, ChainConfig) {
 	config := ChainConfig{
-		BlockInterval: interval,
-		Roster:        roster,
-		MaxBlockSize:  size,
+		BlockInterval:   interval,
+		Roster:          roster,
+		MaxBlockSize:    size,
+		DarcContractIDs: []string{ContractDarcID, "secure_darc"},
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)

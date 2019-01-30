@@ -22,11 +22,17 @@ type Service struct {
 	*onet.ServiceProcessor
 }
 
+// interface to byzcoin.Service
+func (s *Service) byzService() *byzcoin.Service {
+	return s.Service(byzcoin.ServiceName).(*byzcoin.Service)
+}
+
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	byzcoin.RegisterContract(c, ContractValueID, contractValueFromBytes)
 	byzcoin.RegisterContract(c, ContractCoinID, contractCoinFromBytes)
+	byzcoin.RegisterContract(c, ContractSecureDarcID, s.contractSecureDarcFromBytes)
 	return s, nil
 }

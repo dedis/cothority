@@ -1877,6 +1877,49 @@ public final class ByzCoinProto {
      * <code>optional sint32 maxblocksize = 5;</code>
      */
     int getMaxblocksize();
+
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    java.util.List<java.lang.String>
+        getDarccontractidsList();
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    int getDarccontractidsCount();
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    java.lang.String getDarccontractids(int index);
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getDarccontractidsBytes(int index);
   }
   /**
    * <pre>
@@ -1898,6 +1941,7 @@ public final class ByzCoinProto {
       version_ = 0;
       blockinterval_ = 0L;
       maxblocksize_ = 0;
+      darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -1965,6 +2009,15 @@ public final class ByzCoinProto {
               maxblocksize_ = input.readSInt32();
               break;
             }
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                darccontractids_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              darccontractids_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1980,6 +2033,9 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          darccontractids_ = darccontractids_.getUnmodifiableView();
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2133,6 +2189,59 @@ public final class ByzCoinProto {
       return maxblocksize_;
     }
 
+    public static final int DARCCONTRACTIDS_FIELD_NUMBER = 6;
+    private com.google.protobuf.LazyStringList darccontractids_;
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getDarccontractidsList() {
+      return darccontractids_;
+    }
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    public int getDarccontractidsCount() {
+      return darccontractids_.size();
+    }
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    public java.lang.String getDarccontractids(int index) {
+      return darccontractids_.get(index);
+    }
+    /**
+     * <pre>
+     * DarcContracts is the set of contracts that can be parsed as a DARC.
+     * If it is not given, then the set contains on element and it's
+     * "darc".
+     * </pre>
+     *
+     * <code>repeated string darccontractids = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDarccontractidsBytes(int index) {
+      return darccontractids_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2186,6 +2295,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeSInt32(5, maxblocksize_);
       }
+      for (int i = 0; i < darccontractids_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, darccontractids_.getRaw(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2214,6 +2326,14 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(5, maxblocksize_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < darccontractids_.size(); i++) {
+          dataSize += computeStringSizeNoTag(darccontractids_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getDarccontractidsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2256,6 +2376,8 @@ public final class ByzCoinProto {
         result = result && (getMaxblocksize()
             == other.getMaxblocksize());
       }
+      result = result && getDarccontractidsList()
+          .equals(other.getDarccontractidsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2287,6 +2409,10 @@ public final class ByzCoinProto {
       if (hasMaxblocksize()) {
         hash = (37 * hash) + MAXBLOCKSIZE_FIELD_NUMBER;
         hash = (53 * hash) + getMaxblocksize();
+      }
+      if (getDarccontractidsCount() > 0) {
+        hash = (37 * hash) + DARCCONTRACTIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getDarccontractidsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2445,6 +2571,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000008);
         maxblocksize_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
+        darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -2501,6 +2629,11 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000010;
         }
         result.maxblocksize_ = maxblocksize_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          darccontractids_ = darccontractids_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.darccontractids_ = darccontractids_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2564,6 +2697,16 @@ public final class ByzCoinProto {
         }
         if (other.hasMaxblocksize()) {
           setMaxblocksize(other.getMaxblocksize());
+        }
+        if (!other.darccontractids_.isEmpty()) {
+          if (darccontractids_.isEmpty()) {
+            darccontractids_ = other.darccontractids_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureDarccontractidsIsMutable();
+            darccontractids_.addAll(other.darccontractids_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3061,6 +3204,153 @@ public final class ByzCoinProto {
       public Builder clearMaxblocksize() {
         bitField0_ = (bitField0_ & ~0x00000010);
         maxblocksize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureDarccontractidsIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          darccontractids_ = new com.google.protobuf.LazyStringArrayList(darccontractids_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getDarccontractidsList() {
+        return darccontractids_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public int getDarccontractidsCount() {
+        return darccontractids_.size();
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public java.lang.String getDarccontractids(int index) {
+        return darccontractids_.get(index);
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDarccontractidsBytes(int index) {
+        return darccontractids_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public Builder setDarccontractids(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public Builder addDarccontractids(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public Builder addAllDarccontractids(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureDarccontractidsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, darccontractids_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public Builder clearDarccontractids() {
+        darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DarcContracts is the set of contracts that can be parsed as a DARC.
+       * If it is not given, then the set contains on element and it's
+       * "darc".
+       * </pre>
+       *
+       * <code>repeated string darccontractids = 6;</code>
+       */
+      public Builder addDarccontractidsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.add(value);
         onChanged();
         return this;
       }
@@ -9183,6 +9473,25 @@ public final class ByzCoinProto {
      * <code>required sint32 maxblocksize = 3;</code>
      */
     int getMaxblocksize();
+
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    java.util.List<java.lang.String>
+        getDarccontractidsList();
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    int getDarccontractidsCount();
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    java.lang.String getDarccontractids(int index);
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getDarccontractidsBytes(int index);
   }
   /**
    * <pre>
@@ -9204,6 +9513,7 @@ public final class ByzCoinProto {
     private ChainConfig() {
       blockinterval_ = 0L;
       maxblocksize_ = 0;
+      darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -9253,6 +9563,15 @@ public final class ByzCoinProto {
               maxblocksize_ = input.readSInt32();
               break;
             }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                darccontractids_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              darccontractids_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -9268,6 +9587,9 @@ public final class ByzCoinProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          darccontractids_ = darccontractids_.getUnmodifiableView();
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -9337,6 +9659,35 @@ public final class ByzCoinProto {
       return maxblocksize_;
     }
 
+    public static final int DARCCONTRACTIDS_FIELD_NUMBER = 4;
+    private com.google.protobuf.LazyStringList darccontractids_;
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getDarccontractidsList() {
+      return darccontractids_;
+    }
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    public int getDarccontractidsCount() {
+      return darccontractids_.size();
+    }
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    public java.lang.String getDarccontractids(int index) {
+      return darccontractids_.get(index);
+    }
+    /**
+     * <code>repeated string darccontractids = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDarccontractidsBytes(int index) {
+      return darccontractids_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -9376,6 +9727,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeSInt32(3, maxblocksize_);
       }
+      for (int i = 0; i < darccontractids_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, darccontractids_.getRaw(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -9396,6 +9750,14 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(3, maxblocksize_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < darccontractids_.size(); i++) {
+          dataSize += computeStringSizeNoTag(darccontractids_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getDarccontractidsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -9428,6 +9790,8 @@ public final class ByzCoinProto {
         result = result && (getMaxblocksize()
             == other.getMaxblocksize());
       }
+      result = result && getDarccontractidsList()
+          .equals(other.getDarccontractidsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -9451,6 +9815,10 @@ public final class ByzCoinProto {
       if (hasMaxblocksize()) {
         hash = (37 * hash) + MAXBLOCKSIZE_FIELD_NUMBER;
         hash = (53 * hash) + getMaxblocksize();
+      }
+      if (getDarccontractidsCount() > 0) {
+        hash = (37 * hash) + DARCCONTRACTIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getDarccontractidsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -9601,6 +9969,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000002);
         maxblocksize_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
+        darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -9645,6 +10015,11 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000004;
         }
         result.maxblocksize_ = maxblocksize_;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          darccontractids_ = darccontractids_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.darccontractids_ = darccontractids_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -9702,6 +10077,16 @@ public final class ByzCoinProto {
         }
         if (other.hasMaxblocksize()) {
           setMaxblocksize(other.getMaxblocksize());
+        }
+        if (!other.darccontractids_.isEmpty()) {
+          if (darccontractids_.isEmpty()) {
+            darccontractids_ = other.darccontractids_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureDarccontractidsIsMutable();
+            darccontractids_.addAll(other.darccontractids_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -9923,6 +10308,99 @@ public final class ByzCoinProto {
       public Builder clearMaxblocksize() {
         bitField0_ = (bitField0_ & ~0x00000004);
         maxblocksize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureDarccontractidsIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          darccontractids_ = new com.google.protobuf.LazyStringArrayList(darccontractids_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getDarccontractidsList() {
+        return darccontractids_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public int getDarccontractidsCount() {
+        return darccontractids_.size();
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public java.lang.String getDarccontractids(int index) {
+        return darccontractids_.get(index);
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDarccontractidsBytes(int index) {
+        return darccontractids_.getByteString(index);
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public Builder setDarccontractids(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public Builder addDarccontractids(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public Builder addAllDarccontractids(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureDarccontractidsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, darccontractids_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public Builder clearDarccontractids() {
+        darccontractids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string darccontractids = 4;</code>
+       */
+      public Builder addDarccontractidsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarccontractidsIsMutable();
+        darccontractids_.add(value);
         onChanged();
         return this;
       }
@@ -32267,76 +32745,77 @@ public final class ByzCoinProto {
       "\nDataHeader\022\020\n\010trieroot\030\001 \002(\014\022\035\n\025clientt" +
       "ransactionhash\030\002 \002(\014\022\030\n\020statechangeshash" +
       "\030\003 \002(\014\022\021\n\ttimestamp\030\004 \002(\022\"0\n\010DataBody\022$\n" +
-      "\ttxresults\030\001 \003(\0132\021.byzcoin.TxResult\"\221\001\n\022" +
+      "\ttxresults\030\001 \003(\0132\021.byzcoin.TxResult\"\252\001\n\022" +
       "CreateGenesisBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006r" +
       "oster\030\002 \002(\0132\014.onet.Roster\022\037\n\013genesisdarc" +
       "\030\003 \002(\0132\n.darc.Darc\022\025\n\rblockinterval\030\004 \002(" +
-      "\022\022\024\n\014maxblocksize\030\005 \001(\021\"V\n\032CreateGenesis" +
-      "BlockResponse\022\017\n\007version\030\001 \002(\021\022\'\n\tskipbl" +
-      "ock\030\002 \001(\0132\024.skipchain.SkipBlock\"|\n\014AddTx" +
-      "Request\022\017\n\007version\030\001 \002(\021\022\023\n\013skipchainid\030" +
-      "\002 \002(\014\022/\n\013transaction\030\003 \002(\0132\032.byzcoin.Cli" +
-      "entTransaction\022\025\n\rinclusionwait\030\004 \001(\021\" \n" +
-      "\rAddTxResponse\022\017\n\007version\030\001 \002(\021\"4\n\010GetPr" +
-      "oof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030" +
-      "\003 \002(\014\"B\n\020GetProofResponse\022\017\n\007version\030\001 \002" +
-      "(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"l\n\022Che" +
-      "ckAuthorization\022\017\n\007version\030\001 \002(\021\022\021\n\tbyzc" +
-      "oinid\030\002 \002(\014\022\016\n\006darcid\030\003 \002(\014\022\"\n\nidentitie" +
-      "s\030\004 \003(\0132\016.darc.Identity\"-\n\032CheckAuthoriz" +
-      "ationResponse\022\017\n\007actions\030\001 \003(\t\"X\n\013ChainC" +
-      "onfig\022\025\n\rblockinterval\030\001 \002(\022\022\034\n\006roster\030\002" +
-      " \002(\0132\014.onet.Roster\022\024\n\014maxblocksize\030\003 \002(\021" +
-      "\"y\n\005Proof\022#\n\016inclusionproof\030\001 \002(\0132\013.trie" +
-      ".Proof\022$\n\006latest\030\002 \002(\0132\024.skipchain.SkipB" +
-      "lock\022%\n\005links\030\003 \003(\0132\026.skipchain.ForwardL" +
-      "ink\"\302\001\n\013Instruction\022\022\n\ninstanceid\030\001 \002(\014\022" +
-      "\035\n\005spawn\030\002 \001(\0132\016.byzcoin.Spawn\022\037\n\006invoke" +
-      "\030\003 \001(\0132\017.byzcoin.Invoke\022\037\n\006delete\030\004 \001(\0132" +
-      "\017.byzcoin.Delete\022\031\n\rsignercounter\030\005 \003(\004B" +
-      "\002\020\001\022#\n\nsignatures\030\006 \003(\0132\017.darc.Signature" +
-      "\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 " +
-      "\003(\0132\021.byzcoin.Argument\"N\n\006Invoke\022\022\n\ncont" +
-      "ractid\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022\037\n\004args\030\003 " +
-      "\003(\0132\021.byzcoin.Argument\"\034\n\006Delete\022\022\n\ncont" +
-      "ractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r" +
-      "\n\005value\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014in" +
-      "structions\030\001 \003(\0132\024.byzcoin.Instruction\"S" +
-      "\n\010TxResult\0225\n\021clienttransaction\030\001 \002(\0132\032." +
-      "byzcoin.ClientTransaction\022\020\n\010accepted\030\002 " +
-      "\002(\010\"z\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022" +
-      "\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022" +
-      "\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007versio" +
-      "n\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002" +
-      " \002(\004\"\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021" +
-      "StreamingResponse\022#\n\005block\030\001 \001(\0132\024.skipc" +
-      "hain.SkipBlock\"A\n\rDownloadState\022\021\n\tbyzco" +
-      "inid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(" +
-      "\021\"N\n\025DownloadStateResponse\022&\n\tkeyvalues\030" +
-      "\001 \003(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(" +
-      "\004\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 " +
-      "\002(\014\"j\n\017StateChangeBody\022\023\n\013stateaction\030\001 " +
-      "\002(\021\022\022\n\ncontractid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017" +
-      "\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSi" +
-      "gnerCounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipc" +
-      "hainid\030\002 \002(\014\"1\n\031GetSignerCountersRespons" +
-      "e\022\024\n\010counters\030\001 \003(\004B\002\020\001\"N\n\022GetInstanceVe" +
-      "rsion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid" +
-      "\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastInstan" +
-      "ceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstan" +
-      "ceid\030\002 \002(\014\"[\n\032GetInstanceVersionResponse" +
-      "\022)\n\013statechange\030\001 \002(\0132\024.byzcoin.StateCha" +
-      "nge\022\022\n\nblockindex\030\002 \002(\021\"@\n\025GetAllInstanc" +
-      "eVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanc" +
-      "eid\030\002 \002(\014\"Z\n\035GetAllInstanceVersionRespon" +
-      "se\0229\n\014statechanges\030\001 \003(\0132#.byzcoin.GetIn" +
-      "stanceVersionResponse\"T\n\030CheckStateChang" +
-      "eValidity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstan" +
-      "ceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckStat" +
-      "eChangeValidityResponse\022*\n\014statechanges\030" +
-      "\001 \003(\0132\024.byzcoin.StateChange\022\017\n\007blockid\030\002" +
-      " \002(\014B\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoin" +
-      "Proto"
+      "\022\022\024\n\014maxblocksize\030\005 \001(\021\022\027\n\017darccontracti" +
+      "ds\030\006 \003(\t\"V\n\032CreateGenesisBlockResponse\022\017" +
+      "\n\007version\030\001 \002(\021\022\'\n\tskipblock\030\002 \001(\0132\024.ski" +
+      "pchain.SkipBlock\"|\n\014AddTxRequest\022\017\n\007vers" +
+      "ion\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\022/\n\013transa" +
+      "ction\030\003 \002(\0132\032.byzcoin.ClientTransaction\022" +
+      "\025\n\rinclusionwait\030\004 \001(\021\" \n\rAddTxResponse\022" +
+      "\017\n\007version\030\001 \002(\021\"4\n\010GetProof\022\017\n\007version\030" +
+      "\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"B\n\020GetPro" +
+      "ofResponse\022\017\n\007version\030\001 \002(\021\022\035\n\005proof\030\002 \002" +
+      "(\0132\016.byzcoin.Proof\"l\n\022CheckAuthorization" +
+      "\022\017\n\007version\030\001 \002(\021\022\021\n\tbyzcoinid\030\002 \002(\014\022\016\n\006" +
+      "darcid\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.darc." +
+      "Identity\"-\n\032CheckAuthorizationResponse\022\017" +
+      "\n\007actions\030\001 \003(\t\"q\n\013ChainConfig\022\025\n\rblocki" +
+      "nterval\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Ros" +
+      "ter\022\024\n\014maxblocksize\030\003 \002(\021\022\027\n\017darccontrac" +
+      "tids\030\004 \003(\t\"y\n\005Proof\022#\n\016inclusionproof\030\001 " +
+      "\002(\0132\013.trie.Proof\022$\n\006latest\030\002 \002(\0132\024.skipc" +
+      "hain.SkipBlock\022%\n\005links\030\003 \003(\0132\026.skipchai" +
+      "n.ForwardLink\"\302\001\n\013Instruction\022\022\n\ninstanc" +
+      "eid\030\001 \002(\014\022\035\n\005spawn\030\002 \001(\0132\016.byzcoin.Spawn" +
+      "\022\037\n\006invoke\030\003 \001(\0132\017.byzcoin.Invoke\022\037\n\006del" +
+      "ete\030\004 \001(\0132\017.byzcoin.Delete\022\031\n\rsignercoun" +
+      "ter\030\005 \003(\004B\002\020\001\022#\n\nsignatures\030\006 \003(\0132\017.darc" +
+      ".Signature\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022" +
+      "\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n\006Invo" +
+      "ke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022" +
+      "\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n\006Dele" +
+      "te\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004na" +
+      "me\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTransac" +
+      "tion\022*\n\014instructions\030\001 \003(\0132\024.byzcoin.Ins" +
+      "truction\"S\n\010TxResult\0225\n\021clienttransactio" +
+      "n\030\001 \002(\0132\032.byzcoin.ClientTransaction\022\020\n\010a" +
+      "ccepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013stateact" +
+      "ion\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontrac" +
+      "tid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014" +
+      "\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022" +
+      "\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002id" +
+      "\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001 \001" +
+      "(\0132\024.skipchain.SkipBlock\"A\n\rDownloadStat" +
+      "e\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006l" +
+      "ength\030\003 \002(\021\"N\n\025DownloadStateResponse\022&\n\t" +
+      "keyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValue\022\r\n\005" +
+      "nonce\030\002 \002(\004\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r" +
+      "\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013stat" +
+      "eaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\014\022\r\n\005val" +
+      "ue\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(" +
+      "\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 \003(" +
+      "\t\022\023\n\013skipchainid\030\002 \002(\014\"1\n\031GetSignerCount" +
+      "ersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\"N\n\022Get" +
+      "InstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\n" +
+      "instanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026Get" +
+      "LastInstanceVersion\022\023\n\013skipchainid\030\001 \002(\014" +
+      "\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetInstanceVersi" +
+      "onResponse\022)\n\013statechange\030\001 \002(\0132\024.byzcoi" +
+      "n.StateChange\022\022\n\nblockindex\030\002 \002(\021\"@\n\025Get" +
+      "AllInstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022" +
+      "\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllInstanceVer" +
+      "sionResponse\0229\n\014statechanges\030\001 \003(\0132#.byz" +
+      "coin.GetInstanceVersionResponse\"T\n\030Check" +
+      "StateChangeValidity\022\023\n\013skipchainid\030\001 \002(\014" +
+      "\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n" +
+      " CheckStateChangeValidityResponse\022*\n\014sta" +
+      "techanges\030\001 \003(\0132\024.byzcoin.StateChange\022\017\n" +
+      "\007blockid\030\002 \002(\014B\'\n\027ch.epfl.dedis.lib.prot" +
+      "oB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -32371,7 +32850,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_CreateGenesisBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CreateGenesisBlock_descriptor,
-        new java.lang.String[] { "Version", "Roster", "Genesisdarc", "Blockinterval", "Maxblocksize", });
+        new java.lang.String[] { "Version", "Roster", "Genesisdarc", "Blockinterval", "Maxblocksize", "Darccontractids", });
     internal_static_byzcoin_CreateGenesisBlockResponse_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_byzcoin_CreateGenesisBlockResponse_fieldAccessorTable = new
@@ -32419,7 +32898,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_ChainConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ChainConfig_descriptor,
-        new java.lang.String[] { "Blockinterval", "Roster", "Maxblocksize", });
+        new java.lang.String[] { "Blockinterval", "Roster", "Maxblocksize", "Darccontractids", });
     internal_static_byzcoin_Proof_descriptor =
       getDescriptor().getMessageTypes().get(11);
     internal_static_byzcoin_Proof_fieldAccessorTable = new

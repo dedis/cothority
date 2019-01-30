@@ -3056,7 +3056,7 @@ public final class AuthProxProto {
   }
   /**
    * <pre>
-   * PriShare is a local copy of github.com/dedis/kyber/share.PriShare
+   * PriShare is a local copy of go.dedis.ch/kyber/v3/share.PriShare
    * because we do not have proto files for Kyber objects.
    * </pre>
    *
@@ -3276,7 +3276,7 @@ public final class AuthProxProto {
     }
     /**
      * <pre>
-     * PriShare is a local copy of github.com/dedis/kyber/share.PriShare
+     * PriShare is a local copy of go.dedis.ch/kyber/v3/share.PriShare
      * because we do not have proto files for Kyber objects.
      * </pre>
      *
@@ -3509,7 +3509,7 @@ public final class AuthProxProto {
   }
   /**
    * <pre>
-   * PartialSig is a local copy of github.com/dedis/kyber/sign/dss.PartialSig
+   * PartialSig is a local copy of go.dedis.ch/kyber/v3/sign/dss.PartialSig
    * because we do not have proto files for Kyber objects.
    * </pre>
    *
@@ -3867,7 +3867,7 @@ public final class AuthProxProto {
     }
     /**
      * <pre>
-     * PartialSig is a local copy of github.com/dedis/kyber/sign/dss.PartialSig
+     * PartialSig is a local copy of go.dedis.ch/kyber/v3/sign/dss.PartialSig
      * because we do not have proto files for Kyber objects.
      * </pre>
      *
