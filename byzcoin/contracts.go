@@ -1,7 +1,6 @@
 package byzcoin
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -99,13 +98,8 @@ const ContractDarcID = "darc"
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = InstanceID{}
 
-// CmdDarcEvolve is the action/command for evolving a Darc. Using this command
-// to add new rules is not allowed.
+// CmdDarcEvolve is needed to evolve a darc.
 const CmdDarcEvolve = "evolve"
-
-// CmdDarcEvolveUnrestriction is the action/command for arbitrarily evolving a
-// Darc.
-const CmdDarcEvolveUnrestriction = "evolve_unrestricted"
 
 type contractConfig struct {
 	BasicContract
@@ -341,44 +335,7 @@ func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Co
 
 func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	switch inst.Invoke.Command {
-	case CmdDarcEvolve:
-		var darcID darc.ID
-		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
-		if err != nil {
-			return
-		}
-
-		darcBuf := inst.Invoke.Args.Search("darc")
-		newD, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, nil, err
-		}
-		oldD, err := loadDarcFromTrie(rst, darcID)
-		if err != nil {
-			return nil, nil, err
-		}
-		if isChangingEvolveUnrestricted(oldD, newD) {
-			return nil, nil, errors.New("the evolve command is not allowed to change the the evolve_unrestricted rule")
-		}
-		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
-		}
-
-		// use the subset rule if it's not a genesis Darc
-		_, _, _, genesisDarcID, err := getValueContract(rst, NewInstanceID(nil).Slice())
-		if err != nil {
-			return nil, nil, err
-		}
-		if !genesisDarcID.Equal(oldD.GetBaseID()) {
-			if !newD.Rules.IsSubset(oldD.Rules) {
-				return nil, nil, errors.New("rules in the new version must be a subset of the previous version")
-			}
-		}
-
-		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
-		}, coins, nil
-	case CmdDarcEvolveUnrestriction:
+	case "evolve":
 		var darcID darc.ID
 		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 		if err != nil {
@@ -400,22 +357,9 @@ func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []C
 		return []StateChange{
 			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
 		}, coins, nil
-
 	default:
 		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
 	}
-}
-
-func isChangingEvolveUnrestricted(oldD *darc.Darc, newD *darc.Darc) bool {
-	oldExpr := oldD.Rules.Get(darc.Action(CmdDarcEvolveUnrestriction))
-	newExpr := newD.Rules.Get(darc.Action(CmdDarcEvolveUnrestriction))
-	if len(oldExpr) == 0 && len(newExpr) == 0 {
-		return false
-	}
-	if bytes.Equal(oldExpr, newExpr) {
-		return false
-	}
-	return true
 }
 
 // loadConfigFromTrie loads the configuration data from the trie.

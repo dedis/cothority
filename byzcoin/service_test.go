@@ -1080,11 +1080,11 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
+	d2 := s.darc.Copy()
+	require.Nil(t, d2.EvolveFrom(s.darc))
+
 	// first try to evolve with the wrong contract ID
 	{
-		d2 := s.darc.Copy()
-		require.Nil(t, d2.EvolveFrom(s.darc))
-
 		counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
 			SignerIDs:   []string{s.signer.Identity().String()},
 			SkipchainID: s.genesis.SkipChainID(),
@@ -1120,96 +1120,35 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 		require.Error(t, err)
 	}
 
-	// then we spawn a new Darc (ok), then add a rule to that Darc (fail)
-	{
-		id := []darc.Identity{s.signer.Identity()}
-		darc2 := darc.NewDarc(darc.InitRulesWith(id, id, invokeEvolve),
-			[]byte("next darc"))
-		darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
-		darc2Buf, err := darc2.ToProto()
-		require.Nil(t, err)
+	// then we create a bad request, i.e., with an invalid version number
+	d2.Version = 11
+	pr := s.testDarcEvolution(t, *d2, true)
 
-		ctx := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(s.darc.GetBaseID()),
-				Spawn: &Spawn{
-					ContractID: ContractDarcID,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: darc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), s.signer))
-
-		s.sendTx(t, ctx)
-		pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
-		require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
-
-		// now add the rule
-		darc3 := darc2.Copy()
-		require.Nil(t, darc3.EvolveFrom(darc2))
-
-		darc3.Rules.AddRule("spawn:snow", darc3.Rules.GetEvolutionExpr())
-		s.testDarcEvolution(t, *darc3, true)
-	}
-
-	// finally we create a bad request, i.e., with an invalid version number
-	{
-		d2 := s.darc.Copy()
-		require.Nil(t, d2.EvolveFrom(s.darc))
-
-		require.NoError(t, d2.Rules.DeleteRules("spawn:darc"))
-		d2.Version = 11
-		pr := s.testDarcEvolution(t, *d2, true)
-
-		// parse the darc
-		require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
-		_, v0, _, _, err := pr.KeyValue()
-		require.Nil(t, err)
-		d22, err := darc.NewFromProtobuf(v0)
-		require.Nil(t, err)
-		require.False(t, d22.Equal(d2))
-		require.True(t, d22.Equal(s.darc))
-	}
+	// parse the darc
+	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
+	_, v0, _, _, err := pr.KeyValue()
+	require.Nil(t, err)
+	d22, err := darc.NewFromProtobuf(v0)
+	require.Nil(t, err)
+	require.False(t, d22.Equal(d2))
+	require.True(t, d22.Equal(s.darc))
 }
 
 func TestService_DarcEvolution(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	// First evolve without adding a new rule.
 	d2 := s.darc.Copy()
 	require.Nil(t, d2.EvolveFrom(s.darc))
-	{
-		pr := s.testDarcEvolution(t, *d2, false)
+	pr := s.testDarcEvolution(t, *d2, false)
 
-		require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
-		_, v0, _, _, err := pr.KeyValue()
-		require.Nil(t, err)
-		d22, err := darc.NewFromProtobuf(v0)
-		require.Nil(t, err)
-		require.True(t, d22.Equal(d2))
-	}
-
-	// Then evolve to add a new rule. Usually it won't work, but we're
-	// evolving a genesis Darc so it's allowed.
-	{
-		d3 := d2.Copy()
-		require.Nil(t, d3.EvolveFrom(d2))
-		d3.Rules.AddRule("spawn:snow", d3.Rules.GetEvolutionExpr())
-		pr := s.testDarcEvolution(t, *d3, false)
-
-		require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
-		_, v0, _, _, err := pr.KeyValue()
-		require.Nil(t, err)
-		d33, err := darc.NewFromProtobuf(v0)
-		require.Nil(t, err)
-		require.True(t, d33.Equal(d3))
-	}
-
+	// parse the darc
+	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
+	_, v0, _, _, err := pr.KeyValue()
+	require.Nil(t, err)
+	d22, err := darc.NewFromProtobuf(v0)
+	require.Nil(t, err)
+	require.True(t, d22.Equal(d2))
 }
 
 func TestService_DarcSpawn(t *testing.T) {

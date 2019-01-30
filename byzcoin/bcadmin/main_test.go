@@ -74,7 +74,7 @@ func TestCli(t *testing.T) {
 	b = &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b
-	args = []string{"bcadmin", "add", "--replace", "--identity", "ed25519:XXX", "spawn:darc"}
+	args = []string{"bcadmin", "add", "--identity", "ed25519:XXX", "spawn:xxx"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 
@@ -88,5 +88,5 @@ func TestCli(t *testing.T) {
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
-	require.Contains(t, string(b.Bytes()), "spawn:darc - \"ed25519:XXX\"")
+	require.Contains(t, string(b.Bytes()), "spawn:xxx - \"ed25519:XXX\"")
 }
