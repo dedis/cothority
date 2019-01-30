@@ -3,6 +3,8 @@ import Signature from "../darc/signature";
 import { createHash } from "crypto";
 import { Message } from "protobufjs";
 import Long from 'long';
+import ByzCoinRPC from "./byzcoin-rpc";
+import Identity from "../darc/identity";
 
 export default class ClientTransaction extends Message<ClientTransaction> {
     readonly instructions: Instruction[];
@@ -11,6 +13,18 @@ export default class ClientTransaction extends Message<ClientTransaction> {
         const ctxHash = this.hash();
 
         this.instructions.forEach((instr) => instr.signWith(ctxHash, signers));
+    }
+
+    async updateCounters(rpc: ByzCoinRPC, signers: Identity[]): Promise<void> {
+        if (this.instructions.length === 0) {
+            return;
+        }
+
+        await this.instructions[0].updateCounters(rpc, signers);
+
+        for (let i = 1; i < this.instructions.length; i++) {
+            this.instructions[i].signerCounter = this.instructions[0].signerCounter.map(v => v.add(i));
+        }
     }
 
     hash(): Buffer {
@@ -52,6 +66,11 @@ export class Instruction extends Message<Instruction> {
 
     signWith(ctxHash: Buffer, signers: Signer[]): void {
         this._signatures = signers.map(s => s.sign(ctxHash));
+    }
+
+    async updateCounters(rpc: ByzCoinRPC, signers: Identity[]): Promise<void> {
+        const counters = await rpc.getSignerCounters(signers, 1);
+        this.signerCounter = counters;
     }
 
     hash(): Buffer {
@@ -118,10 +137,10 @@ export class Instruction extends Message<Instruction> {
         });
     }
 
-    static createInvoke(iid: Buffer, contractID: string, args: Argument[]): Instruction {
+    static createInvoke(iid: Buffer, contractID: string, command: string, args: Argument[]): Instruction {
         return new Instruction({
             instanceID: iid,
-            invoke: new Invoke({ command: 'evolve', contractID, args }),
+            invoke: new Invoke({ command, contractID, args }),
             signerCounter: [],
         });
     }
@@ -176,36 +195,5 @@ export class Delete extends Message<Delete> {
 
     set contractID(v: string) {
         this.contractid = v;
-    }
-}
-
-export class InstanceID {
-    iid: Buffer;
-
-    constructor(iid: Buffer) {
-        if (iid.length != 32) {
-            throw new Error("instanceIDs are always 32 bytes");
-        }
-        this.iid = Buffer.from(iid);
-    }
-
-    equals(iid: InstanceID) {
-        return this.iid.equals(iid.iid);
-    }
-
-    toObject(): any {
-        return { IID: this.iid };
-    }
-
-    static fromHex(str: string): InstanceID {
-        return new InstanceID(Buffer.from(str, 'hex'));
-    }
-
-    static fromObject(obj: any): InstanceID {
-        return new InstanceID(Buffer.from(obj.IID));
-    }
-
-    static fromObjectBuffer(obj: any): InstanceID {
-        return new InstanceID(Buffer.from(obj));
     }
 }

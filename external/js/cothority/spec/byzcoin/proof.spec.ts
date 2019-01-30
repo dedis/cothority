@@ -22,7 +22,7 @@ describe('Proof Tests', () => {
     beforeAll(async () => {
         await startConodes();
 
-        darc = ByzCoinRPC.makeGenesisDarc([admin.identity], roster);
+        darc = ByzCoinRPC.makeGenesisDarc([admin], roster);
         rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, blockInterval);
         di = await DarcInstance.fromByzcoin(rpc, darc.baseID);
     });
@@ -32,7 +32,7 @@ describe('Proof Tests', () => {
         const ids: Buffer[] = [];
 
         for (let i = 0; i < n; i++) {
-            const newDarc = ByzCoinRPC.makeGenesisDarc([admin.identity], roster, `Darc n°${i}`);
+            const newDarc = ByzCoinRPC.makeGenesisDarc([admin], roster, `Darc n°${i}`);
             await di.spawnDarcAndWait(newDarc, admin, 10);
             ids.push(newDarc.baseID);
         }

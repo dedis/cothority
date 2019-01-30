@@ -1,10 +1,17 @@
 import Docker from 'dockerode';
 import fs from 'fs';
+import { Roster } from '../../src/network/proto';
+import SignerEd25519 from '../../src/darc/signer-ed25519';
 
 const docker = new Docker();
+const data = fs.readFileSync(process.cwd() + '/spec/support/public.toml');
 
 const CONTAINER_NAME = 'conode-test-run-js';
 const FILTERS = JSON.stringify({ name: ['/' + CONTAINER_NAME] });
+
+export const ROSTER = Roster.fromTOML(data);
+export const BLOCK_INTERVAL = 5 * 1000 * 1000 * 1000; // 5s in nano precision
+export const SIGNER = SignerEd25519.fromBytes(Buffer.from("0cb119094dbf72dfd169f8ba605069ce66a0c8ba402eb22952b544022d33b90c", "hex"));
 
 export async function startConodes(): Promise<void> {
     const containers = await docker.listContainers({ all: true, filters: FILTERS });

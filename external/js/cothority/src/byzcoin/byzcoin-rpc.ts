@@ -33,7 +33,7 @@ export default class ByzCoinRPC {
      * transaction to be included
      * @returns a promise that gets resolved if the block has been included
      */
-    sendTransactionAndWait(transaction: ClientTransaction, wait: number = 5): Promise<AddTxResponse> {
+    sendTransactionAndWait(transaction: ClientTransaction, wait: number = 10): Promise<AddTxResponse> {
         const req = new AddTxRequest({
             version: currentVersion,
             skipchainID: this.genesis.hash,

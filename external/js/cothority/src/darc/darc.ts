@@ -108,6 +108,10 @@ export default class Darc extends Message<Darc> {
             "Rules: " + this.rules;
     }
 
+    toBytes(): Buffer {
+        return Buffer.from(Darc.encode(this).finish());
+    }
+
     /**
      * Create a genesis darc using the owners and signers to populate the
      * rules
@@ -116,7 +120,7 @@ export default class Darc extends Message<Darc> {
      * @param desc      the description of the darc
      * @returns the new darc
      */
-    public static newDarc(owners: Identity[], signers: Identity[], desc: Buffer): Darc {
+    public static newDarc(owners: Identity[], signers: Identity[], desc?: Buffer): Darc {
         const darc = new Darc({
             version: Long.fromNumber(0, true),
             description: desc,

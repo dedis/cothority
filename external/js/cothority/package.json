@@ -35,6 +35,7 @@
     "isomorphic-ws": "^4.0.1",
     "lodash": "^4.17.11",
     "long": "^4.0.0",
+    "moment": "^2.24.0",
     "os": "^0.1.1",
     "protobufjs": "^6.8.8",
     "pure-uuid": "^1.5.5",
@@ -45,9 +46,12 @@
     "ws": "^6.1.2"
   },
   "devDependencies": {
+    "@types/bn.js": "^4.11.4",
     "@types/dockerode": "^2.5.11",
+    "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
     "@types/lodash": "^4.14.120",
+    "@types/ws": "^6.0.1",
     "dockerode": "^2.5.8",
     "jasmine": "^3.3.1",
     "ts-node": "^8.0.1",

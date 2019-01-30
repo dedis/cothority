@@ -40,11 +40,10 @@ export default class DarcInstance {
 
     async evolveDarcAndWait(newDarc: Darc, signer: Signer, wait: number): Promise<Proof> {
         const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(newDarc).finish()) })];
-        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, args);
+        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, 'evolve', args);
         const ctx = new ClientTransaction({ instructions: [instr] });
 
-        const counters = await this.rpc.getSignerCounters([signer.identity], 1);
-        instr.signerCounter = counters;
+        await instr.updateCounters(this.rpc, [signer]);
 
         ctx.signWith([signer]);
 
@@ -63,7 +62,7 @@ export default class DarcInstance {
         const ctx = new ClientTransaction({ instructions: [instr] });
 
         // Get the counters before the signature
-        const counters = await this.rpc.getSignerCounters([signer.identity], 1);
+        const counters = await this.rpc.getSignerCounters([signer], 1);
         instr.signerCounter = counters;
 
         ctx.signWith([signer]);

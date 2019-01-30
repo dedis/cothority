@@ -1,6 +1,8 @@
 import Proof from "./proof";
 import ByzCoinRPC from "./byzcoin-rpc";
 
+export type InstanceID = Buffer;
+
 export default class Instance {
     protected constructor(
         readonly id: Buffer,

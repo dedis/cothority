@@ -2,41 +2,23 @@ import { curve, sign, Point, Scalar } from "@dedis/kyber";
 import Signer from "./signer";
 import IdentityEd25519 from "./identity-ed25519";
 import Signature from "./signature";
-import Identity from "./identity";
 
 const ed25519 = curve.newCurve("edwards25519");
 const { schnorr } = sign;
 
-export default class SignerEd25519 extends Signer {
-    private pub: Point;
+export default class SignerEd25519 extends IdentityEd25519 implements Signer {
     private priv: Scalar;
 
     constructor(pub: Point, priv: Scalar) {
-        super();
-        this.pub = pub;
+        super({ point: pub.marshalBinary() });
         this.priv = priv;
-    }
-
-    /** @inheritdoc */
-    get private(): Scalar {
-        return this.priv;
-    }
-
-    /** @inheritdoc */
-    get public(): Point {
-        return this.pub;
-    }
-
-    /** @inheritdoc */
-    get identity(): Identity {
-        return new IdentityEd25519({ point: this.pub.marshalBinary() });
     }
 
     /** @inheritdoc */
     sign(msg: Buffer): Signature {
         return new Signature({
             signature: schnorr.sign(ed25519, this.priv, msg), 
-            signer: this.identity.toWrapper(),
+            signer: this.toWrapper(),
         });
     }
 
