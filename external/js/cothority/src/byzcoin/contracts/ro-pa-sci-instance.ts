@@ -5,6 +5,7 @@ import ByzCoinRPC from "../byzcoin-rpc";
 import Instance, { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
 import { Message } from "protobufjs";
+import { registerMessage } from "../../protobuf";
 
 export default class RoPaSciInstance {
     static readonly contractID = "ropasci";
@@ -21,17 +22,56 @@ export default class RoPaSciInstance {
         this.struct = RoPaSciStruct.decode(this.instance.data);
     }
 
+    /**
+     * Getter for the second player ID
+     * @returns id as a buffer
+     */
+    get adversaryID(): Buffer {
+        return this.struct.secondplayeraccount;
+    }
+
+    /**
+     * Getter for the second player choice
+     * @returns the choice as a number
+     */
+    get adversaryChoice(): number {
+        return this.struct.secondPlayer;
+    }
+
+    /**
+     * Update the instance data
+     * 
+     * @param choice The choice of the first player
+     * @param fillup The fillup of the first player
+     */
     setChoice(choice: number, fillup: Buffer) {
         this.firstMove = choice;
         this.fillUp = fillup;
     }
 
+    /**
+     * Check if both players have played their moves
+     * 
+     * @returns true when both have played, false otherwise
+     */
+    isDone(): boolean {
+        return this.struct.secondPlayer >= 0;
+    }
+
+    /**
+     * Play the adversary move
+     * 
+     * @param coin      The CoinInstance of the second player
+     * @param signer    Signer for the transaction
+     * @param choice    The choice of the second player
+     * @returns a promise that resolves on success, or rejects with the error
+     */
     async second(coin: CoinInstance, signer: Signer, choice: number): Promise<void> {
         if (!coin.name.equals(this.struct.stake.name)) {
-            return Promise.reject("not correct coin-type for player 2");
+            throw new Error("not correct coin-type for player 2");
         }
         if (coin.value.lessThan(this.struct.stake.value)) {
-            return Promise.reject("don't have enough coins to match stake");
+            throw new Error("don't have enough coins to match stake");
         }
 
         const ctx = new ClientTransaction({
@@ -57,11 +97,18 @@ export default class RoPaSciInstance {
         });
 
         await ctx.updateCounters(this.rpc, [signer]);
-
         ctx.signWith([signer]);
+
         await this.rpc.sendTransactionAndWait(ctx);
     }
 
+    /**
+     * Reveal the move of the first player
+     * 
+     * @param coin The CoinInstance of the first player
+     * @returns a promise that resolves on success, or rejects
+     * with the error
+     */
     async confirm(coin: CoinInstance): Promise<void> {
         if (!coin.name.equals(this.struct.stake.name)) {
             throw new Error("not correct coin-type for player 1");
@@ -87,6 +134,12 @@ export default class RoPaSciInstance {
         await this.rpc.sendTransactionAndWait(ctx);
     }
 
+    /**
+     * Update the state of the instance
+     * 
+     * @returns a promise that resolves with the updated instance,
+     * or rejects with the error
+     */
     async update(): Promise<RoPaSciInstance> {
         const proof = await this.rpc.getProof(this.instance.id);
         if (!proof.matches()) {
@@ -98,10 +151,14 @@ export default class RoPaSciInstance {
         return this;
     }
 
-    isDone(): boolean {
-        return this.struct.secondPlayer >= 0;
-    }
-
+    /**
+     * Instantiate a RoPaSciInstance using the given proof if it
+     * is valid
+     * 
+     * @param bc    The ByzCoinRPC to use
+     * @param p     The Proof
+     * @returns the new instance
+     */
     static fromProof(bc: ByzCoinRPC, p: Proof): RoPaSciInstance {
         if (!p.matches()) {
             throw new Error('fail to get a matching proof');
@@ -110,11 +167,22 @@ export default class RoPaSciInstance {
         return new RoPaSciInstance(bc, Instance.fromProof(p));
     }
 
+    /**
+     * Fetch the proof for the given instance and create a
+     * RoPaSciInstance from it
+     * 
+     * @param bc    The ByzCoinRPC to use
+     * @param iid   The instance ID
+     * @returns the new instance
+     */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<RoPaSciInstance> {
         return RoPaSciInstance.fromProof(bc, await bc.getProof(iid));
     }
 }
 
+/**
+ * Data hold by a rock-paper-scisors instance
+ */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
     readonly description: string;
     readonly stake: Coin;
@@ -123,15 +191,30 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     readonly secondplayer: number;
     readonly secondplayeraccount: Buffer;
 
+    /**
+     * Getter for the first player choice
+     * @returns the choice as a number
+     */
     get firstPlayer(): number {
         return this.firstplayer;
     }
 
+    /**
+     * Getter for the second player
+     * @returns the choice as a number
+     */
     get secondPlayer(): number {
         return this.secondplayer;
     }
 
+    /**
+     * Helper to encode the struct using protobuf
+     * 
+     * @returns the data as a buffer
+     */
     toBytes(): Buffer {
         return Buffer.from(RoPaSciStruct.encode(this).finish());
     }
 }
+
+registerMessage('personhood.RoPaSciStruct', RoPaSciStruct);

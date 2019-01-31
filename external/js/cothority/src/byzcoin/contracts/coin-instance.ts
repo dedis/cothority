@@ -32,6 +32,10 @@ export default class CoinInstance {
         return this.coin.value;
     }
 
+    getCoin(): Coin {
+        return this.coin;
+    }
+
     /**
      * Transfer a certain amount of coin to another account.
      *

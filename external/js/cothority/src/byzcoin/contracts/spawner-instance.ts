@@ -211,8 +211,8 @@ export default class SpawnerInstance {
         fph.update(Buffer.from([choice % 3]));
         fph.update(fillup);
         const rps = new RoPaSciStruct({
-            description: desc, 
-            stake: c, 
+            description: desc,
+            stake: c,
             firstplayerhash: fph.digest(),
             firstplayer: -1,
             secondplayer: -1,
