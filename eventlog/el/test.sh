@@ -7,7 +7,7 @@ DBG_SRV=0
 NBR=3
 NBR_SERVERS_GROUP=$NBR
 
-. ../..//libtest.sh
+. ../../libtest.sh
 
 # Use a local config dir.
 el="./el -c ."
