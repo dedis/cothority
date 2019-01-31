@@ -33,6 +33,5 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	byzcoin.RegisterContract(c, ContractValueID, contractValueFromBytes)
 	byzcoin.RegisterContract(c, ContractCoinID, contractCoinFromBytes)
-	byzcoin.RegisterContract(c, ContractSecureDarcID, s.contractSecureDarcFromBytes)
 	return s, nil
 }

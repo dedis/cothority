@@ -312,7 +312,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
-	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
+	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
 	instr2.SignerCounter = []uint64{3}
@@ -335,7 +335,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
-	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
+	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	dcID2 := random.Bits(256, true, random.New())
 	instr2 = createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID2)
@@ -1132,6 +1132,10 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	require.Nil(t, err)
 	require.False(t, d22.Equal(d2))
 	require.True(t, d22.Equal(s.darc))
+
+	// finally we do it correctly
+	d2.Version = 1
+	s.testDarcEvolution(t, *d2, false)
 }
 
 func TestService_DarcEvolution(t *testing.T) {
@@ -1156,7 +1160,7 @@ func TestService_DarcSpawn(t *testing.T) {
 	defer s.local.CloseAll()
 
 	id := []darc.Identity{s.signer.Identity()}
-	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, invokeEvolve),
+	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, "invoke:"+ContractSecureDarcID+"."+cmdDarcEvolveUnrestriction),
 		[]byte("next darc"))
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
@@ -1169,7 +1173,7 @@ func TestService_DarcSpawn(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(s.darc.GetBaseID()),
 			Spawn: &Spawn{
-				ContractID: ContractDarcID,
+				ContractID: ContractSecureDarcID,
 				Args: []Argument{{
 					Name:  "darc",
 					Value: darc2Buf,
@@ -1195,7 +1199,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	id2 := []darc.Identity{signer2.Identity()}
 	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
 		[]byte("second darc"))
-	darc2.Rules.AddRule("spawn:darc", expression.InitOrExpr(s.darc.GetIdentityString()))
+	darc2.Rules.AddRule("spawn:"+ContractSecureDarcID, expression.InitOrExpr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
@@ -1204,7 +1208,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractDarcID,
+			ContractID: ContractSecureDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc2Buf,
@@ -1231,7 +1235,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	instr = Instruction{
 		InstanceID: NewInstanceID(darc2.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractDarcID,
+			ContractID: ContractSecureDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc3Buf,
@@ -1256,7 +1260,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	id2 := []darc.Identity{signer2.Identity()}
 	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
 		[]byte("second darc"))
-	darc2.Rules.AddRule("spawn:darc", expression.Expr(s.darc.GetIdentityString()))
+	darc2.Rules.AddRule("spawn:"+ContractSecureDarcID, expression.Expr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
@@ -1265,7 +1269,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractDarcID,
+			ContractID: ContractSecureDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc2Buf,
@@ -1310,13 +1314,13 @@ func TestService_CheckAuthorization(t *testing.T) {
 	ca.Identities[0] = s.signer.Identity()
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("spawn:darc"))
+	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractSecureDarcID))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewIdentityDarc(s.darc.GetID())
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("spawn:darc"))
+	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractSecureDarcID))
 }
 
 func TestService_GetLeader(t *testing.T) {
@@ -1443,7 +1447,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
 	require.Nil(t, err)
-	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
+	instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID, "darc", testDarcBuf)
 	require.Nil(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 	require.Nil(t, err)
@@ -1487,7 +1491,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		require.Nil(t, err)
 		d, err := darc.NewFromProtobuf(val)
 		require.Nil(t, err)
-		vcIDs := strings.Split(string(d.Rules.Get(darc.Action("invoke:"+ContractConfigID+".view_change"))), " | ")
+		vcIDs := strings.Split(string(d.Rules.Get("invoke:"+ContractConfigID+".view_change")), " | ")
 		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
 
@@ -1601,7 +1605,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 			dummyDarc := darc.NewDarc(darc.InitRules(ids, ids), desc)
 			dummyDarcBuf, err := dummyDarc.ToProto()
 			require.Nil(t, err)
-			instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID,
+			instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID,
 				"darc", dummyDarcBuf)
 			instr.SignerCounter[0] = uint64(count)
 			count++
@@ -1623,7 +1627,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
 	require.Nil(t, err)
-	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
+	instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID, "darc", testDarcBuf)
 	require.Nil(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 	require.Nil(t, err)
@@ -2255,7 +2259,7 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 		BlockInterval:   interval,
 		Roster:          roster,
 		MaxBlockSize:    size,
-		DarcContractIDs: []string{ContractDarcID, "secure_darc"},
+		DarcContractIDs: []string{ContractSecureDarcID},
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -2282,7 +2286,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) Client
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
 	invoke := Invoke{
-		ContractID: ContractDarcID,
+		ContractID: ContractSecureDarcID,
 		Command:    "evolve",
 		Args: []Argument{
 			Argument{
@@ -2429,7 +2433,8 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			"spawn:" + dummyContract,
 			"spawn:" + invalidContract,
 			"spawn:" + panicContract,
-			"spawn:" + ContractDarcID,
+			"spawn:" + ContractSecureDarcID,
+			"invoke:" + ContractSecureDarcID + "." + cmdDarcEvolve,
 			"invoke:" + ContractConfigID + ".update_config",
 			"spawn:" + slowContract,
 			"spawn:" + stateChangeCacheContract,

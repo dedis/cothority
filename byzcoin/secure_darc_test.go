@@ -1,11 +1,10 @@
-package contracts
+package byzcoin
 
 import (
 	"testing"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -20,12 +19,12 @@ func TestSecureDarc(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	_, roster, _ := local.GenTree(3, true)
 
-	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:value", "spawn:darc", "spawn:secure_darc"}, signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster,
+		[]string{"spawn:darc", "spawn:secure_darc"}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
-	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
@@ -35,12 +34,12 @@ func TestSecureDarc(t *testing.T) {
 	secDarc := gDarc.Copy()
 	secDarcBuf, err := secDarc.ToProto()
 	require.NoError(t, err)
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
+	ctx := ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &Spawn{
 				ContractID: ContractSecureDarcID,
-				Args: []byzcoin.Argument{{
+				Args: []Argument{{
 					Name:  "darc",
 					Value: secDarcBuf,
 				}},
@@ -54,16 +53,16 @@ func TestSecureDarc(t *testing.T) {
 
 	log.Info("do the same but without spawn:darc - pass")
 	require.NoError(t, secDarc.Rules.DeleteRules("spawn:darc"))
-	require.NoError(t, secDarc.Rules.AddRule("invoke:secure_darc."+cmdDarcEvolve, []byte(restrictedSigner.Identity().String())))
+	require.NoError(t, secDarc.Rules.UpdateRule("invoke:secure_darc."+cmdDarcEvolve, []byte(restrictedSigner.Identity().String())))
 	require.NoError(t, secDarc.Rules.AddRule("invoke:secure_darc."+cmdDarcEvolveUnrestriction, []byte(unrestrictedSigner.Identity().String())))
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
+	ctx = ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &Spawn{
 				ContractID: ContractSecureDarcID,
-				Args: []byzcoin.Argument{{
+				Args: []Argument{{
 					Name:  "darc",
 					Value: secDarcBuf,
 				}},
@@ -81,13 +80,13 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		secDarc2.Rules.AddRule("spawn:coin", secDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
 		secDarc2Buf, err := secDarc2.ToProto()
-		ctx2 := byzcoin.ClientTransaction{
-			Instructions: []byzcoin.Instruction{{
-				InstanceID: byzcoin.NewInstanceID(secDarc.GetBaseID()),
-				Invoke: &byzcoin.Invoke{
+		ctx2 := ClientTransaction{
+			Instructions: []Instruction{{
+				InstanceID: NewInstanceID(secDarc.GetBaseID()),
+				Invoke: &Invoke{
 					ContractID: ContractSecureDarcID,
 					Command:    cmdDarcEvolve,
-					Args: []byzcoin.Argument{{
+					Args: []Argument{{
 						Name:  "darc",
 						Value: secDarc2Buf,
 					}},
@@ -105,13 +104,13 @@ func TestSecureDarc(t *testing.T) {
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		secDarc2Buf, err := secDarc2.ToProto()
-		ctx2 := byzcoin.ClientTransaction{
-			Instructions: []byzcoin.Instruction{{
-				InstanceID: byzcoin.NewInstanceID(secDarc.GetBaseID()),
-				Invoke: &byzcoin.Invoke{
+		ctx2 := ClientTransaction{
+			Instructions: []Instruction{{
+				InstanceID: NewInstanceID(secDarc.GetBaseID()),
+				Invoke: &Invoke{
 					ContractID: ContractSecureDarcID,
 					Command:    cmdDarcEvolve,
-					Args: []byzcoin.Argument{{
+					Args: []Argument{{
 						Name:  "darc",
 						Value: secDarc2Buf,
 					}},
@@ -139,13 +138,13 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		myDarc2.Rules.AddRule("spawn:coin", myDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
 		myDarc2Buf, err := myDarc2.ToProto()
-		ctx2 := byzcoin.ClientTransaction{
-			Instructions: []byzcoin.Instruction{{
-				InstanceID: byzcoin.NewInstanceID(myDarc.GetBaseID()),
-				Invoke: &byzcoin.Invoke{
+		ctx2 := ClientTransaction{
+			Instructions: []Instruction{{
+				InstanceID: NewInstanceID(myDarc.GetBaseID()),
+				Invoke: &Invoke{
 					ContractID: ContractSecureDarcID,
 					Command:    cmdDarcEvolveUnrestriction,
-					Args: []byzcoin.Argument{{
+					Args: []Argument{{
 						Name:  "darc",
 						Value: myDarc2Buf,
 					}},
@@ -164,13 +163,13 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		myDarc2.Rules.AddRule("spawn:coin", myDarc2.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
 		myDarc2Buf, err := myDarc2.ToProto()
-		ctx2 := byzcoin.ClientTransaction{
-			Instructions: []byzcoin.Instruction{{
-				InstanceID: byzcoin.NewInstanceID(myDarc.GetBaseID()),
-				Invoke: &byzcoin.Invoke{
+		ctx2 := ClientTransaction{
+			Instructions: []Instruction{{
+				InstanceID: NewInstanceID(myDarc.GetBaseID()),
+				Invoke: &Invoke{
 					ContractID: ContractSecureDarcID,
 					Command:    cmdDarcEvolveUnrestriction,
-					Args: []byzcoin.Argument{{
+					Args: []Argument{{
 						Name:  "darc",
 						Value: myDarc2Buf,
 					}},

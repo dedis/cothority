@@ -358,7 +358,7 @@ func add(c *cli.Context) error {
 	}
 
 	invoke := byzcoin.Invoke{
-		ContractID: byzcoin.ContractDarcID,
+		ContractID: byzcoin.ContractSecureDarcID,
 		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{
@@ -493,7 +493,7 @@ func darcAdd(c *cli.Context, dGen *darc.Darc, cfg lib.Config, cl *byzcoin.Client
 		identity = newSigner.Identity()
 	}
 
-	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:"+byzcoin.ContractDarcID+".evolve")
+	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:"+byzcoin.ContractSecureDarcID+".evolve")
 	d := darc.NewDarc(rules, random.Bits(32, true, random.New()))
 
 	dBuf, err := d.ToProto()
@@ -643,7 +643,7 @@ func darcRule(c *cli.Context, d *darc.Darc, update bool, delete bool, cfg lib.Co
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
 	invoke := byzcoin.Invoke{
-		ContractID: byzcoin.ContractDarcID,
+		ContractID: byzcoin.ContractSecureDarcID,
 		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{
@@ -689,7 +689,7 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
 	invoke := byzcoin.Invoke{
-		ContractID: byzcoin.ContractDarcID,
+		ContractID: byzcoin.ContractSecureDarcID,
 		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			byzcoin.Argument{

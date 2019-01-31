@@ -62,7 +62,7 @@ func TestClient_Calypso(t *testing.T) {
 	// Initialise the genesis message and send it to the service.
 	// The admin has the privilege to spawn darcs
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:darc", "spawn:" + ContractLongTermSecretID},
+		[]string{"spawn:" + byzcoin.ContractSecureDarcID, "spawn:" + ContractLongTermSecretID},
 		admin.Identity())
 
 	msg.BlockInterval = 500 * time.Millisecond

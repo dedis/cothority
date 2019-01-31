@@ -48,8 +48,6 @@ var catchupFetchBlocks = 10
 // How many DB-entries to download in one go.
 var catchupFetchDBEntries = 100
 
-const invokeEvolve darc.Action = darc.Action("invoke:" + ContractDarcID + ".evolve")
-
 var rotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
@@ -209,10 +207,17 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 
-	// if there are no DARC contract IDs then use the default one
+	// The user must include at least one contract that can be parsed as a
+	// DARC and it must exist.
 	if len(req.DarcContractIDs) == 0 {
-		req.DarcContractIDs = []string{ContractDarcID}
+		return nil, errors.New("must provide at least one DARC contract")
 	}
+	for _, c := range req.DarcContractIDs {
+		if _, ok := s.GetContractConstructor(c); !ok {
+			return nil, errors.New("the given contract \"" + c + "\" does not exist")
+		}
+	}
+
 	dcIDs := darcContractIDs{
 		IDs: req.DarcContractIDs,
 	}
@@ -2245,6 +2250,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
 	s.registerContract(ContractDarcID, s.contractDarcFromBytes)
+	s.registerContract(ContractSecureDarcID, s.contractSecureDarcFromBytes)
 
 	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {

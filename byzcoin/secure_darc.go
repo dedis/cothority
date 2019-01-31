@@ -1,11 +1,10 @@
-package contracts
+package byzcoin
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 )
 
@@ -19,32 +18,32 @@ import (
 // rules must not contain spawn:darc (the restricted DARC contract). This
 // contract serves as an example. In practice, the contract developer will
 // write his/her own contract for the intended application.
-var ContractSecureDarcID = "secure_darc"
+const ContractSecureDarcID = "secure_darc"
 
 type contractSecureDarc struct {
-	byzcoin.BasicContract
+	BasicContract
 	darc.Darc
-	s *byzcoin.Service
+	s *Service
 }
 
-var _ byzcoin.Contract = (*contractSecureDarc)(nil)
+var _ Contract = (*contractSecureDarc)(nil)
 
 const cmdDarcEvolveUnrestriction = "evolve_unrestricted"
 const cmdDarcEvolve = "evolve"
 
-func (s *Service) contractSecureDarcFromBytes(in []byte) (byzcoin.Contract, error) {
+func (s *Service) contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	d, err := darc.NewFromProtobuf(in)
 	if err != nil {
 		return nil, err
 	}
-	c := &contractSecureDarc{s: s.byzService(), Darc: *d}
+	c := &contractSecureDarc{s: s, Darc: *d}
 	return c, nil
 }
 
-func (c *contractSecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
-	if inst.Spawn.ContractID == byzcoin.ContractDarcID {
+	if inst.Spawn.ContractID == ContractDarcID {
 		return nil, nil, errors.New("this contract is not allowed to spawn a DARC instance")
 	}
 
@@ -65,8 +64,8 @@ func (c *contractSecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 			return nil, nil, errors.New("a secure DARC is not allowed to spawn a regular DARC")
 		}
 
-		return []byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Create, byzcoin.NewInstanceID(id), ContractSecureDarcID, darcBuf, id),
+		return []StateChange{
+			NewStateChange(Create, NewInstanceID(id), ContractSecureDarcID, darcBuf, id),
 		}, coins, nil
 	}
 
@@ -89,7 +88,7 @@ func (c *contractSecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	return c2.Spawn(rst, inst, coins)
 }
 
-func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	switch inst.Invoke.Command {
 	case cmdDarcEvolve:
 		var darcID darc.ID
@@ -103,7 +102,7 @@ func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 		if err != nil {
 			return nil, nil, err
 		}
-		oldD, err := byzcoin.LoadDarcFromTrie(rst, darcID)
+		oldD, err := LoadDarcFromTrie(rst, darcID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -115,7 +114,7 @@ func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 			return nil, nil, err
 		}
 		// use the subset rule if it's not a genesis Darc
-		_, _, _, genesisDarcID, err := byzcoin.GetValueContract(rst, byzcoin.NewInstanceID(nil).Slice())
+		_, _, _, genesisDarcID, err := GetValueContract(rst, NewInstanceID(nil).Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -124,8 +123,8 @@ func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 				return nil, nil, errors.New("rules in the new version must be a subset of the previous version")
 			}
 		}
-		return []byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
+		return []StateChange{
+			NewStateChange(Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
 		}, coins, nil
 	case cmdDarcEvolveUnrestriction:
 		var darcID darc.ID
@@ -142,15 +141,15 @@ func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 		if newD.Rules.Contains("spawn:darc") {
 			return nil, nil, errors.New("the unrestricted_evolve command is not allowed to add the spawn:darc rule")
 		}
-		oldD, err := byzcoin.LoadDarcFromTrie(rst, darcID)
+		oldD, err := LoadDarcFromTrie(rst, darcID)
 		if err != nil {
 			return nil, nil, err
 		}
 		if err := newD.SanityCheck(oldD); err != nil {
 			return nil, nil, err
 		}
-		return []byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
+		return []StateChange{
+			NewStateChange(Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
 		}, coins, nil
 	default:
 		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)

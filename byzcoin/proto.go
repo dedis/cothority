@@ -65,9 +65,8 @@ type CreateGenesisBlock struct {
 	// optional
 	MaxBlockSize int
 	// DarcContracts is the set of contracts that can be parsed as a DARC.
-	// If it is not given, then the set contains on element and it's
-	// "darc".
-	DarcContractIDs []string `protobuf:"opt"`
+	// At least one contract must be given.
+	DarcContractIDs []string
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
@@ -144,7 +143,7 @@ type ChainConfig struct {
 	BlockInterval   time.Duration
 	Roster          onet.Roster
 	MaxBlockSize    int
-	DarcContractIDs []string `protobuf:"opt"`
+	DarcContractIDs []string
 }
 
 // Proof represents everything necessary to verify a given

@@ -1881,8 +1881,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -1892,8 +1891,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -1902,8 +1900,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -1912,8 +1909,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -2194,8 +2190,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -2207,8 +2202,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -2219,8 +2213,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -2231,8 +2224,7 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * DarcContracts is the set of contracts that can be parsed as a DARC.
-     * If it is not given, then the set contains on element and it's
-     * "darc".
+     * At least one contract must be given.
      * </pre>
      *
      * <code>repeated string darccontractids = 6;</code>
@@ -3218,8 +3210,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3231,8 +3222,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3243,8 +3233,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3255,8 +3244,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3268,8 +3256,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3287,8 +3274,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3306,8 +3292,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3323,8 +3308,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>
@@ -3338,8 +3322,7 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * DarcContracts is the set of contracts that can be parsed as a DARC.
-       * If it is not given, then the set contains on element and it's
-       * "darc".
+       * At least one contract must be given.
        * </pre>
        *
        * <code>repeated string darccontractids = 6;</code>

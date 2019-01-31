@@ -168,7 +168,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	if err != nil {
 		return nil, err
 	}
-	if contract != ContractDarcID {
+	if contract != ContractSecureDarcID {
 		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -336,10 +336,13 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
 	}
-	d := darc.NewDarc(darc.InitRulesWith(ids, ids, invokeEvolve), []byte("genesis darc"))
+	d := darc.NewDarc(
+		darc.InitRulesWith(ids, ids, "invoke:"+ContractSecureDarcID+".evolve"),
+		[]byte("genesis darc"))
 	for _, r := range rules {
 		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
 	}
+	// TODO need to add the evolve_unrestricted rule
 
 	// Add an additional rule that allows nodes in the roster to update the
 	// genesis configuration, so that we can change the leader if one
@@ -351,13 +354,11 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	d.Rules.AddRule(darc.Action("invoke:"+ContractConfigID+".view_change"), expression.InitOrExpr(rosterPubs...))
 
 	m := CreateGenesisBlock{
-		Version:       v,
-		Roster:        *r,
-		GenesisDarc:   *d,
-		BlockInterval: defaultInterval,
-		// usually we'd use contracts.ContractSecureDarcID, but there's
-		// an import cycle so we hard-code it
-		DarcContractIDs: []string{"secure_darc", ContractDarcID},
+		Version:         v,
+		Roster:          *r,
+		GenesisDarc:     *d,
+		BlockInterval:   defaultInterval,
+		DarcContractIDs: []string{ContractSecureDarcID},
 	}
 	return &m, nil
 }

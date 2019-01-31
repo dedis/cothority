@@ -45,8 +45,7 @@ message CreateGenesisBlock {
   // Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
   optional sint32 maxblocksize = 5;
   // DarcContracts is the set of contracts that can be parsed as a DARC.
-  // If it is not given, then the set contains on element and it's
-  // "darc".
+  // At least one contract must be given.
   repeated string darccontractids = 6;
 }
 
