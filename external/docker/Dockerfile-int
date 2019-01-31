@@ -9,5 +9,5 @@
 FROM golang:1.11
 RUN apt update && apt install pcregrep && apt clean
 
-WORKDIR /go/src/github.com/dedis/cothority
+WORKDIR /cothority
 CMD ["./integration_test.sh" ]
