@@ -4,7 +4,7 @@ DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
     startTest

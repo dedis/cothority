@@ -6,11 +6,11 @@ DBG_SRV=0
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=3
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. "../../libtest.sh"
 
 main(){
     startTest
-    buildConode github.com/dedis/cothority/byzcoin
+    buildConode go.dedis.ch/cothority/v3/byzcoin
     run testCreateStoreRead
     run testAddDarc
     run testRuleDarc

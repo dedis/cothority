@@ -19,6 +19,18 @@ COLOG=conode
 
 RUNOUT=$( mktemp )
 
+for i in . .. ../.. ../../.. ../../../..
+do
+	if [ -f $i/conode/conode.go ]; then
+		root=$i
+		break
+	fi
+done
+if [ -z "$root" ]; then
+	echo "Cannot find conode/connode.go"
+	exit 1
+fi
+
 # cleans the test-directory and builds the CLI binary
 # Globals:
 #   CLEANBUILD
@@ -280,54 +292,36 @@ build(){
 }
 
 buildDir(){
-  BUILDDIR=${BUILDDIR:-$(mktemp -d)}
+  BUILDDIR=./build
   mkdir -p $BUILDDIR
   testOut "Working in $BUILDDIR"
   cd $BUILDDIR
 }
 
-# Magical method that tries very hard to build a conode. If no arguments given,
-# it will search for a service first in the `./service` directory, and if not
-# found, in the `../service` directory.
 # If a directory is given as an argument, the service will be taken from that
 # directory.
 # Globals:
 #   APPDIR - where the app is stored
 # Arguments:
-#   [serviceDir, ...] - if given, used as directory to be included. More than one
-#                       argument can be given.
+#   [serviceDir, ...] - if given, used as directory to be included. At least one
+#                       argument must be given.
 buildConode(){
   local incl="$@"
-  gopath=`go env GOPATH`
   if [ -z "$incl" ]; then
-    echo "buildConode: No import paths provided. Searching."
-    for i in service ../service
-    do
-      if [ -d $APPDIR/$i ]; then
-        local pkg=$( realpath $APPDIR/$i | sed -e "s:$gopath/src/::" )
-        incl="$incl $pkg"
-      fi
-    done
-    echo "Found: $incl"
+      echo "buildConode: No import paths provided."
+	  exit 1
   fi
 
-  local cotdir=$( mktemp -d )/conode
-  mkdir -p $cotdir
-
+  echo "Building conode"
+  mkdir -p conode_
   ( echo -e "package main\nimport ("
     for i in $incl; do
       echo -e "\t_ \"$i\""
     done
-  echo ")" ) > $cotdir/import.go
+  echo ")" ) > conode_/import.go
 
-  if [ ! -f "$gopath/src/github.com/dedis/cothority/conode/conode.go" ]; then
-    echo "Cannot find package github.com/dedis/cothority."
-    exit 1
-  fi
-  cp "$gopath/src/github.com/dedis/cothority/conode/conode.go" $cotdir/conode.go
-
-  build $cotdir
-  rm -rf $cotdir
+  cp "../$root/conode/conode.go" conode_/conode.go
+  go build -o conode ./conode_
   setupConode
 }
 
@@ -394,10 +388,6 @@ cleanup(){
 
 stopTest(){
   cleanup
-  if [ $( basename $BUILDDIR ) != build ]; then
-    dbgOut "removing $BUILDDIR"
-    rm -rf $BUILDDIR
-  fi
   echo "Success"
 }
 
@@ -428,12 +418,8 @@ for i in "$@"; do
       CLEANBUILD=yes
       shift # past argument=value
       ;;
-    -nt|--notemp)
-      BUILDDIR=$(pwd)/build
-      shift # past argument=value
-      ;;
   esac
 done
 buildDir
 
-export CONODE_SERVICE_PATH=$BUILDDIR/service_storage
+export CONODE_SERVICE_PATH=build/service_storage
