@@ -1,6 +1,9 @@
 import Moment from 'moment';
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs";
 import { registerMessage } from "../../../protobuf";
+import { Point, curve } from '@dedis/kyber';
+
+const ed25519 = curve.newCurve('edwards25519');
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
     readonly state: number;
@@ -49,6 +52,23 @@ export class PopDesc extends Message<PopDesc> {
 
 export class Attendees extends Message<Attendees> {
     readonly keys: Buffer[];
+
+    constructor(properties?: Properties<Attendees>) {
+        super(properties);
+
+        if (!properties || !properties.keys) {
+            this.keys = [];
+        }
+    }
+
+    get publics(): Point[] {
+        return this.keys.map((k) => {
+            const p = ed25519.point();
+            // TODO: point factory
+            p.unmarshalBinary(k.slice(8));
+            return p;
+        });
+    }
 
     toBytes(): Buffer {
         return Buffer.from(Attendees.encode(this).finish());

@@ -14,6 +14,10 @@ export default class SignerEd25519 extends IdentityEd25519 implements Signer {
         this.priv = priv;
     }
 
+    get secret(): Scalar {
+        return this.priv;
+    }
+
     /** @inheritdoc */
     sign(msg: Buffer): Signature {
         return new Signature({

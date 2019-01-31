@@ -1,3 +1,5 @@
+import { Point, curve, Scalar } from "@dedis/kyber";
+import { sign } from '@dedis/kyber/dist/sign/anon';
 import ByzCoinRPC from "../../byzcoin-rpc";
 import ClientTransaction, {Argument, Instruction} from "../../client-transaction";
 import Proof from "../../proof";
@@ -5,11 +7,9 @@ import DarcInstance from "../darc-instance";
 import Signer from "../../../darc/signer";
 import SpawnerInstance from "../spawner-instance";
 import CredentialInstance from "../credentials-instance";
-import { Point, curve, Scalar } from "@dedis/kyber";
 import Instance from "../../instance";
 import { Log } from '../../../log';
 import { PopPartyStruct, FinalStatement } from "./proto";
-import { sign } from './ring-signature';
 
 const ed25519 = curve.newCurve('edwards25519');
 
@@ -32,7 +32,7 @@ export class PopPartyInstance {
 
     async fetchOrgKeys(): Promise<Point[]> {
         let piDarc = await DarcInstance.fromByzcoin(this.bc, this.instance.darcID);
-        let exprOrgs = piDarc.darc.rules.list.find(l => l.action == "invoke:finalize").expr;
+        let exprOrgs = piDarc.darc.rules.list.find(l => l.action == "invoke:popParty.finalize").expr;
         let orgDarcs = exprOrgs.toString().split(" | ");
         let orgPers: Point[] = [];
         for (let i = 0; i < orgDarcs.length; i++) {
@@ -161,12 +161,13 @@ export class PopPartyInstance {
     /**
      * Mine coins for a person using a coin instance ID
      */
-    async mine(secret: Scalar, coinID?: Buffer): Promise<void> {
+    async mine(signer: Signer, secret: Scalar, coinID?: Buffer): Promise<void> {
         if (this.popPartyStruct.state != PopPartyInstance.Finalized) {
             return Promise.reject("cannot mine on a non-finalized party");
         }
 
-        const lrs = await sign(Buffer.from("mine"), this.popPartyStruct.attendees.keys, this.instance.id, secret);
+        const keys = this.popPartyStruct.attendees.publics;
+        const lrs = await sign(Buffer.from("mine"), keys, secret, this.instance.id);
         const args = [
             new Argument({ name: "lrs", value: lrs.encode() }),
             new Argument({ name: "coinIID", value: coinID })
@@ -178,9 +179,9 @@ export class PopPartyInstance {
             "mine",
             args,
         );
-        // TODO: counter needs to be set but no signer ??
         const ctx = new ClientTransaction({ instructions: [instr] });
-        // TODO: ctx needs to be signed but no signer ??
+        await ctx.updateCounters(this.rpc, [signer]);
+        ctx.signWith([signer]);
 
         await this.bc.sendTransactionAndWait(ctx);
         await this.update();

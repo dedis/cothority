@@ -22,6 +22,6 @@ export default class IdentityDarc extends Message<IdentityDarc> implements Ident
     }
 
     toString(): string {
-        return `${this.typeString()}:${this.id.toString('ex')}`
+        return `${this.typeString()}:${this.id.toString('hex')}`
     }
 }

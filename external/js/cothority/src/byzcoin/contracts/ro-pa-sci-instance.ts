@@ -22,6 +22,14 @@ export default class RoPaSciInstance {
         this.struct = RoPaSciStruct.decode(this.instance.data);
     }
 
+    get stake(): Coin {
+        return this.struct.stake;
+    }
+
+    get playerChoice(): number {
+        return this.struct.firstPlayer;
+    }
+
     /**
      * Getter for the second player ID
      * @returns id as a buffer

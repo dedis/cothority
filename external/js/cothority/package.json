@@ -74,7 +74,8 @@
       "coverage/**/*",
       "dist/**/*",
       "doc/**/*",
-      "spec/**/*"
+      "src/log.ts",
+      "scripts/**/*"
     ],
     "require": [
       "ts-node/register"
