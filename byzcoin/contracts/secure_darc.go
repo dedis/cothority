@@ -139,6 +139,9 @@ func (c *contractSecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 		if err != nil {
 			return nil, nil, err
 		}
+		if newD.Rules.Contains("spawn:darc") {
+			return nil, nil, errors.New("the unrestricted_evolve command is not allowed to add the spawn:darc rule")
+		}
 		oldD, err := byzcoin.LoadDarcFromTrie(rst, darcID)
 		if err != nil {
 			return nil, nil, err
