@@ -10,7 +10,7 @@ const curveB = new GfP(3);
  * Point class used by G1
  */
 export default class CurvePoint {
-    static generator = new CurvePoint(1, -2, 1, 0);
+    static generator = new CurvePoint(1, -2, 1, 1);
     
     private x: GfP;
     private y: GfP;
@@ -18,10 +18,13 @@ export default class CurvePoint {
     private t: GfP;
 
     constructor(x?: BNType, y?: BNType, z?: BNType, t?: BNType) {
-        this.x = new GfP(x || 0);
-        this.y = new GfP(y || 1);
-        this.z = new GfP(z || 0);
-        this.t = new GfP(t || 0);
+        // the coefficient are modulo p to insure we have same
+        // values when it comes to comparison
+        // Other arithmetic operations are already modulo.
+        this.x = new GfP(x || 0).mod(p);
+        this.y = new GfP(y || 1).mod(p);
+        this.z = new GfP(z || 0).mod(p);
+        this.t = new GfP(t || 0).mod(p);
     }
 
     /**

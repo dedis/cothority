@@ -56,6 +56,19 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
+    // Test written because of the edge case found by the property-based
+    // test
+    it('should marshal and unmarshal g1 point generated with k=1', () => {
+        const p1 = new BN256G1Point([1]);
+
+        const buf = p1.marshalBinary();
+        const p2 = new BN256G1Point();
+        p2.unmarshalBinary(buf);
+
+        expect(p1.equal(p2)).toBeTruthy();
+        expect(p2.marshalSize()).toBe(buf.length);
+    });
+
     it('should get random g1', () => {
         for (let i = 0; i < 100; i++) {
             const a = new BN256G1Point().pick();
