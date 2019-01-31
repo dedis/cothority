@@ -3,11 +3,11 @@
 DBG_TEST=1
 DBG_APP=2
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
     startTest
-    buildConode
+    buildConode go.dedis.ch/cothority/v3/status/service
     run testBuild
     run testNetwork
     stopTest

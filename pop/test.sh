@@ -8,13 +8,13 @@ NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 MERGE_FILE=""
 main() {
   startTest
-  buildConode github.com/dedis/cothority/cosi/service github.com/dedis/cothority/pop/service \
-    github.com/dedis/cothority/personhood
+  buildConode go.dedis.ch/cothority/v3/cosi/service go.dedis.ch/cothority/v3/pop/service \
+    go.dedis.ch/cothority/v3/personhood
   build $APPDIR/../byzcoin/bcadmin
   echo "Creating directories"
   for n in $(seq $NBR_CLIENTS); do

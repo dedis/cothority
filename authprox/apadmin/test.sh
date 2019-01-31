@@ -6,14 +6,14 @@ DBG_SRV=0
 # Use 3 servers, use all of them, don't leave one down.
 NBR=3
 NBR_SERVERS_GROUP=$NBR
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../../libtest.sh
 
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
 	build $APPDIR/../../eventlog/el
 	
 	startTest
-	buildConode github.com/dedis/cothority/byzcoin github.com/dedis/cothority/authprox
+	buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/authprox
 
 	# This must succeed before the others will work.
 	run BCSetup
