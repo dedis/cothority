@@ -10,9 +10,8 @@
 
 FROM golang:1.11
 
-WORKDIR /go/src/github.com/dedis/cothority
-
 ARG test_tag
 ENV TEST_TAG=$test_tag
 
+WORKDIR /cothority
 CMD ./unit_test.sh ${TEST_TAG}
