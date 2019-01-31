@@ -86,6 +86,18 @@ describe('BN256 Point Tests', () => {
         expect(prop).toHold();
     });
 
+    it('should add and subtract 0 and 1', () => {
+        const p1 = new BN256G2Point([]);
+        const p2 = new BN256G2Point([1]);
+
+        expect(p1.getElement().isInfinity());
+
+        const aa = new BN256G2Point().add(p1, p2);
+        const bb = new BN256G2Point().sub(p1, p2.clone().neg(p2));
+
+        expect(aa.equal(bb)).toBeTruthy();
+    });
+
     it('should add and multiply g2 points', () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G2Point(a);

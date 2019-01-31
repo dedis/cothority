@@ -218,7 +218,6 @@ export default class CurvePoint {
         this.x = a.x;
         this.y = a.y.negate();
         this.z = a.z;
-        this.t = new GfP(0);
     }
 
     /**

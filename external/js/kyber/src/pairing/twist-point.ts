@@ -242,7 +242,6 @@ export default class TwistPoint {
         this.x = a.x;
         this.y = a.y.negative();
         this.z = a.z;
-        this.t = GfP2.zero();
     }
 
     /**
