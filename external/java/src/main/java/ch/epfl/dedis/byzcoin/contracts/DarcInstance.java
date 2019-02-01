@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class DarcInstance {
     // ContractId is how the contract for a darc is represented.
-    public static String ContractId = "darc";
+    public static String ContractId = "secure_darc";
 
     private Instance instance;
     private Darc darc;
@@ -102,10 +102,18 @@ public class DarcInstance {
      * @return Instruction to be sent to byzcoin
      */
     public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr) {
+        return evolveDarcInstruction(newDarc, signerCtr, false);
+    }
+
+    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr, boolean unrestricted) {
         newDarc.setVersion(this.getDarc().getVersion() + 1);
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
-        Invoke inv = new Invoke(ContractId, "evolve", ContractId, newDarc.toProto().toByteArray());
+        String cmd = "evolve";
+        if (unrestricted) {
+            cmd = "evolve_unrestricted";
+        }
+        Invoke inv = new Invoke(ContractId, cmd, "darc", newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
         return new Instruction(new InstanceId(d), Collections.singletonList(signerCtr), inv);
     }
@@ -139,6 +147,13 @@ public class DarcInstance {
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, ownerCtr);
+        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(owner));
+        return bc.sendTransactionAndWait(ct, wait);
+    }
+
+    public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait, boolean unrestricted) throws CothorityException {
+        Instruction inst = evolveDarcInstruction(newDarc, ownerCtr, unrestricted);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);

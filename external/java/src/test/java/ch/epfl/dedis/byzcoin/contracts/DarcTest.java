@@ -56,7 +56,7 @@ class DarcTest {
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
         Darc newDarc = genesisDarc.partialCopy();
-        newDarc.setRule("spawn:darc", "all".getBytes());
+        newDarc.setRule(Darc.RuleSpawn, "all".getBytes());
 
         Instruction instr = dc.evolveDarcInstruction(newDarc, counters.head()+1);
         logger.info("DC is: {}", dc.getId());
@@ -111,14 +111,15 @@ class DarcTest {
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+        assertNotNull(dc.getId());
         Darc darc2 = genesisDarc.partialCopy();
-        darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
+        darc2.setRule(Darc.RuleSpawn, admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, counters.head()+1, 10);
 
         List<Identity> id = Arrays.asList(admin.getIdentity());
         Darc newDarc = new Darc(id, id, "new darc".getBytes());
 
-        Proof p = dc.spawnInstanceAndWait("darc", admin, counters.head()+2,
+        Proof p = dc.spawnInstanceAndWait(DarcInstance.ContractId, admin, counters.head()+2,
                 Argument.NewList("darc", newDarc.toProto().toByteArray()), 10);
         assertTrue(p.matches());
 

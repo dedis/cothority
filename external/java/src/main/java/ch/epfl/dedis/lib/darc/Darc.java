@@ -30,7 +30,9 @@ import java.util.stream.Collectors;
  */
 public class Darc {
     public final static String RuleSignature = "_sign";
+    public final static String RuleSpawn = "spawn:" + DarcInstance.ContractId;
     public final static String RuleEvolve = "invoke:" + DarcInstance.ContractId + ".evolve";
+    public final static String RuleEvolveUnrestricted = "invoke:" + DarcInstance.ContractId + ".evolve_unrestricted";
 
     private long version;
     private byte[] description;

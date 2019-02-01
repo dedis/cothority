@@ -69,6 +69,7 @@ public class GrantAccessTest {
         IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), Arrays.asList(publisherIdentity), "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", new IdentityX509EC(publisherSigner), Rules.OR);
+        documentDarc.addIdentity(Darc.RuleEvolveUnrestricted, new IdentityX509EC(publisherSigner), Rules.OR);
 
         SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
@@ -83,7 +84,7 @@ public class GrantAccessTest {
         Identity identityX509EC = new IdentityX509EC(consumerPublicPart);
         Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", identityX509EC, Rules.OR);
-        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
+        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10, true);
 
         //then
         // Cannot use ephemeral keys yet.
@@ -103,6 +104,7 @@ public class GrantAccessTest {
         IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), Arrays.asList(publisherIdentity), "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", new IdentityX509EC(publisherSigner), Rules.OR);
+        documentDarc.addIdentity(Darc.RuleEvolveUnrestricted, new IdentityX509EC(publisherSigner), Rules.OR);
 
         SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
@@ -116,7 +118,7 @@ public class GrantAccessTest {
         //when
         Darc newDarc = documentDarc.partialCopy();
         newDarc.addIdentity("spawn:calypsoRead", new IdentityDarc(consumerId), Rules.OR);
-        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
+        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10, true);
 
         //then
         // Cannot use ephemeral keys yet.

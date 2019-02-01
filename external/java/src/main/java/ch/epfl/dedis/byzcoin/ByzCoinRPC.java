@@ -51,6 +51,7 @@ public class ByzCoinRPC {
 
     private Subscription subscription;
     public static final int currentVersion = 1;
+    final String[] darcContractIDs = new String[]{"secure_darc"};
 
     private static final Logger logger = LoggerFactory.getLogger(ByzCoinRPC.class);
 
@@ -72,6 +73,9 @@ public class ByzCoinRPC {
         request.setRoster(r.toProto());
         request.setGenesisdarc(d.toProto());
         request.setBlockinterval(blockInterval.toNanos());
+        for (int i = 0; i < darcContractIDs.length; i++) {
+            request.addDarccontractids(darcContractIDs[i]);
+        }
 
         ByteString msg = r.sendMessage("ByzCoin/CreateGenesisBlock",
                 request.build());
@@ -612,8 +616,10 @@ public class ByzCoinRPC {
                 logger.warn("didn't find Ed25519 point");
             }
         });
-        d.addIdentity("spawn:darc", admin.getIdentity(), Rules.OR);
+        // TODO put spawn:secure_darc in a variable/
+        d.addIdentity("spawn:secure_darc", admin.getIdentity(), Rules.OR);
         d.addIdentity("invoke:" + ChainConfigInstance.ContractId + ".update_config", admin.getIdentity(), Rules.OR);
+        d.addIdentity("invoke:secure_darc.evolve_unrestricted", admin.getIdentity(), Rules.OR);
         return d;
     }
 

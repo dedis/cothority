@@ -29,7 +29,7 @@ public class DarcTest {
     @Test
     void rules() {
         // List rules.
-        String evolve = "invoke:darc.evolve";
+        String evolve = "invoke:secure_darc.evolve";
         assertEquals(evolve, darc.getActions().get(0));
         byte[] rule = darc.getExpression(evolve);
 
