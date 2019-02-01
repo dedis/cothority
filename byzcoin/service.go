@@ -8,8 +8,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/byzcoin/trie"
-	"github.com/dedis/kyber/sign/schnorr"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"math"
 	"regexp"
 	"strings"
@@ -725,7 +725,7 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 		if db == nil {
 			return nil, errors.New("didn't find trie for this byzcoin-ID")
 		}
-		err := db.Update(func(tx *bolt.Tx) error {
+		err := db.Update(func(tx *bbolt.Tx) error {
 			return tx.DeleteBucket(bn)
 		})
 		if err != nil {

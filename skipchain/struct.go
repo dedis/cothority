@@ -1031,7 +1031,7 @@ func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
 // If the skipchain is only partial, it can skip missing blocks, as long as the
 // forwardlinks are present.
 func (db *SkipBlockDB) RemoveSkipchain(scid SkipBlockID) error {
-	return db.Update(func(tx *bolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		sb, err := db.getFromTx(tx, scid)
 		if err != nil {
