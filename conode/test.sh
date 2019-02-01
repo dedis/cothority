@@ -3,7 +3,7 @@
 DBG_TEST=5
 DBG_SRV=0
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
     startTest

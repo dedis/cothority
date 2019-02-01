@@ -5,11 +5,11 @@ DBG_TEST=1
 DBG_APP=2
 # DBG_SRV=2
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
 	startTest
-	buildConode github.com/dedis/cothority/skipchain
+	buildConode go.dedis.ch/cothority/v3/skipchain
 	CFG=$BUILDDIR/scmgr_config
 	run testDNSUpdate
 	run testRestart

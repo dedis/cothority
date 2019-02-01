@@ -6,15 +6,8 @@ DBG_APP=2
 DBG_SRV=2
 # Needs 4 clients
 NBR=4
-PACKAGE_POP_GO="github.com/dedis/cothority/pop"
-PACKAGE_POP="$(go env GOPATH)/src/$PACKAGE_POP_GO"
-PACKAGE_SCMGR_GO="github.com/dedis/cothority/scmgr"
-PACKAGE_SCMGR="$(go env GOPATH)/src/$PACKAGE_SCMGR_GO"
-pop=./`basename $PACKAGE_POP`
-scmgr=./`basename $PACKAGE_SCMGR`
-PACKAGE_IDEN="github.com/dedis/cothority/identity"
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
   startTest
@@ -23,9 +16,9 @@ main(){
   addr[2]=localhost:2004
   addr[3]=localhost:2006
   buildKeys
-  buildConode $PACKAGE_IDEN $PACKAGE_POP_GO/service
-  build $PACKAGE_POP
-  build $PACKAGE_SCMGR
+  buildConode go.dedis.ch/cothority/v3/identity go.dedis.ch/cothority/v3/pop/service
+  build $APPDIR/../pop
+  build $APPDIR/../scmgr
   createFinal 2
   createToken 2
 
@@ -351,7 +344,7 @@ testScCreate(){
 
   testOK runCl 1 skipchain create public.toml
 
-  testOK $scmgr -c scmgr-config.bin link add co1/private.toml
+  testOK ./scmgr -c scmgr-config.bin link add co1/private.toml
   testOK runCl 1 skipchain create public.toml
 
   # run out of skipchain creation limit
@@ -544,31 +537,31 @@ createFinal(){
   runCoBG 1 2
   local KP
   KP=$( mktemp )
-  $pop -d 2 attendee create > $KP
+  ./pop -d 2 attendee create > $KP
   PRIV_USER=$( grep Private $KP | sed -e "s/.* //")
   PUB_USER=$( grep Public $KP | sed -e "s/.* //")
 
-  $pop -d 2 attendee create > $KP
+  ./pop -d 2 attendee create > $KP
   local pub_user1=$( grep Public $KP | sed -e "s/.* //")
   createPopDesc $1
 
-  $pop -c cl1 org link ${addr[1]}
+  ./pop -c cl1 org link ${addr[1]}
   local pin=$( grep PIN: ${COLOG}1.log | sed -e "s/.* //" )
-  testOK $pop -c cl1 org link ${addr[1]} $pin
+  testOK ./pop -c cl1 org link ${addr[1]} $pin
 
-  $pop -c cl2 org link ${addr[2]}
+  ./pop -c cl2 org link ${addr[2]}
   pin=$( grep PIN: ${COLOG}2.log | sed -e "s/.* //" )
-  $pop -c cl2 org link ${addr[2]} $pin
+  ./pop -c cl2 org link ${addr[2]} $pin
 
-  $pop -c cl1 org config pop_desc.toml
-  $pop -c cl2 -d 2 org config pop_desc.toml > pop_hash_file
+  ./pop -c cl1 org config pop_desc.toml
+  ./pop -c cl2 -d 2 org config pop_desc.toml > pop_hash_file
   pop_hash=$(grep config: pop_hash_file | sed -e "s/.* //")
-  $pop -c cl1 org public $PUB_USER $pop_hash
-  $pop -c cl2 org public $PUB_USER $pop_hash
-  $pop -c cl1 org public $pub_user1 $pop_hash
-  $pop -c cl2 org public $pub_user1 $pop_hash
-  $pop -c cl1 org final $pop_hash
-  DEBUG_COLOR="" $pop -c cl2 -d 2 org final $pop_hash | tail -n +3> final.toml
+  ./pop -c cl1 org public $PUB_USER $pop_hash
+  ./pop -c cl2 org public $PUB_USER $pop_hash
+  ./pop -c cl1 org public $pub_user1 $pop_hash
+  ./pop -c cl2 org public $pub_user1 $pop_hash
+  ./pop -c cl1 org final $pop_hash
+  DEBUG_COLOR="" ./pop -c cl2 -d 2 org final $pop_hash | tail -n +3> final.toml
 }
 
 runCl(){

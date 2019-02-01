@@ -4,11 +4,11 @@ DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../libtest.sh
 
 main(){
     startTest
-    buildConode
+    buildConode go.dedis.ch/cothority/v3/cosi/service
     rm -rf cl*
     mkdir cl{1,2,3}
     run testBuild

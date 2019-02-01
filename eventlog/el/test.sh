@@ -7,7 +7,7 @@ DBG_SRV=0
 NBR=3
 NBR_SERVERS_GROUP=$NBR
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. ../../libtest.sh
 
 # Use a local config dir.
 el="./el -c ."
@@ -15,7 +15,7 @@ el="./el -c ."
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
 	startTest
-	buildConode github.com/dedis/cothority/eventlog
+	buildConode go.dedis.ch/cothority/v3/eventlog
 
 	# This must succeed before any others will work.
 	run testCreate
