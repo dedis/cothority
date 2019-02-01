@@ -1,9 +1,9 @@
 import ByzCoinRPC from "../byzcoin-rpc";
-import Instance, { InstanceID } from "../instance";
+import { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
 import Signer from "../../darc/signer";
 import DarcInstance from "./darc-instance";
-import { Log } from "../../log";
+import Log from "../../log";
 import ClientTransaction, { Instruction, Argument } from "../client-transaction";
 import Long from "long";
 import CredentialInstance, { CredentialStruct } from "./credentials-instance";

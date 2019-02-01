@@ -8,6 +8,7 @@ import {
     GetUpdateChainReply,
 } from "./proto";
 import { SkipBlock } from "./skipblock";
+import Logger from "../log";
 
 /**
  * SkipchainRPC provides basic tools to interact with a skipchain
@@ -100,7 +101,7 @@ export default class SkipchainRPC {
                     return new SkipchainRPC(b.roster).getLatestBlock(b.hash);
                 }
             } else {
-                console.log(`Received corrupted skipchain with error: ${err.message}`);
+                Logger.lvl3('Received corrupted skipchain with error:', err);
             }
         }
 

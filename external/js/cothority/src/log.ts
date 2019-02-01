@@ -1,17 +1,31 @@
-const util = require("util");
 
 const defaultLvl = 2;
+const lvlStr = ["E", "W", "I", "!4", "!3", "!2", "!1", "P", "1", "2", "3", "4"];
 
-const lvlStr = ["E ", "W ", "I ", "!4", "!3", "!2", "!1", "P ", " 1", " 2", " 3", " 4"];
+const regex = /([^/]+:[0-9]+):[0-9]+/;
 
-export class LogC {
+export class Logger {
     _lvl: number;
+    _out: (str: string) => void;
 
     constructor(lvl: number) {
         this._lvl = lvl === undefined ? defaultLvl : lvl;
+        this._out = console.log;
     }
 
-    joinArgs(args: any[]) {
+    set lvl(l) {
+        this._lvl = l;
+    }
+
+    get lvl(): number {
+        return this._lvl;
+    }
+
+    set out(fn: (str: string) => void) {
+        this._out = fn;
+    }
+
+    private joinArgs(args: any[]) {
         return args.map((a) => {
             if (typeof a === "string") {
                 return a;
@@ -19,62 +33,46 @@ export class LogC {
             if (a == null) {
                 return "null";
             }
-            try {
-                // return JSON.stringify(a, undefined, 4);
-                let type: string = typeof a;
-                if (a === Object(a)) {
-                    if (a.constructor) {
-                        type = a.constructor.name;
-                    }
-                } else if (type === "o") {
-                    console.dir(a);
-                }
-
-                // Have some special cases for the content
-                let content = a.toString();
-                if (type === "Uint8Array" || type === "Buffer") {
-                    content = Buffer.from(a).toString("hex");
-                } else if (content == "[object Object]") {
-                    content = util.inspect(a);
-                }
-                return "{" + type + "}: " + content;
-            } catch (e) {
-                console.log("error while inspecting:", e);
-
-                return a;
+            if (a instanceof Error) {
+                return `${a.message}\n${a.stack}`;
             }
+            if (a instanceof Buffer) {
+                return a.toString("hex");
+            }
+            if (a.toString instanceof Function) {
+                const str = a.toString();
+                if (str !== '[object Object]') {
+                    return str;
+                }
+            }
+            if (a.constructor) {
+                return `[Class ${a.constructor.name}]`;
+            }
+
+            return `${a}`;
         }).join(" ");
     }
 
-    printCaller(err: Error, i: number): string {
-        try {
-            const stack = err.stack.split("\n");
-            let method = [];
-            method = stack[i - 1].trim().split("@");
-            if (method.length === 1) {
-                method.push(method[0]);
-                method[0] = "?";
-            }
-            let module = "unknown";
-            let file = method[0].replace(/^.*\//g, "");
-            if (method.length > 1) {
-                module = method[0];
-                file = method[1].replace(/^.*\/|\)$/g, "");
-            }
-
-            // @ts-ignore
-            return (module + " - " + file).padEnd(60);
-        } catch (e) {
-            return this.printCaller(new Error("Couldn't get stack - " + e), i + 2);
+    private printCaller(err: Error, i: number): string {
+        const lines = err.stack.split('\n');
+        if (lines.length <= i - 1) {
+            return '';
         }
+
+        const matches = lines[i - 1].match(regex);
+        
+        if (matches && matches.length >= 1) {
+            return matches[1];
+        }
+
+        return '';
     }
 
-    printLvl(l: number, args: any[]) {
+    private printLvl(l: number, args: any[]) {
         let indent = Math.abs(l);
         indent = indent >= 5 ? 0 : indent;
         if (l <= this._lvl) {
-            console.log(lvlStr[l + 7] + ": " + this.printCaller(new Error(), 3) +
-                " -> " + " ".repeat(indent * 2) + this.joinArgs(args));
+            this._out(`[${lvlStr[l + 7]}] ${this.printCaller(new Error(), 4)}: ${this.joinArgs(args)}`);
         }
     }
 
@@ -125,42 +123,6 @@ export class LogC {
     error(...args: any[]) {
         this.printLvl(-7, args);
     }
-
-    catch(e: any, ...args: any[]) {
-        let errMsg = e;
-        if (e.message) {
-            errMsg = e.message;
-        }
-        if (e.stack) {
-            for (let i = 1; i < e.stack.split("\n").length; i++) {
-                if (i > 1) {
-                    errMsg = "";
-                }
-                console.log("C : " + this.printCaller(e, i) + " -> (" + errMsg + ") " +
-                    this.joinArgs(args));
-            }
-        } else {
-            console.log("C : " + this.printCaller(e, 1) + " -> (" + errMsg + ") " +
-                this.joinArgs(args));
-        }
-    }
-
-    rcatch(e: any, ...args: any[]): Promise<string> {
-        let errMsg = e;
-        if (e.message) {
-            errMsg = e.message;
-        }
-        this.catch(e, args);
-        return Promise.reject(errMsg.toString().replace(/Error: /, ""));
-    }
-
-    set lvl(l) {
-        this._lvl = l;
-    }
-
-    get lvl() {
-        return this._lvl;
-    }
 }
 
-export let Log = new LogC(2);
+export default new Logger(2);

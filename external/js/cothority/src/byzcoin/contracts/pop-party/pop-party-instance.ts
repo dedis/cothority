@@ -8,7 +8,7 @@ import Signer from "../../../darc/signer";
 import SpawnerInstance from "../spawner-instance";
 import CredentialInstance from "../credentials-instance";
 import Instance from "../../instance";
-import { Log } from '../../../log';
+import Log from '../../../log';
 import { PopPartyStruct, FinalStatement } from "./proto";
 
 export class PopPartyInstance {
@@ -19,13 +19,17 @@ export class PopPartyInstance {
 
     private rpc: ByzCoinRPC;
     private instance: Instance;
-    public tmpAttendees: Point[] = [];
-    public popPartyStruct: PopPartyStruct;
+    private tmpAttendees: Point[] = [];
+    private popPartyStruct: PopPartyStruct;
 
     constructor(public bc: ByzCoinRPC, inst: Instance) {
         this.rpc = bc;
         this.instance = inst;
         this.popPartyStruct = PopPartyStruct.decode(this.instance.data);
+    }
+
+    get data(): PopPartyStruct {
+        return this.popPartyStruct;
     }
 
     async fetchOrgKeys(): Promise<Point[]> {

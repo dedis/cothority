@@ -27,6 +27,8 @@ export async function startConodes(): Promise<void> {
         }
     }
 
+    console.log('\n=== starting conodes ===');
+    console.log('Check output.log for the logs of the conodes');
     const s = fs.createWriteStream('./output.log');
 
     docker.run('dedis/conode-test', [], s, {
@@ -57,6 +59,8 @@ export async function startConodes(): Promise<void> {
     // we can't wait for the end of the run command so we give
     // some time for the conodes to start
     await new Promise(resolve => setTimeout(resolve, 2*1000));
+
+    console.log('=== conodes started ===');
 }
 
 export async function stopConodes(): Promise<void> {
@@ -64,7 +68,7 @@ export async function stopConodes(): Promise<void> {
     const container = containers[0];
 
     if (container) {
-        console.log('stopping conodes...');
+        console.log('\n\n=== stopping conodes ===\n');
 
         // stop only the container of our tests
         await docker.getContainer(container.Id).stop();

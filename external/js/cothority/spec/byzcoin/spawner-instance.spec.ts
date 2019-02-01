@@ -65,11 +65,12 @@ describe('SpawnerInstance Tests', () => {
         await party.delAttendee(pub);
 
         await party.finalize(org);
+        expect(party.data.finalizations).toEqual([org.toString()]);
+        // 3 attendees + 1 organiser
+        expect(party.data.attendees.keys.length).toBe(3 + 1);
 
-        // TODO: mining test disable because the signature doesn't match. It seems
-        // there is some difference with the algo used for Blake. The Typescript
-        // library is signing with Blake2Xs but kyber only has Blake2Xb
-        // await party.mine(admin, attendee.secret, ciAtt.id);
+        await party.mine(admin, attendee.secret, ciAtt.id);
+        expect(party.data.miners.length).toBe(1);
     });
 
     it('should spawn a rock-paper-scisors game', async () => {

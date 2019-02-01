@@ -54,6 +54,7 @@
     "@types/ws": "^6.0.1",
     "dockerode": "^2.5.8",
     "jasmine": "^3.3.1",
+    "jasmine-console-reporter": "^3.1.0",
     "ts-node": "^8.0.1",
     "typescript": "^3.1.6"
   },

@@ -2,6 +2,7 @@ const shuffle = require("shuffle-array");
 import WebSocket from 'isomorphic-ws';
 import { Roster } from "./proto";
 import { Message, util } from 'protobufjs';
+import Logger from '../log';
 
 export interface Connection {
     send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
@@ -44,12 +45,12 @@ export class WebSocketConnection implements Connection {
 
         return new Promise((resolve, reject) => {
             const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, '');
-            console.log("Socket: new WebSocket(" + path + ")");
+            Logger.lvl4(`Socket: new WebSocket(${path})`);
             const ws = new WebSocket(path);
             const bytes = message.$type.encode(message).finish();
 
             const timerId = setTimeout(() => {
-                console.log("timeout - retrying");
+                Logger.lvl3("websocket timeout - retrying");
                 // Not response from the server so we try to send it once more
                 ws.send(bytes);
             }, 10000);
@@ -60,7 +61,7 @@ export class WebSocketConnection implements Connection {
 
             ws.onmessage = (evt: any): any => {
                 const buf = Buffer.from(evt.data);
-                console.log("Getting message with length:", buf.length);
+                Logger.lvl4("Getting message with length:", buf.length);
 
                 try {
                     const ret = reply.decode(buf) as T;
@@ -80,13 +81,13 @@ export class WebSocketConnection implements Connection {
             ws.onclose = (evt: any) => {
                 clearTimeout(timerId);
                 if (evt.code !== 1000) {
-                    console.log("Got close:", evt.code, evt.reason);
+                    Logger.error("Got close:", evt.code, evt.reason);
                     reject(new Error(evt.reason));
                 }
             };
 
             ws.onerror = (evt: any) => {
-                return console.log("error in websocket: ", evt.error);
+                reject(new Error("error in websocket: " + evt.error));
             };
         });
     };
@@ -123,10 +124,12 @@ export class RosterWSConnection extends WebSocketConnection {
             if (this.url == undefined) {
                 continue;
             }
+
             try {
-                return super.send(message, reply);
-            } catch (err) {
-                console.log(err);
+                // we need to await here to catch and try another conode
+                return await super.send(message, reply);
+            } catch (e) {
+                Logger.lvl3(`fail to send on ${this.url} with error:`, e);
             }
         }
 
