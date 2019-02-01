@@ -13,16 +13,12 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path"
 	"reflect"
-	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
@@ -34,7 +30,7 @@ import (
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 const (
@@ -103,11 +99,6 @@ func main() {
 				},
 			},
 		},
-		{
-			Name:   "convert64",
-			Usage:  "convert a base64 toml file to a hex toml file",
-			Action: convert64,
-		},
 	}
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -140,9 +131,18 @@ func main() {
 	log.ErrFatal(err)
 }
 
+// raiseFdLimit is a callback that is only set in the context where it is needed:
+//  * when conode.go is used alone by ../libtest.sh, not needed
+//  * when conode is build on windows, not needed
+//  * when conode is build on unix, fd_unix.go sets it
+var raiseFdLimit func()
+
 func runServer(ctx *cli.Context) error {
 	// first check the options
 	config := ctx.GlobalString("config")
+	if raiseFdLimit != nil {
+		raiseFdLimit()
+	}
 	app.RunServer(config)
 	return nil
 }
@@ -210,31 +210,5 @@ func setup(c *cli.Context) error {
 	}
 
 	app.InteractiveConfig(cothority.Suite, DefaultName)
-	return nil
-}
-
-// Convert toml files from base64-encoded kyes to hex-encoded keys
-func convert64(c *cli.Context) error {
-	scanner := bufio.NewScanner(os.Stdin)
-	lineNo := 0
-	for scanner.Scan() {
-		lineNo++
-		line := scanner.Text()
-		if strings.HasPrefix(line, "  Public = \"") {
-			pub := line[12:]
-			if pub[len(pub)-1] != '"' {
-				// does not end in quote? error.
-				log.Fatal("Expected line to end in quote, but it does not: ", line)
-			}
-			pub = pub[:len(pub)-1]
-			data, err := base64.StdEncoding.DecodeString(pub)
-			if err != nil {
-				log.Fatal("line", lineNo, "error:", err)
-			}
-			fmt.Printf("  Public = \"%v\"\n", hex.EncodeToString(data))
-		} else {
-			fmt.Println(line)
-		}
-	}
 	return nil
 }
