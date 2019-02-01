@@ -42,5 +42,5 @@ export default class BN256Scalar implements Scalar {
     /** @inheritdoc */
     clone(): BN256Scalar;
     /** @inheritdoc */
-    equal(s2: BN256Scalar): boolean;
+    equals(s2: BN256Scalar): boolean;
 }

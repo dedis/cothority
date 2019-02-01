@@ -27,28 +27,6 @@ class Ed25519Point {
         };
     }
     /** @inheritdoc */
-    string() {
-        return this.toString();
-    }
-    inspect() {
-        return this.toString();
-    }
-    toString() {
-        const bytes = this.marshalBinary();
-        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
-    }
-    /** @inheritdoc */
-    equal(p2) {
-        const b1 = this.marshalBinary();
-        const b2 = p2.marshalBinary();
-        for (var i = 0; i < 32; i++) {
-            if (b1[i] !== b2[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-    /** @inheritdoc */
     null() {
         this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
         return this;
@@ -176,6 +154,25 @@ class Ed25519Point {
             throw new Error("bytes > p");
         }
         this.ref.point = this.ref.curve.curve.pointFromY(bnp, odd);
+    }
+    inspect() {
+        return this.toString();
+    }
+    /** @inheritdoc */
+    equals(p2) {
+        const b1 = this.marshalBinary();
+        const b2 = p2.marshalBinary();
+        for (var i = 0; i < 32; i++) {
+            if (b1[i] !== b2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /** @inheritdoc */
+    toString() {
+        const bytes = this.marshalBinary();
+        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 }
 exports.default = Ed25519Point;

@@ -93,7 +93,7 @@ export class PopPartyInstance {
             throw new Error("party is not in attendee-adding mode");
         }
 
-        if (this.tmpAttendees.findIndex(pub => pub.equal(attendee)) >= 0) {
+        if (this.tmpAttendees.findIndex(pub => pub.equals(attendee)) >= 0) {
             throw new Error("already have this attendee");
         }
 
@@ -105,7 +105,7 @@ export class PopPartyInstance {
             throw new Error("party is not in attendee-adding mode");
         }
 
-        let i = this.tmpAttendees.findIndex(pub => pub.equal(attendee));
+        let i = this.tmpAttendees.findIndex(pub => pub.equals(attendee));
         if (i == -1) {
             throw new Error("unknown attendee");
         }

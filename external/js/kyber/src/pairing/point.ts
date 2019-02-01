@@ -118,12 +118,12 @@ export class BN256G1Point implements Point {
     }
 
     /** @inheritdoc */
-    equal(p2: BN256G1Point): boolean {
+    equals(p2: BN256G1Point): boolean {
         return this.g1.equals(p2.g1);
     }
 
     /** @inheritdoc */
-    string(): string {
+    toString(): string {
         return this.g1.toString();
     }
 }
@@ -243,12 +243,12 @@ export class BN256G2Point implements Point {
     }
 
     /** @inheritdoc */
-    equal(p2: BN256G2Point): boolean {
+    equals(p2: BN256G2Point): boolean {
         return this.g2.equals(p2.g2);
     }
 
     /** @inheritdoc */
-    string(): string {
+    toString(): string {
         return this.g2.toString();
     }
 }

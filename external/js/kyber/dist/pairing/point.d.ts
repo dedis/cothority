@@ -50,9 +50,9 @@ export declare class BN256G1Point implements Point {
     /** @inheritdoc */
     marshalSize(): number;
     /** @inheritdoc */
-    equal(p2: BN256G1Point): boolean;
+    equals(p2: BN256G1Point): boolean;
     /** @inheritdoc */
-    string(): string;
+    toString(): string;
 }
 /**
  * Implementation of the point interface for G2
@@ -102,7 +102,7 @@ export declare class BN256G2Point implements Point {
     /** @inheritdoc */
     marshalSize(): number;
     /** @inheritdoc */
-    equal(p2: BN256G2Point): boolean;
+    equals(p2: BN256G2Point): boolean;
     /** @inheritdoc */
-    string(): string;
+    toString(): string;
 }

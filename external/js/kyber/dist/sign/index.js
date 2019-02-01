@@ -9,3 +9,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const schnorr = __importStar(require("./schnorr/schnorr"));
 exports.schnorr = schnorr;
+const bls = __importStar(require("./bls"));
+exports.bls = bls;
+const anon = __importStar(require("./anon"));
+exports.anon = anon;

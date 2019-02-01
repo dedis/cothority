@@ -15,17 +15,6 @@ class NistScalar {
         };
     }
     /** @inheritdoc */
-    string() {
-        return this.toString();
-    }
-    inspect() {
-        return this.toString();
-    }
-    /** @inheritdoc */
-    equal(s2) {
-        return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
-    }
-    /** @inheritdoc */
     set(a) {
         this.ref = a.ref;
         return this;
@@ -83,12 +72,6 @@ class NistScalar {
     bytes() {
         return Buffer.from(this.ref.arr.fromRed().toArray("be"));
     }
-    toString() {
-        let bytes = Buffer.from(this.ref.arr.fromRed().toArray("be"));
-        return Array.from(bytes, b => {
-            return ("0" + (b & 0xff).toString(16)).slice(-2);
-        }).join("");
-    }
     /** @inheritdoc */
     pick(callback) {
         callback = callback || crypto_1.randomBytes;
@@ -114,6 +97,20 @@ class NistScalar {
             throw new Error("bytes > q");
         }
         this.setBytes(bytes);
+    }
+    /** @inheritdoc */
+    equals(s2) {
+        return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
+    }
+    /** @inheritdoc */
+    toString() {
+        let bytes = Buffer.from(this.ref.arr.fromRed().toArray("be"));
+        return Array.from(bytes, b => {
+            return ("0" + (b & 0xff).toString(16)).slice(-2);
+        }).join("");
+    }
+    inspect() {
+        return this.toString();
     }
 }
 exports.default = NistScalar;

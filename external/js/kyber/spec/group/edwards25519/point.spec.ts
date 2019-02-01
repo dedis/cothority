@@ -21,7 +21,7 @@ describe("Ed25519 Point", () => {
         const point = curve.point();
         point.unmarshalBinary(bytes);
 
-        expect(point.string()).toBe(
+        expect(point.toString()).toBe(
             "0545f8adabfe13fd8f8c92ae1a8003346a3770f53e7f2a5d00512fb11e1927c6"
         );
     });
@@ -29,7 +29,7 @@ describe("Ed25519 Point", () => {
     it("should print the string representation of a null point", () => {
         const point = curve.point().null();
 
-        expect(point.string()).toBe(
+        expect(point.toString()).toBe(
             "0100000000000000000000000000000000000000000000000000000000000000"
         );
     });
@@ -96,10 +96,10 @@ describe("Ed25519 Point", () => {
         const a = new Point(curve, x, y);
         const b = new Point(curve, x, y);
 
-        expect(a.equal(b)).toBeTruthy(
+        expect(a.equals(b)).toBeTruthy(
             "equals returns false for two equal points"
         );
-        expect(a.equal(new Point(curve))).toBeFalsy(
+        expect(a.equals(new Point(curve))).toBeFalsy(
             "equal returns true for two unequal points"
         );
     });
@@ -148,7 +148,7 @@ describe("Ed25519 Point", () => {
         );
         const target = new Point(curve, x, y);
 
-        expect(point.equal(target)).toBeTruthy("point != target");
+        expect(point.equals(target)).toBeTruthy("point != target");
     });
 
     it("should point the receiver to another Point object", () => {
@@ -163,9 +163,9 @@ describe("Ed25519 Point", () => {
         const a = new Point(curve, x, y);
         const b = curve.point().set(a) as Point;
 
-        expect(a.equal(b)).toBeTruthy("a != b");
+        expect(a.equals(b)).toBeTruthy("a != b");
         a.base();
-        expect(a.equal(b)).toBeTruthy("a != b");
+        expect(a.equals(b)).toBeTruthy("a != b");
     });
 
     it("should clone the point object", () => {
@@ -181,9 +181,9 @@ describe("Ed25519 Point", () => {
         const a = new Point(curve, x, y);
         const b = a.clone();
 
-        expect(a.equal(b)).toBeTruthy();
+        expect(a.equals(b)).toBeTruthy();
         a.base();
-        expect(a.equal(b)).toBeFalsy();
+        expect(a.equals(b)).toBeFalsy();
     });
 
     it("should return the embed length of point", () => {
@@ -212,7 +212,7 @@ describe("Ed25519 Point", () => {
         );
         const target = new Point(curve, x, y);
 
-        expect(point.equal(target)).toBeTruthy("point != target");
+        expect(point.equals(target)).toBeTruthy("point != target");
     });
 
     it("should embed data with length = embedLen", () => {
@@ -231,7 +231,7 @@ describe("Ed25519 Point", () => {
 
         const target = new Point(curve, x, y);
 
-        expect(point.equal(target)).toBeTruthy("point != target");
+        expect(point.equals(target)).toBeTruthy("point != target");
     });
 
     it("should extract embedded data", () => {
@@ -275,11 +275,11 @@ describe("Ed25519 Point", () => {
         const sum2 = curve.point().add(p2, p1) as Point;
 
         expect(ec.curve.validate(sum.ref.point)).toBeTruthy("sum not on curve");
-        expect(sum.equal(p3)).toBeTruthy("sum != p3");
+        expect(sum.equals(p3)).toBeTruthy("sum != p3");
         expect(ec.curve.validate(sum2.ref.point)).toBeTruthy(
             "sum2 not on curve"
         );
-        expect(sum2.equal(p3)).toBeTruthy("sum2 != p3");
+        expect(sum2.equals(p3)).toBeTruthy("sum2 != p3");
     });
 
     it("should subtract two points", () => {
@@ -302,7 +302,7 @@ describe("Ed25519 Point", () => {
         expect(ec.curve.validate(diff.ref.point)).toBeTruthy(
             "diff not on curve"
         );
-        expect(diff.equal(p3)).toBeTruthy("diff != p3");
+        expect(diff.equals(p3)).toBeTruthy("diff != p3");
     });
 
     it("should negate a point", () => {
@@ -321,14 +321,14 @@ describe("Ed25519 Point", () => {
         const neg = curve.point().neg(p1) as Point;
 
         expect(ec.curve.validate(neg.ref.point)).toBeTruthy("neg not on curve");
-        expect(neg.equal(p2)).toBeTruthy("neg != p2");
+        expect(neg.equals(p2)).toBeTruthy("neg != p2");
     });
 
     it("should negate null point", () => {
         const nullPoint = curve.point().null();
         const negNull = curve.point().neg(nullPoint);
 
-        expect(negNull.equal(nullPoint)).toBeTruthy("negNull != nullPoint");
+        expect(negNull.equals(nullPoint)).toBeTruthy("negNull != nullPoint");
     });
 
     it("should multiply p by scalar s", () => {
@@ -353,7 +353,7 @@ describe("Ed25519 Point", () => {
         expect(ec.curve.validate(prod.ref.point)).toBeTruthy(
             "prod not on curve"
         );
-        expect(prod.equal(p2)).toBeTruthy("prod != p2");
+        expect(prod.equals(p2)).toBeTruthy("prod != p2");
     });
 
     it("should multiply with base point if no point is passed", () => {
@@ -366,6 +366,6 @@ describe("Ed25519 Point", () => {
         expect(ec.curve.validate(threeBase.ref.point)).toBeTruthy(
             "threeBase not on curve"
         );
-        expect(threeBase.equal(target)).toBeTruthy("target != threeBase");
+        expect(threeBase.equals(target)).toBeTruthy("target != threeBase");
     });
 });

@@ -8,7 +8,7 @@ describe('BN256 Point Tests', () => {
         const a = new BN256G1Point();
         a.mul(new BN256Scalar(order), new BN256G1Point().base());
 
-        expect(a.equal(new BN256G1Point().null())).toBeTruthy();
+        expect(a.equals(new BN256G1Point().null())).toBeTruthy();
     });
 
     it('should add and subtract g1 points', () => {
@@ -19,7 +19,7 @@ describe('BN256 Point Tests', () => {
             const aa = new BN256G1Point().add(p1, p2)
             const bb = new BN256G1Point().sub(p1, p2.clone().neg(p2));
 
-            return aa.equal(bb);
+            return aa.equals(bb);
         });
 
         // @ts-ignore
@@ -34,7 +34,7 @@ describe('BN256 Point Tests', () => {
             const bb = new BN256G1Point().add(p1, p1);
             bb.add(bb, p1);
 
-            return aa.equal(bb);
+            return aa.equals(bb);
         });
 
         // @ts-ignore
@@ -49,7 +49,7 @@ describe('BN256 Point Tests', () => {
             const p2 = new BN256G1Point();
             p2.unmarshalBinary(buf);
 
-            return p1.equal(p2) && p2.marshalSize() === buf.length;
+            return p1.equals(p2) && p2.marshalSize() === buf.length;
         });
 
         // @ts-ignore
@@ -74,14 +74,14 @@ describe('BN256 Point Tests', () => {
             const a = new BN256G1Point().pick();
             const b = new BN256G1Point().pick();
 
-            expect(a.equal(b)).toBeFalsy();
+            expect(a.equals(b)).toBeFalsy();
         }
     });
 
     it('should get the string representation of G1', () => {
         const a = new BN256G1Point().null();
 
-        expect(a.string()).toBe('bn256.G1(0,1)');
+        expect(a.toString()).toBe('bn256.G1(0,1)');
     });
 
     it('should add and subtract g2 points', () => {
@@ -92,7 +92,7 @@ describe('BN256 Point Tests', () => {
             const aa = new BN256G2Point().add(p1, p2)
             const bb = new BN256G2Point().sub(p1, p2.clone().neg(p2));
 
-            return aa.equal(bb);
+            return aa.equals(bb);
         });
 
         // @ts-ignore
@@ -119,7 +119,7 @@ describe('BN256 Point Tests', () => {
             const bb = new BN256G2Point().add(p1, p1);
             bb.add(bb, p1);
 
-            return aa.equal(bb);
+            return aa.equals(bb);
         });
 
         // @ts-ignore
@@ -134,7 +134,7 @@ describe('BN256 Point Tests', () => {
             const p2 = new BN256G2Point();
             p2.unmarshalBinary(buf);
 
-            return p1.equal(p2) && p2.marshalSize() === buf.length;
+            return p1.equals(p2) && p2.marshalSize() === buf.length;
         });
 
         // @ts-ignore
@@ -146,14 +146,14 @@ describe('BN256 Point Tests', () => {
             const a = new BN256G2Point().pick();
             const b = new BN256G2Point().pick();
 
-            expect(a.equal(b)).toBeFalsy();
+            expect(a.equals(b)).toBeFalsy();
         }
     })
 
     it('should get the string representation of G2', () => {
         const a = new BN256G2Point().null();
 
-        expect(a.string()).toBe('bn256.G2((0,0),(0,1),(0,0))');
+        expect(a.toString()).toBe('bn256.G2((0,0),(0,1),(0,0))');
     });
 
     it('should pair g1 and g2 points', () => {

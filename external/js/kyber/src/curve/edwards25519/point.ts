@@ -34,32 +34,6 @@ export default class Ed25519Point implements Point {
     }
 
     /** @inheritdoc */
-    string(): string {
-        return this.toString()
-    }
-
-    inspect(): string {
-        return this.toString()
-    }
-
-    toString(): string {
-        const bytes = this.marshalBinary();
-        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
-    }
-
-    /** @inheritdoc */
-    equal(p2: Ed25519Point): boolean {
-        const b1 = this.marshalBinary();
-        const b2 = p2.marshalBinary();
-        for (var i = 0; i < 32; i++) {
-            if (b1[i] !== b2[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** @inheritdoc */
     null(): Ed25519Point {
         this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
         return this;
@@ -213,5 +187,27 @@ export default class Ed25519Point implements Point {
             throw new Error("bytes > p");
         }
         this.ref.point = this.ref.curve.curve.pointFromY(bnp, odd);
+    }
+
+    inspect(): string {
+        return this.toString()
+    }
+
+    /** @inheritdoc */
+    equals(p2: Ed25519Point): boolean {
+        const b1 = this.marshalBinary();
+        const b2 = p2.marshalBinary();
+        for (var i = 0; i < 32; i++) {
+            if (b1[i] !== b2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** @inheritdoc */
+    toString(): string {
+        const bytes = this.marshalBinary();
+        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 }

@@ -30,10 +30,6 @@ class Ed25519Scalar {
         this.ref.arr = new bn_js_1.default(bytes, 16, "le").toRed(this.ref.red);
     }
     /** @inheritdoc */
-    equal(s2) {
-        return this.ref.arr.cmp(s2.ref.arr) == 0;
-    }
-    /** @inheritdoc */
     set(a) {
         this.ref = a.ref;
         return this;
@@ -93,6 +89,10 @@ class Ed25519Scalar {
     setBytes(bytes) {
         this.ref.arr = new bn_js_1.default(bytes, 16, "le").toRed(this.ref.red);
         return this;
+    }
+    /** @inheritdoc */
+    equals(s2) {
+        return this.ref.arr.cmp(s2.ref.arr) == 0;
     }
     toString() {
         const bytes = this.ref.arr.toArray("le", 32);

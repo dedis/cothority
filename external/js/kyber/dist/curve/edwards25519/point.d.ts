@@ -10,12 +10,6 @@ export default class Ed25519Point implements Point {
     };
     constructor(curve: Ed25519, X?: BNType, Y?: BNType, Z?: BNType, T?: BNType);
     /** @inheritdoc */
-    string(): string;
-    inspect(): string;
-    toString(): string;
-    /** @inheritdoc */
-    equal(p2: Ed25519Point): boolean;
-    /** @inheritdoc */
     null(): Ed25519Point;
     /** @inheritdoc */
     base(): Ed25519Point;
@@ -45,4 +39,9 @@ export default class Ed25519Point implements Point {
     marshalBinary(): Buffer;
     /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
+    inspect(): string;
+    /** @inheritdoc */
+    equals(p2: Ed25519Point): boolean;
+    /** @inheritdoc */
+    toString(): string;
 }

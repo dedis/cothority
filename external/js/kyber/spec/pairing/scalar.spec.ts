@@ -65,7 +65,7 @@ describe('BN256 Scalar Tests', () => {
         const a = new BN256Scalar(-1);
         const n = new BN256Scalar().neg(a);
 
-        expect(n.equal(new BN256Scalar().one()))
+        expect(n.equals(new BN256Scalar().one()))
     });
 
     it('should get the inverse', () => {
@@ -73,7 +73,7 @@ describe('BN256 Scalar Tests', () => {
         const inv = new BN256Scalar().inv(a);
 
         const one = new BN256Scalar().mul(a, inv);
-        expect(one.equal(new BN256Scalar().one())).toBeTruthy();
+        expect(one.equals(new BN256Scalar().one())).toBeTruthy();
     });
 
     it('should marshal and unmarshal', () => {
@@ -84,7 +84,7 @@ describe('BN256 Scalar Tests', () => {
             const b = new BN256Scalar();
             b.unmarshalBinary(buf);
 
-            return a.equal(b);
+            return a.equals(b);
         });
 
         // @ts-ignore
@@ -96,7 +96,7 @@ describe('BN256 Scalar Tests', () => {
             const a = new BN256Scalar().pick();
             const b = new BN256Scalar().pick();
 
-            expect(a.equal(b)).toBeFalsy();
+            expect(a.equals(b)).toBeFalsy();
         }
     });
 
@@ -104,7 +104,7 @@ describe('BN256 Scalar Tests', () => {
         const a = new BN256Scalar(123);
         const b = new BN256Scalar().set(a);
 
-        expect(a.clone().equal(a)).toBeTruthy();
-        expect(a.equal(b)).toBeTruthy();
+        expect(a.clone().equals(a)).toBeTruthy();
+        expect(a.equals(b)).toBeTruthy();
     });
 });

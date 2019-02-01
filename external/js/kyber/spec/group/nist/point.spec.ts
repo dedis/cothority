@@ -26,14 +26,14 @@ describe('Nist Point', () => {
         const target = "(39139857753964535406422970543512609321558395110412588924902544519776250623903,22969022198784600445029639705880320580068058102470723316833310869386179114437)";
         point.unmarshalBinary(bytes);
 
-        expect(point.string()).toBe(target);
+        expect(point.toString()).toBe(target);
     });
 
     it("should print the string representation of a null point", () => {
         const point = curve.point().null();
         const target = "(0,0)";
 
-        expect(point.string()).toBe(target);
+        expect(point.toString()).toBe(target);
     });
 
     it("should retrieve the correct point", () => {
@@ -90,8 +90,8 @@ describe('Nist Point', () => {
         );
         const a = new Point(curve, x, y);
         const b = new Point(curve, x, y);
-        expect(a.equal(b)).toBeTruthy();
-        expect(a.equal(new Point(curve))).toBeFalsy();
+        expect(a.equals(b)).toBeTruthy();
+        expect(a.equals(new Point(curve))).toBeFalsy();
     });
 
     it("should set the point to the null element", () => {
@@ -136,7 +136,7 @@ describe('Nist Point', () => {
         );
         const target = new Point(curve, x, y);
 
-        expect(point.equal(target)).toBeTruthy();
+        expect(point.equals(target)).toBeTruthy();
     });
 
     it("should point the receiver to another Point object", () => {
@@ -152,9 +152,9 @@ describe('Nist Point', () => {
         const a = new Point(curve, x, y);
         const b = curve.point().set(a) as NistPoint;
 
-        expect(a.equal(b)).toBeTruthy("a != b");
+        expect(a.equals(b)).toBeTruthy("a != b");
         a.base();
-        expect(a.equal(b)).toBeTruthy("a != b");
+        expect(a.equals(b)).toBeTruthy("a != b");
     });
 
     it("should clone the point object", () => {
@@ -170,9 +170,9 @@ describe('Nist Point', () => {
         const a = new Point(curve, x, y);
         const b = a.clone();
 
-        expect(a.equal(b)).toBeTruthy("a != b");
+        expect(a.equals(b)).toBeTruthy("a != b");
         a.base();
-        expect(a.equal(b)).toBeFalsy("a == b");
+        expect(a.equals(b)).toBeFalsy("a == b");
     });
 
     it("should return the embed length of point", () => {
@@ -200,7 +200,7 @@ describe('Nist Point', () => {
         );
         const target = new Point(curve, x, y);
 
-        expect(point.equal(target)).toBeTruthy("point != target");
+        expect(point.equals(target)).toBeTruthy("point != target");
     });
 
     it("should embed data with length = embedLen", () => {
@@ -218,7 +218,7 @@ describe('Nist Point', () => {
         );
 
         const target = new Point(curve, x, y);
-        expect(point.equal(target)).toBeTruthy("point != target");
+        expect(point.equals(target)).toBeTruthy("point != target");
     });
 
     it("should extract embedded data", () => {
@@ -282,9 +282,9 @@ describe('Nist Point', () => {
         const sum2 = curve.point().add(p2, p1) as NistPoint;
 
         expect(curve.curve.validate(sum.ref.point)).toBeTruthy();
-        expect(sum.equal(p3)).toBeTruthy();
+        expect(sum.equals(p3)).toBeTruthy();
         expect(curve.curve.validate(sum2.ref.point)).toBeTruthy();
-        expect(sum2.equal(p3)).toBeTruthy();
+        expect(sum2.equals(p3)).toBeTruthy();
     });
 
     it("should subtract two points", () => {
@@ -321,7 +321,7 @@ describe('Nist Point', () => {
         const diff = curve.point().sub(p1, p2) as NistPoint;
 
         expect(curve.curve.validate(diff.ref.point)).toBeTruthy();
-        expect(diff.equal(p3)).toBeTruthy();
+        expect(diff.equals(p3)).toBeTruthy();
     });
 
     it("should negate a point", () => {
@@ -348,14 +348,14 @@ describe('Nist Point', () => {
         const neg = curve.point().neg(p1) as NistPoint;
 
         expect(curve.curve.validate(neg.ref.point)).toBeTruthy();
-        expect(neg.equal(p2)).toBeTruthy();
+        expect(neg.equals(p2)).toBeTruthy();
     });
 
     it("should negate null point", () => {
         const nullPoint = curve.point().null();
         const negNull = curve.point().neg(nullPoint);
 
-        expect(negNull.equal(nullPoint)).toBeTruthy();
+        expect(negNull.equals(nullPoint)).toBeTruthy();
     });
 
     describe("mul", () => {
@@ -384,7 +384,7 @@ describe('Nist Point', () => {
             const p2 = new Point(curve, x2, y2);
 
             expect(curve.curve.validate(prod.ref.point)).toBeTruthy();
-            expect(prod.equal(p2)).toBeTruthy();
+            expect(prod.equals(p2)).toBeTruthy();
         });
 
         it("should multiply with base point if no point is passed", () => {
@@ -395,7 +395,7 @@ describe('Nist Point', () => {
             const threeBase = curve.point().mul(threeScalar) as NistPoint;
 
             expect(curve.curve.validate(threeBase.ref.point)).toBeTruthy();
-            expect(threeBase.equal(target)).toBeTruthy();
+            expect(threeBase.equals(target)).toBeTruthy();
         });
     });
 });

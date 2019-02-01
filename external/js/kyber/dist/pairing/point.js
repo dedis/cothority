@@ -96,11 +96,11 @@ class BN256G1Point {
         return this.g1.marshalSize();
     }
     /** @inheritdoc */
-    equal(p2) {
+    equals(p2) {
         return this.g1.equals(p2.g1);
     }
     /** @inheritdoc */
-    string() {
+    toString() {
         return this.g1.toString();
     }
 }
@@ -199,11 +199,11 @@ class BN256G2Point {
         return this.g2.marshalSize();
     }
     /** @inheritdoc */
-    equal(p2) {
+    equals(p2) {
         return this.g2.equals(p2.g2);
     }
     /** @inheritdoc */
-    string() {
+    toString() {
         return this.g2.toString();
     }
 }

@@ -13,20 +13,6 @@ export default class NistScalar implements Scalar {
             curve: curve
         };
     }
-
-    /** @inheritdoc */
-    string(): string {
-        return this.toString()
-    }
-
-    inspect(): string {
-        return this.toString()
-    }
-    
-    /** @inheritdoc */
-    equal(s2: NistScalar): boolean {
-        return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
-    }
     
     /** @inheritdoc */
     set(a: NistScalar): NistScalar {
@@ -100,13 +86,6 @@ export default class NistScalar implements Scalar {
         return Buffer.from(this.ref.arr.fromRed().toArray("be"));
     }
     
-    toString(): string {
-        let bytes = Buffer.from(this.ref.arr.fromRed().toArray("be"));
-        return Array.from(bytes, b => {
-            return ("0" + (b & 0xff).toString(16)).slice(-2);
-        }).join("");
-    }
-    
     /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): NistScalar {
         callback = callback || randomBytes;
@@ -138,5 +117,22 @@ export default class NistScalar implements Scalar {
             throw new Error("bytes > q");
         }
         this.setBytes(bytes);
+    }
+
+    /** @inheritdoc */
+    equals(s2: NistScalar): boolean {
+        return this.ref.arr.fromRed().cmp(s2.ref.arr.fromRed()) == 0;
+    }
+
+    /** @inheritdoc */
+    toString(): string {
+        let bytes = Buffer.from(this.ref.arr.fromRed().toArray("be"));
+        return Array.from(bytes, b => {
+            return ("0" + (b & 0xff).toString(16)).slice(-2);
+        }).join("");
+    }
+
+    inspect(): string {
+        return this.toString()
     }
 }

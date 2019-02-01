@@ -28,47 +28,6 @@ export default class NistPoint implements Point {
             point: curve.curve.point(x, y)
         };
     }
-
-    /** @inheritdoc */
-    string(): string {
-        return this.toString()
-    }
-
-    inspect(): string {
-        return this.toString()
-    }
-    
-    /**
-    * Returns the little endian representation of the y coordinate of
-    * the Point
-    * @returns the string representation
-    */
-    toString(): string {
-        if (this.ref.point.inf) {
-            return "(0,0)";
-        }
-        return (
-            "(" +
-            this.ref.point.x.fromRed().toString(10) +
-            "," +
-            this.ref.point.y.fromRed().toString(10) +
-            ")"
-        );
-    }
-    
-    /** @inheritdoc */
-    equal(p2: NistPoint): boolean {
-        if (this.ref.point.isInfinity() ^ p2.ref.point.isInfinity()) {
-            return false;
-        }
-        if (this.ref.point.isInfinity() & p2.ref.point.isInfinity()) {
-            return true;
-        }
-        return (
-            this.ref.point.x.cmp(p2.ref.point.x) === 0 &&
-            this.ref.point.y.cmp(p2.ref.point.y) === 0
-        );
-    }
     
     /** @inheritdoc */
     set(p2: NistPoint): NistPoint {
@@ -250,5 +209,37 @@ export default class NistPoint implements Point {
         if (!this.ref.curve.curve.validate(this.ref.point)) {
             throw new Error("point is not on curve");
         }
+    }
+
+    /** @inheritdoc */
+    equals(p2: NistPoint): boolean {
+        if (this.ref.point.isInfinity() ^ p2.ref.point.isInfinity()) {
+            return false;
+        }
+        if (this.ref.point.isInfinity() & p2.ref.point.isInfinity()) {
+            return true;
+        }
+        return (
+            this.ref.point.x.cmp(p2.ref.point.x) === 0 &&
+            this.ref.point.y.cmp(p2.ref.point.y) === 0
+        );
+    }
+
+    inspect(): string {
+        return this.toString()
+    }
+    
+    /** @inheritdoc */
+    toString(): string {
+        if (this.ref.point.inf) {
+            return "(0,0)";
+        }
+        return (
+            "(" +
+            this.ref.point.x.fromRed().toString(10) +
+            "," +
+            this.ref.point.y.fromRed().toString(10) +
+            ")"
+        );
     }
 }

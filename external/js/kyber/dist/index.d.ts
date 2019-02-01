@@ -25,12 +25,6 @@ export interface Group {
 }
 export interface Point {
     /**
-     * Check if the given point is the same
-     * @param p2  the point to compare
-     * @returns   true when both are equal
-     */
-    equal(p2: Point): boolean;
-    /**
      * Make a point set to the neutral element
      * @returns the new point
      */
@@ -117,10 +111,16 @@ export interface Point {
      */
     marshalSize(): number;
     /**
+     * Check if the given point is the same
+     * @param p2  the point to compare
+     * @returns   true when both are equal
+     */
+    equals(p2: Point): boolean;
+    /**
      * Get a string representation of the point
      * @returns the string representation
      */
-    string(): string;
+    toString(): string;
 }
 export interface Scalar {
     /**
@@ -133,12 +133,6 @@ export interface Scalar {
      * @param bytes the buffer
      */
     unmarshalBinary(bytes: Buffer): void;
-    /**
-     * Equality test for two Scalars derived from the same Group
-     * @param s2  the scalar to test against
-     * @returns   true when both are equal
-     */
-    equal(s2: Scalar): boolean;
     /**
      * Sets the receiver equal to another Scalar a
      * @param a the new scalar
@@ -211,6 +205,12 @@ export interface Scalar {
      * @returns the scalar
      */
     setBytes(bytes: Buffer): Scalar;
+    /**
+     * Equality test for two Scalars derived from the same Group
+     * @param s2  the scalar to test against
+     * @returns   true when both are equal
+     */
+    equals(s2: Scalar): boolean;
 }
 export { curve, sign, };
 declare const _default: {

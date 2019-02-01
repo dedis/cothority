@@ -138,7 +138,7 @@ export function verify(message: Buffer, anonymitySet: Point[], signatureBuffer: 
         }
         ci = signH1(H1pre, PG, PH);
     }
-    if (!ci.equal(sig.c0)) {
+    if (!ci.equals(sig.c0)) {
         return false;
     }
 
@@ -147,7 +147,7 @@ export function verify(message: Buffer, anonymitySet: Point[], signatureBuffer: 
 
 function findSecretIndex(keys: Point[], privateKey: Scalar): number {
     const pubKey = Suite.point().base().mul(privateKey);
-    const pi = keys.findIndex(pub => pub.equal(pubKey));
+    const pi = keys.findIndex(pub => pub.equals(pubKey));
     if (pi < 0){
         throw new Error("didn't find public key in anonymity set");
     }

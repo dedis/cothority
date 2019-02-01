@@ -16,17 +16,6 @@ export default class NistPoint implements Point {
     };
     constructor(curve: Weierstrass, x?: BNType, y?: BNType);
     /** @inheritdoc */
-    string(): string;
-    inspect(): string;
-    /**
-    * Returns the little endian representation of the y coordinate of
-    * the Point
-    * @returns the string representation
-    */
-    toString(): string;
-    /** @inheritdoc */
-    equal(p2: NistPoint): boolean;
-    /** @inheritdoc */
     set(p2: NistPoint): NistPoint;
     /** @inheritdoc */
     clone(): NistPoint;
@@ -56,4 +45,9 @@ export default class NistPoint implements Point {
     marshalBinary(): Buffer;
     /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
+    /** @inheritdoc */
+    equals(p2: NistPoint): boolean;
+    inspect(): string;
+    /** @inheritdoc */
+    toString(): string;
 }

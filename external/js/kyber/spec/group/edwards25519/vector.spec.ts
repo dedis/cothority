@@ -38,7 +38,7 @@ describe("Ed25519 Test Vector", () => {
 
             const target = curve.point().mul(s);
 
-            expect(p.equal(target)).toBeTruthy();
+            expect(p.equals(target)).toBeTruthy();
         });
     }
 

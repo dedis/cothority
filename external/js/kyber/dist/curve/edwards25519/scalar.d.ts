@@ -15,8 +15,6 @@ export default class Ed25519Scalar implements Scalar {
     /** @inheritdoc */
     unmarshalBinary(bytes: Buffer): void;
     /** @inheritdoc */
-    equal(s2: Ed25519Scalar): boolean;
-    /** @inheritdoc */
     set(a: Ed25519Scalar): Ed25519Scalar;
     /** @inheritdoc */
     clone(): Scalar;
@@ -40,5 +38,7 @@ export default class Ed25519Scalar implements Scalar {
     pick(callback?: (length: number) => Buffer): Scalar;
     /** @inheritdoc */
     setBytes(bytes: Buffer): Scalar;
+    /** @inheritdoc */
+    equals(s2: Ed25519Scalar): boolean;
     toString(): string;
 }

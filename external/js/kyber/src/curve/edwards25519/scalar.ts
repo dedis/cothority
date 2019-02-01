@@ -38,11 +38,6 @@ export default class Ed25519Scalar implements Scalar {
     }
 
     /** @inheritdoc */
-    equal(s2: Ed25519Scalar): boolean {
-        return this.ref.arr.cmp(s2.ref.arr) == 0;
-    }
-
-    /** @inheritdoc */
     set(a: Ed25519Scalar): Ed25519Scalar {
         this.ref = a.ref;
         return this;
@@ -115,6 +110,11 @@ export default class Ed25519Scalar implements Scalar {
     setBytes(bytes: Buffer): Scalar {
         this.ref.arr = new BN(bytes , 16, "le").toRed(this.ref.red);
         return this;
+    }
+
+    /** @inheritdoc */
+    equals(s2: Ed25519Scalar): boolean {
+        return this.ref.arr.cmp(s2.ref.arr) == 0;
     }
 
     toString(): string {

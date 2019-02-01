@@ -92,7 +92,7 @@ class BN256Scalar {
         return s;
     }
     /** @inheritdoc */
-    equal(s2) {
+    equals(s2) {
         return this.v.eq(s2.v);
     }
 }

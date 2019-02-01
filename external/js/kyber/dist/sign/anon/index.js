@@ -112,7 +112,7 @@ function verify(message, anonymitySet, signatureBuffer, linkScope) {
         }
         ci = signH1(H1pre, PG, PH);
     }
-    if (!ci.equal(sig.c0)) {
+    if (!ci.equals(sig.c0)) {
         return false;
     }
     return true;
@@ -120,7 +120,7 @@ function verify(message, anonymitySet, signatureBuffer, linkScope) {
 exports.verify = verify;
 function findSecretIndex(keys, privateKey) {
     const pubKey = exports.Suite.point().base().mul(privateKey);
-    const pi = keys.findIndex(pub => pub.equal(pubKey));
+    const pi = keys.findIndex(pub => pub.equals(pubKey));
     if (pi < 0) {
         throw new Error("didn't find public key in anonymity set");
     }

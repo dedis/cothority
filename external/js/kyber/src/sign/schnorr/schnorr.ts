@@ -69,7 +69,7 @@ export function verify(suite: Group, publicKey: Point, message: Buffer, signatur
     const right = suite.point().mul(challenge, publicKey);
     right.add(right, R);
     
-    if (!right.equal(left)) {
+    if (!right.equals(left)) {
         return false;
     }
     return true;

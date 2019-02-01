@@ -28,39 +28,6 @@ class NistPoint {
         };
     }
     /** @inheritdoc */
-    string() {
-        return this.toString();
-    }
-    inspect() {
-        return this.toString();
-    }
-    /**
-    * Returns the little endian representation of the y coordinate of
-    * the Point
-    * @returns the string representation
-    */
-    toString() {
-        if (this.ref.point.inf) {
-            return "(0,0)";
-        }
-        return ("(" +
-            this.ref.point.x.fromRed().toString(10) +
-            "," +
-            this.ref.point.y.fromRed().toString(10) +
-            ")");
-    }
-    /** @inheritdoc */
-    equal(p2) {
-        if (this.ref.point.isInfinity() ^ p2.ref.point.isInfinity()) {
-            return false;
-        }
-        if (this.ref.point.isInfinity() & p2.ref.point.isInfinity()) {
-            return true;
-        }
-        return (this.ref.point.x.cmp(p2.ref.point.x) === 0 &&
-            this.ref.point.y.cmp(p2.ref.point.y) === 0);
-    }
-    /** @inheritdoc */
     set(p2) {
         this.ref = p2.ref;
         return this;
@@ -215,6 +182,31 @@ class NistPoint {
         if (!this.ref.curve.curve.validate(this.ref.point)) {
             throw new Error("point is not on curve");
         }
+    }
+    /** @inheritdoc */
+    equals(p2) {
+        if (this.ref.point.isInfinity() ^ p2.ref.point.isInfinity()) {
+            return false;
+        }
+        if (this.ref.point.isInfinity() & p2.ref.point.isInfinity()) {
+            return true;
+        }
+        return (this.ref.point.x.cmp(p2.ref.point.x) === 0 &&
+            this.ref.point.y.cmp(p2.ref.point.y) === 0);
+    }
+    inspect() {
+        return this.toString();
+    }
+    /** @inheritdoc */
+    toString() {
+        if (this.ref.point.inf) {
+            return "(0,0)";
+        }
+        return ("(" +
+            this.ref.point.x.fromRed().toString(10) +
+            "," +
+            this.ref.point.y.fromRed().toString(10) +
+            ")");
     }
 }
 exports.default = NistPoint;
