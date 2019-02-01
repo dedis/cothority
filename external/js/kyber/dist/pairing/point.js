@@ -97,13 +97,21 @@ class BN256G1Point {
     }
     /** @inheritdoc */
     equals(p2) {
+        if (!(p2 instanceof BN256G1Point)) {
+            return false;
+        }
         return this.g1.equals(p2.g1);
     }
     /** @inheritdoc */
     toString() {
         return this.g1.toString();
     }
+    /** @inheritdoc */
+    toProto() {
+        return Buffer.concat([BN256G1Point.MARSHAL_ID, this.marshalBinary()]);
+    }
 }
+BN256G1Point.MARSHAL_ID = Buffer.from('bn256.g1');
 exports.BN256G1Point = BN256G1Point;
 /**
  * Implementation of the point interface for G2
@@ -200,11 +208,19 @@ class BN256G2Point {
     }
     /** @inheritdoc */
     equals(p2) {
+        if (!(p2 instanceof BN256G2Point)) {
+            return false;
+        }
         return this.g2.equals(p2.g2);
     }
     /** @inheritdoc */
     toString() {
         return this.g2.toString();
     }
+    /** @inheritdoc */
+    toProto() {
+        return Buffer.concat([BN256G2Point.MARSHAL_ID, this.marshalBinary()]);
+    }
 }
+BN256G2Point.MARSHAL_ID = Buffer.from('bn256.g2');
 exports.BN256G2Point = BN256G2Point;

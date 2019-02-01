@@ -289,7 +289,7 @@ export default class SpawnerInstance {
     }
 
     static prepareUserDarc(pubKey: Point, alias: string): Darc {
-        const id = new IdentityEd25519({ point: pubKey.marshalBinary() });
+        const id = new IdentityEd25519({ point: pubKey.toProto() });
 
         const darc = Darc.newDarc([id], [id], Buffer.from(`user ${alias}`));
         darc.addIdentity('invoke:coin.update', id, Rules.AND);

@@ -50,4 +50,6 @@ export default class NistPoint implements Point {
     inspect(): string;
     /** @inheritdoc */
     toString(): string;
+    /** @inheritdoc */
+    toProto(): Buffer;
 }

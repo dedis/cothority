@@ -1,5 +1,5 @@
 import { Message } from 'protobufjs';
-import { curve, sign, Point } from '@dedis/kyber';
+import { curve, sign, Point, PointFactory } from '@dedis/kyber';
 import Identity from "./identity";
 import { registerMessage } from '../protobuf';
 import IdentityWrapper from './identity-wrapper';
@@ -17,8 +17,7 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
    * Get the public key as a point
    */
   get public(): Point {
-    const p = ed25519.point();
-    p.unmarshalBinary(this.point);
+    const p = PointFactory.fromProto(this.point);
 
     return p;
   }

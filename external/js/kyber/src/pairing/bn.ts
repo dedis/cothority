@@ -176,10 +176,10 @@ export class G1 {
  * then every modification is done in-place.
  */
 export class G2 {
-    p: TwistPoint;
-
     private static ELEM_SIZE = 256 / 8;
     private static MARSHAL_SIZE = G2.ELEM_SIZE * 4;
+
+    private p: TwistPoint;
 
     constructor(k?: BNType) {
         this.p = new TwistPoint();

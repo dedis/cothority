@@ -1,12 +1,9 @@
 const toml = require("toml");
 const UUID = require("pure-uuid");
 import { createHash } from 'crypto';
-import { Point, curve } from '@dedis/kyber';
+import { Point, PointFactory } from '@dedis/kyber';
 import { Message, Properties } from 'protobufjs';
 import { registerMessage } from '../protobuf';
-
-// TODO: point factory
-const ed25519 = new curve.edwards25519.Curve();
 
 export class Roster extends Message<Roster> {
     readonly id: Buffer;
@@ -27,7 +24,7 @@ export class Roster extends Message<Roster> {
         if (!id || !aggregate) {
             const h = createHash("sha256");
             list.forEach((srvid) => {
-                h.update(srvid.getPublic().marshalBinary());
+                h.update(srvid.getPublic().toProto());
 
                 if (!this._agg) {
                     this._agg = srvid.getPublic();
@@ -37,7 +34,7 @@ export class Roster extends Message<Roster> {
             });
 
             // protobuf fields need to be initialized if we want to encode later
-            this.aggregate = this._agg.marshalBinary();
+            this.aggregate = this._agg.toProto();
             this.id = new UUID(5, "ns:URL", h.digest().toString('hex')).export();
         }
     }
@@ -75,19 +72,18 @@ export class Roster extends Message<Roster> {
     static fromTOML(data: string | Buffer, wss: boolean = false): any {
         const roster = toml.parse(data);
         const list = roster.servers.map((server: any) => {
-            const { Public, Address, Description, Services } = server;
-            const pub = Buffer.from(Public, 'hex');
+            const { Public, Suite, Address, Description, Services } = server;
+            const p = PointFactory.fromToml(Suite, Public);
 
             return new ServerIdentity({
-                public: pub,
+                public: p.toProto(),
                 address: Address,
                 description: Description,
                 serviceIdentities: Object.keys(Services).map((key) => {
                     const { Public, Suite: suite } = Services[key];
-                    // TODO: use a point factory to get the correct buffer
-                    const pub = Buffer.concat([Buffer.from('bn256.g2'), Buffer.from(Public, 'hex')]);
+                    const point = PointFactory.fromToml(suite, Public);
 
-                    return new ServiceIdentity({ name: key, public: pub, suite });
+                    return new ServiceIdentity({ name: key, public: point.toProto(), suite });
                 }),
             });
         });
@@ -114,7 +110,7 @@ export class ServerIdentity extends Message<ServerIdentity> {
         }
 
         if (!properties.id) {
-            const hex = this.public.toString('hex');
+            const hex = this.getPublic().toString();
             this.id = new UUID(5, 'ns:URL', `https://dedis.epfl.ch/id/${hex}`).export();
         }
     }
@@ -125,8 +121,7 @@ export class ServerIdentity extends Message<ServerIdentity> {
             return this._point;
         }
 
-        const pub = ed25519.point();
-        pub.unmarshalBinary(this.public);
+        const pub = PointFactory.fromProto(this.public);
         this._point = pub;
         return pub;
     }

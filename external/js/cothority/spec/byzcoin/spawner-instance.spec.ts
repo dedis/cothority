@@ -109,7 +109,7 @@ function generateCredential(pub: Point): CredentialStruct {
             name: 'personhood',
             attributes: [new Attribute({
                 name: 'ed25519',
-                value: pub.marshalBinary(),
+                value: pub.toProto(),
             })]
         })],
     });

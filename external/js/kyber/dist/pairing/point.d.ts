@@ -6,6 +6,7 @@ import BN256Scalar from './scalar';
  * Implementation of the point interface for G1
  */
 export declare class BN256G1Point implements Point {
+    static MARSHAL_ID: Buffer;
     private g1;
     constructor(k?: BNType);
     /**
@@ -50,14 +51,17 @@ export declare class BN256G1Point implements Point {
     /** @inheritdoc */
     marshalSize(): number;
     /** @inheritdoc */
-    equals(p2: BN256G1Point): boolean;
+    equals(p2: Point): p2 is BN256G1Point;
     /** @inheritdoc */
     toString(): string;
+    /** @inheritdoc */
+    toProto(): Buffer;
 }
 /**
  * Implementation of the point interface for G2
  */
 export declare class BN256G2Point implements Point {
+    static MARSHAL_ID: Buffer;
     private g2;
     constructor(k?: BNType);
     /**
@@ -102,7 +106,9 @@ export declare class BN256G2Point implements Point {
     /** @inheritdoc */
     marshalSize(): number;
     /** @inheritdoc */
-    equals(p2: BN256G2Point): boolean;
+    equals(p2: Point): p2 is BN256G2Point;
     /** @inheritdoc */
     toString(): string;
+    /** @inheritdoc */
+    toProto(): Buffer;
 }

@@ -90,9 +90,9 @@ export declare class G1 {
  * then every modification is done in-place.
  */
 export declare class G2 {
-    p: TwistPoint;
     private static ELEM_SIZE;
     private static MARSHAL_SIZE;
+    private p;
     constructor(k?: BNType);
     /**
      * Get the twist point

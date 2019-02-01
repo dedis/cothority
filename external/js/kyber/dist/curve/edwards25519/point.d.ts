@@ -1,14 +1,13 @@
 /// <reference types="node" />
 import { Point } from "../../index";
 import { BNType } from '../../constants';
-import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
 export default class Ed25519Point implements Point {
+    static MARSHAL_ID: Buffer;
     ref: {
         point: any;
-        curve: Ed25519;
     };
-    constructor(curve: Ed25519, X?: BNType, Y?: BNType, Z?: BNType, T?: BNType);
+    constructor(X?: BNType, Y?: BNType, Z?: BNType, T?: BNType);
     /** @inheritdoc */
     null(): Ed25519Point;
     /** @inheritdoc */
@@ -44,4 +43,6 @@ export default class Ed25519Point implements Point {
     equals(p2: Ed25519Point): boolean;
     /** @inheritdoc */
     toString(): string;
+    /** @inheritdoc */
+    toProto(): Buffer;
 }

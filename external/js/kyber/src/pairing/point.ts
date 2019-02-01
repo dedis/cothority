@@ -7,6 +7,8 @@ import BN256Scalar from './scalar';
  * Implementation of the point interface for G1
  */
 export class BN256G1Point implements Point {
+    public static MARSHAL_ID = Buffer.from('bn256.g1');
+
     private g1: G1;
 
     constructor(k?: BNType) {
@@ -118,7 +120,11 @@ export class BN256G1Point implements Point {
     }
 
     /** @inheritdoc */
-    equals(p2: BN256G1Point): boolean {
+    equals(p2: Point): p2 is BN256G1Point {
+        if (!(p2 instanceof BN256G1Point)) {
+            return false;
+        }
+
         return this.g1.equals(p2.g1);
     }
 
@@ -126,12 +132,19 @@ export class BN256G1Point implements Point {
     toString(): string {
         return this.g1.toString();
     }
+
+    /** @inheritdoc */
+    toProto(): Buffer {
+        return Buffer.concat([BN256G1Point.MARSHAL_ID, this.marshalBinary()]);
+    }
 }
 
 /**
  * Implementation of the point interface for G2
  */
 export class BN256G2Point implements Point {
+    public static MARSHAL_ID = Buffer.from('bn256.g2');
+
     private g2: G2;
 
     constructor(k?: BNType) {
@@ -243,12 +256,21 @@ export class BN256G2Point implements Point {
     }
 
     /** @inheritdoc */
-    equals(p2: BN256G2Point): boolean {
+    equals(p2: Point): p2 is BN256G2Point {
+        if (!(p2 instanceof BN256G2Point)) {
+            return false;
+        }
+
         return this.g2.equals(p2.g2);
     }
 
     /** @inheritdoc */
     toString(): string {
         return this.g2.toString();
+    }
+
+    /** @inheritdoc */
+    toProto(): Buffer {
+        return Buffer.concat([BN256G2Point.MARSHAL_ID, this.marshalBinary()]);
     }
 }

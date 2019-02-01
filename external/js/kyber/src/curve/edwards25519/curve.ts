@@ -40,7 +40,7 @@ export default class Ed25519 implements Group {
 
     /** @inheritdoc */
     point(): Point {
-        return new Ed25519Point(this);
+        return new Ed25519Point();
     }
 
     /**

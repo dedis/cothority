@@ -35,7 +35,7 @@ class Ed25519 {
     }
     /** @inheritdoc */
     point() {
-        return new point_1.default(this);
+        return new point_1.default();
     }
     /**
      * NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring

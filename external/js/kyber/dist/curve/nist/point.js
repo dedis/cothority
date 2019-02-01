@@ -208,5 +208,9 @@ class NistPoint {
             this.ref.point.y.fromRed().toString(10) +
             ")");
     }
+    /** @inheritdoc */
+    toProto() {
+        throw new Error('not implemented');
+    }
 }
 exports.default = NistPoint;

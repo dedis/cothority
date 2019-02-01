@@ -93,13 +93,13 @@ describe("Ed25519 Point", () => {
             "22969022198784600445029639705880320580068058102470723316833310869386179114437",
             10
         );
-        const a = new Point(curve, x, y);
-        const b = new Point(curve, x, y);
+        const a = new Point(x, y);
+        const b = new Point(x, y);
 
         expect(a.equals(b)).toBeTruthy(
             "equals returns false for two equal points"
         );
-        expect(a.equals(new Point(curve))).toBeFalsy(
+        expect(a.equals(new Point())).toBeFalsy(
             "equal returns true for two unequal points"
         );
     });
@@ -146,7 +146,7 @@ describe("Ed25519 Point", () => {
             16,
             "le"
         );
-        const target = new Point(curve, x, y);
+        const target = new Point(x, y);
 
         expect(point.equals(target)).toBeTruthy("point != target");
     });
@@ -160,7 +160,7 @@ describe("Ed25519 Point", () => {
             "67e4fb88a8c2b90fb904a2a757f4fba358e804a3fbeb85a801465207b7256ea5",
             16
         );
-        const a = new Point(curve, x, y);
+        const a = new Point(x, y);
         const b = curve.point().set(a) as Point;
 
         expect(a.equals(b)).toBeTruthy("a != b");
@@ -178,7 +178,7 @@ describe("Ed25519 Point", () => {
             16
         );
 
-        const a = new Point(curve, x, y);
+        const a = new Point(x, y);
         const b = a.clone();
 
         expect(a.equals(b)).toBeTruthy();
@@ -210,7 +210,7 @@ describe("Ed25519 Point", () => {
             16,
             "le"
         );
-        const target = new Point(curve, x, y);
+        const target = new Point(x, y);
 
         expect(point.equals(target)).toBeTruthy("point != target");
     });
@@ -229,7 +229,7 @@ describe("Ed25519 Point", () => {
             16
         );
 
-        const target = new Point(curve, x, y);
+        const target = new Point(x, y);
 
         expect(point.equals(target)).toBeTruthy("point != target");
     });
@@ -243,7 +243,7 @@ describe("Ed25519 Point", () => {
             "19788cc22b914896d63f4ff03cea74d4fef79f201030e4521c06050403020106",
             16
         );
-        const point = new Point(curve, x, y);
+        const point = new Point(x, y);
         const data = Buffer.from([1, 2, 3, 4, 5, 6]);
 
         expect(point.data()).toEqual(data, "data returned wrong values");
@@ -269,7 +269,7 @@ describe("Ed25519 Point", () => {
 
         const p1 = curve.point().pick(prng.pseudoRandomBytes);
         const p2 = curve.point().pick(prng.pseudoRandomBytes);
-        const p3 = new Point(curve, x3, y3);
+        const p3 = new Point(x3, y3);
         const sum = curve.point().add(p1, p2) as Point;
         // a + b = b + a
         const sum2 = curve.point().add(p2, p1) as Point;
@@ -296,7 +296,7 @@ describe("Ed25519 Point", () => {
 
         const p1 = curve.point().pick(prng.pseudoRandomBytes);
         const p2 = curve.point().pick(prng.pseudoRandomBytes);
-        const p3 = new Point(curve, x3, y3);
+        const p3 = new Point(x3, y3);
         const diff = curve.point().sub(p1, p2) as Point;
 
         expect(ec.curve.validate(diff.ref.point)).toBeTruthy(
@@ -317,7 +317,7 @@ describe("Ed25519 Point", () => {
         );
 
         const p1 = curve.point().pick(prng.pseudoRandomBytes);
-        const p2 = new Point(curve, x2, y2);
+        const p2 = new Point(x2, y2);
         const neg = curve.point().neg(p1) as Point;
 
         expect(ec.curve.validate(neg.ref.point)).toBeTruthy("neg not on curve");
@@ -348,7 +348,7 @@ describe("Ed25519 Point", () => {
         const buf = Buffer.from([5, 10]);
         const s = curve.scalar().setBytes(buf);
         const prod = curve.point().mul(s, p1) as Point;
-        const p2 = new Point(curve, x2, y2);
+        const p2 = new Point(x2, y2);
 
         expect(ec.curve.validate(prod.ref.point)).toBeTruthy(
             "prod not on curve"

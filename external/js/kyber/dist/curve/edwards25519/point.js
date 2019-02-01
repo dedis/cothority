@@ -4,9 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const bn_js_1 = __importDefault(require("bn.js"));
+const elliptic_1 = require("elliptic");
 const crypto_1 = require("crypto");
+const ec = new elliptic_1.eddsa("ed25519");
 class Ed25519Point {
-    constructor(curve, X, Y, Z, T) {
+    constructor(X, Y, Z, T) {
         if (X instanceof Buffer) {
             X = new bn_js_1.default(X, 16, "le");
         }
@@ -22,18 +24,17 @@ class Ed25519Point {
         // the point reference is stored in a Point reference to make set()
         // consistent.
         this.ref = {
-            point: curve.curve.point(X, Y, Z, T),
-            curve: curve,
+            point: ec.curve.point(X, Y, Z, T),
         };
     }
     /** @inheritdoc */
     null() {
-        this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
+        this.ref.point = ec.curve.point(0, 1, 1, 0);
         return this;
     }
     /** @inheritdoc */
     base() {
-        this.ref.point = this.ref.curve.curve.point(this.ref.curve.curve.g.getX(), this.ref.curve.curve.g.getY());
+        this.ref.point = ec.curve.point(ec.curve.g.getX(), ec.curve.g.getY());
         return this;
     }
     /** @inheritdoc */
@@ -48,7 +49,7 @@ class Ed25519Point {
     /** @inheritdoc */
     clone() {
         const { point } = this.ref;
-        return new Ed25519Point(this.ref.curve, point.x, point.y, point.z, point.t);
+        return new Ed25519Point(point.x, point.y, point.z, point.t);
     }
     /** @inheritdoc */
     embedLen() {
@@ -67,7 +68,7 @@ class Ed25519Point {
             dl = data.length;
         }
         callback = callback || crypto_1.randomBytes;
-        let point_obj = new Ed25519Point(this.ref.curve);
+        let point_obj = new Ed25519Point();
         while (true) {
             const buff = callback(32);
             if (dl > 0) {
@@ -88,7 +89,7 @@ class Ed25519Point {
                 return point_obj;
             }
             let q = point_obj.clone();
-            q.ref.point = q.ref.point.mul(this.ref.curve.curve.n);
+            q.ref.point = q.ref.point.mul(ec.curve.n);
             if (q.ref.point.isInfinity()) {
                 return point_obj;
             }
@@ -106,7 +107,7 @@ class Ed25519Point {
     /** @inheritdoc */
     add(p1, p2) {
         const point = p1.ref.point;
-        this.ref.point = this.ref.curve.curve
+        this.ref.point = ec.curve
             .point(point.x, point.y, point.z, point.t)
             .add(p2.ref.point);
         return this;
@@ -114,7 +115,7 @@ class Ed25519Point {
     /** @inheritdoc */
     sub(p1, p2) {
         const point = p1.ref.point;
-        this.ref.point = this.ref.curve.curve
+        this.ref.point = ec.curve
             .point(point.x, point.y, point.z, point.t)
             .add(p2.ref.point.neg());
         return this;
@@ -129,7 +130,7 @@ class Ed25519Point {
         p = p || null;
         const arr = s.ref.arr;
         this.ref.point =
-            p !== null ? p.ref.point.mul(arr) : this.ref.curve.curve.g.mul(arr);
+            p !== null ? p.ref.point.mul(arr) : ec.curve.g.mul(arr);
         return this;
     }
     /** @inheritdoc */
@@ -150,10 +151,10 @@ class Ed25519Point {
         const odd = buff[31] >> 7 === 1;
         buff[31] &= 0x7f;
         let bnp = new bn_js_1.default(buff, 16, "le");
-        if (bnp.cmp(this.ref.curve.curve.p) >= 0) {
+        if (bnp.cmp(ec.curve.p) >= 0) {
             throw new Error("bytes > p");
         }
-        this.ref.point = this.ref.curve.curve.pointFromY(bnp, odd);
+        this.ref.point = ec.curve.pointFromY(bnp, odd);
     }
     inspect() {
         return this.toString();
@@ -174,5 +175,10 @@ class Ed25519Point {
         const bytes = this.marshalBinary();
         return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
+    /** @inheritdoc */
+    toProto() {
+        return Buffer.concat([Ed25519Point.MARSHAL_ID, this.marshalBinary()]);
+    }
 }
+Ed25519Point.MARSHAL_ID = Buffer.from('ed.point');
 exports.default = Ed25519Point;

@@ -1,9 +1,7 @@
 import Moment from 'moment';
 import { Message, Properties } from "protobufjs";
 import { registerMessage } from "../../../protobuf";
-import { Point, curve } from '@dedis/kyber';
-
-const ed25519 = curve.newCurve('edwards25519');
+import { Point, PointFactory } from '@dedis/kyber';
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
     readonly state: number;
@@ -16,7 +14,8 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
     readonly previous: Buffer;
     readonly next: Buffer;
 
-    updateAttendes(keys: Buffer[]): void {
+    updateAttendes(publics: Point[]): void {
+        const keys = publics.map(p => p.toProto());
         this.attendees.keys.splice(0, this.attendees.keys.length, ...keys);
     }
 }
@@ -62,12 +61,7 @@ export class Attendees extends Message<Attendees> {
     }
 
     get publics(): Point[] {
-        return this.keys.map((k) => {
-            const p = ed25519.point();
-            // TODO: point factory
-            p.unmarshalBinary(k.slice(8));
-            return p;
-        });
+        return this.keys.map((k) => PointFactory.fromProto(k));
     }
 
     toBytes(): Buffer {

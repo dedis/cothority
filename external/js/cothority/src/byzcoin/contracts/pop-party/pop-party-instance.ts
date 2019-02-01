@@ -1,7 +1,7 @@
-import { Point, curve, Scalar } from "@dedis/kyber";
+import { Point, Scalar, PointFactory } from "@dedis/kyber";
 import { sign } from '@dedis/kyber/dist/sign/anon';
 import ByzCoinRPC from "../../byzcoin-rpc";
-import ClientTransaction, {Argument, Instruction} from "../../client-transaction";
+import ClientTransaction, { Argument, Instruction } from "../../client-transaction";
 import Proof from "../../proof";
 import DarcInstance from "../darc-instance";
 import Signer from "../../../darc/signer";
@@ -10,8 +10,6 @@ import CredentialInstance from "../credentials-instance";
 import Instance from "../../instance";
 import { Log } from '../../../log';
 import { PopPartyStruct, FinalStatement } from "./proto";
-
-const ed25519 = curve.newCurve('edwards25519');
 
 export class PopPartyInstance {
     static readonly contractID = "popParty";
@@ -46,9 +44,7 @@ export class PopPartyInstance {
                 throw new Error("found organizer without personhood credential");
             }
 
-            const pub = ed25519.point();
-            pub.unmarshalBinary(credPers);
-
+            const pub = PointFactory.fromProto(credPers);
             orgPers.push(pub);
         }
 
@@ -118,11 +114,7 @@ export class PopPartyInstance {
             return Promise.reject("party did not pass barrier-point yet");
         }
 
-        const keys = this.tmpAttendees
-            .map(p => p.marshalBinary())
-            .sort((a, b) => Buffer.compare(a, b));
-
-        this.popPartyStruct.updateAttendes(keys);
+        this.popPartyStruct.updateAttendes(this.tmpAttendees);
 
         const instr = Instruction.createInvoke(
             this.instance.id,

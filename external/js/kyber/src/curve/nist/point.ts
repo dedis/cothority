@@ -242,4 +242,9 @@ export default class NistPoint implements Point {
             ")"
         );
     }
+
+    /** @inheritdoc */
+    toProto(): Buffer {
+        throw new Error('not implemented');
+    }
 }

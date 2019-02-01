@@ -1,5 +1,6 @@
 import * as curve from "./curve";
 import * as sign from "./sign";
+import PointFactory from './point-factory';
 
 export interface Group {
   /**
@@ -120,6 +121,7 @@ export interface Point {
   /**
    * Convert a buffer back to a curve point.
    * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62.
+   * Don't use this to send the point through the network but toProto instead.
    */
   unmarshalBinary(bytes: Buffer): void;
 
@@ -141,6 +143,12 @@ export interface Point {
    * @returns the string representation
    */
   toString(): string;
+
+  /**
+   * Encode the point to be passed through a protobuf channel. Use this
+   * instead of marshalBinary to send the point over the network.
+   */
+  toProto(): Buffer;
 }
 
 export interface Scalar {
@@ -251,9 +259,11 @@ export interface Scalar {
 export {
   curve,
   sign,
+  PointFactory,
 }
 
 export default {
   curve,
   sign,
+  PointFactory,
 }
