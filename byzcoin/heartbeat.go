@@ -79,9 +79,7 @@ func (r *heartbeats) updateTimeout(key string, timeout time.Duration) {
 	if !ok {
 		return
 	}
-	if h.timeout != timeout {
-		h.updateTimeoutChan <- timeout
-	}
+	h.updateTimeoutChan <- timeout
 }
 
 func (r *heartbeats) stop(key string) {
