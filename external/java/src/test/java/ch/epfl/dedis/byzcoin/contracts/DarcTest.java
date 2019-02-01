@@ -52,7 +52,7 @@ class DarcTest {
         // Get the counter for the admin
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+        SecureDarcInstance dc = SecureDarcInstance.fromByzCoin(bc, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
         Darc newDarc = genesisDarc.partialCopy();
@@ -80,7 +80,7 @@ class DarcTest {
         SignerX509EC kcsigner2 = new SignerX509ECTest();
         Darc adminDarc2 = genesisDarc.partialCopy();
         adminDarc2.setRule(Darc.RuleEvolve, kcsigner.getIdentity().toString().getBytes());
-        DarcInstance di = DarcInstance.fromByzCoin(bc, genesisDarc);
+        SecureDarcInstance di = SecureDarcInstance.fromByzCoin(bc, genesisDarc);
         di.evolveDarcAndWait(adminDarc2, admin, counters.head()+1, 10);
         di.update();
         assertEquals(1, di.getDarc().getVersion());
@@ -110,7 +110,7 @@ class DarcTest {
         // Get the counter for the admin
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+        SecureDarcInstance dc = SecureDarcInstance.fromByzCoin(bc, genesisDarc);
         assertNotNull(dc.getId());
         Darc darc2 = genesisDarc.partialCopy();
         darc2.setRule(Darc.RuleSpawn, admin.getIdentity().toString().getBytes());
@@ -119,12 +119,12 @@ class DarcTest {
         List<Identity> id = Arrays.asList(admin.getIdentity());
         Darc newDarc = new Darc(id, id, "new darc".getBytes());
 
-        Proof p = dc.spawnInstanceAndWait(DarcInstance.ContractId, admin, counters.head()+2,
+        Proof p = dc.spawnInstanceAndWait(SecureDarcInstance.ContractId, admin, counters.head()+2,
                 Argument.NewList("darc", newDarc.toProto().toByteArray()), 10);
         assertTrue(p.matches());
 
         logger.info("creating DarcInstance");
-        DarcInstance dc2 = DarcInstance.fromByzCoin(bc, newDarc);
+        SecureDarcInstance dc2 = SecureDarcInstance.fromByzCoin(bc, newDarc);
         logger.info("ids: {} - {}", dc2.getDarc().getId(), newDarc.getId());
         logger.info("ids: {} - {}", dc2.getDarc().getBaseId(), newDarc.getBaseId());
         logger.info("darcs:\n{}\n{}", dc2.getDarc(), newDarc);
@@ -145,7 +145,7 @@ class DarcTest {
         // Get the counter for the admin
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
-        DarcInstance gi = bc.getGenesisDarcInstance();
+        SecureDarcInstance gi = bc.getGenesisDarcInstance();
         List<DarcId> ids = new ArrayList<>();
         // Add 50 darcs without waiting - so the requests will be batched together in multiple blocks
         int n = 50;
@@ -168,7 +168,7 @@ class DarcTest {
             try {
                 Proof p = bc.getProof(new InstanceId(id.getId()));
                 assertTrue(p.matches());
-                assertEquals(DarcInstance.ContractId, p.getContractID());
+                assertEquals(SecureDarcInstance.ContractId, p.getContractID());
             } catch (CothorityException e) {
                 fail("Got exception when fetching darc: " + e.getMessage());
             }

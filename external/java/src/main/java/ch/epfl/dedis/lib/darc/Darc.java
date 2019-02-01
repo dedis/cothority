@@ -1,10 +1,9 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityAlreadyExistsException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
@@ -30,9 +29,9 @@ import java.util.stream.Collectors;
  */
 public class Darc {
     public final static String RuleSignature = "_sign";
-    public final static String RuleSpawn = "spawn:" + DarcInstance.ContractId;
-    public final static String RuleEvolve = "invoke:" + DarcInstance.ContractId + ".evolve";
-    public final static String RuleEvolveUnrestricted = "invoke:" + DarcInstance.ContractId + ".evolve_unrestricted";
+    public final static String RuleSpawn = "spawn:" + SecureDarcInstance.ContractId;
+    public final static String RuleEvolve = "invoke:" + SecureDarcInstance.ContractId + ".evolve";
+    public final static String RuleEvolveUnrestricted = "invoke:" + SecureDarcInstance.ContractId + ".evolve_unrestricted";
 
     private long version;
     private byte[] description;
@@ -330,7 +329,7 @@ public class Darc {
         if (owners != null && owners.size() > 0) {
             List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
             try {
-                rs.addRule("invoke:" + DarcInstance.ContractId + ".evolve", String.join(" & ", ownerIDs).getBytes());
+                rs.addRule("invoke:" + SecureDarcInstance.ContractId + ".evolve", String.join(" & ", ownerIDs).getBytes());
             } catch (CothorityAlreadyExistsException e) {
                 throw new RuntimeException("this should never happen because we are adding a rule to a new object");
             }

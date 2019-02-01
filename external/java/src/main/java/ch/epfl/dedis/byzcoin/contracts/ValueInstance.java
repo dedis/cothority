@@ -1,6 +1,5 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
@@ -45,7 +44,7 @@ public class ValueInstance {
      * @throws CothorityException if something goes wrong
      */
     public ValueInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, byte[] value) throws CothorityException {
-        DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
+        SecureDarcInstance spawner = SecureDarcInstance.fromByzCoin(bc, spawnerDarcId);
         List<Argument> args = new ArrayList<>();
         instance = spawner.spawnInstanceAndWait(ContractId, spawnerSigner, signerCtr, args, 10).getInstance();
         this.bc = bc;

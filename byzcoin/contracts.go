@@ -86,14 +86,11 @@ func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []Stat
 //
 // Built-in contracts necessary for bootstrapping the ledger.
 //  * Config
-//  * Darc
+//  * SecureDarc
 //
 
 // ContractConfigID denotes a config-contract
 const ContractConfigID = "config"
-
-// ContractDarcID denotes a darc-contract
-const ContractDarcID = "darc"
 
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = InstanceID{}
@@ -293,86 +290,6 @@ func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roste
 	return []StateChange{
 		NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
 	}, nil
-}
-
-type contractDarc struct {
-	BasicContract
-	darc.Darc
-	s *Service
-}
-
-var _ Contract = (*contractDarc)(nil)
-
-func (s *Service) contractDarcFromBytes(in []byte) (Contract, error) {
-	d, err := darc.NewFromProtobuf(in)
-	if err != nil {
-		return nil, err
-	}
-	c := &contractDarc{s: s, Darc: *d}
-	return c, nil
-}
-
-func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	cout = coins
-
-	if inst.Spawn.ContractID == ContractDarcID {
-		darcBuf := inst.Spawn.Args.Search("darc")
-		d, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
-		}
-		id := d.GetBaseID()
-		return []StateChange{
-			NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
-		}, coins, nil
-	}
-
-	// If we got here this is a spawn:XXX in order to spawn
-	// a new instance of contract XXX, so do that.
-
-	cfact, found := c.s.contracts[inst.Spawn.ContractID]
-	if !found {
-		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
-	}
-
-	// Pass nil into the contract factory here because this instance does not exist yet.
-	// So the factory will make a zero-value instance, and then calling Spawn on it
-	// will give it a chance to encode it's zero state and emit one or more StateChanges to put itself
-	// into the trie.
-	c2, err := cfact(nil)
-	if err != nil {
-		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
-	}
-	return c2.Spawn(rst, inst, coins)
-}
-
-func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	switch inst.Invoke.Command {
-	case "evolve":
-		var darcID darc.ID
-		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
-		if err != nil {
-			return
-		}
-
-		darcBuf := inst.Invoke.Args.Search("darc")
-		newD, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, nil, err
-		}
-		oldD, err := LoadDarcFromTrie(rst, darcID)
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
-		}
-		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
-		}, coins, nil
-	default:
-		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
-	}
 }
 
 // LoadConfigFromTrie loads the configuration data from the trie.

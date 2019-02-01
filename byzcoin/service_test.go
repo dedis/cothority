@@ -2433,8 +2433,6 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			"spawn:" + dummyContract,
 			"spawn:" + invalidContract,
 			"spawn:" + panicContract,
-			"spawn:" + ContractSecureDarcID,
-			"invoke:" + ContractSecureDarcID + "." + cmdDarcEvolve,
 			"invoke:" + ContractConfigID + ".update_config",
 			"spawn:" + slowContract,
 			"spawn:" + stateChangeCacheContract,

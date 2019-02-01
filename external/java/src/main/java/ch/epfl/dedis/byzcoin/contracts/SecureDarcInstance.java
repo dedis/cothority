@@ -5,7 +5,6 @@ import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.*;
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -25,7 +24,7 @@ import java.util.List;
  * sufficient, meaning it has a link to the byzcoin service it runs on.
  * If you evolve the DarcInstance, it will update its internal darc.
  */
-public class DarcInstance {
+public class SecureDarcInstance {
     // ContractId is how the contract for a darc is represented.
     public static String ContractId = "secure_darc";
 
@@ -33,7 +32,7 @@ public class DarcInstance {
     private Darc darc;
     private ByzCoinRPC bc;
 
-    private final static Logger logger = LoggerFactory.getLogger(DarcInstance.class);
+    private final static Logger logger = LoggerFactory.getLogger(SecureDarcInstance.class);
 
     /**
      * Instantiates a new DarcInstance from an existing darc by sending a spawn instruction to
@@ -46,9 +45,9 @@ public class DarcInstance {
      * @param newDarc       the new darc to spawn
      * @throws CothorityException if something goes wrong
      */
-    public DarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, Darc newDarc) throws CothorityException {
-        DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
-        DarcInstance newDarcInst = spawner.spawnDarcAndWait(newDarc, spawnerSigner, signerCtr, 10);
+    public SecureDarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, Darc newDarc) throws CothorityException {
+        SecureDarcInstance spawner = SecureDarcInstance.fromByzCoin(bc, spawnerDarcId);
+        SecureDarcInstance newDarcInst = spawner.spawnDarcAndWait(newDarc, spawnerSigner, signerCtr, 10);
         this.bc = bc;
         darc = newDarc;
         instance = newDarcInst.getInstance();
@@ -62,7 +61,7 @@ public class DarcInstance {
      * @param inst an instance representing a darc
      * @throws CothorityException if something goes wrong
      */
-    private DarcInstance(ByzCoinRPC bc, Instance inst) throws CothorityException {
+    private SecureDarcInstance(ByzCoinRPC bc, Instance inst) throws CothorityException {
         this.bc = bc;
         if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong contract: {}", instance.getContractId());
@@ -105,6 +104,18 @@ public class DarcInstance {
         return evolveDarcInstruction(newDarc, signerCtr, false);
     }
 
+    /**
+     * Creates an instruction to (unrestricted) evolve the darc in byzcoin. The signer must have its identity in the current
+     * darc as "Invoke_Evolve" rule.
+     * TODO: allow for evolution if the expression has more than one identity.
+     *
+     * @param newDarc      the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
+     *                     automatically by this function
+     * @param signerCtr    is the monotonically increasing counter which must match the signer who will eventually
+     *                     sign the returned instruction.
+     * @param unrestricted whether to use the unrestricted evolution
+     * @return Instruction to be sent to byzcoin
+     */
     public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr, boolean unrestricted) {
         newDarc.setVersion(this.getDarc().getVersion() + 1);
         newDarc.setPrevId(darc);
@@ -135,7 +146,6 @@ public class DarcInstance {
     /**
      * Asks byzcoin to evolve the darc and waits until the new darc has
      * been stored in the global state.
-     * TODO: check if there has been an error in the transaction!
      *
      * @param newDarc  the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
      *                 automatically by this function
@@ -152,6 +162,19 @@ public class DarcInstance {
         return bc.sendTransactionAndWait(ct, wait);
     }
 
+    /**
+     * Asks byzcoin to (unrestricted) evolve the darc and waits until the new darc has
+     * been stored in the global state.
+     *
+     * @param newDarc      the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
+     *                     automatically by this function
+     * @param owner        is the owner that can sign to evolve the darc
+     * @param ownerCtr     a monotonically increasing counter which must map to the owners
+     * @param wait         the maximum number of blocks to wait
+     * @param unrestricted whether to use the unrestricted evolution
+     * @return ClientTransactionId of the accepted transaction
+     * @throws CothorityException if something goes wrong
+     */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait, boolean unrestricted) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, ownerCtr, unrestricted);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
@@ -237,12 +260,12 @@ public class DarcInstance {
      * @return a new DarcInstance, might be null if wait == 0
      * @throws CothorityException if something goes wrong if something went wrong
      */
-    public DarcInstance spawnDarcAndWait(Darc d, Signer s, Long signerCounter, int wait) throws CothorityException {
+    public SecureDarcInstance spawnDarcAndWait(Darc d, Signer s, Long signerCounter, int wait) throws CothorityException {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("darc", d.toProto().toByteArray()));
         if (wait > 0) {
             Proof p = spawnInstanceAndWait(ContractId, s, signerCounter, args, wait);
-            return new DarcInstance(this.bc, p.getInstance());
+            return new SecureDarcInstance(this.bc, p.getInstance());
         } else {
             spawnInstance(ContractId, s, signerCounter, args);
             return null;
@@ -281,8 +304,8 @@ public class DarcInstance {
      * @return DarcInstance representing the latest version of the darc given in id
      * @throws CothorityException if something goes wrong
      */
-    public static DarcInstance fromByzCoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
-        return new DarcInstance(bc, Instance.fromByzcoin(bc, id));
+    public static SecureDarcInstance fromByzCoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+        return new SecureDarcInstance(bc, Instance.fromByzcoin(bc, id));
     }
 
     /**
@@ -296,7 +319,7 @@ public class DarcInstance {
      * @return DarcInstance representing the latest version of the given baseId
      * @throws CothorityException if something goes wrong
      */
-    public static DarcInstance fromByzCoin(ByzCoinRPC bc, DarcId baseId) throws CothorityException {
+    public static SecureDarcInstance fromByzCoin(ByzCoinRPC bc, DarcId baseId) throws CothorityException {
         return fromByzCoin(bc, new InstanceId(baseId.getId()));
     }
 
@@ -311,7 +334,7 @@ public class DarcInstance {
      * @return DarcInstance representing the latest version of the given baseId
      * @throws CothorityException if somethings goes wrong
      */
-    public static DarcInstance fromByzCoin(ByzCoinRPC bc, Darc d) throws CothorityException {
+    public static SecureDarcInstance fromByzCoin(ByzCoinRPC bc, Darc d) throws CothorityException {
         return fromByzCoin(bc, d.getBaseId());
     }
 }

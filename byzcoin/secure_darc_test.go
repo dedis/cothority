@@ -19,8 +19,7 @@ func TestSecureDarc(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	_, roster, _ := local.GenTree(3, true)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster,
-		[]string{"spawn:darc", "spawn:secure_darc"}, signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
@@ -30,8 +29,9 @@ func TestSecureDarc(t *testing.T) {
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
 
-	log.Info("spawn a new secure darc with spawn:darc - fail")
+	log.Info("spawn a new secure darc with spawn:insecure_darc - fail")
 	secDarc := gDarc.Copy()
+	require.NoError(t, secDarc.Rules.AddRule("spawn:insecure_darc", []byte(restrictedSigner.Identity().String())))
 	secDarcBuf, err := secDarc.ToProto()
 	require.NoError(t, err)
 	ctx := ClientTransaction{
@@ -51,10 +51,10 @@ func TestSecureDarc(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
-	log.Info("do the same but without spawn:darc - pass")
-	require.NoError(t, secDarc.Rules.DeleteRules("spawn:darc"))
+	log.Info("do the same but without spawn:insecure_darc - pass")
+	require.NoError(t, secDarc.Rules.DeleteRules("spawn:insecure_darc"))
 	require.NoError(t, secDarc.Rules.UpdateRule("invoke:secure_darc."+cmdDarcEvolve, []byte(restrictedSigner.Identity().String())))
-	require.NoError(t, secDarc.Rules.AddRule("invoke:secure_darc."+cmdDarcEvolveUnrestriction, []byte(unrestrictedSigner.Identity().String())))
+	require.NoError(t, secDarc.Rules.UpdateRule("invoke:secure_darc."+cmdDarcEvolveUnrestriction, []byte(unrestrictedSigner.Identity().String())))
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
 	ctx = ClientTransaction{

@@ -2,7 +2,7 @@ package ch.epfl.dedis.byzcoin;
 
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.lib.network.Roster;
@@ -266,8 +266,8 @@ public class ByzCoinRPC {
      * @return the darc instance of the genesis darc.
      * @throws CothorityException if something goes wrong if something goes wrong
      */
-    public DarcInstance getGenesisDarcInstance() throws CothorityException {
-        return DarcInstance.fromByzCoin(this, genesisDarc);
+    public SecureDarcInstance getGenesisDarcInstance() throws CothorityException {
+        return SecureDarcInstance.fromByzCoin(this, genesisDarc);
     }
 
     /**
@@ -577,7 +577,7 @@ public class ByzCoinRPC {
         bc.config = new Config(proof.getValue());
 
         Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
-        if (!proof2.contractIsType(DarcInstance.ContractId)) {
+        if (!proof2.contractIsType(SecureDarcInstance.ContractId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
         }
         if (!proof2.exists(proof.getDarcID().getId())) {
@@ -616,10 +616,9 @@ public class ByzCoinRPC {
                 logger.warn("didn't find Ed25519 point");
             }
         });
-        // TODO put spawn:secure_darc in a variable/
-        d.addIdentity("spawn:secure_darc", admin.getIdentity(), Rules.OR);
+        d.addIdentity("spawn:" + SecureDarcInstance.ContractId, admin.getIdentity(), Rules.OR);
         d.addIdentity("invoke:" + ChainConfigInstance.ContractId + ".update_config", admin.getIdentity(), Rules.OR);
-        d.addIdentity("invoke:secure_darc.evolve_unrestricted", admin.getIdentity(), Rules.OR);
+        d.addIdentity("invoke:" + SecureDarcInstance.ContractId + ".evolve_unrestricted", admin.getIdentity(), Rules.OR);
         return d;
     }
 

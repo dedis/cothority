@@ -5,7 +5,7 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.calypso.*;
 import ch.epfl.dedis.lib.darc.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -151,7 +151,7 @@ public class AuthorizationTest {
     }
 
     private DarcId createConsumer(CalypsoRPC ocs) throws Exception {
-        DarcInstance user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(CONSUMER_SCALAR))));
+        SecureDarcInstance user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(CONSUMER_SCALAR))));
         return new DarcId(user.getId().getId());
     }
 
@@ -164,7 +164,7 @@ public class AuthorizationTest {
     }
 
     private DarcId createPublisher(CalypsoRPC ocs) throws Exception {
-        DarcInstance user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(PUBLISHER_SCALAR))));
+        SecureDarcInstance user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(PUBLISHER_SCALAR))));
         grantSystemWriteAccess(ocs, user.getDarc());
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
@@ -176,7 +176,7 @@ public class AuthorizationTest {
                         Hex.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
-    private DarcInstance createUser(CalypsoRPC ocs, IdentityEd25519 user) throws Exception {
+    private SecureDarcInstance createUser(CalypsoRPC ocs, IdentityEd25519 user) throws Exception {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
         SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
@@ -192,7 +192,7 @@ public class AuthorizationTest {
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 
-        DarcInstance di = DarcInstance.fromByzCoin(ocs, ocs.getGenesisDarc().getBaseId());
+        SecureDarcInstance di = SecureDarcInstance.fromByzCoin(ocs, ocs.getGenesisDarc().getBaseId());
         di.evolveDarcAndWait(newGenesis, admin, adminCtrs.head()+1, 10);
     }
 }

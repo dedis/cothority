@@ -15,9 +15,9 @@ import (
 // that allows authorised users to change the rules arbitrarily. Our second
 // form of security is "controlled spawn", where the rules of the secure darcs
 // spawned using this contract are subject to some restrictions, e.g., the new
-// rules must not contain spawn:darc (the restricted DARC contract). This
-// contract serves as an example. In practice, the contract developer will
-// write his/her own contract for the intended application.
+// rules must not contain spawn:inseucre_darc. While this contract may be
+// useful in a lot of scenarios, it is possible to have even more control by
+// writing new DARC contracts for the intended application.
 const ContractSecureDarcID = "secure_darc"
 
 type contractSecureDarc struct {
@@ -43,10 +43,6 @@ func (s *Service) contractSecureDarcFromBytes(in []byte) (Contract, error) {
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
-	if inst.Spawn.ContractID == ContractDarcID {
-		return nil, nil, errors.New("this contract is not allowed to spawn a DARC instance")
-	}
-
 	if inst.Spawn.ContractID == ContractSecureDarcID {
 		darcBuf := inst.Spawn.Args.Search("darc")
 		d, err := darc.NewFromProtobuf(darcBuf)
@@ -55,13 +51,13 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 		}
 		id := d.GetBaseID()
 
-		// Here is a hard-coded constraint for spawning DARCs. If the
-		// constraint needs to be dynamic, then it is recommended to
-		// create a new contract that contains mappings of roles ->
-		// identities, and roles -> whitelist of rules. Then modify
-		// this contract to check the whitelist.
-		if d.Rules.Contains("spawn:darc") {
-			return nil, nil, errors.New("a secure DARC is not allowed to spawn a regular DARC")
+		// Here is an example hard-coded constraint for spawning DARCs.
+		// If the constraint needs to be dynamic, then it is
+		// recommended to create a new contract that contains mappings
+		// of roles -> identities, and roles -> whitelist of rules.
+		// Then modify this contract to check the whitelist.
+		if d.Rules.Contains("spawn:insecure_darc") {
+			return nil, nil, errors.New("a secure DARC is not allowed to spawn an insecure DARC")
 		}
 
 		return []StateChange{
@@ -137,9 +133,6 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 		newD, err := darc.NewFromProtobuf(darcBuf)
 		if err != nil {
 			return nil, nil, err
-		}
-		if newD.Rules.Contains("spawn:darc") {
-			return nil, nil, errors.New("the unrestricted_evolve command is not allowed to add the spawn:darc rule")
 		}
 		oldD, err := LoadDarcFromTrie(rst, darcID)
 		if err != nil {

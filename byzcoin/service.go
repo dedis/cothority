@@ -2249,7 +2249,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
-	s.registerContract(ContractDarcID, s.contractDarcFromBytes)
 	s.registerContract(ContractSecureDarcID, s.contractSecureDarcFromBytes)
 
 	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)

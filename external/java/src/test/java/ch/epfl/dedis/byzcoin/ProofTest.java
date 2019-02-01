@@ -1,6 +1,6 @@
 package ch.epfl.dedis.byzcoin;
 
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
@@ -44,7 +44,7 @@ class ProofTest {
     void test() throws Exception {
         // create a bunch of blocks
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
-        DarcInstance gi = bc.getGenesisDarcInstance();
+        SecureDarcInstance gi = bc.getGenesisDarcInstance();
         List<DarcId> ids = new ArrayList<>();
         int n = 4;
         for (int i = 0; i < n; i++) {

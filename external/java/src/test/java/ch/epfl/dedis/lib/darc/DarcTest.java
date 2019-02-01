@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
