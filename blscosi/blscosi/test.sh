@@ -18,7 +18,8 @@ main(){
     done
     run testBuild
     run testServerCfg
-    run testSignFile
+	# Disabled because it is flaky, see issue #1687
+    #run testSignFile
     run testCheck
     run testReconnect
     stopTest
