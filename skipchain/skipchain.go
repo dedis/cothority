@@ -1126,10 +1126,10 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 
 // forwardLink receives a signature request of a newly accepted block.
 // It only needs the 2nd-newest block and the forward-link.
-func (s *Service) forwardLink(req *network.Envelope) {
+func (s *Service) forwardLink(req *network.Envelope) error {
 	err := s.incrementWorking()
 	if err != nil {
-		return
+		return err
 	}
 	defer s.decrementWorking()
 
@@ -1201,8 +1201,9 @@ func (s *Service) forwardLink(req *network.Envelope) {
 		return s.startPropagation(s.propagateForwardLink, from.Roster, &PropagateForwardLink{fl, fs.TargetHeight})
 	}()
 	if err != nil {
-		log.Error(s.ServerIdentity(), "couldn't create forwardLink:", err, "requested by", req.ServerIdentity)
+		return fmt.Errorf("%v couldn't create forwardLink: %v requested by %v", s.ServerIdentity(), err, req.ServerIdentity)
 	}
+	return nil
 }
 
 // verifyFollowBlock makes sure that a signature-request for a forward-link

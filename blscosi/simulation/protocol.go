@@ -89,12 +89,12 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 	// intercept announcements on some nodes
 	for _, n := range toIntercept {
 		if n.ID.Equal(config.Server.ServerIdentity.ID) {
-			config.Server.RegisterProcessorFunc(onet.ProtocolMsgID, func(e *network.Envelope) {
+			config.Server.RegisterProcessorFunc(onet.ProtocolMsgID, func(e *network.Envelope) error {
 				//get message
 				_, msg, err := network.Unmarshal(e.Msg.(*onet.ProtocolMsg).MsgSlice, config.Server.Suite())
 				if err != nil {
 					log.Fatal("error while unmarshaling a message:", err)
-					return
+					return err
 				}
 
 				switch msg.(type) {
@@ -103,6 +103,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 				default:
 					config.Overlay.Process(e)
 				}
+				return nil
 			})
 			break // this node has been found
 		}

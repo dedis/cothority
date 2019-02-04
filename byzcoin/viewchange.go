@@ -3,6 +3,7 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -201,23 +202,20 @@ func (s *Service) getFaultThreshold(sbID skipchain.SkipBlockID) int {
 
 // handleViewChangeReq should be registered as a handler for viewchange.InitReq
 // messages.
-func (s *Service) handleViewChangeReq(env *network.Envelope) {
+func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 	// Parse message.
 	req, ok := env.Msg.(*viewchange.InitReq)
 	if !ok {
-		log.Error(s.ServerIdentity(), "failed to cast to viewchange.ViewChangeReq")
-		return
+		return fmt.Errorf("%v failed to cast to viewchange.ViewChangeReq", s.ServerIdentity())
 	}
 	// Should not be sending to ourself.
 	if req.SignerID.Equal(s.ServerIdentity().ID) {
-		log.Error(s.ServerIdentity(), "should not send to ourself")
-		return
+		return fmt.Errorf("%v should not send to ourself", s.ServerIdentity())
 	}
 
 	// Check that the genesis exists and the view is valid.
 	if gen := s.db().GetByID(req.View.Gen); gen == nil || gen.Index != 0 {
-		log.Error(s.ServerIdentity(), "cannot find the genesis block in request")
-		return
+		return fmt.Errorf("%v cannot find the genesis block in request", s.ServerIdentity())
 	}
 	reqLatest := s.db().GetByID(req.View.ID)
 	if reqLatest == nil {
@@ -226,27 +224,24 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) {
 		// delay for triggering view-change should be longer than the
 		// time it takes to create and propagate a new block. Hence,
 		// somebody is sending bogus views.
-		log.Error(s.ServerIdentity(), "we do not know this view")
-		return
+		return fmt.Errorf("%v we do not know this view", s.ServerIdentity())
 	}
 	if len(reqLatest.ForwardLink) != 0 {
-		log.Error(s.ServerIdentity(), "view-change should not happen for blocks that are not the latest")
-		return
+		return fmt.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
 	}
 
 	// Check signature.
 	_, signerSID := reqLatest.Roster.Search(req.SignerID)
 	if signerSID == nil {
-		log.Error(s.ServerIdentity(), "signer does not exist")
-		return
+		return fmt.Errorf("%v signer does not exist", s.ServerIdentity())
 	}
 	if err := schnorr.Verify(cothority.Suite, signerSID.Public, req.Hash(), req.Signature); err != nil {
-		log.Error(s.ServerIdentity(), err)
-		return
+		return fmt.Errorf("%v %v", s.ServerIdentity(), err)
 	}
 
 	// Store it in our log.
 	s.viewChangeMan.addReq(*req)
+	return nil
 }
 
 func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error) {
