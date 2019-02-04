@@ -220,18 +220,18 @@ Darc contracts.
 Suppose we are in a hierarchical situation where the boss is allowed to do
 anything, the managers are allowed to do a certain set of tasks including
 spawning user Darcs and the users are allowed to do another set of tasks but
-they are not allowed to do anything. The SecureDarc contract already achieves
-some of the requirements. If the managers are benign, they would spawn users
-with the correct set of rules. Thus the users cannot give themselves extra
-permission because they are only authorized to invoke their `evolve` action. If
-the boss is benign, then he/she will only spawn managers with the correct set
-of rules. What the SecureDarc cannot do is to stop managers from spawning user
-Darcs with arbitrary rules. We can prevent this problem by writing new Darc
-contracts. A simple solution is to write three contracts: BossDarc, ManagerDarc
-and UserDarc. The BossDarc will be the same as SecureDarc. The ManagerDarc will
-have additional logic in its Spawn function which stops it from spawning
-manager or boss Darcs. Finally, the UserDarc will not be allowed to spawn any
-other Darc.
+they are not allowed to spawn any new Darcs. The SecureDarc contract already
+achieves some of the requirements. If the managers are benign, they would spawn
+users with the correct set of rules. Thus the users cannot give themselves
+extra permission because they are only authorized to invoke their `evolve`
+action. If the boss is benign, then he/she will only spawn managers with the
+correct set of rules. What the SecureDarc cannot do is to stop managers from
+spawning user Darcs with arbitrary rules. We can prevent this problem by
+writing new Darc contracts. A simple solution is to write three contracts:
+BossDarc, ManagerDarc and UserDarc. The BossDarc will be the same as
+SecureDarc. The ManagerDarc will have additional logic in its Spawn function
+which stops it from spawning manager or boss Darcs. Finally, the UserDarc will
+not be allowed to spawn any other Darc.
 
 ## Possible future contracts
 

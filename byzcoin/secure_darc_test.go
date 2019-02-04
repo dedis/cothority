@@ -28,6 +28,8 @@ func TestSecureDarc(t *testing.T) {
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
+	invokeEvolve := darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolve)
+	invokeEvolveUnrestricted := darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction)
 
 	log.Info("spawn a new secure darc with spawn:insecure_darc - fail")
 	secDarc := gDarc.Copy()
@@ -53,8 +55,8 @@ func TestSecureDarc(t *testing.T) {
 
 	log.Info("do the same but without spawn:insecure_darc - pass")
 	require.NoError(t, secDarc.Rules.DeleteRules("spawn:insecure_darc"))
-	require.NoError(t, secDarc.Rules.UpdateRule("invoke:secure_darc."+cmdDarcEvolve, []byte(restrictedSigner.Identity().String())))
-	require.NoError(t, secDarc.Rules.UpdateRule("invoke:secure_darc."+cmdDarcEvolveUnrestriction, []byte(unrestrictedSigner.Identity().String())))
+	require.NoError(t, secDarc.Rules.UpdateRule(invokeEvolve, []byte(restrictedSigner.Identity().String())))
+	require.NoError(t, secDarc.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(unrestrictedSigner.Identity().String())))
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
 	ctx = ClientTransaction{
@@ -78,7 +80,33 @@ func TestSecureDarc(t *testing.T) {
 	{
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
-		secDarc2.Rules.AddRule("spawn:coin", secDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
+		require.NoError(t, secDarc2.Rules.AddRule("spawn:coin", secDarc.Rules.Get(invokeEvolveUnrestricted)))
+		secDarc2Buf, err := secDarc2.ToProto()
+		ctx2 := ClientTransaction{
+			Instructions: []Instruction{{
+				InstanceID: NewInstanceID(secDarc.GetBaseID()),
+				Invoke: &Invoke{
+					ContractID: ContractSecureDarcID,
+					Command:    cmdDarcEvolve,
+					Args: []Argument{{
+						Name:  "darc",
+						Value: secDarc2Buf,
+					}},
+				},
+				SignerCounter: []uint64{1},
+			}},
+		}
+		require.Nil(t, ctx2.SignWith(restrictedSigner))
+		_, err = cl.AddTransactionAndWait(ctx2, 10)
+		require.Error(t, err)
+	}
+
+	log.Info("evolve to modify the unrestrict_evolve rule - fail")
+	{
+		secDarc2 := secDarc.Copy()
+		require.NoError(t, secDarc2.EvolveFrom(secDarc))
+		// changing the signer to something else, then it should fail
+		require.NoError(t, secDarc2.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(restrictedSigner.Identity().String())))
 		secDarc2Buf, err := secDarc2.ToProto()
 		ctx2 := ClientTransaction{
 			Instructions: []Instruction{{
@@ -136,7 +164,7 @@ func TestSecureDarc(t *testing.T) {
 	{
 		myDarc2 := myDarc.Copy()
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
-		myDarc2.Rules.AddRule("spawn:coin", myDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
+		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
 		ctx2 := ClientTransaction{
 			Instructions: []Instruction{{
@@ -161,7 +189,7 @@ func TestSecureDarc(t *testing.T) {
 	{
 		myDarc2 := myDarc.Copy()
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
-		myDarc2.Rules.AddRule("spawn:coin", myDarc2.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
+		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc2.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
 		ctx2 := ClientTransaction{
 			Instructions: []Instruction{{
@@ -191,5 +219,5 @@ func TestSecureDarc(t *testing.T) {
 		require.Equal(t, myDarc.Rules.Get("spawn:coin"), myDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
 	}
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }

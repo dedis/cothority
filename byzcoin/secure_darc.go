@@ -150,8 +150,8 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 }
 
 func isChangingEvolveUnrestricted(oldD *darc.Darc, newD *darc.Darc) bool {
-	oldExpr := oldD.Rules.Get(darc.Action(cmdDarcEvolveUnrestriction))
-	newExpr := newD.Rules.Get(darc.Action(cmdDarcEvolveUnrestriction))
+	oldExpr := oldD.Rules.Get(darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction))
+	newExpr := newD.Rules.Get(darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction))
 	if len(oldExpr) == 0 && len(newExpr) == 0 {
 		return false
 	}
