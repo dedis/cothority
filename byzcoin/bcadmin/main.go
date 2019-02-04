@@ -372,14 +372,14 @@ func add(c *cli.Context) error {
 			{
 				InstanceID: byzcoin.NewInstanceID(d2.GetBaseID()),
 				Invoke:     &invoke,
-				Signatures: []darc.Signature{
-					darc.Signature{Signer: signer.Identity()},
+				SignerIdentities: []darc.Identity{
+					signer.Identity(),
 				},
 				SignerCounter: []uint64{signatureCtr.Counters[0] + 1},
 			},
 		},
 	}
-	err = ctx.SignWith(*signer)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}

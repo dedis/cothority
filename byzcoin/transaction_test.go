@@ -99,6 +99,7 @@ func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signe
 func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
 	instr := createSpawnInstr(dID, kind, "data", value)
 	instr.SignerCounter = []uint64{counter}
+	instr.SignerIdentities = []darc.Identity{signer.Identity()}
 	t := ClientTransaction{
 		Instructions: []Instruction{instr},
 	}
@@ -113,8 +114,10 @@ func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer
 
 func createClientTxWithTwoInstrWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
 	instr1 := createSpawnInstr(dID, kind, "", value)
+	instr1.SignerIdentities = []darc.Identity{signer.Identity()}
 	instr1.SignerCounter = []uint64{counter}
 	instr2 := createSpawnInstr(dID, kind, "", value)
+	instr2.SignerIdentities = []darc.Identity{signer.Identity()}
 	instr2.SignerCounter = []uint64{counter + 1}
 	t := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
@@ -151,6 +154,9 @@ func createInvokeInstr(dID InstanceID, contractID, cmd, argName string, value []
 }
 
 func combineInstrsAndSign(signer darc.Signer, instrs ...Instruction) (ClientTransaction, error) {
+	for i := range instrs {
+		instrs[i].SignerIdentities = []darc.Identity{signer.Identity()}
+	}
 	t := ClientTransaction{
 		Instructions: instrs,
 	}

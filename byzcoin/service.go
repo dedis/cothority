@@ -1131,7 +1131,10 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
 		} else {
 			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
-			s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+			err = s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+			if err != nil {
+				log.Errorf("%s heartbeat failed to start with error: %s", s.ServerIdentity(), err.Error())
+			}
 		}
 		if s.viewChangeMan.started(sb.SkipChainID()) {
 			// If it is a view-change transaction, confirm it's done
@@ -1649,7 +1652,7 @@ clientTransactions:
 				continue clientTransactions
 			}
 			var counterScs StateChanges
-			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
+			if counterScs, err = incrementSignerCounters(sstTempC, instr.SignerIdentities); err != nil {
 				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
@@ -2236,7 +2239,7 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 				if err != nil {
 					return nil, err
 				}
-				counterScs, err := incrementSignerCounters(sst, instr.Signatures)
+				counterScs, err := incrementSignerCounters(sst, instr.SignerIdentities)
 				if err != nil {
 					return nil, err
 				}

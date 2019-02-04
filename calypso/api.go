@@ -64,7 +64,7 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 	tx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{inst},
 	}
-	if err := tx.SignWith(signers...); err != nil {
+	if err := tx.FillSignersAndSignWith(signers...); err != nil {
 		return nil, err
 	}
 	if _, err := c.bcClient.AddTransactionAndWait(tx, 4); err != nil {
@@ -154,7 +154,7 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 		}},
 	}
 	//Sign the transaction
-	err = ctx.SignWith(signer)
+	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 			SignerCounter: []uint64{signerCtr},
 		}},
 	}
-	err = ctx.SignWith(signer)
+	err = ctx.FillSignersAndSignWith(signer)
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	if err != nil {
 		return nil, err
@@ -253,7 +253,7 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 			SignerCounter: []uint64{signerCtr},
 		}},
 	}
-	err = ctx.SignWith(signer)
+	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
 		return nil, err
 	}

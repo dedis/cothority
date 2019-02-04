@@ -12,14 +12,11 @@ func TestReplayGuard(t *testing.T) {
 	sst, err := newMemStagingStateTrie([]byte("my nonce"))
 	require.NoError(t, err)
 	signers := []darc.Signer{darc.NewSignerEd25519(nil, nil), darc.NewSignerEd25519(nil, nil)}
-	var sigs []darc.Signature
+	var ids []darc.Identity
 	for _, signer := range signers {
-		sigs = append(sigs, darc.Signature{
-			Signature: []byte(""),
-			Signer:    signer.Identity()},
-		)
+		ids = append(ids, signer.Identity())
 	}
-	sc, err := incrementSignerCounters(sst, sigs)
+	sc, err := incrementSignerCounters(sst, ids)
 	require.NoError(t, err)
 	require.NoError(t, sst.StoreAll(sc))
 
@@ -33,11 +30,11 @@ func TestReplayGuard(t *testing.T) {
 	require.Equal(t, uint64(1), ctr1)
 
 	// increment again, now the counter state is at 2
-	sc, err = incrementSignerCounters(sst, sigs)
+	sc, err = incrementSignerCounters(sst, ids)
 	require.NoError(t, err)
 	require.NoError(t, sst.StoreAll(sc))
 
 	// verify, the new counter state must be 3
-	err = verifySignerCounters(sst, []uint64{3, 3}, sigs)
+	err = verifySignerCounters(sst, []uint64{3, 3}, ids)
 	require.NoError(t, err)
 }

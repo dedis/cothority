@@ -313,8 +313,10 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
 	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
+	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	instr1.SignerCounter = []uint64{2}
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
+	instr2.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	instr2.SignerCounter = []uint64{3}
 	tx2 := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
@@ -337,9 +339,11 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	log.Lvl1("Adding a third, valid tx")
 	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
+	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	dcID2 := random.Bits(256, true, random.New())
 	instr2 = createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID2)
 	instr2.SignerCounter = []uint64{3}
+	instr2.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	tx3 := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
 	}
@@ -448,7 +452,7 @@ func TestService_DarcProxy(t *testing.T) {
 		},
 	}
 
-	err = ctx.SignWith(signer)
+	err = ctx.FillSignersAndSignWith(signer)
 	require.Nil(t, err)
 
 	_, err = s.service().AddTransaction(&AddTxRequest{
@@ -491,6 +495,7 @@ func TestService_Depending(t *testing.T) {
 
 	// First instruction: spawn a dummy value.
 	in1 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", []byte("something to delete"))
+	in1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	in1.SignerCounter = []uint64{1}
 
 	// Second instruction: delete the value we just spawned.
@@ -500,6 +505,7 @@ func TestService_Depending(t *testing.T) {
 			ContractID: dummyContract,
 		},
 	}
+	in2.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	in2.SignerCounter = []uint64{2}
 
 	tx, err := combineInstrsAndSign(s.signer, in1, in2)
@@ -1179,7 +1185,8 @@ func TestService_DarcSpawn(t *testing.T) {
 					Value: darc2Buf,
 				}},
 			},
-			SignerCounter: []uint64{1},
+			SignerIdentities: []darc.Identity{s.signer.Identity()},
+			SignerCounter:    []uint64{1},
 		}},
 	}
 	require.Nil(t, ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), s.signer))
@@ -2177,9 +2184,10 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 
 	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
 		instr := Instruction{
-			InstanceID:    NewInstanceID(iid),
-			Spawn:         &Spawn{ContractID: stateChangeCacheContract},
-			SignerCounter: []uint64{counter},
+			InstanceID:       NewInstanceID(iid),
+			Spawn:            &Spawn{ContractID: stateChangeCacheContract},
+			SignerIdentities: []darc.Identity{s.signer.Identity()},
+			SignerCounter:    []uint64{counter},
 		}
 		tx := ClientTransaction{Instructions: Instructions{instr}}
 		err := tx.Instructions[0].SignWith(tx.Instructions.Hash(), s.signer)
@@ -2274,7 +2282,8 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 				Value: configBuf,
 			}},
 		},
-		SignerCounter: []uint64{uint64(counter)},
+		SignerIdentities: []darc.Identity{s.signer.Identity()},
+		SignerCounter:    []uint64{uint64(counter)},
 	}
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 

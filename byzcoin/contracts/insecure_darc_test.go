@@ -46,7 +46,7 @@ func TestInsecureDarc(t *testing.T) {
 			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
@@ -69,7 +69,7 @@ func TestInsecureDarc(t *testing.T) {
 			SignerCounter: []uint64{2},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 }

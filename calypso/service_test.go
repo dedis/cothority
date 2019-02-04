@@ -73,7 +73,7 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 			},
 		},
 	}
-	require.Nil(t, ctx.SignWith(s.signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransactionAndWait(ctx, 4)
 	require.Error(t, err)
 }
@@ -113,7 +113,7 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 					},
 				},
 			}
-			require.Nil(t, ctx.SignWith(s.signer))
+			require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 			_, err = s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
@@ -184,7 +184,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 					},
 				},
 			}
-			require.Nil(t, ctx.SignWith(s.signer))
+			require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 			_, err = s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
@@ -361,7 +361,7 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point, ctr uin
 			SignerCounter: []uint64{ctr},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(s.signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
 	return ctx.Instructions[0].DeriveID("")
@@ -416,7 +416,7 @@ func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 	tx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{inst},
 	}
-	require.NoError(t, tx.SignWith(s.signer))
+	require.NoError(t, tx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransactionAndWait(tx, 4)
 	require.NoError(t, err)
 
@@ -508,7 +508,7 @@ func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 			SignerCounter: []uint64{ctr},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(s.signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
 	return ctx.Instructions[0].DeriveID("")
