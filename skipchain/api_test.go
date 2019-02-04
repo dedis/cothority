@@ -28,50 +28,12 @@ func TestClient_CreateGenesis(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
-	_, err := c.CreateGenesis(roster, 1, 1, VerificationNone,
-		[]byte{1, 2, 3}, nil)
+	_, err := c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{1, 2, 3})
 	require.Nil(t, err)
-	_, err = c.CreateGenesis(roster, 1, 0, VerificationNone,
-		&testData{}, nil)
+	_, err = c.CreateGenesis(roster, 1, 0, VerificationNone, &testData{})
 	require.NotNil(t, err)
-	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone,
-		&testData{}, nil)
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, &testData{})
 	require.Nil(t, err)
-	_, _, err = c.CreateRootControl(roster, roster, nil, 1, 1, 0)
-	require.NotNil(t, err)
-}
-
-func TestClient_CreateRootControl(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	_, roster, _ := l.GenTree(3, true)
-	defer l.CloseAll()
-	c := newTestClient(l)
-	_, _, err := c.CreateRootControl(roster, roster, nil, 0, 0, 0)
-	require.NotNil(t, err)
-}
-
-func TestClient_CreateRootInter(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	_, ro, _ := l.GenTree(5, true)
-	defer l.CloseAll()
-
-	c := newTestClient(l)
-	root, inter, err := c.CreateRootControl(ro, ro, nil, 1, 1, 1)
-	log.ErrFatal(err)
-	if root == nil || inter == nil {
-		t.Fatal("Pointers are nil")
-	}
-	log.ErrFatal(root.VerifyForwardSignatures(),
-		"Root signature invalid:")
-	log.ErrFatal(inter.VerifyForwardSignatures(),
-		"Root signature invalid:")
-	update, err := c.GetUpdateChain(root.Roster, root.Hash)
-	log.ErrFatal(err)
-	root = update.Update[0]
-	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
-	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
-		t.Fatal("Intermediate doesn't point to root")
-	}
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
@@ -149,8 +111,8 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	defer l.CloseAll()
 
 	c := newTestClient(l)
-	log.Lvl1("Creating root and control chain")
-	_, inter, err := c.CreateRootControl(ro, ro, nil, 1, 1, 1)
+	log.Lvl1("Creating chain")
+	inter, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
 	log.ErrFatal(err)
 	ro2 := onet.NewRoster(ro.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", ro2)
@@ -199,7 +161,7 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 
 	c := newTestClient(l)
 	log.Lvl1("Creating chain with one extra block")
-	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	r, err := c.StoreSkipBlock(sb1, ro, nil)
 	require.Nil(t, err)
@@ -224,14 +186,14 @@ func TestClient_GetAllSkipChainIDs(t *testing.T) {
 	c := newTestClient(l)
 
 	log.Lvl1("Creating chain 1 with one extra block")
-	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	r1, err := c.StoreSkipBlock(sb1, ro, nil)
 	require.Nil(t, err)
 	require.Equal(t, 1, r1.Latest.Index)
 
 	log.Lvl1("Creating chain 2 with one extra block")
-	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	r2, err := c.StoreSkipBlock(sb2, ro, nil)
 	require.Nil(t, err)
@@ -260,7 +222,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrBlocks := 10
 	blocks := make([]*SkipBlock, nbrBlocks)
 	var err error
-	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil, nil)
+	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil)
 	// hand-calculated links table
 	// This should be the number of forward links for every block:
 	//   4, 1, 2, 1, 3, 1, 2, 1, 2, 1, 1
@@ -332,11 +294,11 @@ func TestClient_Follow(t *testing.T) {
 
 	// Verify that server1 doesn't allow a new skipchain using server0 and server1
 	roster01 := onet.NewRoster(ls.roster.List[0:2])
-	_, err = ls.client.CreateGenesis(roster01, 1, 1, VerificationNone, nil, nil)
+	_, err = ls.client.CreateGenesis(roster01, 1, 1, VerificationNone, nil)
 	require.NotNil(t, err)
 
 	roster0 := onet.NewRoster([]*network.ServerIdentity{ls.si})
-	genesis, err := ls.client.CreateGenesisSignature(roster0, 1, 1, VerificationNone, nil, nil, priv0)
+	genesis, err := ls.client.CreateGenesisSignature(roster0, 1, 1, VerificationNone, nil, priv0)
 	require.Nil(t, err)
 
 	// Now server1 follows skipchain from server0, so it should allow a new skipblock,
@@ -347,7 +309,7 @@ func TestClient_Follow(t *testing.T) {
 	require.Nil(t, err)
 	block1, err := ls.client.StoreSkipBlockSignature(genesis, roster01, nil, priv0)
 	require.Nil(t, err)
-	genesis1, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, nil, priv0)
+	genesis1, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, priv0)
 	require.Nil(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(genesis1, roster01, nil, priv0)
 	require.NotNil(t, err)
@@ -360,7 +322,7 @@ func TestClient_Follow(t *testing.T) {
 	require.Nil(t, err)
 	block2, err := ls.client.StoreSkipBlockSignature(block1.Latest, roster01, nil, priv0)
 	require.Nil(t, err)
-	genesis2, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, nil, priv0)
+	genesis2, err := ls.client.CreateGenesisSignature(roster01, 1, 1, VerificationNone, nil, priv0)
 	require.Nil(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(genesis2, roster01, nil, priv0)
 	require.Nil(t, err)
@@ -376,7 +338,7 @@ func TestClient_Follow(t *testing.T) {
 	require.Nil(t, err)
 	_, err = ls.client.StoreSkipBlockSignature(block2.Latest, ls.roster, nil, priv0)
 	require.Nil(t, err)
-	_, err = ls.client.CreateGenesisSignature(ls.roster, 1, 1, VerificationNone, nil, nil, priv0)
+	_, err = ls.client.CreateGenesisSignature(ls.roster, 1, 1, VerificationNone, nil, priv0)
 	require.Nil(t, err)
 }
 
@@ -384,7 +346,7 @@ func TestClient_DelFollow(t *testing.T) {
 	ls := linked(3)
 	defer ls.local.CloseAll()
 
-	sb, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil, nil)
+	sb, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb.SkipChainID(),
 		FollowID, NewChainNone, "")
@@ -400,12 +362,12 @@ func TestClient_ListFollow(t *testing.T) {
 	ls := linked(3)
 	defer ls.local.CloseAll()
 
-	sb1, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil, nil)
+	sb1, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb1.SkipChainID(),
 		FollowID, NewChainNone, "")
 	require.Nil(t, err)
-	sb2, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil, nil)
+	sb2, err := ls.client.CreateGenesis(ls.roster, 1, 1, VerificationNone, nil)
 	require.Nil(t, err)
 	err = ls.client.AddFollow(ls.server.ServerIdentity, ls.priv, sb2.SkipChainID(),
 		FollowLookup, NewChainNone, ls.server.ServerIdentity.Address.NetworkAddress())
@@ -470,7 +432,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 
 	cl := newTestClient(l)
 	msg := []byte("genesis")
-	gen, err := cl.CreateGenesis(ro, 2, 10, VerificationRoot, msg, nil)
+	gen, err := cl.CreateGenesis(ro, 2, 10, VerificationStandard, msg)
 	require.Nil(t, err)
 
 	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)

@@ -31,7 +31,6 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	root1.Index++
 	db.Store(root1)
 	inter0 := NewSkipBlock()
-	inter0.ParentBlockID = root1.Hash
 	inter0.Roster = roster
 	inter0.Hash = inter0.CalculateHash()
 	db.Store(inter0)
@@ -124,13 +123,7 @@ func TestBlockLink_Copy(t *testing.T) {
 	}
 
 	sb1 := NewSkipBlock()
-	sb1.ChildSL = append(sb1.ChildSL, []byte{3})
 	sb2 := sb1.Copy()
-	sb1.ChildSL[0] = []byte{1}
-	sb2.ChildSL[0] = []byte{2}
-	if bytes.Equal(sb1.ChildSL[0], sb2.ChildSL[0]) {
-		t.Fatal("They should not be equal")
-	}
 	sb1.Height = 10
 	sb2.Height = 20
 	if sb1.Height == sb2.Height {
