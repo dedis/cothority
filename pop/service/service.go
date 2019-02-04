@@ -502,17 +502,15 @@ func (s *Service) GetSigner(req *GetSigner) (*GetSignerReply, error) {
 // MergeConfig receives a final statement of requesting party,
 // hash of local party. Checks if they are from one merge party and responses with
 // own finalStatement
-func (s *Service) MergeConfig(req *network.Envelope) {
+func (s *Service) MergeConfig(req *network.Envelope) error {
 	log.Lvlf2("%s gets MergeConfig from %s", s.Context.ServerIdentity().String(),
 		req.ServerIdentity.String())
 	mc, ok := req.Msg.(*MergeConfig)
 	if !ok {
-		log.Errorf("Didn't get a MergeConfig: %#v", req.Msg)
-		return
+		return fmt.Errorf("Didn't get a MergeConfig: %#v", req.Msg)
 	}
 	if mc.Final == nil || mc.Final.Desc == nil {
-		log.Error("MergeConfig is empty")
-		return
+		return errors.New("MergeConfig is empty")
 	}
 	mcr := &MergeConfigReply{PopStatusOK, mc.Final.Desc.Hash(), nil}
 	var final *FinalStatement
@@ -552,12 +550,13 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 
 	err := s.SendRaw(req.ServerIdentity, mcr)
 	if err != nil {
-		log.Error("Couldn't send reply:", err)
+		return err
 	}
+	return nil
 }
 
 // MergeConfigReply processes the response after MergeConfig message
-func (s *Service) MergeConfigReply(req *network.Envelope) {
+func (s *Service) MergeConfigReply(req *network.Envelope) error {
 	log.Lvlf2("MergeConfigReply: %s from %s got %v",
 		s.ServerIdentity(), req.ServerIdentity.String(), req.Msg)
 	mcrVal, ok := req.Msg.(*MergeConfigReply)
@@ -588,19 +587,19 @@ func (s *Service) MergeConfigReply(req *network.Envelope) {
 			syncData.mcChannel <- mcr
 		}
 	} else {
-		log.Error("No hash for sync found")
+		return errors.New("No hash for sync found")
 	}
+	return nil
 }
 
 // CheckConfig receives a hash for a config and a list of attendees. It returns
 // a CheckConfigReply filled according to this structure's description. If
 // the config has been found, it strips its own attendees from the one missing
 // in the other configuration.
-func (s *Service) CheckConfig(req *network.Envelope) {
+func (s *Service) CheckConfig(req *network.Envelope) error {
 	cc, ok := req.Msg.(*CheckConfig)
 	if !ok {
-		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
-		return
+		return fmt.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
 	}
 
 	ccr := &CheckConfigReply{PopStatusOK, cc.PopHash, nil}
@@ -621,13 +620,14 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 	log.Lvl2(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
 	err := s.SendRaw(req.ServerIdentity, ccr)
 	if err != nil {
-		log.Error("Couldn't send reply:", err)
+		return err
 	}
+	return nil
 }
 
 // CheckConfigReply strips the attendees missing in the reply, if the
 // PopStatus == PopStatusOK.
-func (s *Service) CheckConfigReply(req *network.Envelope) {
+func (s *Service) CheckConfigReply(req *network.Envelope) error {
 	ccrVal, ok := req.Msg.(*CheckConfigReply)
 
 	if syncData, found := s.syncs[string(ccrVal.PopHash)]; found {
@@ -652,8 +652,9 @@ func (s *Service) CheckConfigReply(req *network.Envelope) {
 			syncData.ccChannel <- ccr
 		}
 	} else {
-		log.Error("No hash for sync found")
+		return errors.New("No hash for sync found")
 	}
+	return nil
 }
 
 // VerifyMergeStatement checks that received mergeFinal is valid and can be merged with final

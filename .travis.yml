@@ -24,6 +24,18 @@ matrix:
       script:
         - env GO111MODULE=on make test
 
+    - language: go
+      name: "Go v1.10.x build"
+
+      go_import_path: go.dedis.ch/cothority/v3
+ 
+      go:
+        - "1.10.x"
+
+      script:
+        - go get ./...
+        - go build ./...
+
     - language: java
       name: "Java Tests"
 
