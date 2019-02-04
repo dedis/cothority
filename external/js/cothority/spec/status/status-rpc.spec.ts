@@ -1,12 +1,8 @@
-import fs from 'fs';
 import StatusRPC from '../../src/status/status-rpc';
-import { Roster } from '../../src/network/proto';
-import { startConodes } from '../support/conondes';
-
-const data = fs.readFileSync(process.cwd() + '/spec/support/public.toml');
+import { startConodes, ROSTER } from '../support/conondes';
 
 describe('StatusRPC', () => {
-    const roster = Roster.fromTOML(data);
+    const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();

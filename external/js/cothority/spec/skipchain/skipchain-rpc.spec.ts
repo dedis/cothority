@@ -1,13 +1,9 @@
-import fs from 'fs';
 import SkipchainRPC from '../../src/skipchain/skipchain-rpc';
-import { Roster } from '../../src/network/proto';
 import { SkipBlock } from '../../src/skipchain/skipblock';
-import { startConodes } from '../support/conondes';
-
-const data = fs.readFileSync(process.cwd() + '/spec/support/public.toml');
+import { startConodes, ROSTER } from '../support/conondes';
 
 describe('SkipchainRPC Tests', () => {
-    const roster = Roster.fromTOML(data).slice(0, 4);
+    const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();

@@ -51,6 +51,7 @@
     "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
     "@types/lodash": "^4.14.120",
+    "@types/shuffle-array": "0.0.28",
     "@types/ws": "^6.0.1",
     "dockerode": "^2.5.8",
     "jasmine": "^3.3.1",

@@ -1,18 +1,14 @@
-import fs from 'fs';
-import { Roster } from '../../src/network/proto';
-import { startConodes } from '../support/conondes';
+import { startConodes, ROSTER } from '../support/conondes';
 import ByzCoinRPC from '../../src/byzcoin/byzcoin-rpc';
 import SignerEd25519 from '../../src/darc/signer-ed25519';
 import DarcInstance from '../../src/byzcoin/contracts/darc-instance';
 import Darc from '../../src/darc/darc';
 import Proof from '../../src/byzcoin/proof';
 
-const data = fs.readFileSync(process.cwd() + '/spec/support/public.toml');
-
 const blockInterval = 5 * 1000 * 1000 * 1000; // 5s in nano precision
 
 describe('Proof Tests', () => {
-    const roster = Roster.fromTOML(data).slice(0, 4);
+    const roster = ROSTER.slice(0, 4);
     const admin = SignerEd25519.fromBytes(Buffer.from("0cb119094dbf72dfd169f8ba605069ce66a0c8ba402eb22952b544022d33b90c", "hex"));
 
     let darc: Darc;

@@ -1,53 +1,75 @@
-const shuffle = require("shuffle-array");
-import WebSocket from 'isomorphic-ws';
-import { Roster } from "./proto";
+import shuffle from 'shuffle-array';
 import { Message, util } from 'protobufjs';
 import Logger from '../log';
+import { Roster } from './proto';
+import { BrowserWebSocketAdapter, WebSocketAdapter } from './websocket-adapter';
 
+let factory: (path: string) => WebSocketAdapter = (path: string) => new BrowserWebSocketAdapter(path);
+
+/**
+ * Set the websocket generator. The default one is compatible
+ * with browsers and nodejs.
+ * @param generator A function taking a path and creating a websocket adapter instance
+ */
+export function setFactory(generator: (path: string) => WebSocketAdapter): void {
+    factory = generator;
+}
+
+/**
+ * A connection allows to send a message to one or more distant peer
+ */
 export interface Connection {
+    /**
+     * Send a message to the distant peer
+     * @param message   Protobuf compatible message
+     * @param reply     Protobuf type of the reply
+     * @returns a promise resolving with the reply on success, rejecting otherwise
+     */
     send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
+
+    /**
+     * Get the complete distant address
+     * @returns the address as a string
+     */
     getURL(): string;
 }
 
 /**
- * Socket is a WebSocket object instance through which protobuf messages are
- * sent to conodes.
- * @param {string} addr websocket address of the conode to contact.
- * @param {string} service name. A socket is tied to a service name.
- *
- * @throws {TypeError} when urlRegistered is not a string or protobuf is not an object
+ * Single peer connection
  */
 export class WebSocketConnection implements Connection {
     protected url: string;
     private service: string;
 
+    /**
+     * @param addr      Address of the distant peer
+     * @param service   Name of the service to reach
+     */
     constructor(addr: string, service: string) {
         this.url = addr;
         this.service = service;
     }
 
+    /** @inheritdoc */
     getURL(): string {
         return this.url;
     }
 
-    /**
-     * Send transmits data to a given urlRegistered and parses the response.
-     * @param {string} request name of registered protobuf message
-     * @param {string} response name of registered protobuf message
-     * @param {object} data to be sent
-     *
-     * @returns {object} Promise with response message on success, and an error on failure
-     */
+    /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
+        if (!message.$type) {
+            return Promise.reject(new Error(`message "${message}" is not registered`));
+        }
+
         if (!reply.$type) {
-            return Promise.reject(new Error(`Message "${reply}" is not registered`));
+            return Promise.reject(new Error(`message "${reply}" is not registered`));
         }
 
         return new Promise((resolve, reject) => {
             const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, '');
             Logger.lvl4(`Socket: new WebSocket(${path})`);
-            const ws = new WebSocket(path);
-            const bytes = message.$type.encode(message).finish();
+            const ws = factory(path);
+            const bytes = Buffer.from(message.$type.encode(message).finish());
 
             const timerId = setTimeout(() => {
                 Logger.lvl3("websocket timeout - retrying");
@@ -55,12 +77,12 @@ export class WebSocketConnection implements Connection {
                 ws.send(bytes);
             }, 10000);
 
-            ws.onopen = () => {
+            ws.onOpen(() => {
                 ws.send(bytes);
-            };
+            });
 
-            ws.onmessage = (evt: any): any => {
-                const buf = Buffer.from(evt.data);
+            ws.onMessage((data: Buffer) => {
+                const buf = Buffer.from(data);
                 Logger.lvl4("Getting message with length:", buf.length);
 
                 try {
@@ -76,54 +98,45 @@ export class WebSocketConnection implements Connection {
                 }
 
                 ws.close(1000);
-            };
+            });
 
-            ws.onclose = (evt: any) => {
+            ws.onClose((code: number, reason: string) => {
                 clearTimeout(timerId);
-                if (evt.code !== 1000) {
-                    Logger.error("Got close:", evt.code, evt.reason);
-                    reject(new Error(evt.reason));
+                if (code !== 1000) {
+                    Logger.error("Got close:", code, reason);
+                    reject(new Error(reason));
                 }
-            };
+            });
 
-            ws.onerror = (evt: any) => {
+            ws.onError((evt: any) => {
                 reject(new Error("error in websocket: " + evt.error));
-            };
+            });
         });
     };
 }
 
-/*
- * RosterSocket offers similar functionality from the Socket class but chooses
- * a random conode when trying to connect. If a connection fails, it
- * automatically retries to connect to another random server.
- * */
+/**
+ * Multi peer connection that tries all nodes one after another
+ */
 export class RosterWSConnection extends WebSocketConnection {
     addresses: string[];
 
+    /**
+     * @param r         The roster to use
+     * @param service   The name of the service to reach
+     */
     constructor(r: Roster, service: string) {
         super('', service);
         this.addresses = r.list.map(conode => conode.getWebSocketAddress());
     }
 
-    /**
-     * send tries to send the request to a random server in the list as long as there is no successful response.
-     * It tries a permutation of all server's addresses.
-     *
-     * @param {string} request name of the protobuf packet
-     * @param {string} response name of the protobuf packet response
-     * @param {Object} data javascript object representing the request
-     * @returns {Promise} holds the returned data in case of success.
-     */
+    /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         const addresses = this.addresses.slice();
         shuffle(addresses);
 
         for (let i = 0; i < addresses.length; i++) {
             this.url = addresses[i];
-            if (this.url == undefined) {
-                continue;
-            }
 
             try {
                 // we need to await here to catch and try another conode
@@ -138,12 +151,13 @@ export class RosterWSConnection extends WebSocketConnection {
 }
 
 /**
- * LeaderSocket reads a roster and can be used to communicate with the leader
- * node. As of now the leader is the first node in the roster.
- *
- * @throws {Error} when roster doesn't have any node
+ * Single peer connection that reaches only the leader of the roster
  */
 export class LeaderConnection extends WebSocketConnection {
+    /**
+     * @param roster    The roster to use
+     * @param service   The name of the service
+     */
     constructor(roster: Roster, service: string) {
         if (roster.list.length === 0) {
             throw new Error("Roster should have at least one node");
