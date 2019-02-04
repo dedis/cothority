@@ -14,12 +14,6 @@ export default interface Identity {
   verify(msg: Buffer, signature: Buffer): boolean;
 
   /**
-   * Get the type of the identity
-   * @returns the type of the identity as a string
-   */
-  typeString(): string;
-
-  /**
    * Get the wrapper used to encode the identity
    * @returns the wrapper
    */

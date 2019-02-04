@@ -150,29 +150,13 @@ export default class RoPaSciInstance {
      */
     async update(): Promise<RoPaSciInstance> {
         const proof = await this.rpc.getProof(this.instance.id);
-        if (!proof.matches()) {
+        if (!proof.exists(this.instance.id)) {
             throw new Error('fail to get a matching proof');
         }
 
-        this.instance = Instance.fromProof(proof);
+        this.instance = Instance.fromProof(this.instance.id, proof);
         this.struct = RoPaSciStruct.decode(this.instance.data);
         return this;
-    }
-
-    /**
-     * Instantiate a RoPaSciInstance using the given proof if it
-     * is valid
-     * 
-     * @param bc    The ByzCoinRPC to use
-     * @param p     The Proof
-     * @returns the new instance
-     */
-    static fromProof(bc: ByzCoinRPC, p: Proof): RoPaSciInstance {
-        if (!p.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return new RoPaSciInstance(bc, Instance.fromProof(p));
     }
 
     /**
@@ -184,7 +168,7 @@ export default class RoPaSciInstance {
      * @returns the new instance
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<RoPaSciInstance> {
-        return RoPaSciInstance.fromProof(bc, await bc.getProof(iid));
+        return new RoPaSciInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }
 

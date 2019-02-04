@@ -1,11 +1,9 @@
-import { startConodes, ROSTER } from '../support/conondes';
+import { startConodes, ROSTER, BLOCK_INTERVAL } from '../support/conondes';
 import ByzCoinRPC from '../../src/byzcoin/byzcoin-rpc';
 import SignerEd25519 from '../../src/darc/signer-ed25519';
 import DarcInstance from '../../src/byzcoin/contracts/darc-instance';
 import Darc from '../../src/darc/darc';
 import Proof from '../../src/byzcoin/proof';
-
-const blockInterval = 5 * 1000 * 1000 * 1000; // 5s in nano precision
 
 describe('Proof Tests', () => {
     const roster = ROSTER.slice(0, 4);
@@ -19,7 +17,7 @@ describe('Proof Tests', () => {
         await startConodes();
 
         darc = ByzCoinRPC.makeGenesisDarc([admin], roster);
-        rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, blockInterval);
+        rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         di = await DarcInstance.fromByzcoin(rpc, darc.baseID);
     });
 
@@ -35,7 +33,7 @@ describe('Proof Tests', () => {
 
         for (let j = 0; j < ids.length; j++) {
             const p = await rpc.getProof(ids[j]);
-            expect(p.matches()).toBeTruthy();
+            expect(p.exists(ids[j])).toBeTruthy();
         }
     });
 

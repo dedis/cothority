@@ -16,11 +16,9 @@ describe('WebSocketAdapter Tests', () => {
         const ret = Buffer.from(Roster.encode(new Roster()).finish());
         setFactory(() => new TestWebSocket(ret, null));
         const conn = new WebSocketConnection('', '');
-
         const msg = new Roster();
-        const reply = await conn.send(msg, Roster);
 
-        expect(reply instanceof Roster).toBeTruthy();
+        expectAsync(conn.send(msg, Roster)).toBeResolved();
     });
 
     it('should throw an error when code is not 1000', async () => {

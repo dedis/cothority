@@ -1,6 +1,6 @@
 import Long from 'long';
 import { createHash } from 'crypto';
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs";
 import Identity from "./identity";
 import { registerMessage } from '../protobuf';
 import Proof from '../byzcoin/proof';
@@ -32,6 +32,14 @@ export default class Darc extends Message<Darc> {
     readonly previd: Buffer;
     readonly rules: Rules;
 
+    constructor(properties?: Properties<Darc>) {
+        super(properties);
+
+        if (!properties || !properties.rules) {
+            this.rules = new Rules();
+        }
+    }
+
     /**
      * Get the id of the darc
      * @returns the id as a buffer
@@ -40,17 +48,21 @@ export default class Darc extends Message<Darc> {
         let h = createHash("sha256");
         let versionBuf = Buffer.from(this.version.toBytesLE());
         h.update(versionBuf);
-        h.update(this.description);
+        h.update(Buffer.from(this.description));
         if (this.baseid) {
-            h.update(this.baseid);
+            h.update(Buffer.from(this.baseid));
         }
         if (this.previd) {
-            h.update(this.previd);
+            h.update(Buffer.from(this.previd));
         }
-        this.rules.list.forEach(r => {
-            h.update(r.action);
-            h.update(r.expr);
-        });
+
+        if (this.rules) {
+            this.rules.list.forEach(r => {
+                h.update(r.action);
+                h.update(r.expr);
+            });
+        }
+        
         return h.digest();
     }
 
@@ -66,6 +78,10 @@ export default class Darc extends Message<Darc> {
         }
     }
     
+    /**
+     * Get the darc ID of the previous version
+     * @returns the id as a buffer
+     */
     get prevID(): Buffer {
         return this.previd;
     }
@@ -92,7 +108,7 @@ export default class Darc extends Message<Darc> {
             description: this.description,
             baseid: this.baseID,
             previd: this.id,
-            rules: this.rules,
+            rules: this.rules.clone(),
         });
     }
 
@@ -108,6 +124,10 @@ export default class Darc extends Message<Darc> {
             "Rules: " + this.rules;
     }
 
+    /**
+     * Helper to encode the darc using protobuf
+     * @returns encoded darc as a buffer
+     */
     toBytes(): Buffer {
         return Buffer.from(Darc.encode(this).finish());
     }
@@ -134,12 +154,17 @@ export default class Darc extends Message<Darc> {
 
     /**
      * Instantiate a darc using a proof
-     * @param p the proof to use
+     * @param key   Key of the proof
+     * @param p     The proof to use
      * @returns the darc when compatible
      */
-    public static fromProof(p: Proof): Darc {
+    public static fromProof(key: Buffer, p: Proof): Darc {
         if (!p.matchContract(DarcInstance.contractID)) {
             throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID.toString()}`);
+        }
+
+        if (!p.exists(key)) {
+            throw new Error(`invalid key for proof: ${key.toString('hex')}`);
         }
 
         return Darc.decode(p.value);

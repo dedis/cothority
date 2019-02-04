@@ -13,7 +13,7 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
     readonly version: number;
     readonly roster: Roster;
     private genesisdarc: Darc;
-    private blockinterval: number;
+    private blockinterval: Long;
     private maxblocksize: number;
 
     get genesisDarc(): Darc {
@@ -24,11 +24,11 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
         this.genesisdarc = darc;
     }
 
-    get blockInterval(): number {
+    get blockInterval(): Long {
         return this.blockinterval;
     }
 
-    set blockInterval(v: number) {
+    set blockInterval(v: Long) {
         this.blockinterval = v;
     }
 

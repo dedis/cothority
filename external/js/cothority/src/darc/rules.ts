@@ -10,6 +10,17 @@ export class Rule extends Message<Rule> {
     expr: Buffer;
 
     /**
+     * Get a deep clone of the rule
+     * @returns the new rule
+     */
+    clone(): Rule {
+        return new Rule({
+            action: this.action,
+            expr: Buffer.from(this.expr),
+        });
+    }
+
+    /**
      * Get a string representation of the rule
      * @returns the string representation
      */
@@ -50,6 +61,14 @@ export default class Rules extends Message<Rules> {
         } else {
             this.list.push(new Rule({ action, expr: Buffer.from(identity.toString()) }));
         }
+    }
+
+    /**
+     * Get a deep copy of the list of rules
+     * @returns the clone
+     */
+    clone(): Rules {
+        return new Rules({ list: this.list.map(r => r.clone()) });
     }
 
     /**

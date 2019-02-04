@@ -30,11 +30,8 @@ export default class DarcInstance {
      */
     async update(): Promise<DarcInstance> {
         const proof = await this.rpc.getProof(this.darc.baseID);
-        if (!proof.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
+        this.darc = Darc.fromProof(this.darc.baseID, proof);
 
-        this.darc = Darc.fromProof(proof);
         return this;
     }
 
@@ -50,14 +47,14 @@ export default class DarcInstance {
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
         const proof = await this.rpc.getProof(this.darc.baseID);
-        if (!proof.matches()) {
+        if (!proof.exists(this.darc.baseID)) {
             throw new Error('instance is not in proof');
         }
 
         return proof;
     }
 
-    async spawnInstanceAndWait(contractID: string, signer: Signer, args: Argument[], wait: number): Promise<Proof> {
+    async spawnInstanceAndWait(contractID: string, signer: Signer, args: Argument[], wait: number): Promise<DarcInstance> {
         const instr = Instruction.createSpawn(this.darc.baseID, DarcInstance.contractID, args);
         const ctx = new ClientTransaction({ instructions: [instr] });
 
@@ -75,24 +72,13 @@ export default class DarcInstance {
             iid = d.baseID;
         }
 
-        const proof = await this.rpc.getProof(iid);
-        if (!proof.matches()) {
-            throw new Error('instance is not in proof');
-        }
-
-        return proof;
+        return DarcInstance.fromByzcoin(this.rpc, iid);
     }
 
-    async spawnDarcAndWait(d: Darc, signer: Signer, wait: number = 0): Promise<DarcInstance> {
+    spawnDarcAndWait(d: Darc, signer: Signer, wait: number = 0): Promise<DarcInstance> {
         const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(d).finish()) })];
 
-        const p = await this.spawnInstanceAndWait(DarcInstance.contractID, signer, args, wait);
-
-        return DarcInstance.fromProof(this.rpc, p);
-    }
-
-    static fromProof(bc: ByzCoinRPC, p: Proof): DarcInstance {
-        return new DarcInstance(bc, Instance.fromProof(p));
+        return this.spawnInstanceAndWait(DarcInstance.contractID, signer, args, wait);
     }
 
     /**
@@ -101,11 +87,6 @@ export default class DarcInstance {
      * @param instID
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<DarcInstance> {
-        const p = await bc.getProof(iid);
-        if (!p.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return new DarcInstance(bc, Instance.fromProof(p));
+        return new DarcInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }

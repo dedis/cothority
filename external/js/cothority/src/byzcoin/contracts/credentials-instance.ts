@@ -35,12 +35,7 @@ export default class CredentialsInstance {
      * the error otherwise
      */
     async update(): Promise<CredentialsInstance> {
-        const proof = await this.rpc.getProof(this.instance.id);
-        if (!proof.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        this.instance = Instance.fromProof(proof);
+        this.instance = await Instance.fromByzCoin(this.rpc, this.instance.id);
         this.credential = CredentialStruct.decode(this.instance.data);
         return this;
     }
@@ -107,26 +102,13 @@ export default class CredentialsInstance {
     }
 
     /**
-     * Instantiate the underlying credential instance if the proof is valid
-     * @param bc    the byzcoin RPC
-     * @param p     the proof
-     */
-    static async fromProof(bc: ByzCoinRPC, p: Proof): Promise<CredentialsInstance> {
-        if (!p.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return new CredentialsInstance(bc, Instance.fromProof(p));
-    }
-
-    /**
      * Get an existing credential instance using its instance ID by fetching
      * the proof.
      * @param bc    the byzcoin RPC
      * @param iid   the instance ID
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CredentialsInstance> {
-        return CredentialsInstance.fromProof(bc, await bc.getProof(iid));
+        return new CredentialsInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }
 

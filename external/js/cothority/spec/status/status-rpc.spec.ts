@@ -12,11 +12,12 @@ describe('StatusRPC', () => {
         const rpc = new StatusRPC(roster);
 
         expect(roster.length).toBeGreaterThan(0);
+        expectAsync(rpc.getStatus()).toBeResolved();
 
-        for (let i = 0; i < roster.length; i++) {
-            const res = await rpc.getStatus();
-
-            expect(res).toBeDefined();
+        for (let i = 1; i < roster.length; i++) {
+            expectAsync(rpc.getStatus(i)).toBeResolved();
         }
+
+        expectAsync(rpc.getStatus(roster.length)).toBeRejected();
     });
 });

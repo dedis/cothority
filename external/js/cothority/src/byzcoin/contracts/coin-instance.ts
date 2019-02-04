@@ -6,6 +6,7 @@ import Signer from "../../darc/signer";
 import { SpawnerCoin } from "./spawner-instance";
 import Proof from "../proof";
 import { registerMessage } from "../../protobuf";
+import { InstanceID } from "../instance";
 
 export default class CoinInstance {
     static readonly contractID = "coin";
@@ -78,7 +79,7 @@ export default class CoinInstance {
      */
     async update(): Promise<CoinInstance> {
         const p = await this.rpc.getProof(this.iid);
-        if (!p.matches()) {
+        if (!p.exists(this.iid)) {
             throw new Error('fail to get a matching proof');
         }
 
@@ -101,19 +102,11 @@ export default class CoinInstance {
 
         const coinIID = inst.deriveId();
         const p = await bc.getProof(coinIID);
-        if (!p.matches()) {
+        if (!p.exists(coinIID)) {
             throw new Error('fail to get a matching proof');
         }
 
         return new CoinInstance(bc, coinIID, Coin.decode(p.value));
-    }
-
-    static fromProof(bc: ByzCoinRPC, p: Proof): CoinInstance {
-        if (!p.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return new CoinInstance(bc, p.key, Coin.decode(p.value));
     }
 
     /**
@@ -121,8 +114,13 @@ export default class CoinInstance {
      * @param bc
      * @param iid
      */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<CoinInstance> {
-        return CoinInstance.fromProof(bc, await bc.getProof(iid));
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CoinInstance> {
+        const proof = await bc.getProof(iid);
+        if (!proof.exists(iid)) {
+            throw new Error(`key not in proof: ${iid.toString('hex')}`);
+        }
+
+        return new CoinInstance(bc, iid, Coin.decode(proof.value));
     }
 }
 

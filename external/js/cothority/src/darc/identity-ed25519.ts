@@ -28,11 +28,6 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
   }
 
   /** @inheritdoc */
-  typeString() {
-    return "ed25519";
-  }
-
-  /** @inheritdoc */
   toWrapper() {
     return new IdentityWrapper({ ed25519: this });
   }
@@ -44,7 +39,7 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
 
   /** @inheritdoc */
   toString() {
-    return `${this.typeString()}:${this.public.toString().toLowerCase()}`;
+    return `ed25519:${this.public.toString().toLowerCase()}`;
   }
 }
 

@@ -76,18 +76,6 @@ export default class Proof extends Message<Proof> {
     }
 
     /**
-     * Check the proof is well formed and that the instance ID
-     * stored in the leaf exists in the proof
-     */
-    matches(): boolean {
-        if (!this.inclusionproof.leaf) {
-            return false;
-        }
-
-        return this.exists(this.key);
-    }
-
-    /**
      * Check if the key exists in the proof
      * 
      * @returns true when it exists, false otherwise

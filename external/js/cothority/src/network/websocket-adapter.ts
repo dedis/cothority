@@ -69,11 +69,11 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
     /** @inheritdoc */
     onMessage(callback: (data: Buffer) => void): void {
         this.ws.onmessage = (evt: { data: WebSocket.Data }): any => {
-            if (typeof evt.data === 'string') {
-                callback(Buffer.from(evt.data, 'hex'));
-            } else if (evt.data instanceof Buffer) {
+            if (evt.data instanceof Buffer || evt.data instanceof ArrayBuffer) {
                 callback(Buffer.from(evt.data));
             } else {
+                // In theory, any type of data could be sent through but we only
+                // allow protobuf encoded messages
                 Logger.lvl2(`got an unknown websocket message type: ${typeof evt.data}`);
             }
         };

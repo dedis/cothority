@@ -56,10 +56,12 @@ export default class SpawnerInstance {
 
     async createUserDarc(coin: CoinInstance, signers: Signer[], pubKey: Point, alias: string): Promise<DarcInstance> {
         let d = SpawnerInstance.prepareUserDarc(pubKey, alias);
-        let pr = await this.rpc.getProof(d.baseID);
-        if (pr.exists(d.baseID)) {
+        try {
+            const darc = await DarcInstance.fromByzcoin(this.rpc, d.baseID);
             Log.lvl2("this darc is already registerd");
-            return DarcInstance.fromProof(this.rpc, pr);
+            return darc;
+        } catch (e) {
+            // darc already exists
         }
 
         const ctx = new ClientTransaction({
@@ -86,10 +88,12 @@ export default class SpawnerInstance {
     }
 
     async createCoin(coin: CoinInstance, signers: Signer[], darcID: Buffer, balance: Long = Long.fromNumber(0)): Promise<CoinInstance> {
-        let pr = await this.rpc.getProof(SpawnerInstance.coinIID(darcID));
-        if (pr.exists(SpawnerInstance.coinIID(darcID))) {
+        try {
+            const ci = await CoinInstance.fromByzcoin(this.rpc, SpawnerInstance.coinIID(darcID));
             Log.lvl2("this coin is already registered");
-            return CoinInstance.fromProof(this.rpc, pr);
+            return ci;
+        } catch (e) {
+            // doesn't exist
         }
 
         let valueBuf = this.struct.costCoin.value.add(balance).toBytesLE();
@@ -120,10 +124,12 @@ export default class SpawnerInstance {
     }
 
     async createCredential(coin: CoinInstance, signers: Signer[], darcID: Buffer, cred: CredentialStruct): Promise<CredentialInstance> {
-        let pr = await this.rpc.getProof(SpawnerInstance.credentialIID(darcID));
-        if (pr.exists(SpawnerInstance.credentialIID(darcID))) {
+        try {
+            const cred = await CredentialInstance.fromByzcoin(this.rpc, SpawnerInstance.credentialIID(darcID));
             Log.lvl2("this credential is already registerd");
-            return CredentialInstance.fromProof(this.rpc, pr);
+            return cred;
+        } catch (e) {
+            // credential doesn't exist
         }
 
         let valueBuf = this.struct.costCredential.value.toBytesLE();
@@ -271,8 +277,8 @@ export default class SpawnerInstance {
         return this.fromByzcoin(bc, inst.deriveId());
     }
 
-    static fromProof(bc: ByzCoinRPC, p: Proof): SpawnerInstance {
-        if (!p.matches()) {
+    static fromProof(bc: ByzCoinRPC, key: InstanceID, p: Proof): SpawnerInstance {
+        if (!p.exists(key)) {
             throw new Error('fail to get a matching proof');
         }
 
@@ -285,7 +291,7 @@ export default class SpawnerInstance {
      * @param instID
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<SpawnerInstance> {
-        return SpawnerInstance.fromProof(bc, await bc.getProof(iid));
+        return SpawnerInstance.fromProof(bc, iid, await bc.getProof(iid));
     }
 
     static prepareUserDarc(pubKey: Point, alias: string): Darc {

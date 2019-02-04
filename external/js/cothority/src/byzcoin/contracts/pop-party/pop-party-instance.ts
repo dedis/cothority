@@ -138,12 +138,7 @@ export class PopPartyInstance {
     }
 
     async update(): Promise<PopPartyInstance> {
-        const proof = await this.bc.getProof(this.instance.id);
-        if (!proof.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        this.instance = Instance.fromProof(proof);
+        this.instance = await Instance.fromByzCoin(this.rpc, this.instance.id);
         this.popPartyStruct = PopPartyStruct.decode(this.instance.data);
 
         if (this.popPartyStruct.state === PopPartyInstance.Scanning &&
@@ -183,16 +178,7 @@ export class PopPartyInstance {
         await this.update();
     }
 
-    public static fromProof(rpc: ByzCoinRPC, proof: Proof): PopPartyInstance {
-        return new PopPartyInstance(rpc, Instance.fromProof(proof));
-    }
-
     public static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<PopPartyInstance> {
-        const p = await bc.getProof(iid);
-        if (!p.matches()) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return PopPartyInstance.fromProof(bc, p);
+        return new PopPartyInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }
