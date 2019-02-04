@@ -1,7 +1,6 @@
 package skipchain
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -67,7 +66,6 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
 	genesis.BaseHeight = 2
-	genesis.ParentBlockID = sbRoot.Hash
 	genesis.Roster = sbRoot.Roster
 	genesis.VerifierIDs = VerificationStandard
 	blockCount := 0
@@ -93,7 +91,6 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	next.Data = []byte("And the earth was without form, and void; " +
 		"and darkness was upon the face of the deep. ")
 	next.MaximumHeight = 2
-	next.ParentBlockID = sbRoot.Hash
 	next.Roster = sbRoot.Roster
 	id := psbr.Latest.Hash
 	if id == nil {
@@ -118,7 +115,6 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 		deadServer.Unpause()
 	}
 
-	next.ParentBlockID = next.Hash
 	next.Data = []byte("And the Spirit of God moved upon the face of the waters.")
 	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: psbr2.Latest.Hash, NewBlock: next})
 	assert.NotNil(t, psbr3)
@@ -145,65 +141,6 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 
 	// +1 for the root block
 	assert.Equal(t, blockCount+1, service.db.Length())
-}
-
-func TestService_SetChildrenSkipBlock(t *testing.T) {
-	// How many nodes in Root
-	nodesRoot := 3
-
-	local := onet.NewLocalTest(cothority.Suite)
-	defer waitPropagationFinished(t, local)
-	defer local.CloseAll()
-	hosts, el, genService := local.MakeSRS(cothority.Suite, nodesRoot, skipchainSID)
-	service := genService.(*Service)
-
-	// Setting up two chains and linking one to the other
-	sbRoot, err := makeGenesisRoster(service, el)
-	log.ErrFatal(err)
-	sbInter, err := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerificationNone, 1, 1)
-	log.ErrFatal(err)
-
-	// Verifying other nodes also got the updated chains
-	// Check for the root-chain
-	for i, h := range hosts {
-		log.Lvlf2("%x", skipchainSID)
-		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
-		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
-		log.Lvl2(s.Context)
-		if len(sb.Update) != 1 {
-			// we expect only the first block
-			t.Fatal("There should be only 1 SkipBlock in the update")
-		}
-		require.Equal(t, 1, len(sb.Update[0].ChildSL), "No child-entry found")
-		link := sb.Update[0].ChildSL[0]
-		if !link.Equal(sbInter.Hash) {
-			t.Fatal("The child-link doesn't point to our intermediate SkipBlock", i)
-		}
-		// We need to verify the signature on the child-link, too. This
-		// has to be signed by the collective signature of sbRoot.
-		if err := sbRoot.VerifyForwardSignatures(); err != nil {
-			t.Fatal("Signature on child-link is not valid")
-		}
-	}
-
-	// And check for the intermediate-chain to be updated
-	for _, h := range hosts {
-		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-
-		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
-
-		log.ErrFatal(err)
-		if len(sb.Update) != 1 {
-			t.Fatal("There should be only 1 SkipBlock in the update")
-		}
-		if !bytes.Equal(sb.Update[0].ParentBlockID, sbRoot.Hash) {
-			t.Fatal("The intermediate SkipBlock doesn't point to the root")
-		}
-		if err := sb.Update[0].VerifyForwardSignatures(); err != nil {
-			t.Fatal("Signature of that SkipBlock doesn't fit")
-		}
-	}
 }
 
 func TestService_MultiLevel(t *testing.T) {
@@ -278,7 +215,6 @@ func TestService_Verification(t *testing.T) {
 	sb.Roster = el
 	sb.MaximumHeight = 1
 	sb.BaseHeight = 1
-	sb.ParentBlockID = sbRoot.Hash
 	sb.VerifierIDs = VerificationStandard
 	//_, err = service.ProposeSkipBlock(&ProposeSkipBlock{nil, sb})
 	//require.NotNil(t, err, "Shouldn't accept a non-conforming skipblock")
@@ -460,11 +396,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	sbErr.ParentBlockID = SkipBlockID([]byte{1, 2, 3})
-	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbErr})
-	require.NotNil(t, err)
 	log.Lvl1("Trying to add to non-existing skipchain")
-	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbErr.ParentBlockID, NewBlock: sbErr})
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: SkipBlockID([]byte{1, 2, 3}), NewBlock: sbErr})
 	// Last successful log...
 	require.NotNil(t, err)
 
@@ -1196,7 +1129,6 @@ func makeGenesisRosterArgs(s *Service, el *onet.Roster, parent SkipBlockID,
 	sb.Roster = el
 	sb.MaximumHeight = maxHeight
 	sb.BaseHeight = base
-	sb.ParentBlockID = parent
 	sb.VerifierIDs = vid
 	psbr, err := s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sb})
 	if err != nil {

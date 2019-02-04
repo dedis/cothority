@@ -170,6 +170,10 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 	// Initial checks on the proposed block.
 	prop := psbd.NewBlock
+	if len(prop.Roster.List) == 0 {
+		return nil, errors.New("empty roster")
+	}
+
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
 		return nil, errors.New(
 			"only leader is allowed to add blocks")
@@ -275,7 +279,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		// Copy the block-header to a new block.
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
-		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
 		prop.GenesisID = scID
@@ -1394,17 +1397,6 @@ func (s *Service) propagateGenesisHandler(msg network.Message) {
 		// the error is logged in the store function
 		return
 	}
-
-	if !pg.Genesis.ParentBlockID.IsNull() {
-		sb := s.db.GetByID(pg.Genesis.ParentBlockID)
-		if sb == nil {
-			log.Lvl3("Unknown parent block. Conode could be out of sync.")
-			return
-		}
-
-		sb.ChildSL = append(sb.ChildSL, pg.Genesis.Hash)
-		s.db.Store(sb)
-	}
 }
 
 // PropagateForwardLinkHandler will update the latest block with
@@ -1541,17 +1533,6 @@ func (s *Service) startPropagation(propagate messaging.PropagationFunc, ro *onet
 func (s *Service) startGenesisPropagation(genesis *SkipBlock) error {
 	roster := genesis.Roster
 	log.Lvlf3("%s: propagating %x to %s", s.ServerIdentity(), genesis.Hash, roster.List)
-
-	// If the chain has a parent, it needs to be warned to update its
-	// child array
-	if !genesis.ParentBlockID.IsNull() {
-		parent := s.db.GetByID(genesis.ParentBlockID)
-		if parent == nil {
-			return errors.New("Didn't find parent")
-		}
-
-		roster = roster.Concat(parent.Roster.List...)
-	}
 
 	return s.startPropagation(s.propagateGenesis, roster, &PropagateGenesis{genesis})
 }
@@ -1711,15 +1692,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(network.RegisterMessage(&ForwardSignature{}), s.forwardLink)
 
 	if err := s.registerVerification(VerifyBase, s.verifyFuncBase); err != nil {
-		return nil, err
-	}
-	if err := s.registerVerification(VerifyRoot, s.verifyFuncRoot); err != nil {
-		return nil, err
-	}
-	if err := s.registerVerification(VerifyControl, s.verifyFuncControl); err != nil {
-		return nil, err
-	}
-	if err := s.registerVerification(VerifyData, s.verifyFuncData); err != nil {
 		return nil, err
 	}
 
