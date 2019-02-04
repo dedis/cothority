@@ -33,7 +33,6 @@ public class Proof {
     private final TrieProto.Proof proof;
     private final List<SkipchainProto.ForwardLink> links;
     private final SkipBlock latest;
-    private final StateChangeBody finalStateChangeBody;
 
     /**
      * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
@@ -47,24 +46,14 @@ public class Proof {
         latest = new SkipBlock(p.getLatest());
         links = p.getLinksList();
         this.verify(scID);
-        // we need to call matches to check that the leaf is correct before parsing it
-        // otherwise we might throw an exception
-        if (this.matches()) {
-            try {
-                finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
-            } catch (InvalidProtocolBufferException e) {
-                throw new CothorityCryptoException("failed to decode state change body: " + e.getMessage());
-            }
-        } else {
-            finalStateChangeBody = null;
-        }
     }
 
     /**
-     * @return the instance stored in this proof - it will not verify if the proof is valid!
-     * @throws CothorityNotFoundException if the requested instance cannot be found
+     * Creates an instance from the proof, it assumes the proof is valid.
+     *
+     * @return the instance stored in this proof.
      */
-    public Instance getInstance() throws CothorityNotFoundException {
+    public Instance getInstance() {
         return Instance.fromProof(this);
     }
 
@@ -159,31 +148,47 @@ public class Proof {
     }
 
     /**
-     * @return the list of values in the leaf node.
+     * @return the list of values in the leaf node. Return null if the value cannot be parsed.
      */
     public StateChangeBody getValues() {
-        return finalStateChangeBody;
+        try {
+            return new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
+        } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+            return null;
+        }
     }
 
     /**
-     * @return the value of the proof.
+     * @return the value of the proof. Return null if the value cannot be parsed.
      */
     public byte[] getValue() {
-        return getValues().getValue();
+        StateChangeBody body = getValues();
+        if (body == null) {
+            return null;
+        }
+        return body.getValue();
     }
 
     /**
-     * @return the string of the contractID.
+     * @return the string of the contractID. Return null if the value cannot be parsed.
      */
     public String getContractID() {
-        return new String(getValues().getContractID());
+        StateChangeBody body = getValues();
+        if (body == null) {
+            return null;
+        }
+        return new String(body.getContractID());
     }
 
     /**
      * @return the darcID defining the access rules to the instance.
      */
     public DarcId getDarcID() {
-        return getValues().getDarcId();
+        StateChangeBody body = getValues();
+        if (body == null) {
+            return null;
+        }
+        return body.getDarcId();
     }
 
     /**
@@ -202,15 +207,9 @@ public class Proof {
      * @return true if the proof has the key/value pair stored on the leaf, false if it
      * is a proof of absence or an error has occured.
      */
-    public boolean matches() {
-        if (!proof.hasLeaf()) {
-            return false;
-        }
-        if (proof.getLeaf().getKey().isEmpty()) {
-            return false;
-        }
+    public boolean matches(byte[] key) {
         try {
-            return this.exists(proof.getLeaf().getKey().toByteArray());
+            return this.exists(key);
         } catch (CothorityCryptoException e) {
             return false;
         }
