@@ -1,4 +1,3 @@
-
 const defaultLvl = 2;
 const lvlStr = ["E", "W", "I", "!4", "!3", "!2", "!1", "P", "1", "2", "3", "4"];
 

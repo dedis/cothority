@@ -59,6 +59,8 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
     constructor(path: string) {
         super(path);
         this.ws = new WebSocket(path);
+        // to prevent the browser to use blob
+        this.ws.binaryType = 'arraybuffer';
     }
 
     /** @inheritdoc */
@@ -74,6 +76,7 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
             } else {
                 // In theory, any type of data could be sent through but we only
                 // allow protobuf encoded messages
+                console.log(evt.data);
                 Logger.lvl2(`got an unknown websocket message type: ${typeof evt.data}`);
             }
         };

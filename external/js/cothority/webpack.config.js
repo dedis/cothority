@@ -1,8 +1,7 @@
 const path = require("path");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
-    entry: "./src/index.ts",
+    entry: ["@babel/polyfill", "./src/index.ts"],
     output: {
       filename: "bundle.min.js",
       path: path.resolve(__dirname, "dist"),
@@ -17,10 +16,7 @@ module.exports = {
           use: {
             loader: "babel-loader",
             options: {
-              presets: [
-                ["env", { targets: { browsers: [">1%"] }, useBuiltIns: true }]
-              ],
-              plugins: [require("babel-plugin-transform-object-rest-spread")]
+              presets: ["@babel/preset-env"]
             }
           }
         },
@@ -31,7 +27,7 @@ module.exports = {
                 {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['env'],
+                        presets: ['@babel/preset-env'],
                     }
                 },
                 "ts-loader",
@@ -40,15 +36,6 @@ module.exports = {
       ]
     },
     resolve: {
-        extensions: ['.ts', '.js'],
-    },
-    plugins: [
-      new UglifyJsPlugin({
-        uglifyOptions: {
-          mangle: {
-            safari10: true
-          }
-        }
-      })
-    ]
+        extensions: ['.js', '.ts'],
+    }
   };

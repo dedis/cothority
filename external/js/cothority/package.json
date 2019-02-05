@@ -26,6 +26,7 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
+    "@babel/polyfill": "^7.2.5",
     "@stablelib/blake2xs": "^0.10.4",
     "@types/crypto-js": "^3.1.43",
     "@types/node": "^10.12.18",
@@ -46,6 +47,8 @@
     "ws": "^6.1.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
     "@types/bn.js": "^4.11.4",
     "@types/dockerode": "^2.5.11",
     "@types/elliptic": "^6.4.2",
@@ -53,11 +56,15 @@
     "@types/lodash": "^4.14.120",
     "@types/shuffle-array": "0.0.28",
     "@types/ws": "^6.0.1",
+    "babel-loader": "^8.0.5",
     "dockerode": "^2.5.8",
     "jasmine": "^3.3.1",
     "jasmine-console-reporter": "^3.1.0",
+    "ts-loader": "^5.3.3",
     "ts-node": "^8.0.1",
-    "typescript": "^3.1.6"
+    "typescript": "^3.1.6",
+    "webpack": "^4.29.1",
+    "webpack-cli": "^3.2.3"
   },
   "files": [
     "dist",
