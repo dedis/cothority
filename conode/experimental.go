@@ -12,6 +12,5 @@ import (
 	_ "go.dedis.ch/cothority/v3/calypso"
 	_ "go.dedis.ch/cothority/v3/eventlog"
 	_ "go.dedis.ch/cothority/v3/evoting/service"
-	_ "go.dedis.ch/cothority/v3/identity"
 	_ "go.dedis.ch/cothority/v3/personhood"
 )

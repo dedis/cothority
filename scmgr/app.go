@@ -18,7 +18,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/identity"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/util/encoding"
@@ -398,8 +397,6 @@ func scPrint(c *cli.Context) error {
 			vfStr = "skipchain.VerifyControl"
 		case skipchain.VerifyData:
 			vfStr = "skipchain.VerifyData"
-		case identity.VerifyIdentity:
-			vfStr = "identity.VerifyIdentity"
 		}
 		log.Infof("Verification[%d] = %s", i, vfStr)
 	}
