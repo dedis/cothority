@@ -28,7 +28,6 @@ async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cr
 }
 
 describe('CredentialsInstance Tests', () => {
-    const admin = SIGNER;
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
@@ -36,32 +35,32 @@ describe('CredentialsInstance Tests', () => {
     });
 
     it('should create a credential instance', async () => {
-        const darc = ByzCoinRPC.makeGenesisDarc([admin], roster);
-        darc.addIdentity('spawn:credential', admin, Rules.OR);
-        darc.addIdentity('invoke:credential.update', admin, Rules.OR);
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
+        darc.addIdentity('spawn:credential', SIGNER, Rules.OR);
+        darc.addIdentity('invoke:credential.update', SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
         const cred = new CredentialStruct();
-        const ci = await createInstance(rpc, [admin], darc, cred);
+        const ci = await createInstance(rpc, [SIGNER], darc, cred);
         expect(ci).toBeDefined();
         expect(ci.darcID).toEqual(darc.baseID);
 
         // set non-existing credential
-        await ci.setAttribute(admin, 'personhood', 'ed25519', admin.toBytes());
+        await ci.setAttribute(SIGNER, 'personhood', 'ed25519', SIGNER.toBytes());
         await ci.update();
-        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(admin.toBytes());
+        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(SIGNER.toBytes());
 
         // set a different credential
-        await ci.setAttribute(admin, 'personhood', 'abc', Buffer.from('abc'));
+        await ci.setAttribute(SIGNER, 'personhood', 'abc', Buffer.from('abc'));
         await ci.update();
-        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(admin.toBytes());
+        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(SIGNER.toBytes());
         expect(ci.getAttribute('personhood', 'abc')).toEqual(Buffer.from('abc'));
 
         // update a credential
-        await ci.setAttribute(admin, 'personhood', 'abc', Buffer.from('def'));
+        await ci.setAttribute(SIGNER, 'personhood', 'abc', Buffer.from('def'));
         await ci.update();
-        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(admin.toBytes());
+        expect(ci.getAttribute('personhood', 'ed25519')).toEqual(SIGNER.toBytes());
         expect(ci.getAttribute('personhood', 'abc')).toEqual(Buffer.from('def'));
 
         expect(ci.getAttribute('personhood', 'a')).toBeNull();

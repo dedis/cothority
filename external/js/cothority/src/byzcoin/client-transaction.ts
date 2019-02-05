@@ -1,8 +1,8 @@
-import Signer from "../darc/signer";
-import Signature from "../darc/signature";
 import { createHash } from "crypto";
 import { Message } from "protobufjs";
 import Long from 'long';
+import Signer from "../darc/signer";
+import Signature from "../darc/signature";
 import Identity from "../darc/identity";
 
 export interface CounterUpdater {

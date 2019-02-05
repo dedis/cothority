@@ -22,12 +22,14 @@ describe('ByzCoinRPC Tests', () => {
         const instance = await DarcInstance.fromByzcoin(rpc, darc.baseID);
 
         const evolveDarc = darc.evolve();
-        const evolveProof = await instance.evolveDarcAndWait(evolveDarc, SIGNER, 10);
-        expect(evolveProof.exists(darc.baseID)).toBeTruthy();
+        const evolveInstance = await instance.evolveDarcAndWait(evolveDarc, [SIGNER], 10);
+        expect(evolveInstance.getDarc().baseID).toEqual(darc.baseID);
+
+        await evolveInstance.update();
 
         const newDarc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, 'another darc');
-        const newInstance = await instance.spawnDarcAndWait(newDarc, SIGNER, 10);
-        expect(newInstance.darc.baseID.equals(newDarc.baseID)).toBeTruthy();
+        const newInstance = await instance.spawnDarcAndWait(newDarc, [SIGNER], 10);
+        expect(newInstance.getDarc().baseID.equals(newDarc.baseID)).toBeTruthy();
     });
 
     it('should create an rpc and get it from byzcoin', async () => {
@@ -41,10 +43,11 @@ describe('ByzCoinRPC Tests', () => {
         expect(rpc2.getConfig().blockInterval.toNumber()).toEqual(rpc.getConfig().blockInterval.toNumber());
     });
 
-    it('should throw an error for non-existing instance', async () => {
+    it('should throw an error for non-existing instance or wrong type', async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
         expectAsync(Instance.fromByzCoin(rpc, Buffer.from([1, 2, 3]))).toBeRejectedWith('key not in proof: 010203');
+        expectAsync(DarcInstance.fromByzcoin(rpc, Buffer.alloc(32, 0))).toBeRejected();
     });
 });

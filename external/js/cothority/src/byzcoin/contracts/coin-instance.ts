@@ -4,7 +4,6 @@ import ByzCoinRPC from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Signer from "../../darc/signer";
 import { SpawnerCoin } from "./spawner-instance";
-import Proof from "../proof";
 import { registerMessage } from "../../protobuf";
 import { InstanceID } from "../instance";
 
@@ -21,18 +20,34 @@ export default class CoinInstance {
         this.coin = coin;
     }
 
+    /**
+     * Getter for the instance id
+     * @returns the id
+     */
     get id() {
         return this.iid;
     }
 
+    /**
+     * Getter for the coin name
+     * @returns the name
+     */
     get name(): Buffer {
         return this.coin.name;
     }
 
+    /**
+     * Getter for the coin value
+     * @returns the value
+     */
     get value(): Long {
         return this.coin.value;
     }
 
+    /**
+     * Get the coin object
+     * @returns the coin object
+     */
     getCoin(): Coin {
         return this.coin;
     }
@@ -40,9 +55,9 @@ export default class CoinInstance {
     /**
      * Transfer a certain amount of coin to another account.
      *
-     * @param  coins the amount
-     * @param to the destination account (must be a coin contract instance id)
-     * @param signers the signers (of the giver account)
+     * @param coins     the amount
+     * @param to        the destination account (must be a coin contract instance id)
+     * @param signers   the signers (of the giver account)
      */
     async transfer(coins: Long, to: Buffer, signers: Signer[]): Promise<void> {
         const args = [
@@ -59,6 +74,13 @@ export default class CoinInstance {
         await this.rpc.sendTransactionAndWait(ctx, 10);
     }
 
+    /**
+     * Mine a given amount of coins
+     * 
+     * @param signers   The list of signers for the transaction
+     * @param amount    The amount to add to the coin instance
+     * @param wait      Number of blocks to wait for inclusion
+     */
     async mint(signers: Signer[], amount: Long, wait?: number): Promise<void> {
         const inst = Instruction.createInvoke(
             this.iid,
@@ -76,6 +98,8 @@ export default class CoinInstance {
 
     /**
      * Update the data of this instance
+     * 
+     * @returns the updated instance
      */
     async update(): Promise<CoinInstance> {
         const p = await this.rpc.getProof(this.iid);
@@ -87,9 +111,18 @@ export default class CoinInstance {
         return this;
     }
 
-    static async create(bc: ByzCoinRPC, iid: Buffer, signers: Signer[], type: Buffer = SpawnerCoin): Promise<CoinInstance> {
+    /**
+     * Create a coin instance from a darc id
+     * 
+     * @param bc        The RPC to use
+     * @param darcID    The darc instance ID
+     * @param signers   The list of signers for the transaction
+     * @param type      The coin instance type
+     * @returns a promise that resolves with the new instance
+     */
+    static async create(bc: ByzCoinRPC, darcID: InstanceID, signers: Signer[], type: Buffer = SpawnerCoin): Promise<CoinInstance> {
         const inst = Instruction.createSpawn(
-            iid,
+            darcID,
             CoinInstance.contractID,
             [new Argument({ name: "type", value: type })]
         );
@@ -111,8 +144,9 @@ export default class CoinInstance {
 
     /**
      * Initializes using an existing coinInstance from ByzCoin
-     * @param bc
-     * @param iid
+     * @param bc    The RPC to use
+     * @param iid   The instance ID
+     * @returns a promise that resolves with the coin instance
      */
     static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CoinInstance> {
         const proof = await bc.getProof(iid);

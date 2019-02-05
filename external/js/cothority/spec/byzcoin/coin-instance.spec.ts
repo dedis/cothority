@@ -5,7 +5,6 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import Rules from "../../src/darc/rules";
 
 describe('CoinInstance Tests', () => {
-    const admin = SIGNER;
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
@@ -13,23 +12,23 @@ describe('CoinInstance Tests', () => {
     });
 
     it('should spawn a coin instance', async () => {
-        const darc = ByzCoinRPC.makeGenesisDarc([admin], roster);
-        darc.addIdentity('spawn:coin', admin, Rules.OR);
-        darc.addIdentity('invoke:coin.mint', admin, Rules.OR);
-        darc.addIdentity('invoke:coin.transfer', admin, Rules.OR);
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
+        darc.addIdentity('spawn:coin', SIGNER, Rules.OR);
+        darc.addIdentity('invoke:coin.mint', SIGNER, Rules.OR);
+        darc.addIdentity('invoke:coin.transfer', SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const ci = await CoinInstance.create(rpc, darc.baseID, [admin]);
+        const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
 
         expect(ci.value.toNumber()).toBe(0);
 
-        await ci.mint([admin], Long.fromNumber(1000));
+        await ci.mint([SIGNER], Long.fromNumber(1000));
         await ci.update();
 
         expect(ci.value.toNumber()).toBe(1000);
 
-        const ci2 = await CoinInstance.create(rpc, darc.baseID, [admin, admin]);
-        await ci.transfer(Long.fromNumber(50), ci2.id, [admin, admin]);
+        const ci2 = await CoinInstance.create(rpc, darc.baseID, [SIGNER, SIGNER]);
+        await ci.transfer(Long.fromNumber(50), ci2.id, [SIGNER, SIGNER]);
 
         await ci.update();
         await ci2.update();

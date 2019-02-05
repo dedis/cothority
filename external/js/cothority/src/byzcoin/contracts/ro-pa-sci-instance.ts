@@ -1,10 +1,9 @@
-import Proof from "../proof";
+import { Message } from "protobufjs";
 import ClientTransaction, {Argument, Instruction} from "../client-transaction";
 import Signer from "../../darc/signer";
 import ByzCoinRPC from "../byzcoin-rpc";
 import Instance, { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
-import { Message } from "protobufjs";
 import { registerMessage } from "../../protobuf";
 
 export default class RoPaSciInstance {

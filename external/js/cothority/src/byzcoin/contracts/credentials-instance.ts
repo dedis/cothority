@@ -3,7 +3,6 @@ import Instance, { InstanceID } from "../instance";
 import ByzCoinRPC from "../byzcoin-rpc";
 import Signer from "../../darc/signer";
 import ClientTransaction, { Instruction, Argument } from "../client-transaction";
-import Proof from "../proof";
 import { registerMessage } from "../../protobuf";
 
 export default class CredentialsInstance {

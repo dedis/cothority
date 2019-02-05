@@ -53,7 +53,6 @@ async function createInstance(rpc: ByzCoinRPC, stake: CoinInstance, darc: Darc, 
 }
 
 describe('Rock-Paper-Scisors Instance Tests', () => {
-    const admin = SIGNER;
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
@@ -61,24 +60,24 @@ describe('Rock-Paper-Scisors Instance Tests', () => {
     });
 
     it('should play a game', async () => {
-        const darc = ByzCoinRPC.makeGenesisDarc([admin], roster);
-        darc.addIdentity('spawn:coin', admin, Rules.OR);
-        darc.addIdentity('invoke:coin.mint', admin, Rules.OR);
-        darc.addIdentity('invoke:coin.fetch', admin, Rules.OR);
-        darc.addIdentity('spawn:ropasci', admin, Rules.OR);
+        const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
+        darc.addIdentity('spawn:coin', SIGNER, Rules.OR);
+        darc.addIdentity('invoke:coin.mint', SIGNER, Rules.OR);
+        darc.addIdentity('invoke:coin.fetch', SIGNER, Rules.OR);
+        darc.addIdentity('spawn:ropasci', SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const p1 = await CoinInstance.create(rpc, darc.baseID, [admin]);
-        await p1.mint([admin], Long.fromNumber(1000));
+        const p1 = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        await p1.mint([SIGNER], Long.fromNumber(1000));
         await p1.update();
-        const p2 = await CoinInstance.create(rpc, darc.baseID, [admin, admin]);
-        await p2.mint([admin], Long.fromNumber(1000));
+        const p2 = await CoinInstance.create(rpc, darc.baseID, [SIGNER, SIGNER]);
+        await p2.mint([SIGNER], Long.fromNumber(1000));
         await p2.update();
 
-        const rps = await createInstance(rpc, p1, darc, admin);
+        const rps = await createInstance(rpc, p1, darc, SIGNER);
         expect(rps).toBeDefined();
 
-        await rps.second(p2, admin, 2);
+        await rps.second(p2, SIGNER, 2);
 
         await rps.confirm(p1);
         await rps.update();

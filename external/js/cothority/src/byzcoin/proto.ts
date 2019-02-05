@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs";
 import ClientTransaction from "./client-transaction";
 import { Roster } from "../network/proto";
 import Darc from "../darc/darc";
@@ -16,28 +16,41 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
     private blockinterval: Long;
     private maxblocksize: number;
 
+    constructor(properties?: Properties<CreateGenesisBlock>) {
+        const props: { [k: string]: any } = {};
+        if (properties) {
+            // convert camel-cased fields to protobuf fields
+            Object.keys(properties).forEach((key) => {
+                // @ts-ignore
+                props[key.toLowerCase()] = properties[key];
+            });
+        }
+
+        super(props);
+    }
+
+    /**
+     * Getter for the genesis darc
+     * @returns the genesis darc
+     */
     get genesisDarc(): Darc {
         return this.genesisdarc;
     }
 
-    set genesisDarc(darc: Darc) {
-        this.genesisdarc = darc;
-    }
-
+    /**
+     * Getter for the block interval
+     * @returns the interval
+     */
     get blockInterval(): Long {
         return this.blockinterval;
     }
 
-    set blockInterval(v: Long) {
-        this.blockinterval = v;
-    }
-
+    /**
+     * Getter for the block maximum size
+     * @returns the maximum size
+     */
     get maxBlockSize(): number {
         return this.maxblocksize;
-    }
-
-    set maxBlockSize(v: number) {
-        this.maxBlockSize = v;
     }
 }
 
@@ -75,12 +88,26 @@ export class AddTxRequest extends Message<AddTxRequest> {
     readonly transaction: ClientTransaction;
     readonly inclusionwait: number;
 
-    get skipchainID(): Buffer {
-        return this.skipchainid;
+    constructor(properties?: Properties<AddTxRequest>) {
+        const props: { [k: string]: any } = {};
+
+        if (properties) {
+            // convert camel-cased fields to protobuf fields
+            Object.keys(properties).forEach((key) => {
+                // @ts-ignore
+                props[key.toLowerCase()] = properties[key];
+            });
+        }
+
+        super(props);
     }
 
-    set skipchainID(id: Buffer) {
-        this.skipchainid = id;
+    /**
+     * Getter for the skipchain id
+     * @returns the id
+     */
+    get skipchainID(): Buffer {
+        return this.skipchainid;
     }
 }
 

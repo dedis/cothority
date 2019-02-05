@@ -16,9 +16,11 @@ import { createHash } from "crypto";
  * instance data in case it is a proof of existence. For absence proofs, these methods will throw an error.
  */
 export default class Proof extends Message<Proof> {
-    inclusionproof: InclusionProof;
-    latest: SkipBlock;
-    links: ForwardLink[];
+    readonly inclusionproof: InclusionProof;
+    readonly latest: SkipBlock;
+    readonly links: ForwardLink[];
+
+    private _state: StateChangeBody;
 
     /**
      * Get the state change stored in the inclusion proof
@@ -26,7 +28,12 @@ export default class Proof extends Message<Proof> {
      * @returns the state change body
      */
     get stateChangeBody(): StateChangeBody {
-        return StateChangeBody.decode(this.inclusionproof.value);
+        if (!this._state) {
+            // cache the decoding
+            this._state = StateChangeBody.decode(this.inclusionproof.value);
+        }
+
+        return this._state;
     }
 
     /**
@@ -55,15 +62,6 @@ export default class Proof extends Message<Proof> {
      */
     get value(): Buffer {
         return this.stateChangeBody.value;
-    }
-
-    /**
-     * Get the version of the instance
-     * 
-     * @returns the version of the instance this proof represents.
-     */
-    get version(): Long {
-        return this.stateChangeBody.version;
     }
 
     /**
@@ -119,24 +117,26 @@ export default class Proof extends Message<Proof> {
             return false;
         }
 
-        throw new Error('no corresponding leaf/empty ndoe with respect to the interior node');
+        throw new Error('no corresponding leaf/empty node with respect to the interior node');
     }
 
     /**
      * @param cid contractID to check
-     * @return true if it is a proof of existence and the given type of contract matches.
+     * @returns true if it is a proof of existence and the given type of contract matches.
      */
-    matchContract(cid: string): boolean {
+    matchContract(cid: string | Buffer): boolean {
+        if (cid instanceof Buffer) {
+            return this.stateChangeBody.contractID.equals(cid);
+        }
+
         return this.stateChangeBody.contractID.toString() == cid;
     }
 
     /**
-     * @return a nicely formatted representation of the proof.
+     * @returns a nicely formatted representation of the proof.
      */
     toString(): string {
-        let str = "Proof for contractID(" + this.contractID + ") for "
-            + this.inclusionproof.key.toString('hex');
-        return str;
+        return `Proof for contractID(${this.contractID.toString()}) for ${this.key}`;
     }
 }
 
@@ -212,14 +212,6 @@ class InclusionProof extends Message<InclusionProof> {
     nonce: Buffer;
 
     /**
-     * @param {InstanceID} iid the instanceID this proof should represent
-     * @return {boolean} true if it is a proof of existence.
-     */
-    matches(iid: Buffer): boolean {
-        return this.leaf.key.equals(iid);
-    }
-
-    /**
      * @return {Buffer} the key in the leaf for this inclusionProof. This is not the same as the key this proof has
      * been created for!
      */
@@ -233,14 +225,6 @@ class InclusionProof extends Message<InclusionProof> {
      */
     get value(): Buffer {
         return this.leaf.value;
-    }
-
-    /**
-     * @return {Buffer[]} an array of length two for the key and the value. For a proof of absence, the key is not
-     * the same as the requested key.
-     */
-    get keyValue(): Buffer[] {
-        return [this.leaf.key, this.leaf.value];
     }
 
     /**
