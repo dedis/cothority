@@ -218,7 +218,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 		// Check if we really want to take this block with regard to our
 		// authorization lists.
-		if !s.blockIsFriendly(psbd.NewBlock) {
+		if !s.BlockIsFriendly(psbd.NewBlock) {
 			log.Lvlf2("%s: block is not friendly: %x",
 				s.ServerIdentity(), psbd.NewBlock.Hash)
 			return nil, errors.New("chain not followed")
@@ -1044,7 +1044,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 	}
 	prevSB := s.db.GetByID(fs.Previous)
 	if prevSB == nil {
-		if !s.blockIsFriendly(fs.Newest) {
+		if !s.BlockIsFriendly(fs.Newest) {
 			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), fs.Newest.Hash)
 			return false
 		}
@@ -1384,7 +1384,7 @@ func (s *Service) propagateGenesisHandler(msg network.Message) {
 		return
 	}
 
-	if !s.blockIsFriendly(pg.Genesis) {
+	if !s.BlockIsFriendly(pg.Genesis) {
 		log.Error("Conode doesn't want to follow that skipchain")
 		return
 	}
@@ -1467,7 +1467,7 @@ func (s *Service) propagateProofHandler(msg network.Message) error {
 		return errors.New("Couldn't convert to PropagateProof message")
 	}
 
-	if len(pc.Proof) > 0 && !s.blockIsFriendly(pc.Proof[0]) {
+	if len(pc.Proof) > 0 && !s.BlockIsFriendly(pc.Proof[0]) {
 		return errors.New("Block is not friendly")
 	}
 
@@ -1579,33 +1579,44 @@ func (s *Service) authenticate(msg []byte, sig []byte) bool {
 	return false
 }
 
-// blockIsFriendly searches if all members of the new block are followed
-// by this node.
-func (s *Service) blockIsFriendly(sb *SkipBlock) bool {
+// ChainIsFriendly searches if this chain should be allowed or not.
+func (s *Service) ChainIsFriendly(scID SkipBlockID) bool {
 	s.storageMutex.Lock()
 	defer s.storageMutex.Unlock()
 
 	// If no skipchains are stored, allow everything
-	if len(s.Storage.Follow) == 0 {
+	if len(s.Storage.FollowIDs) == 0 {
 		return true
 	}
 	// accept all blocks that are already stored with us.
-	if s.db.GetByID(sb.SkipChainID()) != nil {
+	if s.db.GetByID(scID) != nil {
 		return true
 	}
 	// Also accept blocks that are stored in the FollowIDs
 	for _, id := range s.Storage.FollowIDs {
-		if id.Equal(sb.SkipChainID()) {
+		if id.Equal(scID) {
 			return true
 		}
 	}
+	return false
+}
 
+// BlockIsFriendly searches if all members of the new block are followed
+// by this node.
+func (s *Service) BlockIsFriendly(sb *SkipBlock) bool {
+	if s.ChainIsFriendly(sb.SkipChainID()) {
+		return true
+	}
 	// Accept if we're the root.
 	index, _ := sb.Roster.Search(s.ServerIdentity().ID)
 	if index == 0 {
 		return true
 	}
 
+	// If no skipchains are stored, allow everything
+	if len(s.Storage.Follow) == 0 {
+		return true
+	}
 	// For each Follow, find out if it permits this chain.
 	for _, fct := range s.Storage.Follow {
 		err := fct.GetLatest(s.ServerIdentity(), s)

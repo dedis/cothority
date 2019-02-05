@@ -101,8 +101,8 @@ public class DockerTestServerController extends TestServerController {
         DockerClient dockerClient = container.getDockerClient();
 
         ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(container.getContainerId())
-                .withAttachStdout(false)
-                .withAttachStderr(false)
+                .withAttachStdout(true)
+                .withAttachStderr(true)
                 .withAttachStdin(false)
                 .withCmd(cmd)
                 .exec();

@@ -85,8 +85,9 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries     map[string]*stateTrie
-	stateTriesLock sync.Mutex
+	updateCollectionLock sync.Mutex
+	stateTries           map[string]*stateTrie
+	stateTriesLock       sync.Mutex
 	// We need to store the state changes for keeping track
 	// of the history of an instance
 	stateChangeStorage *stateChangeStorage
@@ -850,6 +851,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			s.stateTriesLock.Lock()
 			s.stateTries[idStr] = st
 			s.stateTriesLock.Unlock()
+			log.Lvlf2("%s: successfully downloaded database", s.ServerIdentity())
 			return nil
 		}()
 		if err == nil {
@@ -858,6 +860,31 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		log.Errorf("Couldn't load database from %s - got error %s", roster.List[0], err)
 	}
 	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
+}
+
+func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
+	s.updateCollectionLock.Lock()
+	if s.catchingUp {
+		s.updateCollectionLock.Unlock()
+		return errors.New("already catching up")
+	}
+	s.catchingUp = true
+	s.updateCollectionLock.Unlock()
+
+	cl := skipchain.NewClient()
+	search, err := cl.GetUpdateChain(r, scID)
+	if err != nil {
+		return err
+	}
+	if len(search.Update) == 0 {
+		log.Lvlf1("%s: Got empty skipblock", s.ServerIdentity())
+		return errors.New("got empty skipblock")
+	}
+	for _, sb := range search.Update {
+		log.Lvlf2("Update: got block %d", sb.Index)
+	}
+	s.catchUp(search.Update[len(search.Update)-1])
+	return nil
 }
 
 // catchUp takes a skipblock as reference for the roster, the current index,
@@ -870,6 +897,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		s.catchingUp = false
 		s.updateTrieLock.Unlock()
 	}()
+	log.Lvlf2("Catching up %x / %d", sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
 	st, err := s.getStateTrie(sb.SkipChainID())
@@ -882,6 +910,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	trieIndex := st.GetIndex()
 
 	if sb.Index-trieIndex > catchupDownloadAll {
+		log.Lvl2("Downloading whole DB for catching up")
 		err := s.downloadDB(sb)
 		if err != nil {
 			log.Error("Error while downloading trie:", err)
@@ -912,8 +941,8 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 			log.Error("Got an invalid, unlinkable block: " + err.Error())
 			return
 		}
-		trieIndex += len(updates)
 		latest = updates[len(updates)-1]
+		trieIndex = latest.Index
 	}
 }
 
@@ -1832,7 +1861,16 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	defer s.working.Done()
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
-		log.Lvlf1("%s: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
+		log.Lvlf2("%s: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
+		if s.skService().ChainIsFriendly(scID) {
+			log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
+			err = s.catchupFromID(roster, scID)
+			if err != nil {
+				log.Error(err)
+			}
+		} else {
+			log.Lvlf1("%s: Got asked for transactions of unknown, non-friendly chain %x", s.ServerIdentity(), scID)
+		}
 		return []ClientTransaction{}
 	}
 	if !leader.Equal(actualLeader) {
@@ -1849,6 +1887,11 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	// failure).
 	ourLatest, err := s.db().GetLatestByID(scID)
 	if err != nil {
+		log.Warnf("%s: we do not know about the skipchain ID %x: %s", s.ServerIdentity(), scID, err)
+		err = s.catchupFromID(roster, scID)
+		if err != nil {
+			log.Error(err)
+		}
 		return []ClientTransaction{}
 	}
 	latestSB := s.db().GetByID(latestID)
@@ -2008,9 +2051,20 @@ func (s *Service) startAllChains() error {
 			continue
 		}
 
+		if s.db().GetByID(gen) == nil {
+			log.Errorf("%s ignoring chain with missing genesis-block %x", s.ServerIdentity(), gen)
+			continue
+		}
+		latest, err := s.db().GetLatestByID(gen)
+		if err != nil {
+			log.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
+				s.ServerIdentity(), gen, err)
+		}
+
 		leader, err := s.getLeader(gen)
 		if err != nil {
-			panic("getLeader should not return an error if roster is initialised.")
+			log.Error("getLeader should not return an error if roster is initialised:", err)
+			continue
 		}
 		if leader.Equal(s.ServerIdentity()) {
 			s.pollChanMut.Lock()
@@ -2031,7 +2085,7 @@ func (s *Service) startAllChains() error {
 		if s.heartbeats.exists(string(gen)) {
 			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
 		}
-		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), gen)
+		log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, gen)
 		s.heartbeats.start(string(gen), interval*rotationWindow, s.heartbeatsTimeout)
 
 		// initiate the view-change manager
