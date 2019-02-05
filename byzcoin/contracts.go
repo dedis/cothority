@@ -39,12 +39,12 @@ type ContractFn func(in []byte) (Contract, error)
 // RegisterContract stores the contract in a map and will call it whenever a
 // contract needs to be done. GetService makes it possible to give either an
 // `onet.Context` or `onet.Server` to `RegisterContract`.
-func RegisterContract(s skipchain.GetService, kind string, f ContractFn) error {
+func RegisterContract(s skipchain.GetService, contractID string, f ContractFn) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)
 	}
-	return scs.(*Service).registerContract(kind, f)
+	return scs.(*Service).registerContract(contractID, f)
 }
 
 // BasicContract is a type that contracts may choose to embed in order to provide
@@ -86,14 +86,11 @@ func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []Stat
 //
 // Built-in contracts necessary for bootstrapping the ledger.
 //  * Config
-//  * Darc
+//  * SecureDarc
 //
 
 // ContractConfigID denotes a config-contract
 const ContractConfigID = "config"
-
-// ContractDarcID denotes a darc-contract
-const ContractDarcID = "darc"
 
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = InstanceID{}
@@ -115,6 +112,10 @@ func contractConfigFromBytes(in []byte) (Contract, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+type darcContractIDs struct {
+	IDs []string
 }
 
 // We need to override BasicContract.Verify because of the genesis config special case.
@@ -172,6 +173,15 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 		return
 	}
 
+	// get the darc contracts
+	darcContractIDsBuf := inst.Spawn.Args.Search("darc_contracts")
+	dcIDs := darcContractIDs{}
+	err = protobuf.Decode(darcContractIDsBuf, &dcIDs)
+	if err != nil {
+		return
+	}
+	c.DarcContractIDs = dcIDs.IDs
+
 	configBuf, err := protobuf.Encode(c)
 	if err != nil {
 		return
@@ -180,7 +190,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	id := d.GetBaseID()
 	sc = []StateChange{
 		NewStateChange(Create, ConfigInstanceID, ContractConfigID, configBuf, id),
-		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
+		NewStateChange(Create, NewInstanceID(id), ContractSecureDarcID, darcBuf, id),
 	}
 	return
 }
@@ -212,7 +222,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		var oldConfig *ChainConfig
-		oldConfig, err = loadConfigFromTrie(rst)
+		oldConfig, err = LoadConfigFromTrie(rst)
 		if err != nil {
 			return
 		}
@@ -241,7 +251,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 		sc = []StateChange{
 			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
-			NewStateChange(Update, NewInstanceID(darcID), ContractDarcID, genesisBuf, darcID),
+			NewStateChange(Update, NewInstanceID(darcID), ContractSecureDarcID, genesisBuf, darcID),
 		}
 		return
 	case "view_change":
@@ -267,7 +277,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 }
 
 func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := loadConfigFromTrie(rst)
+	config, err := LoadConfigFromTrie(rst)
 	if err != nil {
 		return nil, err
 	}
@@ -282,90 +292,10 @@ func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roste
 	}, nil
 }
 
-type contractDarc struct {
-	BasicContract
-	darc.Darc
-	s *Service
-}
-
-var _ Contract = (*contractDarc)(nil)
-
-func (s *Service) contractDarcFromBytes(in []byte) (Contract, error) {
-	d, err := darc.NewFromProtobuf(in)
-	if err != nil {
-		return nil, err
-	}
-	c := &contractDarc{s: s, Darc: *d}
-	return c, nil
-}
-
-func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	cout = coins
-
-	if inst.Spawn.ContractID == ContractDarcID {
-		darcBuf := inst.Spawn.Args.Search("darc")
-		d, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
-		}
-		id := d.GetBaseID()
-		return []StateChange{
-			NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
-		}, coins, nil
-	}
-
-	// If we got here this is a spawn:XXX in order to spawn
-	// a new instance of contract XXX, so do that.
-
-	cfact, found := c.s.contracts[inst.Spawn.ContractID]
-	if !found {
-		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
-	}
-
-	// Pass nil into the contract factory here because this instance does not exist yet.
-	// So the factory will make a zero-value instance, and then calling Spawn on it
-	// will give it a chance to encode it's zero state and emit one or more StateChanges to put itself
-	// into the trie.
-	c2, err := cfact(nil)
-	if err != nil {
-		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
-	}
-	return c2.Spawn(rst, inst, coins)
-}
-
-func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	switch inst.Invoke.Command {
-	case "evolve":
-		var darcID darc.ID
-		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
-		if err != nil {
-			return
-		}
-
-		darcBuf := inst.Invoke.Args.Search("darc")
-		newD, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, nil, err
-		}
-		oldD, err := loadDarcFromTrie(rst, darcID)
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
-		}
-		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
-		}, coins, nil
-	default:
-		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
-	}
-}
-
-// loadConfigFromTrie loads the configuration data from the trie.
-func loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
+// LoadConfigFromTrie loads the configuration data from the trie.
+func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
-	val, _, contract, _, err := getValueContract(st, NewInstanceID(nil).Slice())
+	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +312,9 @@ func loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	return &config, nil
 }
 
-func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version uint64, contract string, darcID darc.ID, err error) {
+// GetValueContract gets all the information in an instance, an error is
+// returned if the instance does not exist.
+func GetValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version uint64, contract string, darcID darc.ID, err error) {
 	value, version, contract, darcID, err = st.GetValues(key)
 	if err != nil {
 		return
@@ -394,7 +326,13 @@ func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version u
 	return
 }
 
-func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID) (*darc.Darc, error) {
+func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID, darcContractIDs []string) (*darc.Darc, error) {
+	// conver the string slice to a map
+	m := make(map[string]bool)
+	for _, id := range darcContractIDs {
+		m[id] = true
+	}
+
 	// From instance ID, find the darcID that controls access to it.
 	_, _, _, dID, err := c.GetValues(iid.Slice())
 	if err != nil {
@@ -407,20 +345,30 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID) (*darc.Darc, error) {
 		return nil, err
 	}
 
-	if string(contract) != ContractDarcID {
-		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
+	if _, ok := m[string(contract)]; !ok {
+		return nil, fmt.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
 	}
 	return darc.NewFromProtobuf(value)
 }
 
-// loadDarcFromTrie loads a darc which should be stored in key.
-func loadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
+// LoadDarcFromTrie loads a darc which should be stored in key.
+func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 	darcBuf, _, contract, _, err := st.GetValues(key)
 	if err != nil {
 		return nil, err
 	}
-	if contract != ContractDarcID {
-		return nil, errors.New("expected contract to be darc but got: " + contract)
+	config, err := LoadConfigFromTrie(st)
+	if err != nil {
+		return nil, err
+	}
+	var ok bool
+	for _, id := range config.DarcContractIDs {
+		if contract == id {
+			ok = true
+		}
+	}
+	if !ok {
+		return nil, errors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {

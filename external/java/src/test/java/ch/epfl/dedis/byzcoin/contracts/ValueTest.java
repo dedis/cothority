@@ -53,7 +53,7 @@ class ValueTest {
     @Test
     void spawnValue() throws Exception {
 
-        DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+        SecureDarcInstance dc = SecureDarcInstance.fromByzCoin(bc, genesisDarc);
 
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
@@ -96,7 +96,7 @@ class ValueTest {
         // list in the next block. We then use spawnInstanceAndWait on one we know is
         // going to succeed in order to sync the test to the creation of the new
         // block.
-        DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+        SecureDarcInstance dc = SecureDarcInstance.fromByzCoin(bc, genesisDarc);
 
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));

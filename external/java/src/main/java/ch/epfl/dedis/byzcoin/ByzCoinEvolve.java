@@ -1,6 +1,6 @@
 package ch.epfl.dedis.byzcoin;
 
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -19,7 +19,7 @@ public class ByzCoinEvolve {
      * @throws CothorityException
      */
     public static void from20181008(ByzCoinRPC bc, Signer admin) throws CothorityException{
-        DarcInstance genesis = bc.getGenesisDarcInstance();
+        SecureDarcInstance genesis = bc.getGenesisDarcInstance();
         Darc updatedGenesis = genesis.getDarc();
         updatedGenesis.addIdentity("invoke:update_config", admin.getIdentity(), Rules.OR);
         genesis.evolveDarcAndWait(updatedGenesis, admin,1L, 20);

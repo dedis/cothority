@@ -178,7 +178,7 @@ func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc byzcoin.State
 	}
 	log.Lvlf3("Final %x/%x", d.GetBaseID(), sha256.Sum256(darcBuf))
 	sc = byzcoin.NewStateChange(byzcoin.Create, byzcoin.NewInstanceID(d.GetBaseID()),
-		byzcoin.ContractDarcID, darcBuf, darcID)
+		byzcoin.ContractSecureDarcID, darcBuf, darcID)
 	return
 }
 

@@ -387,6 +387,32 @@ func TestDarc_X509(t *testing.T) {
 	// TODO
 }
 
+func TestDarc_IsSubset(t *testing.T) {
+	expr := []byte(createIdentity().String())
+	supersetRules := NewRules()
+	supersetRules.AddRule("rule1", expr)
+	supersetRules.AddRule("rule2", expr)
+	supersetRules.AddRule("rule3", expr)
+
+	properSubsetRules := NewRules()
+	properSubsetRules.AddRule("rule1", expr)
+	properSubsetRules.AddRule("rule2", expr)
+	properSubsetRules.AddRule("rule3", expr)
+
+	strictSubsetRules := NewRules()
+	strictSubsetRules.AddRule("rule1", expr)
+	strictSubsetRules.AddRule("rule2", expr)
+
+	wrongSubsetRules := NewRules()
+	wrongSubsetRules.AddRule("rule1", expr)
+	wrongSubsetRules.AddRule("rule2", expr)
+	wrongSubsetRules.AddRule("rule4", expr)
+
+	require.True(t, properSubsetRules.IsSubset(supersetRules))
+	require.True(t, strictSubsetRules.IsSubset(supersetRules))
+	require.False(t, wrongSubsetRules.IsSubset(supersetRules))
+}
+
 type testDarc struct {
 	darc   *Darc
 	owners []Signer

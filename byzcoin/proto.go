@@ -64,6 +64,9 @@ type CreateGenesisBlock struct {
 	// Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
 	// optional
 	MaxBlockSize int
+	// DarcContracts is the set of contracts that can be parsed as a DARC.
+	// At least one contract must be given.
+	DarcContractIDs []string
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
@@ -137,9 +140,10 @@ type CheckAuthorizationResponse struct {
 // ChainConfig stores all the configuration information for one skipchain. It
 // will be stored under the key [32]byte{} in the tree.
 type ChainConfig struct {
-	BlockInterval time.Duration
-	Roster        onet.Roster
-	MaxBlockSize  int
+	BlockInterval   time.Duration
+	Roster          onet.Roster
+	MaxBlockSize    int
+	DarcContractIDs []string
 }
 
 // Proof represents everything necessary to verify a given

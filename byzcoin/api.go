@@ -168,7 +168,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	if err != nil {
 		return nil, err
 	}
-	if contract != ContractDarcID {
+	if contract != ContractSecureDarcID {
 		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -331,14 +331,38 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the
-// genesis Darc and block.
+// genesis Darc and block. It will contain rules for spawning and evolving the
+// secure_darc contract.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
 	}
-	d := darc.NewDarc(darc.InitRulesWith(ids, ids, invokeEvolve), []byte("genesis darc"))
+
+	rs := darc.NewRules()
+	ownerIDs := make([]string, len(ids))
+	for i, o := range ids {
+		ownerIDs[i] = o.String()
+	}
+	ownerExpr := expression.InitAndExpr(ownerIDs...)
+	if err := rs.AddRule("spawn:"+ContractSecureDarcID, ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("_sign", ownerExpr); err != nil {
+		return nil, err
+	}
+	d := darc.NewDarc(rs, []byte("genesis darc"))
+
+	// extra rules
 	for _, r := range rules {
-		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
+		if err := d.Rules.AddRule(darc.Action(r), ownerExpr); err != nil {
+			return nil, err
+		}
 	}
 
 	// Add an additional rule that allows nodes in the roster to update the
@@ -351,10 +375,11 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	d.Rules.AddRule(darc.Action("invoke:"+ContractConfigID+".view_change"), expression.InitOrExpr(rosterPubs...))
 
 	m := CreateGenesisBlock{
-		Version:       v,
-		Roster:        *r,
-		GenesisDarc:   *d,
-		BlockInterval: defaultInterval,
+		Version:         v,
+		Roster:          *r,
+		GenesisDarc:     *d,
+		BlockInterval:   defaultInterval,
+		DarcContractIDs: []string{ContractSecureDarcID},
 	}
 	return &m, nil
 }

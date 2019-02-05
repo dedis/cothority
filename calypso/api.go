@@ -244,7 +244,7 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(controlDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDarcID,
+				ContractID: byzcoin.ContractSecureDarcID,
 				Args: []byzcoin.Argument{{
 					Name:  "darc",
 					Value: darcBuf,

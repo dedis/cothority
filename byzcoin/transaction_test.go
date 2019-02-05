@@ -37,7 +37,23 @@ func TestTransaction_Signing(t *testing.T) {
 	// set the version, but it's too high, verification should fail
 	require.NoError(t, setSignerCounter(sst, signer.Identity().String(), 10))
 	require.Error(t, ctx.Instructions[0].Verify(sst, ctxHash))
-	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "got version")
+	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "got counter=")
+
+	// set the config
+	config := ChainConfig{
+		DarcContractIDs: []string{"darc"},
+	}
+	configBuf, err := protobuf.Encode(&config)
+	require.NoError(t, err)
+	err = sst.StoreAll([]StateChange{
+		{
+			InstanceID:  NewInstanceID(nil).Slice(),
+			StateAction: Create,
+			ContractID:  []byte("config"),
+			Value:       configBuf,
+		},
+	})
+	require.NoError(t, err)
 
 	// set the right version, but darc is missing, verification should fail
 	require.NoError(t, setSignerCounter(sst, signer.Identity().String(), 0))

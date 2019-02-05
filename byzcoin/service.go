@@ -48,8 +48,6 @@ var catchupFetchBlocks = 10
 // How many DB-entries to download in one go.
 var catchupFetchDBEntries = 100
 
-const invokeEvolve darc.Action = darc.Action("invoke:" + ContractDarcID + ".evolve")
-
 var rotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
@@ -209,7 +207,27 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 
+	// The user must include at least one contract that can be parsed as a
+	// DARC and it must exist.
+	if len(req.DarcContractIDs) == 0 {
+		return nil, errors.New("must provide at least one DARC contract")
+	}
+	for _, c := range req.DarcContractIDs {
+		if _, ok := s.GetContractConstructor(c); !ok {
+			return nil, errors.New("the given contract \"" + c + "\" does not exist")
+		}
+	}
+
+	dcIDs := darcContractIDs{
+		IDs: req.DarcContractIDs,
+	}
+	darcContractIDsBuf, err := protobuf.Encode(&dcIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	// This is the nonce for the trie.
+	// TODO this nonce is picked by the root, how to make sure it's secure?
 	nonce := GenNonce()
 
 	spawn := &Spawn{
@@ -220,6 +238,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 			{Name: "max_block_size", Value: bsBuf},
 			{Name: "roster", Value: rosterBuf},
 			{Name: "trie_nonce", Value: nonce[:]},
+			{Name: "darc_contracts", Value: darcContractIDsBuf},
 		},
 	}
 
@@ -399,7 +418,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	if err != nil {
 		return nil, err
 	}
-	d, err := loadDarcFromTrie(st, req.DarcID)
+	d, err := LoadDarcFromTrie(st, req.DarcID)
 	if err != nil {
 		return nil, errors.New("couldn't find darc: " + err.Error())
 	}
@@ -413,7 +432,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := loadDarcFromTrie(st, id)
+		d, err := LoadDarcFromTrie(st, id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil
@@ -1220,7 +1239,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loadConfigFromTrie(st)
+	return LoadConfigFromTrie(st)
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
@@ -1229,7 +1248,11 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 	if err != nil {
 		return nil, err
 	}
-	return getInstanceDarc(st, ConfigInstanceID)
+	config, err := s.LoadConfig(scID)
+	if err != nil {
+		return nil, err
+	}
+	return getInstanceDarc(st, ConfigInstanceID, config.DarcContractIDs)
 }
 
 // LoadBlockInfo loads the block interval and the maximum size from the
@@ -1243,7 +1266,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	if err != nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	config, err := loadConfigFromTrie(st)
+	config, err := LoadConfigFromTrie(st)
 	if err != nil {
 		if err == errKeyNotSet {
 			err = nil
@@ -1365,7 +1388,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 					panic("the state trie must exist because we only start polling after creating/loading the skipchain")
 				}
 				_, txOut, _, sstTemp := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, bcConfig.BlockInterval/2)
-				bcConfig, err = loadConfigFromTrie(sstTemp)
+				bcConfig, err = LoadConfigFromTrie(sstTemp)
 				if err != nil {
 					panic("couldn't load config from temp stage Trie, this should never happen: " + err.Error())
 				}
@@ -1493,7 +1516,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	config, err := loadConfigFromTrie(sst)
+	config, err := LoadConfigFromTrie(sst)
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
@@ -1694,6 +1717,13 @@ clientTransactions:
 		s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
 	}
 	return
+}
+
+// GetContractConstructor gets the contract constructor of the contract
+// contractName.
+func (s *Service) GetContractConstructor(contractName string) (ContractFn, bool) {
+	fn, exists := s.contracts[contractName]
+	return fn, exists
 }
 
 func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
@@ -2219,7 +2249,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
-	s.registerContract(ContractDarcID, s.contractDarcFromBytes)
+	s.registerContract(ContractSecureDarcID, s.contractSecureDarcFromBytes)
 
 	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {

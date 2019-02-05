@@ -152,7 +152,7 @@ spawn new instances.
 In the ByzCoin service, the following contracts are pre-defined:
 
 - `Config` - holds the configuration of ByzCoin
-- `Darc` - defines the access control
+- `SecureDarc` - defines the access control
 
 To extend ByzCoin, you will have to create a new service that defines new
 contracts that will have to be registered with ByzCoin. An example is
@@ -178,23 +178,23 @@ are available to ByzCoin.
 
 - `Config_Update` - stores a new configuration
 
-## Darc Contract
+## SecureDarc Contract
 
-The most basic contract in ByzCoin is the `Darc` contract that defines the
-access rules for all clients. When creating a new ByzCoin blockchain, a
-genesis Darc instance is created, which indicates what instructions need which
-signatures to be accepted.
+The SecureDarc contract that defines the access rules for all clients using the
+Darc data structure. When creating a new ByzCoin blockchain, a genesis Darc
+instance is created, which indicates what instructions need which signatures to
+be accepted.
 
 ### Spawn
 
-When the client sends a spawn instruction to a Darc contract, he asks the instance
-to create a new instance with the given ContractID, which can be different from
-the Darc itself. The client must be able to authenticate against a
-`spawn:$contractid` rule defined in the Darc instance. For instance, to call
-Spawn on a contract ID of "eventlog", you must send a spawn request to
-an instance of a Darc contract that includes the "spawn:eventlog" rule,
-and the instruction must be signed by one of the keys mentioned in the rule's
-expression.
+When the client sends a spawn instruction to a SecureDarc contract, he asks the
+instance to create a new instance with the given ContractID, which can be
+different from the SecureDarc instance itself. The client must be able to
+authenticate against a `spawn:$contractid` rule defined in the SecureDarc
+instance. For instance, to call Spawn on a contract ID of "eventlog", you must
+send a spawn request to an instance of a SecureDarc contract that includes the
+"spawn:eventlog" rule, and the instruction must be signed by one of the keys
+mentioned in the rule's expression.
 
 The new instance spawned will have an instance ID equal to the hash of
 the Spawn instruction. The client can remember this instance ID in order
@@ -202,13 +202,36 @@ to invoke methods on it later.
 
 ### Invoke
 
-The only method that a client can invoke on a Darc instance is `evolve`, which
-asks ByzCoin to store a new version of the Darc in the global state.
+The first method that a client can invoke on a SecureDarc instance is `evolve`,
+which asks ByzCoin to store a new version of the Darc. The rules may be
+modified but new rules cannot be added. Use `evolve_unrestricted` to add rules.
 
 ### Delete
 
-When a Darc instance receives a `Delete` instruction, it will be removed from the
-global state.
+When a Darc instance receives a `Delete` instruction, it will be removed from
+the global state.
+
+### Secure Darc Customization
+
+Sometimes the user needs fine-grained control of all aspects of their access
+control policy. For these purposes we encourage the user to write their own
+Darc contracts.
+
+Suppose we are in a hierarchical situation where the boss is allowed to do
+anything, the managers are allowed to do a certain set of tasks including
+spawning user Darcs and the users are allowed to do another set of tasks but
+they are not allowed to spawn any new Darcs. The SecureDarc contract already
+achieves some of the requirements. If the managers are benign, they would spawn
+users with the correct set of rules. Thus the users cannot give themselves
+extra permission because they are only authorized to invoke their `evolve`
+action. If the boss is benign, then he/she will only spawn managers with the
+correct set of rules. What the SecureDarc cannot do is to stop managers from
+spawning user Darcs with arbitrary rules. We can prevent this problem by
+writing new Darc contracts. A simple solution is to write three contracts:
+BossDarc, ManagerDarc and UserDarc. The BossDarc will be the same as
+SecureDarc. The ManagerDarc will have additional logic in its Spawn function
+which stops it from spawning manager or boss Darcs. Finally, the UserDarc will
+not be allowed to spawn any other Darc.
 
 ## Possible future contracts
 

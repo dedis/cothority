@@ -69,7 +69,7 @@ func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.S
 		// to 0, this is the intended behaviour, otherwise the client
 		// will not be able to make more transactions.
 		if counter != c+1 {
-			return fmt.Errorf("for pk %s, got version %v, but need %v", id, counter, c+1)
+			return fmt.Errorf("for pk %s, got counter=%v, but need %v", id, counter, c+1)
 		}
 	}
 	return nil

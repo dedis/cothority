@@ -3,7 +3,7 @@ package ch.epfl.dedis.calypso;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.SignerCounters;
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
@@ -326,7 +326,7 @@ class CalypsoTest {
             logger.info("correct refusal of invalid read-request");
         }
 
-        DarcInstance rd = DarcInstance.fromByzCoin(calypso, readerDarc);
+        SecureDarcInstance rd = SecureDarcInstance.fromByzCoin(calypso, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         rd.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
@@ -344,7 +344,7 @@ class CalypsoTest {
 
         // Add another reader
         Signer reader2 = new SignerEd25519();
-        DarcInstance di = DarcInstance.fromByzCoin(calypso, readerDarc);
+        SecureDarcInstance di = SecureDarcInstance.fromByzCoin(calypso, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
@@ -357,7 +357,7 @@ class CalypsoTest {
     void getDocumentWithFailedNode() throws CothorityException, IOException, InterruptedException {
         WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
-        DarcInstance di = DarcInstance.fromByzCoin(calypso, readerDarc);
+        SecureDarcInstance di = SecureDarcInstance.fromByzCoin(calypso, readerDarc);
         Signer reader2 = new SignerEd25519();
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
@@ -410,7 +410,7 @@ class CalypsoTest {
         CalypsoRPC calypso2 = CalypsoRPC.fromCalypso(calypso.getRoster(), calypso.getGenesisBlock().getSkipchainId(),
                 calypso.getLTSId());
         Signer reader2 = new SignerEd25519();
-        DarcInstance di = DarcInstance.fromByzCoin(calypso2, readerDarc);
+        SecureDarcInstance di = SecureDarcInstance.fromByzCoin(calypso2, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
         ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);

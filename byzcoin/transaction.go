@@ -230,8 +230,14 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 		return err
 	}
 
+	// get the valid DARC contract IDs from the configuration
+	config, err := LoadConfigFromTrie(st)
+	if err != nil {
+		return err
+	}
+
 	// get the darc
-	d, err := getInstanceDarc(st, instr.InstanceID)
+	d, err := getInstanceDarc(st, instr.InstanceID, config.DarcContractIDs)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
@@ -260,7 +266,7 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 		if err != nil {
 			return nil
 		}
-		d, err := loadDarcFromTrie(st, darcID)
+		d, err := LoadDarcFromTrie(st, darcID)
 		if err != nil {
 			return nil
 		}

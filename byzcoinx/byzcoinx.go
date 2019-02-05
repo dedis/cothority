@@ -18,9 +18,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 )
 
-// ByzCoinX contains the state used in the execution of the BFTCoSi
-// protocol. It is also known as OmniCon, which is described in the OmniLedger
-// paper - https://eprint.iacr.org/2017/406
+// ByzCoinX contains the state used to execute two rounds of blscosi.
 type ByzCoinX struct {
 	// the node we are represented-in
 	*onet.TreeNodeInstance
