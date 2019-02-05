@@ -21,7 +21,7 @@ type instr struct {
 	v  []byte
 }
 
-// StagingTrie represents an lazy copy of a Trie for staging operations. The
+// StagingTrie represents a lazy copy of a Trie for staging operations. The
 // keys and values stored in this object will not go into the source Trie from
 // which it is created until the Commit function is called. The StagingTrie
 // becomes invalid if the source Trie is modified directly.

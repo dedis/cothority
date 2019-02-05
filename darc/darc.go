@@ -654,7 +654,7 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 		return fmt.Errorf("evaluation failed on '%s' with error: %v", expr, err)
 	}
 	if res != true {
-		return fmt.Errorf("expression '%s' evaluated to false", expr)
+		return fmt.Errorf("expression '%s' evaluated to false with ids %s", expr, ids)
 	}
 	return nil
 }

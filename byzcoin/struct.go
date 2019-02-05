@@ -89,7 +89,7 @@ func (kt keyTimeArray) Swap(i, j int) {
 }
 
 // stateChangeStorage stores the state changes using their instance ID, the block index and
-// their version to yeld a key. This key has the property to sort the key-value pairs
+// their version to yield a key. This key has the property to sort the key-value pairs
 // first by instance ID and then by version so we can use the BoltDB key traversal.
 // The block index is appended only to access more efficiently to the information
 // without having to decode the value.
