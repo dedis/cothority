@@ -862,6 +862,47 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
 }
 
+// catchupAll calls catchup for every byzcoin instance stored in this system.
+func (s *Service) catchupAll() error {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return errors.New("cannot sync all while closing")
+	}
+	s.working.Add(1)
+	defer s.working.Done()
+	s.closedMutex.Unlock()
+	gas := &skipchain.GetAllSkipChainIDs{}
+	gasr, err := s.skService().GetAllSkipChainIDs(gas)
+	if err != nil {
+		return err
+	}
+
+	for _, scID := range gasr.IDs {
+		sb, err := s.db().GetLatestByID(scID)
+		if err != nil {
+			return err
+		}
+		s.catchUp(sb)
+
+		// the MT root is not checked so we don't need the correct nonce
+		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			continue
+		}
+
+		_, err = s.buildStateChanges(sb.Hash, sst, []Coin{})
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+	}
+	return nil
+}
+
+// catchupFromID takes a roster and a skipchain-ID, and then searches to update this
+// skipchain. This is useful in case there is no block stored yet in the system, but
+// we get a roster, e.g., from getTxs
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
 	s.updateCollectionLock.Lock()
 	if s.catchingUp {
@@ -900,16 +941,17 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	log.Lvlf2("Catching up %x / %d", sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
+	download := false
 	st, err := s.getStateTrie(sb.SkipChainID())
 	if err != nil {
-		log.Error("problem with trie:", err)
-		return
+		log.Warn("problem with trie:", err)
+		download = true
+	} else {
+		download = sb.Index-st.GetIndex() > catchupDownloadAll
 	}
 
 	// Check if we are updating the right index.
-	trieIndex := st.GetIndex()
-
-	if sb.Index-trieIndex > catchupDownloadAll {
+	if download {
 		log.Lvl2("Downloading whole DB for catching up")
 		err := s.downloadDB(sb)
 		if err != nil {
@@ -918,6 +960,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		return
 	}
 
+	trieIndex := st.GetIndex()
 	cl := skipchain.NewClient()
 
 	// Fetch all missing blocks to fill the hole
@@ -2101,13 +2144,14 @@ func (s *Service) startAllChains() error {
 		// TODO fault threshold might change
 	}
 
-	// Running trySyncAll in background so it doesn't stop the other
+	// Running catchupAll in background so it doesn't stop the other
 	// services from starting.
-	// TODO: do this on a per-needed basis, or only a couple of seconds
-	// after startup.
 	go func() {
 		s.monitorLeaderFailure()
-		s.trySyncAll()
+		err := s.catchupAll()
+		if err != nil {
+			log.Error(s.ServerIdentity(), "couldn't sync:", err)
+		}
 	}()
 
 	return nil
@@ -2136,66 +2180,6 @@ func (s *Service) save() {
 	err := s.Save(storageID, s.storage)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "Couldn't save file:", err)
-	}
-}
-
-func (s *Service) trySyncAll() {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
-		return
-	}
-	s.working.Add(1)
-	defer s.working.Done()
-	s.closedMutex.Unlock()
-	gas := &skipchain.GetAllSkipChainIDs{}
-	gasr, err := s.skService().GetAllSkipChainIDs(gas)
-	if err != nil {
-		log.Error(s.ServerIdentity(), err)
-		return
-	}
-
-	// It reads from the state change storage and gets the last
-	// block index for each chain
-	indices, err := s.stateChangeStorage.loadFromDB()
-	if err != nil {
-		log.Error(s.ServerIdentity(), err)
-		return
-	}
-
-	for _, scID := range gasr.IDs {
-		sb, err := s.db().GetLatestByID(scID)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-			continue
-		}
-		err = s.skService().SyncChain(sb.Roster, sb.Hash)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
-
-		// the MT root is not checked so we don't need the correct nonce
-		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
-
-		index, ok := indices[fmt.Sprintf("%x", sb.SkipChainID())]
-		if !ok {
-			// from the beginning
-			index = 0
-		}
-
-		// start from the last known skipblock
-		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
-		lksb, err := s.skService().GetSingleBlockByIndex(req)
-		if lksb != nil {
-			log.Lvlf2("Starting to create state changes for skipchain %x", sb.SkipChainID())
-			_, err = s.buildStateChanges(lksb.SkipBlock.Hash, sst, []Coin{})
-			if err != nil {
-				log.Error(s.ServerIdentity(), err)
-			}
-		} // else there is no new block
 	}
 }
 
@@ -2256,8 +2240,14 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 	}
 
 	if len(sb.ForwardLink) > 0 {
-		// Follow the FL level 0 to create all the state changes
-		return s.buildStateChanges(sb.ForwardLink[0].To, sst, cin)
+		// There might be skips in the blockchain, so take the first
+		// link that points to an existing block.
+		for _, link := range sb.ForwardLink {
+			if block := s.db().GetByID(link.To); block != nil {
+				return s.buildStateChanges(block.Hash, sst, cin)
+			}
+		}
+		return nil, errors.New("last block has forwardlinks that are not available")
 	}
 
 	return nil, nil
