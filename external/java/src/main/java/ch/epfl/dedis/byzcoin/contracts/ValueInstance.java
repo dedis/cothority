@@ -9,6 +9,7 @@ import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Invoke;
 import ch.epfl.dedis.lib.darc.DarcId;
+import ch.epfl.dedis.lib.darc.Identity;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -89,9 +90,12 @@ public class ValueInstance {
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveValueInstruction(byte[] newValue, Long signerCtr) {
+    public Instruction evolveValueInstruction(byte[] newValue, Identity owner, Long signerCtr) {
         Invoke inv = new Invoke(ContractId, "update", ContractId, newValue);
-        return new Instruction(instance.getId(), Collections.singletonList(signerCtr), inv);
+        return new Instruction(instance.getId(),
+                Collections.singletonList(owner),
+                Collections.singletonList(signerCtr),
+                inv);
     }
 
     /**
@@ -103,7 +107,7 @@ public class ValueInstance {
      * @throws CothorityException if something goes wrong
      */
     public void evolveValue(byte[] newValue, Signer owner, Long ownerCtr) throws CothorityException {
-        Instruction inst = evolveValueInstruction(newValue, ownerCtr);
+        Instruction inst = evolveValueInstruction(newValue, owner.getIdentity(), ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(owner));
         bc.sendTransaction(ct);
@@ -121,7 +125,7 @@ public class ValueInstance {
      * @throws CothorityException if something goes wrong
      */
     public void evolveValueAndWait(byte[] newValue, Signer owner, Long ownerCtr, int wait) throws CothorityException {
-        Instruction inst = evolveValueInstruction(newValue, ownerCtr);
+        Instruction inst = evolveValueInstruction(newValue, owner.getIdentity(), ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(owner));
         bc.sendTransactionAndWait(ct, wait);

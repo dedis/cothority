@@ -92,4 +92,8 @@ public class IdentityDarc implements Identity {
     public String typeString() {
         return "darc";
     }
+
+    public byte[] getPublicBytes() {
+        return darcID.getId();
+    }
 }

@@ -56,7 +56,7 @@ public class Invoke {
     /**
      * Getter for the contract ID.
      */
-    public String getContractId() {
+    public String getContractID() {
         return contractID;
     }
 
@@ -91,5 +91,10 @@ public class Invoke {
             b.addArgs(a.toProto());
         }
         return b.build();
+    }
+
+    @Override
+    public String toString() {
+        return "contractID: " + this.contractID + ", command: " + this.command + ", argument: <hidden>";
     }
 }

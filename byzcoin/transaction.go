@@ -78,19 +78,20 @@ func (args Arguments) Search(name string) []byte {
 
 // FillSignersAndSignWith fills the SignerIdentities field with the identities of the signers and then signs all the
 // instructions using the same set of  signers. If some instructions need to be signed by different sets of signers,
-// then use the SighWith method of Instruction.
+// then use the SignWith method of Instruction.
 func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) error {
+	var ids []darc.Identity
+	for _, signer := range signers {
+		ids = append(ids, signer.Identity())
+	}
 	for i := range ctx.Instructions {
-		ctx.Instructions[i].SignerIdentities = []darc.Identity{}
-		for _, signer := range signers {
-			ctx.Instructions[i].SignerIdentities = append(ctx.Instructions[i].SignerIdentities, signer.Identity())
-		}
+		ctx.Instructions[i].SignerIdentities = ids
 	}
 	return ctx.SignWith(signers...)
 }
 
 // SignWith signs all the instructions with the same signers. If some instructions need to be signed by different sets
-// of signers, then use the SighWith method of Instruction.
+// of signers, then use the SignWith method of Instruction.
 func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 	digest := ctx.Instructions.Hash()
 	for i := range ctx.Instructions {
@@ -129,17 +130,7 @@ func (instr Instruction) Hash() []byte {
 		h.Write(verBuf)
 	}
 	for _, id := range instr.SignerIdentities {
-		if id.Ed25519 != nil {
-			id.Ed25519.Point.MarshalTo(h)
-		} else if id.X509EC != nil {
-			h.Write(id.X509EC.Public)
-		} else if id.Darc != nil {
-			h.Write(id.Darc.ID)
-		} else if id.Proxy.Public != nil {
-			id.Proxy.Public.MarshalTo(h)
-		} else {
-			panic("invalid signer identity " + id.String())
-		}
+		h.Write(id.GetPublicBytes())
 	}
 	return h.Sum(nil)
 }
@@ -211,12 +202,13 @@ func (instr Instruction) String() string {
 	out += fmt.Sprintf("instr: %x\n", instr.Hash())
 	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
 	out += fmt.Sprintf("\taction: %s\n", instr.Action())
+	out += fmt.Sprintf("\tidentities: %v\n", instr.SignerIdentities)
 	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
 	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
 	return out
 }
 
-// FillSignersAndSignWith creates a signed version of the instruction. The signature is
+// SignWith creates a signed version of the instruction. The signature is
 // created on msg, which must be the hash of the ClientTransaction which
 // contains the instruction. Otherwise the verification will fail on the server
 // side.
@@ -229,8 +221,8 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	}
 	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {
-		signerId := signers[i].Identity()
-		if !instr.SignerIdentities[i].Equal(&signerId) {
+		signerID := signers[i].Identity()
+		if !instr.SignerIdentities[i].Equal(&signerID) {
 			return errors.New("signer identity is not set correctly")
 		}
 		sig, err := signers[i].Sign(msg)

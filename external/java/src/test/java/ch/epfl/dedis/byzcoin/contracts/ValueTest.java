@@ -78,15 +78,7 @@ class ValueTest {
         Block ob = new Block(p);
         ob.getAcceptedClientTransactions()
                 .forEach(clientTransaction -> clientTransaction.getInstructions().
-                        forEach(instr -> processInstr(instr)));
-    }
-
-    void processInstr(Instruction instr) {
-        try {
-            instr.deriveId("");
-        } catch (CothorityCryptoException e) {
-            throw new RuntimeException(e);
-        }
+                        forEach(instr -> instr.deriveId("")));
     }
 
     @Test

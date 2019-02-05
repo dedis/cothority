@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * WriteInstance holds the data related to a spawnCalypsoWrite request. It is a representation of what is
@@ -122,7 +123,10 @@ public class WriteInstance {
     private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         Argument arg = new Argument("write", req.toProto().toByteArray());
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcID.getId()),
+                signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                signerCtrs,
+                spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         tx.signWith(signers);

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * EventLogInstance is for interacting with the eventlog contract on ByzCoin.
@@ -197,7 +198,10 @@ public class EventLogInstance {
             throw new CothorityException("already have a contract");
         }
         Spawn spawn = new Spawn(ContractId, new ArrayList<>());
-        Instruction instr = new Instruction(new InstanceId(darcId.getId()), signerCtrs, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcId.getId()),
+                signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                signerCtrs,
+                spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         tx.signWith(signers);
@@ -233,7 +237,10 @@ public class EventLogInstance {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
             Invoke invoke = new Invoke(ContractId, LogCmd, args);
-            Instruction instr = new Instruction(instance.getId(), new ArrayList<>(signerCtrs), invoke);
+            Instruction instr = new Instruction(instance.getId(),
+                    signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                    signerCtrs,
+                    invoke);
             instrs.add(instr);
             signerCtrs = incrementCtrs(signerCtrs);
         }

@@ -820,6 +820,30 @@ func (id Identity) Verify(msg, sig []byte) error {
 	}
 }
 
+// GetPublicBytes gets the public identifier in bytes. The returned value is not a serialisation of the identity.
+func (id Identity) GetPublicBytes() []byte {
+	switch id.Type() {
+	case 0:
+		return id.Darc.ID
+	case 1:
+		buf, err := id.Ed25519.Point.MarshalBinary()
+		if err != nil {
+			return nil
+		}
+		return buf
+	case 2:
+		return id.X509EC.Public
+	case 3:
+		buf, err := id.Proxy.Public.MarshalBinary()
+		if err != nil {
+			return nil
+		}
+		return buf
+	default:
+		return nil
+	}
+}
+
 // NewIdentityDarc creates a new darc identity struct given a darc ID.
 func NewIdentityDarc(id ID) Identity {
 	return Identity{

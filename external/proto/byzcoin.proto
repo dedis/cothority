@@ -162,9 +162,11 @@ message Instruction {
   // must map to the corresponding element in Signature. The initial
   // counter is 1. Overflow is allowed.
   repeated uint64 signercounter = 5 [packed=true];
+  // SignerIdentities are the identities of all the signers.
+  repeated darc.Identity signeridentities = 6;
   // Signatures that are verified using the Darc controlling access to
   // the instance.
-  repeated darc.Signature signatures = 6;
+  repeated bytes signatures = 7;
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

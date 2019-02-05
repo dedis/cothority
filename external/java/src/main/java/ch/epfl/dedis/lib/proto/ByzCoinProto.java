@@ -12106,30 +12106,64 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Signatures that are verified using the Darc controlling access to
-     * the instance.
+     * SignerIdentities are the identities of all the signers.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
      */
-    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> 
-        getSignaturesList();
+    java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> 
+        getSigneridentitiesList();
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.Identity getSigneridentities(int index);
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    int getSigneridentitiesCount();
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+        getSigneridentitiesOrBuilderList();
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getSigneridentitiesOrBuilder(
+        int index);
+
     /**
      * <pre>
      * Signatures that are verified using the Darc controlling access to
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
-    ch.epfl.dedis.lib.proto.DarcProto.Signature getSignatures(int index);
+    java.util.List<com.google.protobuf.ByteString> getSignaturesList();
     /**
      * <pre>
      * Signatures that are verified using the Darc controlling access to
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
     int getSignaturesCount();
     /**
@@ -12138,20 +12172,9 @@ public final class ByzCoinProto {
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
-        getSignaturesOrBuilderList();
-    /**
-     * <pre>
-     * Signatures that are verified using the Darc controlling access to
-     * the instance.
-     * </pre>
-     *
-     * <code>repeated .darc.Signature signatures = 6;</code>
-     */
-    ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignaturesOrBuilder(
-        int index);
+    com.google.protobuf.ByteString getSignatures(int index);
   }
   /**
    * <pre>
@@ -12172,6 +12195,7 @@ public final class ByzCoinProto {
     private Instruction() {
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
       signercounter_ = java.util.Collections.emptyList();
+      signeridentities_ = java.util.Collections.emptyList();
       signatures_ = java.util.Collections.emptyList();
     }
 
@@ -12266,11 +12290,19 @@ public final class ByzCoinProto {
             }
             case 50: {
               if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-                signatures_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Signature>();
+                signeridentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>();
                 mutable_bitField0_ |= 0x00000020;
               }
-              signatures_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.parser(), extensionRegistry));
+              signeridentities_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry));
+              break;
+            }
+            case 58: {
+              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000040;
+              }
+              signatures_.add(input.readBytes());
               break;
             }
             default: {
@@ -12292,6 +12324,9 @@ public final class ByzCoinProto {
           signercounter_ = java.util.Collections.unmodifiableList(signercounter_);
         }
         if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          signeridentities_ = java.util.Collections.unmodifiableList(signeridentities_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
           signatures_ = java.util.Collections.unmodifiableList(signatures_);
         }
         this.unknownFields = unknownFields.build();
@@ -12480,17 +12515,73 @@ public final class ByzCoinProto {
     }
     private int signercounterMemoizedSerializedSize = -1;
 
-    public static final int SIGNATURES_FIELD_NUMBER = 6;
-    private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> signatures_;
+    public static final int SIGNERIDENTITIES_FIELD_NUMBER = 6;
+    private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> signeridentities_;
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> getSigneridentitiesList() {
+      return signeridentities_;
+    }
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+        getSigneridentitiesOrBuilderList() {
+      return signeridentities_;
+    }
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    public int getSigneridentitiesCount() {
+      return signeridentities_.size();
+    }
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.Identity getSigneridentities(int index) {
+      return signeridentities_.get(index);
+    }
+    /**
+     * <pre>
+     * SignerIdentities are the identities of all the signers.
+     * </pre>
+     *
+     * <code>repeated .darc.Identity signeridentities = 6;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getSigneridentitiesOrBuilder(
+        int index) {
+      return signeridentities_.get(index);
+    }
+
+    public static final int SIGNATURES_FIELD_NUMBER = 7;
+    private java.util.List<com.google.protobuf.ByteString> signatures_;
     /**
      * <pre>
      * Signatures that are verified using the Darc controlling access to
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
-    public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> getSignaturesList() {
+    public java.util.List<com.google.protobuf.ByteString>
+        getSignaturesList() {
       return signatures_;
     }
     /**
@@ -12499,19 +12590,7 @@ public final class ByzCoinProto {
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
-     */
-    public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
-        getSignaturesOrBuilderList() {
-      return signatures_;
-    }
-    /**
-     * <pre>
-     * Signatures that are verified using the Darc controlling access to
-     * the instance.
-     * </pre>
-     *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
     public int getSignaturesCount() {
       return signatures_.size();
@@ -12522,21 +12601,9 @@ public final class ByzCoinProto {
      * the instance.
      * </pre>
      *
-     * <code>repeated .darc.Signature signatures = 6;</code>
+     * <code>repeated bytes signatures = 7;</code>
      */
-    public ch.epfl.dedis.lib.proto.DarcProto.Signature getSignatures(int index) {
-      return signatures_.get(index);
-    }
-    /**
-     * <pre>
-     * Signatures that are verified using the Darc controlling access to
-     * the instance.
-     * </pre>
-     *
-     * <code>repeated .darc.Signature signatures = 6;</code>
-     */
-    public ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignaturesOrBuilder(
-        int index) {
+    public com.google.protobuf.ByteString getSignatures(int index) {
       return signatures_.get(index);
     }
 
@@ -12569,8 +12636,8 @@ public final class ByzCoinProto {
           return false;
         }
       }
-      for (int i = 0; i < getSignaturesCount(); i++) {
-        if (!getSignatures(i).isInitialized()) {
+      for (int i = 0; i < getSigneridentitiesCount(); i++) {
+        if (!getSigneridentities(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -12602,8 +12669,11 @@ public final class ByzCoinProto {
       for (int i = 0; i < signercounter_.size(); i++) {
         output.writeUInt64NoTag(signercounter_.get(i));
       }
+      for (int i = 0; i < signeridentities_.size(); i++) {
+        output.writeMessage(6, signeridentities_.get(i));
+      }
       for (int i = 0; i < signatures_.size(); i++) {
-        output.writeMessage(6, signatures_.get(i));
+        output.writeBytes(7, signatures_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -12644,9 +12714,18 @@ public final class ByzCoinProto {
         }
         signercounterMemoizedSerializedSize = dataSize;
       }
-      for (int i = 0; i < signatures_.size(); i++) {
+      for (int i = 0; i < signeridentities_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, signatures_.get(i));
+          .computeMessageSize(6, signeridentities_.get(i));
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < signatures_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(signatures_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getSignaturesList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -12686,6 +12765,8 @@ public final class ByzCoinProto {
       }
       result = result && getSignercounterList()
           .equals(other.getSignercounterList());
+      result = result && getSigneridentitiesList()
+          .equals(other.getSigneridentitiesList());
       result = result && getSignaturesList()
           .equals(other.getSignaturesList());
       result = result && unknownFields.equals(other.unknownFields);
@@ -12718,6 +12799,10 @@ public final class ByzCoinProto {
       if (getSignercounterCount() > 0) {
         hash = (37 * hash) + SIGNERCOUNTER_FIELD_NUMBER;
         hash = (53 * hash) + getSignercounterList().hashCode();
+      }
+      if (getSigneridentitiesCount() > 0) {
+        hash = (37 * hash) + SIGNERIDENTITIES_FIELD_NUMBER;
+        hash = (53 * hash) + getSigneridentitiesList().hashCode();
       }
       if (getSignaturesCount() > 0) {
         hash = (37 * hash) + SIGNATURES_FIELD_NUMBER;
@@ -12858,7 +12943,7 @@ public final class ByzCoinProto {
           getSpawnFieldBuilder();
           getInvokeFieldBuilder();
           getDeleteFieldBuilder();
-          getSignaturesFieldBuilder();
+          getSigneridentitiesFieldBuilder();
         }
       }
       @java.lang.Override
@@ -12886,12 +12971,14 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000008);
         signercounter_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000010);
-        if (signaturesBuilder_ == null) {
-          signatures_ = java.util.Collections.emptyList();
+        if (signeridentitiesBuilder_ == null) {
+          signeridentities_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000020);
         } else {
-          signaturesBuilder_.clear();
+          signeridentitiesBuilder_.clear();
         }
+        signatures_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -12953,15 +13040,20 @@ public final class ByzCoinProto {
           bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.signercounter_ = signercounter_;
-        if (signaturesBuilder_ == null) {
+        if (signeridentitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000020) == 0x00000020)) {
-            signatures_ = java.util.Collections.unmodifiableList(signatures_);
+            signeridentities_ = java.util.Collections.unmodifiableList(signeridentities_);
             bitField0_ = (bitField0_ & ~0x00000020);
           }
-          result.signatures_ = signatures_;
+          result.signeridentities_ = signeridentities_;
         } else {
-          result.signatures_ = signaturesBuilder_.build();
+          result.signeridentities_ = signeridentitiesBuilder_.build();
         }
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          signatures_ = java.util.Collections.unmodifiableList(signatures_);
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.signatures_ = signatures_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13033,31 +13125,41 @@ public final class ByzCoinProto {
           }
           onChanged();
         }
-        if (signaturesBuilder_ == null) {
-          if (!other.signatures_.isEmpty()) {
-            if (signatures_.isEmpty()) {
-              signatures_ = other.signatures_;
+        if (signeridentitiesBuilder_ == null) {
+          if (!other.signeridentities_.isEmpty()) {
+            if (signeridentities_.isEmpty()) {
+              signeridentities_ = other.signeridentities_;
               bitField0_ = (bitField0_ & ~0x00000020);
             } else {
-              ensureSignaturesIsMutable();
-              signatures_.addAll(other.signatures_);
+              ensureSigneridentitiesIsMutable();
+              signeridentities_.addAll(other.signeridentities_);
             }
             onChanged();
           }
         } else {
-          if (!other.signatures_.isEmpty()) {
-            if (signaturesBuilder_.isEmpty()) {
-              signaturesBuilder_.dispose();
-              signaturesBuilder_ = null;
-              signatures_ = other.signatures_;
+          if (!other.signeridentities_.isEmpty()) {
+            if (signeridentitiesBuilder_.isEmpty()) {
+              signeridentitiesBuilder_.dispose();
+              signeridentitiesBuilder_ = null;
+              signeridentities_ = other.signeridentities_;
               bitField0_ = (bitField0_ & ~0x00000020);
-              signaturesBuilder_ = 
+              signeridentitiesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getSignaturesFieldBuilder() : null;
+                   getSigneridentitiesFieldBuilder() : null;
             } else {
-              signaturesBuilder_.addAllMessages(other.signatures_);
+              signeridentitiesBuilder_.addAllMessages(other.signeridentities_);
             }
           }
+        }
+        if (!other.signatures_.isEmpty()) {
+          if (signatures_.isEmpty()) {
+            signatures_ = other.signatures_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureSignaturesIsMutable();
+            signatures_.addAll(other.signatures_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -13084,8 +13186,8 @@ public final class ByzCoinProto {
             return false;
           }
         }
-        for (int i = 0; i < getSignaturesCount(); i++) {
-          if (!getSignatures(i).isInitialized()) {
+        for (int i = 0; i < getSigneridentitiesCount(); i++) {
+          if (!getSigneridentities(i).isInitialized()) {
             return false;
           }
         }
@@ -13744,334 +13846,423 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> signatures_ =
+      private java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> signeridentities_ =
         java.util.Collections.emptyList();
-      private void ensureSignaturesIsMutable() {
+      private void ensureSigneridentitiesIsMutable() {
         if (!((bitField0_ & 0x00000020) == 0x00000020)) {
-          signatures_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Signature>(signatures_);
+          signeridentities_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Identity>(signeridentities_);
           bitField0_ |= 0x00000020;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> signaturesBuilder_;
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> signeridentitiesBuilder_;
 
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature> getSignaturesList() {
-        if (signaturesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(signatures_);
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity> getSigneridentitiesList() {
+        if (signeridentitiesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(signeridentities_);
         } else {
-          return signaturesBuilder_.getMessageList();
+          return signeridentitiesBuilder_.getMessageList();
         }
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public int getSignaturesCount() {
-        if (signaturesBuilder_ == null) {
-          return signatures_.size();
+      public int getSigneridentitiesCount() {
+        if (signeridentitiesBuilder_ == null) {
+          return signeridentities_.size();
         } else {
-          return signaturesBuilder_.getCount();
+          return signeridentitiesBuilder_.getCount();
         }
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public ch.epfl.dedis.lib.proto.DarcProto.Signature getSignatures(int index) {
-        if (signaturesBuilder_ == null) {
-          return signatures_.get(index);
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity getSigneridentities(int index) {
+        if (signeridentitiesBuilder_ == null) {
+          return signeridentities_.get(index);
         } else {
-          return signaturesBuilder_.getMessage(index);
+          return signeridentitiesBuilder_.getMessage(index);
         }
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder setSignatures(
-          int index, ch.epfl.dedis.lib.proto.DarcProto.Signature value) {
-        if (signaturesBuilder_ == null) {
+      public Builder setSigneridentities(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (signeridentitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureSignaturesIsMutable();
-          signatures_.set(index, value);
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.set(index, value);
           onChanged();
         } else {
-          signaturesBuilder_.setMessage(index, value);
+          signeridentitiesBuilder_.setMessage(index, value);
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder setSignatures(
-          int index, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder builderForValue) {
-        if (signaturesBuilder_ == null) {
-          ensureSignaturesIsMutable();
-          signatures_.set(index, builderForValue.build());
+      public Builder setSigneridentities(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder builderForValue) {
+        if (signeridentitiesBuilder_ == null) {
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.set(index, builderForValue.build());
           onChanged();
         } else {
-          signaturesBuilder_.setMessage(index, builderForValue.build());
+          signeridentitiesBuilder_.setMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder addSignatures(ch.epfl.dedis.lib.proto.DarcProto.Signature value) {
-        if (signaturesBuilder_ == null) {
+      public Builder addSigneridentities(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (signeridentitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureSignaturesIsMutable();
-          signatures_.add(value);
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.add(value);
           onChanged();
         } else {
-          signaturesBuilder_.addMessage(value);
+          signeridentitiesBuilder_.addMessage(value);
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder addSignatures(
-          int index, ch.epfl.dedis.lib.proto.DarcProto.Signature value) {
-        if (signaturesBuilder_ == null) {
+      public Builder addSigneridentities(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (signeridentitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureSignaturesIsMutable();
-          signatures_.add(index, value);
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.add(index, value);
           onChanged();
         } else {
-          signaturesBuilder_.addMessage(index, value);
+          signeridentitiesBuilder_.addMessage(index, value);
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder addSignatures(
-          ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder builderForValue) {
-        if (signaturesBuilder_ == null) {
-          ensureSignaturesIsMutable();
-          signatures_.add(builderForValue.build());
+      public Builder addSigneridentities(
+          ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder builderForValue) {
+        if (signeridentitiesBuilder_ == null) {
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.add(builderForValue.build());
           onChanged();
         } else {
-          signaturesBuilder_.addMessage(builderForValue.build());
+          signeridentitiesBuilder_.addMessage(builderForValue.build());
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder addSignatures(
-          int index, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder builderForValue) {
-        if (signaturesBuilder_ == null) {
-          ensureSignaturesIsMutable();
-          signatures_.add(index, builderForValue.build());
+      public Builder addSigneridentities(
+          int index, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder builderForValue) {
+        if (signeridentitiesBuilder_ == null) {
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.add(index, builderForValue.build());
           onChanged();
         } else {
-          signaturesBuilder_.addMessage(index, builderForValue.build());
+          signeridentitiesBuilder_.addMessage(index, builderForValue.build());
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder addAllSignatures(
-          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.DarcProto.Signature> values) {
-        if (signaturesBuilder_ == null) {
-          ensureSignaturesIsMutable();
+      public Builder addAllSigneridentities(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.DarcProto.Identity> values) {
+        if (signeridentitiesBuilder_ == null) {
+          ensureSigneridentitiesIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, signatures_);
+              values, signeridentities_);
           onChanged();
         } else {
-          signaturesBuilder_.addAllMessages(values);
+          signeridentitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder clearSignatures() {
-        if (signaturesBuilder_ == null) {
-          signatures_ = java.util.Collections.emptyList();
+      public Builder clearSigneridentities() {
+        if (signeridentitiesBuilder_ == null) {
+          signeridentities_ = java.util.Collections.emptyList();
           bitField0_ = (bitField0_ & ~0x00000020);
           onChanged();
         } else {
-          signaturesBuilder_.clear();
+          signeridentitiesBuilder_.clear();
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public Builder removeSignatures(int index) {
-        if (signaturesBuilder_ == null) {
-          ensureSignaturesIsMutable();
-          signatures_.remove(index);
+      public Builder removeSigneridentities(int index) {
+        if (signeridentitiesBuilder_ == null) {
+          ensureSigneridentitiesIsMutable();
+          signeridentities_.remove(index);
           onChanged();
         } else {
-          signaturesBuilder_.remove(index);
+          signeridentitiesBuilder_.remove(index);
         }
         return this;
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder getSignaturesBuilder(
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder getSigneridentitiesBuilder(
           int index) {
-        return getSignaturesFieldBuilder().getBuilder(index);
+        return getSigneridentitiesFieldBuilder().getBuilder(index);
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignaturesOrBuilder(
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getSigneridentitiesOrBuilder(
           int index) {
-        if (signaturesBuilder_ == null) {
-          return signatures_.get(index);  } else {
-          return signaturesBuilder_.getMessageOrBuilder(index);
+        if (signeridentitiesBuilder_ == null) {
+          return signeridentities_.get(index);  } else {
+          return signeridentitiesBuilder_.getMessageOrBuilder(index);
         }
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
-           getSignaturesOrBuilderList() {
-        if (signaturesBuilder_ != null) {
-          return signaturesBuilder_.getMessageOrBuilderList();
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+           getSigneridentitiesOrBuilderList() {
+        if (signeridentitiesBuilder_ != null) {
+          return signeridentitiesBuilder_.getMessageOrBuilderList();
         } else {
-          return java.util.Collections.unmodifiableList(signatures_);
+          return java.util.Collections.unmodifiableList(signeridentities_);
         }
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder addSignaturesBuilder() {
-        return getSignaturesFieldBuilder().addBuilder(
-            ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance());
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder addSigneridentitiesBuilder() {
+        return getSigneridentitiesFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance());
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder addSignaturesBuilder(
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder addSigneridentitiesBuilder(
           int index) {
-        return getSignaturesFieldBuilder().addBuilder(
-            index, ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance());
+        return getSigneridentitiesFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance());
       }
       /**
        * <pre>
-       * Signatures that are verified using the Darc controlling access to
-       * the instance.
+       * SignerIdentities are the identities of all the signers.
        * </pre>
        *
-       * <code>repeated .darc.Signature signatures = 6;</code>
+       * <code>repeated .darc.Identity signeridentities = 6;</code>
        */
-      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder> 
-           getSignaturesBuilderList() {
-        return getSignaturesFieldBuilder().getBuilderList();
+      public java.util.List<ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder> 
+           getSigneridentitiesBuilderList() {
+        return getSigneridentitiesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
-          getSignaturesFieldBuilder() {
-        if (signaturesBuilder_ == null) {
-          signaturesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>(
-                  signatures_,
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          getSigneridentitiesFieldBuilder() {
+        if (signeridentitiesBuilder_ == null) {
+          signeridentitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
+                  signeridentities_,
                   ((bitField0_ & 0x00000020) == 0x00000020),
                   getParentForChildren(),
                   isClean());
-          signatures_ = null;
+          signeridentities_ = null;
         }
-        return signaturesBuilder_;
+        return signeridentitiesBuilder_;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> signatures_ = java.util.Collections.emptyList();
+      private void ensureSignaturesIsMutable() {
+        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+          signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>(signatures_);
+          bitField0_ |= 0x00000040;
+         }
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getSignaturesList() {
+        return java.util.Collections.unmodifiableList(signatures_);
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public int getSignaturesCount() {
+        return signatures_.size();
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public com.google.protobuf.ByteString getSignatures(int index) {
+        return signatures_.get(index);
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public Builder setSignatures(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSignaturesIsMutable();
+        signatures_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public Builder addSignatures(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSignaturesIsMutable();
+        signatures_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public Builder addAllSignatures(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureSignaturesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, signatures_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Signatures that are verified using the Darc controlling access to
+       * the instance.
+       * </pre>
+       *
+       * <code>repeated bytes signatures = 7;</code>
+       */
+      public Builder clearSignatures() {
+        signatures_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -32752,53 +32943,53 @@ public final class ByzCoinProto {
       "tids\030\004 \003(\t\"y\n\005Proof\022#\n\016inclusionproof\030\001 " +
       "\002(\0132\013.trie.Proof\022$\n\006latest\030\002 \002(\0132\024.skipc" +
       "hain.SkipBlock\022%\n\005links\030\003 \003(\0132\026.skipchai" +
-      "n.ForwardLink\"\302\001\n\013Instruction\022\022\n\ninstanc" +
+      "n.ForwardLink\"\333\001\n\013Instruction\022\022\n\ninstanc" +
       "eid\030\001 \002(\014\022\035\n\005spawn\030\002 \001(\0132\016.byzcoin.Spawn" +
       "\022\037\n\006invoke\030\003 \001(\0132\017.byzcoin.Invoke\022\037\n\006del" +
       "ete\030\004 \001(\0132\017.byzcoin.Delete\022\031\n\rsignercoun" +
-      "ter\030\005 \003(\004B\002\020\001\022#\n\nsignatures\030\006 \003(\0132\017.darc" +
-      ".Signature\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022" +
-      "\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n\006Invo" +
-      "ke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022" +
-      "\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n\006Dele" +
-      "te\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004na" +
-      "me\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTransac" +
-      "tion\022*\n\014instructions\030\001 \003(\0132\024.byzcoin.Ins" +
-      "truction\"S\n\010TxResult\0225\n\021clienttransactio" +
-      "n\030\001 \002(\0132\032.byzcoin.ClientTransaction\022\020\n\010a" +
-      "ccepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013stateact" +
-      "ion\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontrac" +
-      "tid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014" +
-      "\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022" +
-      "\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002id" +
-      "\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001 \001" +
-      "(\0132\024.skipchain.SkipBlock\"A\n\rDownloadStat" +
-      "e\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006l" +
-      "ength\030\003 \002(\021\"N\n\025DownloadStateResponse\022&\n\t" +
-      "keyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValue\022\r\n\005" +
-      "nonce\030\002 \002(\004\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r" +
-      "\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013stat" +
-      "eaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\014\022\r\n\005val" +
-      "ue\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(" +
-      "\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 \003(" +
-      "\t\022\023\n\013skipchainid\030\002 \002(\014\"1\n\031GetSignerCount" +
-      "ersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\"N\n\022Get" +
-      "InstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\n" +
-      "instanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026Get" +
-      "LastInstanceVersion\022\023\n\013skipchainid\030\001 \002(\014" +
-      "\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetInstanceVersi" +
-      "onResponse\022)\n\013statechange\030\001 \002(\0132\024.byzcoi" +
-      "n.StateChange\022\022\n\nblockindex\030\002 \002(\021\"@\n\025Get" +
-      "AllInstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022" +
-      "\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllInstanceVer" +
-      "sionResponse\0229\n\014statechanges\030\001 \003(\0132#.byz" +
-      "coin.GetInstanceVersionResponse\"T\n\030Check" +
-      "StateChangeValidity\022\023\n\013skipchainid\030\001 \002(\014" +
-      "\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n" +
-      " CheckStateChangeValidityResponse\022*\n\014sta" +
-      "techanges\030\001 \003(\0132\024.byzcoin.StateChange\022\017\n" +
-      "\007blockid\030\002 \002(\014B\'\n\027ch.epfl.dedis.lib.prot" +
-      "oB\014ByzCoinProto"
+      "ter\030\005 \003(\004B\002\020\001\022(\n\020signeridentities\030\006 \003(\0132" +
+      "\016.darc.Identity\022\022\n\nsignatures\030\007 \003(\014\"<\n\005S" +
+      "pawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021" +
+      ".byzcoin.Argument\"N\n\006Invoke\022\022\n\ncontracti" +
+      "d\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022\037\n\004args\030\003 \003(\0132\021" +
+      ".byzcoin.Argument\"\034\n\006Delete\022\022\n\ncontracti" +
+      "d\030\001 \002(\t\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005val" +
+      "ue\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014instruc" +
+      "tions\030\001 \003(\0132\024.byzcoin.Instruction\"S\n\010TxR" +
+      "esult\0225\n\021clienttransaction\030\001 \002(\0132\032.byzco" +
+      "in.ClientTransaction\022\020\n\010accepted\030\002 \002(\010\"z" +
+      "\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\nin" +
+      "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005va" +
+      "lue\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030\006 \002" +
+      "(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"" +
+      "\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021Strea" +
+      "mingResponse\022#\n\005block\030\001 \001(\0132\024.skipchain." +
+      "SkipBlock\"A\n\rDownloadState\022\021\n\tbyzcoinid\030" +
+      "\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"N\n\025" +
+      "DownloadStateResponse\022&\n\tkeyvalues\030\001 \003(\013" +
+      "2\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\"(\n\n" +
+      "DBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j" +
+      "\n\017StateChangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022" +
+      "\n\ncontractid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017\n\007ver" +
+      "sion\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerC" +
+      "ounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchaini" +
+      "d\030\002 \002(\014\"1\n\031GetSignerCountersResponse\022\024\n\010" +
+      "counters\030\001 \003(\004B\002\020\001\"N\n\022GetInstanceVersion" +
+      "\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(" +
+      "\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastInstanceVer" +
+      "sion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030" +
+      "\002 \002(\014\"[\n\032GetInstanceVersionResponse\022)\n\013s" +
+      "tatechange\030\001 \002(\0132\024.byzcoin.StateChange\022\022" +
+      "\n\nblockindex\030\002 \002(\021\"@\n\025GetAllInstanceVers" +
+      "ion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002" +
+      " \002(\014\"Z\n\035GetAllInstanceVersionResponse\0229\n" +
+      "\014statechanges\030\001 \003(\0132#.byzcoin.GetInstanc" +
+      "eVersionResponse\"T\n\030CheckStateChangeVali" +
+      "dity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030" +
+      "\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckStateChan" +
+      "geValidityResponse\022*\n\014statechanges\030\001 \003(\013" +
+      "2\024.byzcoin.StateChange\022\017\n\007blockid\030\002 \002(\014B" +
+      "\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -32893,7 +33084,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_Instruction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Instruction_descriptor,
-        new java.lang.String[] { "Instanceid", "Spawn", "Invoke", "Delete", "Signercounter", "Signatures", });
+        new java.lang.String[] { "Instanceid", "Spawn", "Invoke", "Delete", "Signercounter", "Signeridentities", "Signatures", });
     internal_static_byzcoin_Spawn_descriptor =
       getDescriptor().getMessageTypes().get(13);
     internal_static_byzcoin_Spawn_fieldAccessorTable = new

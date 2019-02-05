@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LTSInstance {
     public static String ContractId = "longTermSecret";
@@ -102,7 +103,10 @@ public class LTSInstance {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
         Spawn sp = new Spawn(LTSInstance.ContractId, args);
-        Instruction inst = new Instruction(new InstanceId(darcID.getId()), signerCtrs, sp);
+        Instruction inst = new Instruction(new InstanceId(darcID.getId()),
+                signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                signerCtrs,
+                sp);
         ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
         ctx.signWith(signers);
         return ctx;
@@ -113,7 +117,10 @@ public class LTSInstance {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
         Invoke invoke = new Invoke(ContractId, InvokeCommand, args);
-        Instruction inst = new Instruction(instanceId, signerCtrs, invoke);
+        Instruction inst = new Instruction(instanceId,
+                signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                signerCtrs,
+                invoke);
         ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
         ctx.signWith(signers);
         return ctx;

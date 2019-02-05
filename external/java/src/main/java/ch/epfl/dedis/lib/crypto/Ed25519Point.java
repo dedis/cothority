@@ -22,7 +22,7 @@ public class Ed25519Point implements Point {
 
     private GroupElement element;
 
-    Ed25519Point(byte[] b) throws CothorityCryptoException {
+    public Ed25519Point(byte[] b) throws CothorityCryptoException {
         if (b.length != 40 && b.length != 32) {
             throw new CothorityCryptoException("Wrong Edward25519 format");
         }
@@ -33,15 +33,15 @@ public class Ed25519Point implements Point {
         element = new GroupElement(Ed25519.curve, b);
     }
 
-    Ed25519Point(String str) throws CothorityCryptoException {
+    public Ed25519Point(String str) throws CothorityCryptoException {
         this(Hex.parseHexBinary(str));
     }
 
-    Ed25519Point(Point p) {
+    public Ed25519Point(Point p) {
         this(convert(p).element);
     }
 
-    Ed25519Point(GroupElement e) {
+    public Ed25519Point(GroupElement e) {
         element = e;
     }
 

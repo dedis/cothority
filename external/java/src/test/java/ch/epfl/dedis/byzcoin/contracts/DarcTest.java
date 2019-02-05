@@ -58,7 +58,7 @@ class DarcTest {
         Darc newDarc = genesisDarc.partialCopy();
         newDarc.setRule(Darc.RuleSpawn, "all".getBytes());
 
-        Instruction instr = dc.evolveDarcInstruction(newDarc, counters.head()+1);
+        Instruction instr = dc.evolveDarcInstruction(newDarc, admin.getIdentity(), counters.head()+1);
         logger.info("DC is: {}", dc.getId());
 
         ClientTransaction ctx = new ClientTransaction(Arrays.asList(instr));

@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ReadInstance represents a contract created by the calypsoRead contract.
@@ -128,7 +129,10 @@ public class ReadInstance {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("read", read.toProto().toByteArray()));
         Spawn sp = new Spawn(ReadInstance.ContractId, args);
-        Instruction inst = new Instruction(writeInstance.getId(), consumerCtrs, sp);
+        Instruction inst = new Instruction(writeInstance.getId(),
+                consumers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                consumerCtrs,
+                sp);
         ClientTransaction ctx = new ClientTransaction(Arrays.asList(inst));
         ctx.signWith(consumers);
         return ctx;
@@ -141,7 +145,10 @@ public class ReadInstance {
         Argument arg = new Argument("read", rr.toProto().toByteArray());
 
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcID.getId()),
+                signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                signerCtrs,
+                spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         tx.signWith(signers);

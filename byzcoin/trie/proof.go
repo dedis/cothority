@@ -47,10 +47,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 		if !equal(bits[:i+1], p.Leaf.Prefix) {
 			return false, errors.New("invalid prefix in leaf node")
 		}
-		if !bytes.Equal(p.Leaf.Key, key) {
-			return false, nil
-		}
-		return true, nil
+		return bytes.Equal(p.Leaf.Key, key), nil
 	} else if bytes.Equal(expectedHash, p.Empty.hash(p.Nonce)) {
 		if !equal(bits[:i+1], p.Empty.Prefix) {
 			return false, errors.New("invalid prefix in empty node")

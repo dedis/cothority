@@ -31,4 +31,9 @@ public class Delete {
     public String getContractId() {
         return contractID;
     }
+
+    @Override
+    public String toString() {
+        return "contractID: " + this.contractID + ", argument: <hidden>";
+    }
 }
