@@ -88,7 +88,7 @@ public class Instruction {
      *
      * @return the InstanceID
      */
-    public InstanceId getInstId() {
+    public InstanceId getInstanceId() {
         return instId;
     }
 
