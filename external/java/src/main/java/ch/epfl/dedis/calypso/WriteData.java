@@ -107,7 +107,7 @@ public class WriteData {
      *                    see Encryption.java for details.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
+    private void encryptKey(Calypso.Write.Builder wr, CreateLTSReply lts, byte[] keyMaterial, DarcId darcBaseID) throws CothorityCryptoException {
         if (keyMaterial.length != Encryption.KEYMATERIAL_LEN) {
             throw new CothorityCryptoException("invalid keyMaterial length, got " + keyMaterial.length + " but it must be " + Encryption.KEYMATERIAL_LEN);
         }
@@ -135,7 +135,7 @@ public class WriteData {
             hash.update(Ubar.toBytes());
             hash.update(w.toBytes());
             hash.update(wBar.toBytes());
-            hash.update(darcId.getId());
+            hash.update(darcBaseID.getId());
             Scalar E = new Ed25519Scalar(hash.digest());
             wr.setE(E.toProto());
             Scalar F = s.add(E.mul(r));

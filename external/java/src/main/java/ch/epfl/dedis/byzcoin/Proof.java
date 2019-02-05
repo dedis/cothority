@@ -180,10 +180,10 @@ public class Proof {
     }
 
     /**
-     * @return the darcID defining the access rules to the instance.
+     * @return the Darc base ID defining the access rules to the instance.
      */
-    public DarcId getDarcID() {
-        return getValues().getDarcId();
+    public DarcId getDarcBaseID() {
+        return getValues().getDarcBaseId();
     }
 
     /**

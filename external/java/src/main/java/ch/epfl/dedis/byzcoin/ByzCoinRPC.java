@@ -576,11 +576,11 @@ public class ByzCoinRPC {
         ByzCoinRPC bc = new ByzCoinRPC();
         bc.config = new Config(proof.getValue());
 
-        Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
+        Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcBaseID().getId()));
         if (!proof2.contractIsType(SecureDarcInstance.ContractId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
         }
-        if (!proof2.exists(proof.getDarcID().getId())) {
+        if (!proof2.exists(proof.getDarcBaseID().getId())) {
             throw new CothorityNotFoundException("darc instance does not exist");
         }
         try {

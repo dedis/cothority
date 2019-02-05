@@ -34,16 +34,16 @@ public class WriteInstance {
      * Constructor for creating a new instance.
      *
      * @param calypso    The CalypsoRPC object which should be already running.
-     * @param darcId     The darc ID for which the signers belong.
+     * @param darcBaseID     The darc ID for which the signers belong.
      * @param signers    The list of signers that are authorised to create the instance.
      * @param signerCtrs a list of monotonically increasing counter for every signer
      * @param wr         The WriteData object, to be stored in the instance.
      * @throws CothorityException if something goes wrong
      */
-    public WriteInstance(CalypsoRPC calypso, DarcId darcId, List<Signer> signers, List<Long> signerCtrs, WriteData wr) throws CothorityException {
+    public WriteInstance(CalypsoRPC calypso, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs, WriteData wr) throws CothorityException {
         this.calypso = calypso;
         this.lts = calypso.getLTS();
-        InstanceId id = spawnCalypsoWrite(wr, darcId, signers, signerCtrs);
+        InstanceId id = spawnCalypsoWrite(wr, darcBaseID, signers, signerCtrs);
         instance = getInstance(id);
     }
 
@@ -79,7 +79,7 @@ public class WriteInstance {
     }
 
     public DarcId getDarcId() {
-        return instance.getDarcId();
+        return instance.getDarcBaseID();
     }
 
     /**
@@ -119,10 +119,10 @@ public class WriteInstance {
     /**
      * Create a spawn instruction with a spawnCalypsoWrite request and send it to the ledger.
      */
-    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         Argument arg = new Argument("write", req.toProto().toByteArray());
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcBaseID.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         tx.signWith(signers);

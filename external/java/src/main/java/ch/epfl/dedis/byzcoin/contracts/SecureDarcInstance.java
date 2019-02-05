@@ -39,14 +39,14 @@ public class SecureDarcInstance {
      * ByzCoin and then creating the instance from the existing darcInstance.
      *
      * @param bc            a running ByzCoin service
-     * @param spawnerDarcId the darcId of a darc with the rights to spawn new darcs
+     * @param spawnerBaseId the base ID of a darc with the rights to spawn new darcs
      * @param spawnerSigner the signer with the rights to spawn new darcs
      * @param signerCtr     the monotonically increasing counters for the spawnSigner
      * @param newDarc       the new darc to spawn
      * @throws CothorityException if something goes wrong
      */
-    public SecureDarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, Darc newDarc) throws CothorityException {
-        SecureDarcInstance spawner = SecureDarcInstance.fromByzCoin(bc, spawnerDarcId);
+    public SecureDarcInstance(ByzCoinRPC bc, DarcId spawnerBaseId, Signer spawnerSigner, Long signerCtr, Darc newDarc) throws CothorityException {
+        SecureDarcInstance spawner = SecureDarcInstance.fromByzCoin(bc, spawnerBaseId);
         SecureDarcInstance newDarcInst = spawner.spawnDarcAndWait(newDarc, spawnerSigner, signerCtr, 10);
         this.bc = bc;
         darc = newDarc;

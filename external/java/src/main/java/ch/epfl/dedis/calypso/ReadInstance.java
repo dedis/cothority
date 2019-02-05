@@ -137,11 +137,11 @@ public class ReadInstance {
     /**
      * Create a spawn instruction with a read request and send it to the ledger.
      */
-    private InstanceId read(ReadData rr, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    private InstanceId read(ReadData rr, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         Argument arg = new Argument("read", rr.toProto().toByteArray());
 
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcBaseID.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         tx.signWith(signers);

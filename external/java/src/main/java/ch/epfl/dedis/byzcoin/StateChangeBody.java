@@ -13,7 +13,7 @@ public class StateChangeBody {
     private byte[] contractID;
     private byte[] value;
     private long version;
-    private DarcId darcId;
+    private DarcId darcBaseId;
 
     /**
      * Construct a StateChangeBody object from its protobuf representation.
@@ -24,9 +24,9 @@ public class StateChangeBody {
         value = proto.getValue().toByteArray();
         version = proto.getVersion();
         if (proto.getDarcid().toByteArray().length != Sha256id.length) {
-            throw new CothorityCryptoException("darc ID is empty");
+            throw new CothorityCryptoException("darc ID has the wrong length");
         }
-        darcId = new DarcId(proto.getDarcid());
+        darcBaseId = new DarcId(proto.getDarcid());
     }
 
     /**
@@ -58,9 +58,9 @@ public class StateChangeBody {
     }
 
     /**
-     * Getter for the Darc ID.
+     * Getter for the Darc base ID.
      */
-    public DarcId getDarcId() {
-        return darcId;
+    public DarcId getDarcBaseId() {
+        return darcBaseId;
     }
 }
