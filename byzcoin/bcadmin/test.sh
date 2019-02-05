@@ -30,7 +30,7 @@ testCoin(){
   testOK runBA create public.toml --interval .5s
   bc=config/bc*cfg
   key=config/key*cfg
-  testOK runBA mint $bc $key 0000000000000000000000000000000000000000000000000000000000000000 10000
+  testOK runBA mint $bc $key 00 10000
 }
 
 testRoster(){

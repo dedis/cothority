@@ -62,6 +62,7 @@ var cmds = cli.Commands{
 		},
 		Action: create,
 	},
+
 	{
 		Name:      "show",
 		Usage:     "show the config, contact ByzCoin to get Genesis Darc ID",
@@ -76,6 +77,7 @@ var cmds = cli.Commands{
 		},
 		Action: show,
 	},
+
 	{
 		Name:    "debug",
 		Usage:   "interact with byzcoin for debugging",
@@ -101,12 +103,14 @@ var cmds = cli.Commands{
 			},
 		},
 	},
+
 	{
 		Name:      "mint",
 		Usage:     "mint coins on account",
 		ArgsUsage: "bc-xxx.cfg key-xxx.cfg public-key",
 		Action:    mint,
 	},
+
 	{
 		Name:    "roster",
 		Usage:   "change the roster of the ByzCoin",
@@ -132,6 +136,7 @@ var cmds = cli.Commands{
 			},
 		},
 	},
+
 	{
 		Name:      "config",
 		Usage:     "update the config",
@@ -148,6 +153,7 @@ var cmds = cli.Commands{
 		},
 		Action: config,
 	},
+
 	{
 		Name:    "add",
 		Usage:   "add a rule and signer to the base darc",
@@ -173,6 +179,7 @@ var cmds = cli.Commands{
 		},
 		Action: add,
 	},
+
 	{
 		Name:    "key",
 		Usage:   "generates a new keypair and prints the public key in the stdout",
@@ -185,6 +192,7 @@ var cmds = cli.Commands{
 		},
 		Action: key,
 	},
+
 	{
 		Name: "darc",
 		Usage: "tool used to manage darcs: it can be used with multiple subcommands (add, show, rule)\n" +
@@ -241,6 +249,7 @@ var cmds = cli.Commands{
 		},
 		Action: darcCli,
 	},
+
 	{
 		Name:    "qr",
 		Usage:   "generates a QRCode containing the description of the BC Config",
@@ -441,6 +450,10 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *da
 	gr, err := app.ReadGroupDescToml(grf)
 	if err != nil {
 		err = errors.New("couldn't load public.toml: " + err.Error())
+		return
+	}
+	if len(gr.Roster.List) == 0 {
+		err = errors.New("missing roster")
 		return
 	}
 	pub = gr.Roster.List[0]
@@ -654,11 +667,6 @@ func rosterAdd(c *cli.Context) error {
 	chainConfig.Roster = *old.Concat(pub)
 	log.Lvl2("New roster is:", chainConfig.Roster.List)
 
-	// Do it twice to make sure the new roster is active - there is an issue ;)
-	err = updateConfig(cl, signer, chainConfig)
-	if err != nil {
-		return err
-	}
 	err = updateConfig(cl, signer, chainConfig)
 	if err != nil {
 		return err
@@ -686,11 +694,6 @@ func rosterDel(c *cli.Context) error {
 	chainConfig.Roster = *onet.NewRoster(list)
 	log.Lvl2("New roster is:", chainConfig.Roster.List)
 
-	// Do it twice to make sure the new roster is active - there is an issue ;)
-	err = updateConfig(cl, signer, chainConfig)
-	if err != nil {
-		return err
-	}
 	err = updateConfig(cl, signer, chainConfig)
 	if err != nil {
 		return err

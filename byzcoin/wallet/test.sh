@@ -7,7 +7,7 @@ DBG_BA=2
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=3
 
-. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+. "../../libtest.sh"
 
 main(){
   startTest

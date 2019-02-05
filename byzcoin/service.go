@@ -11,6 +11,8 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"math"
+	"net"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
@@ -29,7 +31,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
-	uuid "gopkg.in/satori/go.uuid.v1"
+	"gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
@@ -639,6 +641,25 @@ type leafNode struct {
 	Prefix []bool
 	Key    []byte
 	Value  []byte
+}
+
+// ProcessClientRequest implements onet.Service. We override the version
+// we normally get from embedding onet.ServiceProcessor in order to
+// hook it and get a look at the http.Request.
+func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
+	if path == "Debug" {
+		h, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err != nil {
+			return nil, nil, err
+		}
+		ip := net.ParseIP(h)
+
+		if !ip.IsLoopback() {
+			return nil, nil, errors.New("the 'debug'-endpoint is only allowed on loopback")
+		}
+	}
+
+	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
