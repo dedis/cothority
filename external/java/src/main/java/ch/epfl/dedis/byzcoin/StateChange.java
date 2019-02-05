@@ -14,7 +14,7 @@ public class StateChange {
     private StateAction stateAction;
     private InstanceId instanceId;
     private String contractId;
-    private DarcId darcId;
+    private DarcId darcBaseID;
     private ByteString value;
     private long version;
 
@@ -34,7 +34,7 @@ public class StateChange {
         }
 
         if (!sc.getDarcid().isEmpty()) {
-            darcId = new DarcId(sc.getDarcid());
+            darcBaseID = new DarcId(sc.getDarcid());
         }
 
         stateAction = StateAction.fromInteger(sc.getStateaction());
@@ -68,8 +68,8 @@ public class StateChange {
      * Getter for the darc ID
      * @return the darc ID
      */
-    public DarcId getDarcId() {
-        return darcId;
+    public DarcId getDarcBaseID() {
+        return darcBaseID;
     }
 
     /**

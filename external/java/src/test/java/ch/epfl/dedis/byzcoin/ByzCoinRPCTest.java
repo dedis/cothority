@@ -384,7 +384,7 @@ public class ByzCoinRPCTest {
         assertEquals(n-1, scs.get(n-1).getVersion());
         assertEquals("secure_darc", scs.get(0).getContractId());
         assertEquals(bc.getGenesisDarcInstance().getInstance().getId(), scs.get(0).getInstanceId());
-        assertEquals(scs.get(0).getDarcId(), scs.get(1).getDarcId());
+        assertEquals(scs.get(0).getDarcBaseID(), scs.get(1).getDarcBaseID());
 
         boolean isValid = bc.checkStateChangeValidity(sc);
         assertTrue(isValid);

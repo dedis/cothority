@@ -58,14 +58,14 @@ public class EventLogInstance {
      * time. This constructor expects the byzcoin RPC to be initialised with a darc that contains "spawn:eventlog".
      *
      * @param bc         the byzcoin RPC
-     * @param darcId     the darc ID that has the "spawn:eventlog" permission
+     * @param darcBaseID     the darc ID that has the "spawn:eventlog" permission
      * @param signers    a list of signers that has the "spawn:eventlog" permission
      * @param signerCtrs a list of monotonically increasing counter for every signer
      * @throws CothorityException if something goes wrong
      */
-    public EventLogInstance(ByzCoinRPC bc, DarcId darcId, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    public EventLogInstance(ByzCoinRPC bc, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         this.bc = bc;
-        InstanceId id = this.initEventlogInstance(darcId, signers, signerCtrs);
+        InstanceId id = this.initEventlogInstance(darcBaseID, signers, signerCtrs);
 
         // wait for byzcoin to commit the transaction in block
         try {
@@ -193,12 +193,12 @@ public class EventLogInstance {
         return new EventLogInstance(bc, id);
     }
 
-    private InstanceId initEventlogInstance(DarcId darcId, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    private InstanceId initEventlogInstance(DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         if (this.instance != null) {
             throw new CothorityException("already have a contract");
         }
         Spawn spawn = new Spawn(ContractId, new ArrayList<>());
-        Instruction instr = new Instruction(new InstanceId(darcId.getId()),
+        Instruction instr = new Instruction(new InstanceId(darcBaseID.getId()),
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 spawn);
