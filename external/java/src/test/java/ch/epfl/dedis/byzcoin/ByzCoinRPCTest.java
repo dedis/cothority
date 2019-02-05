@@ -382,7 +382,7 @@ public class ByzCoinRPCTest {
 
         assertEquals(n, scs.size());
         assertEquals(n-1, scs.get(n-1).getVersion());
-        assertEquals("secure_darc", scs.get(0).getContractId());
+        assertEquals("darc", scs.get(0).getContractId());
         assertEquals(bc.getGenesisDarcInstance().getInstance().getId(), scs.get(0).getInstanceId());
         assertEquals(scs.get(0).getDarcId(), scs.get(1).getDarcId());
 

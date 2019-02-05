@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class SecureDarcInstance {
     // ContractId is how the contract for a darc is represented.
-    public static String ContractId = "secure_darc";
+    public static String ContractId = "darc";
 
     private Instance instance;
     private Darc darc;
@@ -91,7 +91,7 @@ public class SecureDarcInstance {
 
     /**
      * Creates an instruction to evolve the darc in byzcoin. The signer must have its identity in the current
-     * darc as "invoke:secure_darc:evolve" rule.
+     * darc as "invoke:darc:evolve" rule.
      * TODO: allow for evolution if the expression has more than one identity.
      *
      * @param newDarc   the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set
@@ -106,7 +106,7 @@ public class SecureDarcInstance {
 
     /**
      * Creates an instruction to (unrestricted) evolve the darc in byzcoin. The signer must have its identity in the current
-     * darc as "invoke:secure_darc.evolve" or "invoke:secure_darc.evolve_unrestricted" rule, depending on the unrestricted flag.
+     * darc as "invoke:darc.evolve" or "invoke:darc.evolve_unrestricted" rule, depending on the unrestricted flag.
      * TODO: allow for evolution if the expression has more than one identity.
      *
      * @param newDarc      the darc to replace the old darc, the version, prevID and baseID attributes are ignored and set

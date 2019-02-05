@@ -190,7 +190,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	id := d.GetBaseID()
 	sc = []StateChange{
 		NewStateChange(Create, ConfigInstanceID, ContractConfigID, configBuf, id),
-		NewStateChange(Create, NewInstanceID(id), ContractSecureDarcID, darcBuf, id),
+		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 	}
 	return
 }
@@ -251,7 +251,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 		sc = []StateChange{
 			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
-			NewStateChange(Update, NewInstanceID(darcID), ContractSecureDarcID, genesisBuf, darcID),
+			NewStateChange(Update, NewInstanceID(darcID), ContractDarcID, genesisBuf, darcID),
 		}
 		return
 	case "view_change":

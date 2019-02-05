@@ -3,10 +3,11 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"math"
 	"time"
+
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
@@ -170,7 +171,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	if err != nil {
 		return nil, err
 	}
-	if contract != ContractSecureDarcID {
+	if contract != ContractDarcID {
 		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -361,7 +362,7 @@ func DebugRemove(addr network.Address, priv kyber.Scalar, byzcoinID skipchain.Sk
 
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis Darc and block. It will contain rules for spawning and evolving the
-// secure_darc contract.
+// darc contract.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
@@ -373,13 +374,17 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		ownerIDs[i] = o.String()
 	}
 	ownerExpr := expression.InitAndExpr(ownerIDs...)
-	if err := rs.AddRule("spawn:"+ContractSecureDarcID, ownerExpr); err != nil {
+	if err := rs.AddRule("invoke:"+ContractConfigID+"."+"update_config", ownerExpr); err != nil {
+		log.Error(err)
 		return nil, err
 	}
-	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
+	if err := rs.AddRule("spawn:"+ContractDarcID, ownerExpr); err != nil {
 		return nil, err
 	}
-	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
+	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
 		return nil, err
 	}
 	if err := rs.AddRule("_sign", ownerExpr); err != nil {
@@ -408,7 +413,7 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		Roster:          *r,
 		GenesisDarc:     *d,
 		BlockInterval:   defaultInterval,
-		DarcContractIDs: []string{ContractSecureDarcID},
+		DarcContractIDs: []string{ContractDarcID},
 	}
 	return &m, nil
 }

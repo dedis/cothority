@@ -8,8 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"math"
 	"net"
 	"net/http"
@@ -17,6 +15,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -31,7 +32,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
-	"gopkg.in/satori/go.uuid.v1"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
@@ -2438,7 +2439,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetInstanceVersion,
 		s.GetLastInstanceVersion,
 		s.GetAllInstanceVersion,
-		s.CheckStateChangeValidity)
+		s.CheckStateChangeValidity,
+		s.Debug,
+		s.DebugRemove)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
@@ -2449,7 +2452,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
-	s.registerContract(ContractSecureDarcID, s.contractSecureDarcFromBytes)
+	s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
 
 	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {

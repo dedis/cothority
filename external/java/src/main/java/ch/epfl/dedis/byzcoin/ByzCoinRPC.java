@@ -51,7 +51,7 @@ public class ByzCoinRPC {
 
     private Subscription subscription;
     public static final int currentVersion = 1;
-    final String[] darcContractIDs = new String[]{"secure_darc"};
+    final String[] darcContractIDs = new String[]{"darc"};
 
     private static final Logger logger = LoggerFactory.getLogger(ByzCoinRPC.class);
 
