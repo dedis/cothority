@@ -64,7 +64,7 @@ class ReadInstanceTest {
         w = new WriteInstance(calypso, genesisDarc.getId(),
                 Arrays.asList(admin), Collections.singletonList(2L),
                 doc.getWriteData(calypso.getLTS()));
-        assertTrue(calypso.getProof(w.getInstance().getId()).matches(w.getInstance().getId().getId()));
+        assertTrue(calypso.getProof(w.getInstance().getId()).matches());
 
         // ephemeral key cannot be the same as one of the signers
         assertThrows(CothorityCryptoException.class, () -> {
@@ -72,13 +72,13 @@ class ReadInstanceTest {
         });
         Ed25519Pair ephemeralPair = new Ed25519Pair();
         r = new ReadInstance(calypso, w, Arrays.asList(admin), Collections.singletonList(3L), ephemeralPair.point);
-        assertTrue(calypso.getProof(r.getInstance().getId()).matches(r.getInstance().getId().getId()));
+        assertTrue(calypso.getProof(r.getInstance().getId()).matches());
     }
 
     @Test
     void testCopyReader() throws Exception {
         ReadInstance r2 = ReadInstance.fromByzCoin(calypso, r.getInstance().getId());
-        assertTrue(calypso.getProof(r2.getInstance().getId()).matches(r2.getInstance().getId().getId()));
+        assertTrue(calypso.getProof(r2.getInstance().getId()).matches());
     }
 
     @Test

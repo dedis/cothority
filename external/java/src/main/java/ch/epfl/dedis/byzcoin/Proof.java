@@ -33,6 +33,8 @@ public class Proof {
     private final TrieProto.Proof proof;
     private final List<SkipchainProto.ForwardLink> links;
     private final SkipBlock latest;
+    private final byte[] key;
+    private final StateChangeBody body;
 
     /**
      * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
@@ -41,11 +43,20 @@ public class Proof {
      * @param scID is the skipchain ID
      * @throws CothorityCryptoException       if the verification of the forward links are wrong
      */
-    public Proof(ByzCoinProto.Proof p, SkipblockId scID) throws CothorityCryptoException {
-        proof = p.getInclusionproof();
-        latest = new SkipBlock(p.getLatest());
-        links = p.getLinksList();
+    public Proof(ByzCoinProto.Proof p, SkipblockId scID, InstanceId iid) throws CothorityCryptoException {
+        this.proof = p.getInclusionproof();
+        this.latest = new SkipBlock(p.getLatest());
+        this.links = p.getLinksList();
+        this.key = iid.getId();
         this.verify(scID);
+
+        StateChangeBody tmpBody;
+        try {
+            tmpBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
+        } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+            tmpBody = null;
+        }
+        this.body = tmpBody;
     }
 
     /**
@@ -151,11 +162,7 @@ public class Proof {
      * @return the list of values in the leaf node. Return null if the value cannot be parsed.
      */
     public StateChangeBody getValues() {
-        try {
-            return new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
-        } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
-            return null;
-        }
+        return this.body;
     }
 
     /**
@@ -202,14 +209,14 @@ public class Proof {
     }
 
     /**
-     * Check whether the key on the leaf exists.
+     * Check whether the key (Instance ID) exists.
      *
      * @return true if the proof has the key/value pair stored on the leaf, false if it
      * is a proof of absence or an error has occured.
      */
-    public boolean matches(byte[] key) {
+    public boolean matches() {
         try {
-            return this.exists(key);
+            return this.exists(this.key);
         } catch (CothorityCryptoException e) {
             return false;
         }

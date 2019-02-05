@@ -60,13 +60,13 @@ class WriteInstanceTest {
                 doc.getWriteData(calypso.getLTS()));
 
         Proof p = calypso.getProof(w.getInstance().getId());
-        assertTrue(p.matches(w.getInstance().getId().getId()));
+        assertTrue(p.matches());
     }
 
     @Test
     void testCopyWriter() throws Exception {
         WriteInstance w2 = WriteInstance.fromCalypso(calypso, w.getInstance().getId());
-        assertTrue(calypso.getProof(w2.getInstance().getId()).matches(w2.getInstance().getId().getId()));
+        assertTrue(calypso.getProof(w2.getInstance().getId()).matches());
     }
 
     @Test

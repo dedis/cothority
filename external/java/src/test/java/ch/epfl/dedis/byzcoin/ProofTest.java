@@ -68,9 +68,10 @@ class ProofTest {
         assertFalse(bc.getProof(badId).exists(badId.getId()));
 
         // if the skipchain ID is wrong, it should fail
+        InstanceId iid = new InstanceId(ids.get(0).getId());
         Proof p = bc.getProof(new InstanceId(ids.get(0).getId()));
         assertThrows(CothorityCryptoException.class, () ->
-                new Proof(p.toProto(), new SkipblockId(new byte[32])));
+                new Proof(p.toProto(), new SkipblockId(new byte[32]), iid));
 
         // useful variables for constructing a bad proof
         TrieProto.Proof inclusionProof = p.toProto().getInclusionproof();
@@ -85,14 +86,16 @@ class ProofTest {
                         .setLeaf(leaf.toBuilder()
                                 .setKey(ByteString.copyFrom("abcdefg".getBytes()))))
                 .build();
-        assertThrows(CothorityCryptoException.class, () -> new Proof(badProtoProof, bc.getGenesisBlock().getId()).exists(ids.get(0).getId()));
+        assertThrows(CothorityCryptoException.class,
+                () -> new Proof(badProtoProof, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
 
         // no interior nodes
         ByzCoinProto.Proof badProtoProof2 = p.toProto().toBuilder()
                 .setInclusionproof(inclusionProof.toBuilder()
                         .clearInteriors())
                 .build();
-        assertThrows(CothorityCryptoException.class, () -> new Proof(badProtoProof2, bc.getGenesisBlock().getId()));
+        assertThrows(CothorityCryptoException.class,
+                () -> new Proof(badProtoProof2, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
 
         // take one proof and modify an intermediate, it should fail
         ByzCoinProto.Proof badProtoProof3 = p.toProto().toBuilder()
@@ -100,7 +103,8 @@ class ProofTest {
                         .setInteriors(1, interior1.toBuilder()
                                 .setLeft(ByteString.copyFrom("gauche".getBytes()))))
                 .build();
-        assertThrows(CothorityCryptoException.class, () -> new Proof(badProtoProof3, bc.getGenesisBlock().getId()).exists(ids.get(0).getId()));
+        assertThrows(CothorityCryptoException.class,
+                () -> new Proof(badProtoProof3, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
 
         // wrong prefix (we invert the prefix)
         ByzCoinProto.Proof badProtoProof4 = p.toProto().toBuilder()
@@ -109,6 +113,7 @@ class ProofTest {
                                 .clearPrefix()
                                 .addAllPrefix(prefixList.stream().map(x -> !x).collect(Collectors.toList()))))
                 .build();
-        assertThrows(CothorityCryptoException.class, () -> new Proof(badProtoProof4, bc.getGenesisBlock().getId()).exists(ids.get(0).getId()));
+        assertThrows(CothorityCryptoException.class,
+                () -> new Proof(badProtoProof4, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
     }
 }

@@ -121,7 +121,7 @@ class DarcTest {
 
         Proof p = dc.spawnInstanceAndWait(SecureDarcInstance.ContractId, admin, counters.head()+2,
                 Argument.NewList("darc", newDarc.toProto().toByteArray()), 10);
-        assertTrue(p.matches(newDarc.getBaseId().getId()));
+        assertTrue(p.matches());
 
         logger.info("creating DarcInstance");
         SecureDarcInstance dc2 = SecureDarcInstance.fromByzCoin(bc, newDarc);
@@ -167,7 +167,7 @@ class DarcTest {
         ids.forEach(id -> {
             try {
                 Proof p = bc.getProof(new InstanceId(id.getId()));
-                assertTrue(p.matches(id.getId()));
+                assertTrue(p.matches());
                 assertEquals(SecureDarcInstance.ContractId, p.getContractID());
             } catch (CothorityException e) {
                 fail("Got exception when fetching darc: " + e.getMessage());
