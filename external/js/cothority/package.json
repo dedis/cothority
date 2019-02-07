@@ -11,7 +11,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node node_modules/jasmine/bin/jasmine.js",
+    "linter": "node_modules/.bin/tslint src/**/*.ts spec/**/*.ts",
+    "test": "npm run linter && ts-node node_modules/jasmine/bin/jasmine.js",
     "cover": "nyc node_modules/jasmine/bin/jasmine.js",
     "coveralls": "nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js && cat ./coveralls/lcov.info | coveralls",
     "bundle": "node node_modules/.bin/webpack",
@@ -62,6 +63,7 @@
     "jasmine-console-reporter": "^3.1.0",
     "ts-loader": "^5.3.3",
     "ts-node": "^8.0.1",
+    "tslint": "^5.12.1",
     "typescript": "^3.1.6",
     "webpack": "^4.29.1",
     "webpack-cli": "^3.2.3"

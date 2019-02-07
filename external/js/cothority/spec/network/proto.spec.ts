@@ -1,7 +1,8 @@
-import { Roster, ServerIdentity } from '../../src/network/proto';
+/* tslint:disable max-line-length */
+import { Roster, ServerIdentity } from "../../src/network/proto";
 
-describe('Network Proto Tests', () => {
-    it('should parse a roster', () => {
+describe("Network Proto Tests", () => {
+    it("should parse a roster", () => {
         const str = `
         [[servers]]
             Address = "tcp://127.0.0.1:7001"
@@ -25,16 +26,16 @@ describe('Network Proto Tests', () => {
         expect(roster.aggregate.length).toBeGreaterThan(0);
     });
 
-    it('should get a websocket address', () => {
-        const srvid = new ServerIdentity({ address: 'tls://127.0.0.1:5000', id: Buffer.from([]) });
+    it("should get a websocket address", () => {
+        const srvid = new ServerIdentity({ address: "tls://127.0.0.1:5000", id: Buffer.from([]) });
 
-        expect(srvid.getWebSocketAddress()).toBe('ws://127.0.0.1:5001');
+        expect(srvid.getWebSocketAddress()).toBe("ws://127.0.0.1:5001");
     });
 
-    it('should valid and invalid addresses', () => {
-        expect(ServerIdentity.isValidAddress('tls://127.0.0.1:5000')).toBeTruthy();
-        expect(ServerIdentity.isValidAddress('tls://127.0.0.1:5000000')).toBeFalsy();
-        expect(ServerIdentity.isValidAddress('tcp://127.0.0.1:5000')).toBeFalsy();
-        expect(ServerIdentity.isValidAddress('')).toBeFalsy();
+    it("should valid and invalid addresses", () => {
+        expect(ServerIdentity.isValidAddress("tls://127.0.0.1:5000")).toBeTruthy();
+        expect(ServerIdentity.isValidAddress("tls://127.0.0.1:5000000")).toBeFalsy();
+        expect(ServerIdentity.isValidAddress("tcp://127.0.0.1:5000")).toBeFalsy();
+        expect(ServerIdentity.isValidAddress("")).toBeFalsy();
     });
 });

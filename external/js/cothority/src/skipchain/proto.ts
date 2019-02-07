@@ -1,6 +1,6 @@
 import { Message, Properties } from "protobufjs";
-import { SkipBlock } from "./skipblock";
 import { registerMessage } from "../protobuf";
+import { SkipBlock } from "./skipblock";
 
 export class StoreSkipBlock extends Message<StoreSkipBlock> {
     readonly targetSkipChainID: Buffer;
@@ -29,8 +29,8 @@ export class GetUpdateChainReply extends Message<GetUpdateChainReply> {
     readonly update: SkipBlock[];
 }
 
-registerMessage('StoreSkipBlock', StoreSkipBlock);
-registerMessage('StoreSkipBlockReply', StoreSkipBlockReply);
-registerMessage('GetSingleBlock', GetSingleBlock);
-registerMessage('GetUpdateChain', GetUpdateChain);
-registerMessage('GetUpdateChainReply', GetUpdateChainReply);
+registerMessage("StoreSkipBlock", StoreSkipBlock);
+registerMessage("StoreSkipBlockReply", StoreSkipBlockReply);
+registerMessage("GetSingleBlock", GetSingleBlock);
+registerMessage("GetUpdateChain", GetUpdateChain);
+registerMessage("GetUpdateChainReply", GetUpdateChainReply);

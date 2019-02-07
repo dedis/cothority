@@ -1,11 +1,20 @@
-import ByzCoinRPC from "../byzcoin-rpc";
 import Darc from "../../darc/darc";
-import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Signer from "../../darc/signer";
+import ByzCoinRPC from "../byzcoin-rpc";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 
 export default class DarcInstance {
     static readonly contractID = "darc";
+
+    /**
+     * Initializes using an existing coinInstance from ByzCoin
+     * @param bc
+     * @param instID
+     */
+    static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<DarcInstance> {
+        return new DarcInstance(bc, await Instance.fromByzCoin(bc, iid));
+    }
 
     private darc: Darc;
     private instance: Instance;
@@ -48,15 +57,15 @@ export default class DarcInstance {
     /**
      * Request to evolve the existing darc using the new darc and wait for
      * the block inclusion
-     * 
+     *
      * @param newDarc The new darc
      * @param signers Signers for the counters
      * @param wait Number of blocks to wait for
      * @returns a promise that resolves with the new darc instance
      */
     async evolveDarcAndWait(newDarc: Darc, signers: Signer[], wait: number): Promise<DarcInstance> {
-        const args = [new Argument({ name: 'darc', value: Buffer.from(Darc.encode(newDarc).finish()) })];
-        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, 'evolve', args);
+        const args = [new Argument({ name: "darc", value: Buffer.from(Darc.encode(newDarc).finish()) })];
+        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, "evolve", args);
 
         const ctx = new ClientTransaction({ instructions: [instr] });
         await ctx.updateCounters(this.rpc, signers);
@@ -69,7 +78,7 @@ export default class DarcInstance {
 
     /**
      * Request to spawn an instance and wait for the inclusion
-     * 
+     *
      * @param contractID    Contract name of the new instance
      * @param signers       Signers for the counters
      * @param wait          Number of blocks to wait for
@@ -78,7 +87,7 @@ export default class DarcInstance {
     async spawnDarcAndWait(d: Darc, signers: Signer[], wait: number = 0): Promise<DarcInstance> {
         const args = [
             new Argument({
-                name: 'darc',
+                name: "darc",
                 value: Buffer.from(Darc.encode(d).finish()),
             }),
         ];
@@ -91,14 +100,5 @@ export default class DarcInstance {
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
         return DarcInstance.fromByzcoin(this.rpc, d.baseID);
-    }
-
-    /**
-     * Initializes using an existing coinInstance from ByzCoin
-     * @param bc
-     * @param instID
-     */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: Buffer): Promise<DarcInstance> {
-        return new DarcInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }

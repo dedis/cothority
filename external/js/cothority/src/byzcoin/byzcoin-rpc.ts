@@ -1,26 +1,105 @@
 import Darc from "../darc/darc";
-import Proof from "./proof";
-import { Roster } from "../network/proto";
-import ClientTransaction, { CounterUpdater } from "./client-transaction";
 import Identity from "../darc/identity";
-import { Connection, RosterWSConnection, WebSocketConnection } from "../network/connection";
-import { AddTxRequest, AddTxResponse, CreateGenesisBlock, CreateGenesisBlockResponse, GetProof, GetProofResponse, GetSignerCounters, GetSignerCountersResponse } from "./proto";
-import { SkipBlock } from "../skipchain/skipblock";
-import ChainConfig from "./config";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import Rules from "../darc/rules";
+import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { Roster } from "../network/proto";
+import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
+import ClientTransaction, { ICounterUpdater } from "./client-transaction";
+import ChainConfig from "./config";
+import Proof from "./proof";
+import {
+    AddTxRequest,
+    AddTxResponse,
+    CreateGenesisBlock,
+    CreateGenesisBlockResponse,
+    GetProof,
+    GetProofResponse,
+    GetSignerCounters,
+    GetSignerCountersResponse,
+} from "./proto";
 
 export const currentVersion = 1;
 
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
-export default class ByzCoinRPC implements CounterUpdater {
+export default class ByzCoinRPC implements ICounterUpdater {
+    /**
+     * Helper to create a genesis darc
+     * @param signers       Authorized signers
+     * @param roster        Roster that will be used
+     * @param description   An optional description for the chain
+     */
+    static makeGenesisDarc(signers: Identity[], roster: Roster, description?: string): Darc {
+        if (signers.length === 0) {
+            throw new Error("no identities");
+        }
+
+        const d = Darc.newDarc(signers, signers, Buffer.from(description || "Genesis darc"));
+        roster.list.forEach((srvid) => {
+            d.addIdentity("view_change", new IdentityEd25519({ point: srvid.public }), Rules.OR);
+        });
+
+        signers.forEach((signer) => {
+            d.addIdentity("spawn:darc", signer, Rules.OR);
+            d.addIdentity("invoke:update_config", signer, Rules.OR);
+        });
+
+        return d;
+    }
+
+    /**
+     * Recreate a byzcoin RPC from a given roster
+     * @param roster        The roster to ask for the config and darc
+     * @param skipchainID   The genesis block identifier
+     */
+    static async fromByzcoin(roster: Roster, skipchainID: Buffer): Promise<ByzCoinRPC> {
+        const rpc = new ByzCoinRPC();
+        rpc.conn = new RosterWSConnection(roster, "ByzCoin");
+
+        const skipchain = new SkipchainRPC(roster);
+        rpc.genesis = await skipchain.getSkipblock(skipchainID);
+
+        const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID);
+        rpc.config = ChainConfig.fromProof(ccProof);
+
+        const gdProof = await rpc.getProof(ccProof.stateChangeBody.darcID);
+        rpc.genesisDarc = Darc.fromProof(ccProof.stateChangeBody.darcID, gdProof);
+
+        return rpc;
+    }
+
+    /**
+     * Create a new byzcoin chain and return a associated RPC
+     * @param roster        The roster to use to create the genesis block
+     * @param darc          The genesis darc
+     * @param blockInterval The interval of block creation in nanoseconds
+     */
+    static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
+        const rpc = new ByzCoinRPC();
+        rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
+        rpc.genesisDarc = darc;
+        rpc.config = new ChainConfig({ blockInterval });
+
+        const req = new CreateGenesisBlock({
+            blockInterval,
+            genesisDarc: darc,
+            roster,
+            version: currentVersion,
+        });
+
+        const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
+
+        rpc.genesis = ret.skipblock;
+
+        return rpc;
+    }
+
     private genesisDarc: Darc;
     private config: ChainConfig;
     private genesis: SkipBlock;
-    private conn: Connection;
-    private skipchainRpc: SkipchainRPC;
+    private conn: IConnection;
 
     protected constructor() { }
 
@@ -61,12 +140,12 @@ export default class ByzCoinRPC implements CounterUpdater {
      */
     sendTransactionAndWait(transaction: ClientTransaction, wait: number = 10): Promise<AddTxResponse> {
         const req = new AddTxRequest({
-            version: currentVersion,
+            inclusionwait: wait,
             skipchainID: this.genesis.hash,
             transaction,
-            inclusionwait: wait,
+            version: currentVersion,
         });
-        
+
         return this.conn.send(req, AddTxResponse);
     }
 
@@ -80,7 +159,7 @@ export default class ByzCoinRPC implements CounterUpdater {
 
         const darcIID = pr.stateChangeBody.darcID;
         const genesisDarcProof = await this.getProof(darcIID);
-        
+
         this.genesisDarc = Darc.fromProof(darcIID, genesisDarcProof);
     }
 
@@ -93,9 +172,9 @@ export default class ByzCoinRPC implements CounterUpdater {
      */
     async getProof(id: Buffer): Promise<Proof> {
         const req = new GetProof({
-            version: currentVersion,
             id: this.genesis.hash,
             key: id,
+            version: currentVersion,
         });
 
         const reply = await this.conn.send<GetProofResponse>(req, GetProofResponse);
@@ -109,92 +188,19 @@ export default class ByzCoinRPC implements CounterUpdater {
 
     /**
      * Get the latest counter for the given signers and increase it with a given value
-     * 
+     *
      * @param ids The identifiers of the signers
      * @param add The increment
      * @returns the ordered list of counters
      */
     async getSignerCounters(ids: Identity[], add: number = 0): Promise<Long[]> {
         const req = new GetSignerCounters({
+            signerids: ids.map((id) => id.toString()),
             skipchainid: this.genesis.hash,
-            signerids: ids.map(id => id.toString()),
         });
-        
+
         const rep = await this.conn.send<GetSignerCountersResponse>(req, GetSignerCountersResponse);
 
-        return rep.counters.map(c => c.add(add));
-    }
-
-    /**
-     * Helper to create a genesis darc
-     * @param signers       Authorized signers
-     * @param roster        Roster that will be used
-     * @param description   An optional description for the chain
-     */
-    static makeGenesisDarc(signers: Identity[], roster: Roster, description?: string): Darc {
-        if (signers.length == 0) {
-            throw new Error("no identities");
-        }
-
-        const d = Darc.newDarc(signers, signers, Buffer.from(description || "Genesis darc"));
-        roster.list.forEach((srvid) => {
-            d.addIdentity('view_change', new IdentityEd25519({ point: srvid.public }), Rules.OR);
-        });
-
-        signers.forEach((signer) => {
-            d.addIdentity('spawn:darc', signer, Rules.OR);
-            d.addIdentity('invoke:update_config', signer, Rules.OR);
-        });
-
-        return d;
-    }
-
-    /**
-     * Recreate a byzcoin RPC from a given roster
-     * @param roster        The roster to ask for the config and darc
-     * @param skipchainID   The genesis block identifier
-     */
-    static async fromByzcoin(roster: Roster, skipchainID: Buffer): Promise<ByzCoinRPC> {
-        const rpc = new ByzCoinRPC();
-        rpc.conn = new RosterWSConnection(roster, 'ByzCoin');
-        rpc.skipchainRpc = new SkipchainRPC(roster);
-
-        const skipchain = new SkipchainRPC(roster);
-        rpc.genesis = await skipchain.getSkipblock(skipchainID);
-
-        const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID);
-        rpc.config = ChainConfig.fromProof(ccProof);
-
-        const gdProof = await rpc.getProof(ccProof.stateChangeBody.darcID);
-        rpc.genesisDarc = Darc.fromProof(ccProof.stateChangeBody.darcID, gdProof);
-
-        return rpc;
-    }
-
-    /**
-     * Create a new byzcoin chain and return a associated RPC
-     * @param roster        The roster to use to create the genesis block
-     * @param darc          The genesis darc
-     * @param blockInterval The interval of block creation in nanoseconds
-     */
-    static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
-        const rpc = new ByzCoinRPC();
-        rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), 'ByzCoin');
-        rpc.skipchainRpc = new SkipchainRPC(roster);
-        rpc.genesisDarc = darc;
-        rpc.config = new ChainConfig({ blockInterval });
-
-        const req = new CreateGenesisBlock({
-            version: currentVersion,
-            roster,
-            genesisDarc: darc,
-            blockInterval,
-        });
-
-        const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
-
-        rpc.genesis = ret.skipblock;
-
-        return rpc;
+        return rep.counters.map((c) => c.add(add));
     }
 }

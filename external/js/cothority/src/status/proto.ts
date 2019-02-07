@@ -1,5 +1,5 @@
-import { ServerIdentity } from "../network/proto";
 import { Message } from "protobufjs";
+import { ServerIdentity } from "../network/proto";
 import { registerMessage } from "../protobuf";
 
 /**
@@ -27,7 +27,7 @@ export class Status extends Message<Status> {
      * @returns a string
      */
     toString(): string {
-        return Object.keys(this.field).sort().map(k => `${k}: ${this.field[k]}`).join('\n');
+        return Object.keys(this.field).sort().map((k) => `${k}: ${this.field[k]}`).join("\n");
     }
 }
 
@@ -60,10 +60,10 @@ export class StatusResponse extends Message<StatusResponse> {
      * @returns a string
      */
     toString(): string {
-        return Object.keys(this.status).sort().map(k => `[${k}]\n${this.status[k].toString()}`).join('\n\n');
+        return Object.keys(this.status).sort().map((k) => `[${k}]\n${this.status[k].toString()}`).join("\n\n");
     }
 }
 
-registerMessage('Request', StatusRequest);
-registerMessage('Response', StatusResponse);
-registerMessage('Status', Status);
+registerMessage("Request", StatusRequest);
+registerMessage("Response", StatusResponse);
+registerMessage("Status", Status);

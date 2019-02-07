@@ -1,21 +1,21 @@
-import Long from 'long';
-import { ROSTER, startConodes, BLOCK_INTERVAL, SIGNER } from "../support/conondes";
-import CoinInstance from '../../src/byzcoin/contracts/coin-instance';
+import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
+import CoinInstance from "../../src/byzcoin/contracts/coin-instance";
 import Rules from "../../src/darc/rules";
+import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-describe('CoinInstance Tests', () => {
+describe("CoinInstance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();
     });
 
-    it('should spawn a coin instance', async () => {
+    it("should spawn a coin instance", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-        darc.addIdentity('spawn:coin', SIGNER, Rules.OR);
-        darc.addIdentity('invoke:coin.mint', SIGNER, Rules.OR);
-        darc.addIdentity('invoke:coin.transfer', SIGNER, Rules.OR);
+        darc.addIdentity("spawn:coin", SIGNER, Rules.OR);
+        darc.addIdentity("invoke:coin.mint", SIGNER, Rules.OR);
+        darc.addIdentity("invoke:coin.transfer", SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);

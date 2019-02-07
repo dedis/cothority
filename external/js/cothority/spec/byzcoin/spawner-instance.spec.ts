@@ -1,26 +1,26 @@
-import Long from 'long';
-import { startConodes, ROSTER, SIGNER, BLOCK_INTERVAL } from "../support/conondes";
-import SpawnerInstance from '../../src/byzcoin/contracts/spawner-instance';
+import { curve, Point } from "@dedis/kyber";
+import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
+import CoinInstance from "../../src/byzcoin/contracts/coin-instance";
+import { Attribute, Credential, CredentialStruct } from "../../src/byzcoin/contracts/credentials-instance";
+import { PopDesc } from "../../src/byzcoin/contracts/pop-party/proto";
+import SpawnerInstance from "../../src/byzcoin/contracts/spawner-instance";
+import Darc from "../../src/darc/darc";
 import Rules from "../../src/darc/rules";
-import CoinInstance from '../../src/byzcoin/contracts/coin-instance';
-import { curve, Point } from '@dedis/kyber';
-import { CredentialStruct, Attribute, Credential } from '../../src/byzcoin/contracts/credentials-instance';
-import { PopDesc } from '../../src/byzcoin/contracts/pop-party/proto';
-import SignerEd25519 from '../../src/darc/signer-ed25519';
-import { Roster } from '../../src/network/proto';
-import Darc from '../../src/darc/darc';
+import SignerEd25519 from "../../src/darc/signer-ed25519";
+import { Roster } from "../../src/network/proto";
+import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-const ed25519 = curve.newCurve('edwards25519');
+const ed25519 = curve.newCurve("edwards25519");
 
-describe('SpawnerInstance Tests', () => {
+describe("SpawnerInstance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();
     });
 
-    it('should create a spawner', async () => {
+    it("should create a spawner", async () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
@@ -29,9 +29,9 @@ describe('SpawnerInstance Tests', () => {
         await ci.update();
 
         const costs = {
-            costDarc: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
+            costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
         };
 
@@ -39,13 +39,13 @@ describe('SpawnerInstance Tests', () => {
         const si = await SpawnerInstance.create(params);
 
         expect(si.signupCost.toNumber()).toBe(3000);
-        expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from('deadbeef'))).toBeRejected();
+        expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from("deadbeef"))).toBeRejected();
         expectAsync(SpawnerInstance.fromByzcoin(rpc, si.iid)).toBeResolved();
 
         await si.update();
     });
 
-    it('should spawn a pop party', async () => {
+    it("should spawn a pop party", async () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
@@ -54,9 +54,9 @@ describe('SpawnerInstance Tests', () => {
         await ci.update();
 
         const costs = {
-            costDarc: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
+            costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
         };
 
@@ -65,23 +65,30 @@ describe('SpawnerInstance Tests', () => {
 
         // Get an organiser
         const org = SignerEd25519.fromBytes(Buffer.from([1, 2, 3, 4, 5, 6]));
-        const darcOrg = await si.createUserDarc(ci, [SIGNER], org.public, 'org');
-        const orgCred = await si.createCredential(ci, [SIGNER], darcOrg.getDarc().baseID, generateCredential(org.public));
+        const darcOrg = await si.createUserDarc(ci, [SIGNER], org.public, "org");
+        const orgCred =
+            await si.createCredential(ci, [SIGNER], darcOrg.getDarc().baseID, generateCredential(org.public));
 
         // Get an organiser without key
-        const org2 = SignerEd25519.fromBytes(Buffer.from('deadbeef'));
-        const darcOrg2 = await si.createUserDarc(ci, [SIGNER], org2.public, 'org2');
+        const org2 = SignerEd25519.fromBytes(Buffer.from("deadbeef"));
+        const darcOrg2 = await si.createUserDarc(ci, [SIGNER], org2.public, "org2");
         const orgCred2 = await si.createCredential(ci, [SIGNER], darcOrg2.getDarc().baseID, new CredentialStruct());
 
         // get an attendee
         const attendee = SignerEd25519.fromBytes(Buffer.from([5, 6, 7, 8]));
-        const darcAtt = await si.createUserDarc(ci, [SIGNER], attendee.public, 'attendee');
+        const darcAtt = await si.createUserDarc(ci, [SIGNER], attendee.public, "attendee");
         const ciAtt = await si.createCoin(ci, [SIGNER], darcAtt.getDarc().baseID);
-        
-        // Spawn a pop party
-        const desc = new PopDesc({ name: 'spawned pop party' });
 
-        const popParams = { coin: ci, signers: [SIGNER], orgs: [orgCred, orgCred2], desc, reward: Long.fromNumber(10000) };
+        // Spawn a pop party
+        const desc = new PopDesc({ name: "spawned pop party" });
+
+        const popParams = {
+            coin: ci,
+            desc,
+            orgs: [orgCred, orgCred2],
+            reward: Long.fromNumber(10000),
+            signers: [SIGNER],
+        };
         expectAsync(si.createPopParty(popParams)).toBeRejected();
 
         popParams.orgs = [orgCred];
@@ -119,16 +126,16 @@ describe('SpawnerInstance Tests', () => {
         expect(party.data.miners.length).toBe(1);
     });
 
-    it('should spawn a rock-paper-scisors game', async () => {
+    it("should spawn a rock-paper-scisors game", async () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
 
         const costs = {
-            costDarc: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
+            costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
         };
 
@@ -140,7 +147,7 @@ describe('SpawnerInstance Tests', () => {
         const fillup = Buffer.allocUnsafe(31);
 
         // fill up too small
-        const rpsParams = { desc: 'abc', coin: ci, signers: [SIGNER], stake, choice, fillup: Buffer.from([]) };
+        const rpsParams = { desc: "abc", coin: ci, signers: [SIGNER], stake, choice, fillup: Buffer.from([]) };
         expectAsync(si.createRoPaSci(rpsParams)).toBeRejected();
         // not enough coins
         rpsParams.fillup = fillup;
@@ -154,7 +161,7 @@ describe('SpawnerInstance Tests', () => {
         expect(game.stake.value.toNumber()).toBe(stake.toNumber());
     });
 
-    it('should not try to create existing instances', async () => {
+    it("should not try to create existing instances", async () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
@@ -163,9 +170,9 @@ describe('SpawnerInstance Tests', () => {
         await ci.update();
 
         const costs = {
-            costDarc: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
+            costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
         };
 
@@ -173,12 +180,14 @@ describe('SpawnerInstance Tests', () => {
         const si = await SpawnerInstance.create(params);
 
         const user = SignerEd25519.fromBytes(Buffer.from([1, 2, 3, 4, 5, 6]));
-        const userDarc = await si.createUserDarc(ci, [SIGNER], user.public, 'org');
-        const userDarc2 = await si.createUserDarc(ci, [SIGNER], user.public, 'org');
+        const userDarc = await si.createUserDarc(ci, [SIGNER], user.public, "org");
+        const userDarc2 = await si.createUserDarc(ci, [SIGNER], user.public, "org");
         expect(userDarc.getDarc().id).toEqual(userDarc2.getDarc().id);
 
-        const userCred = await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
-        const userCred2 = await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
+        const userCred =
+            await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
+        const userCred2 =
+            await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
         expect(userCred.darcID).toEqual(userCred2.darcID);
 
         const userCoin = await si.createCoin(ci, [SIGNER], userDarc.getDarc().baseID);
@@ -189,22 +198,22 @@ describe('SpawnerInstance Tests', () => {
 
 async function makeDarc(roster: Roster): Promise<Darc> {
     const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-    darc.addIdentity('spawn:coin', SIGNER, Rules.OR);
-    darc.addIdentity('invoke:coin.mint', SIGNER, Rules.OR);
-    darc.addIdentity('invoke:coin.fetch', SIGNER, Rules.OR);
-    darc.addIdentity('spawn:spawner', SIGNER, Rules.OR);
-    
+    darc.addIdentity("spawn:coin", SIGNER, Rules.OR);
+    darc.addIdentity("invoke:coin.mint", SIGNER, Rules.OR);
+    darc.addIdentity("invoke:coin.fetch", SIGNER, Rules.OR);
+    darc.addIdentity("spawn:spawner", SIGNER, Rules.OR);
+
     return darc;
 }
 
 function generateCredential(pub: Point): CredentialStruct {
     return new CredentialStruct({
         credentials: [new Credential({
-            name: 'personhood',
             attributes: [new Attribute({
-                name: 'ed25519',
+                name: "ed25519",
                 value: pub.toProto(),
-            })]
+            })],
+            name: "personhood",
         })],
     });
 }

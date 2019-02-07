@@ -1,10 +1,10 @@
-import _ from 'lodash';
-import { Message } from "protobufjs";
-import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
-import { registerMessage } from "../protobuf";
 import { createHash } from "crypto";
-import { InstanceID } from './instance';
-import { SkipchainRPC } from '..';
+import _ from "lodash";
+import { Message } from "protobufjs";
+import { SkipchainRPC } from "..";
+import { registerMessage } from "../protobuf";
+import { ForwardLink, SkipBlock } from "../skipchain/skipblock";
+import { InstanceID } from "./instance";
 
 /**
  * The proof class represents a proof that a given instance with its data is either present or absent in the global
@@ -26,7 +26,7 @@ export default class Proof extends Message<Proof> {
 
     /**
      * Get the state change stored in the inclusion proof
-     * 
+     *
      * @returns the state change body
      */
     get stateChangeBody(): StateChangeBody {
@@ -41,7 +41,7 @@ export default class Proof extends Message<Proof> {
     /**
      * Returns the contractID this proof represents. Throws an error if it
      * is a proof of absence.
-     * 
+     *
      * @returns the contract ID as a buffer
      */
     get contractID(): Buffer {
@@ -50,7 +50,7 @@ export default class Proof extends Message<Proof> {
 
     /**
      * Get the darc ID of the instance
-     * 
+     *
      * @returns the darcID responsible for the instanceID this proof represents.
      */
     get darcID(): Buffer {
@@ -68,7 +68,7 @@ export default class Proof extends Message<Proof> {
 
     /**
      * Get the instance ID for the proof
-     * 
+     *
      * @returns the instance ID as a buffer
      */
     get key(): Buffer {
@@ -77,25 +77,25 @@ export default class Proof extends Message<Proof> {
 
     /**
      * Verify that the proof contains a correct chain from the given genesis
-     * 
+     *
      * @param genesisID The skipchain ID
      * @returns an error if something is wrong, null otherwise
      */
     verify(genesisID: InstanceID): Error {
         if (!this.latest.computeHash().equals(this.latest.hash)) {
-            return new Error('invalid latest block');
+            return new Error("invalid latest block");
         }
 
         const header = DataHeader.decode(this.latest.data);
         if (!this.inclusionproof.hashInterior(0).equals(header.trieroot)) {
-            return new Error('invalid root');
+            return new Error("invalid root");
         }
 
-        let publics = this.latest.roster.getServicePublics(SkipchainRPC.ServiceName);
+        let publics = this.latest.roster.getServicePublics(SkipchainRPC.serviceName);
         let prev = this.links[0].to;
 
         if (!prev.equals(genesisID)) {
-            return new Error('first link must come from the genesis block');
+            return new Error("first link must come from the genesis block");
         }
 
         const links = this.links;
@@ -104,18 +104,22 @@ export default class Proof extends Message<Proof> {
 
             const err = link.verify(publics);
             if (err) {
-                return new Error('invalid forward link signature: ' + err.message);
+                return new Error("invalid forward link signature: " + err.message);
             }
 
             if (!link.from.equals(prev)) {
-                return new Error('invalid chain of forward links');
+                return new Error("invalid chain of forward links");
             }
 
             prev = link.to;
 
             if (link.newRoster) {
-                publics = link.newRoster.getServicePublics(SkipchainRPC.ServiceName);
+                publics = link.newRoster.getServicePublics(SkipchainRPC.serviceName);
             }
+        }
+
+        if (!prev.equals(this.latest.hash)) {
+            return new Error("last forward link does not point to the latest block");
         }
 
         return null;
@@ -123,16 +127,16 @@ export default class Proof extends Message<Proof> {
 
     /**
      * Check if the key exists in the proof
-     * 
+     *
      * @returns true when it exists, false otherwise
      * @throws for corrupted proofs
      */
     exists(key: Buffer): boolean {
         if (key.length === 0) {
-            throw new Error('key is nil');
+            throw new Error("key is nil");
         }
         if (this.inclusionproof.interiors.length === 0) {
-            throw new Error('no interior node');
+            throw new Error("no interior node");
         }
 
         const bits = hashToBits(key);
@@ -141,7 +145,7 @@ export default class Proof extends Message<Proof> {
         let i = 0;
         for (; i < this.inclusionproof.interiors.length; i++) {
             if (!expectedHash.equals(this.inclusionproof.hashInterior(i))) {
-                throw new Error('invalid interior node');
+                throw new Error("invalid interior node");
             }
 
             if (bits[i]) {
@@ -153,19 +157,19 @@ export default class Proof extends Message<Proof> {
 
         if (expectedHash.equals(this.inclusionproof.hashLeaf())) {
             if ( _.difference(bits.slice(0, i), this.inclusionproof.leaf.prefix).length !== 0) {
-                throw new Error('invalid prefix in leaf node');
+                throw new Error("invalid prefix in leaf node");
             }
 
             return this.key.equals(key);
         } else if (expectedHash.equals(this.inclusionproof.hashEmpty())) {
             if (_.difference(bits.slice(0, i), this.inclusionproof.empty.prefix).length !== 0) {
-                throw new Error('invalid prefix in empty node');
+                throw new Error("invalid prefix in empty node");
             }
 
             return false;
         }
 
-        throw new Error('no corresponding leaf/empty node with respect to the interior node');
+        throw new Error("no corresponding leaf/empty node with respect to the interior node");
     }
 
     /**
@@ -177,7 +181,7 @@ export default class Proof extends Message<Proof> {
             return this.stateChangeBody.contractID.equals(cid);
         }
 
-        return this.stateChangeBody.contractID.toString() == cid;
+        return this.stateChangeBody.contractID.toString() === cid;
     }
 
     /**
@@ -191,17 +195,18 @@ export default class Proof extends Message<Proof> {
 /**
  * Get an array of booleans depending on the binary representation
  * of the key
- * 
+ *
  * @param key the key to hash
  * @returns an array of booleans matching the key binary value
  */
 function hashToBits(key: Buffer): boolean[] {
-    const h = createHash('sha256');
+    const h = createHash("sha256");
     h.update(key);
     const hash = h.digest();
 
     const bits = new Array(hash.length * 8);
     for (let i = 0; i < bits.length; i++) {
+        // tslint:disable-next-line no-bitwise
         bits[i] = ((hash[i >> 3] << (i % 8)) & (1 << 7)) > 0;
     }
 
@@ -210,15 +215,17 @@ function hashToBits(key: Buffer): boolean[] {
 
 /**
  * Get a buffer from an array of boolean converted in binary
- * 
+ *
  * @param bits the array of booleans
  * @returns a buffer of the binary shape
  */
 function boolToBuffer(bits: boolean[]): Buffer {
+    // tslint:disable-next-line no-bitwise
     const buf = Buffer.alloc((bits.length + 7) >> 3, 0);
 
     for (let i = 0; i < bits.length; i++) {
         if (bits[i]) {
+            // tslint:disable-next-line no-bitwise
             buf[i >> 3] |= (1 << 7) >> (i % 8);
         }
     }
@@ -277,12 +284,12 @@ class InclusionProof extends Message<InclusionProof> {
 
     /**
      * Get the hash of the interior node at the given index
-     * 
+     *
      * @param index the index of the interior node
      * @returns the hash as a buffer
      */
     hashInterior(index: number): Buffer {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         h.update(this.interiors[index].left);
         h.update(this.interiors[index].right);
 
@@ -291,11 +298,11 @@ class InclusionProof extends Message<InclusionProof> {
 
     /**
      * Get the hash of the leaf of the inclusion proof
-     * 
+     *
      * @returns the hash as a buffer
      */
     hashLeaf(): Buffer {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         h.update(Buffer.from([3]));
         h.update(this.nonce);
 
@@ -314,11 +321,11 @@ class InclusionProof extends Message<InclusionProof> {
 
     /**
      * Get the hash of the empty node of the inclusion proof
-     * 
+     *
      * @returns the hash of the empty node
      */
     hashEmpty(): Buffer {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         h.update(Buffer.from([2]));
         h.update(this.nonce);
 
@@ -357,11 +364,11 @@ class DataHeader extends Message<DataHeader> {
 }
 
 export function registerProofMessages() {
-    registerMessage('byzcoin.Proof', Proof);
-    registerMessage('byzcoin.DataHeader', DataHeader);
-    registerMessage('trie.Proof', InclusionProof);
-    registerMessage('trie.InteriorNode', InteriorNode);
-    registerMessage('trie.LeafNode', LeafNode);
-    registerMessage('trie.EmptyNode', EmptyNode);
-    registerMessage('StateChangeBody', StateChangeBody);
+    registerMessage("byzcoin.Proof", Proof);
+    registerMessage("byzcoin.DataHeader", DataHeader);
+    registerMessage("trie.Proof", InclusionProof);
+    registerMessage("trie.InteriorNode", InteriorNode);
+    registerMessage("trie.LeafNode", LeafNode);
+    registerMessage("trie.EmptyNode", EmptyNode);
+    registerMessage("StateChangeBody", StateChangeBody);
 }

@@ -1,5 +1,5 @@
-import WebSocket from 'isomorphic-ws';
-import Logger from '../log';
+import WebSocket from "isomorphic-ws";
+import Logger from "../log";
 
 /**
  * An adapter to use any kind of websocket and interface it with
@@ -60,7 +60,7 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
         super(path);
         this.ws = new WebSocket(path);
         // to prevent the browser to use blob
-        this.ws.binaryType = 'arraybuffer';
+        this.ws.binaryType = "arraybuffer";
     }
 
     /** @inheritdoc */
@@ -76,7 +76,6 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
             } else {
                 // In theory, any type of data could be sent through but we only
                 // allow protobuf encoded messages
-                console.log(evt.data);
                 Logger.lvl2(`got an unknown websocket message type: ${typeof evt.data}`);
             }
         };

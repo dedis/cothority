@@ -1,14 +1,14 @@
-import Long from 'long';
+import Long from "long";
 import {
-    CreateGenesisBlock, AddTxRequest
-} from '../../src/byzcoin/proto';
-import Darc from '../../src/darc/darc';
+    AddTxRequest, CreateGenesisBlock,
+} from "../../src/byzcoin/proto";
+import Darc from "../../src/darc/darc";
 
-describe('ByzCoin Proto Tests', () => {
-    it('should handle create genesis block messages', () => {
+describe("ByzCoin Proto Tests", () => {
+    it("should handle create genesis block messages", () => {
         const req = new CreateGenesisBlock({
-            genesisDarc: new Darc(),
             blockInterval: Long.fromNumber(1),
+            genesisDarc: new Darc(),
             maxBlockSize: 42,
         });
 
@@ -19,7 +19,7 @@ describe('ByzCoin Proto Tests', () => {
         expect(new CreateGenesisBlock()).toBeDefined();
     });
 
-    it('should handle add tx request messages', () => {
+    it("should handle add tx request messages", () => {
         const req = new AddTxRequest({ skipchainID: Buffer.from([1, 2, 3]) });
 
         expect(req.skipchainID).toEqual(Buffer.from([1, 2, 3]));

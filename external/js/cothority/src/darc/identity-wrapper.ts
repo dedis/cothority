@@ -1,6 +1,6 @@
 import { Message } from "protobufjs";
-import IdentityEd25519 from "./identity-ed25519";
 import IdentityDarc from "./identity-darc";
+import IdentityEd25519 from "./identity-ed25519";
 
 /**
  * Protobuf representation of an identity

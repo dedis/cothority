@@ -3,7 +3,7 @@ import IdentityWrapper from "./identity-wrapper";
 /**
  * Identitiy is an abstract class for all the Darcs's identities
  */
-export default interface Identity {
+export default interface IIdentity {
   /**
    * Returns true if the verification of signature on the sha-256 of msg is
    * successful or false if not.

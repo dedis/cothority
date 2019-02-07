@@ -1,13 +1,25 @@
 import { Message } from "protobufjs";
-import ClientTransaction, {Argument, Instruction} from "../client-transaction";
 import Signer from "../../darc/signer";
+import { registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
+import ClientTransaction, {Argument, Instruction} from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
-import { registerMessage } from "../../protobuf";
 
 export default class RoPaSciInstance {
     static readonly contractID = "ropasci";
+
+    /**
+     * Fetch the proof for the given instance and create a
+     * RoPaSciInstance from it
+     *
+     * @param bc    The ByzCoinRPC to use
+     * @param iid   The instance ID
+     * @returns the new instance
+     */
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<RoPaSciInstance> {
+        return new RoPaSciInstance(bc, await Instance.fromByzCoin(bc, iid));
+    }
 
     private rpc: ByzCoinRPC;
     private instance: Instance;
@@ -47,7 +59,7 @@ export default class RoPaSciInstance {
 
     /**
      * Update the instance data
-     * 
+     *
      * @param choice The choice of the first player
      * @param fillup The fillup of the first player
      */
@@ -58,7 +70,7 @@ export default class RoPaSciInstance {
 
     /**
      * Check if both players have played their moves
-     * 
+     *
      * @returns true when both have played, false otherwise
      */
     isDone(): boolean {
@@ -67,7 +79,7 @@ export default class RoPaSciInstance {
 
     /**
      * Play the adversary move
-     * 
+     *
      * @param coin      The CoinInstance of the second player
      * @param signer    Signer for the transaction
      * @param choice    The choice of the second player
@@ -99,8 +111,8 @@ export default class RoPaSciInstance {
                         new Argument({ name: "account", value: coin.id }),
                         new Argument({ name: "choice", value: Buffer.from([choice % 3]) }),
                     ],
-                )
-            ]
+                ),
+            ],
         });
 
         await ctx.updateCounters(this.rpc, [signer]);
@@ -111,7 +123,7 @@ export default class RoPaSciInstance {
 
     /**
      * Reveal the move of the first player
-     * 
+     *
      * @param coin The CoinInstance of the first player
      * @returns a promise that resolves on success, or rejects
      * with the error
@@ -134,8 +146,8 @@ export default class RoPaSciInstance {
                         new Argument({ name: "prehash", value: preHash }),
                         new Argument({ name: "account", value: coin.id }),
                     ],
-                )
-            ]
+                ),
+            ],
         });
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -143,31 +155,19 @@ export default class RoPaSciInstance {
 
     /**
      * Update the state of the instance
-     * 
+     *
      * @returns a promise that resolves with the updated instance,
      * or rejects with the error
      */
     async update(): Promise<RoPaSciInstance> {
         const proof = await this.rpc.getProof(this.instance.id);
         if (!proof.exists(this.instance.id)) {
-            throw new Error('fail to get a matching proof');
+            throw new Error("fail to get a matching proof");
         }
 
         this.instance = Instance.fromProof(this.instance.id, proof);
         this.struct = RoPaSciStruct.decode(this.instance.data);
         return this;
-    }
-
-    /**
-     * Fetch the proof for the given instance and create a
-     * RoPaSciInstance from it
-     * 
-     * @param bc    The ByzCoinRPC to use
-     * @param iid   The instance ID
-     * @returns the new instance
-     */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<RoPaSciInstance> {
-        return new RoPaSciInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }
 
@@ -200,7 +200,7 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
 
     /**
      * Helper to encode the struct using protobuf
-     * 
+     *
      * @returns the data as a buffer
      */
     toBytes(): Buffer {
@@ -208,4 +208,4 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     }
 }
 
-registerMessage('personhood.RoPaSciStruct', RoPaSciStruct);
+registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);

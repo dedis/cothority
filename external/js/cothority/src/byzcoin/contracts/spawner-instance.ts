@@ -1,32 +1,141 @@
+import { Point } from "@dedis/kyber";
 import { createHash } from "crypto";
 import Long from "long";
 import { Message } from "protobufjs";
-import { Point } from "@dedis/kyber";
-import ByzCoinRPC from "../byzcoin-rpc";
-import { InstanceID } from "../instance";
-import CoinInstance, { Coin } from "./coin-instance";
-import Signer from "../../darc/signer";
-import DarcInstance from "./darc-instance";
-import Log from "../../log";
-import ClientTransaction, { Instruction, Argument } from "../client-transaction";
-import CredentialInstance, { CredentialStruct } from "./credentials-instance";
-import { PopDesc } from "./pop-party/proto";
-import { PopPartyInstance } from "./pop-party/pop-party-instance";
-import RoPaSciInstance, { RoPaSciStruct } from "./ro-pa-sci-instance";
 import Darc from "../../darc/darc";
+import IdentityDarc from "../../darc/identity-darc";
 import IdentityEd25519 from "../../darc/identity-ed25519";
 import Rules from "../../darc/rules";
+import Signer from "../../darc/signer";
+import Log from "../../log";
 import { registerMessage } from "../../protobuf";
-import IdentityDarc from "../../darc/identity-darc";
+import ByzCoinRPC from "../byzcoin-rpc";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
+import { InstanceID } from "../instance";
+import CoinInstance, { Coin } from "./coin-instance";
+import CredentialInstance, { CredentialStruct } from "./credentials-instance";
+import DarcInstance from "./darc-instance";
+import { PopPartyInstance } from "./pop-party/pop-party-instance";
+import { PopDesc } from "./pop-party/proto";
+import RoPaSciInstance, { RoPaSciStruct } from "./ro-pa-sci-instance";
 
-export const SpawnerCoin = Buffer.alloc(32, 0);
-SpawnerCoin.write('SpawnerCoin');
+export const SPAWNER_COIN = Buffer.alloc(32, 0);
+SPAWNER_COIN.write("SpawnerCoin");
 
 export default class SpawnerInstance {
     static readonly contractID = "spawner";
 
-    private rpc: ByzCoinRPC;
+    /**
+     * Create a spawner instance
+     *
+     * @param bc The ByzCoinRPC to use
+     * @param darcID The darc instance ID
+     * @param signers The list of signers
+     * @param costs The different cost for new instances
+     * @param beneficiary The beneficiary of the costs
+     */
+    static async create(params: ICreateSpawner): Promise<SpawnerInstance> {
+        const { bc, darcID, signers, costs, beneficiary } = params;
+
+        const args = [
+            ...Object.keys(costs).map((k) => {
+                const value = new Coin({ name: SPAWNER_COIN, value: costs[k] }).toBytes();
+                return new Argument({ name: k, value });
+            }),
+            new Argument({ name: "beneficiary", value: beneficiary }),
+        ];
+
+        const inst = Instruction.createSpawn(darcID, this.contractID, args);
+        const ctx = new ClientTransaction({ instructions: [inst] });
+        await ctx.updateCounters(bc, signers);
+        ctx.signWith(signers);
+
+        await bc.sendTransactionAndWait(ctx);
+
+        return this.fromByzcoin(bc, inst.deriveId());
+    }
+
+    /**
+     * Initializes using an existing coinInstance from ByzCoin
+     *
+     * @param bc
+     * @param iid
+     */
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<SpawnerInstance> {
+        const proof = await bc.getProof(iid);
+        if (!proof.exists(iid)) {
+            throw new Error("fail to get a matching proof");
+        }
+
+        return new SpawnerInstance(bc, iid, SpawnerStruct.decode(proof.value));
+    }
+
+    /**
+     * Helper to create a user darc
+     *
+     * @param pubKey    The user public key
+     * @param alias     The user alias
+     * @returns the new darc
+     */
+    static prepareUserDarc(pubKey: Point, alias: string): Darc {
+        const id = new IdentityEd25519({ point: pubKey.toProto() });
+
+        const darc = Darc.newDarc([id], [id], Buffer.from(`user ${alias}`));
+        darc.addIdentity("invoke:coin.update", id, Rules.AND);
+        darc.addIdentity("invoke:coin.fetch", id, Rules.AND);
+        darc.addIdentity("invoke:coin.transfer", id, Rules.AND);
+
+        return darc;
+    }
+
+    /**
+     * Helper to create a PoP party darc
+     *
+     * @param darcIDs   Organizers darc instance IDs
+     * @param desc      Description of the party
+     * @returns the new darc
+     */
+    static preparePartyDarc(darcIDs: InstanceID[], desc: string): Darc {
+        const ids = darcIDs.map((di) => new IdentityDarc({ id: di }));
+        const darc = Darc.newDarc(ids, ids, Buffer.from(desc));
+        ids.forEach((id) => {
+            darc.addIdentity("invoke:popParty.barrier", id, Rules.OR);
+            darc.addIdentity("invoke:popParty.finalize", id, Rules.OR);
+            darc.addIdentity("invoke:popParty.addParty", id, Rules.OR);
+        });
+
+        return darc;
+    }
+
+    /**
+     * Generate the credential instance ID for a given darc ID
+     *
+     * @param darcBaseID The base ID of the darc
+     * @returns the id as a buffer
+     */
+    static credentialIID(darcBaseID: Buffer): InstanceID {
+        const h = createHash("sha256");
+        h.update(Buffer.from("credential"));
+        h.update(darcBaseID);
+        return h.digest();
+    }
+
+    /**
+     * Generate the coin instance ID for a given darc ID
+     *
+     * @param darcBaseID The base ID of the darc
+     * @returns the id as a buffer
+     */
+    static coinIID(darcBaseID: Buffer): InstanceID {
+        const h = createHash("sha256");
+        h.update(Buffer.from("coin"));
+        h.update(darcBaseID);
+        return h.digest();
+    }
+
     readonly iid: InstanceID;
+
+    private rpc: ByzCoinRPC;
     private struct: SpawnerStruct;
 
     /**
@@ -38,12 +147,12 @@ export default class SpawnerInstance {
     constructor(bc: ByzCoinRPC, iid: InstanceID, spawner: SpawnerStruct) {
         this.rpc = bc;
         this.iid = iid;
-        this.struct = spawner
+        this.struct = spawner;
     }
 
     /**
      * Get the total cost required to sign up
-     * 
+     *
      * @returns the cost
      */
     get signupCost(): Long {
@@ -58,14 +167,14 @@ export default class SpawnerInstance {
      * @returns a promise that resolves once the data is up-to-date
      */
     async update(): Promise<SpawnerInstance> {
-        let proof = await this.rpc.getProof(this.iid);
+        const proof = await this.rpc.getProof(this.iid);
         this.struct = SpawnerStruct.decode(proof.value);
         return this;
     }
 
     /**
      * Create a darc for a user
-     * 
+     *
      * @param coin      The coin instance to take coins from
      * @param signers   The signers for the transaction
      * @param pubKey    public key of the user
@@ -95,7 +204,7 @@ export default class SpawnerInstance {
                     DarcInstance.contractID,
                     [new Argument({ name: "darc", value: d.toBytes() })],
                 ),
-            ]
+            ],
         });
         await ctx.updateCounters(this.rpc, signers);
         ctx.signWith(signers);
@@ -107,7 +216,7 @@ export default class SpawnerInstance {
 
     /**
      * Create a coin instance for a given darc
-     * 
+     *
      * @param coin      The coin instance to take the coins from
      * @param signers   The signers for the transaction
      * @param darcID    The darc instance ID
@@ -137,11 +246,11 @@ export default class SpawnerInstance {
                     this.iid,
                     CoinInstance.contractID,
                     [
-                        new Argument({ name: "coinName", value: SpawnerCoin }),
+                        new Argument({ name: "coinName", value: SPAWNER_COIN }),
                         new Argument({ name: "darcID", value: darcID }),
                     ],
-                )
-            ]
+                ),
+            ],
         });
         await ctx.updateCounters(this.rpc, signers);
         ctx.signWith(signers);
@@ -153,7 +262,7 @@ export default class SpawnerInstance {
 
     /**
      * Create a credential instance for the given darc
-     * 
+     *
      * @param coin      The coin instance to take coins from
      * @param signers   The signers for the transaction
      * @param darcID    The darc instance ID
@@ -162,9 +271,9 @@ export default class SpawnerInstance {
      */
     async createCredential(coin: CoinInstance, signers: Signer[], darcID: Buffer, cred: CredentialStruct): Promise<CredentialInstance> {
         try {
-            const cred = await CredentialInstance.fromByzcoin(this.rpc, SpawnerInstance.credentialIID(darcID));
+            const c = await CredentialInstance.fromByzcoin(this.rpc, SpawnerInstance.credentialIID(darcID));
             Log.lvl2("this credential is already registerd");
-            return cred;
+            return c;
         } catch (e) {
             // credential doesn't exist
         }
@@ -198,7 +307,7 @@ export default class SpawnerInstance {
 
     /**
      * Create a PoP party
-     * 
+     *
      * @param coin The coin instance to take coins from
      * @param signers The signers for the transaction
      * @param orgs The list fo organisers
@@ -206,17 +315,17 @@ export default class SpawnerInstance {
      * @param reward The reward of an attendee
      * @returns a promise tha resolves with the new pop party instance
      */
-    async createPopParty(params: CreatePopParty): Promise<PopPartyInstance> {
+    async createPopParty(params: ICreatePopParty): Promise<PopPartyInstance> {
         const { coin, signers, orgs, desc, reward } = params;
 
         // Verify that all organizers have published their personhood public key
         for (const org of orgs) {
-            if (!org.getAttribute('personhood', 'ed25519')) {
+            if (!org.getAttribute("personhood", "ed25519")) {
                 throw new Error(`One of the organisers didn't publish his personhood key`);
             }
         }
 
-        const orgDarcIDs = orgs.map(org => org.darcID);
+        const orgDarcIDs = orgs.map((org) => org.darcID);
         const valueBuf = this.struct.costDarc.value.add(this.struct.costParty.value).toBytesLE();
         const orgDarc = SpawnerInstance.preparePartyDarc(orgDarcIDs, "party-darc " + desc.name);
         const ctx = new ClientTransaction({
@@ -240,8 +349,8 @@ export default class SpawnerInstance {
                         new Argument({ name: "description", value: desc.toBytes() }),
                         new Argument({ name: "miningReward", value: Buffer.from(reward.toBytesLE()) }),
                     ],
-                )
-            ]
+                ),
+            ],
         });
         await ctx.updateCounters(this.rpc, signers);
         ctx.signWith(signers);
@@ -253,7 +362,7 @@ export default class SpawnerInstance {
 
     /**
      * Create a Rock-Paper-Scisors game instance
-     * 
+     *
      * @param desc      The description of the game
      * @param coin      The coin instance to take coins from
      * @param signers   The list of signers
@@ -262,15 +371,15 @@ export default class SpawnerInstance {
      * @param fillup    Data that will be hash with the choice
      * @returns a promise that resolves with the new instance
      */
-    async createRoPaSci(params: CreateRoPaSci): Promise<RoPaSciInstance> {
+    async createRoPaSci(params: ICreateRoPaSci): Promise<RoPaSciInstance> {
         const { desc, coin, signers, stake, choice, fillup } = params;
-        
-        if (fillup.length != 31){
+
+        if (fillup.length !== 31) {
             throw new Error("need exactly 31 bytes for fillUp");
         }
 
         const c = new Coin({name: coin.name, value: stake.add(this.struct.costRoPaSci.value) });
-        if (coin.value.lessThan(c.value)){
+        if (coin.value.lessThan(c.value)) {
             throw new Error("account balance not high enough for that stake");
         }
 
@@ -279,11 +388,11 @@ export default class SpawnerInstance {
         fph.update(fillup);
         const rps = new RoPaSciStruct({
             description: desc,
-            stake: c,
-            firstplayerhash: fph.digest(),
             firstplayer: -1,
+            firstplayerhash: fph.digest(),
             secondplayer: -1,
             secondplayeraccount: null,
+            stake: c,
         });
 
         const ctx = new ClientTransaction({
@@ -292,13 +401,13 @@ export default class SpawnerInstance {
                     coin.id,
                     CoinInstance.contractID,
                     "fetch",
-                    [new Argument({ name: "coins", value: Buffer.from(c.value.toBytesLE()) })]
+                    [new Argument({ name: "coins", value: Buffer.from(c.value.toBytesLE()) })],
                 ),
                 Instruction.createSpawn(
                     this.iid,
                     RoPaSciInstance.contractID,
                     [new Argument({ name: "struct", value: rps.toBytes() })],
-                )
+                ),
             ],
         });
         await ctx.updateCounters(this.rpc, signers);
@@ -310,114 +419,6 @@ export default class SpawnerInstance {
         rpsi.setChoice(choice, fillup);
 
         return rpsi;
-    }
-
-    /**
-     * Create a spawner instance
-     * 
-     * @param bc The ByzCoinRPC to use
-     * @param darcID The darc instance ID
-     * @param signers The list of signers
-     * @param costs The different cost for new instances
-     * @param beneficiary The beneficiary of the costs
-     */
-    static async create(params: CreateSpawner): Promise<SpawnerInstance> {
-        const { bc, darcID, signers, costs, beneficiary } = params;
-
-        const args = [
-            ...Object.keys(costs).map((k) => {
-                const value = new Coin({ name: SpawnerCoin, value: costs[k] }).toBytes();
-                return new Argument({ name: k, value });
-            }),
-            new Argument({ name: 'beneficiary', value: beneficiary }),
-        ];
-
-        const inst = Instruction.createSpawn(darcID, this.contractID, args);
-        const ctx = new ClientTransaction({ instructions: [inst] });
-        await ctx.updateCounters(bc, signers);
-        ctx.signWith(signers);
-
-        await bc.sendTransactionAndWait(ctx);
-
-        return this.fromByzcoin(bc, inst.deriveId());
-    }
-
-    /**
-     * Initializes using an existing coinInstance from ByzCoin
-     * 
-     * @param bc
-     * @param iid
-     */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<SpawnerInstance> {
-        const proof = await bc.getProof(iid);
-        if (!proof.exists(iid)) {
-            throw new Error('fail to get a matching proof');
-        }
-
-        return new SpawnerInstance(bc, iid, SpawnerStruct.decode(proof.value));
-    }
-
-    /**
-     * Helper to create a user darc
-     * 
-     * @param pubKey    The user public key
-     * @param alias     The user alias
-     * @returns the new darc
-     */
-    static prepareUserDarc(pubKey: Point, alias: string): Darc {
-        const id = new IdentityEd25519({ point: pubKey.toProto() });
-
-        const darc = Darc.newDarc([id], [id], Buffer.from(`user ${alias}`));
-        darc.addIdentity('invoke:coin.update', id, Rules.AND);
-        darc.addIdentity('invoke:coin.fetch', id, Rules.AND);
-        darc.addIdentity('invoke:coin.transfer', id, Rules.AND);
-
-        return darc;
-    }
-
-    /**
-     * Helper to create a PoP party darc
-     * 
-     * @param darcIDs   Organizers darc instance IDs
-     * @param desc      Description of the party
-     * @returns the new darc
-     */
-    static preparePartyDarc(darcIDs: InstanceID[], desc: string): Darc {
-        const ids = darcIDs.map(di => new IdentityDarc({ id: di }));
-        const darc = Darc.newDarc(ids, ids, Buffer.from(desc));
-        ids.forEach((id) => {
-            darc.addIdentity('invoke:popParty.barrier', id, Rules.OR);
-            darc.addIdentity('invoke:popParty.finalize', id, Rules.OR);
-            darc.addIdentity('invoke:popParty.addParty', id, Rules.OR);
-        });
-
-        return darc;
-    }
-
-    /**
-     * Generate the credential instance ID for a given darc ID
-     * 
-     * @param darcBaseID The base ID of the darc
-     * @returns the id as a buffer
-     */
-    static credentialIID(darcBaseID: Buffer): InstanceID {
-        let h = createHash("sha256");
-        h.update(Buffer.from("credential"));
-        h.update(darcBaseID);
-        return h.digest();
-    }
-
-    /**
-     * Generate the coin instance ID for a given darc ID
-     * 
-     * @param darcBaseID The base ID of the darc
-     * @returns the id as a buffer
-     */
-    static coinIID(darcBaseID: Buffer): InstanceID {
-        let h = createHash("sha256");
-        h.update(Buffer.from("coin"));
-        h.update(darcBaseID);
-        return h.digest();
     }
 }
 
@@ -456,49 +457,49 @@ export class SpawnerStruct extends Message<SpawnerStruct> {
 /**
  * Fields of the costs of a spawner instance
  */
-interface CreateCost {
-    [k: string]: Long
-    costDarc: Long,
-    costCoin: Long,
-    costCredential: Long,
-    costParty: Long,
+interface ICreateCost {
+    [k: string]: Long;
+    costDarc: Long;
+    costCoin: Long;
+    costCredential: Long;
+    costParty: Long;
 }
 
 /**
  * Parameters to create a spawner instance
  */
-interface CreateSpawner {
-    [k: string]: any
-    bc: ByzCoinRPC,
-    darcID: InstanceID,
-    signers: Signer[],
-    costs: CreateCost,
-    beneficiary: InstanceID,
+interface ICreateSpawner {
+    [k: string]: any;
+    bc: ByzCoinRPC;
+    darcID: InstanceID;
+    signers: Signer[];
+    costs: ICreateCost;
+    beneficiary: InstanceID;
 }
 
 /**
  * Parameters to create a rock-paper-scisors game
  */
-interface CreateRoPaSci {
-    [k: string]: any
-    desc: string,
-    coin: CoinInstance,
-    signers: Signer[],
-    stake: Long,
-    choice: number,
-    fillup: Buffer,
+interface ICreateRoPaSci {
+    [k: string]: any;
+    desc: string;
+    coin: CoinInstance;
+    signers: Signer[];
+    stake: Long;
+    choice: number;
+    fillup: Buffer;
 }
 
 /**
  * Parameters to create a pop party
  */
-interface CreatePopParty {
-    [k: string]: any
-    coin: CoinInstance,
-    signers: Signer[],
-    orgs: CredentialInstance[],
-    desc: PopDesc,
-    reward: Long,
+interface ICreatePopParty {
+    [k: string]: any;
+    coin: CoinInstance;
+    signers: Signer[];
+    orgs: CredentialInstance[];
+    desc: PopDesc;
+    reward: Long;
 }
 
-registerMessage('personhood.SpawnerStruct', SpawnerStruct);
+registerMessage("personhood.SpawnerStruct", SpawnerStruct);

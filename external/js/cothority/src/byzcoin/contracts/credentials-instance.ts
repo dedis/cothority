@@ -1,12 +1,22 @@
 import { Message, Properties } from "protobufjs";
-import Instance, { InstanceID } from "../instance";
-import ByzCoinRPC from "../byzcoin-rpc";
 import Signer from "../../darc/signer";
-import ClientTransaction, { Instruction, Argument } from "../client-transaction";
 import { registerMessage } from "../../protobuf";
+import ByzCoinRPC from "../byzcoin-rpc";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
+import Instance, { InstanceID } from "../instance";
 
 export default class CredentialsInstance {
     static readonly contractID = "credential";
+
+    /**
+     * Get an existing credential instance using its instance ID by fetching
+     * the proof.
+     * @param bc    the byzcoin RPC
+     * @param iid   the instance ID
+     */
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CredentialsInstance> {
+        return new CredentialsInstance(bc, await Instance.fromByzCoin(bc, iid));
+    }
 
     private rpc: ByzCoinRPC;
     private instance: Instance;
@@ -20,7 +30,7 @@ export default class CredentialsInstance {
 
     /**
      * Getter for the darc ID
-     * 
+     *
      * @returns the id as a buffer
      */
     get darcID(): InstanceID {
@@ -29,7 +39,7 @@ export default class CredentialsInstance {
 
     /**
      * Update the data of the crendetial instance by fetching the proof
-     * 
+     *
      * @returns a promise resolving with the instance on success, rejecting with
      * the error otherwise
      */
@@ -41,17 +51,17 @@ export default class CredentialsInstance {
 
     /**
      * Get a credential attribute
-     * 
+     *
      * @param credential    The name of the credential
      * @param attribute     The name of the attribute
      * @returns the value of the attribute if it exists, null otherwise
      */
     getAttribute(credential: string, attribute: string): Buffer {
-        let cred = this.credential.credentials.find(c => c.name == credential);
+        const cred = this.credential.credentials.find((c) => c.name === credential);
         if (!cred) {
             return null;
         }
-        let att = cred.attributes.find(a => a.name == attribute);
+        const att = cred.attributes.find((a) => a.name === attribute);
         if (!att) {
             return null;
         }
@@ -61,7 +71,7 @@ export default class CredentialsInstance {
     /**
      * Set or update a credential attribute by sending a transaction. It will wait
      * for the block inclusion or throw an error if it fails.
-     * 
+     *
      * @param owner         Signer to use for the transaction
      * @param credential    Name of the credential
      * @param attribute     Name of the attribute
@@ -70,12 +80,12 @@ export default class CredentialsInstance {
      * for an error
      */
     async setAttribute(owner: Signer, credential: string, attribute: string, value: Buffer): Promise<any> {
-        let cred = this.credential.credentials.find(c => c.name == credential);
+        let cred = this.credential.credentials.find((c) => c.name === credential);
         if (!cred) {
             cred = new Credential({ name: credential, attributes: [new Attribute({ name: attribute, value })] });
             this.credential.credentials.push(cred);
         } else {
-            const idx = cred.attributes.findIndex(a => a.name == attribute);
+            const idx = cred.attributes.findIndex((a) => a.name === attribute);
             const attr = new Attribute({ name: attribute, value });
             if (idx === -1) {
                 cred.attributes.push(attr);
@@ -98,16 +108,6 @@ export default class CredentialsInstance {
         await this.rpc.sendTransactionAndWait(ctx);
 
         return this;
-    }
-
-    /**
-     * Get an existing credential instance using its instance ID by fetching
-     * the proof.
-     * @param bc    the byzcoin RPC
-     * @param iid   the instance ID
-     */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CredentialsInstance> {
-        return new CredentialsInstance(bc, await Instance.fromByzCoin(bc, iid));
     }
 }
 
@@ -151,6 +151,6 @@ export class Attribute extends Message<Attribute> {
     readonly value: Buffer;
 }
 
-registerMessage('personhood.CredentialStruct', CredentialStruct);
-registerMessage('personhood.Credential', Credential);
-registerMessage('personhood.Attribute', Attribute);
+registerMessage("personhood.CredentialStruct", CredentialStruct);
+registerMessage("personhood.Credential", Credential);
+registerMessage("personhood.Attribute", Attribute);

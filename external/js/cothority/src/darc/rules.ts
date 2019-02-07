@@ -34,8 +34,8 @@ export class Rule extends Message<Rule> {
  * the rules
  */
 export default class Rules extends Message<Rules> {
-    public static OR = '|';
-    public static AND = '&';
+    static OR = "|";
+    static AND = "&";
 
     readonly list: Rule[];
 
@@ -54,7 +54,7 @@ export default class Rules extends Message<Rules> {
      * @param op        the operator to use if the rule exists
      */
     appendToRule(action: string, identity: Identity, op: string): void {
-        const rule = this.list.find(r => r.action === action);
+        const rule = this.list.find((r) => r.action === action);
 
         if (rule) {
             rule.expr = Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]);
@@ -68,7 +68,7 @@ export default class Rules extends Message<Rules> {
      * @returns the clone
      */
     clone(): Rules {
-        return new Rules({ list: this.list.map(r => r.clone()) });
+        return new Rules({ list: this.list.map((r) => r.clone()) });
     }
 
     /**
@@ -76,9 +76,9 @@ export default class Rules extends Message<Rules> {
      * @returns a string representation
      */
     toString(): string {
-        return this.list.map(l => l.toString()).join("\n");
+        return this.list.map((l) => l.toString()).join("\n");
     }
 }
 
-registerMessage('Rule', Rule);
-registerMessage('Rules', Rules);
+registerMessage("Rule", Rule);
+registerMessage("Rules", Rules);

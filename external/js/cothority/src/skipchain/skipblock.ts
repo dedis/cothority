@@ -1,22 +1,22 @@
-import { createHash } from 'crypto';
-import { sign, Point } from '@dedis/kyber';
-import { Message } from 'protobufjs';
-import { Roster } from '../network/proto';
-import { registerMessage } from '../protobuf';
-import { BN256G2Point, BN256G1Point } from '@dedis/kyber/dist/pairing/point';
+import { Point, sign } from "@dedis/kyber";
+import { BN256G1Point, BN256G2Point } from "@dedis/kyber/dist/pairing/point";
+import { createHash } from "crypto";
+import { Message } from "protobufjs";
+import { Roster } from "../network/proto";
+import { registerMessage } from "../protobuf";
 
 const { bls, Mask } = sign;
 
 /**
  * Convert an integer into a little-endian buffer
- * 
+ *
  * @param v The number to convert
  * @returns a 32bits buffer
  */
 function int2buf(v: number): Buffer {
     const b = Buffer.allocUnsafe(4);
     b.writeInt32LE(v, 0);
-    
+
     return b;
 }
 
@@ -36,7 +36,7 @@ export class SkipBlock extends Message<SkipBlock> {
 
     /**
      * Getter for the forward links
-     * 
+     *
      * @returns the list of forward links
      */
     get forwardLinks(): ForwardLink[] {
@@ -45,11 +45,11 @@ export class SkipBlock extends Message<SkipBlock> {
 
     /**
      * Calculate the hash of the block
-     * 
+     *
      * @returns the hash
      */
     computeHash(): Buffer {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         /* https://github.com/dedis/cothority/issues/1701
         h.update(int2buf(this.index));
         h.update(int2buf(this.height));
@@ -69,7 +69,7 @@ export class SkipBlock extends Message<SkipBlock> {
         h.update(this.data);
 
         if (this.roster) {
-            for (const pub of this.roster.list.map(srvid => srvid.getPublic())) {
+            for (const pub of this.roster.list.map((srvid) => srvid.getPublic())) {
                 h.update(pub.marshalBinary());
             }
         }
@@ -86,11 +86,11 @@ export class ForwardLink extends Message<ForwardLink> {
 
     /**
      * Compute the hash of the forward link
-     * 
+     *
      * @returns the hash
      */
     hash(): Buffer {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         h.update(this.from);
         h.update(this.to);
 
@@ -103,19 +103,19 @@ export class ForwardLink extends Message<ForwardLink> {
 
     /**
      * Verify the signature against the list of public keys
-     * 
+     *
      * @param publics The list of public keys
      * @returns an error if something is wrong, null otherwise
      */
     verify(publics: Point[]): Error {
         if (!this.hash().equals(this.signature.msg)) {
-            return new Error('recreated message does not match');
+            return new Error("recreated message does not match");
         }
 
         const agg = this.signature.getAggregate(publics) as BN256G2Point;
 
         if (!bls.verify(this.signature.msg, agg, this.signature.getSignature())) {
-            return new Error('signature not verified');
+            return new Error("signature not verified");
         }
 
         return null;
@@ -128,7 +128,7 @@ export class ByzcoinSignature extends Message<ByzcoinSignature> {
 
     /**
      * Get the actual bytes of the signature. The remaining part is the mask.
-     * 
+     *
      * @returns the signature
      */
     getSignature(): Buffer {
@@ -138,7 +138,7 @@ export class ByzcoinSignature extends Message<ByzcoinSignature> {
     /**
      * Get the correct aggregation of the public keys using the mask to know
      * which one has been used
-     * 
+     *
      * @param publics The public keys of the roster
      * @returns the aggregated public key for this signature
      */
@@ -148,6 +148,6 @@ export class ByzcoinSignature extends Message<ByzcoinSignature> {
     }
 }
 
-registerMessage('SkipBlock', SkipBlock);
-registerMessage('ForwardLink', ForwardLink);
-registerMessage('ByzcoinSig', ByzcoinSignature);
+registerMessage("SkipBlock", SkipBlock);
+registerMessage("ForwardLink", ForwardLink);
+registerMessage("ByzcoinSig", ByzcoinSignature);

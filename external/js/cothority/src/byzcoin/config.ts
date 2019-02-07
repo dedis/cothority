@@ -1,16 +1,16 @@
 import { Message, Properties } from "protobufjs";
 import { Roster } from "../network/proto";
-import Proof from "./proof";
 import { registerMessage } from "../protobuf";
+import Proof from "./proof";
 
 export default class ChainConfig extends Message<ChainConfig> {
+    static fromProof(proof: Proof): ChainConfig {
+        return ChainConfig.decode(proof.stateChangeBody.value);
+    }
+
     readonly roster: Roster;
     private blockinterval: Long;
     private maxblocksize: number;
-
-    public static fromProof(proof: Proof): ChainConfig {
-        return ChainConfig.decode(proof.stateChangeBody.value);
-    }
 
     constructor(properties?: Properties<ChainConfig>) {
         super(properties);
@@ -42,4 +42,4 @@ export default class ChainConfig extends Message<ChainConfig> {
     }
 }
 
-registerMessage('byzcoin.ChainConfig', ChainConfig);
+registerMessage("byzcoin.ChainConfig", ChainConfig);

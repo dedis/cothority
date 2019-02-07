@@ -1,15 +1,15 @@
-import { WebSocketAdapter } from '../../src/network/websocket-adapter';
+import { WebSocketAdapter } from "../../src/network/websocket-adapter";
 
 export default class TestWebSocket extends WebSocketAdapter {
-    public isOpen = false;
-    public isClosed = false;
-    public data: Buffer;
-    public error: Error;
-    public code: number;
-    public sent: Buffer;
+    isOpen = false;
+    isClosed = false;
+    data: Buffer;
+    error: Error;
+    code: number;
+    sent: Buffer;
 
     constructor(data: Buffer, error: Error, code: number = 1000) {
-        super('');
+        super("");
 
         this.data = data;
         this.error = error;
@@ -20,7 +20,7 @@ export default class TestWebSocket extends WebSocketAdapter {
     onOpen(callback: () => void): void {
         callback();
     }
-    
+
     onMessage(callback: (data: Buffer) => void): void {
         if (this.data) {
             callback(this.data);
@@ -28,7 +28,7 @@ export default class TestWebSocket extends WebSocketAdapter {
     }
 
     onClose(callback: (code: number, reason: string) => void): void {
-        callback(this.code, 'reason to close');
+        callback(this.code, "reason to close");
     }
 
     onError(callback: (err: Error) => void): void {

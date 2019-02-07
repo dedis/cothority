@@ -1,7 +1,7 @@
 import { Message } from "protobufjs";
+import { registerMessage } from "../protobuf";
 import Identity from "./identity";
 import IdentityWrapper from "./identity-wrapper";
-import { registerMessage } from "../protobuf";
 
 /**
  * Identity based on a DARC identifier
@@ -26,8 +26,8 @@ export default class IdentityDarc extends Message<IdentityDarc> implements Ident
 
     /** @inheritdoc */
     toString(): string {
-        return `darc:${this.id.toString('hex')}`
+        return `darc:${this.id.toString("hex")}`;
     }
 }
 
-registerMessage('IdentityDarc', IdentityDarc);
+registerMessage("IdentityDarc", IdentityDarc);

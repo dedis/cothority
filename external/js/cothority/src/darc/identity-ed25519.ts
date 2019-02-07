@@ -1,16 +1,16 @@
-import { Message } from 'protobufjs';
-import { curve, sign, Point, PointFactory } from '@dedis/kyber';
-import Identity from "./identity";
-import { registerMessage } from '../protobuf';
-import IdentityWrapper from './identity-wrapper';
+import { curve, Point, PointFactory, sign } from "@dedis/kyber";
+import { Message } from "protobufjs";
+import { registerMessage } from "../protobuf";
+import IIdentity from "./identity";
+import IdentityWrapper from "./identity-wrapper";
 
 const { schnorr } = sign;
-const ed25519 = curve.newCurve('edwards25519');
+const ed25519 = curve.newCurve("edwards25519");
 
 /**
  * Identity of an Ed25519 signer
  */
-export default class IdentityEd25519 extends Message<IdentityEd25519> implements Identity {
+export default class IdentityEd25519 extends Message<IdentityEd25519> implements IIdentity {
   readonly point: Buffer;
 
   /**
@@ -43,4 +43,4 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
   }
 }
 
-registerMessage('IdentityEd25519', IdentityEd25519);
+registerMessage("IdentityEd25519", IdentityEd25519);

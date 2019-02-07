@@ -1,14 +1,14 @@
-import StatusRPC from '../../src/status/status-rpc';
-import { startConodes, ROSTER } from '../support/conondes';
+import StatusRPC from "../../src/status/status-rpc";
+import { ROSTER, startConodes } from "../support/conondes";
 
-describe('StatusRPC', () => {
+describe("StatusRPC", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();
     }, 30 * 1000);
 
-    it('should get the status of the conode', async () => {
+    it("should get the status of the conode", async () => {
         const rpc = new StatusRPC(roster);
 
         expect(roster.length).toBeGreaterThan(0);

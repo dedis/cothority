@@ -4,11 +4,12 @@ const lvlStr = ["E", "W", "I", "!4", "!3", "!2", "!1", "P", "1", "2", "3", "4"];
 const regex = /([^/]+:[0-9]+):[0-9]+/;
 
 export class Logger {
-    _lvl: number;
-    _out: (str: string) => void;
+    private _lvl: number;
+    private _out: (str: string) => void;
 
     constructor(lvl: number) {
         this._lvl = lvl === undefined ? defaultLvl : lvl;
+        // tslint:disable-next-line
         this._out = console.log;
     }
 
@@ -22,6 +23,54 @@ export class Logger {
 
     set out(fn: (str: string) => void) {
         this._out = fn;
+    }
+
+    public print(...args: any[]) {
+        this.printLvl(0, args);
+    }
+
+    public lvl1(...args: any[]) {
+        this.printLvl(1, args);
+    }
+
+    public lvl2(...args: any[]) {
+        this.printLvl(2, args);
+    }
+
+    public lvl3(...args: any[]) {
+        this.printLvl(3, args);
+    }
+
+    public lvl4(...args: any[]) {
+        this.printLvl(4, args);
+    }
+
+    public llvl1(...args: any[]) {
+        this.printLvl(-1, args);
+    }
+
+    public llvl2(...args: any[]) {
+        this.printLvl(-2, args);
+    }
+
+    public llvl3(...args: any[]) {
+        this.printLvl(-3, args);
+    }
+
+    public llvl4(...args: any[]) {
+        this.printLvl(-4, args);
+    }
+
+    public info(...args: any[]) {
+        this.printLvl(-5, args);
+    }
+
+    public warn(...args: any[]) {
+        this.printLvl(-6, args);
+    }
+
+    public error(...args: any[]) {
+        this.printLvl(-7, args);
     }
 
     private joinArgs(args: any[]) {
@@ -40,7 +89,7 @@ export class Logger {
             }
             if (a.toString instanceof Function) {
                 const str = a.toString();
-                if (str !== '[object Object]') {
+                if (str !== "[object Object]") {
                     return str;
                 }
             }
@@ -53,18 +102,18 @@ export class Logger {
     }
 
     private printCaller(err: Error, i: number): string {
-        const lines = err.stack.split('\n');
+        const lines = err.stack.split("\n");
         if (lines.length <= i - 1) {
-            return '';
+            return "";
         }
 
         const matches = lines[i - 1].match(regex);
-        
+
         if (matches && matches.length >= 1) {
             return matches[1];
         }
 
-        return '';
+        return "";
     }
 
     private printLvl(l: number, args: any[]) {
@@ -73,54 +122,6 @@ export class Logger {
         if (l <= this._lvl) {
             this._out(`[${lvlStr[l + 7]}] ${this.printCaller(new Error(), 4)}: ${this.joinArgs(args)}`);
         }
-    }
-
-    print(...args: any[]) {
-        this.printLvl(0, args);
-    }
-
-    lvl1(...args: any[]) {
-        this.printLvl(1, args);
-    }
-
-    lvl2(...args: any[]) {
-        this.printLvl(2, args);
-    }
-
-    lvl3(...args: any[]) {
-        this.printLvl(3, args);
-    }
-
-    lvl4(...args: any[]) {
-        this.printLvl(4, args);
-    }
-
-    llvl1(...args: any[]) {
-        this.printLvl(-1, args);
-    }
-
-    llvl2(...args: any[]) {
-        this.printLvl(-2, args);
-    }
-
-    llvl3(...args: any[]) {
-        this.printLvl(-3, args);
-    }
-
-    llvl4(...args: any[]) {
-        this.printLvl(-4, args);
-    }
-
-    info(...args: any[]) {
-        this.printLvl(-5, args);
-    }
-
-    warn(...args: any[]) {
-        this.printLvl(-6, args);
-    }
-
-    error(...args: any[]) {
-        this.printLvl(-7, args);
     }
 }
 

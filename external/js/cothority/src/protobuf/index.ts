@@ -1,5 +1,5 @@
-import protobuf = require("protobufjs");
-import models from './models.json';
+import protobuf from "protobufjs";
+import models from "./models.json";
 
 const root = protobuf.Root.fromJSON(models);
 

@@ -1,11 +1,11 @@
 import { createHash } from "crypto";
+import Long from "long";
 import { Message } from "protobufjs";
-import Long from 'long';
-import Signer from "../darc/signer";
-import Signature from "../darc/signature";
 import Identity from "../darc/identity";
+import Signature from "../darc/signature";
+import Signer from "../darc/signer";
 
-export interface CounterUpdater {
+export interface ICounterUpdater {
     getSignerCounters(signers: Identity[], increment: number): Promise<Long[]>;
 }
 
@@ -30,7 +30,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * @param rpc       The RPC to use to fetch
      * @param signers   List of signers
      */
-    async updateCounters(rpc: CounterUpdater, signers: Identity[]): Promise<void> {
+    async updateCounters(rpc: ICounterUpdater, signers: Identity[]): Promise<void> {
         if (this.instructions.length === 0) {
             return;
         }
@@ -38,7 +38,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
         await this.instructions[0].updateCounters(rpc, signers);
 
         for (let i = 1; i < this.instructions.length; i++) {
-            this.instructions[i].signerCounter = this.instructions[0].signerCounter.map(v => v.add(i));
+            this.instructions[i].signerCounter = this.instructions[0].signerCounter.map((v) => v.add(i));
         }
     }
 
@@ -47,8 +47,8 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * @returns a buffer of the hash
      */
     hash(): Buffer {
-        let h = createHash("sha256");
-        this.instructions.forEach(i => h.update(i.hash()));
+        const h = createHash("sha256");
+        this.instructions.forEach((i) => h.update(i.hash()));
         return h.digest();
     }
 }
@@ -57,13 +57,6 @@ export default class ClientTransaction extends Message<ClientTransaction> {
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
-    private instanceid: Buffer;
-    readonly spawn: Spawn;
-    readonly invoke: Invoke;
-    readonly delete: Delete;
-    private signercounter: Long[];
-
-    private _signatures: Signature[];
 
     /**
      * Getter for the instance ID
@@ -124,76 +117,6 @@ export class Instruction extends Message<Instruction> {
     }
 
     /**
-     * Use the signers to make a signature of the hash
-     * @param ctxHash The client transaction hash
-     * @param signers The list of signers
-     */
-    signWith(ctxHash: Buffer, signers: Signer[]): void {
-        this._signatures = signers.map(s => s.sign(ctxHash));
-    }
-
-    /**
-     * Fetch and update the counters
-     * @param rpc       the RPC to use to fetch
-     * @param signers   the list of signers
-     */
-    async updateCounters(rpc: CounterUpdater, signers: Identity[]): Promise<void> {
-        const counters = await rpc.getSignerCounters(signers, 1);
-        this.signerCounter = counters;
-    }
-
-    /**
-     * Hash the instruction
-     * @returns a buffer of the hash
-     */
-    hash(): Buffer {
-        let h = createHash("sha256");
-        h.update(this.instanceid);
-        h.update(Buffer.from([this.type]));
-        let args: Argument[] = [];
-        switch (this.type) {
-            case 0:
-                h.update(this.spawn.contractID);
-                args = this.spawn.args;
-                break;
-            case 1:
-                h.update(this.invoke.contractID);
-                args = this.invoke.args;
-                break;
-            case 2:
-                h.update(this.delete.contractID);
-                break;
-        }
-        args.forEach(arg => {
-            h.update(arg.name);
-            h.update(arg.value);
-        });
-        this.signerCounter.forEach(sc => {
-            h.update(Buffer.from(sc.toBytesLE()));
-        });
-        return h.digest();
-    }
-
-    /**
-     * Get the unique identifier of the instruction
-     * @returns the id as a buffer
-     */
-    deriveId(what: string = ""): Buffer {
-        let h = createHash("sha256");
-        h.update(this.hash());
-        let b = Buffer.alloc(4);
-        b.writeUInt32LE(this.signatures.length, 0);
-        h.update(b);
-        this.signatures.forEach(sig => {
-            b.writeUInt32LE(sig.signature.length, 0);
-            h.update(b);
-            h.update(sig.signature);
-        });
-        h.update(Buffer.from(what));
-        return h.digest();
-    }
-
-    /**
      * Helper to create a spawn instruction
      * @param iid           The instance ID
      * @param contractID    The contract name
@@ -203,8 +126,8 @@ export class Instruction extends Message<Instruction> {
     static createSpawn(iid: Buffer, contractID: string, args: Argument[]): Instruction {
         return new Instruction({
             instanceID: iid,
-            spawn: new Spawn({ contractID, args }),
             signerCounter: [],
+            spawn: new Spawn({ contractID, args }),
         });
     }
 
@@ -232,10 +155,87 @@ export class Instruction extends Message<Instruction> {
      */
     static createDelete(iid: Buffer, contractID: string): Instruction {
         return new Instruction({
-            instanceID: iid,
             delete: new Delete({ contractID }),
+            instanceID: iid,
             signerCounter: [],
         });
+    }
+    readonly spawn: Spawn;
+    readonly invoke: Invoke;
+    readonly delete: Delete;
+    private instanceid: Buffer;
+    private signercounter: Long[];
+
+    private _signatures: Signature[];
+
+    /**
+     * Use the signers to make a signature of the hash
+     * @param ctxHash The client transaction hash
+     * @param signers The list of signers
+     */
+    signWith(ctxHash: Buffer, signers: Signer[]): void {
+        this._signatures = signers.map((s) => s.sign(ctxHash));
+    }
+
+    /**
+     * Fetch and update the counters
+     * @param rpc       the RPC to use to fetch
+     * @param signers   the list of signers
+     */
+    async updateCounters(rpc: ICounterUpdater, signers: Identity[]): Promise<void> {
+        const counters = await rpc.getSignerCounters(signers, 1);
+        this.signerCounter = counters;
+    }
+
+    /**
+     * Hash the instruction
+     * @returns a buffer of the hash
+     */
+    hash(): Buffer {
+        const h = createHash("sha256");
+        h.update(this.instanceid);
+        h.update(Buffer.from([this.type]));
+        let args: Argument[] = [];
+        switch (this.type) {
+            case 0:
+                h.update(this.spawn.contractID);
+                args = this.spawn.args;
+                break;
+            case 1:
+                h.update(this.invoke.contractID);
+                args = this.invoke.args;
+                break;
+            case 2:
+                h.update(this.delete.contractID);
+                break;
+        }
+        args.forEach((arg) => {
+            h.update(arg.name);
+            h.update(arg.value);
+        });
+        this.signerCounter.forEach((sc) => {
+            h.update(Buffer.from(sc.toBytesLE()));
+        });
+        return h.digest();
+    }
+
+    /**
+     * Get the unique identifier of the instruction
+     * @returns the id as a buffer
+     */
+    deriveId(what: string = ""): Buffer {
+        const h = createHash("sha256");
+        h.update(this.hash());
+        const b = Buffer.alloc(4);
+        b.writeUInt32LE(this.signatures.length, 0);
+        h.update(b);
+        this.signatures.forEach((sig) => {
+            b.writeUInt32LE(sig.signature.length, 0);
+            h.update(b);
+            h.update(sig.signature);
+        });
+        h.update(Buffer.from(what));
+        return h.digest();
     }
 }
 
@@ -251,8 +251,6 @@ export class Argument extends Message<Argument> {
  * Spawn instruction that will create instances
  */
 export class Spawn extends Message<Spawn> {
-    private contractid: string;
-    readonly args: Argument[];
 
     /**
      * Getter for the contract ID
@@ -269,15 +267,14 @@ export class Spawn extends Message<Spawn> {
     set contractID(v: string) {
         this.contractid = v;
     }
+    readonly args: Argument[];
+    private contractid: string;
 }
 
 /**
  * Invoke instruction that will update an existing instance
  */
 export class Invoke extends Message<Invoke> {
-    private contractid: string;
-    readonly command: string;
-    readonly args: Argument[];
 
     /**
      * Getter for the contract ID
@@ -294,6 +291,9 @@ export class Invoke extends Message<Invoke> {
     set contractID(v: string) {
         this.contractid = v;
     }
+    readonly command: string;
+    readonly args: Argument[];
+    private contractid: string;
 }
 
 /**

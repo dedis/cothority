@@ -1,11 +1,11 @@
-import Long from 'long';
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
+import Long from "long";
 import { Message, Properties } from "protobufjs";
+import DarcInstance from "../byzcoin/contracts/darc-instance";
+import Proof from "../byzcoin/proof";
+import { registerMessage } from "../protobuf";
 import Identity from "./identity";
-import { registerMessage } from '../protobuf';
-import Proof from '../byzcoin/proof';
-import DarcInstance from '../byzcoin/contracts/darc-instance';
-import Rules from './rules';
+import Rules from "./rules";
 
 /**
  * Create a list of rules with basic permissions for owners and signers
@@ -16,8 +16,8 @@ import Rules from './rules';
 function initRules(owners: Identity[], signers: Identity[]): Rules {
     const rules = new Rules();
 
-    owners.forEach((o) => rules.appendToRule('invoke:darc.evolve', o, Rules.AND));
-    signers.forEach(s => rules.appendToRule('_sign', s, Rules.OR));
+    owners.forEach((o) => rules.appendToRule("invoke:darc.evolve", o, Rules.AND));
+    signers.forEach((s) => rules.appendToRule("_sign", s, Rules.OR));
 
     return rules;
 }
@@ -26,6 +26,44 @@ function initRules(owners: Identity[], signers: Identity[]): Rules {
  * Distributed Access Right Controls
  */
 export default class Darc extends Message<Darc> {
+    /**
+     * Create a genesis darc using the owners and signers to populate the
+     * rules
+     * @param owners    those you can evolve the darc
+     * @param signers   those you can sign
+     * @param desc      the description of the darc
+     * @returns the new darc
+     */
+    static newDarc(owners: Identity[], signers: Identity[], desc?: Buffer): Darc {
+        const darc = new Darc({
+            baseid: Buffer.from([]),
+            description: desc,
+            previd: createHash("sha256").digest(),
+            rules: initRules(owners, signers),
+            version: Long.fromNumber(0, true),
+        });
+
+        return darc;
+    }
+
+    /**
+     * Instantiate a darc using a proof
+     * @param key   Key of the proof
+     * @param p     The proof to use
+     * @returns the darc when compatible
+     */
+    static fromProof(key: Buffer, p: Proof): Darc {
+        if (!p.matchContract(DarcInstance.contractID)) {
+            throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID.toString()}`);
+        }
+
+        if (!p.exists(key)) {
+            throw new Error(`invalid key for proof: ${key.toString("hex")}`);
+        }
+
+        return Darc.decode(p.value);
+    }
+
     readonly version: Long;
     readonly description: Buffer;
     readonly baseid: Buffer;
@@ -45,8 +83,8 @@ export default class Darc extends Message<Darc> {
      * @returns the id as a buffer
      */
     get id(): Buffer {
-        let h = createHash("sha256");
-        let versionBuf = Buffer.from(this.version.toBytesLE());
+        const h = createHash("sha256");
+        const versionBuf = Buffer.from(this.version.toBytesLE());
         h.update(versionBuf);
         h.update(Buffer.from(this.description));
         if (this.baseid) {
@@ -57,12 +95,12 @@ export default class Darc extends Message<Darc> {
         }
 
         if (this.rules) {
-            this.rules.list.forEach(r => {
+            this.rules.list.forEach((r) => {
                 h.update(r.action);
                 h.update(r.expr);
             });
         }
-        
+
         return h.digest();
     }
 
@@ -77,7 +115,7 @@ export default class Darc extends Message<Darc> {
             return this.baseid;
         }
     }
-    
+
     /**
      * Get the darc ID of the previous version
      * @returns the id as a buffer
@@ -104,11 +142,11 @@ export default class Darc extends Message<Darc> {
      */
     evolve(): Darc {
         return new Darc({
-            version: this.version.add(1),
-            description: this.description,
             baseid: this.baseID,
+            description: this.description,
             previd: this.id,
             rules: this.rules.clone(),
+            version: this.version.add(1),
         });
     }
 
@@ -117,9 +155,9 @@ export default class Darc extends Message<Darc> {
      * @returns the string representation
      */
     toString(): string {
-        return "ID: " + this.id.toString('hex') + "\n" +
-            "Base: " + this.baseID.toString('hex') + "\n" +
-            "Prev: " + this.previd.toString('hex') + "\n" +
+        return "ID: " + this.id.toString("hex") + "\n" +
+            "Base: " + this.baseID.toString("hex") + "\n" +
+            "Prev: " + this.previd.toString("hex") + "\n" +
             "Version: " + this.version + "\n" +
             "Rules: " + this.rules;
     }
@@ -131,44 +169,6 @@ export default class Darc extends Message<Darc> {
     toBytes(): Buffer {
         return Buffer.from(Darc.encode(this).finish());
     }
-
-    /**
-     * Create a genesis darc using the owners and signers to populate the
-     * rules
-     * @param owners    those you can evolve the darc
-     * @param signers   those you can sign
-     * @param desc      the description of the darc
-     * @returns the new darc
-     */
-    public static newDarc(owners: Identity[], signers: Identity[], desc?: Buffer): Darc {
-        const darc = new Darc({
-            version: Long.fromNumber(0, true),
-            description: desc,
-            baseid: Buffer.from([]),
-            previd: createHash('sha256').digest(),
-            rules: initRules(owners, signers),
-        });
-
-        return darc;
-    }
-
-    /**
-     * Instantiate a darc using a proof
-     * @param key   Key of the proof
-     * @param p     The proof to use
-     * @returns the darc when compatible
-     */
-    public static fromProof(key: Buffer, p: Proof): Darc {
-        if (!p.matchContract(DarcInstance.contractID)) {
-            throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID.toString()}`);
-        }
-
-        if (!p.exists(key)) {
-            throw new Error(`invalid key for proof: ${key.toString('hex')}`);
-        }
-
-        return Darc.decode(p.value);
-    }
 }
 
-registerMessage('Darc', Darc);
+registerMessage("Darc", Darc);

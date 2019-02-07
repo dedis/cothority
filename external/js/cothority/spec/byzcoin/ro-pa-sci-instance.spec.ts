@@ -1,27 +1,32 @@
-import Long from 'long';
-import { startConodes, SIGNER, ROSTER, BLOCK_INTERVAL } from "../support/conondes";
+import { createHash } from "crypto";
+import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
-import Rules from "../../src/darc/rules";
+import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
 import CoinInstance from "../../src/byzcoin/contracts/coin-instance";
-import RoPaSciInstance, { RoPaSciStruct } from '../../src/byzcoin/contracts/ro-pa-sci-instance';
-import { createHash } from 'crypto';
-import ClientTransaction, { Instruction, Argument } from '../../src/byzcoin/client-transaction';
-import Signer from '../../src/darc/signer';
-import Darc from '../../src/darc/darc';
+import RoPaSciInstance, { RoPaSciStruct } from "../../src/byzcoin/contracts/ro-pa-sci-instance";
+import Darc from "../../src/darc/darc";
+import Rules from "../../src/darc/rules";
+import Signer from "../../src/darc/signer";
+import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-async function createInstance(rpc: ByzCoinRPC, stake: CoinInstance, darc: Darc, signer: Signer): Promise<RoPaSciInstance> {
+async function createInstance(
+    rpc: ByzCoinRPC,
+    stake: CoinInstance,
+    darc: Darc,
+    signer: Signer,
+): Promise<RoPaSciInstance> {
     const fillup = Buffer.alloc(31);
     const fph = createHash("sha256");
     fph.update(Buffer.from([1]));
     fph.update(fillup);
 
     const rps = new RoPaSciStruct({
-        description: 'test game',
-        stake: stake.getCoin(),
-        firstplayerhash: fph.digest(),
+        description: "test game",
         firstplayer: -1,
+        firstplayerhash: fph.digest(),
         secondplayer: -1,
         secondplayeraccount: null,
+        stake: stake.getCoin(),
     });
 
     const ctx = new ClientTransaction({
@@ -30,13 +35,13 @@ async function createInstance(rpc: ByzCoinRPC, stake: CoinInstance, darc: Darc, 
                 stake.id,
                 CoinInstance.contractID,
                 "fetch",
-                [new Argument({ name: "coins", value: Buffer.from(Long.fromNumber(100).toBytesLE()) })]
+                [new Argument({ name: "coins", value: Buffer.from(Long.fromNumber(100).toBytesLE()) })],
             ),
             Instruction.createSpawn(
                 darc.baseID,
                 RoPaSciInstance.contractID,
                 [new Argument({ name: "struct", value: rps.toBytes() })],
-            )
+            ),
         ],
     });
 
@@ -52,19 +57,19 @@ async function createInstance(rpc: ByzCoinRPC, stake: CoinInstance, darc: Darc, 
     return instance;
 }
 
-describe('Rock-Paper-Scisors Instance Tests', () => {
+describe("Rock-Paper-Scisors Instance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();
     });
 
-    it('should play a game', async () => {
+    it("should play a game", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-        darc.addIdentity('spawn:coin', SIGNER, Rules.OR);
-        darc.addIdentity('invoke:coin.mint', SIGNER, Rules.OR);
-        darc.addIdentity('invoke:coin.fetch', SIGNER, Rules.OR);
-        darc.addIdentity('spawn:ropasci', SIGNER, Rules.OR);
+        darc.addIdentity("spawn:coin", SIGNER, Rules.OR);
+        darc.addIdentity("invoke:coin.mint", SIGNER, Rules.OR);
+        darc.addIdentity("invoke:coin.fetch", SIGNER, Rules.OR);
+        darc.addIdentity("spawn:ropasci", SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const p1 = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);

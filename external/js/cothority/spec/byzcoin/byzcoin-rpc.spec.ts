@@ -1,16 +1,16 @@
-import { startConodes, ROSTER, SIGNER, BLOCK_INTERVAL } from '../support/conondes';
-import ByzCoinRPC from '../../src/byzcoin/byzcoin-rpc';
-import DarcInstance from '../../src/byzcoin/contracts/darc-instance';
-import Instance from '../../src/byzcoin/instance';
+import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
+import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
+import Instance from "../../src/byzcoin/instance";
+import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-describe('ByzCoinRPC Tests', () => {
+describe("ByzCoinRPC Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
         await startConodes();
     });
 
-    it('should create an rpc and evolve/spawn darcs', async () => {
+    it("should create an rpc and evolve/spawn darcs", async () => {
         expect(() => ByzCoinRPC.makeGenesisDarc([], roster)).toThrow();
 
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
@@ -27,12 +27,12 @@ describe('ByzCoinRPC Tests', () => {
 
         await evolveInstance.update();
 
-        const newDarc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, 'another darc');
+        const newDarc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, "another darc");
         const newInstance = await instance.spawnDarcAndWait(newDarc, [SIGNER], 10);
         expect(newInstance.getDarc().baseID.equals(newDarc.baseID)).toBeTruthy();
     });
 
-    it('should create an rpc and get it from byzcoin', async () => {
+    it("should create an rpc and get it from byzcoin", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
@@ -43,11 +43,11 @@ describe('ByzCoinRPC Tests', () => {
         expect(rpc2.getConfig().blockInterval.toNumber()).toEqual(rpc.getConfig().blockInterval.toNumber());
     });
 
-    it('should throw an error for non-existing instance or wrong type', async () => {
+    it("should throw an error for non-existing instance or wrong type", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
-        expectAsync(Instance.fromByzCoin(rpc, Buffer.from([1, 2, 3]))).toBeRejectedWith('key not in proof: 010203');
+        expectAsync(Instance.fromByzCoin(rpc, Buffer.from([1, 2, 3]))).toBeRejectedWith("key not in proof: 010203");
         expectAsync(DarcInstance.fromByzcoin(rpc, Buffer.alloc(32, 0))).toBeRejected();
     });
 });

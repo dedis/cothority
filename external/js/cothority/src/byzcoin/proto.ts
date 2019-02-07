@@ -1,10 +1,10 @@
 import { Message, Properties } from "protobufjs";
-import ClientTransaction from "./client-transaction";
-import { Roster } from "../network/proto";
 import Darc from "../darc/darc";
-import { SkipBlock } from "../skipchain/skipblock";
-import Proof, { registerProofMessages } from "./proof";
+import { Roster } from "../network/proto";
 import { registerMessage } from "../protobuf";
+import { SkipBlock } from "../skipchain/skipblock";
+import ClientTransaction from "./client-transaction";
+import Proof, { registerProofMessages } from "./proof";
 
 /**
  * Request to create a byzcoin skipchain
@@ -84,9 +84,9 @@ export class GetProofResponse extends Message<GetProofResponse> {
  */
 export class AddTxRequest extends Message<AddTxRequest> {
     readonly version: number;
-    private skipchainid: Buffer;
     readonly transaction: ClientTransaction;
     readonly inclusionwait: number;
+    private skipchainid: Buffer;
 
     constructor(properties?: Properties<AddTxRequest>) {
         const props: { [k: string]: any } = {};
@@ -138,11 +138,11 @@ export class GetSignerCountersResponse extends Message<GetSignerCountersResponse
 // a type definition
 registerProofMessages();
 
-registerMessage('CreateGenesisBlock', CreateGenesisBlock);
-registerMessage('CreateGenesisBlockResponse', CreateGenesisBlockResponse);
-registerMessage('GetProof', GetProof);
-registerMessage('GetProofResponse', GetProofResponse);
-registerMessage('AddTxRequest', AddTxRequest);
-registerMessage('AddTxResponse', AddTxResponse);
-registerMessage('GetSignerCounters', GetSignerCounters);
-registerMessage('GetSignerCountersResponse', GetSignerCountersResponse);
+registerMessage("CreateGenesisBlock", CreateGenesisBlock);
+registerMessage("CreateGenesisBlockResponse", CreateGenesisBlockResponse);
+registerMessage("GetProof", GetProof);
+registerMessage("GetProofResponse", GetProofResponse);
+registerMessage("AddTxRequest", AddTxRequest);
+registerMessage("AddTxResponse", AddTxResponse);
+registerMessage("GetSignerCounters", GetSignerCounters);
+registerMessage("GetSignerCountersResponse", GetSignerCountersResponse);

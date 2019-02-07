@@ -1,8 +1,8 @@
-import shuffle from 'shuffle-array';
-import { Message, util } from 'protobufjs';
-import Logger from '../log';
-import { Roster } from './proto';
-import { BrowserWebSocketAdapter, WebSocketAdapter } from './websocket-adapter';
+import { Message, util } from "protobufjs";
+import shuffle from "shuffle-array";
+import Logger from "../log";
+import { Roster } from "./proto";
+import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
 
 let factory: (path: string) => WebSocketAdapter = (path: string) => new BrowserWebSocketAdapter(path);
 
@@ -18,7 +18,7 @@ export function setFactory(generator: (path: string) => WebSocketAdapter): void 
 /**
  * A connection allows to send a message to one or more distant peer
  */
-export interface Connection {
+export interface IConnection {
     /**
      * Send a message to the distant peer
      * @param message   Protobuf compatible message
@@ -37,7 +37,7 @@ export interface Connection {
 /**
  * Single peer connection
  */
-export class WebSocketConnection implements Connection {
+export class WebSocketConnection implements IConnection {
     protected url: string;
     private service: string;
 
@@ -66,7 +66,7 @@ export class WebSocketConnection implements Connection {
         }
 
         return new Promise((resolve, reject) => {
-            const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, '');
+            const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
             Logger.lvl4(`Socket: new WebSocket(${path})`);
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
@@ -93,7 +93,7 @@ export class WebSocketConnection implements Connection {
                     if (err instanceof util.ProtocolError) {
                         reject(err);
                     } else {
-                        reject(new Error('Error when trying to decode the message'));
+                        reject(new Error("Error when trying to decode the message"));
                     }
                 }
 
@@ -112,7 +112,7 @@ export class WebSocketConnection implements Connection {
                 reject(new Error("error in websocket: " + evt.error));
             });
         });
-    };
+    }
 }
 
 /**
@@ -126,8 +126,8 @@ export class RosterWSConnection extends WebSocketConnection {
      * @param service   The name of the service to reach
      */
     constructor(r: Roster, service: string) {
-        super('', service);
-        this.addresses = r.list.map(conode => conode.getWebSocketAddress());
+        super("", service);
+        this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
     }
 
     /** @inheritdoc */
@@ -135,14 +135,14 @@ export class RosterWSConnection extends WebSocketConnection {
         const addresses = this.addresses.slice();
         shuffle(addresses);
 
-        for (let i = 0; i < addresses.length; i++) {
-            this.url = addresses[i];
+        for (const addr of addresses) {
+            this.url = addr;
 
             try {
                 // we need to await here to catch and try another conode
                 return await super.send(message, reply);
             } catch (e) {
-                Logger.lvl3(`fail to send on ${this.url} with error:`, e);
+                Logger.lvl3(`fail to send on ${addr} with error:`, e);
             }
         }
 
