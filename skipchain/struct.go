@@ -285,8 +285,12 @@ func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	hash := sha256.New()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
 		sbf.BaseHeight} {
-		_ = binary.Write(hash, binary.LittleEndian, i)
+		err := binary.Write(hash, binary.LittleEndian, int32(i))
+		if err != nil {
+			panic("error writing to hash:" + err.Error())
+		}
 	}
+
 	for _, bl := range sbf.BackLinkIDs {
 		hash.Write(bl)
 	}

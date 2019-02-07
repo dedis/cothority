@@ -7,6 +7,7 @@ import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
@@ -434,9 +435,9 @@ public class ByzCoinRPCTest {
             counters.increment();
 
             // Need to send in at least two blocks before the new node is active
-            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
-            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
 
             // This should work - why does it fail?

@@ -100,7 +100,8 @@ func TestCoin_InvokeMint(t *testing.T) {
 			Command: "mint",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	err = inst.SignWith(dummyCtxHash, gsigner)
 	require.Nil(t, err)

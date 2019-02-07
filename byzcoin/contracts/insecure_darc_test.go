@@ -64,7 +64,8 @@ func TestInsecureDarc(t *testing.T) {
 					Value: newDarcBuf,
 				}},
 			},
-			SignerCounter: []uint64{2},
+			SignerIdentities: []darc.Identity{signer.Identity()},
+			SignerCounter:    []uint64{2},
 		}},
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
