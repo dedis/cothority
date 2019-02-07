@@ -144,7 +144,7 @@ public class ChainConfigInstance {
     }
 
     /**
-     * Convenience function to connect to an existing ValueInstance.
+     * Convenience function to connect to an existing ValueInstance. This function expects the proof to be valid.
      *
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance

@@ -65,7 +65,7 @@ class ValueTest {
 
         byte[] myvalue = "314159".getBytes();
         Proof p = dc.spawnInstanceAndWait("value", admin, adminCtrs.head()+2, Argument.NewList("value", myvalue), 10);
-        assertTrue(p.matches());
+        // dc.spawnInstanceAndWait checks the proof, so we don't need to check again
 
         ValueInstance vi = ValueInstance.fromByzcoin(bc, p);
         assertArrayEquals(vi.getValue(), myvalue);
@@ -112,7 +112,7 @@ class ValueTest {
 
         // And send through a valid tx too, that we can wait for, so we know a block just got processed.
         Proof p = dc.spawnInstanceAndWait("value", admin, adminCtrs.head()+2, Argument.NewList("value", "314159".getBytes()), 10);
-        assertTrue(p.matches());
+        // dc.spawnInstanceAndWait checks the proof, so we don't need to check again
 
         // Now that we know the latest block (it was returned to us in the proof p), we check it for the expected
         // failed tx. If we don't find it, we walk backwards one and look. We need to check back because BC could

@@ -33,16 +33,12 @@ public class Instance {
     }
 
     /**
-     * Creates an instance from a proof received from ByzCoin.
+     * Creates an instance from a proof received from ByzCoin. This function expects the proof to be valid.
      *
      * @param p the proof for the instance
      * @return a new Instance
-     * @throws CothorityNotFoundException if the proof is not found
      */
-    public static Instance fromProof(Proof p) throws CothorityNotFoundException {
-        if (!p.matches()) {
-            throw new CothorityNotFoundException("this is a proof of absence");
-        }
+    public static Instance fromProof(Proof p) {
         StateChangeBody body = p.getValues();
         return new Instance(new InstanceId(p.getKey()), new String(body.getContractID()), body.getDarcId(), body.getValue());
     }

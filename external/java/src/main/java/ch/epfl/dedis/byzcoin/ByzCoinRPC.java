@@ -179,7 +179,7 @@ public class ByzCoinRPC {
         try {
             ByzCoinProto.GetProofResponse reply =
                     ByzCoinProto.GetProofResponse.parseFrom(msg);
-            Proof p = new Proof(reply.getProof(), skipchain.getID());
+            Proof p = new Proof(reply.getProof(), skipchain.getID(), id);
             logger.info("Successfully received and created proof");
             return p;
         } catch (InvalidProtocolBufferException e) {
@@ -643,7 +643,7 @@ public class ByzCoinRPC {
 
         try {
             ByzCoinProto.GetProofResponse reply = ByzCoinProto.GetProofResponse.parseFrom(msg);
-            return new Proof(reply.getProof(), skipchainId);
+            return new Proof(reply.getProof(), skipchainId, key);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
