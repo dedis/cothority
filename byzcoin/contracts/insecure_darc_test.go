@@ -50,6 +50,28 @@ func TestInsecureDarc(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
+	// spawn a darc with a version > 0 - fail
+	newDarc.Version = 1
+	newDarcBuf, err = newDarc.ToProto()
+	require.NoError(t, err)
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: ContractInsecureDarcID,
+				Args: []byzcoin.Argument{{
+					Name:  "darc",
+					Value: newDarcBuf,
+				}},
+			},
+			SignerCounter: []uint64{2},
+		}},
+	}
+	require.Nil(t, ctx.SignWith(signer))
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err) // test for failure
+	newDarc.Version = 0   // reset the version
+
 	// evolve it
 	newDarc2 := newDarc.Copy()
 	require.NoError(t, newDarc2.EvolveFrom(newDarc))

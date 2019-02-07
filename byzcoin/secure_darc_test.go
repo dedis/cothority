@@ -76,6 +76,27 @@ func TestSecureDarc(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
+	log.Info("spawn a darc with a version > 0 - fail")
+	secDarc.Version = 1
+	secDarcBuf, err = secDarc.ToProto()
+	ctx = ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &Spawn{
+				ContractID: ContractSecureDarcID,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: secDarcBuf,
+				}},
+			},
+			SignerCounter: []uint64{2},
+		}},
+	}
+	require.Nil(t, ctx.SignWith(signer))
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err)
+
+	secDarc.Version = 0
 	log.Info("evolve to add rules - fail")
 	{
 		secDarc2 := secDarc.Copy()
