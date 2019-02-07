@@ -16,3 +16,4 @@ for (( n=1; n<=7; n++ )) do
 done
 
 cp public.toml $dir/external/java/src/test/resources/.
+cp public.toml $dir/external/js/cothority/spec/support/.
