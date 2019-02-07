@@ -95,12 +95,10 @@ public class Document {
         if (other == this) return true;
         if (!(other instanceof Document)) return false;
         Document otherDoc = (Document) other;
-        boolean wrid = true;
         return Arrays.equals(otherDoc.data, data) &&
-                Arrays.equals(otherDoc.extraData, extraData) &&
+                ((otherDoc.extraData == null && extraData == null) || Arrays.equals(otherDoc.extraData, extraData)) &&
                 Arrays.equals(otherDoc.keyMaterial, keyMaterial) &&
-                otherDoc.publisherId.equals(publisherId) &&
-                wrid;
+                otherDoc.publisherId.equals(publisherId);
     }
 
     /**
