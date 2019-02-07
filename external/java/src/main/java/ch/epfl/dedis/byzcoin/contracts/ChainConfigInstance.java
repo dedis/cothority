@@ -70,9 +70,9 @@ public class ChainConfigInstance {
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Identity> id, List<Long> ownerCtrs) {
+    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Identity> ids, List<Long> ownerCtrs) {
         Invoke inv = new Invoke(ContractId, "update_config", ContractId, newConfig.toProto().toByteArray());
-        return new Instruction(instance.getId(), id, ownerCtrs, inv);
+        return new Instruction(instance.getId(), ids, ownerCtrs, inv);
     }
 
     /**
