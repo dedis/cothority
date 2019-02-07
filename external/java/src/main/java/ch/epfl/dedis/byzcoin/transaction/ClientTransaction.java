@@ -1,5 +1,7 @@
 package ch.epfl.dedis.byzcoin.transaction;
 
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.darc.Identity;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
@@ -9,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClientTransaction is a set of instructions are will be executed atomically by ByzCoin.
@@ -24,7 +27,7 @@ public class ClientTransaction {
         this.instructions = instructions;
     }
 
-    public ClientTransaction(ByzCoinProto.ClientTransaction proto) throws CothorityCryptoException {
+    public ClientTransaction(ByzCoinProto.ClientTransaction proto) {
         instructions = new ArrayList<>();
         for (ByzCoinProto.Instruction i : proto.getInstructionsList()) {
             instructions.add(new Instruction(i));
@@ -58,6 +61,10 @@ public class ClientTransaction {
      * @param signers is the list of signers who signs all instructions
      */
     public void signWith(List<Signer> signers) throws CothorityCryptoException {
+        List<Identity> ids = new ArrayList<>(signers.stream().map(Signer::getIdentity).collect(Collectors.toList()));
+        for (Instruction instr : this.instructions) {
+            instr.setSignerIdentities(ids);
+        }
         byte[] h = this.hashInstructions();
         for (Instruction instr : this.instructions) {
             instr.signWith(h, signers);

@@ -1,6 +1,8 @@
 package ch.epfl.dedis.byzcoin.transaction;
 
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
@@ -13,6 +15,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * An instruction is sent and executed by ByzCoin.
@@ -22,18 +25,21 @@ public class Instruction {
     private Spawn spawn;
     private Invoke invoke;
     private Delete delete;
+    private List<Identity> signerIdentities;
     private List<Long> signerCounters;
-    private List<Signature> signatures;
+    private List<byte[]> signatures;
 
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
      *
      * @param instId The instance ID.
+     * @param ids    The identities of all the signers.
      * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param spawn  The spawn object, which contains the value and the argument.
      */
-    public Instruction(InstanceId instId, List<Long> ctrs, Spawn spawn) {
+    public Instruction(InstanceId instId, List<Identity> ids, List<Long> ctrs, Spawn spawn) {
         this.instId = instId;
+        this.signerIdentities = ids;
         this.signerCounters = ctrs;
         this.spawn = spawn;
     }
@@ -42,11 +48,13 @@ public class Instruction {
      * Use this constructor if it is an invoke instruction, i.e. you want to mutate an object.
      *
      * @param instId The ID of the object, which must be unique.
+     * @param ids    The identities of all the signers.
      * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param invoke The invoke object.
      */
-    public Instruction(InstanceId instId, List<Long> ctrs, Invoke invoke) {
+    public Instruction(InstanceId instId, List<Identity> ids, List<Long> ctrs, Invoke invoke) {
         this.instId = instId;
+        this.signerIdentities = ids;
         this.signerCounters = ctrs;
         this.invoke = invoke;
     }
@@ -55,16 +63,23 @@ public class Instruction {
      * Use this constructor if it is a delete instruction, i.e. you want to delete an object.
      *
      * @param instId The ID of the object, which must be unique.
+     * @param ids    The identities of all the signers.
      * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param delete The delete object.
      */
-    public Instruction(InstanceId instId, List<Long> ctrs, Delete delete) {
+    public Instruction(InstanceId instId, List<Identity> ids, List<Long> ctrs, Delete delete) {
         this.instId = instId;
         this.signerCounters = ctrs;
+        this.signerIdentities = ids;
         this.delete = delete;
     }
 
-    public Instruction(ByzCoinProto.Instruction inst) throws CothorityCryptoException {
+    /**
+     * Construct Instruction from its protobuf representation.
+     *
+     * @param inst the protobuf representation of the instruction
+     */
+    public Instruction(ByzCoinProto.Instruction inst) {
         this.instId = new InstanceId(inst.getInstanceid());
         if (inst.hasSpawn()) {
             this.spawn = new Spawn(inst.getSpawn());
@@ -75,12 +90,40 @@ public class Instruction {
         if (inst.hasDelete()) {
             this.delete = new Delete(inst.getDelete());
         }
+
+        this.signerIdentities = new ArrayList<>();
+        this.signerIdentities.addAll(inst.getSigneridentitiesList()
+                .stream().map(IdentityFactory::New).collect(Collectors.toList()));
+
         this.signerCounters = new ArrayList<>();
         this.signerCounters.addAll(inst.getSignercounterList());
+
         this.signatures = new ArrayList<>();
-        for (DarcProto.Signature sig : inst.getSignaturesList()) {
-            this.signatures.add(new Signature(sig));
-        }
+        this.signatures.addAll(inst.getSignaturesList()
+                .stream().map(x -> x.toByteArray()).collect(Collectors.toList()));
+    }
+
+    /**
+     * Getter for signer identities.
+     */
+    public List<Identity> getSignerIdentities() {
+        return signerIdentities;
+    }
+
+    /**
+     * Getter for signer counters.
+     */
+    public List<Long> getSignerCounters() {
+        return signerCounters;
+    }
+
+    /**
+     * Getter for the signatures.
+     *
+     * @return the signatures in this instruction.
+     */
+    public List<byte[]> getSignatures() {
+        return signatures;
     }
 
     /**
@@ -90,6 +133,33 @@ public class Instruction {
      */
     public InstanceId getInstId() {
         return instId;
+    }
+
+    /**
+     * Getter for the spawn argument.
+     *
+     * @return the spawn-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Spawn getSpawn() {
+        return spawn;
+    }
+
+    /**
+     * Getter for the invoke argument.
+     *
+     * @return the invoke-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Invoke getInvoke() {
+        return invoke;
+    }
+
+    /**
+     * Getter for the delete argument.
+     *
+     * @return the delete-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Delete getDelete() {
+        return delete;
     }
 
     /**
@@ -106,8 +176,12 @@ public class Instruction {
      *
      * @param signatures the signatures to set
      */
-    public void setSignatures(List<Signature> signatures) {
+    public void setSignatures(List<byte[]> signatures) {
         this.signatures = signatures;
+    }
+
+    public void setSignerIdentities(List<Identity> signerIdentities) {
+        this.signerIdentities = signerIdentities;
     }
 
     /**
@@ -122,11 +196,11 @@ public class Instruction {
             List<Argument> args = new ArrayList<>();
             if (this.spawn != null) {
                 digest.update((byte) (0));
-                digest.update(this.spawn.getContractId().getBytes());
+                digest.update(this.spawn.getContractID().getBytes());
                 args = this.spawn.getArguments();
             } else if (this.invoke != null) {
                 digest.update((byte) (1));
-                digest.update(this.invoke.getContractId().getBytes());
+                digest.update(this.invoke.getContractID().getBytes());
                 args = this.invoke.getArguments();
             } else if (this.delete != null) {
                 digest.update((byte) (2));
@@ -142,8 +216,11 @@ public class Instruction {
                 buffer.putLong(ctr);
                 digest.update(buffer.array());
             }
+            for (Identity id : this.signerIdentities) {
+                digest.update(id.getPublicBytes());
+            }
             return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException  e) {
             throw new RuntimeException(e);
         }
     }
@@ -163,10 +240,11 @@ public class Instruction {
         } else if (this.delete != null) {
             b.setDelete(this.delete.toProto());
         }
+        b.addAllSigneridentities(this.signerIdentities
+                .stream().map(Identity::toProto).collect(Collectors.toList()));
         b.addAllSignercounter(this.signerCounters);
-        for (Signature s : this.signatures) {
-            b.addSignatures(s.toProto());
-        }
+        b.addAllSignatures(this.signatures
+                .stream().map(ByteString::copyFrom).collect(Collectors.toList()));
         return b.build();
     }
 
@@ -179,9 +257,9 @@ public class Instruction {
     public String action() {
         String a = "invalid";
         if (this.spawn != null) {
-            a = "spawn:" + this.spawn.getContractId();
+            a = "spawn:" + this.spawn.getContractID();
         } else if (this.invoke != null) {
-            a = "invoke:" + this.invoke.getContractId() + "." + this.invoke.getCommand();
+            a = "invoke:" + this.invoke.getContractID() + "." + this.invoke.getCommand();
         } else if (this.delete != null) {
             a = "delete:" + this.delete.getContractId();
         }
@@ -197,10 +275,20 @@ public class Instruction {
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public void signWith(byte[] ctxHash, List<Signer> signers) throws CothorityCryptoException {
+        if (signers.size() != this.signerIdentities.size()) {
+            throw new CothorityCryptoException("the number of signers does not match the number of identities");
+        }
+        if (signers.size() != this.signerCounters.size()) {
+            throw new CothorityCryptoException("the number of signers does not match the number of counters");
+        }
         this.signatures = new ArrayList<>();
-        for (Signer signer : signers) {
+        for (int i = 0; i < signers.size(); i++) {
+            Identity signerID = signers.get(i).getIdentity();
+            if (!this.signerIdentities.get(i).equals(signerID)) {
+                throw new CothorityCryptoException("signer identity is not set correctly");
+            }
             try {
-                this.signatures.add(new Signature(signer.sign(ctxHash), signer.getIdentity()));
+                this.signatures.add(signers.get(i).sign(ctxHash));
             } catch (Signer.SignRequestRejectedException e) {
                 throw new CothorityCryptoException(e.getMessage());
             }
@@ -213,16 +301,15 @@ public class Instruction {
      *
      * @param what - the string that gets mixed into the derived instance ID
      * @return the instance ID
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public InstanceId deriveId(String what) throws CothorityCryptoException {
+    public InstanceId deriveId(String what) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(this.hash());
             digest.update(intToArr4(this.signatures.size()));
-            for (Signature sig : this.signatures) {
-                digest.update(intToArr4(sig.signature.length));
-                digest.update(sig.signature);
+            for (byte[] sig : this.signatures) {
+                digest.update(intToArr4(sig.length));
+                digest.update(sig);
             }
             digest.update(what.getBytes());
             return new InstanceId(digest.digest());
@@ -231,32 +318,16 @@ public class Instruction {
         }
     }
 
-    /**
-     * @return the spawn-argument of the instruction - only one of spawn, invoke, and delete should be present.
-     */
-    public Spawn getSpawn() {
-        return spawn;
-    }
-
-    /**
-     * @return the invoke-argument of the instruction - only one of spawn, invoke, and delete should be present.
-     */
-    public Invoke getInvoke() {
-        return invoke;
-    }
-
-    /**
-     * @return the delete-argument of the instruction - only one of spawn, invoke, and delete should be present.
-     */
-    public Delete getDelete() {
-        return delete;
-    }
-
-    /**
-     * @return the signatures in this instruction.
-     */
-    public List<Signature> getSignatures() {
-        return signatures;
+    @Override
+    public String toString() {
+        StringBuffer out = new StringBuffer("");
+        out.append(String.format("instr %s\n", Hex.printHexBinary(this.hash())));
+        out.append(String.format("\taction: %s\n", this.action()));
+        // TODO use proper strings
+        out.append(String.format("\tidentities: %d\n", this.signerIdentities.size()));
+        out.append(String.format("\tcounters: %d\n", this.signerCounters.size()));
+        out.append(String.format("\tsignatures: %d\n", this.signatures.size()));
+        return out.toString();
     }
 
     private static byte[] intToArr4(int x) {

@@ -50,7 +50,7 @@ func (c *Client) Create() error {
 	tx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{instr},
 	}
-	if err := tx.SignWith(c.Signers...); err != nil {
+	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return err
 	}
 	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 2); err != nil {
@@ -180,7 +180,7 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 			SignerCounter: c.incrementCtrs(),
 		}
 	}
-	if err := tx.SignWith(c.Signers...); err != nil {
+	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return nil, nil, err
 	}
 	for i := range tx.Instructions {

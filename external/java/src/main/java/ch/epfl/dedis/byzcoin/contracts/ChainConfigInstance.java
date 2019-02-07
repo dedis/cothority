@@ -7,6 +7,7 @@ import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Invoke;
+import ch.epfl.dedis.lib.darc.Identity;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ChainConfigInstance represents the only Configuration present in a ByzCoin ledger. This should not be used directly,
@@ -68,9 +70,9 @@ public class ChainConfigInstance {
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Long> ownerCtrs) {
+    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Identity> ids, List<Long> ownerCtrs) {
         Invoke inv = new Invoke(ContractId, "update_config", ContractId, newConfig.toProto().toByteArray());
-        return new Instruction(instance.getId(), ownerCtrs, inv);
+        return new Instruction(instance.getId(), ids, ownerCtrs, inv);
     }
 
     /**
@@ -84,7 +86,9 @@ public class ChainConfigInstance {
      * @throws CothorityException if something goes wrong
      */
     public void evolveChainConfig(ChainConfigData newConfig, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
-        Instruction inst = evolveChainConfigInstruction(newConfig, ownerCtrs);
+        Instruction inst = evolveChainConfigInstruction(newConfig,
+                owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                ownerCtrs);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(owners);
         bc.sendTransaction(ct);
@@ -101,7 +105,9 @@ public class ChainConfigInstance {
      * @throws CothorityException if something goes wrong
      */
     public void evolveConfigAndWait(ChainConfigData newConfig, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
-        Instruction inst = evolveChainConfigInstruction(newConfig, ownerCtrs);
+        Instruction inst = evolveChainConfigInstruction(newConfig,
+                owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                ownerCtrs);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(owners);
         bc.sendTransactionAndWait(ct, wait);

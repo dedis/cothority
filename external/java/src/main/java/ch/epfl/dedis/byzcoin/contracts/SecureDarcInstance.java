@@ -100,8 +100,8 @@ public class SecureDarcInstance {
      *                  sign the returned instruction.
      * @return Instruction to be sent to byzcoin
      */
-    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr) {
-        return evolveDarcInstruction(newDarc, signerCtr, false);
+    public Instruction evolveDarcInstruction(Darc newDarc, Identity id, Long signerCtr) {
+        return evolveDarcInstruction(newDarc, id, signerCtr, false);
     }
 
     /**
@@ -116,7 +116,7 @@ public class SecureDarcInstance {
      * @param unrestricted whether to use the unrestricted evolution
      * @return Instruction to be sent to byzcoin
      */
-    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr, boolean unrestricted) {
+    public Instruction evolveDarcInstruction(Darc newDarc, Identity id, Long signerCtr, boolean unrestricted) {
         newDarc.setVersion(this.getDarc().getVersion() + 1);
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
@@ -126,7 +126,10 @@ public class SecureDarcInstance {
         }
         Invoke inv = new Invoke(ContractId, cmd, "darc", newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
-        return new Instruction(new InstanceId(d), Collections.singletonList(signerCtr), inv);
+        return new Instruction(new InstanceId(d),
+                Collections.singletonList(id),
+                Collections.singletonList(signerCtr),
+                inv);
     }
 
     /**
@@ -156,7 +159,7 @@ public class SecureDarcInstance {
      * @throws CothorityException if something goes wrong
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait) throws CothorityException {
-        Instruction inst = evolveDarcInstruction(newDarc, ownerCtr);
+        Instruction inst = evolveDarcInstruction(newDarc, owner.getIdentity(), ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);
@@ -176,7 +179,7 @@ public class SecureDarcInstance {
      * @throws CothorityException if something goes wrong
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait, boolean unrestricted) throws CothorityException {
-        Instruction inst = evolveDarcInstruction(newDarc, ownerCtr, unrestricted);
+        Instruction inst = evolveDarcInstruction(newDarc, owner.getIdentity(), ownerCtr, unrestricted);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);
@@ -192,9 +195,12 @@ public class SecureDarcInstance {
      * @param args       arguments to give to the contract
      * @return the instruction to be added to the ClientTransaction
      */
-    public Instruction spawnInstanceInstruction(String contractID, Long signerCtr, List<Argument> args) {
+    public Instruction spawnInstanceInstruction(String contractID, Identity id, Long signerCtr, List<Argument> args) {
         Spawn sp = new Spawn(contractID, args);
-        return new Instruction(new InstanceId(darc.getBaseId().getId()), Collections.singletonList(signerCtr), sp);
+        return new Instruction(new InstanceId(darc.getBaseId().getId()),
+                Collections.singletonList(id),
+                Collections.singletonList(signerCtr),
+                sp);
     }
 
     /**
@@ -209,7 +215,7 @@ public class SecureDarcInstance {
      * @throws CothorityException if something goes wrong
      */
     public ClientTransactionId spawnInstance(String contractID, Signer s, Long signerCtr, List<Argument> args) throws CothorityException {
-        Instruction inst = spawnInstanceInstruction(contractID, signerCtr, args);
+        Instruction inst = spawnInstanceInstruction(contractID, s.getIdentity(), signerCtr, args);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(s));
         return bc.sendTransaction(ct);
@@ -227,7 +233,7 @@ public class SecureDarcInstance {
      * @throws CothorityException if something goes wrong
      */
     public Proof spawnInstanceAndWait(String contractID, Signer s, Long signerCtr, List<Argument> args, int wait) throws CothorityException {
-        Instruction inst = spawnInstanceInstruction(contractID, signerCtr, args);
+        Instruction inst = spawnInstanceInstruction(contractID, s.getIdentity(), signerCtr, args);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ct.signWith(Collections.singletonList(s));
 

@@ -182,9 +182,11 @@ type Instruction struct {
 	// must map to the corresponding element in Signature. The initial
 	// counter is 1. Overflow is allowed.
 	SignerCounter []uint64
+	// SignerIdentities are the identities of all the signers.
+	SignerIdentities []darc.Identity
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
-	Signatures []darc.Signature
+	Signatures [][]byte
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

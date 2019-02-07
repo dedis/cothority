@@ -96,4 +96,8 @@ public class IdentityX509EC implements Identity {
     public String typeString() {
         return "x509ec";
     }
+
+    public byte[] getPublicBytes() {
+        return pubKey.getEncoded();
+    }
 }

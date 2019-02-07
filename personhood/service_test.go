@@ -432,7 +432,7 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.SignWith(s.signer)
+	err = ctx.FillSignersAndSignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -480,7 +480,7 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		}},
 	}
 	dID := s.gMsg.GenesisDarc.GetBaseID()
-	err = ctx.SignWith(s.signer)
+	err = ctx.FillSignersAndSignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -593,7 +593,7 @@ func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins 
 			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(sig))
+	require.Nil(t, ctx.FillSignersAndSignWith(sig))
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,

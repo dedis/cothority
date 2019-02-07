@@ -76,13 +76,26 @@ func (args Arguments) Search(name string) []byte {
 	return nil
 }
 
-// SignWith signs all the instructions in the transaction using the same set of
-// signers. If some instructions need to be signed by different sets of
-// signers, then use the SighWith method of Instruction.
-func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
-	h := ctx.Instructions.Hash()
+// FillSignersAndSignWith fills the SignerIdentities field with the identities of the signers and then signs all the
+// instructions using the same set of  signers. If some instructions need to be signed by different sets of signers,
+// then use the SignWith method of Instruction.
+func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) error {
+	var ids []darc.Identity
+	for _, signer := range signers {
+		ids = append(ids, signer.Identity())
+	}
 	for i := range ctx.Instructions {
-		if err := ctx.Instructions[i].SignWith(h, signers...); err != nil {
+		ctx.Instructions[i].SignerIdentities = ids
+	}
+	return ctx.SignWith(signers...)
+}
+
+// SignWith signs all the instructions with the same signers. If some instructions need to be signed by different sets
+// of signers, then use the SignWith method of Instruction.
+func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
+	digest := ctx.Instructions.Hash()
+	for i := range ctx.Instructions {
+		if err := ctx.Instructions[i].SignWith(digest, signers...); err != nil {
 			return err
 		}
 	}
@@ -116,6 +129,9 @@ func (instr Instruction) Hash() []byte {
 		binary.LittleEndian.PutUint64(verBuf, ver)
 		h.Write(verBuf)
 	}
+	for _, id := range instr.SignerIdentities {
+		h.Write(id.GetPublicBytes())
+	}
 	return h.Sum(nil)
 }
 
@@ -141,11 +157,10 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
 	h.Write(b[:])
 
-	for _, s := range instr.Signatures {
-		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
+	for _, sig := range instr.Signatures {
+		binary.LittleEndian.PutUint32(b[:], uint32(len(sig)))
 		h.Write(b[:])
-		h.Write(s.Signature)
-		// TODO: Why not h.Write(s.Signer)
+		h.Write(sig)
 	}
 	// Because there is no attacker-controlled input after what, we do not need
 	// domain separation here.
@@ -187,6 +202,7 @@ func (instr Instruction) String() string {
 	out += fmt.Sprintf("instr: %x\n", instr.Hash())
 	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
 	out += fmt.Sprintf("\taction: %s\n", instr.Action())
+	out += fmt.Sprintf("\tidentities: %v\n", instr.SignerIdentities)
 	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
 	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
 	return out
@@ -197,16 +213,23 @@ func (instr Instruction) String() string {
 // contains the instruction. Otherwise the verification will fail on the server
 // side.
 func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
-	instr.Signatures = make([]darc.Signature, len(signers))
+	if len(signers) != len(instr.SignerIdentities) {
+		return errors.New("the number of signers does not match the number of identities")
+	}
+	if len(signers) != len(instr.SignerCounter) {
+		return errors.New("the number of signers does not match the number of counters")
+	}
+	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {
+		signerID := signers[i].Identity()
+		if !instr.SignerIdentities[i].Equal(&signerID) {
+			return errors.New("signer identity is not set correctly")
+		}
 		sig, err := signers[i].Sign(msg)
 		if err != nil {
 			return err
 		}
-		instr.Signatures[i] = darc.Signature{
-			Signature: sig,
-			Signer:    signers[i].Identity(),
-		}
+		instr.Signatures[i] = sig
 	}
 	return nil
 }
@@ -214,9 +237,9 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 // GetIdentityStrings gets a slice of identities who are signing the
 // instruction.
 func (instr Instruction) GetIdentityStrings() []string {
-	res := make([]string, len(instr.Signatures))
-	for i, sig := range instr.Signatures {
-		res[i] = sig.Signer.String()
+	res := make([]string, len(instr.SignerIdentities))
+	for i, id := range instr.SignerIdentities {
+		res[i] = id.String()
 	}
 	return res
 }
@@ -225,8 +248,13 @@ func (instr Instruction) GetIdentityStrings() []string {
 // and then verify if the signature on the instruction can satisfy the rules of
 // the darc. An error is returned if any of the verification fails.
 func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
+	// check the number of signers match with the number of signatures
+	if len(instr.SignerIdentities) != len(instr.Signatures) {
+		return errors.New("lengh of identities does not match the length of signatures")
+	}
+
 	// check the signature counters
-	if err := verifySignerCounters(st, instr.SignerCounter, instr.Signatures); err != nil {
+	if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
 		return err
 	}
 
@@ -251,8 +279,8 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 	}
 
 	// check the signature
-	for _, sig := range instr.Signatures {
-		if err := sig.Signer.Verify(msg, sig.Signature); err != nil {
+	for i := range instr.Signatures {
+		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err != nil {
 			return err
 		}
 	}

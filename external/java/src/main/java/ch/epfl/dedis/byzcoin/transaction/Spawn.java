@@ -9,21 +9,21 @@ import java.util.List;
  * Spawn is an operation that an Instruction can take, it should be used for creating an object.
  */
 public class Spawn {
-    private String contractId;
+    private String contractID;
     private List<Argument> arguments;
 
     /**
      * Constructor for the spawn action.
-     * @param contractId The contract ID.
+     * @param contractID The contract ID.
      * @param arguments The initial arguments for running the contract.
      */
-    public Spawn(String contractId, List<Argument> arguments) {
-        this.contractId = contractId;
+    public Spawn(String contractID, List<Argument> arguments) {
+        this.contractID = contractID;
         this.arguments = arguments;
     }
 
     public Spawn(ByzCoinProto.Spawn proto) {
-        contractId = proto.getContractid();
+        contractID = proto.getContractid();
         arguments = new ArrayList<>();
         for (ByzCoinProto.Argument a : proto.getArgsList()) {
             arguments.add(new Argument(a));
@@ -34,8 +34,8 @@ public class Spawn {
      * Getter for contract ID.
      * @return The contract ID.
      */
-    public String getContractId() {
-        return contractId;
+    public String getContractID() {
+        return contractID;
     }
 
     /**
@@ -52,10 +52,15 @@ public class Spawn {
      */
     public ByzCoinProto.Spawn toProto() {
         ByzCoinProto.Spawn.Builder b = ByzCoinProto.Spawn.newBuilder();
-        b.setContractid(this.contractId);
+        b.setContractid(this.contractID);
         for (Argument a : this.arguments) {
             b.addArgs(a.toProto());
         }
         return b.build();
+    }
+
+    @Override
+    public String toString() {
+        return "contractID: " + this.contractID + ", argument: <hidden>";
     }
 }

@@ -243,7 +243,7 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 		}},
 	}
 
-	err = ctx.SignWith(party.Signer)
+	err = ctx.FillSignersAndSignWith(party.Signer)
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())
 	}

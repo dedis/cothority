@@ -49,7 +49,8 @@ func TestCoin_Spawn(t *testing.T) {
 		Spawn: &byzcoin.Spawn{
 			ContractID: ContractCoinID,
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	dummyCtxHash := []byte("dummy_ctx_hash")
 	err := inst.SignWith(dummyCtxHash, gsigner)
@@ -83,7 +84,8 @@ func TestCoin_InvokeMint(t *testing.T) {
 			Command: "mint",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	dummyCtxHash := []byte("dummy_ctx_hash")
 	err := inst.SignWith(dummyCtxHash, gsigner)
@@ -116,7 +118,8 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 			Command: "mint",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	dummyCtxHash := []byte("dummy_ctx_hash")
 	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
@@ -141,7 +144,8 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Command: "store",
 			Args:    nil,
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	dummyCtxHash := []byte("dummy_ctx_hash")
 	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
@@ -164,7 +168,8 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Command: "fetch",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
@@ -208,7 +213,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 				{Name: "destination", Value: coAddr1.Slice()},
 			},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 
 	dummyCtxHash := []byte("dummy_ctx_hash")
@@ -225,7 +231,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 				{Name: "destination", Value: coAddr2.Slice()},
 			},
 		},
-		SignerCounter: []uint64{1},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
 	}
 
 	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))

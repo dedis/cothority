@@ -25,4 +25,9 @@ public interface Identity {
     String typeString();
 
     String toString();
+
+    /**
+     * Get the public identifier in bytes. The returned value is not a serialisation of the identity.
+     */
+    byte[] getPublicBytes();
 }

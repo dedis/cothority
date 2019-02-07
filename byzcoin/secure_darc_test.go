@@ -49,7 +49,7 @@ func TestSecureDarc(t *testing.T) {
 			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
@@ -72,7 +72,7 @@ func TestSecureDarc(t *testing.T) {
 			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
@@ -117,7 +117,7 @@ func TestSecureDarc(t *testing.T) {
 				SignerCounter: []uint64{1},
 			}},
 		}
-		require.Nil(t, ctx2.SignWith(restrictedSigner))
+		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -143,7 +143,7 @@ func TestSecureDarc(t *testing.T) {
 				SignerCounter: []uint64{1},
 			}},
 		}
-		require.Nil(t, ctx2.SignWith(restrictedSigner))
+		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -167,7 +167,7 @@ func TestSecureDarc(t *testing.T) {
 				SignerCounter: []uint64{1},
 			}},
 		}
-		require.Nil(t, ctx2.SignWith(restrictedSigner))
+		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
 	}
@@ -201,7 +201,7 @@ func TestSecureDarc(t *testing.T) {
 				SignerCounter: []uint64{1},
 			}},
 		}
-		require.Nil(t, ctx2.SignWith(restrictedSigner)) // here we use the wrong signer
+		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner)) // here we use the wrong signer
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -226,7 +226,7 @@ func TestSecureDarc(t *testing.T) {
 				SignerCounter: []uint64{1},
 			}},
 		}
-		require.Nil(t, ctx2.SignWith(unrestrictedSigner)) // here we use the correct signer
+		require.Nil(t, ctx2.FillSignersAndSignWith(unrestrictedSigner)) // here we use the correct signer
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
 	}

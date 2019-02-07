@@ -759,7 +759,7 @@ func bcStore(c *cli.Context) error {
 	ct := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	err = ct.SignWith(*signer)
+	err = ct.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}
@@ -787,7 +787,7 @@ func bcStore(c *cli.Context) error {
 	ct = byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	err = ct.SignWith(*signer)
+	err = ct.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}
@@ -899,7 +899,7 @@ func bcFinalize(c *cli.Context) error {
 			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.SignWith(*signer)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return errors.New("couldn't sign instruction: " + err.Error())
 	}
@@ -1107,7 +1107,7 @@ func bcCoinTransfer(c *cli.Context) error {
 			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.SignWith(srcSigner)
+	err = ctx.FillSignersAndSignWith(srcSigner)
 	if err != nil {
 		return errors.New("couldn't sign transaction: " + err.Error())
 	}

@@ -81,7 +81,7 @@ class WriteInstanceTest {
             for (ClientTransaction ct : bcBlock.getAcceptedClientTransactions()) {
                 // Suppose that the spawn instruction for the calypsoWrite is in the first element of the array.
                 Spawn sp = ct.getInstructions().get(0).getSpawn();
-                if (sp != null && sp.getContractId().equals(WriteInstance.ContractId)) {
+                if (sp != null && sp.getContractID().equals(WriteInstance.ContractId)) {
                     logger.info("Found Writer");
                     WriteData wd = WriteData.fromProto(sp.getArguments().get(0).getValue());
                     assertArrayEquals(w.getWrite().toProto().toByteArray(), wd.toProto().toByteArray());

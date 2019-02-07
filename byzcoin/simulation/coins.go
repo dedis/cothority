@@ -100,20 +100,22 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
-				SignerCounter: []uint64{1},
+				SignerIdentities: []darc.Identity{signer.Identity()},
+				SignerCounter:    []uint64{1},
 			},
 			{
 				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
 				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
-				SignerCounter: []uint64{2},
+				SignerIdentities: []darc.Identity{signer.Identity()},
+				SignerCounter:    []uint64{2},
 			},
 		},
 	}
 
 	// Now sign all the instructions
-	if err = tx.SignWith(signer); err != nil {
+	if err = tx.FillSignersAndSignWith(signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	coinAddr1 := tx.Instructions[0].DeriveID("")
@@ -138,11 +140,12 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 						Name:  "coins",
 						Value: coins}},
 				},
-				SignerCounter: []uint64{3},
+				SignerIdentities: []darc.Identity{signer.Identity()},
+				SignerCounter:    []uint64{3},
 			},
 		},
 	}
-	if err = tx.SignWith(signer); err != nil {
+	if err = tx.FillSignersAndSignWith(signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	_, err = c.AddTransactionAndWait(tx, 2)
@@ -198,10 +201,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 								Value: coinAddr2.Slice(),
 							}},
 					},
-					SignerCounter: []uint64{signatureCtr},
+					SignerIdentities: []darc.Identity{signer.Identity()},
+					SignerCounter:    []uint64{signatureCtr},
 				})
 				signatureCtr++
-				err = tx.SignWith(signer)
+				err = tx.FillSignersAndSignWith(signer)
 				if err != nil {
 					return errors.New("signature error: " + err.Error())
 				}

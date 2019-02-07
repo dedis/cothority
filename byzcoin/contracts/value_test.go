@@ -42,7 +42,7 @@ func TestValue_Spawn(t *testing.T) {
 			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)

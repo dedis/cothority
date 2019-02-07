@@ -84,4 +84,9 @@ public class IdentityEd25519 implements Identity {
         IdentityEd25519 otherEd = (IdentityEd25519) other;
         return pub.equals(otherEd.pub);
     }
+
+    @Override
+    public byte[] getPublicBytes() {
+        return pub.toBytes();
+    }
 }

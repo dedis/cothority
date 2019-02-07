@@ -25,10 +25,10 @@ func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 
 // incrementSignerCounters loads the existing counters from sigs and then
 // increments all of them by 1.
-func incrementSignerCounters(st ReadOnlyStateTrie, sigs []darc.Signature) (StateChanges, error) {
+func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateChanges, error) {
 	var scs StateChanges
-	for _, sig := range sigs {
-		id := sig.Signer.String()
+	for _, id := range ids {
+		id := id.String()
 		ver, err := getSignerCounter(st, id)
 		if err != nil {
 			return scs, err
@@ -52,15 +52,15 @@ func incrementSignerCounters(st ReadOnlyStateTrie, sigs []darc.Signature) (State
 
 // verifySignerCounters verifies whether the given counters are valid with
 // respect to the current counters.
-func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.Signature) error {
-	if len(counters) != len(sigs) {
+func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, ids []darc.Identity) error {
+	if len(counters) != len(ids) {
 		return errors.New("lengths of the counters and signatures are not the same")
 	}
 	for i, counter := range counters {
-		if !sigs[i].Signer.PrimaryIdentity() {
+		if !ids[i].PrimaryIdentity() {
 			return errors.New("not a primary identity")
 		}
-		id := sigs[i].Signer.String()
+		id := ids[i].String()
 		c, err := getSignerCounter(st, id)
 		if err != nil {
 			return err

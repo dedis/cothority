@@ -93,7 +93,7 @@ class ReadInstanceTest {
             for (ClientTransaction ct : bcBlock.getAcceptedClientTransactions()) {
                 // Suppose that the spawn instruction for the calypsoRead is in the first element of the array.
                 Spawn sp = ct.getInstructions().get(0).getSpawn();
-                if (sp != null && sp.getContractId().equals(ReadInstance.ContractId)) {
+                if (sp != null && sp.getContractID().equals(ReadInstance.ContractId)) {
                     logger.info("Found Reader");
                     ReadData rd = ReadData.fromProto(sp.getArguments().get(0).getValue());
                     assertArrayEquals(r.getRead().toProto().toByteArray(), rd.toProto().toByteArray());
