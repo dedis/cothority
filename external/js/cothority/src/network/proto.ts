@@ -57,6 +57,20 @@ export class Roster extends Message<Roster> {
     }
 
     /**
+     * Get the public keys for a given service
+     * 
+     * @param name The name of the service
+     * @returns the list of points
+     */
+    getServicePublics(name: string): Point[] {
+        return this.list.map((srvid) => {
+            const t = srvid.serviceIdentities.find(s => s.name === name);
+
+            return PointFactory.fromProto(t.public);
+        });
+    }
+
+    /**
      * Get a subset of the roster
      * @param start Index of the first identity
      * @param end   Index of the last identity, not inclusive
@@ -138,14 +152,12 @@ export class ServerIdentity extends Message<ServerIdentity> {
      * @returns the point
      */
     getPublic(): Point {
-        if (this._point) {
+        if (!this._point) {
             // cache the point to avoid multiple unmarshaling
-            return this._point;
+            this._point = PointFactory.fromProto(this.public);
         }
 
-        const pub = PointFactory.fromProto(this.public);
-        this._point = pub;
-        return pub;
+        return this._point.clone();
     }
 
     /**

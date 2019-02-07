@@ -84,7 +84,7 @@ export default class SkipchainRPC {
             try {
                 reply = await this.conn[i].send(req, GetUpdateChainReply);
             } catch (err) {
-                console.error(`Failed to reach ${this.conn[i].getURL()}`);
+                Logger.error(`Failed to reach ${this.conn[i].getURL()}`);
                 continue;
             }
 
@@ -140,7 +140,7 @@ export default class SkipchainRPC {
                 return new Error('No forward link associated with the next block');
             }
 
-            const err = link.verify();
+            const err = link.verify(curr.roster.getServicePublics(SkipchainRPC.ServiceName));
             if (err) {
                 return err;
             }

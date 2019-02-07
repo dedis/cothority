@@ -2,12 +2,13 @@ import ByzCoinRPC from "../byzcoin-rpc";
 import Darc from "../../darc/darc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Signer from "../../darc/signer";
-import Instance from "../instance";
+import Instance, { InstanceID } from "../instance";
 
 export default class DarcInstance {
     static readonly contractID = "darc";
 
     private darc: Darc;
+    private instance: Instance;
     private rpc: ByzCoinRPC;
 
     constructor(rpc: ByzCoinRPC, instance: Instance) {
@@ -16,7 +17,12 @@ export default class DarcInstance {
         }
 
         this.rpc = rpc;
+        this.instance = instance;
         this.darc = Darc.decode(instance.data);
+    }
+
+    get iid(): InstanceID {
+        return this.instance.id;
     }
 
     /**

@@ -2,5 +2,7 @@
 node_modules
 .nyc_output
 coverage
+dist
+doc
 
 output.log

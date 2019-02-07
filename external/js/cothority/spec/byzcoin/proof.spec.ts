@@ -20,7 +20,7 @@ describe('Proof Tests', () => {
         di = await DarcInstance.fromByzcoin(rpc, darc.baseID);
     });
 
-    it('should get proofs en verify them', async () => {
+    it('should get proofs and verify them', async () => {
         const n = 4;
         const ids: Buffer[] = [];
 

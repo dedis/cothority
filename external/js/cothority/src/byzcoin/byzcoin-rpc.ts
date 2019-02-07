@@ -20,6 +20,7 @@ export default class ByzCoinRPC implements CounterUpdater {
     private config: ChainConfig;
     private genesis: SkipBlock;
     private conn: Connection;
+    private skipchainRpc: SkipchainRPC;
 
     protected constructor() { }
 
@@ -98,6 +99,11 @@ export default class ByzCoinRPC implements CounterUpdater {
         });
 
         const reply = await this.conn.send<GetProofResponse>(req, GetProofResponse);
+        const err = reply.proof.verify(this.genesis.hash);
+        if (err) {
+            throw new Error(`invalid proof: ${err.message}`);
+        }
+
         return reply.proof;
     }
 
@@ -151,6 +157,7 @@ export default class ByzCoinRPC implements CounterUpdater {
     static async fromByzcoin(roster: Roster, skipchainID: Buffer): Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
         rpc.conn = new RosterWSConnection(roster, 'ByzCoin');
+        rpc.skipchainRpc = new SkipchainRPC(roster);
 
         const skipchain = new SkipchainRPC(roster);
         rpc.genesis = await skipchain.getSkipblock(skipchainID);
@@ -173,6 +180,7 @@ export default class ByzCoinRPC implements CounterUpdater {
     static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
         rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), 'ByzCoin');
+        rpc.skipchainRpc = new SkipchainRPC(roster);
         rpc.genesisDarc = darc;
         rpc.config = new ChainConfig({ blockInterval });
 

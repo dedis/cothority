@@ -3,6 +3,8 @@ import { Message } from "protobufjs";
 import { SkipBlock, ForwardLink } from "../skipchain/skipblock";
 import { registerMessage } from "../protobuf";
 import { createHash } from "crypto";
+import { InstanceID } from './instance';
+import { SkipchainRPC } from '..';
 
 /**
  * The proof class represents a proof that a given instance with its data is either present or absent in the global
@@ -71,6 +73,52 @@ export default class Proof extends Message<Proof> {
      */
     get key(): Buffer {
         return this.inclusionproof.key;
+    }
+
+    /**
+     * Verify that the proof contains a correct chain from the given genesis
+     * 
+     * @param genesisID The skipchain ID
+     * @returns an error if something is wrong, null otherwise
+     */
+    verify(genesisID: InstanceID): Error {
+        if (!this.latest.computeHash().equals(this.latest.hash)) {
+            return new Error('invalid latest block');
+        }
+
+        const header = DataHeader.decode(this.latest.data);
+        if (!this.inclusionproof.hashInterior(0).equals(header.trieroot)) {
+            return new Error('invalid root');
+        }
+
+        let publics = this.latest.roster.getServicePublics(SkipchainRPC.ServiceName);
+        let prev = this.links[0].to;
+
+        if (!prev.equals(genesisID)) {
+            return new Error('first link must come from the genesis block');
+        }
+
+        const links = this.links;
+        for (let i = 1; i < links.length; i++) {
+            const link = links[i];
+
+            const err = link.verify(publics);
+            if (err) {
+                return new Error('invalid forward link signature: ' + err.message);
+            }
+
+            if (!link.from.equals(prev)) {
+                return new Error('invalid chain of forward links');
+            }
+
+            prev = link.to;
+
+            if (link.newRoster) {
+                publics = link.newRoster.getServicePublics(SkipchainRPC.ServiceName);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -301,8 +349,16 @@ class StateChangeBody extends Message<StateChangeBody> {
     }
 }
 
+class DataHeader extends Message<DataHeader> {
+    readonly trieroot: Buffer;
+    readonly clienttransactionhash: Buffer;
+    readonly statechangeshash: Buffer;
+    readonly timestamp: Long;
+}
+
 export function registerProofMessages() {
     registerMessage('byzcoin.Proof', Proof);
+    registerMessage('byzcoin.DataHeader', DataHeader);
     registerMessage('trie.Proof', InclusionProof);
     registerMessage('trie.InteriorNode', InteriorNode);
     registerMessage('trie.LeafNode', LeafNode);
