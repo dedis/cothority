@@ -49,6 +49,10 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 		if err != nil {
 			return nil, nil, errors.New("given DARC could not be decoded: " + err.Error())
 		}
+		if d.Version != 0 {
+			return nil, nil, errors.New("DARC version must start at 0")
+		}
+
 		id := d.GetBaseID()
 
 		// Here is an example hard-coded constraint for spawning DARCs.

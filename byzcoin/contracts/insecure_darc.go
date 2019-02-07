@@ -37,6 +37,9 @@ func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin
 		if err != nil {
 			return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
 		}
+		if d.Version != 0 {
+			return nil, nil, errors.New("DARC version must start at 0")
+		}
 		id := d.GetBaseID()
 		return []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Create, byzcoin.NewInstanceID(id), ContractInsecureDarcID, darcBuf, id),
