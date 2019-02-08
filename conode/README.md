@@ -50,6 +50,7 @@ You will find more details about the available apps on
 
 For creating a new docker image, there are two commands:
 
-* `make docker` - creates a docker image from source, uses `master` for all repos
 * `make docker_dev` - creates a docker image with the currently checked out versions
 on your machine.
+* `make docker BUILD_TAG=v3.0.0-pre1` - creates a docker image from source at tag
+BUILD_TAG.

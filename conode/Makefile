@@ -1,51 +1,49 @@
 CONTAINER = conode
 IMAGE_NAME = dedis/$(CONTAINER)
 DATA_DIR = $(shell pwd)/conode_data
-VERSION = dev
-OUTPUT_DIR = conode-$(VERSION)
+OUTPUT_DIR = conode-dev
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
-TAG = $(VERSION)-$(shell date +%y%m%d)
+TAG = dev-$(shell date +%y%m%d)
 GIT_TAG = $(shell git tag -l --points-at HEAD )
 ifneq ($(GIT_TAG),)
-  TAG = $(VERSION)-$(GIT_TAG)
+  TAG = $(GIT_TAG)
 endif
 
 # -s -w are for smaller binaries
 # -X compiles the git tag into the binary
-ldflags=-s -w -X main.gitTag=$(TAG) -X github.com/dedis/onet.gitTag=$(TAG)
-flags=-ldflags="$(ldflags)"
+ldflags=-s -w -X main.gitTag=$(TAG)
 
 all: docker
 
 # Use this target to build from only published sources.
 docker: clean Dockerfile
-	BUILDFLAG=$(flags)
-	docker build -t $(IMAGE_NAME):$(TAG) --build-arg BUILDFLAG="$(ldflags)" .
-	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
+	@[ -z "$(BUILD_TAG)" ] && echo "Must specify BUILD_TAG." && exit 1 || true
+	docker build -t $(IMAGE_NAME):$(TAG) --build-arg BUILD_TAG="$(BUILD_TAG)" --build-arg ldflags="$(ldflags)" .
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):dev
 
 # Use this target to build from local source instead of from publish sources.
 docker_dev: clean Dockerfile-dev exe/conode.Linux.x86_64
 	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
-	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):dev
 
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
-	docker push $(IMAGE_NAME):$(VERSION)
+	docker push $(IMAGE_NAME):dev
 	docker push $(IMAGE_NAME):$(TAG)
 
 docker_push_latest: docker_push
-	docker tag $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME):latest
+	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):latest
 
 docker_setup:
 	mkdir -p $(DATA_DIR)
 	docker run -it --rm -p 7770-7771:7770-7771 --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
-	    $(IMAGE_NAME):$(VERSION) ./conode setup
+	    $(IMAGE_NAME):dev ./conode setup
 
 docker_run:
 	if [ ! -f conode_data/private.toml ]; then make docker_setup; fi
 	mkdir -p $(DATA_DIR)
 	docker run -it --rm -p 7770-7771:7770-7771 --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
-	    $(IMAGE_NAME):$(VERSION)
+	    $(IMAGE_NAME):dev
 
 docker_stop:
 	docker rm -f $(CONTAINER)
@@ -61,15 +59,15 @@ clean:
 # so that we can find the right one in the wrapper script.
 # This is in it's own rule because the Docker build needs it also.
 exe/conode.Linux.x86_64:
-	GOOS=linux GOARCH=amd64 go build $(flags) -o $@
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o $@
 
 bindist: clean exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
 	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
-	GOOS=linux  GOARCH=arm go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.armv7l
-	GOOS=freebsd GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
-	GOOS=windows GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.exe
+	GO111MODULE=on GOOS=linux  GOARCH=arm go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.Linux.armv7l
+	GO111MODULE=on GOOS=freebsd GOARCH=amd64 go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
+	GO111MODULE=on GOOS=windows GOARCH=amd64 go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.exe
 	echo "#!/bin/sh" > $(OUTPUT_DIR)/conode
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
 	chmod +x $(OUTPUT_DIR)/conode

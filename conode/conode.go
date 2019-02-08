@@ -37,9 +37,6 @@ const (
 	// DefaultName is the name of the binary we produce and is used to create a directory
 	// folder with this name
 	DefaultName = "conode"
-
-	// Version of this binary
-	Version = "2.0"
 )
 
 var gitTag = ""
@@ -49,9 +46,9 @@ func main() {
 	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
 	if gitTag == "" {
-		cliApp.Version = Version
+		cliApp.Version = "unknown"
 	} else {
-		cliApp.Version = Version + "-" + gitTag
+		cliApp.Version = gitTag
 	}
 
 	cliApp.Commands = []cli.Command{
