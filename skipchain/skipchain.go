@@ -1379,33 +1379,30 @@ func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg
 	}
 }
 
-// PropagateGenesisHandler will save a new SkipBlock
-func (s *Service) propagateGenesisHandler(msg network.Message) {
+// propagateGenesisHandler will save a new SkipBlock
+func (s *Service) propagateGenesisHandler(msg network.Message) error {
 	pg, ok := msg.(*PropagateGenesis)
 	if !ok {
-		log.Error("Couldn't convert to slice of SkipBlocks")
-		return
+		return errors.New("Couldn't convert to slice of SkipBlocks")
 	}
 
 	if !s.BlockIsFriendly(pg.Genesis) {
-		log.Error("Conode doesn't want to follow that skipchain")
-		return
+		return errors.New("Conode doesn't want to follow that skipchain")
 	}
 
 	id := s.db.Store(pg.Genesis)
 	if id == nil {
-		// the error is logged in the store function
-		return
+		return errors.New("failed to store the block")
 	}
+	return nil
 }
 
-// PropagateForwardLinkHandler will update the latest block with
+// propagateForwardLinkHandler will update the latest block with
 // the new forward link and the new block when given
-func (s *Service) propagateForwardLinkHandler(msg network.Message) {
+func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	pfl, ok := msg.(*PropagateForwardLink)
 	if !ok {
-		log.Error("Couldn't convert to a ForwardLink propagation")
-		return
+		return errors.New("Couldn't convert to a ForwardLink propagation")
 	}
 
 	// Get the block to update the list of FLs
@@ -1413,45 +1410,33 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) {
 	if sb == nil {
 		// Here we assume the block must be there because it should
 		// have caught up during the signature request
-		log.Error("Couldn't get the block to attach the forward link")
-		return
+		return errors.New("Couldn't get the block to attach the forward link")
 	}
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {
-		log.Error(err)
-		return
+		return err
 	}
 
 	// Update the forward link list of the block. The link is verified
 	// before the update.
 	id := s.db.Store(sb)
 	if id == nil {
-		// error already logged
-		return
+		return errors.New("failed to store the block")
 	}
 
 	// Add the block if available
 	if sb := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To); sb != nil {
 		id := s.db.Store(sb)
 		if id == nil {
-			// error already logged
-			return
+			return errors.New("failed to store the block")
 		}
 		s.blockBuffer.clear(sb.SkipChainID())
 	}
+	return nil
 }
 
-// TODO: change messaging package to allow to return an error
-// it makes the function easier to test
-func (s *Service) propagateProofHandlerNoError(msg network.Message) {
-	err := s.propagateProofHandler(msg)
-	if err != nil {
-		log.Error(err.Error())
-	}
-}
-
-// PropagateChainHandler handles a chain propagation message that
+// propagateProofHandler handles a chain propagation message that
 // announces a skipchain to a new conode
 func (s *Service) propagateProofHandler(msg network.Message) error {
 	pc, ok := msg.(*PropagateProof)
@@ -1704,7 +1689,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.propagateProof, err = messaging.NewPropagationFunc(c, "SkipchainPropagateProof", s.propagateProofHandlerNoError, -1)
+	s.propagateProof, err = messaging.NewPropagationFunc(c, "SkipchainPropagateProof", s.propagateProofHandler, -1)
 	if err != nil {
 		return nil, err
 	}
