@@ -2237,7 +2237,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(scs))
 
-	s.service().trySyncAll()
+	s.service().catchupAll()
 
 	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
 	require.Nil(t, err)
