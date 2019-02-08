@@ -502,4 +502,5 @@ interface ICreatePopParty {
     reward: Long;
 }
 
-registerMessage("personhood.SpawnerStruct", SpawnerStruct);
+// TODO: remove comment after personhood.online is merged
+// registerMessage("personhood.SpawnerStruct", SpawnerStruct);

@@ -1,6 +1,5 @@
 import { curve, Point, Scalar, sign } from "@dedis/kyber";
 import IdentityEd25519 from "./identity-ed25519";
-import Signature from "./signature";
 import ISigner from "./signer";
 
 const ed25519 = curve.newCurve("edwards25519");
@@ -31,10 +30,7 @@ export default class SignerEd25519 extends IdentityEd25519 implements ISigner {
     }
 
     /** @inheritdoc */
-    sign(msg: Buffer): Signature {
-        return new Signature({
-            signature: schnorr.sign(ed25519, this.priv, msg),
-            signer: this.toWrapper(),
-        });
+    sign(msg: Buffer): Buffer {
+        return schnorr.sign(ed25519, this.priv, msg);
     }
 }

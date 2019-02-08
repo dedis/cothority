@@ -17,7 +17,7 @@ describe("Identity Tests", () => {
 
         const msg = Buffer.from("deadbeef", "hex");
         const sig = SIGNER.sign(msg);
-        expect(id.verify(msg, sig.signature)).toBeTruthy();
+        expect(id.verify(msg, sig)).toBeTruthy();
         expect(id.toWrapper().ed25519).toBeDefined();
         expect(id.toBytes()).toEqual(SIGNER.point);
         expect(id.toString()).toBe(`ed25519:${SIGNER.public.toString()}`);

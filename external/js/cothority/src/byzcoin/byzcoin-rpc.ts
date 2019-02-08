@@ -84,6 +84,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const req = new CreateGenesisBlock({
             blockInterval,
+            darcContractIDs: ["darc"],
             genesisDarc: darc,
             roster,
             version: currentVersion,

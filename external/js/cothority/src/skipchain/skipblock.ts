@@ -50,12 +50,10 @@ export class SkipBlock extends Message<SkipBlock> {
      */
     computeHash(): Buffer {
         const h = createHash("sha256");
-        /* https://github.com/dedis/cothority/issues/1701
         h.update(int2buf(this.index));
         h.update(int2buf(this.height));
         h.update(int2buf(this.maxHeight));
         h.update(int2buf(this.baseHeight));
-        */
 
         for (const bl of this.backlinks) {
             h.update(bl);

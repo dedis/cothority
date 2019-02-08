@@ -102,8 +102,10 @@ export class LRSTag extends Message<LRSTag> {
     readonly tag: Buffer;
 }
 
+/* TODO: remove after personhood.online is merged
 registerMessage("personhood.PopPartyStruct", PopPartyStruct);
 registerMessage("personhood.FinalStatement", FinalStatement);
 registerMessage("personhood.PopDesc", PopDesc);
 registerMessage("personhood.Attendees", Attendees);
 registerMessage("personhood.LRSTag", LRSTag);
+*/

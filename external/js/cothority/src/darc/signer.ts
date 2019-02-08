@@ -1,5 +1,4 @@
 import Identity from "./identity";
-import Signature from "./signature";
 
 export default interface ISigner extends Identity {
     /**
@@ -10,5 +9,5 @@ export default interface ISigner extends Identity {
      * @param msg the message to sign
      * @returns the signature
      */
-    sign(msg: Buffer): Signature;
+    sign(msg: Buffer): Buffer;
 }

@@ -208,4 +208,5 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     }
 }
 
-registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);
+// TODO: remove comment after personhood.online is merged
+// registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);

@@ -108,8 +108,8 @@ export class WebSocketConnection implements IConnection {
                 }
             });
 
-            ws.onError((evt: any) => {
-                reject(new Error("error in websocket: " + evt.error));
+            ws.onError((err: Error) => {
+                reject(new Error("error in websocket " + path + ": " + err));
             });
         });
     }

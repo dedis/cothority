@@ -1,13 +1,6 @@
-import { PointFactory } from "@dedis/kyber";
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/dist/pairing/point";
-import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { Roster, ServerIdentity } from "../../src/network/proto";
 import { ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
-
-/*
- * TODO
- * Update the hash after https://github.com/dedis/cothority/issues/1701
- */
 
 describe("SkipBlock Tests", () => {
     it("should hash the block", () => {
@@ -23,7 +16,7 @@ describe("SkipBlock Tests", () => {
         });
 
         expect(sb.computeHash().toString("hex"))
-            .toBe("698629e47b4736d7c4a0a75c42529e80e0d962eed2e7111b1616ab2ffaab22b5");
+            .toBe("36a9ae78a58ea8a1dd7f851a7c0d163d7456f016eed30e9e41db1a80f017bcc0");
     });
 
     it("should hash the block with a roster", () => {
@@ -31,13 +24,13 @@ describe("SkipBlock Tests", () => {
             list: [
                 new ServerIdentity({
                     public: Buffer.from(
-                        "65642e706f696e7471e96e3fcf50e07c1937ffc3df479f3cd0d5e76f37471439fe556fdc768b225d",
+                        "65642e706f696e748d463370bcf61e31b64bdf06a7c2bbb752e09f6bcee2396847200fd74539ac4f",
                         "hex",
                     ),
                 }),
                 new ServerIdentity({
                     public: Buffer.from(
-                        "65642e706f696e74510f70f3655f26ec7289a1c23b3fcb258c6fceb546670e3d5fd63ec1020a9ee3",
+                        "65642e706f696e74770155e2439b99be3407301a43d41a4cd0f3222ac7db0411696bcccf0e9f2990",
                         "hex",
                     ),
                 }),
@@ -45,19 +38,19 @@ describe("SkipBlock Tests", () => {
         });
 
         const sb = new SkipBlock({
-            backlinks: [Buffer.from([2])],
-            baseHeight: 0,
-            data: Buffer.from([3]),
-            genesis: Buffer.from([1]),
-            height: 0,
+            backlinks: [Buffer.from([1, 2, 3])],
+            baseHeight: 4,
+            data: Buffer.from([1, 2, 3]),
+            genesis: Buffer.from([1, 2, 3]),
+            height: 32,
             index: 0,
-            maxHeight: 0,
+            maxHeight: 32,
             roster,
             verifiers: [Buffer.from("a7f6cdb747f856b4aff5ece35a882489", "hex")],
         });
 
         expect(sb.computeHash().toString("hex"))
-            .toBe("0905c7459d7bd011455160b6faa41d744268794a1733e9d3c45f988204352875");
+            .toBe("bdbe534e525441980184bb53692da069a7ae9ecc5cafcc4f64cb54fc453ff02b");
     });
 
     it("should hash the forward link", () => {

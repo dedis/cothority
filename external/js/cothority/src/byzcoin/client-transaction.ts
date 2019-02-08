@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import Long from "long";
 import { Message } from "protobufjs";
 import Identity from "../darc/identity";
-import Signature from "../darc/signature";
+import IdentityWrapper from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 
 export interface ICounterUpdater {
@@ -39,6 +39,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
 
         for (let i = 1; i < this.instructions.length; i++) {
             this.instructions[i].signerCounter = this.instructions[0].signerCounter.map((v) => v.add(i));
+            this.instructions[i].signerIdentities = signers.map((s) => s.toWrapper());
         }
     }
 
@@ -57,65 +58,6 @@ export default class ClientTransaction extends Message<ClientTransaction> {
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
-
-    /**
-     * Getter for the instance ID
-     * @returns the instance ID
-     */
-    get instanceID(): Buffer {
-        return this.instanceid;
-    }
-
-    /**
-     * Setter for the instance ID
-     * @param v The value to set
-     */
-    set instanceID(v: Buffer) {
-        this.instanceid = v;
-    }
-
-    /**
-     * Getter for the signer counters
-     * @returns the counters
-     */
-    get signerCounter(): Long[] {
-        return this.signercounter;
-    }
-
-    /**
-     * Setter for the signer counters
-     * @param v The value to set
-     */
-    set signerCounter(v: Long[]) {
-        this.signercounter = v;
-    }
-
-    /**
-     * Getter for the signatures
-     * @returns the list of signatures
-     */
-    get signatures(): Signature[] {
-        // readonly access with internal modification via signWith
-        return this._signatures;
-    }
-
-    /**
-     * Get the type of the instruction
-     * @returns the type as a number
-     */
-    get type(): number {
-        if (this.spawn) {
-            return 0;
-        }
-        if (this.invoke) {
-            return 1;
-        }
-        if (this.delete) {
-            return 2;
-        }
-        throw new Error("instruction without type");
-    }
-
     /**
      * Helper to create a spawn instruction
      * @param iid           The instance ID
@@ -165,8 +107,83 @@ export class Instruction extends Message<Instruction> {
     readonly delete: Delete;
     private instanceid: Buffer;
     private signercounter: Long[];
+    private signeridentities: IdentityWrapper[];
 
-    private _signatures: Signature[];
+    private _signatures: Buffer[];
+
+    /**
+     * Getter for the instance ID
+     * @returns the instance ID
+     */
+    get instanceID(): Buffer {
+        return this.instanceid;
+    }
+
+    /**
+     * Setter for the instance ID
+     * @param v The value to set
+     */
+    set instanceID(v: Buffer) {
+        this.instanceid = v;
+    }
+
+    /**
+     * Getter for the signer counters
+     * @returns the counters
+     */
+    get signerCounter(): Long[] {
+        return this.signercounter;
+    }
+
+    /**
+     * Setter for the signer counters
+     * @param v The value to set
+     */
+    set signerCounter(v: Long[]) {
+        this.signercounter = v;
+    }
+
+    /**
+     * Getter for the signer identites
+     * @returns the signer identities
+     */
+    get signerIdentities(): IdentityWrapper[] {
+        return this.signeridentities;
+    }
+
+    /**
+     * Setter for the signer identities
+     * @param v The list of identity wrappers
+     */
+    set signerIdentities(v: IdentityWrapper[]) {
+        this.signeridentities = v;
+    }
+
+    /**
+     * Getter for the signatures
+     * @returns the list of signatures
+     */
+    get signatures(): Buffer[] {
+        // readonly access with internal modification via signWith
+        return this._signatures;
+    }
+
+    /**
+     * Get the type of the instruction
+     * @returns the type as a number
+     */
+    get type(): number {
+        if (this.spawn) {
+            return 0;
+        }
+        if (this.invoke) {
+            return 1;
+        }
+        if (this.delete) {
+            return 2;
+        }
+        throw new Error("instruction without type");
+    }
 
     /**
      * Use the signers to make a signature of the hash
@@ -185,6 +202,7 @@ export class Instruction extends Message<Instruction> {
     async updateCounters(rpc: ICounterUpdater, signers: Identity[]): Promise<void> {
         const counters = await rpc.getSignerCounters(signers, 1);
         this.signerCounter = counters;
+        this.signeridentities = signers.map((s) => s.toWrapper());
     }
 
     /**
@@ -216,6 +234,9 @@ export class Instruction extends Message<Instruction> {
         this.signerCounter.forEach((sc) => {
             h.update(Buffer.from(sc.toBytesLE()));
         });
+        this.signerIdentities.forEach((si) => {
+            h.update(si.toBytes());
+        });
         return h.digest();
     }
 
@@ -230,9 +251,9 @@ export class Instruction extends Message<Instruction> {
         b.writeUInt32LE(this.signatures.length, 0);
         h.update(b);
         this.signatures.forEach((sig) => {
-            b.writeUInt32LE(sig.signature.length, 0);
+            b.writeUInt32LE(sig.length, 0);
             h.update(b);
-            h.update(sig.signature);
+            h.update(sig);
         });
         h.update(Buffer.from(what));
         return h.digest();

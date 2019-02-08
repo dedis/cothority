@@ -13,7 +13,8 @@ import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/cononde
 
 const ed25519 = curve.newCurve("edwards25519");
 
-describe("SpawnerInstance Tests", () => {
+// TODO: enable after personhood.online is merged
+xdescribe("SpawnerInstance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {

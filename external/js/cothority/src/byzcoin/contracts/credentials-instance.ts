@@ -151,6 +151,8 @@ export class Attribute extends Message<Attribute> {
     readonly value: Buffer;
 }
 
+/* TODO: remove comment after personhood.online is merged
 registerMessage("personhood.CredentialStruct", CredentialStruct);
 registerMessage("personhood.Credential", Credential);
 registerMessage("personhood.Attribute", Attribute);
+*/

@@ -15,6 +15,7 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
     private genesisdarc: Darc;
     private blockinterval: Long;
     private maxblocksize: number;
+    private darccontractids: string[];
 
     constructor(properties?: Properties<CreateGenesisBlock>) {
         const props: { [k: string]: any } = {};
@@ -51,6 +52,14 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
      */
     get maxBlockSize(): number {
         return this.maxblocksize;
+    }
+
+    /**
+     * Getter for the darc contract ids
+     * @returns the list of contract names
+     */
+    get darcContractIDs(): string[] {
+        return this.darccontractids;
     }
 }
 
