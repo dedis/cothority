@@ -67,7 +67,7 @@ func TestInsecureDarc(t *testing.T) {
 			SignerCounter: []uint64{2},
 		}},
 	}
-	require.Nil(t, ctx.SignWith(signer))
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err) // test for failure
 	newDarc.Version = 0   // reset the version
