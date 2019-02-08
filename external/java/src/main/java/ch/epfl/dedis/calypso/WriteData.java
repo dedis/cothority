@@ -3,6 +3,7 @@ package ch.epfl.dedis.calypso;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -36,7 +37,10 @@ public class WriteData {
      * keyMaterial and can be decrypted using keyMaterial.
      *
      * @param lts         Long Term Secret parameters
-     * @param dataEnc     The ciphertext which will be stored _as is_ on ByzCoin.
+     * @param dataEnc     The ciphertext which will be stored _as is_ on ByzCoin. There is a limit on the size of the
+     *                    ciphertext which depends on the block size of ByzCoin. Typically the limit is slightly below
+     *                    the block size because the block also contains other metadata. You can find the block size
+     *                    using ChainConfigInstance.
      * @param keyMaterial The symmetric key plus eventually an IV. This will be encrypted under the shared symmetricKey
      *                    of the cothority.
      * @param extraData   data that will _not be encrypted_ but will be visible in cleartext on ByzCoin.
@@ -44,7 +48,7 @@ public class WriteData {
      * @throws CothorityException if something went wrong
      */
     public WriteData(CreateLTSReply lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
-        if (dataEnc.length > 8000000) {
+        if (dataEnc.length > ChainConfigData.blocksizeMax) {
             throw new CothorityException("data length too long");
         }
         Calypso.Write.Builder wr = Calypso.Write.newBuilder();
@@ -71,10 +75,10 @@ public class WriteData {
      *
      * @param bc a running Byzcoin service
      * @param id an instanceId of a WriteInstance
-     * @throws CothorityNotFoundException if the requested instance cannot be found
-     * @throws CothorityCommunicationException if something went wrong with the communication
-     * @throws CothorityCryptoException if there is something wrong with the proof
      * @return the new WriteData
+     * @throws CothorityNotFoundException      if the requested instance cannot be found
+     * @throws CothorityCommunicationException if something went wrong with the communication
+     * @throws CothorityCryptoException        if there is something wrong with the proof
      */
     public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException, CothorityCryptoException {
         return WriteData.fromInstance(Instance.fromByzcoin(bc, id));
@@ -154,6 +158,7 @@ public class WriteData {
 
     /**
      * Get the encrypted data.
+     *
      * @return the encrypted data
      */
     public byte[] getDataEnc() {
@@ -162,6 +167,7 @@ public class WriteData {
 
     /**
      * Get the extra data.
+     *
      * @return the extra data
      */
     public byte[] getExtraData() {
@@ -174,6 +180,7 @@ public class WriteData {
 
     /**
      * Takes a byte array as an input to parse into the protobuf representation of WriteData.
+     *
      * @param buf the protobuf data
      * @return WriteData
      * @throws InvalidProtocolBufferException if the protobuf data is invalid.

@@ -47,8 +47,12 @@ public class Document {
      * symmetricKey and encrypts the data using AES-GCM.
      *
      * @param data        any data that will be stored encrypted on the skipchain.
-     *                    There is a 10MB-limit on how much data can be stored. If you
-     *                    need more, this must be a pointer to an off-chain storage.
+     *                    There is a limit on how much data can be stored. The limit
+     *                    depends on the block size configuration in ByzCoin. It is
+     *                    slightly below the block size because metadata is also stored
+     *                    in the block. You can find the block size using
+     *                    ChainConfigInstance. If you need more, this must be a pointer to an
+     *                    off-chain storage.
      * @param extraData   any public data that will not be encrypted
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
      */
