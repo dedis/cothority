@@ -122,7 +122,7 @@ export default class SkipchainRPC {
             return new Error("No block returned in the chain");
         }
 
-        if (firstID && !blocks[0].hash.equals(firstID)) {
+        if (firstID && !blocks[0].computeHash().equals(firstID)) {
             // expect the first block to be a particular block
             return new Error("the first ID is not the one we have");
         }
@@ -130,6 +130,10 @@ export default class SkipchainRPC {
         for (let i = 1; i < blocks.length; i++) {
             const prev = blocks[i - 1];
             const curr = blocks[i];
+
+            if (!curr.computeHash().equals(curr.hash)) {
+                return new Error("invalid block hash");
+            }
 
             if (prev.forwardLinks.length === 0) {
                 return new Error("No forward link included in the skipblock");
