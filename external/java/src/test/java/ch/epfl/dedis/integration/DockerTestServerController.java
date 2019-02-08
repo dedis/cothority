@@ -68,7 +68,7 @@ public class DockerTestServerController extends TestServerController {
         }
         logger.info("Starting container co{}/private.toml", nodeNumber);
         runCmdInBackgroundStd(blockchainContainer, "env", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "DEBUG_TIME=true", "CONODE_SERVICE_PATH=.",
-                "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
+                "conode", "-d", "1", "-c", "co" + nodeNumber + "/private.toml", "server");
         // Wait a bit for the server to actually start.
         Thread.sleep(1000);
     }

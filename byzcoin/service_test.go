@@ -1049,18 +1049,18 @@ func TestService_StateChangeVerification(t *testing.T) {
 	require.Equal(t, false, txOut[0].Accepted)
 
 	log.Lvl1("Create new instance, but fail to create it twice")
-	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	txs := NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Spawn:      &Spawn{ContractID: cid},
-	}}}), noTimeout)
+	}}})
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
 	require.Nil(t, cdb.StoreAll(scs, 0))
-	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
-		InstanceID: iid,
-		Spawn:      &Spawn{ContractID: cid},
-	}}}), noTimeout)
+	// Clear cache so that the transactions get re-evaluated
+	delete(s.service().stateChangeCache.cache, string(s.genesis.SkipChainID()))
+	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
@@ -2237,7 +2237,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(scs))
 
-	s.service().trySyncAll()
+	s.service().catchupAll()
 
 	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
 	require.Nil(t, err)
