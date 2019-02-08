@@ -65,7 +65,7 @@ describe('BN256 Point Tests', () => {
         const p2 = new BN256G1Point();
         p2.unmarshalBinary(buf);
 
-        expect(p1.equal(p2)).toBeTruthy();
+        expect(p1.equals(p2)).toBeTruthy();
         expect(p2.marshalSize()).toBe(buf.length);
     });
 
@@ -108,7 +108,7 @@ describe('BN256 Point Tests', () => {
         const aa = new BN256G2Point().add(p1, p2);
         const bb = new BN256G2Point().sub(p1, p2.clone().neg(p2));
 
-        expect(aa.equal(bb)).toBeTruthy();
+        expect(aa.equals(bb)).toBeTruthy();
     });
 
     it('should add and multiply g2 points', () => {
