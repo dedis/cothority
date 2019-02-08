@@ -121,16 +121,28 @@ func (instr Instruction) Hash() []byte {
 		h.Write([]byte(instr.Delete.ContractID))
 	}
 	for _, a := range args {
-		h.Write([]byte(a.Name))
+		nameBuf := []byte(a.Name)
+		nameLenBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(nameLenBuf, uint64(len(nameBuf)))
+		h.Write(nameLenBuf)
+		h.Write(nameBuf)
+
+		valueLenBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(valueLenBuf, uint64(len(a.Value)))
+		h.Write(valueLenBuf)
 		h.Write(a.Value)
 	}
-	for _, ver := range instr.SignerCounter {
-		verBuf := make([]byte, 8)
-		binary.LittleEndian.PutUint64(verBuf, ver)
-		h.Write(verBuf)
+	for _, ctr := range instr.SignerCounter {
+		ctrBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(ctrBuf, ctr)
+		h.Write(ctrBuf)
 	}
 	for _, id := range instr.SignerIdentities {
-		h.Write(id.GetPublicBytes())
+		buf := id.GetPublicBytes()
+		lenBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(lenBuf, uint64(len(buf)))
+		h.Write(lenBuf)
+		h.Write(buf)
 	}
 	return h.Sum(nil)
 }
