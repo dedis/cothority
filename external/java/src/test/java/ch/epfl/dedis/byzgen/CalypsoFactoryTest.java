@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CalypsoFactoryTest {
     public static final String SAMPLE_GENESIS_ID = "8dd9d04e027040e6815d58b5ccccb1fa13df771198d52f3e035cabdffc34551a";
-    public static final String CONODE_ADDRESS_INCORRECT = "http://localhost:7002";
+    public static final String CONODE_ADDRESS_INCORRECT = "http://localhost:7772";
     public static final String SAMPLE_CONODE_URI = "tls://remote.host.name:7044";
     public static final Point SAMPLE_CONODE_PUB =
             PointFactory.getInstance().fromToml("Ed25519", "402552116B5056CC6B989BAE9A8DFD8BF0C1A2714FB820F0472C096AB5D148D8");

@@ -19,7 +19,7 @@ func TestValue_Spawn(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:value", "spawn:darc"}, signer.Identity())
+		[]string{"spawn:value"}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 

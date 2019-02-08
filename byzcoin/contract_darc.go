@@ -8,7 +8,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 )
 
-// ContractSecureDarcID denotes a secure version of the DARC contract. We
+// ContractDarcID denotes a secure version of the DARC contract. We
 // provide two forms of security. The first is "restricted evolution", where
 // the evolve command only allows changes to existing rules, it is not allowed
 // to add new rules. There exists an additional command "evolve_unrestricted"
@@ -18,7 +18,7 @@ import (
 // rules must not contain spawn:inseucre_darc. While this contract may be
 // useful in a lot of scenarios, it is possible to have even more control by
 // writing new DARC contracts for the intended application.
-const ContractSecureDarcID = "secure_darc"
+const ContractDarcID = "darc"
 
 type contractSecureDarc struct {
 	BasicContract
@@ -43,7 +43,7 @@ func (s *Service) contractSecureDarcFromBytes(in []byte) (Contract, error) {
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
-	if inst.Spawn.ContractID == ContractSecureDarcID {
+	if inst.Spawn.ContractID == ContractDarcID {
 		darcBuf := inst.Spawn.Args.Search("darc")
 		d, err := darc.NewFromProtobuf(darcBuf)
 		if err != nil {
@@ -65,7 +65,7 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 		}
 
 		return []StateChange{
-			NewStateChange(Create, NewInstanceID(id), ContractSecureDarcID, darcBuf, id),
+			NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 		}, coins, nil
 	}
 
@@ -124,7 +124,7 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 			}
 		}
 		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
+			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
 		}, coins, nil
 	case cmdDarcEvolveUnrestriction:
 		var darcID darc.ID
@@ -146,7 +146,7 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 			return nil, nil, err
 		}
 		return []StateChange{
-			NewStateChange(Update, inst.InstanceID, ContractSecureDarcID, darcBuf, darcID),
+			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
 		}, coins, nil
 	default:
 		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
@@ -154,8 +154,8 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 }
 
 func isChangingEvolveUnrestricted(oldD *darc.Darc, newD *darc.Darc) bool {
-	oldExpr := oldD.Rules.Get(darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction))
-	newExpr := newD.Rules.Get(darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction))
+	oldExpr := oldD.Rules.Get(darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolveUnrestriction))
+	newExpr := newD.Rules.Get(darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolveUnrestriction))
 	if len(oldExpr) == 0 && len(newExpr) == 0 {
 		return false
 	}

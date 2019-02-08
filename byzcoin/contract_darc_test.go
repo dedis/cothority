@@ -28,8 +28,8 @@ func TestSecureDarc(t *testing.T) {
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
-	invokeEvolve := darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolve)
-	invokeEvolveUnrestricted := darc.Action("invoke:" + ContractSecureDarcID + "." + cmdDarcEvolveUnrestriction)
+	invokeEvolve := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolve)
+	invokeEvolveUnrestricted := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolveUnrestriction)
 
 	log.Info("spawn a new secure darc with spawn:insecure_darc - fail")
 	secDarc := gDarc.Copy()
@@ -40,7 +40,7 @@ func TestSecureDarc(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &Spawn{
-				ContractID: ContractSecureDarcID,
+				ContractID: ContractDarcID,
 				Args: []Argument{{
 					Name:  "darc",
 					Value: secDarcBuf,
@@ -63,7 +63,7 @@ func TestSecureDarc(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &Spawn{
-				ContractID: ContractSecureDarcID,
+				ContractID: ContractDarcID,
 				Args: []Argument{{
 					Name:  "darc",
 					Value: secDarcBuf,
@@ -83,7 +83,7 @@ func TestSecureDarc(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &Spawn{
-				ContractID: ContractSecureDarcID,
+				ContractID: ContractDarcID,
 				Args: []Argument{{
 					Name:  "darc",
 					Value: secDarcBuf,
@@ -107,7 +107,7 @@ func TestSecureDarc(t *testing.T) {
 			Instructions: []Instruction{{
 				InstanceID: NewInstanceID(secDarc.GetBaseID()),
 				Invoke: &Invoke{
-					ContractID: ContractSecureDarcID,
+					ContractID: ContractDarcID,
 					Command:    cmdDarcEvolve,
 					Args: []Argument{{
 						Name:  "darc",
@@ -133,7 +133,7 @@ func TestSecureDarc(t *testing.T) {
 			Instructions: []Instruction{{
 				InstanceID: NewInstanceID(secDarc.GetBaseID()),
 				Invoke: &Invoke{
-					ContractID: ContractSecureDarcID,
+					ContractID: ContractDarcID,
 					Command:    cmdDarcEvolve,
 					Args: []Argument{{
 						Name:  "darc",
@@ -157,7 +157,7 @@ func TestSecureDarc(t *testing.T) {
 			Instructions: []Instruction{{
 				InstanceID: NewInstanceID(secDarc.GetBaseID()),
 				Invoke: &Invoke{
-					ContractID: ContractSecureDarcID,
+					ContractID: ContractDarcID,
 					Command:    cmdDarcEvolve,
 					Args: []Argument{{
 						Name:  "darc",
@@ -176,7 +176,7 @@ func TestSecureDarc(t *testing.T) {
 	resp, err := cl.GetProof(secDarc.GetBaseID())
 	require.NoError(t, err)
 	myDarc := darc.Darc{}
-	require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractSecureDarcID, &myDarc))
+	require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
 	// secDarc is copied from genesis DARC, after one evolution the version
 	// should increase by one
 	require.Equal(t, myDarc.Version, gDarc.Version+1)
@@ -191,7 +191,7 @@ func TestSecureDarc(t *testing.T) {
 			Instructions: []Instruction{{
 				InstanceID: NewInstanceID(myDarc.GetBaseID()),
 				Invoke: &Invoke{
-					ContractID: ContractSecureDarcID,
+					ContractID: ContractDarcID,
 					Command:    cmdDarcEvolveUnrestriction,
 					Args: []Argument{{
 						Name:  "darc",
@@ -216,7 +216,7 @@ func TestSecureDarc(t *testing.T) {
 			Instructions: []Instruction{{
 				InstanceID: NewInstanceID(myDarc.GetBaseID()),
 				Invoke: &Invoke{
-					ContractID: ContractSecureDarcID,
+					ContractID: ContractDarcID,
 					Command:    cmdDarcEvolveUnrestriction,
 					Args: []Argument{{
 						Name:  "darc",
@@ -236,8 +236,8 @@ func TestSecureDarc(t *testing.T) {
 		resp, err := cl.GetProof(secDarc.GetBaseID())
 		require.NoError(t, err)
 		myDarc := darc.Darc{}
-		require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractSecureDarcID, &myDarc))
-		require.Equal(t, myDarc.Rules.Get("spawn:coin"), myDarc.Rules.Get("invoke:secure_darc."+cmdDarcEvolveUnrestriction))
+		require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
+		require.Equal(t, myDarc.Rules.Get("spawn:coin"), myDarc.Rules.Get("invoke:darc."+cmdDarcEvolveUnrestriction))
 	}
 
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))

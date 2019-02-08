@@ -6,6 +6,9 @@ import (
 	"math"
 	"time"
 
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
@@ -168,7 +171,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	if err != nil {
 		return nil, err
 	}
-	if contract != ContractSecureDarcID {
+	if contract != ContractDarcID {
 		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -330,9 +333,36 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("Error while downloading state from nodes")
 }
 
+// Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
+// existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
+func Debug(addr network.Address, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
+	si := &network.ServerIdentity{Address: addr}
+	reply = &DebugResponse{}
+	request := &DebugRequest{}
+	if byzcoinID != nil {
+		request.ByzCoinID = *byzcoinID
+	}
+	err = onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, reply)
+	return
+}
+
+// DebugRemove deletes an existing byzcoin-instance from the conode.
+func DebugRemove(addr network.Address, priv kyber.Scalar, byzcoinID skipchain.SkipBlockID) error {
+	si := &network.ServerIdentity{Address: addr}
+	sig, err := schnorr.Sign(cothority.Suite, priv, byzcoinID)
+	if err != nil {
+		return err
+	}
+	request := &DebugRemoveRequest{
+		ByzCoinID: byzcoinID,
+		Signature: sig,
+	}
+	return onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, nil)
+}
+
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis Darc and block. It will contain rules for spawning and evolving the
-// secure_darc contract.
+// darc contract.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
@@ -344,13 +374,17 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		ownerIDs[i] = o.String()
 	}
 	ownerExpr := expression.InitAndExpr(ownerIDs...)
-	if err := rs.AddRule("spawn:"+ContractSecureDarcID, ownerExpr); err != nil {
+	if err := rs.AddRule("invoke:"+ContractConfigID+"."+"update_config", ownerExpr); err != nil {
+		log.Error(err)
 		return nil, err
 	}
-	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
+	if err := rs.AddRule("spawn:"+ContractDarcID, ownerExpr); err != nil {
 		return nil, err
 	}
-	if err := rs.AddRule("invoke:"+ContractSecureDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
+	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolve, ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("invoke:"+ContractDarcID+"."+cmdDarcEvolveUnrestriction, ownerExpr); err != nil {
 		return nil, err
 	}
 	if err := rs.AddRule("_sign", ownerExpr); err != nil {
@@ -379,7 +413,7 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		Roster:          *r,
 		GenesisDarc:     *d,
 		BlockInterval:   defaultInterval,
-		DarcContractIDs: []string{ContractSecureDarcID},
+		DarcContractIDs: []string{ContractDarcID},
 	}
 	return &m, nil
 }

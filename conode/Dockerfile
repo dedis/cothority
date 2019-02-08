@@ -8,7 +8,7 @@ RUN cd /go/src/github.com/dedis/cothority/conode && go install -ldflags="$BUILDF
 FROM debian:stretch-slim
 WORKDIR /root/
 COPY --from=builder /go/bin/conode .
-COPY setup-then-start.sh .
+COPY run_nodes.sh .
 RUN mkdir /conode_data
 RUN mkdir -p .local/share .config
 RUN ln -s /conode_data .local/share/conode
@@ -16,4 +16,4 @@ RUN ln -s /conode_data .config/conode
 
 EXPOSE 7770 7771
 
-CMD "./setup-then-start.sh"
+CMD "./run_nodes.sh -n 1"

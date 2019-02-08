@@ -37,18 +37,18 @@ public class DockerTestServerController extends TestServerController {
                     new ImageFromDockerfile(TEMPORARY_DOCKER_IMAGE, true)
                             .withDockerfileFromBuilder(builder -> builder
                                     .from(TEST_SERVER_IMAGE_NAME)
-                                    .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009, 7010, 7011, 7012, 7013, 7014, 7015))
+                                    .expose(7770, 7771, 7772, 7773, 7774, 7775, 7776, 7777, 7778, 7779, 7780, 7781, 7782, 7783))
             );
 
             blockchainContainer.setPortBindings(Arrays.asList(
-                    "7002:7002", "7003:7003",
-                    "7004:7004", "7005:7005",
-                    "7006:7006", "7007:7007",
-                    "7008:7008", "7009:7009",
-                    "7010:7010", "7011:7011",
-                    "7012:7012", "7013:7013",
-                    "7014:7014", "7015:7015"));
-            blockchainContainer.withExposedPorts(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009);
+                    "7770:7770", "7771:7771",
+                    "7772:7772", "7773:7773",
+                    "7774:7774", "7775:7775",
+                    "7776:7776", "7777:7777",
+                    "7778:7778", "7779:7779",
+                    "7780:7780", "7781:7781",
+                    "7782:7782", "7783:7783"));
+            blockchainContainer.withExposedPorts(7770, 7771, 7772, 7773, 7774, 7775, 7776, 7777);
             blockchainContainer.waitingFor(Wait.forListeningPort());
             blockchainContainer.start();
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
@@ -67,7 +67,8 @@ public class DockerTestServerController extends TestServerController {
             throw new InterruptedException("Node numbering starts at 1!");
         }
         logger.info("Starting container co{}/private.toml", nodeNumber);
-        runCmdInBackground(blockchainContainer, "env", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "conode", "-d", "1", "-c", "co" + nodeNumber + "/private.toml", "server");
+        runCmdInBackgroundStd(blockchainContainer, "env", "COTHORITY_ALLOW_INSECURE_ADMIN=1", "DEBUG_TIME=true", "CONODE_SERVICE_PATH=.",
+                "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
         // Wait a bit for the server to actually start.
         Thread.sleep(1000);
     }
@@ -98,6 +99,25 @@ public class DockerTestServerController extends TestServerController {
     }
 
     private void runCmdInBackground(GenericContainer container, String... cmd) throws InterruptedException {
+        DockerClient dockerClient = container.getDockerClient();
+
+        ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(container.getContainerId())
+                .withAttachStdout(true)
+                .withAttachStderr(true)
+                .withAttachStdin(false)
+                .withCmd(cmd)
+                .exec();
+
+        FrameConsumerResultCallback fc = new FrameConsumerResultCallback();
+        Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
+        fc.addConsumer(OutputFrame.OutputType.STDOUT, logConsumer);
+        fc.addConsumer(OutputFrame.OutputType.STDERR, logConsumer);
+
+        dockerClient.execStartCmd(execCreateCmdResponse.getId())
+                .exec(fc).awaitStarted();
+    }
+
+    private void runCmdInBackgroundStd(GenericContainer container, String... cmd) throws InterruptedException {
         DockerClient dockerClient = container.getDockerClient();
 
         ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(container.getContainerId())
