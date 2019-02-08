@@ -45,10 +45,10 @@ func main() {
 	defer l.CloseAll()
 
 	client := newTestClient(l)
-	_, inter, err := client.CreateRootControl(ro, ro, nil, 1, 1, 1)
+	inter, err := client.CreateGenesis(ro, 1, 1, skipchain.VerificationStandard, nil)
 	log.ErrFatal(err)
 
-	var latest = inter
+	latest := inter
 	for i := 0; i < blocks; i++ {
 		sb, err := client.StoreSkipBlock(latest, ro, message)
 		log.ErrFatal(err)

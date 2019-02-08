@@ -312,7 +312,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
-	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
+	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
 	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	instr1.SignerCounter = []uint64{2}
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
@@ -337,7 +337,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
-	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractSecureDarcID, "evolve", "data", dcID)
+	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	dcID2 := random.Bits(256, true, random.New())
@@ -544,7 +544,7 @@ func TestService_LateBlock(t *testing.T) {
 	// Hook the verifier in order delay the arrival and test timestamp checking.
 	ser := s.services[0]
 	c := ser.Context
-	err := skipchain.RegisterVerification(c, verifyByzCoin, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Make this block arrive late compared to it's timestamp. The window will be
 		// 1000ms, so sleep 1200 more, just to be sure.
 		time.Sleep(2200 * time.Millisecond)
@@ -570,7 +570,7 @@ func TestService_BadDataHeader(t *testing.T) {
 
 	ser := s.services[0]
 	c := ser.Context
-	err := skipchain.RegisterVerification(c, verifyByzCoin, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Hack up the DataHeader to make the TrieRoot the wrong size.
 		var header DataHeader
 		err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
@@ -1166,7 +1166,7 @@ func TestService_DarcSpawn(t *testing.T) {
 	defer s.local.CloseAll()
 
 	id := []darc.Identity{s.signer.Identity()}
-	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, "invoke:"+ContractSecureDarcID+"."+cmdDarcEvolveUnrestriction),
+	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, "invoke:"+ContractDarcID+"."+cmdDarcEvolveUnrestriction),
 		[]byte("next darc"))
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
@@ -1179,7 +1179,7 @@ func TestService_DarcSpawn(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(s.darc.GetBaseID()),
 			Spawn: &Spawn{
-				ContractID: ContractSecureDarcID,
+				ContractID: ContractDarcID,
 				Args: []Argument{{
 					Name:  "darc",
 					Value: darc2Buf,
@@ -1206,7 +1206,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	id2 := []darc.Identity{signer2.Identity()}
 	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
 		[]byte("second darc"))
-	darc2.Rules.AddRule("spawn:"+ContractSecureDarcID, expression.InitOrExpr(s.darc.GetIdentityString()))
+	darc2.Rules.AddRule("spawn:"+ContractDarcID, expression.InitOrExpr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
@@ -1215,7 +1215,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractSecureDarcID,
+			ContractID: ContractDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc2Buf,
@@ -1242,7 +1242,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	instr = Instruction{
 		InstanceID: NewInstanceID(darc2.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractSecureDarcID,
+			ContractID: ContractDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc3Buf,
@@ -1267,7 +1267,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	id2 := []darc.Identity{signer2.Identity()}
 	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
 		[]byte("second darc"))
-	darc2.Rules.AddRule("spawn:"+ContractSecureDarcID, expression.Expr(s.darc.GetIdentityString()))
+	darc2.Rules.AddRule("spawn:"+ContractDarcID, expression.Expr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
@@ -1276,7 +1276,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
 		Spawn: &Spawn{
-			ContractID: ContractSecureDarcID,
+			ContractID: ContractDarcID,
 			Args: []Argument{{
 				Name:  "darc",
 				Value: darc2Buf,
@@ -1321,13 +1321,13 @@ func TestService_CheckAuthorization(t *testing.T) {
 	ca.Identities[0] = s.signer.Identity()
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractSecureDarcID))
+	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewIdentityDarc(s.darc.GetID())
 	resp, err = s.service().CheckAuthorization(ca)
 	require.Nil(t, err)
-	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractSecureDarcID))
+	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 }
 
 func TestService_GetLeader(t *testing.T) {
@@ -1454,7 +1454,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
 	require.Nil(t, err)
-	instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID, "darc", testDarcBuf)
+	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
 	require.Nil(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 	require.Nil(t, err)
@@ -1612,7 +1612,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 			dummyDarc := darc.NewDarc(darc.InitRules(ids, ids), desc)
 			dummyDarcBuf, err := dummyDarc.ToProto()
 			require.Nil(t, err)
-			instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID,
+			instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID,
 				"darc", dummyDarcBuf)
 			instr.SignerCounter[0] = uint64(count)
 			count++
@@ -1634,7 +1634,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
 	require.Nil(t, err)
-	instr := createSpawnInstr(s.darc.GetBaseID(), ContractSecureDarcID, "darc", testDarcBuf)
+	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
 	require.Nil(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 	require.Nil(t, err)
@@ -2237,7 +2237,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(scs))
 
-	s.service().trySyncAll()
+	s.service().catchupAll()
 
 	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
 	require.Nil(t, err)
@@ -2267,7 +2267,7 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 		BlockInterval:   interval,
 		Roster:          roster,
 		MaxBlockSize:    size,
-		DarcContractIDs: []string{ContractSecureDarcID},
+		DarcContractIDs: []string{ContractDarcID},
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -2295,7 +2295,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) Client
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
 	invoke := Invoke{
-		ContractID: ContractSecureDarcID,
+		ContractID: ContractDarcID,
 		Command:    "evolve",
 		Args: []Argument{
 			Argument{
@@ -2442,7 +2442,6 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			"spawn:" + dummyContract,
 			"spawn:" + invalidContract,
 			"spawn:" + panicContract,
-			"invoke:" + ContractConfigID + ".update_config",
 			"spawn:" + slowContract,
 			"spawn:" + stateChangeCacheContract,
 			"delete:" + dummyContract,

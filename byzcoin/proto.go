@@ -386,3 +386,38 @@ type CheckStateChangeValidityResponse struct {
 	StateChanges []StateChange
 	BlockID      skipchain.SkipBlockID
 }
+
+// DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
+// a dump of all instances if byzcoinid is given and exists.
+type DebugRequest struct {
+	ByzCoinID []byte `protobuf:"opt"`
+}
+
+// DebugResponse is returned from the server. Either Byzcoins is returned and holds a
+// list of all byzcoin-instances, together with the genesis block and the latest block,
+// or it returns a dump of all instances in the form of a slice of StateChangeBodies.
+type DebugResponse struct {
+	Byzcoins []DebugResponseByzcoin `protobuf:"opt"`
+	Dump     []DebugResponseState   `protobuf:"opt"`
+}
+
+// DebugResponseByzcoin represents one byzcoinid with the genesis and the latest block,
+// as it is for debugging reasons, we trust the node and don't return any proof.
+type DebugResponseByzcoin struct {
+	ByzCoinID []byte
+	Genesis   *skipchain.SkipBlock
+	Latest    *skipchain.SkipBlock
+}
+
+// DebugResponseState holds one key/state pair of the response.
+type DebugResponseState struct {
+	Key   []byte
+	State StateChangeBody
+}
+
+// DebugRemoveRequest asks the conode to delete the given byzcoin-instance from its database.
+// It needs to be signed by the private key of the conode.
+type DebugRemoveRequest struct {
+	ByzCoinID []byte
+	Signature []byte
+}

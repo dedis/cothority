@@ -32725,6 +32725,4010 @@ public final class ByzCoinProto {
 
   }
 
+  public interface DebugRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.DebugRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>optional bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+  }
+  /**
+   * <pre>
+   * DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
+   * a dump of all instances if byzcoinid is given and exists.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.DebugRequest}
+   */
+  public  static final class DebugRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.DebugRequest)
+      DebugRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DebugRequest.newBuilder() to construct.
+    private DebugRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DebugRequest() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DebugRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRequest_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>optional bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest) obj;
+
+      boolean result = true;
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
+     * a dump of all instances if byzcoinid is given and exists.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.DebugRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.DebugRequest)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRequest_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRequest_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>optional bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.DebugRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.DebugRequest)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DebugRequest>
+        PARSER = new com.google.protobuf.AbstractParser<DebugRequest>() {
+      @java.lang.Override
+      public DebugRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DebugRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DebugRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DebugRequest> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DebugResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.DebugResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> 
+        getByzcoinsList();
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getByzcoins(int index);
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    int getByzcoinsCount();
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
+        getByzcoinsOrBuilderList();
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder getByzcoinsOrBuilder(
+        int index);
+
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> 
+        getDumpList();
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDump(int index);
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    int getDumpCount();
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
+        getDumpOrBuilderList();
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder getDumpOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * DebugResponse is returned from the server. Either Byzcoins is returned and holds a
+   * list of all byzcoin-instances, together with the genesis block and the latest block,
+   * or it returns a dump of all instances in the form of a slice of StateChangeBodies.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.DebugResponse}
+   */
+  public  static final class DebugResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.DebugResponse)
+      DebugResponseOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DebugResponse.newBuilder() to construct.
+    private DebugResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DebugResponse() {
+      byzcoins_ = java.util.Collections.emptyList();
+      dump_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DebugResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                byzcoins_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              byzcoins_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.parser(), extensionRegistry));
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                dump_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              dump_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          byzcoins_ = java.util.Collections.unmodifiableList(byzcoins_);
+        }
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          dump_ = java.util.Collections.unmodifiableList(dump_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponse_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.Builder.class);
+    }
+
+    public static final int BYZCOINS_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> byzcoins_;
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> getByzcoinsList() {
+      return byzcoins_;
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
+        getByzcoinsOrBuilderList() {
+      return byzcoins_;
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    public int getByzcoinsCount() {
+      return byzcoins_.size();
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getByzcoins(int index) {
+      return byzcoins_.get(index);
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder getByzcoinsOrBuilder(
+        int index) {
+      return byzcoins_.get(index);
+    }
+
+    public static final int DUMP_FIELD_NUMBER = 2;
+    private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> dump_;
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> getDumpList() {
+      return dump_;
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
+        getDumpOrBuilderList() {
+      return dump_;
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    public int getDumpCount() {
+      return dump_.size();
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDump(int index) {
+      return dump_.get(index);
+    }
+    /**
+     * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder getDumpOrBuilder(
+        int index) {
+      return dump_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getByzcoinsCount(); i++) {
+        if (!getByzcoins(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getDumpCount(); i++) {
+        if (!getDump(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < byzcoins_.size(); i++) {
+        output.writeMessage(1, byzcoins_.get(i));
+      }
+      for (int i = 0; i < dump_.size(); i++) {
+        output.writeMessage(2, dump_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < byzcoins_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, byzcoins_.get(i));
+      }
+      for (int i = 0; i < dump_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, dump_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse) obj;
+
+      boolean result = true;
+      result = result && getByzcoinsList()
+          .equals(other.getByzcoinsList());
+      result = result && getDumpList()
+          .equals(other.getDumpList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getByzcoinsCount() > 0) {
+        hash = (37 * hash) + BYZCOINS_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinsList().hashCode();
+      }
+      if (getDumpCount() > 0) {
+        hash = (37 * hash) + DUMP_FIELD_NUMBER;
+        hash = (53 * hash) + getDumpList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DebugResponse is returned from the server. Either Byzcoins is returned and holds a
+     * list of all byzcoin-instances, together with the genesis block and the latest block,
+     * or it returns a dump of all instances in the form of a slice of StateChangeBodies.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.DebugResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.DebugResponse)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponse_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getByzcoinsFieldBuilder();
+          getDumpFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (byzcoinsBuilder_ == null) {
+          byzcoins_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          byzcoinsBuilder_.clear();
+        }
+        if (dumpBuilder_ == null) {
+          dump_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          dumpBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponse_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse(this);
+        int from_bitField0_ = bitField0_;
+        if (byzcoinsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            byzcoins_ = java.util.Collections.unmodifiableList(byzcoins_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.byzcoins_ = byzcoins_;
+        } else {
+          result.byzcoins_ = byzcoinsBuilder_.build();
+        }
+        if (dumpBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            dump_ = java.util.Collections.unmodifiableList(dump_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.dump_ = dump_;
+        } else {
+          result.dump_ = dumpBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse.getDefaultInstance()) return this;
+        if (byzcoinsBuilder_ == null) {
+          if (!other.byzcoins_.isEmpty()) {
+            if (byzcoins_.isEmpty()) {
+              byzcoins_ = other.byzcoins_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureByzcoinsIsMutable();
+              byzcoins_.addAll(other.byzcoins_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.byzcoins_.isEmpty()) {
+            if (byzcoinsBuilder_.isEmpty()) {
+              byzcoinsBuilder_.dispose();
+              byzcoinsBuilder_ = null;
+              byzcoins_ = other.byzcoins_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              byzcoinsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getByzcoinsFieldBuilder() : null;
+            } else {
+              byzcoinsBuilder_.addAllMessages(other.byzcoins_);
+            }
+          }
+        }
+        if (dumpBuilder_ == null) {
+          if (!other.dump_.isEmpty()) {
+            if (dump_.isEmpty()) {
+              dump_ = other.dump_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureDumpIsMutable();
+              dump_.addAll(other.dump_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.dump_.isEmpty()) {
+            if (dumpBuilder_.isEmpty()) {
+              dumpBuilder_.dispose();
+              dumpBuilder_ = null;
+              dump_ = other.dump_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              dumpBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getDumpFieldBuilder() : null;
+            } else {
+              dumpBuilder_.addAllMessages(other.dump_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        for (int i = 0; i < getByzcoinsCount(); i++) {
+          if (!getByzcoins(i).isInitialized()) {
+            return false;
+          }
+        }
+        for (int i = 0; i < getDumpCount(); i++) {
+          if (!getDump(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> byzcoins_ =
+        java.util.Collections.emptyList();
+      private void ensureByzcoinsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          byzcoins_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin>(byzcoins_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> byzcoinsBuilder_;
+
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> getByzcoinsList() {
+        if (byzcoinsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(byzcoins_);
+        } else {
+          return byzcoinsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public int getByzcoinsCount() {
+        if (byzcoinsBuilder_ == null) {
+          return byzcoins_.size();
+        } else {
+          return byzcoinsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getByzcoins(int index) {
+        if (byzcoinsBuilder_ == null) {
+          return byzcoins_.get(index);
+        } else {
+          return byzcoinsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder setByzcoins(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin value) {
+        if (byzcoinsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureByzcoinsIsMutable();
+          byzcoins_.set(index, value);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder setByzcoins(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder builderForValue) {
+        if (byzcoinsBuilder_ == null) {
+          ensureByzcoinsIsMutable();
+          byzcoins_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          byzcoinsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder addByzcoins(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin value) {
+        if (byzcoinsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureByzcoinsIsMutable();
+          byzcoins_.add(value);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder addByzcoins(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin value) {
+        if (byzcoinsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureByzcoinsIsMutable();
+          byzcoins_.add(index, value);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder addByzcoins(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder builderForValue) {
+        if (byzcoinsBuilder_ == null) {
+          ensureByzcoinsIsMutable();
+          byzcoins_.add(builderForValue.build());
+          onChanged();
+        } else {
+          byzcoinsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder addByzcoins(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder builderForValue) {
+        if (byzcoinsBuilder_ == null) {
+          ensureByzcoinsIsMutable();
+          byzcoins_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          byzcoinsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder addAllByzcoins(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin> values) {
+        if (byzcoinsBuilder_ == null) {
+          ensureByzcoinsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, byzcoins_);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder clearByzcoins() {
+        if (byzcoinsBuilder_ == null) {
+          byzcoins_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public Builder removeByzcoins(int index) {
+        if (byzcoinsBuilder_ == null) {
+          ensureByzcoinsIsMutable();
+          byzcoins_.remove(index);
+          onChanged();
+        } else {
+          byzcoinsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder getByzcoinsBuilder(
+          int index) {
+        return getByzcoinsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder getByzcoinsOrBuilder(
+          int index) {
+        if (byzcoinsBuilder_ == null) {
+          return byzcoins_.get(index);  } else {
+          return byzcoinsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
+           getByzcoinsOrBuilderList() {
+        if (byzcoinsBuilder_ != null) {
+          return byzcoinsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(byzcoins_);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder addByzcoinsBuilder() {
+        return getByzcoinsFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder addByzcoinsBuilder(
+          int index) {
+        return getByzcoinsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseByzcoin byzcoins = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder> 
+           getByzcoinsBuilderList() {
+        return getByzcoinsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder> 
+          getByzcoinsFieldBuilder() {
+        if (byzcoinsBuilder_ == null) {
+          byzcoinsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder>(
+                  byzcoins_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          byzcoins_ = null;
+        }
+        return byzcoinsBuilder_;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> dump_ =
+        java.util.Collections.emptyList();
+      private void ensureDumpIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          dump_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState>(dump_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> dumpBuilder_;
+
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> getDumpList() {
+        if (dumpBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(dump_);
+        } else {
+          return dumpBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public int getDumpCount() {
+        if (dumpBuilder_ == null) {
+          return dump_.size();
+        } else {
+          return dumpBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDump(int index) {
+        if (dumpBuilder_ == null) {
+          return dump_.get(index);
+        } else {
+          return dumpBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder setDump(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState value) {
+        if (dumpBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDumpIsMutable();
+          dump_.set(index, value);
+          onChanged();
+        } else {
+          dumpBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder setDump(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder builderForValue) {
+        if (dumpBuilder_ == null) {
+          ensureDumpIsMutable();
+          dump_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          dumpBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder addDump(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState value) {
+        if (dumpBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDumpIsMutable();
+          dump_.add(value);
+          onChanged();
+        } else {
+          dumpBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder addDump(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState value) {
+        if (dumpBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDumpIsMutable();
+          dump_.add(index, value);
+          onChanged();
+        } else {
+          dumpBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder addDump(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder builderForValue) {
+        if (dumpBuilder_ == null) {
+          ensureDumpIsMutable();
+          dump_.add(builderForValue.build());
+          onChanged();
+        } else {
+          dumpBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder addDump(
+          int index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder builderForValue) {
+        if (dumpBuilder_ == null) {
+          ensureDumpIsMutable();
+          dump_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          dumpBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder addAllDump(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState> values) {
+        if (dumpBuilder_ == null) {
+          ensureDumpIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, dump_);
+          onChanged();
+        } else {
+          dumpBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder clearDump() {
+        if (dumpBuilder_ == null) {
+          dump_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          dumpBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public Builder removeDump(int index) {
+        if (dumpBuilder_ == null) {
+          ensureDumpIsMutable();
+          dump_.remove(index);
+          onChanged();
+        } else {
+          dumpBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder getDumpBuilder(
+          int index) {
+        return getDumpFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder getDumpOrBuilder(
+          int index) {
+        if (dumpBuilder_ == null) {
+          return dump_.get(index);  } else {
+          return dumpBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
+           getDumpOrBuilderList() {
+        if (dumpBuilder_ != null) {
+          return dumpBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(dump_);
+        }
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder addDumpBuilder() {
+        return getDumpFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder addDumpBuilder(
+          int index) {
+        return getDumpFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .byzcoin.DebugResponseState dump = 2;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder> 
+           getDumpBuilderList() {
+        return getDumpFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder> 
+          getDumpFieldBuilder() {
+        if (dumpBuilder_ == null) {
+          dumpBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder>(
+                  dump_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          dump_ = null;
+        }
+        return dumpBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.DebugResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.DebugResponse)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DebugResponse>
+        PARSER = new com.google.protobuf.AbstractParser<DebugResponse>() {
+      @java.lang.Override
+      public DebugResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DebugResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DebugResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DebugResponse> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DebugResponseByzcoinOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.DebugResponseByzcoin)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    boolean hasGenesis();
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis();
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getGenesisOrBuilder();
+
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    boolean hasLatest();
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest();
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder();
+  }
+  /**
+   * <pre>
+   * DebugResponseByzcoin represents one byzcoinid with the genesis and the latest block,
+   * as it is for debugging reasons, we trust the node and don't return any proof.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.DebugResponseByzcoin}
+   */
+  public  static final class DebugResponseByzcoin extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.DebugResponseByzcoin)
+      DebugResponseByzcoinOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DebugResponseByzcoin.newBuilder() to construct.
+    private DebugResponseByzcoin(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DebugResponseByzcoin() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DebugResponseByzcoin(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = genesis_.toBuilder();
+              }
+              genesis_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(genesis_);
+                genesis_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = latest_.toBuilder();
+              }
+              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(latest_);
+                latest_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseByzcoin_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int GENESIS_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock genesis_;
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    public boolean hasGenesis() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis() {
+      return genesis_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
+    }
+    /**
+     * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getGenesisOrBuilder() {
+      return genesis_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
+    }
+
+    public static final int LATEST_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_;
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    public boolean hasLatest() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
+      return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
+    }
+    /**
+     * <code>optional .skipchain.SkipBlock latest = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder() {
+      return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasGenesis()) {
+        if (!getGenesis().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasLatest()) {
+        if (!getLatest().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getGenesis());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getLatest());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getGenesis());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getLatest());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin) obj;
+
+      boolean result = true;
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && (hasGenesis() == other.hasGenesis());
+      if (hasGenesis()) {
+        result = result && getGenesis()
+            .equals(other.getGenesis());
+      }
+      result = result && (hasLatest() == other.hasLatest());
+      if (hasLatest()) {
+        result = result && getLatest()
+            .equals(other.getLatest());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasGenesis()) {
+        hash = (37 * hash) + GENESIS_FIELD_NUMBER;
+        hash = (53 * hash) + getGenesis().hashCode();
+      }
+      if (hasLatest()) {
+        hash = (37 * hash) + LATEST_FIELD_NUMBER;
+        hash = (53 * hash) + getLatest().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DebugResponseByzcoin represents one byzcoinid with the genesis and the latest block,
+     * as it is for debugging reasons, we trust the node and don't return any proof.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.DebugResponseByzcoin}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.DebugResponseByzcoin)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoinOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseByzcoin_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getGenesisFieldBuilder();
+          getLatestFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (genesisBuilder_ == null) {
+          genesis_ = null;
+        } else {
+          genesisBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (latestBuilder_ == null) {
+          latest_ = null;
+        } else {
+          latestBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseByzcoin_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (genesisBuilder_ == null) {
+          result.genesis_ = genesis_;
+        } else {
+          result.genesis_ = genesisBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (latestBuilder_ == null) {
+          result.latest_ = latest_;
+        } else {
+          result.latest_ = latestBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasGenesis()) {
+          mergeGenesis(other.getGenesis());
+        }
+        if (other.hasLatest()) {
+          mergeLatest(other.getLatest());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (hasGenesis()) {
+          if (!getGenesis().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasLatest()) {
+          if (!getLatest().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock genesis_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> genesisBuilder_;
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public boolean hasGenesis() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getGenesis() {
+        if (genesisBuilder_ == null) {
+          return genesis_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
+        } else {
+          return genesisBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public Builder setGenesis(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (genesisBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          genesis_ = value;
+          onChanged();
+        } else {
+          genesisBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public Builder setGenesis(
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
+        if (genesisBuilder_ == null) {
+          genesis_ = builderForValue.build();
+          onChanged();
+        } else {
+          genesisBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public Builder mergeGenesis(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (genesisBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              genesis_ != null &&
+              genesis_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
+            genesis_ =
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.newBuilder(genesis_).mergeFrom(value).buildPartial();
+          } else {
+            genesis_ = value;
+          }
+          onChanged();
+        } else {
+          genesisBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public Builder clearGenesis() {
+        if (genesisBuilder_ == null) {
+          genesis_ = null;
+          onChanged();
+        } else {
+          genesisBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder getGenesisBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getGenesisFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getGenesisOrBuilder() {
+        if (genesisBuilder_ != null) {
+          return genesisBuilder_.getMessageOrBuilder();
+        } else {
+          return genesis_ == null ?
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : genesis_;
+        }
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock genesis = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          getGenesisFieldBuilder() {
+        if (genesisBuilder_ == null) {
+          genesisBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>(
+                  getGenesis(),
+                  getParentForChildren(),
+                  isClean());
+          genesis_ = null;
+        }
+        return genesisBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock latest_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> latestBuilder_;
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public boolean hasLatest() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getLatest() {
+        if (latestBuilder_ == null) {
+          return latest_ == null ? ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
+        } else {
+          return latestBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public Builder setLatest(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (latestBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          latest_ = value;
+          onChanged();
+        } else {
+          latestBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public Builder setLatest(
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
+        if (latestBuilder_ == null) {
+          latest_ = builderForValue.build();
+          onChanged();
+        } else {
+          latestBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public Builder mergeLatest(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (latestBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              latest_ != null &&
+              latest_ != ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
+            latest_ =
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.newBuilder(latest_).mergeFrom(value).buildPartial();
+          } else {
+            latest_ = value;
+          }
+          onChanged();
+        } else {
+          latestBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public Builder clearLatest() {
+        if (latestBuilder_ == null) {
+          latest_ = null;
+          onChanged();
+        } else {
+          latestBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder getLatestBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getLatestFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getLatestOrBuilder() {
+        if (latestBuilder_ != null) {
+          return latestBuilder_.getMessageOrBuilder();
+        } else {
+          return latest_ == null ?
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance() : latest_;
+        }
+      }
+      /**
+       * <code>optional .skipchain.SkipBlock latest = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          getLatestFieldBuilder() {
+        if (latestBuilder_ == null) {
+          latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>(
+                  getLatest(),
+                  getParentForChildren(),
+                  isClean());
+          latest_ = null;
+        }
+        return latestBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.DebugResponseByzcoin)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.DebugResponseByzcoin)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DebugResponseByzcoin>
+        PARSER = new com.google.protobuf.AbstractParser<DebugResponseByzcoin>() {
+      @java.lang.Override
+      public DebugResponseByzcoin parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DebugResponseByzcoin(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DebugResponseByzcoin> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DebugResponseByzcoin> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseByzcoin getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DebugResponseStateOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.DebugResponseState)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    boolean hasKey();
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    com.google.protobuf.ByteString getKey();
+
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    boolean hasState();
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState();
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder getStateOrBuilder();
+  }
+  /**
+   * <pre>
+   * DebugResponseState holds one key/state pair of the response.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.DebugResponseState}
+   */
+  public  static final class DebugResponseState extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.DebugResponseState)
+      DebugResponseStateOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DebugResponseState.newBuilder() to construct.
+    private DebugResponseState(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DebugResponseState() {
+      key_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DebugResponseState(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              key_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = state_.toBuilder();
+              }
+              state_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(state_);
+                state_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseState_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseState_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int KEY_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString key_;
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    public com.google.protobuf.ByteString getKey() {
+      return key_;
+    }
+
+    public static final int STATE_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody state_;
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    public boolean hasState() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState() {
+      return state_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
+    }
+    /**
+     * <code>required .byzcoin.StateChangeBody state = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder getStateOrBuilder() {
+      return state_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasState()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getState().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getState());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getState());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState) obj;
+
+      boolean result = true;
+      result = result && (hasKey() == other.hasKey());
+      if (hasKey()) {
+        result = result && getKey()
+            .equals(other.getKey());
+      }
+      result = result && (hasState() == other.hasState());
+      if (hasState()) {
+        result = result && getState()
+            .equals(other.getState());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasKey()) {
+        hash = (37 * hash) + KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getKey().hashCode();
+      }
+      if (hasState()) {
+        hash = (37 * hash) + STATE_FIELD_NUMBER;
+        hash = (53 * hash) + getState().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DebugResponseState holds one key/state pair of the response.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.DebugResponseState}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.DebugResponseState)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseStateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseState_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseState_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getStateFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        key_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (stateBuilder_ == null) {
+          state_ = null;
+        } else {
+          stateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugResponseState_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (stateBuilder_ == null) {
+          result.state_ = state_;
+        } else {
+          result.state_ = stateBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState.getDefaultInstance()) return this;
+        if (other.hasKey()) {
+          setKey(other.getKey());
+        }
+        if (other.hasState()) {
+          mergeState(other.getState());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasKey()) {
+          return false;
+        }
+        if (!hasState()) {
+          return false;
+        }
+        if (!getState().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public com.google.protobuf.ByteString getKey() {
+        return key_;
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public Builder setKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody state_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder> stateBuilder_;
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public boolean hasState() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody getState() {
+        if (stateBuilder_ == null) {
+          return state_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
+        } else {
+          return stateBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public Builder setState(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody value) {
+        if (stateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          state_ = value;
+          onChanged();
+        } else {
+          stateBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public Builder setState(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder builderForValue) {
+        if (stateBuilder_ == null) {
+          state_ = builderForValue.build();
+          onChanged();
+        } else {
+          stateBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public Builder mergeState(ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody value) {
+        if (stateBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              state_ != null &&
+              state_ != ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance()) {
+            state_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.newBuilder(state_).mergeFrom(value).buildPartial();
+          } else {
+            state_ = value;
+          }
+          onChanged();
+        } else {
+          stateBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public Builder clearState() {
+        if (stateBuilder_ == null) {
+          state_ = null;
+          onChanged();
+        } else {
+          stateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder getStateBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getStateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder getStateOrBuilder() {
+        if (stateBuilder_ != null) {
+          return stateBuilder_.getMessageOrBuilder();
+        } else {
+          return state_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.getDefaultInstance() : state_;
+        }
+      }
+      /**
+       * <code>required .byzcoin.StateChangeBody state = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder> 
+          getStateFieldBuilder() {
+        if (stateBuilder_ == null) {
+          stateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBody.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.StateChangeBodyOrBuilder>(
+                  getState(),
+                  getParentForChildren(),
+                  isClean());
+          state_ = null;
+        }
+        return stateBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.DebugResponseState)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.DebugResponseState)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DebugResponseState>
+        PARSER = new com.google.protobuf.AbstractParser<DebugResponseState>() {
+      @java.lang.Override
+      public DebugResponseState parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DebugResponseState(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DebugResponseState> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DebugResponseState> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugResponseState getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DebugRemoveRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.DebugRemoveRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * DebugRemoveRequest asks the conode to delete the given byzcoin-instance from its database.
+   * It needs to be signed by the private key of the conode.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.DebugRemoveRequest}
+   */
+  public  static final class DebugRemoveRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.DebugRemoveRequest)
+      DebugRemoveRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DebugRemoveRequest.newBuilder() to construct.
+    private DebugRemoveRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DebugRemoveRequest() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DebugRemoveRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRemoveRequest_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest) obj;
+
+      boolean result = true;
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DebugRemoveRequest asks the conode to delete the given byzcoin-instance from its database.
+     * It needs to be signed by the private key of the conode.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.DebugRemoveRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.DebugRemoveRequest)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRemoveRequest_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_DebugRemoveRequest_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.DebugRemoveRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.DebugRemoveRequest)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DebugRemoveRequest>
+        PARSER = new com.google.protobuf.AbstractParser<DebugRemoveRequest>() {
+      @java.lang.Override
+      public DebugRemoveRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new DebugRemoveRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DebugRemoveRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DebugRemoveRequest> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.DebugRemoveRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DataHeader_descriptor;
   private static final 
@@ -32905,6 +36909,31 @@ public final class ByzCoinProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_CheckStateChangeValidityResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_DebugRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_DebugRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_DebugResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_DebugResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_DebugResponseByzcoin_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_DebugResponseState_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_DebugResponseState_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_DebugRemoveRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -32988,7 +37017,17 @@ public final class ByzCoinProto {
       "dity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030" +
       "\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckStateChan" +
       "geValidityResponse\022*\n\014statechanges\030\001 \003(\013" +
-      "2\024.byzcoin.StateChange\022\017\n\007blockid\030\002 \002(\014B" +
+      "2\024.byzcoin.StateChange\022\017\n\007blockid\030\002 \002(\014\"" +
+      "!\n\014DebugRequest\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDe" +
+      "bugResponse\022/\n\010byzcoins\030\001 \003(\0132\035.byzcoin." +
+      "DebugResponseByzcoin\022)\n\004dump\030\002 \003(\0132\033.byz" +
+      "coin.DebugResponseState\"v\n\024DebugResponse" +
+      "Byzcoin\022\021\n\tbyzcoinid\030\001 \002(\014\022%\n\007genesis\030\002 " +
+      "\001(\0132\024.skipchain.SkipBlock\022$\n\006latest\030\003 \001(" +
+      "\0132\024.skipchain.SkipBlock\"J\n\022DebugResponse" +
+      "State\022\013\n\003key\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzc" +
+      "oin.StateChangeBody\":\n\022DebugRemoveReques" +
+      "t\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B" +
       "\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
@@ -33223,6 +37262,36 @@ public final class ByzCoinProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor,
         new java.lang.String[] { "Statechanges", "Blockid", });
+    internal_static_byzcoin_DebugRequest_descriptor =
+      getDescriptor().getMessageTypes().get(36);
+    internal_static_byzcoin_DebugRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_DebugRequest_descriptor,
+        new java.lang.String[] { "Byzcoinid", });
+    internal_static_byzcoin_DebugResponse_descriptor =
+      getDescriptor().getMessageTypes().get(37);
+    internal_static_byzcoin_DebugResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_DebugResponse_descriptor,
+        new java.lang.String[] { "Byzcoins", "Dump", });
+    internal_static_byzcoin_DebugResponseByzcoin_descriptor =
+      getDescriptor().getMessageTypes().get(38);
+    internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_DebugResponseByzcoin_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Genesis", "Latest", });
+    internal_static_byzcoin_DebugResponseState_descriptor =
+      getDescriptor().getMessageTypes().get(39);
+    internal_static_byzcoin_DebugResponseState_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_DebugResponseState_descriptor,
+        new java.lang.String[] { "Key", "State", });
+    internal_static_byzcoin_DebugRemoveRequest_descriptor =
+      getDescriptor().getMessageTypes().get(40);
+    internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_DebugRemoveRequest_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Signature", });
     ch.epfl.dedis.lib.proto.SkipchainProto.getDescriptor();
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
     ch.epfl.dedis.lib.proto.DarcProto.getDescriptor();

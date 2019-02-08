@@ -51,7 +51,7 @@ public class CalypsoFactory {
 
     public CalypsoFactory addConode(ServerIdentity id) {
         if (!id.getAddress().getScheme().equals("tls")) {
-            throw new IllegalArgumentException("conode address must be in tls:// format like \"tls://127.0.0.0:7001\"");
+            throw new IllegalArgumentException("conode address must be in tls:// format like \"tls://127.0.0.0:7771\"");
         }
 
         servers.add(id);

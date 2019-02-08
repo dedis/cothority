@@ -8,8 +8,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	bbolt "go.etcd.io/bbolt"
 )
 
@@ -31,7 +33,6 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	root1.Index++
 	db.Store(root1)
 	inter0 := NewSkipBlock()
-	inter0.ParentBlockID = root1.Hash
 	inter0.Roster = roster
 	inter0.Hash = inter0.CalculateHash()
 	db.Store(inter0)
@@ -83,16 +84,40 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
+	// Needed for the roster.
+	s := suites.MustFind("ed25519")
+	si := network.NewServerIdentity(s.Point(), "tcp://127.0.0.1:2000")
+
 	sbd1 := NewSkipBlock()
 	sbd1.Data = []byte("1")
 	sbd1.Height = 4
+	sbd1.Roster = onet.NewRoster([]*network.ServerIdentity{si})
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
+	// Dump the current hash, to put it into the Java test.
+	//t.Logf("%x", h1) // 1304bd5ecad8d54a2fd7b81a8864f698966308104b20780b634c4b237b843823
 
-	sbd2 := NewSkipBlock()
-	sbd2.Data = []byte("2")
-	sbd1.Height = 2
+	// Dumping the skipblock, to put it into the Java test.
+	// buf, err := protobuf.Encode(sbd1)
+	// require.NoError(t, err)
+	// t.Logf("%x", buf) // 08001008180020003a004201314a94010a106bc1027de8ef542e8b09219c287b2fde12560a2865642e706f696e7400000000000000000000000000000000000000000000000000000000000000001a103809e37975a45b4a865899668d645d9522147463703a2f2f3132372e302e302e313a323030302a003a001a2865642e706f696e74000000000000000000000000000000000000000000000000000000000000000052201304bd5ecad8d54a2fd7b81a8864f698966308104b20780b634c4b237b8438236200
+
+	// Clone: equal
+	sbd2 := sbd1.Copy()
+	assert.Equal(t, sbd2.Hash, sbd1.Hash)
+	// update with no changes: still equal
 	h2 := sbd2.updateHash()
+	assert.Equal(t, h1, h2)
+
+	// Change height: not equal
+	sbd2.Height++
+	h2 = sbd2.updateHash()
+	assert.NotEqual(t, h1, h2)
+
+	// Clone, then change field Data: not equal
+	sbd2 = sbd1.Copy()
+	sbd2.Data[0]++
+	h2 = sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
 
@@ -124,13 +149,7 @@ func TestBlockLink_Copy(t *testing.T) {
 	}
 
 	sb1 := NewSkipBlock()
-	sb1.ChildSL = append(sb1.ChildSL, []byte{3})
 	sb2 := sb1.Copy()
-	sb1.ChildSL[0] = []byte{1}
-	sb2.ChildSL[0] = []byte{2}
-	if bytes.Equal(sb1.ChildSL[0], sb2.ChildSL[0]) {
-		t.Fatal("They should not be equal")
-	}
 	sb1.Height = 10
 	sb2.Height = 20
 	if sb1.Height == sb2.Height {

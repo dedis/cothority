@@ -748,7 +748,7 @@ func bcStore(c *cli.Context) error {
 	inst := byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
-			ContractID: byzcoin.ContractSecureDarcID,
+			ContractID: byzcoin.ContractDarcID,
 			Args: byzcoin.Arguments{{
 				Name:  "darc",
 				Value: orgDarcBuf,

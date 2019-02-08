@@ -18,6 +18,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/util/encoding"
@@ -294,7 +295,7 @@ func scCreate(c *cli.Context) error {
 	log.Infof("Creating new skipchain with leader %s and roster %s.", group.Roster.List[0], group.Roster)
 	log.Infof("Base-height: %d; Maximum-height: %d", c.Int("base"), c.Int("height"))
 	sb, err := skipchain.NewClient().CreateGenesisSignature(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, nil, nil, priv)
+		skipchain.VerificationStandard, nil, priv)
 	if err != nil {
 		return errors.New("while creating the genesis-roster: " + err.Error())
 	}
@@ -391,12 +392,8 @@ func scPrint(c *cli.Context) error {
 		switch vf {
 		case skipchain.VerifyBase:
 			vfStr = "skipchain.VerifyBase"
-		case skipchain.VerifyRoot:
-			vfStr = "skipchain.VerifyRoot"
-		case skipchain.VerifyControl:
-			vfStr = "skipchain.VerifyControl"
-		case skipchain.VerifyData:
-			vfStr = "skipchain.VerifyData"
+		case byzcoin.Verify:
+			vfStr = "byzcoin.Verify"
 		}
 		log.Infof("Verification[%d] = %s", i, vfStr)
 	}

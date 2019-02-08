@@ -10,7 +10,7 @@ cd $cwd
 echo "" > public.toml
 
 for (( n=1; n<=7; n++ )) do
-    printf "127.0.0.1:70%02d\nConode_$n\nco$n\nY\nY\n" $((2*$n)) | conode setup
+    printf "127.0.0.1:77%02d\nConode_$n\nco$n\nY\nY\n" $((70 + 2*$n - 2)) | conode setup
     cat "co$n/public.toml" >> public.toml
     echo "" >> public.toml
 done

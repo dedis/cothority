@@ -366,3 +366,38 @@ message CheckStateChangeValidityResponse {
   repeated StateChange statechanges = 1;
   required bytes blockid = 2;
 }
+
+// DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
+// a dump of all instances if byzcoinid is given and exists.
+message DebugRequest {
+  optional bytes byzcoinid = 1;
+}
+
+// DebugResponse is returned from the server. Either Byzcoins is returned and holds a
+// list of all byzcoin-instances, together with the genesis block and the latest block,
+// or it returns a dump of all instances in the form of a slice of StateChangeBodies.
+message DebugResponse {
+  repeated DebugResponseByzcoin byzcoins = 1;
+  repeated DebugResponseState dump = 2;
+}
+
+// DebugResponseByzcoin represents one byzcoinid with the genesis and the latest block,
+// as it is for debugging reasons, we trust the node and don't return any proof.
+message DebugResponseByzcoin {
+  required bytes byzcoinid = 1;
+  optional skipchain.SkipBlock genesis = 2;
+  optional skipchain.SkipBlock latest = 3;
+}
+
+// DebugResponseState holds one key/state pair of the response.
+message DebugResponseState {
+  required bytes key = 1;
+  required StateChangeBody state = 2;
+}
+
+// DebugRemoveRequest asks the conode to delete the given byzcoin-instance from its database.
+// It needs to be signed by the private key of the conode.
+message DebugRemoveRequest {
+  required bytes byzcoinid = 1;
+  required bytes signature = 2;
+}

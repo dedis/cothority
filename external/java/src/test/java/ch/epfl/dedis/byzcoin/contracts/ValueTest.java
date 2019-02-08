@@ -5,6 +5,7 @@ import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.Block;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;

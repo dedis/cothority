@@ -7,6 +7,7 @@ import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
@@ -382,9 +383,9 @@ public class ByzCoinRPCTest {
 
         assertEquals(n, scs.size());
         assertEquals(n-1, scs.get(n-1).getVersion());
-        assertEquals("secure_darc", scs.get(0).getContractId());
+        assertEquals("darc", scs.get(0).getContractId());
         assertEquals(bc.getGenesisDarcInstance().getInstance().getId(), scs.get(0).getInstanceId());
-        assertEquals(scs.get(0).getDarcId(), scs.get(1).getDarcId());
+        assertEquals(scs.get(0).getDarcBaseID(), scs.get(1).getDarcBaseID());
 
         boolean isValid = bc.checkStateChangeValidity(sc);
         assertTrue(isValid);
@@ -434,9 +435,9 @@ public class ByzCoinRPCTest {
             counters.increment();
 
             // Need to send in at least two blocks before the new node is active
-            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
-            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
 
             // This should work - why does it fail?

@@ -22,10 +22,10 @@ class RosterTest {
     private static final Point SAMPLE_CONODE_PUB_3 = PointFactory.getInstance().fromToml("Ed25519", "D5F268F8E66DA23CB92B407C55CC6474F183CCE54853F17D3CF27729E0BCB33A");
     private static final Point SAMPLE_CONODE_PUB_4 = PointFactory.getInstance().fromToml("Ed25519", "402552116B5056CC6B989BAE9A8DFD8BF0C1A2714FB820F0472C096AB5D148D8");
 
-    private static final URI SAMPLE_CONODE_1 = buildURI("tls://testnode1:7002");
-    private static final URI SAMPLE_CONODE_2 = buildURI("tls://testnode2:7004");
-    private static final URI SAMPLE_CONODE_3 = buildURI("tls://testnode3:7006");
-    private static final URI SAMPLE_CONODE_4 = buildURI("tls://testnode4:7008");
+    private static final URI SAMPLE_CONODE_1 = buildURI("tls://testnode1:7772");
+    private static final URI SAMPLE_CONODE_2 = buildURI("tls://testnode2:7774");
+    private static final URI SAMPLE_CONODE_3 = buildURI("tls://testnode3:7776");
+    private static final URI SAMPLE_CONODE_4 = buildURI("tls://testnode4:7778");
 
     private static final String SAMPLE_AGGREGATE = "465657D7E7C12F8CA355E5127AF2ABA43D4DC75A2B433FA63567D527C676F2A4";
 

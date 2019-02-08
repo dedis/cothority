@@ -9,10 +9,15 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -59,10 +64,11 @@ const viewChangeFtCosi = "viewchange_ftcosi"
 
 var viewChangeMsgID network.MessageTypeID
 
-// ByzCoinID can be used to refer to this service
+// ByzCoinID can be used to refer to this service.
 var ByzCoinID onet.ServiceID
 
-var verifyByzCoin = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "ByzCoin"))
+// Verify is the verifier ID for ByzCoin skipchains.
+var Verify = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "ByzCoin"))
 
 func init() {
 	var err error
@@ -78,7 +84,7 @@ func GenNonce() (n Nonce) {
 	return n
 }
 
-// Service is our ByzCoin-service
+// Service is the ByzCoin service.
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
@@ -633,6 +639,145 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 	}, nil
 }
 
+type leafNode struct {
+	Prefix []bool
+	Key    []byte
+	Value  []byte
+}
+
+// ProcessClientRequest implements onet.Service. We override the version
+// we normally get from embedding onet.ServiceProcessor in order to
+// hook it and get a look at the http.Request.
+func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
+	if path == "Debug" {
+		h, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err != nil {
+			return nil, nil, err
+		}
+		ip := net.ParseIP(h)
+
+		if !ip.IsLoopback() {
+			return nil, nil, errors.New("the 'debug'-endpoint is only allowed on loopback")
+		}
+	}
+
+	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
+}
+
+// Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
+// existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
+func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
+	resp = &DebugResponse{}
+	if len(req.ByzCoinID) != 32 {
+		rep, err := s.skService().GetAllSkipChainIDs(nil)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, scID := range rep.IDs {
+			latest, err := s.db().GetLatestByID(scID)
+			if err != nil {
+				continue
+			}
+			if !s.hasByzCoinVerification(skipchain.SkipBlockID(latest.SkipChainID())) {
+				continue
+			}
+			genesis := s.db().GetByID(latest.SkipChainID())
+			resp.Byzcoins = append(resp.Byzcoins, DebugResponseByzcoin{
+				ByzCoinID: latest.SkipChainID(),
+				Genesis:   genesis,
+				Latest:    latest,
+			})
+		}
+		return resp, nil
+	}
+	st, err := s.getStateTrie(skipchain.SkipBlockID(req.ByzCoinID))
+	if err != nil {
+		return nil, errors.New("didn't find this byzcoin instance: " + err.Error())
+	}
+	err = st.DB().View(func(b trie.Bucket) error {
+		err := b.ForEach(func(k, v []byte) error {
+			if len(k) == 32 {
+				if v[0] == byte(3) {
+					ln := leafNode{}
+					err = protobuf.Decode(v[1:], &ln)
+					if err != nil {
+						log.Error(err)
+						// Not all key/value pairs are valid statechanges
+						return nil
+					}
+					scb := StateChangeBody{}
+					err = protobuf.Decode(ln.Value, &scb)
+					resp.Dump = append(resp.Dump, DebugResponseState{Key: ln.Key, State: scb})
+				}
+			}
+			return nil
+		})
+		return err
+	})
+	return
+}
+
+// DebugRemove deletes an existing byzcoin-instance from the conode.
+func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
+	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, req.ByzCoinID, req.Signature); err != nil {
+		log.Error("Signature failure:", err)
+		return nil, err
+	}
+	idStr := string(req.ByzCoinID)
+	if s.heartbeats.exists(idStr) {
+		log.Lvl2("Removing heartbeat")
+		s.heartbeats.stop(idStr)
+	}
+
+	s.pollChanMut.Lock()
+	pc, exists := s.pollChan[idStr]
+	if exists {
+		log.Lvl2("Closing polling-channel")
+		close(pc)
+		delete(s.pollChan, idStr)
+	}
+	s.pollChanMut.Unlock()
+
+	s.stateTriesLock.Lock()
+	idStrHex := fmt.Sprintf("%x", req.ByzCoinID)
+	_, exists = s.stateTries[idStrHex]
+	if exists {
+		log.Lvl2("Removing state-trie")
+		db, bn := s.GetAdditionalBucket([]byte(idStrHex))
+		if db == nil {
+			return nil, errors.New("didn't find trie for this byzcoin-ID")
+		}
+		err := db.Update(func(tx *bbolt.Tx) error {
+			return tx.DeleteBucket(bn)
+		})
+		if err != nil {
+			return nil, err
+		}
+		delete(s.stateTries, idStr)
+		err = s.db().RemoveSkipchain(req.ByzCoinID)
+		if err != nil {
+			log.Error("couldn't remove the whole chain:", err)
+		}
+	}
+	s.stateTriesLock.Unlock()
+
+	s.darcToScMut.Lock()
+	for k, sc := range s.darcToSc {
+		if sc.Equal(skipchain.SkipBlockID(req.ByzCoinID)) {
+			log.Lvl2("Removing darc-to-skipchain mapping")
+			delete(s.darcToSc, k)
+		}
+	}
+	s.darcToScMut.Unlock()
+
+	log.Lvl2("Stopping view change monitor")
+	s.viewChangeMan.stop(skipchain.SkipBlockID(req.ByzCoinID))
+
+	s.save()
+	return &DebugResponse{}, nil
+}
+
 // SetPropagationTimeout overrides the default propagation timeout that is used
 // when a new block is announced to the nodes as well as the skipchain
 // propagation timeout.
@@ -664,7 +809,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		sb.MaximumHeight = 32
 		sb.BaseHeight = 4
 		// We have to register the verification functions in the genesis block
-		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyByzCoin}
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, Verify}
 
 		nonce, err := s.loadNonceFromTxs(tx)
 		if err != nil {
@@ -863,6 +1008,47 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
 }
 
+// catchupAll calls catchup for every byzcoin instance stored in this system.
+func (s *Service) catchupAll() error {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return errors.New("cannot sync all while closing")
+	}
+	s.working.Add(1)
+	defer s.working.Done()
+	s.closedMutex.Unlock()
+	gas := &skipchain.GetAllSkipChainIDs{}
+	gasr, err := s.skService().GetAllSkipChainIDs(gas)
+	if err != nil {
+		return err
+	}
+
+	for _, scID := range gasr.IDs {
+		sb, err := s.db().GetLatestByID(scID)
+		if err != nil {
+			return err
+		}
+		s.catchUp(sb)
+
+		// the MT root is not checked so we don't need the correct nonce
+		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			continue
+		}
+
+		_, err = s.buildStateChanges(sb.Hash, sst, []Coin{})
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+	}
+	return nil
+}
+
+// catchupFromID takes a roster and a skipchain-ID, and then searches to update this
+// skipchain. This is useful in case there is no block stored yet in the system, but
+// we get a roster, e.g., from getTxs
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
 	s.updateCollectionLock.Lock()
 	if s.catchingUp {
@@ -2105,13 +2291,11 @@ func (s *Service) startAllChains() error {
 		// TODO fault threshold might change
 	}
 
-	// Running trySyncAll in background so it doesn't stop the other
+	// Running catchupAll in background so it doesn't stop the other
 	// services from starting.
-	// TODO: do this on a per-needed basis, or only a couple of seconds
-	// after startup.
 	go func() {
 		s.monitorLeaderFailure()
-		err := s.trySyncAll()
+		err := s.catchupAll()
 		if err != nil {
 			log.Error(s.ServerIdentity(), "couldn't sync:", err)
 		}
@@ -2129,7 +2313,7 @@ func (s *Service) hasByzCoinVerification(gen skipchain.SkipBlockID) bool {
 		return false
 	}
 	for _, x := range sb.VerifierIDs {
-		if x.Equal(verifyByzCoin) {
+		if x.Equal(Verify) {
 			return true
 		}
 	}
@@ -2144,66 +2328,6 @@ func (s *Service) save() {
 	if err != nil {
 		log.Error(s.ServerIdentity(), "Couldn't save file:", err)
 	}
-}
-
-func (s *Service) trySyncAll() error {
-	s.closedMutex.Lock()
-	if s.closed {
-		s.closedMutex.Unlock()
-		return errors.New("closing down")
-	}
-	s.working.Add(1)
-	defer s.working.Done()
-	s.closedMutex.Unlock()
-	gas := &skipchain.GetAllSkipChainIDs{}
-	gasr, err := s.skService().GetAllSkipChainIDs(gas)
-	if err != nil {
-		return err
-	}
-
-	// It reads from the state change storage and gets the last
-	// block index for each chain
-	indices, err := s.stateChangeStorage.loadFromDB()
-	if err != nil {
-		return err
-	}
-
-	for _, scID := range gasr.IDs {
-		sb, err := s.db().GetLatestByID(scID)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-			continue
-		}
-		err = s.skService().SyncChain(sb.Roster, sb.Hash)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
-
-		// the MT root is not checked so we don't need the correct nonce
-		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-			continue
-		}
-
-		index, ok := indices[fmt.Sprintf("%x", sb.SkipChainID())]
-		if !ok {
-			// from the beginning
-			index = 0
-		}
-
-		// start from the last known skipblock
-		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
-		lksb, err := s.skService().GetSingleBlockByIndex(req)
-		if lksb != nil {
-			log.Lvlf2("Starting to create state changes for skipchain %x", sb.SkipChainID())
-			_, err = s.buildStateChanges(lksb.SkipBlock.Hash, sst, []Coin{})
-			if err != nil {
-				log.Error(s.ServerIdentity(), err)
-			}
-		} // else there is no new block
-	}
-	return nil
 }
 
 // getBlockTx fetches the block with the given id and then decodes the payload
@@ -2263,8 +2387,14 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 	}
 
 	if len(sb.ForwardLink) > 0 {
-		// Follow the FL level 0 to create all the state changes
-		return s.buildStateChanges(sb.ForwardLink[0].To, sst, cin)
+		// There might be skips in the blockchain, so take the first
+		// link that points to an existing block.
+		for _, link := range sb.ForwardLink {
+			if block := s.db().GetByID(link.To); block != nil {
+				return s.buildStateChanges(block.Hash, sst, cin)
+			}
+		}
+		return nil, errors.New("last block has forwardlinks that are not available")
 	}
 
 	return nil, nil
@@ -2302,7 +2432,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetInstanceVersion,
 		s.GetLastInstanceVersion,
 		s.GetAllInstanceVersion,
-		s.CheckStateChangeValidity)
+		s.CheckStateChangeValidity,
+		s.Debug,
+		s.DebugRemove)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
@@ -2313,9 +2445,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
-	s.registerContract(ContractSecureDarcID, s.contractSecureDarcFromBytes)
+	s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
 
-	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
+	skipchain.RegisterVerification(c, Verify, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err
 	}
