@@ -58,6 +58,9 @@ func TestProtocol(t *testing.T) {
 	nodes := []int{1, 2, 5, 13, 24}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
+	if testing.Short() {
+		nodes = nodes[:2]
+	}
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
@@ -105,6 +108,9 @@ func TestProtocolQuickAnswer(t *testing.T) {
 	nodes := []int{2, 5, 13, 24}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
+	if testing.Short() {
+		nodes = nodes[:2]
+	}
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
@@ -160,6 +166,9 @@ func TestUnresponsiveLeafs(t *testing.T) {
 	nodes := []int{3, 13, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
+	if testing.Short() {
+		nodes = nodes[:1]
+	}
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
@@ -230,6 +239,9 @@ func TestUnresponsiveSubleader(t *testing.T) {
 	nodes := []int{3, 13, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
+	if testing.Short() {
+		nodes = nodes[:1]
+	}
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
@@ -296,6 +308,9 @@ func TestProtocolErrors(t *testing.T) {
 	nodes := []int{1, 2, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
+	if testing.Short() {
+		nodes = nodes[:1]
+	}
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
@@ -409,7 +424,6 @@ func TestProtocolRefuseOne(t *testing.T) {
 	if testing.Short() {
 		// Make it faster on travis and just check that there is not an obvious bug.
 		nodes = []int{4}
-		subtrees = []int{1, 2}
 	}
 	proposal := []byte{0xFF}
 
