@@ -25,51 +25,51 @@ export class Logger {
         this._out = fn;
     }
 
-    public print(...args: any[]) {
+    print(...args: any[]) {
         this.printLvl(0, args);
     }
 
-    public lvl1(...args: any[]) {
+    lvl1(...args: any[]) {
         this.printLvl(1, args);
     }
 
-    public lvl2(...args: any[]) {
+    lvl2(...args: any[]) {
         this.printLvl(2, args);
     }
 
-    public lvl3(...args: any[]) {
+    lvl3(...args: any[]) {
         this.printLvl(3, args);
     }
 
-    public lvl4(...args: any[]) {
+    lvl4(...args: any[]) {
         this.printLvl(4, args);
     }
 
-    public llvl1(...args: any[]) {
+    llvl1(...args: any[]) {
         this.printLvl(-1, args);
     }
 
-    public llvl2(...args: any[]) {
+    llvl2(...args: any[]) {
         this.printLvl(-2, args);
     }
 
-    public llvl3(...args: any[]) {
+    llvl3(...args: any[]) {
         this.printLvl(-3, args);
     }
 
-    public llvl4(...args: any[]) {
+    llvl4(...args: any[]) {
         this.printLvl(-4, args);
     }
 
-    public info(...args: any[]) {
+    info(...args: any[]) {
         this.printLvl(-5, args);
     }
 
-    public warn(...args: any[]) {
+    warn(...args: any[]) {
         this.printLvl(-6, args);
     }
 
-    public error(...args: any[]) {
+    error(...args: any[]) {
         this.printLvl(-7, args);
     }
 

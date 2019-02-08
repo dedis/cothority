@@ -11,7 +11,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "linter": "node_modules/.bin/tslint src/**/*.ts spec/**/*.ts",
+    "linter": "node_modules/.bin/tslint src/*.ts src/**/*.ts spec/*.ts spec/**/*.ts",
     "test": "npm run linter && ts-node node_modules/jasmine/bin/jasmine.js",
     "cover": "nyc node_modules/jasmine/bin/jasmine.js",
     "coveralls": "nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js && cat ./coveralls/lcov.info | coveralls",
