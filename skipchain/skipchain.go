@@ -1079,6 +1079,12 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 	}
 
 	ok = func() bool {
+		for i, verifier := range prevSB.VerifierIDs {
+			if !verifier.Equal(fs.Newest.VerifierIDs[i]) {
+				log.Lvlf2("Verifier IDs in the forward signature is wrong: %s != %s", verifier.String(), fs.Newest.VerifierIDs[i].String())
+				return false
+			}
+		}
 		for _, ver := range fs.Newest.VerifierIDs {
 			f, exists := s.verifiers[ver]
 			if !exists {
@@ -1090,7 +1096,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 			g := func(to []byte, newest *SkipBlock) (out bool) {
 				defer func() {
 					if re := recover(); re != nil {
-						log.Error("verification function panic: " + re.(string))
+						log.Error("Verification function panic: " + re.(string))
 						out = false
 					}
 				}()
@@ -1100,7 +1106,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 
 			if !g(fl.To, fs.Newest) {
 				fname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
-				log.Lvlf2("verification function failed: %v %s", fname, ver)
+				log.Lvlf2("Verification function failed: %v %s", fname, ver)
 				return false
 			}
 		}
