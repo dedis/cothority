@@ -1,15 +1,22 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.byzcoin.StateChange;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,7 +51,47 @@ public class SkipBlock {
      * @return the hash of the block, which includes the backward-links and the data.
      */
     public byte[] getHash() {
-        return skipBlock.getHash().toByteArray();
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            return null;
+        }
+
+        ByteBuffer bb = ByteBuffer.allocate(4);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+
+        bb.putInt(getIndex());
+        digest.update(bb.array());
+        bb.clear();
+        bb.putInt(getHeight());
+        digest.update(bb.array());
+        bb.clear();
+        bb.putInt(getMaximumHeight());
+        digest.update(bb.array());
+        bb.clear();
+        bb.putInt(getBaseHeight());
+        digest.update(bb.array());
+
+        getBackLinks().forEach(bl -> {
+            digest.update(bl.getId());
+        });
+        getVerifiers().forEach(v -> {
+            digest.update(v);
+        });
+        try {
+            digest.update(skipBlock.getGenesis().toByteArray());
+            digest.update(getData());
+            if (getRoster() != null) {
+                getRoster().getNodes().forEach(si -> {
+                    digest.update(si.getPublic().toBytes());
+                });
+            }
+        } catch (CothorityCryptoException e) {
+            return null;
+        }
+
+        return digest.digest();
     }
 
     /**
@@ -93,6 +140,20 @@ public class SkipBlock {
     }
 
     /**
+     * @return the maximum height of the block.
+     */
+    public int getMaximumHeight() {
+        return skipBlock.getMaxHeight();
+    }
+
+    /**
+     * @return the base height of the block.
+     */
+    public int getBaseHeight() {
+        return skipBlock.getBaseHeight();
+    }
+
+    /**
      * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
      * if this is the tip of the chain.
      */
@@ -137,6 +198,15 @@ public class SkipBlock {
     public List<SkipblockId> getBackLinks() {
         return skipBlock.getBacklinksList().stream()
                 .map(bl -> new SkipblockId(bl.toByteArray()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Getter for the list of verifiers in the skipblock.
+     */
+    public List<byte[]> getVerifiers() {
+        return skipBlock.getVerifiersList().stream()
+                .map(v -> v.toByteArray())
                 .collect(Collectors.toList());
     }
 

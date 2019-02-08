@@ -4,6 +4,7 @@ import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -66,7 +67,7 @@ class SkipchainRPCTest {
         List<SkipBlock> sbs = new ArrayList<>();
 
         // Initialise the genesis block, it's not the one from the initialisation function
-        SkipBlock genesisSB = this.makeGenesisRosterArgs(new Roster(nodes.subList(0, 2)), null, new ArrayList<>(), 2, 3);
+        SkipBlock genesisSB = this.makeGenesisRosterArgs(new Roster(nodes.subList(0, 2)), new ArrayList<>(), 2, 3);
         sbs.add(genesisSB);
 
         // Initialized skipchain.
@@ -107,14 +108,11 @@ class SkipchainRPCTest {
         }
     }
 
-    private SkipBlock makeGenesisRosterArgs(Roster roster, SkipblockId parent, List<byte[]> verifierIDs, int base, int maxHeight) throws CothorityException {
+    private SkipBlock makeGenesisRosterArgs(Roster roster, List<byte[]> verifierIDs, int base, int maxHeight) throws CothorityException {
         SkipchainProto.SkipBlock.Builder b = SkipchainProto.SkipBlock.newBuilder();
         b.setRoster(roster.toProto());
         b.setMaxHeight(maxHeight);
         b.setBaseHeight(base);
-        if (parent != null) {
-            b.setParent(parent.toProto());
-        }
         b.addAllVerifiers(verifierIDs.stream().map(ByteString::copyFrom).collect(Collectors.toList()));
 
         // set stuff to their defaults

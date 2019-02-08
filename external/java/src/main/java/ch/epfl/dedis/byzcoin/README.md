@@ -5,8 +5,8 @@
 In ByzCoin land, all data is stored in instances, where every instance has the following fields:
 
 - data - representing the current state of that instance
-- contractID - pointing to the contract responsible for updating this instance
-- darcId - pointing to the darc that defines the rules for the contract
+- contractId - pointing to the contract responsible for updating this instance
+- darcBaseId - the base ID of the darc that defines the rules for the contract
 
 Whenever a ClientTransaction is sent to ByzCoin, it contains one or more instructions. Every instruction is sent
 to an instance and can be one of the following:

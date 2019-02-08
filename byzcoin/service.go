@@ -64,10 +64,11 @@ const viewChangeFtCosi = "viewchange_ftcosi"
 
 var viewChangeMsgID network.MessageTypeID
 
-// ByzCoinID can be used to refer to this service
+// ByzCoinID can be used to refer to this service.
 var ByzCoinID onet.ServiceID
 
-var verifyByzCoin = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "ByzCoin"))
+// Verify is the verifier ID for ByzCoin skipchains.
+var Verify = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "ByzCoin"))
 
 func init() {
 	var err error
@@ -83,7 +84,7 @@ func GenNonce() (n Nonce) {
 	return n
 }
 
-// Service is our ByzCoin-service
+// Service is the ByzCoin service.
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
@@ -808,7 +809,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		sb.MaximumHeight = 32
 		sb.BaseHeight = 4
 		// We have to register the verification functions in the genesis block
-		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyByzCoin}
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, Verify}
 
 		nonce, err := s.loadNonceFromTxs(tx)
 		if err != nil {
@@ -2266,7 +2267,7 @@ func (s *Service) hasByzCoinVerification(gen skipchain.SkipBlockID) bool {
 		return false
 	}
 	for _, x := range sb.VerifierIDs {
-		if x.Equal(verifyByzCoin) {
+		if x.Equal(Verify) {
 			return true
 		}
 	}
@@ -2454,7 +2455,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
 	s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
 
-	skipchain.RegisterVerification(c, verifyByzCoin, s.verifySkipBlock)
+	skipchain.RegisterVerification(c, Verify, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err
 	}

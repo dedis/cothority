@@ -188,14 +188,14 @@ public class Proof {
     }
 
     /**
-     * @return the darcID defining the access rules to the instance.
+     * @return the Darc base ID defining the access rules to the instance.
      */
-    public DarcId getDarcID() {
+    public DarcId getDarcBaseID() {
         StateChangeBody body = getValues();
         if (body == null) {
             return null;
         }
-        return body.getDarcId();
+        return body.getDarcBaseId();
     }
 
     /**

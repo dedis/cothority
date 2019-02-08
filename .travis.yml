@@ -1,12 +1,4 @@
-language: node_js
-sudo: required
 dist: trusty
-
-node_js:
-  - "lts/*"
-
-env:
-  - TEST_DIR=kyber
 
 matrix:
   include:
@@ -52,6 +44,8 @@ matrix:
 
     - language: node_js
       name: "kyber-js Tests"
+ 
+      node_js: "lts/*"
   
       script:
         - cd $TRAVIS_BUILD_DIR/external/js/kyber

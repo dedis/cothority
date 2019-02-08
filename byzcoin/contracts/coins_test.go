@@ -78,7 +78,23 @@ func TestCoin_InvokeMint(t *testing.T) {
 	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
+	// Send through a corrupt short coins argument.
 	inst := byzcoin.Instruction{
+		InstanceID: coAddr,
+		Invoke: &byzcoin.Invoke{
+			Command: "mint",
+			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne[0:3]}},
+		},
+		SignerIdentities: []darc.Identity{gsigner.Identity()},
+		SignerCounter:    []uint64{1},
+	}
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	err := inst.SignWith(dummyCtxHash, gsigner)
+	require.Nil(t, err)
+	_, _, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	require.Error(t, err)
+
+	inst = byzcoin.Instruction{
 		InstanceID: coAddr,
 		Invoke: &byzcoin.Invoke{
 			Command: "mint",
@@ -87,8 +103,7 @@ func TestCoin_InvokeMint(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	err := inst.SignWith(dummyCtxHash, gsigner)
+	err = inst.SignWith(dummyCtxHash, gsigner)
 	require.Nil(t, err)
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})

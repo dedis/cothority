@@ -212,37 +212,12 @@ var (
 	// the links are correctly set up, the height-parameters and the
 	// verification didn't change.
 	VerifyBase = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Base"))
-	// VerifyRoot depends on a data-block being a slice of public keys
-	// that are used to sign the next block. The private part of those
-	// keys are supposed to be offline. It makes sure
-	// that every new block is signed by the keys present in the previous block.
-	VerifyRoot = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Root"))
-	// VerifyControl makes sure this chain is a child of a Root-chain and
-	// that there is no new block if a newer parent is present.
-	// It also makes sure that no more than 1/3 of the members of the roster
-	// change between two blocks.
-	VerifyControl = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Control"))
-	// VerifyData makes sure that:
-	//   - it has a parent-chain with `VerificationControl`
-	//   - its Roster doesn't change between blocks
-	//   - if there is a newer parent, no new block will be appended to that chain.
-	VerifyData = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Data"))
 )
 
 // VerificationStandard makes sure that all links are correct and that the
 // basic parameters like height, GenesisID and others don't change between
 // blocks.
 var VerificationStandard = []VerifierID{VerifyBase}
-
-// VerificationRoot is used to create a root-chain that has 'Control'-chains
-// as its children.
-var VerificationRoot = []VerifierID{VerifyBase, VerifyRoot}
-
-// VerificationControl is used in chains that depend on a 'Root'-chain.
-var VerificationControl = []VerifierID{VerifyBase, VerifyControl}
-
-// VerificationData is used in chains that depend on a 'Control'-chain.
-var VerificationData = []VerifierID{VerifyBase, VerifyData}
 
 // VerificationNone is mostly used for test - it allows for nearly every new
 // block to be appended.
@@ -265,9 +240,6 @@ type SkipBlockFix struct {
 	BackLinkIDs []SkipBlockID
 	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
 	VerifierIDs []VerifierID
-	// SkipBlockParent points to the SkipBlock of the responsible Roster -
-	// is nil if this is the Root-roster
-	ParentBlockID SkipBlockID
 	// GenesisID is the ID of the genesis-block. For the genesis-block, this
 	// is null. The SkipBlockID() method returns the correct ID both for
 	// the genesis block and for later blocks.
@@ -289,9 +261,6 @@ func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
 	verifierIDs := make([]VerifierID, len(sbf.VerifierIDs))
 	copy(verifierIDs, sbf.VerifierIDs)
 
-	parentBlockID := make(SkipBlockID, len(sbf.ParentBlockID))
-	copy(parentBlockID, sbf.ParentBlockID)
-
 	genesisID := make(SkipBlockID, len(sbf.GenesisID))
 	copy(genesisID, sbf.GenesisID)
 
@@ -305,7 +274,6 @@ func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
 		BaseHeight:    sbf.BaseHeight,
 		BackLinkIDs:   backLinkIDs,
 		VerifierIDs:   verifierIDs,
-		ParentBlockID: parentBlockID,
 		GenesisID:     genesisID,
 		Data:          data,
 		Roster:        sbf.Roster,
@@ -317,15 +285,18 @@ func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	hash := sha256.New()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
 		sbf.BaseHeight} {
-		_ = binary.Write(hash, binary.LittleEndian, i)
+		err := binary.Write(hash, binary.LittleEndian, int32(i))
+		if err != nil {
+			panic("error writing to hash:" + err.Error())
+		}
 	}
+
 	for _, bl := range sbf.BackLinkIDs {
 		hash.Write(bl)
 	}
 	for _, v := range sbf.VerifierIDs {
 		hash.Write(v[:])
 	}
-	hash.Write(sbf.ParentBlockID)
 	hash.Write(sbf.GenesisID)
 	hash.Write(sbf.Data)
 	if sbf.Roster != nil {
@@ -350,9 +321,6 @@ type SkipBlock struct {
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*ForwardLink
-	// SkipLists that depend on us, given as the first SkipBlock - can
-	// be a Data or a Roster SkipBlock
-	ChildSL []SkipBlockID
 
 	// Payload is additional data that needs to be hashed by the application
 	// itself into SkipBlockFix.Data. A normal use case is to set
@@ -405,14 +373,9 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		Hash:         make([]byte, len(sb.Hash)),
 		Payload:      make([]byte, len(sb.Payload)),
 		ForwardLink:  make([]*ForwardLink, len(sb.ForwardLink)),
-		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
 	}
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
-	}
-	for i, child := range sb.ChildSL {
-		b.ChildSL[i] = make(SkipBlockID, len(child))
-		copy(b.ChildSL[i], child)
 	}
 	copy(b.Hash, sb.Hash)
 	copy(b.Payload, sb.Payload)
@@ -714,9 +677,6 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						}
 					}
 				}
-				if len(sb.ChildSL) > len(sbOld.ChildSL) {
-					sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
-				}
 				err := db.storeToTx(tx, sbOld)
 				if err != nil {
 					return err
@@ -823,23 +783,14 @@ func (db *SkipBlockDB) Length() int {
 
 // GetResponsible searches for the block that is responsible for sb
 // - Root_Genesis - himself
-// - *_Gensis - it's his parent
 // - else - it's the previous block
 func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
 		log.Panic(log.Stack())
 	}
 	if sb.Index == 0 {
-		// Genesis-block
-		if sb.ParentBlockID.IsNull() {
-			// Root-skipchain, no other parent
-			return sb, nil
-		}
-		ret := db.GetByID(sb.ParentBlockID)
-		if ret == nil {
-			return nil, errors.New("no Roster and no parent")
-		}
-		return ret, nil
+		// Root-skipchain, no other parent
+		return sb, nil
 	}
 	if len(sb.BackLinkIDs) == 0 {
 		return nil, errors.New("invalid block: no backlink")
@@ -860,27 +811,6 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 
 	if err := sb.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong signatures: " + err.Error())
-	}
-
-	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNull() {
-		parent := db.GetByID(sb.ParentBlockID)
-		if parent == nil {
-			return errors.New("didn't find parent")
-		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := false
-		for _, child := range parent.ChildSL {
-			if child.Equal(sb.Hash) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New("parent doesn't know about us")
-		}
 	}
 
 	// We don't check backward-links for genesis-blocks

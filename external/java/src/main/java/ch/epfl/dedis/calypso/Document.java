@@ -116,7 +116,7 @@ public class Document {
     }
 
     /**
-     * @return the darcId protecting access to this document.
+     * @return the Darc base ID protecting access to this document.
      */
     public DarcId getPublisherId() {
         return publisherId;

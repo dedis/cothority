@@ -104,6 +104,10 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			err = errors.New("argument \"coins\" is missing")
 			return
 		}
+		if len(coinsBuf) != 8 {
+			err = errors.New("argument \"coins\" is wrong length")
+			return
+		}
 		coinsArg = binary.LittleEndian.Uint64(coinsBuf)
 	}
 
