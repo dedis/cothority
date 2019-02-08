@@ -29,14 +29,14 @@ public class LTSInstance {
     /**
      *
      * @param calypso
-     * @param darcID
+     * @param darcBaseID
      * @param roster
      * @param signers
      * @param signerCtrs
      * @throws CothorityException
      */
-    public LTSInstance(CalypsoRPC calypso, DarcId darcID, Roster roster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        ClientTransaction ctx = createSpawnTx(new LTSInstanceInfo(roster), darcID, signers, signerCtrs);
+    public LTSInstance(CalypsoRPC calypso, DarcId darcBaseID, Roster roster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        ClientTransaction ctx = createSpawnTx(new LTSInstanceInfo(roster), darcBaseID, signers, signerCtrs);
         calypso.sendTransactionAndWait(ctx, 10);
         this.instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
         this.calypso = calypso;
@@ -98,12 +98,12 @@ public class LTSInstance {
         return p;
     }
 
-    private static ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+    private static ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
         byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
         Spawn sp = new Spawn(LTSInstance.ContractId, args);
-        Instruction inst = new Instruction(new InstanceId(darcID.getId()),
+        Instruction inst = new Instruction(new InstanceId(darcBaseID.getId()),
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 sp);

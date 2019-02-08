@@ -36,10 +36,10 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param byzcoin the existing byzcoin ledger.
      * @throws CothorityException if something goes wrong
      */
-    public CalypsoRPC(ByzCoinRPC byzcoin, DarcId darcId, Roster ltsRoster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    public CalypsoRPC(ByzCoinRPC byzcoin, DarcId darcBaseID, Roster ltsRoster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         super(byzcoin);
         // Send a transaction to store the LTS roster in ByzCoin
-        LTSInstance inst = new LTSInstance(this, darcId, ltsRoster, signers, signerCtrs);
+        LTSInstance inst = new LTSInstance(this, darcBaseID, ltsRoster, signers, signerCtrs);
         Proof proof = inst.getProofAndVerify();
         if (!proof.exists(inst.getInstance().getId().getId())) {
             throw new CothorityCryptoException("instance is not in the proof");

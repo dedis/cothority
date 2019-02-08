@@ -544,7 +544,7 @@ func TestService_LateBlock(t *testing.T) {
 	// Hook the verifier in order delay the arrival and test timestamp checking.
 	ser := s.services[0]
 	c := ser.Context
-	err := skipchain.RegisterVerification(c, verifyByzCoin, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Make this block arrive late compared to it's timestamp. The window will be
 		// 1000ms, so sleep 1200 more, just to be sure.
 		time.Sleep(2200 * time.Millisecond)
@@ -570,7 +570,7 @@ func TestService_BadDataHeader(t *testing.T) {
 
 	ser := s.services[0]
 	c := ser.Context
-	err := skipchain.RegisterVerification(c, verifyByzCoin, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Hack up the DataHeader to make the TrieRoot the wrong size.
 		var header DataHeader
 		err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))

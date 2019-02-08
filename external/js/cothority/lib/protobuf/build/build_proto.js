@@ -6,8 +6,8 @@ const root = new protobuf.Root();
 root.define("cothority");
 
 const regex = /^.*\.proto$/;
-const protoPath = "../../proto/";
-//files.walk("../../protobuf", (err, path, dirs, items) => {
+const protoPath = "../../proto";
+
 files.walkSync(protoPath, (path, dirs, items) => {
   items.forEach(file => {
     const fullPath = path + "/" + file;
@@ -17,6 +17,7 @@ files.walkSync(protoPath, (path, dirs, items) => {
     }
   });
 });
+
 const modelPath = "lib/protobuf/models.json";
 fs.writeFileSync(modelPath, JSON.stringify(root.toJSON()));
 console.log();

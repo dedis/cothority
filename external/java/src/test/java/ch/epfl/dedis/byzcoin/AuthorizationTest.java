@@ -63,7 +63,7 @@ public class AuthorizationTest {
         // Check that consumer has access
         SignerEd25519 consumer = new SignerEd25519(Hex.parseHexBinary(CONSUMER_SCALAR));
 
-        List<String> auths = calypso.checkAuthorization(writeInstance.getInstance().getDarcId(), Arrays.asList(consumer.getIdentity()));
+        List<String> auths = calypso.checkAuthorization(writeInstance.getInstance().getDarcBaseID(), Arrays.asList(consumer.getIdentity()));
         assertEquals(1, auths.size());
     }
 

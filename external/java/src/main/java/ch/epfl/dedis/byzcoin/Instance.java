@@ -5,8 +5,6 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 
-import java.util.List;
-
 /**
  * A contract represents the data that can be interpreted by the
  * corresponding contract.
@@ -14,7 +12,7 @@ import java.util.List;
 public class Instance {
     private InstanceId id;
     private String contractId;
-    private DarcId darcId;
+    private DarcId darcBaseID;
     private byte[] data;
 
     /**
@@ -22,13 +20,13 @@ public class Instance {
      *
      * @param id   the id of the instance
      * @param cid  the contractId, a string
-     * @param did  the darcId responsible for this instance
+     * @param baseID  the Darc base ID responsible for this instance
      * @param data the data stored in this instance
      */
-    private Instance(InstanceId id, String cid, DarcId did, byte[] data) {
+    private Instance(InstanceId id, String cid, DarcId baseID, byte[] data) {
         this.id = id;
         contractId = cid;
-        darcId = did;
+        darcBaseID = baseID;
         this.data = data;
     }
 
@@ -40,7 +38,7 @@ public class Instance {
      */
     public static Instance fromProof(Proof p) {
         StateChangeBody body = p.getValues();
-        return new Instance(new InstanceId(p.getKey()), new String(body.getContractID()), body.getDarcId(), body.getValue());
+        return new Instance(new InstanceId(p.getKey()), new String(body.getContractID()), body.getDarcBaseId(), body.getValue());
     }
 
     /**
@@ -78,8 +76,8 @@ public class Instance {
     /**
      * @return the darcid of this instance
      */
-    public DarcId getDarcId() {
-        return darcId;
+    public DarcId getDarcBaseID() {
+        return darcBaseID;
     }
 
     /**

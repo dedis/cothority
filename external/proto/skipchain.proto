@@ -81,14 +81,12 @@ message SkipBlock {
     required sint32 base_height = 4;
     repeated bytes backlinks = 5;
     repeated bytes verifiers = 6;
-    optional bytes parent = 7;
-    required bytes genesis = 8;
-    required bytes data = 9;
-    required onet.Roster roster = 10;
-    required bytes hash = 11;
-    repeated ForwardLink forward = 12;
-    repeated bytes children = 13;
-    optional bytes payload = 14;
+    required bytes genesis = 7;
+    required bytes data = 8;
+    required onet.Roster roster = 9;
+    required bytes hash = 10;
+    repeated ForwardLink forward = 11;
+    optional bytes payload = 12;
 }
 
 message ForwardLink {

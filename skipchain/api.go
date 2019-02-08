@@ -108,18 +108,16 @@ func (c *Client) StoreSkipBlock(target *SkipBlock, ro *onet.Roster, d network.Me
 //  - data can be nil or any data that will be network.Marshaled to the
 //    skipblock, except if the data is of type []byte, in which case it will be
 //    stored as-is on the skipchain.
-//  - parent is the responsible parent-block, can be 'nil'
 //  - priv is a private key that is allowed to sign for new skipblocks
 //
 // This function returns the created skipblock or nil and an error.
 func (c *Client) CreateGenesisSignature(ro *onet.Roster, baseH, maxH int, ver []VerifierID,
-	data interface{}, parent SkipBlockID, priv kyber.Scalar) (*SkipBlock, error) {
+	data interface{}, priv kyber.Scalar) (*SkipBlock, error) {
 	genesis := NewSkipBlock()
 	genesis.Roster = ro
 	genesis.VerifierIDs = ver
 	genesis.MaximumHeight = maxH
 	genesis.BaseHeight = baseH
-	genesis.ParentBlockID = parent
 	if data != nil {
 		var ok bool
 		genesis.Data, ok = data.([]byte)
@@ -153,34 +151,8 @@ func (c *Client) CreateGenesisSignature(ro *onet.Roster, baseH, maxH int, ver []
 //
 // This function returns the created skipblock or nil and an error.
 func (c *Client) CreateGenesis(ro *onet.Roster, baseH, maxH int, ver []VerifierID,
-	data interface{}, parent SkipBlockID) (*SkipBlock, error) {
-	return c.CreateGenesisSignature(ro, baseH, maxH, ver, data, parent, nil)
-}
-
-// CreateRootControl is a convenience function and creates two Skipchains:
-// a root SkipChain with maximumHeight of maxHRoot and a control SkipChain with
-// maximumHeight of maxHControl. It connects both chains for later
-// reference. The root-chain will use `VerificationRoot` and the config-chain
-// will use `VerificationConfig`.
-//
-// A slice of verification-functions is given for the root and the control
-// skipchain.
-func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
-	keys []kyber.Point, baseHeight,
-	maxHRoot, maxHControl int) (root, control *SkipBlock, err error) {
-	log.Lvl2("Creating root roster", elRoot)
-	root, err = c.CreateGenesis(elRoot, baseHeight, maxHRoot,
-		VerificationRoot, nil, nil)
-	if err != nil {
-		return
-	}
-	log.Lvl2("Creating control roster", elControl)
-	control, err = c.CreateGenesis(elControl, baseHeight, maxHControl,
-		VerificationControl, nil, root.Hash)
-	if err != nil {
-		return
-	}
-	return root, control, err
+	data interface{}) (*SkipBlock, error) {
+	return c.CreateGenesisSignature(ro, baseH, maxH, ver, data, nil)
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to

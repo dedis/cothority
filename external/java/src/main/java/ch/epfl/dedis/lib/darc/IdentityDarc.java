@@ -1,12 +1,11 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 public class IdentityDarc implements Identity {
-    private DarcId darcID;
+    private DarcId darcBaseID;
 
     /**
      * Instantiates a IdentityDarc given its protobuf representation.
@@ -14,16 +13,16 @@ public class IdentityDarc implements Identity {
      * @param proto the protobuf representation of the IdentityDarc
      */
     public IdentityDarc(DarcProto.IdentityDarc proto) {
-        darcID = new DarcId(proto.getId().toByteArray());
+        darcBaseID = new DarcId(proto.getId().toByteArray());
     }
 
     /**
      * Instantiates a IdentityDarc given a darc-id.
      *
-     * @param darcID the source DarcId
+     * @param darcBaseID the source DarcId
      */
-    public IdentityDarc(DarcId darcID) {
-        this.darcID = darcID;
+    public IdentityDarc(DarcId darcBaseID) {
+        this.darcBaseID = darcBaseID;
     }
 
     /**
@@ -56,7 +55,7 @@ public class IdentityDarc implements Identity {
     public DarcProto.Identity toProto() {
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
         DarcProto.IdentityDarc.Builder bdd = DarcProto.IdentityDarc.newBuilder();
-        bdd.setId(ByteString.copyFrom(darcID.getId()));
+        bdd.setId(ByteString.copyFrom(darcBaseID.getId()));
         bid.setDarc(bdd);
         return bid.build();
     }
@@ -67,7 +66,7 @@ public class IdentityDarc implements Identity {
      * @return ID of DARC
      */
     public DarcId getDarcId() {
-        return darcID;
+        return darcBaseID;
     }
 
     @Override
@@ -77,16 +76,16 @@ public class IdentityDarc implements Identity {
 
         IdentityDarc that = (IdentityDarc) o;
 
-        return darcID != null ? darcID.equals(that.darcID) : that.darcID == null;
+        return darcBaseID != null ? darcBaseID.equals(that.darcBaseID) : that.darcBaseID == null;
     }
 
     @Override
     public int hashCode() {
-        return darcID != null ? darcID.hashCode() : 0;
+        return darcBaseID != null ? darcBaseID.hashCode() : 0;
     }
 
     public String toString() {
-        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.darcID.getId()).toLowerCase());
+        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.darcBaseID.getId()).toLowerCase());
     }
 
     public String typeString() {
@@ -94,6 +93,6 @@ public class IdentityDarc implements Identity {
     }
 
     public byte[] getPublicBytes() {
-        return darcID.getId();
+        return darcBaseID.getId();
     }
 }
