@@ -19,10 +19,10 @@ COLOG=conode
 
 RUNOUT=$( mktemp )
 
-for i in . .. ../.. ../../.. ../../../..
+for i in . .. ../.. ../../.. ../../../.. $( go env GOPATH )/src/go.dedis.ch/cothority
 do
 	if [ -f $i/conode/conode.go ]; then
-		root=$i
+		root=$( cd -P $i; pwd )
 		break
 	fi
 done
@@ -281,11 +281,15 @@ backg(){
 build(){
   local builddir=$1
   local app=$( basename $builddir )
+  local out=$( pwd )/$app
   if [ ! -e $app -o "$CLEANBUILD" ]; then
     testOut "Building $app"
-    if ! go build -o $app $TAGS $builddir/*.go; then
-      fail "Couldn't build $builddir"
-    fi
+    ( 
+      cd $builddir
+      if ! go build -o $out $TAGS *.go; then
+        fail "Couldn't build $builddir"
+      fi
+    )
   else
     dbgOut "Not building $app because it's here"
   fi
@@ -320,7 +324,7 @@ buildConode(){
     done
   echo ")" ) > conode_/import.go
 
-  cp "../$root/conode/conode.go" conode_/conode.go
+  cp "$root/conode/conode.go" conode_/conode.go
   go build -o conode ./conode_
   setupConode
 }
