@@ -484,7 +484,7 @@ func updateConfig(cl *byzcoin.Client, signer *darc.Signer, chainConfig byzcoin.C
 		}},
 	}
 
-	err = ctx.SignWith(*signer)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return errors.New("couldn't sign the clientTransaction: " + err.Error())
 	}
@@ -596,7 +596,10 @@ func mint(c *cli.Context) error {
 				SignerCounter: counters,
 			}},
 		}
-		ctx.SignWith(*signer)
+		ctx.FillSignersAndSignWith(*signer)
+		if err != nil {
+			return err
+		}
 		_, err = cl.AddTransactionAndWait(ctx, 10)
 		if err != nil {
 			return err
@@ -623,7 +626,10 @@ func mint(c *cli.Context) error {
 				SignerCounter: counters,
 			}},
 		}
-		ctx.SignWith(*signer)
+		ctx.FillSignersAndSignWith(*signer)
+		if err != nil {
+			return err
+		}
 		_, err = cl.AddTransactionAndWait(ctx, 10)
 		if err != nil {
 			return err
@@ -646,7 +652,10 @@ func mint(c *cli.Context) error {
 			SignerCounter: counters,
 		}},
 	}
-	ctx.SignWith(*signer)
+	err = ctx.FillSignersAndSignWith(*signer)
+	if err != nil {
+		return err
+	}
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return err
@@ -1082,12 +1091,17 @@ func darcAdd(c *cli.Context, dGen *darc.Darc, cfg lib.Config, cl *byzcoin.Client
 			},
 		},
 	}
-	instr := byzcoin.Instruction{
-		InstanceID:    instID,
-		Spawn:         &spawn,
-		SignerCounter: []uint64{counters.Counters[0] + 1},
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID:    instID,
+				Spawn:         &spawn,
+				SignerCounter: []uint64{counters.Counters[0] + 1},
+			},
+		},
 	}
-	ctx, err := combineInstrsAndSign(*signer, instr)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}
@@ -1220,12 +1234,16 @@ func darcRule(c *cli.Context, d *darc.Darc, update bool, delete bool, cfg lib.Co
 			},
 		},
 	}
-	instr := byzcoin.Instruction{
-		InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
-		Invoke:        &invoke,
-		SignerCounter: []uint64{counters.Counters[0] + 1},
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+				Invoke:        &invoke,
+				SignerCounter: []uint64{counters.Counters[0] + 1},
+			},
+		},
 	}
-	ctx, err := combineInstrsAndSign(*signer, instr)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}
@@ -1266,12 +1284,16 @@ func darcRuleDel(c *cli.Context, d *darc.Darc, action string, signer *darc.Signe
 			},
 		},
 	}
-	instr := byzcoin.Instruction{
-		InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
-		Invoke:        &invoke,
-		SignerCounter: []uint64{counters.Counters[0] + 1},
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+				Invoke:        &invoke,
+				SignerCounter: []uint64{counters.Counters[0] + 1},
+			},
+		},
 	}
-	ctx, err := combineInstrsAndSign(*signer, instr)
+	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
 	}
