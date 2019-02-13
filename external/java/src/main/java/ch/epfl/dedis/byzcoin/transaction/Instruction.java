@@ -207,17 +207,32 @@ public class Instruction {
                 digest.update(this.delete.getContractId().getBytes());
             }
             for (Argument a : args) {
-                digest.update(a.getName().getBytes());
+                byte[] nameBuf = a.getName().getBytes();
+                ByteBuffer nameLenBuf = ByteBuffer.allocate(Long.BYTES);
+                nameLenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                nameLenBuf.putLong(nameBuf.length);
+                digest.update(nameLenBuf.array());
+                digest.update(nameBuf);
+
+                ByteBuffer valueLenBuf = ByteBuffer.allocate(Long.BYTES);
+                valueLenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                valueLenBuf.putLong(a.getValue().length);
+                digest.update(valueLenBuf.array());
                 digest.update(a.getValue());
             }
             for (Long ctr : this.signerCounters) {
-                ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.putLong(ctr);
-                digest.update(buffer.array());
+                ByteBuffer ctrBuf = ByteBuffer.allocate(Long.BYTES);
+                ctrBuf.order(ByteOrder.LITTLE_ENDIAN);
+                ctrBuf.putLong(ctr);
+                digest.update(ctrBuf.array());
             }
             for (Identity id : this.signerIdentities) {
-                digest.update(id.getPublicBytes());
+                byte[] buf = id.getPublicBytes();
+                ByteBuffer lenBuf = ByteBuffer.allocate(Long.BYTES);
+                lenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                lenBuf.putLong(buf.length);
+                digest.update(lenBuf.array());
+                digest.update(buf);
             }
             return digest.digest();
         } catch (NoSuchAlgorithmException  e) {
