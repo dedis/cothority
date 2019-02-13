@@ -63,7 +63,7 @@ type PropagateReply struct {
 type PropagationFunc func(el *onet.Roster, msg network.Message, timeout time.Duration) (int, error)
 
 // PropagationStore is the function that will store the new data.
-type PropagationStore func(network.Message)
+type PropagationStore func(network.Message) error
 
 // propagationContext is used for testing.
 type propagationContext interface {
@@ -188,7 +188,8 @@ func (p *Propagate) Dispatch() error {
 				if err != nil {
 					log.Lvlf2("Unmarshal failed with %v", err)
 				} else {
-					p.onData(netMsg)
+					err := p.onData(netMsg)
+					log.Lvlf2("Propagation callback failed: %v", err)
 				}
 			}
 			if !p.IsRoot() {

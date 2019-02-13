@@ -4,7 +4,7 @@ RUN mkdir /conode_data
 RUN mkdir -p .local/share .config
 RUN ln -s /conode_data .local/share/conode
 RUN ln -s /conode_data .config/conode
-RUN apt update; apt install -y procps
+RUN apt update; apt install -y procps; apt clean
 COPY run_nodes.sh .
 COPY exe/conode.Linux.x86_64 ./conode
 

@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"sync"
 	"testing"
@@ -42,13 +43,15 @@ func propagate(t *testing.T, nbrNodes, nbrFailures []int) {
 			pc := &PC{server, local.Overlays[server.ServerIdentity.ID]}
 			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
-				func(m network.Message) {
+				func(m network.Message) error {
 					if bytes.Equal(msg.Data, m.(*propagateMsg).Data) {
 						iMut.Lock()
 						recvCount++
 						iMut.Unlock()
+						return nil
 					} else {
 						t.Error("Didn't receive correct data")
+						return errors.New("Didn't receive correct data")
 					}
 				}, nbrFailures[i])
 			log.ErrFatal(err)

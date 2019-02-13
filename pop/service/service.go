@@ -876,36 +876,34 @@ func (s *Service) bftVerifyMergeAck(msg, data []byte) bool {
 	return ok
 }
 
-// PropagateFinal saves the new final statement
-func (s *Service) PropagateFinal(msg network.Message) {
+// propagateFinal saves the new final statement
+func (s *Service) propagateFinal(msg network.Message) error {
 	fs, ok := msg.(*FinalStatement)
 	if !ok {
-		log.Error("Couldn't convert to a FinalStatement")
-		return
+		return errors.New("Couldn't convert to a FinalStatement")
 	}
 	if err := fs.Verify(); err != nil {
-		log.Error(err)
-		return
+		return err
 	}
 	*s.data.Finals[string(fs.Desc.Hash())] = *fs
 	s.save()
 	log.Lvlf2("%s Stored final statement %v", s.ServerIdentity(), fs)
+	return nil
 }
 
-// PropagateDescription is called to store new descriptions on the nodes that
+// propagateDescriptionFn is called to store new descriptions on the nodes that
 // are supposed to participate.
-func (s *Service) PropagateDescription(msg network.Message) {
+func (s *Service) propagateDescriptionFn(msg network.Message) error {
 	pd, ok := msg.(*PopDesc)
 	if !ok {
-		log.Error("Couldn't convert to a PopDesc")
-		return
+		return errors.New("Couldn't convert to a PopDesc")
 	}
 	if pd.Roster.List[0].Equal(s.ServerIdentity()) {
-		log.Lvl2("Not storing proposition on leader")
-		return
+		return errors.New("Not storing proposition on leader")
 	}
 	s.proposedDescription = append(s.proposedDescription, *pd)
 	log.Lvl2("Stored proposed description on", s.ServerIdentity())
+	return nil
 }
 
 // SignatureSize is the size of signatures expected by this service.
@@ -1186,11 +1184,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.data.StoredKeys = map[string]*keyList{}
 	}
 	s.syncs = make(map[string]*syncChans)
-	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
+	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.propagateFinal, 0)
 	if err != nil {
 		return nil, err
 	}
-	s.propagateDescription, err = messaging.NewPropagationFunc(c, propagDescription, s.PropagateDescription, 0)
+	s.propagateDescription, err = messaging.NewPropagationFunc(c, propagDescription, s.propagateDescriptionFn, 0)
 	if err != nil {
 		return nil, err
 	}
