@@ -40,8 +40,8 @@ describe("Nist Scalar", () => {
         const s1 = curve.scalar().setBytes(bytes);
         const s2 = curve.scalar().setBytes(bytes);
 
-        expect(s1.equal(s2)).toBeTruthy();
-        expect(s1.equal(curve.scalar())).toBeFalsy();
+        expect(s1.equals(s2)).toBeTruthy();
+        expect(s1.equals(curve.scalar())).toBeFalsy();
     });
 
     it("should set the scalar to 0", () => {
@@ -57,10 +57,10 @@ describe("Nist Scalar", () => {
         const s2 = curve.scalar().set(s1);
         const zero = curve.scalar().zero();
 
-        expect(s1.equal(s2)).toBeTruthy();
+        expect(s1.equals(s2)).toBeTruthy();
         s1.zero();
-        expect(s1.equal(s2)).toBeTruthy();
-        expect(s1.equal(zero)).toBeTruthy();
+        expect(s1.equals(s2)).toBeTruthy();
+        expect(s1.equals(zero)).toBeTruthy();
     });
 
     it("should clone a scalar", () => {
@@ -68,9 +68,9 @@ describe("Nist Scalar", () => {
         const s1 = curve.scalar().setBytes(bytes);
         const s2 = s1.clone();
 
-        expect(s1.equal(s2)).toBeTruthy();
+        expect(s1.equals(s2)).toBeTruthy();
         s1.zero();
-        expect(s1.equal(s2)).toBeFalsy();
+        expect(s1.equals(s2)).toBeFalsy();
     });
 
     it("should add two scalars", () => {
@@ -82,7 +82,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([190, 106, 201, 42, 29, 98, 50, 20, 33, 0, 19, 67, 158, 237, 104, 224, 224, 253, 31, 149, 82, 182, 97, 87, 34, 5, 98, 17, 87, 61, 172, 180]);
         const s3 = curve.scalar().setBytes(target);
 
-        expect(sum.equal(s3)).toBeTruthy();
+        expect(sum.equals(s3)).toBeTruthy();
     });
 
     it("should subtract two scalars", () => {
@@ -95,7 +95,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([255, 255, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 188, 230, 250, 173, 167, 23, 158, 132, 243, 185, 202, 194, 248, 95, 33, 77]);
         const s3 = curve.scalar().setBytes(target);
 
-        expect(diff.equal(s3)).toBeTruthy();
+        expect(diff.equals(s3)).toBeTruthy();
     });
 
     it("should negate a point", () => {
@@ -106,7 +106,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([154, 39, 145, 231, 128, 248, 52, 6, 49, 85, 200, 164, 158, 16, 33, 96, 146, 236, 120, 242, 154, 155, 254, 225, 166, 156, 209, 20, 34, 240, 40, 166]);
         const s2 = curve.scalar().setBytes(target);
 
-        expect(neg.equal(s2)).toBeTruthy();
+        expect(neg.equals(s2)).toBeTruthy();
     });
 
     it("should return the bytes in big-endian representation", () => {
@@ -133,7 +133,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([88, 150, 22, 208, 89, 155, 151, 255, 177, 162, 187, 27, 200, 24, 106, 226, 148, 44, 50, 249, 104, 23, 185, 233, 226, 79, 51, 233, 132, 194, 166, 138]);
         const s3 = curve.scalar().setBytes(target);
 
-        expect(prod.equal(s3)).toBeTruthy();
+        expect(prod.equals(s3)).toBeTruthy();
     });
 
     it("should divide two scalars", () => {
@@ -145,7 +145,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([197, 214, 67, 20, 213, 10, 109, 3, 187, 62, 94, 90, 111, 152, 254, 126, 57, 162, 144, 250, 104, 92, 124, 206, 143, 31, 20, 64, 4, 243, 185, 241]);
         const s3 = curve.scalar().setBytes(target);
 
-        expect(quotient.equal(s3)).toBeTruthy();
+        expect(quotient.equals(s3)).toBeTruthy();
     });
 
     it("should compute the inverse modulo n of scalar", () => {
@@ -156,7 +156,7 @@ describe("Nist Scalar", () => {
         const target = Buffer.from([65, 112, 236, 29, 4, 150, 6, 224, 144, 13, 175, 197, 232, 73, 19, 137, 150, 235, 201, 127, 55, 45, 109, 196, 104, 154, 215, 9, 171, 186, 177, 58]);
         const s2 = curve.scalar().setBytes(target);
 
-        expect(inv.equal(s2)).toBeTruthy();
+        expect(inv.equals(s2)).toBeTruthy();
     });
 
     it("should pick a random scalar", () => {
@@ -166,7 +166,7 @@ describe("Nist Scalar", () => {
         const bytes = Buffer.from([225, 208, 244, 196, 143, 183, 151, 13, 179, 199, 181, 81, 189, 241, 253, 227, 46, 34, 167, 212, 41, 112, 79, 126, 170, 10, 139, 193, 110, 187, 30, 231]);
         const target = curve.scalar().setBytes(bytes);
 
-        expect(s1.equal(target)).toBeTruthy();
+        expect(s1.equals(target)).toBeTruthy();
     });
 
     it("should return the marshalled representation of scalar", () => {
@@ -204,20 +204,20 @@ describe("Nist Scalar", () => {
         // prettier-ignore
         const target = "65d86e177f07cbfaceaa375b61efde9f29fa81bb0c7b9fa34d1cf9aed972fcab";
 
-        expect(s1.string()).toBe(target);
+        expect(s1.toString()).toBe(target);
     });
 
     it("should print the string representation of zero scalar", () => {
         const s1 = curve.scalar().zero() as NistScalar;
         const target = "00";
 
-        expect(s1.string()).toBe(target);
+        expect(s1.toString()).toBe(target);
     });
 
     it("should print the string representation of one scalar", () => {
         const s1 = curve.scalar().one() as NistScalar;
         const target = "01";
 
-        expect(s1.string()).toBe(target);
+        expect(s1.toString()).toBe(target);
     });
 });

@@ -36,8 +36,8 @@ describe("Ed25519 Scalar", () => {
         const s1 = curve.scalar().setBytes(bytes);
         const s2 = curve.scalar().setBytes(bytes);
 
-        expect(s1.equal(s2)).toBeTruthy("s1 != s2");
-        expect(s1.equal(curve.scalar())).toBeFalsy("s1 == 0");
+        expect(s1.equals(s2)).toBeTruthy("s1 != s2");
+        expect(s1.equals(curve.scalar())).toBeFalsy("s1 == 0");
     });
 
     it("should set the scalar to 0", () => {
@@ -53,10 +53,10 @@ describe("Ed25519 Scalar", () => {
         const s2 = curve.scalar().set(s1);
         const zero = curve.scalar().zero();
 
-        expect(s1.equal(s2)).toBeTruthy("s1 != s2");
+        expect(s1.equals(s2)).toBeTruthy("s1 != s2");
         s1.zero();
-        expect(s1.equal(s2)).toBeTruthy("s1 != s2");
-        expect(s1.equal(zero)).toBeTruthy("s1 != 0");
+        expect(s1.equals(s2)).toBeTruthy("s1 != s2");
+        expect(s1.equals(zero)).toBeTruthy("s1 != 0");
     });
 
     it("should clone a scalar", () => {
@@ -64,9 +64,9 @@ describe("Ed25519 Scalar", () => {
         const s1 = curve.scalar().setBytes(bytes);
         const s2 = s1.clone();
 
-        expect(s1.equal(s2)).toBeTruthy("s1 != s2");
+        expect(s1.equals(s2)).toBeTruthy("s1 != s2");
         s1.zero();
-        expect(s1.equal(s2)).toBeFalsy("s1 == s2");
+        expect(s1.equals(s2)).toBeFalsy("s1 == s2");
     });
 
     it("should add two scalars", () => {
@@ -79,7 +79,7 @@ describe("Ed25519 Scalar", () => {
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
-        expect(sum.equal(s3)).toBeTruthy("sum != s3");
+        expect(sum.equals(s3)).toBeTruthy("sum != s3");
     });
 
     it("should subtract two scalars", () => {
@@ -91,7 +91,7 @@ describe("Ed25519 Scalar", () => {
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
-        expect(diff.equal(s3)).toBeTruthy("diff != s3");
+        expect(diff.equals(s3)).toBeTruthy("diff != s3");
     });
 
     it("should negate a point", () => {
@@ -103,7 +103,7 @@ describe("Ed25519 Scalar", () => {
         const s2 = curve.scalar();
         s2.unmarshalBinary(target);
 
-        expect(neg.equal(s2)).toBeTruthy("neg != s2");
+        expect(neg.equals(s2)).toBeTruthy("neg != s2");
     });
 
     it("should set the scalar to one", () => {
@@ -125,7 +125,7 @@ describe("Ed25519 Scalar", () => {
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
-        expect(prod.equal(s3)).toBeTruthy("mul != s3");
+        expect(prod.equals(s3)).toBeTruthy("mul != s3");
     });
 
     it("should divide two scalars", () => {
@@ -138,7 +138,7 @@ describe("Ed25519 Scalar", () => {
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
-        expect(quotient.equal(s3)).toBeTruthy("quotient != s3");
+        expect(quotient.equals(s3)).toBeTruthy("quotient != s3");
     });
 
     it("should compute the inverse modulo n of scalar", () => {
@@ -150,7 +150,7 @@ describe("Ed25519 Scalar", () => {
         const s2 = curve.scalar();
         s2.unmarshalBinary(target);
 
-        expect(inv.equal(s2)).toBeTruthy();
+        expect(inv.equals(s2)).toBeTruthy();
     });
 
     it("should pick a random scalar", () => {
@@ -162,7 +162,7 @@ describe("Ed25519 Scalar", () => {
         const target = curve.scalar();
         target.unmarshalBinary(bytes);
 
-        expect(s1.equal(target)).toBeTruthy();
+        expect(s1.equals(target)).toBeTruthy();
     });
 
     it("should return the marshalled representation of scalar", () => {

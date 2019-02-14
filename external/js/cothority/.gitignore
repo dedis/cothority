@@ -1,4 +1,8 @@
-package-lock.json
-node_modules/
-dist/
-.idea/
+.idea
+node_modules
+.nyc_output
+coverage
+dist
+doc
+
+output.log

@@ -110,7 +110,7 @@ export default class BN256Scalar implements Scalar {
     }
 
     /** @inheritdoc */
-    equal(s2: BN256Scalar): boolean {
+    equals(s2: BN256Scalar): boolean {
         return this.v.eq(s2.v);
     }
 }

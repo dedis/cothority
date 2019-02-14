@@ -52,6 +52,33 @@ matrix:
         - npm install
         - npm run test
         - npm run build
+    
+    - language: node_js
+      name: "cothority-js Tests"
+
+      node_js: "lts/*"
+
+      install:
+        - gimme 1.11
+        - . $HOME/.gimme/envs/go1.11.env
+        - env GO111MODULE=off go get github.com/dedis/Coding || true
+
+      script:
+        # build the docker image dedis/conode-test that will be used to run conodes
+        - cd $TRAVIS_BUILD_DIR
+        - make docker
+
+        # build the kyber library to use the local version
+        - cd $TRAVIS_BUILD_DIR/external/js/kyber
+        - npm install
+        - npm run build
+        - npm link
+
+        - cd $TRAVIS_BUILD_DIR/external/js/cothority
+        - npm install
+        # use the local library
+        - npm link @dedis/kyber
+        - npm run test
 
 after_success:
   - npm run coveralls

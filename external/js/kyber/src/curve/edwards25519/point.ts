@@ -1,18 +1,21 @@
 import BN from "bn.js";
+import { eddsa } from "elliptic";
 import { randomBytes } from "crypto";
 import { Point } from "../../index";
 import { BNType } from '../../constants';
-import Ed25519 from "./curve";
 import Ed25519Scalar from "./scalar";
 
+const ec = new eddsa("ed25519");
+
 export default class Ed25519Point implements Point {
+    public static MARSHAL_ID = Buffer.from('ed.point');
+
     // TODO: this should be private
     ref: {
         point: any,
-        curve: Ed25519
     }
 
-    constructor(curve: Ed25519, X?: BNType, Y?: BNType, Z?: BNType, T?: BNType) {
+    constructor(X?: BNType, Y?: BNType, Z?: BNType, T?: BNType) {
         if (X instanceof Buffer) {
             X = new BN(X, 16, "le");
         }
@@ -28,48 +31,21 @@ export default class Ed25519Point implements Point {
         // the point reference is stored in a Point reference to make set()
         // consistent.
         this.ref = {
-            point: curve.curve.point(X, Y, Z, T),
-            curve: curve,
+            point: ec.curve.point(X, Y, Z, T),
         };
     }
 
     /** @inheritdoc */
-    string(): string {
-        return this.toString()
-    }
-
-    inspect(): string {
-        return this.toString()
-    }
-
-    toString(): string {
-        const bytes = this.marshalBinary();
-        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
-    }
-
-    /** @inheritdoc */
-    equal(p2: Ed25519Point): boolean {
-        const b1 = this.marshalBinary();
-        const b2 = p2.marshalBinary();
-        for (var i = 0; i < 32; i++) {
-            if (b1[i] !== b2[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** @inheritdoc */
     null(): Ed25519Point {
-        this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
+        this.ref.point = ec.curve.point(0, 1, 1, 0);
         return this;
     }
 
     /** @inheritdoc */
     base(): Ed25519Point {
-        this.ref.point = this.ref.curve.curve.point(
-            this.ref.curve.curve.g.getX(),
-            this.ref.curve.curve.g.getY()
+        this.ref.point = ec.curve.point(
+            ec.curve.g.getX(),
+            ec.curve.g.getY(),
         );
         return this;
     }
@@ -88,7 +64,7 @@ export default class Ed25519Point implements Point {
     /** @inheritdoc */
     clone(): Ed25519Point {
         const { point } = this.ref;
-        return new Ed25519Point(this.ref.curve, point.x, point.y, point.z, point.t);
+        return new Ed25519Point(point.x, point.y, point.z, point.t);
     }
 
     /** @inheritdoc */
@@ -112,7 +88,7 @@ export default class Ed25519Point implements Point {
 
         callback = callback || randomBytes;
 
-        let point_obj = new Ed25519Point(this.ref.curve);
+        let point_obj = new Ed25519Point();
         while (true) {
             const buff = callback(32);
 
@@ -135,7 +111,7 @@ export default class Ed25519Point implements Point {
             }
 
             let q = point_obj.clone();
-            q.ref.point = q.ref.point.mul(this.ref.curve.curve.n);
+            q.ref.point = q.ref.point.mul(ec.curve.n);
             if (q.ref.point.isInfinity()) {
                 return point_obj;
             }
@@ -155,7 +131,7 @@ export default class Ed25519Point implements Point {
     /** @inheritdoc */
     add(p1: Ed25519Point, p2: Ed25519Point): Ed25519Point {
         const point = p1.ref.point;
-        this.ref.point = this.ref.curve.curve
+        this.ref.point = ec.curve
             .point(point.x, point.y, point.z, point.t)
             .add(p2.ref.point);
         return this;
@@ -164,7 +140,7 @@ export default class Ed25519Point implements Point {
     /** @inheritdoc */
     sub(p1: Ed25519Point, p2: Ed25519Point): Ed25519Point {
         const point = p1.ref.point;
-        this.ref.point = this.ref.curve.curve
+        this.ref.point = ec.curve
             .point(point.x, point.y, point.z, point.t)
             .add(p2.ref.point.neg());
         return this;
@@ -181,7 +157,7 @@ export default class Ed25519Point implements Point {
         p = p || null;
         const arr = s.ref.arr;
         this.ref.point =
-        p !== null ? p.ref.point.mul(arr) : this.ref.curve.curve.g.mul(arr);
+        p !== null ? p.ref.point.mul(arr) : ec.curve.g.mul(arr);
         return this;
     }
 
@@ -209,9 +185,36 @@ export default class Ed25519Point implements Point {
 
         buff[31] &= 0x7f;
         let bnp = new BN(buff, 16, "le");
-        if (bnp.cmp(this.ref.curve.curve.p) >= 0) {
+        if (bnp.cmp(ec.curve.p) >= 0) {
             throw new Error("bytes > p");
         }
-        this.ref.point = this.ref.curve.curve.pointFromY(bnp, odd);
+        this.ref.point = ec.curve.pointFromY(bnp, odd);
+    }
+
+    inspect(): string {
+        return this.toString()
+    }
+
+    /** @inheritdoc */
+    equals(p2: Ed25519Point): boolean {
+        const b1 = this.marshalBinary();
+        const b2 = p2.marshalBinary();
+        for (var i = 0; i < 32; i++) {
+            if (b1[i] !== b2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** @inheritdoc */
+    toString(): string {
+        const bytes = this.marshalBinary();
+        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+    }
+
+    /** @inheritdoc */
+    toProto(): Buffer {
+        return Buffer.concat([Ed25519Point.MARSHAL_ID, this.marshalBinary()]);
     }
 }

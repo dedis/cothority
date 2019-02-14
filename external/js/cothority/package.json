@@ -1,19 +1,24 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.1.20",
-  "description": "module for interacting with cothority nodes",
-  "main": "dist/bundle.node.min.js",
+  "version": "1.2.0",
+  "description": "A typescript implementation of the cothority",
+  "main": "dist/index.js",
   "browser": "dist/bundle.min.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/dedis/cothority.git"
   },
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "node node_modules/.bin/webpack",
-    "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
-    "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec",
-    "prepublishOnly": "npm run protobuf && npm run build"
+    "build": "tsc",
+    "linter": "node_modules/.bin/tslint src/*.ts src/**/*.ts spec/*.ts spec/**/*.ts",
+    "test": "npm run linter && ts-node node_modules/jasmine/bin/jasmine.js",
+    "cover": "nyc node_modules/jasmine/bin/jasmine.js",
+    "coveralls": "nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js && cat ./coveralls/lcov.info | coveralls",
+    "bundle": "node node_modules/.bin/webpack",
+    "doc": "node_modules/.bin/typedoc --out doc/ src/",
+    "prepublishOnly": "npm run build && npm run bundle && npm run doc",
+    "protobuf": "node scripts/build_proto.js"
   },
   "keywords": [
     "cothority",
@@ -22,36 +27,69 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "^0.0.10",
+    "@babel/polyfill": "^7.2.5",
+    "@stablelib/blake2xs": "^0.10.4",
+    "@types/crypto-js": "^3.1.43",
+    "@types/node": "^10.12.18",
+    "@types/sprintf-js": "^1.1.1",
     "co": "^4.6.0",
+    "file": "^0.2.2",
+    "isomorphic-ws": "^4.0.1",
+    "lodash": "^4.17.11",
+    "long": "^4.0.0",
+    "moment": "^2.24.0",
+    "os": "^0.1.1",
+    "protobufjs": "^6.8.8",
+    "pure-uuid": "^1.5.5",
     "shuffle-array": "^1.0.1",
-    "protobufjs": "^6.8.6",
-    "pure-uuid": "^1.5.0",
-    "topl": "^0.3.1",
-    "ws": "^4.0.0"
+    "sprintf-js": "^1.1.2",
+    "toml": "^2.3.5",
+    "util": "^0.11.1",
+    "ws": "^6.1.2"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-stage-3": "^6.24.1",
-    "chai": "^4.1.2",
-    "eslint": "^4.19.1",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-prettier": "^2.5.0",
-    "file": "^0.2.2",
-    "istanbul": "^0.4.5",
-    "jsdoc-to-markdown": "^4.0.1",
-    "mocha": "^5.0.1",
-    "prettier": "1.10.2",
-    "uglify-es": "3.3.9",
-    "uglifyjs-webpack-plugin": "^1.2.0",
-    "webpack": "^3.11.0",
-    "webpack-node-externals": "^1.6.0"
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "@types/bn.js": "^4.11.4",
+    "@types/dockerode": "^2.5.11",
+    "@types/elliptic": "^6.4.2",
+    "@types/jasmine": "^3.3.5",
+    "@types/lodash": "^4.14.120",
+    "@types/shuffle-array": "0.0.28",
+    "@types/ws": "^6.0.1",
+    "babel-loader": "^8.0.5",
+    "dockerode": "^2.5.8",
+    "jasmine": "^3.3.1",
+    "jasmine-console-reporter": "^3.1.0",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^8.0.1",
+    "tslint": "^5.12.1",
+    "typescript": "^3.1.6",
+    "webpack": "^4.29.1",
+    "webpack-cli": "^3.2.3"
   },
   "files": [
     "dist",
     "doc",
     "index.html"
-  ]
+  ],
+  "nyc": {
+    "all": true,
+    "extension": [
+      ".ts"
+    ],
+    "exclude": [
+      "spec/**/*",
+      "**/*.d.ts",
+      "**/*.config.js",
+      "coverage/**/*",
+      "dist/**/*",
+      "doc/**/*",
+      "src/log.ts",
+      "scripts/**/*"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  }
 }

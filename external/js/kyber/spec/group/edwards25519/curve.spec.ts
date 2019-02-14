@@ -31,6 +31,6 @@ describe("edwards25519", () => {
       const eight = curve.scalar().setBytes(new BN(8).toBuffer());
       const quotient = curve.scalar().div(key, eight);
 
-      expect(curve.scalar().mul(eight, quotient).equal(key)).toBeTruthy();
+      expect(curve.scalar().mul(eight, quotient).equals(key)).toBeTruthy();
     });
 });
