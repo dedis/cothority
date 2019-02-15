@@ -103,6 +103,8 @@ runSrvCfg(){
 
 runSrv(){
     ( ./ftcosi -d $DBG_SRV server -c srv$1/private.toml & )
+
+    sleep 10
 }
 
 main
