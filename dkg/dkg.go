@@ -55,8 +55,11 @@ func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = o.RegisterChannels(&o.structStartDeal, &o.structDeal, &o.structResponse,
+	// TODO: Ceyhun Edit
+	err = o.RegisterChannelsLength(5000, &o.structStartDeal, &o.structDeal, &o.structResponse,
 		&o.structSecretCommit, &o.structWaitSetup, &o.structWaitReply)
+	//err = o.RegisterChannels(&o.structStartDeal, &o.structDeal, &o.structResponse,
+	//&o.structSecretCommit, &o.structWaitSetup, &o.structWaitReply)
 	if err != nil {
 		return nil, err
 	}

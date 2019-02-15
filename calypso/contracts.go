@@ -14,6 +14,11 @@ import (
 // ContractWriteID references a write contract system-wide.
 var ContractWriteID = "calypsoWrite"
 
+//TODO: Ceyhun
+var ContractSimpleWriteID = "calypsoSimpleWrite"
+
+//var ContractLotteryWriteID = "calypsoLotteryWrite"
+
 // ContractWrite is used to store a secret in the ledger, so that an
 // authorized reader can retrieve it by creating a Read-instance.
 //
@@ -53,6 +58,27 @@ func (s *Service) ContractWrite(cdb byzcoin.CollectionView, inst byzcoin.Instruc
 			instID := inst.DeriveID("")
 			log.Lvlf3("Successfully verified write request and will store in %x", instID)
 			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
+		case ContractSimpleWriteID:
+			w := inst.Spawn.Args.Search("write")
+			if w == nil || len(w) == 0 {
+				return nil, nil, errors.New("need a write request in 'write' argument")
+			}
+			//var wr Write
+			//err := protobuf.DecodeWithConstructors(w, &wr, network.DefaultConstructors(cothority.Suite))
+			var sw SimpleWrite
+			err := protobuf.DecodeWithConstructors(w, &sw, network.DefaultConstructors(cothority.Suite))
+			if err != nil {
+				return nil, nil, errors.New("couldn't unmarshal write: " + err.Error())
+			}
+			// TODO: Ceyhun - SimpleWrite does its equivalent of
+			// CheckProof later when a decryption request is
+			// received
+			//if err = wr.CheckProof(cothority.Suite, darcID); err != nil {
+			//return nil, nil, errors.New("proof of write failed: " + err.Error())
+			//}
+			instID := inst.DeriveID("")
+			log.Lvlf3("Successfully verified write request and will store in %x", instID)
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractSimpleWriteID, w, darcID))
 		case ContractReadID:
 			var scs byzcoin.StateChanges
 			var err error
@@ -112,12 +138,13 @@ func (s *Service) ContractRead(cdb byzcoin.CollectionView, inst byzcoin.Instruct
 		if err != nil {
 			return nil, nil, errors.New("referenced write-id is not correct: " + err.Error())
 		}
-		if cid != ContractWriteID {
-			return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
+		//TODO: Ceyhun
+		if cid != ContractWriteID && cid != ContractSimpleWriteID {
+			return nil, nil, errors.New("referenced write-id is not a write or simplewrite instance, got " + cid)
+			//return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
 		}
 		return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
 	default:
 		return nil, nil, errors.New("not a spawn instruction")
 	}
-
 }

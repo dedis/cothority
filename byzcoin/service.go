@@ -524,6 +524,8 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 
 	log.Lvlf2("%s Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	_, _, scs := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.TxResults, noTimeout)
+	//TODO: Ceyhun Edit
+	//log.Info("Number of transactions in block:", len(body.TxResults))
 
 	log.Lvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	if err = cdb.StoreAll(scs, sb.Index); err != nil {

@@ -35,6 +35,8 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	_ "github.com/hsb/lottery"
+	_ "github.com/hsb/lottery/service"
 	"gopkg.in/urfave/cli.v1"
 )
 

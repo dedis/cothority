@@ -20,6 +20,16 @@ import (
 // Common structures
 // ***
 
+// TODO: Ceyhun
+type SimpleWrite struct {
+	//Data     []byte
+	DataHash  []byte
+	K         kyber.Point
+	C         kyber.Point
+	Reader    kyber.Point
+	EncReader []byte
+}
+
 // Write is the data stored in a write instance. It stores a reference to the LTS
 // used and the encrypted secret.
 type Write struct {
