@@ -228,13 +228,24 @@ export class Instruction extends Message<Instruction> {
                 break;
         }
         args.forEach((arg) => {
+            const nameBuf = Buffer.from(arg.name);
+            const nameLenBuf = Buffer.from(Long.fromNumber(nameBuf.length).toBytesLE());
+
+            h.update(nameLenBuf);
             h.update(arg.name);
+
+            const valueLenBuf = Buffer.from(Long.fromNumber(arg.value.length).toBytesLE());
+            h.update(valueLenBuf);
             h.update(arg.value);
         });
         this.signerCounter.forEach((sc) => {
             h.update(Buffer.from(sc.toBytesLE()));
         });
         this.signerIdentities.forEach((si) => {
+            const buf = si.toBytes();
+            const lenBuf = Buffer.from(Long.fromNumber(buf.length).toBytesLE());
+
+            h.update(lenBuf);
             h.update(si.toBytes());
         });
         return h.digest();
