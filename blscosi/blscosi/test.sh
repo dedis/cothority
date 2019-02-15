@@ -3,6 +3,7 @@
 DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
+CLEANBUILD=1
 
 . ../../libtest.sh
 
@@ -18,8 +19,7 @@ main(){
     done
     run testBuild
     run testServerCfg
-	# Disabled because it is flaky, see issue #1687
-    #run testSignFile
+    run testSignFile
     run testCheck
     run testReconnect
     stopTest
@@ -36,7 +36,6 @@ testReconnect(){
         testFail runCl 1 sign foo.txt
         testOut "Starting server $s again"
         runSrv $s
-        sleep 1
         testOK runCl 1 sign foo.txt
         pkill -9 -f ./blscosi
     done
@@ -104,6 +103,8 @@ runSrvCfg(){
 
 runSrv(){
     ( ./blscosi -d $DBG_SRV server -c srv$1/private.toml & )
+
+    sleep 10
 }
 
 main

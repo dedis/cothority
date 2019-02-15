@@ -14,7 +14,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-const protocolTimeout = 10 * time.Second
+const protocolTimeout = 20 * time.Second
 
 var suite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
