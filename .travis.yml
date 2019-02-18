@@ -72,7 +72,7 @@ matrix:
         - cd $TRAVIS_BUILD_DIR/external/js/kyber
         - npm install
         - npm run build
-        - npm link
+        - npm run link
 
         - cd $TRAVIS_BUILD_DIR/external/js/cothority
         - npm install

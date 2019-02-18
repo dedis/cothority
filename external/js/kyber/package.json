@@ -1,16 +1,18 @@
 {
+  "private": true,
   "name": "@dedis/kyber",
   "version": "0.0.1",
   "description": "A typescript implementation of Kyber interfaces",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "browser": "bundle.min.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "node_modules/.bin/nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js",
+    "test": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",
     "coveralls": "cat ./coverage/lcov.info | node_modules/.bin/coveralls",
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
-    "prepublishOnly": "npm run build && npm run bundle && npm run doc"
+    "link": "./publish.sh --link"
   },
   "repository": {
     "type": "git",
@@ -25,11 +27,6 @@
   "author": "DEDIS",
   "license": "AGPL-3.0",
   "homepage": "https://github.com/dedis/cothority",
-  "files": [
-    "dist/",
-    "doc/",
-    "index.html"
-  ],
   "dependencies": {
     "@stablelib/blake2xs": "^0.10.4",
     "bn.js": "^4.11.8",
@@ -52,7 +49,7 @@
     "jasmine": "^3.3.1",
     "jsdoc-to-markdown": "^4.0.1",
     "jsverify": "^0.8.4",
-    "nyc": "^12.0.2",
+    "nyc": "^13.3.0",
     "prettier": "^1.10.2",
     "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",

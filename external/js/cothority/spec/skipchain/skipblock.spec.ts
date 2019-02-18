@@ -1,4 +1,4 @@
-import { BN256G1Point, BN256G2Point } from "@dedis/kyber/dist/pairing/point";
+import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { Roster, ServerIdentity } from "../../src/network/proto";
 import { ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
 

@@ -1,24 +1,25 @@
 {
+  "private": true,
   "name": "@dedis/cothority",
   "version": "1.2.0",
   "description": "A typescript implementation of the cothority",
-  "main": "dist/index.js",
-  "browser": "dist/bundle.min.js",
+  "main": "index.js",
+  "browser": "bundle.min.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/dedis/cothority.git"
   },
-  "types": "dist/index.d.ts",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run protobuf && tsc",
     "linter": "node_modules/.bin/tslint src/*.ts src/**/*.ts spec/*.ts spec/**/*.ts",
     "test": "npm run linter && npm run cover",
     "cover": "node_modules/.bin/nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
-    "prepublishOnly": "npm run build && npm run bundle && npm run doc",
-    "protobuf": "node scripts/build_proto.js"
+    "protobuf": "node scripts/build_proto.js",
+    "link": "./publish.sh --link"
   },
   "keywords": [
     "cothority",
@@ -70,11 +71,6 @@
     "webpack": "^4.29.1",
     "webpack-cli": "^3.2.3"
   },
-  "files": [
-    "dist",
-    "doc",
-    "index.html"
-  ],
   "nyc": {
     "all": true,
     "extension": [
