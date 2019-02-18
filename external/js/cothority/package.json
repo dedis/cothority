@@ -26,7 +26,7 @@
     "network"
   ],
   "author": "DEDIS",
-  "license": "ISC",
+  "license": "LGPL-3.0-or-later",
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
     "@stablelib/blake2xs": "^0.10.4",

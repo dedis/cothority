@@ -14,7 +14,7 @@ import (
 	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 type sigHex struct {
@@ -82,7 +82,7 @@ func verifyFile(c *cli.Context) error {
 		return fmt.Errorf("Invalid: Signature verification failed: %s", err.Error())
 	}
 
-	log.Lvl2("[+] OK: Signature is valid.")
+	fmt.Fprintln(c.App.Writer, "[+] OK: Signature is valid.")
 	return nil
 }
 

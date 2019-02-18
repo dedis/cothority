@@ -12,7 +12,7 @@ The conode in this repository includes all protocols and services and can
 be run either for local tests or on a public server. The currently running
 conodes are available under http://status.dedis.ch.
 
-You can run the conode either using the binary, the `run_conode.sh`-script
+You can run the conode either using the binary, the `run_nodes.sh`-script
 or with docker:
 
 - Using [command line](CLI.md)
@@ -25,7 +25,7 @@ Conode is the program that allows you to be part of a cothority. For the server 
 - 24/7 availability
 - 512MB of RAM and 1GB of disk-space
 - a public IP-address and two consecutive, open ports
-- go1.9 or go1.10 installed and set up according to https://golang.org/doc/install
+- Go 1.11 installed and set up according to https://golang.org/doc/install
 
 You find further information about what is important when you operate a conode
 in the following document: [Operating a Conode](Operating.md).

@@ -6,14 +6,14 @@
 
     <groupId>ch.epfl.dedis</groupId>
     <artifactId>cothority</artifactId>
-    <version>3.0.0-pre1</version>
+    <version>3.0.0-pre4</version>
     <name>Cothority client library for Java</name>
     <description>A client library for communicating with cothorities (a collective authority).</description>
     <url>https://github.com/dedis/cothority</url>
     <licenses>
         <license>
-            <name>GNU Affero General Public License version 3</name>
-            <url>https://opensource.org/licenses/AGPL-3.0</url>
+            <name>GNU Lesser General Public License v3.0 or later</name>
+            <url>https://spdx.org/licenses/LGPL-3.0-or-later.html</url>
         </license>
     </licenses>
     <developers>

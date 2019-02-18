@@ -15,16 +15,13 @@ of a CLI is not enough to be an application, while it is a requirement.
 
 The currently elected applications in the cothority are:
 - [Status Report](../status/README.md) reports the status of a node
-- [CISC Identity SkipChain](../cisc/README.md) stores key/value keypairs on a
-skipchain, has special modules for handling ssh-keys, storing webpages and
-requesting certificates from letsencrypt
-- [Onchain-Secrets](../ocs/README.md) hides data on a blockchain and adds
+- [Calypso](../calypso/README.md) hides data on a blockchain and adds
 an access control to it
 - [Proof of Personhood](../pop/README.md) create a PoP party to distribute unique
 cryptographic tokens to physical people
-- [E-voting](../evoting/README.md) following Helios to store votes on a blockchain,
-shuffle them and decrypt all votes
-- [Eventlog](../eventlog) is an event logging system built on top of ByzCoin.
+- [E-voting](../evoting/README.md) run an election by storing votes on a blockchain,
+then having a cothority shuffling them and decrypting the votes.
+- [Eventlog](../eventlog/README.md) is an event logging system built on top of ByzCoin.
 
 # Building Blocks
 
@@ -32,6 +29,5 @@ These two pieces of technology support those above:
 
 - [ByzCoin](../byzcoin/README.md) has a distributed ledger holding keys and
 values. It implements pre-compiled smart contracts.
-- [skipchain](../skipchain/README.md). It's more than a building block, because it
-already has some functionality. But it's not an application, because you cannot
-do anything useful with it as-is.
+- [Skipchain](../skipchain/README.md) is a blockchain maintained by a cothority
+with features that allow clients to catch up without downloading the entire chain.

@@ -140,12 +140,6 @@ describe it as follows:
 +-------------+-----------------+                 
 ```
 
-### Webpages
-
-- [Pulsar](https://pulsar.dedis.ch) - publicly verifiable randomness
-- [Status](http://status.dedis.ch) - status of our test-network
-- [PoP](https://pop.dedis.ch) - 2nd pop-party ever held
-
 ### Command Line Interfaces
 
 Command line interfaces (CLI) are used to communicate with one or more conodes.
@@ -192,17 +186,16 @@ network or create a collective signature using our running nodes:
 
 ## Status
 
-To get the status of the conodes in the cothority, first install the status binary:
+To get the status of the conodes in the cothority, first install the `status` binary:
 
-```go
-go get github.com/dedis/cothority/status
-export DEDIS_GROUP=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml
+```
+go install ./status
 ```
 
 Now you can run it by giving the definition of the dedis-cothority on the command line:
 
-```go
-status --group $DEDIS_GROUP
+```
+status -g dedis-cothority.toml
 ```
 
 ## Collective Signing
@@ -211,22 +204,21 @@ Another service available is fault-tolerant collective signing, or ftCoSi. It
 requests a collective signature from a set of conodes. The signature is created
 on a given input data. For installation, type:
 
-```go
-go get github.com/dedis/cothority/ftcosi
-export DEDIS_GROUP=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml
+```
+go install ./blscosi/blscosi
 ```
 
 Now you can create a file and have it signed by the cothority:
 
-```go
+```
 date > /tmp/my_file
-ftcosi sign --group $DEDIS_GROUP /tmp/my_file | tee sig.json
+blscosi sign -g dedis-cothority.toml /tmp/my_file | tee sig.json
 ```
 
 And later somebody can verify the signature is correct by running the following command:
 
-```go
-ftcosi verify --group $DEDIS_GROUP --signature sig.json /tmp/my_file
+```
+blscosi verify -g dedis-cothority.toml --signature sig.json /tmp/my_file
 ```
 
 If everything is correct, it should print
@@ -271,9 +263,9 @@ everything goes smoothly. And we'd like to have good code-coverage.
 The software in this repository is put under a dual-licensing scheme: In general
 all of the provided code is open source via [GNU/AGPL
 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the
-[LICENSE](LICENSE.AGPL) file for more details. If you intend to use the
-cothority code for commercial purposes, please [contact
-us](mailto:dedis@epfl.ch) to get a commercial license.
+[LICENSE](LICENSE.AGPL) file for more details. If you would like to
+use Cothority in a way not allowed by the applicable license, please [contact
+us](mailto:dedis@epfl.ch) to inquire about conditions to get a commercial license.
 
 ## Contact
 

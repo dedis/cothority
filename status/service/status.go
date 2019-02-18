@@ -19,7 +19,6 @@ func init() {
 	onet.RegisterNewService(ServiceName, newStatService)
 	network.RegisterMessage(&Request{})
 	network.RegisterMessage(&Response{})
-
 }
 
 // Stat is the service that returns the status reports of all services running
@@ -28,9 +27,18 @@ type Stat struct {
 	*onet.ServiceProcessor
 }
 
+// Version will be set by the main() function before starting the server.
+var Version = "unknown"
+
 // Request treats external request to this service.
 func (st *Stat) Request(req *Request) (network.Message, error) {
 	statuses := st.Context.ReportStatus()
+
+	// Add this in here, because onet no longer knows the version, it is just a support
+	// library and should never really have known it.
+	statuses["Conode"] = &onet.Status{Field: make(map[string]string)}
+	statuses["Conode"].Field["version"] = Version
+
 	log.Lvl4("Returning", statuses)
 	return &Response{
 		Status:         statuses,

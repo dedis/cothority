@@ -5,22 +5,20 @@
     <script type="text/javascript">
       var nist = kyber.curve.nist;
       var p256 = new nist.Curve(nist.Params.p256);
-      var randomPoint = p256.point().pick();
-      var randomScalar = p256.scalar().pick();
+      var secret = p256.scalar().pick();
+      var public = p256.point().mul(secret);
       window.onload = function() {
-        var pRef = document.getElementById("point");
-        var sRef = document.getElementById("scalar");
-        var p = document.createTextNode("Point: " + randomPoint.string());
-        var s = document.createTextNode("Scalar: " + randomScalar.string());
-        pRef.appendChild(p);
-        sRef.appendChild(s);
+        var s = document.createTextNode("Scalar: " + secret.toString());
+        var p = document.createTextNode("Point: " + public.toString());
+        var pRef = document.getElementById("point").appendChild(p);
+        var sRef = document.getElementById("scalar").appendChild(s);
       }
     </script>
   </head>
   <body>
     <div id="container">
-      <p id="point"></p>
       <p id="scalar"></p>
+      <p id="point"></p>
     </div>
   </body>
 </html>

@@ -4,9 +4,9 @@ Simulation
 
 # Simulation
 
-When testing protocols and services, it is useful to have a way to test for more
+When testing protocols and services, it is useful to have a way to test more
 than 1-10 nodes (which is covered by go-tests). Simulation can do this on
-different levers:
+different levels:
 
 - localhost - up to 100 nodes in a more real environment than go-tests
 - mininet - using a small number of machines, simulations can be done on up
@@ -25,17 +25,16 @@ spent.
 To run a simulation for CoSi, you can do the following:
 
 ```
-cd /cosi/simulation
+cd blscosi/simulation
 go build
-./simulation cosi_verification.toml
+./simulation local.toml
 ```
 
-The result of the simulation will be stored in `test_data` as a csv-file
-that can be used for further analysis.
+The result of the simulation will be stored in directory
+`test_data` as a CSV file that can be used for further analysis.
 
 ## Simulations available
 
 Here is a list of available simulations in the cothority-code:
-- [Collective Signing](../cosi/simulation/README.md)
-- [Fault Tolerant Collective Signing](../ftcosi/simulation/README.md)
-- [Randhound](../randhound/simulation/README.md)
+- [Collective Signing](../blscosi/simulation/README.md)
+- [ByzCoin Distributed Ledger](../byzcoin/simulation)
