@@ -77,4 +77,23 @@ export async function stopConodes(): Promise<void> {
         await docker.getContainer(container.Id).stop();
         await docker.getContainer(container.Id).remove();
     }
+
+    if (process.env.CI) {
+        // Write the logs for continuous integration as we don't have access
+        // to the file
+
+        await new Promise((resolve) => {
+            const logs = fs.createReadStream("./output.log");
+
+            logs.on("data", (chunk) => {
+                if (chunk instanceof Buffer) {
+                    console.log(chunk.toString());
+                } else {
+                    console.log(chunk);
+                }
+            });
+
+            logs.on("close", resolve);
+        });
+    }
 }

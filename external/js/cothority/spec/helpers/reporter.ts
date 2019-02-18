@@ -1,7 +1,7 @@
 // @ts-ignore
 import JasmineConsoleReporter from "jasmine-console-reporter";
 
-jasmine.getEnv().clearReporters();
+// @ts-ignore
 jasmine.getEnv().addReporter(new JasmineConsoleReporter({
 
 }));
