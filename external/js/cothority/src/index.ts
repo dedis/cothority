@@ -1,13 +1,15 @@
-import ByzCoinRPC from "./byzcoin/byzcoin-rpc";
-import Darc from "./darc/darc";
-import { Roster } from "./network/proto";
-import SkipchainRPC from "./skipchain/skipchain-rpc";
-import StatusRPC from "./status/status-rpc";
+import * as byzcoin from "./byzcoin";
+import * as contracts from "./byzcoin/contracts";
+import * as darc from "./darc";
+import * as network from "./network";
+import * as skipchain from "./skipchain";
+import * as status from "./status";
 
 export {
-    ByzCoinRPC,
-    SkipchainRPC,
-    StatusRPC,
-    Roster,
-    Darc,
+    byzcoin,
+    contracts,
+    darc,
+    network,
+    skipchain,
+    status,
 };

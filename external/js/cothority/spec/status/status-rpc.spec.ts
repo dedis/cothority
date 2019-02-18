@@ -1,4 +1,4 @@
-import StatusRPC from "../../src/status/status-rpc";
+import { StatusRPC } from "../../src/status";
 import { ROSTER, startConodes } from "../support/conondes";
 
 describe("StatusRPC", () => {

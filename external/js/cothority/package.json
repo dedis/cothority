@@ -14,7 +14,7 @@
     "build": "npm run protobuf && tsc",
     "linter": "node_modules/.bin/tslint src/*.ts src/**/*.ts spec/*.ts spec/**/*.ts",
     "test": "npm run linter && npm run cover",
-    "cover": "node_modules/.bin/nyc --reporter=lcov node_modules/jasmine/bin/jasmine.js",
+    "cover": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "bundle": "node node_modules/.bin/webpack",
     "doc": "node_modules/.bin/typedoc --out doc/ src/",
@@ -83,8 +83,8 @@
       "coverage/**/*",
       "dist/**/*",
       "doc/**/*",
-      "src/log.ts",
-      "scripts/**/*"
+      "scripts/**/*",
+      "src/darc/signer.ts"
     ],
     "require": [
       "ts-node/register"

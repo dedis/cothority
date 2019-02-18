@@ -1,4 +1,4 @@
-import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
+import { ByzCoinRPC } from "../../src/byzcoin";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import Instance from "../../src/byzcoin/instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";

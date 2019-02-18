@@ -4,7 +4,7 @@ import { Message, Properties } from "protobufjs";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
 import Proof from "../byzcoin/proof";
 import { registerMessage } from "../protobuf";
-import Identity from "./identity";
+import { IIdentity } from "./identity-wrapper";
 import Rules from "./rules";
 
 /**
@@ -13,7 +13,7 @@ import Rules from "./rules";
  * @param signers those allow to sign
  * @returns the list of rules
  */
-function initRules(owners: Identity[], signers: Identity[]): Rules {
+function initRules(owners: IIdentity[], signers: IIdentity[]): Rules {
     const rules = new Rules();
 
     owners.forEach((o) => rules.appendToRule("invoke:darc.evolve", o, Rules.AND));
@@ -34,7 +34,7 @@ export default class Darc extends Message<Darc> {
      * @param desc      the description of the darc
      * @returns the new darc
      */
-    static newDarc(owners: Identity[], signers: Identity[], desc?: Buffer): Darc {
+    static newDarc(owners: IIdentity[], signers: IIdentity[], desc?: Buffer): Darc {
         const darc = new Darc({
             baseid: Buffer.from([]),
             description: desc,
@@ -131,7 +131,7 @@ export default class Darc extends Message<Darc> {
      * @param identity  the identity to append to the rule
      * @param op        the operator to use if necessary
      */
-    addIdentity(rule: string, identity: Identity, op: string): void {
+    addIdentity(rule: string, identity: IIdentity, op: string): void {
         this.rules.appendToRule(rule, identity, op);
     }
 

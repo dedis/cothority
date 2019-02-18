@@ -1,8 +1,7 @@
 import { curve, Point, PointFactory, sign } from "@dedis/kyber";
 import { Message } from "protobufjs";
 import { registerMessage } from "../protobuf";
-import IIdentity from "./identity";
-import IdentityWrapper from "./identity-wrapper";
+import IdentityWrapper, { IIdentity } from "./identity-wrapper";
 
 const { schnorr } = sign;
 const ed25519 = curve.newCurve("edwards25519");

@@ -269,7 +269,12 @@ export default class SpawnerInstance {
      * @param cred      The starting credentials
      * @returns a promise that resolves with the new credential instance
      */
-    async createCredential(coin: CoinInstance, signers: Signer[], darcID: Buffer, cred: CredentialStruct): Promise<CredentialInstance> {
+    async createCredential(
+        coin: CoinInstance,
+        signers: Signer[],
+        darcID: Buffer,
+        cred: CredentialStruct,
+    ): Promise<CredentialInstance> {
         try {
             const c = await CredentialInstance.fromByzcoin(this.rpc, SpawnerInstance.credentialIID(darcID));
             Log.lvl2("this credential is already registerd");

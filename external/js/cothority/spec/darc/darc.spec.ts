@@ -1,5 +1,4 @@
-import Darc from "../../src/darc/darc";
-import IdentityEd25519 from "../../src/darc/identity-ed25519";
+import { Darc, IdentityEd25519 } from "../../src/darc";
 import { SIGNER } from "../support/conondes";
 
 describe("Darc Tests", () => {

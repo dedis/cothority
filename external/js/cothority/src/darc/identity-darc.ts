@@ -1,12 +1,11 @@
 import { Message } from "protobufjs";
 import { registerMessage } from "../protobuf";
-import Identity from "./identity";
-import IdentityWrapper from "./identity-wrapper";
+import IdentityWrapper, { IIdentity } from "./identity-wrapper";
 
 /**
  * Identity based on a DARC identifier
  */
-export default class IdentityDarc extends Message<IdentityDarc> implements Identity {
+export default class IdentityDarc extends Message<IdentityDarc> implements IIdentity {
     readonly id: Buffer;
 
     /** @inheritdoc */
