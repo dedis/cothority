@@ -31,9 +31,12 @@ type ByzCoinX struct {
 	// CreateProtocol stores a function pointer used to create the ftcosi
 	// protocol
 	CreateProtocol protocol.CreateProtocolFunction
-	// Timeout is passed down to the ftcosi protocol and used for waiting
+	// Timeout is passed down to the blscosi protocol and used for waiting
 	// for some of its messages.
 	Timeout time.Duration
+	// SubleaderFailures is the maximum number of attempts
+	// when subleaders are failing
+	SubleaderFailures int
 	// Threshold is the number of nodes to reach for a signature to be valid
 	Threshold int
 	// prepCosiProtoName is the ftcosi protocol name for the prepare phase
@@ -90,7 +93,7 @@ func (bft *ByzCoinX) Start() error {
 		select {
 		case tmpSig := <-prepProto.FinalSignature:
 			bft.prepSigChan <- tmpSig
-		case <-time.After(bft.Timeout):
+		case <-time.After(bft.Timeout / time.Duration(2) * time.Duration(bft.SubleaderFailures+1)):
 			// Waiting for bft.Timeout is too long here but used as a safeguard in
 			// case the prepProto does not return in time.
 			log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
@@ -122,6 +125,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 	cosiProto.Threshold = bft.Threshold
 	// For each of the prepare and commit phase we get half of the time.
 	cosiProto.Timeout = bft.Timeout / 2
+	cosiProto.SubleaderFailures = bft.SubleaderFailures
 
 	cosiProto.SetNbrSubTree(bft.nSubtrees)
 
@@ -169,7 +173,7 @@ func (bft *ByzCoinX) Dispatch() error {
 	select {
 	case commitSig = <-commitProto.FinalSignature:
 		log.Lvl3("Finished commit phase")
-	case <-time.After(bft.Timeout):
+	case <-time.After(bft.Timeout / time.Duration(2) * time.Duration(bft.SubleaderFailures+1)):
 		// Waiting for bft.Timeout is too long here but used as a safeguard in
 		// case the commitProto does not return in time.
 		log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")

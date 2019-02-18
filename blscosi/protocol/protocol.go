@@ -18,7 +18,8 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-const defaultTimeout = 20 * time.Second
+const defaultTimeout = 10 * time.Second
+const defaultSubleaderFailures = 2
 
 // VerificationFn is called on every node. Where msg is the message that is
 // co-signed and the data is additional data for verification.
@@ -40,9 +41,10 @@ type BlsCosi struct {
 	CreateProtocol CreateProtocolFunction
 	// Timeout is not a global timeout for the protocol, but a timeout used
 	// for waiting for responses for sub protocols.
-	Timeout        time.Duration
-	Threshold      int
-	FinalSignature chan BlsSignature // final signature that is sent back to client
+	Timeout           time.Duration
+	SubleaderFailures int
+	Threshold         int
+	FinalSignature    chan BlsSignature // final signature that is sent back to client
 
 	stoppedOnce     sync.Once
 	subProtocols    []*SubBlsCosi
@@ -83,14 +85,15 @@ func DefaultThreshold(n int) int {
 func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	nNodes := len(n.Roster().List)
 	c := &BlsCosi{
-		TreeNodeInstance: n,
-		FinalSignature:   make(chan BlsSignature, 1),
-		Timeout:          defaultTimeout,
-		Threshold:        DefaultThreshold(nNodes),
-		startChan:        make(chan bool, 1),
-		verificationFn:   vf,
-		subProtocolName:  subProtocolName,
-		suite:            suite,
+		TreeNodeInstance:  n,
+		FinalSignature:    make(chan BlsSignature, 1),
+		Timeout:           defaultTimeout,
+		SubleaderFailures: defaultSubleaderFailures,
+		Threshold:         DefaultThreshold(nNodes),
+		startChan:         make(chan bool, 1),
+		verificationFn:    vf,
+		subProtocolName:   subProtocolName,
+		suite:             suite,
 	}
 
 	// the default number of subtree is the square root to
@@ -257,7 +260,7 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
 	// at least three leaves as new subleader
-	cosiSubProtocol.Timeout = p.Timeout / 3
+	cosiSubProtocol.Timeout = p.Timeout / time.Duration(p.SubleaderFailures+1)
 	// Give one leaf for free but as we don't know how many leaves
 	// could fail from the other trees, we need as much as possible
 	// responses. The main protocol will deal with early answers.
