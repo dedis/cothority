@@ -46,6 +46,7 @@ matrix:
       name: "kyber-js Tests"
  
       node_js: "lts/*"
+      cache: npm
   
       script:
         - cd $TRAVIS_BUILD_DIR/external/js/kyber
@@ -57,6 +58,7 @@ matrix:
       name: "cothority-js Tests"
 
       node_js: "lts/*"
+      cache: npm
 
       install:
         - gimme 1.11
