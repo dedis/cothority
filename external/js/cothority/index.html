@@ -11,8 +11,8 @@
       function getStatus(e) {
         const fr = new FileReader();
         fr.onload = function(evt) {
-          const r = cothority.Roster.fromTOML(evt.target.result);
-          const rpc = new cothority.StatusRPC(r);
+          const r = cothority.network.Roster.fromTOML(evt.target.result);
+          const rpc = new cothority.status.StatusRPC(r);
 
           rpc.getStatus(0).then(
             (r) => {

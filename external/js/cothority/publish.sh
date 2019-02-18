@@ -4,9 +4,12 @@ npm run build
 
 cp README.md dist/.
 cp package.json dist/.
+cp index.html dist/.
 
 # remove the private field of the package json
 sed -i '/"private": true,/d' dist/package.json
+# fix the bundle path
+sed -i 's/src="dist\//src="/' dist/index.html
 
 if [ "$1" = "--link" ] || [ "$1" = "-l" ]; then
     # linking allow to use the package locally
