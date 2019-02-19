@@ -6,42 +6,16 @@ messages.
 
 # Usage
 
-```html
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <script src="dist/bundle.min.js" type="text/javascript"></script>
-    <script type="text/javascript">
-        const net = cothority.net; // the network module 
-        const serverAddress = "ws://127.0.0.1:8000"; 
-        const socket = new net.Socket(serverAddress); // socket to talk to a conode
-        
-        // the data that we want to send, as a JS object
-        const deviceMessage = { 
-            point: new Uint8Array([1,2,3,4]);
-        }
-        // the name of the protobuf structure we are sending
-        const sendingMessageName = "Device";
-        // the name of the protobuf structure we expect to receive
-        const expectedMessageName = "ID";
-        socket.send(sendingMessageName, expectedMessageName, deviceMessage)
-            .then((data) => {
-                // data is a JS object
-                console.log(data.id);
-            }).catch((err) =>  {
-                console.log("error: " + err);
-            });
-    </script>
-  </head>
-  <body>
-  </body>
-</html>
+Import the library using
+```js
+import Cothority from "@dedis/cothority"
+```
 
-``` 
+Check out the example in index.html for a browser-based usage
 
 # Documentation
 
-You can find the markdown generated documentation in `doc/doc.md`.
+Execute `npm run doc` to generate the documentation and browse doc/index.html
 
 # Development
 
@@ -67,3 +41,10 @@ npm run protobuf
 
 That would compile all protobuf definitions into a single JSON file
 (`models.json`). This json file is then embedded in the library automatically.
+
+Publishing
+----------
+
+You must use the given script instead of `npm publish` because we need to publish
+the _dist_ folder instead. If you try to use the official command, you will get
+an error on purpose.

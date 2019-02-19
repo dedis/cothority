@@ -1,7 +1,7 @@
 import { Message } from "protobufjs";
+import { BrowserWebSocketAdapter } from "../../src/network";
 import { LeaderConnection, RosterWSConnection, setFactory, WebSocketConnection } from "../../src/network/connection";
 import { Roster, ServerIdentity } from "../../src/network/proto";
-import { BrowserWebSocketAdapter } from "../../src/network/websocket-adapter";
 import { ROSTER } from "../support/conondes";
 import TestWebSocket from "./websocket-test-adapter";
 

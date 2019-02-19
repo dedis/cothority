@@ -1,6 +1,6 @@
 import Darc from "../darc/darc";
-import Identity from "../darc/identity";
 import IdentityEd25519 from "../darc/identity-ed25519";
+import { IIdentity } from "../darc/identity-wrapper";
 import Rules from "../darc/rules";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
@@ -31,7 +31,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param roster        Roster that will be used
      * @param description   An optional description for the chain
      */
-    static makeGenesisDarc(signers: Identity[], roster: Roster, description?: string): Darc {
+    static makeGenesisDarc(signers: IIdentity[], roster: Roster, description?: string): Darc {
         if (signers.length === 0) {
             throw new Error("no identities");
         }
@@ -194,7 +194,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param add The increment
      * @returns the ordered list of counters
      */
-    async getSignerCounters(ids: Identity[], add: number = 0): Promise<Long[]> {
+    async getSignerCounters(ids: IIdentity[], add: number = 0): Promise<Long[]> {
         const req = new GetSignerCounters({
             signerids: ids.map((id) => id.toString()),
             skipchainid: this.genesis.hash,

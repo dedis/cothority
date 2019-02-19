@@ -1,10 +1,10 @@
 import Long from "long";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
-import Identity from "../../src/darc/identity";
+import { IIdentity } from "../../src/darc/identity-wrapper";
 import { SIGNER } from "../support/conondes";
 
 const updater = new class {
-    getSignerCounters(signers: Identity[], increment: number): Promise<Long[]> {
+    getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]> {
         return Promise.resolve(signers.map(() => Long.fromNumber(increment)));
     }
 }();

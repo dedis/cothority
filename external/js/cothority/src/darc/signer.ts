@@ -1,6 +1,6 @@
-import Identity from "./identity";
+import { IIdentity } from "./identity-wrapper";
 
-export default interface ISigner extends Identity {
+export default interface ISigner extends IIdentity {
     /**
      * Signs the sha256 hash of the message. It must return
      * an array of bytes that can be verified by the

@@ -1,6 +1,6 @@
 import { Message, Properties } from "protobufjs";
 import { registerMessage } from "../protobuf";
-import Identity from "./identity";
+import { IIdentity } from "./identity-wrapper";
 
 /**
  * A rule will give who is allowed to use a given action
@@ -53,7 +53,7 @@ export default class Rules extends Message<Rules> {
      * @param identity  the identity to append
      * @param op        the operator to use if the rule exists
      */
-    appendToRule(action: string, identity: Identity, op: string): void {
+    appendToRule(action: string, identity: IIdentity, op: string): void {
         const rule = this.list.find((r) => r.action === action);
 
         if (rule) {

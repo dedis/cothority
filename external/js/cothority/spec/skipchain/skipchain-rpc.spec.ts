@@ -1,5 +1,4 @@
-import { SkipBlock } from "../../src/skipchain/skipblock";
-import SkipchainRPC from "../../src/skipchain/skipchain-rpc";
+import { SkipBlock, SkipchainRPC } from "../../src/skipchain";
 import { ROSTER, startConodes } from "../support/conondes";
 
 describe("SkipchainRPC Tests", () => {

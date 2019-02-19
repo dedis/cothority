@@ -1,5 +1,5 @@
 import { Point, sign } from "@dedis/kyber";
-import { BN256G1Point, BN256G2Point } from "@dedis/kyber/dist/pairing/point";
+import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { createHash } from "crypto";
 import { Message } from "protobufjs";
 import { Roster } from "../network/proto";

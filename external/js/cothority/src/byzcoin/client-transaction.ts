@@ -1,12 +1,11 @@
 import { createHash } from "crypto";
 import Long from "long";
 import { Message } from "protobufjs";
-import Identity from "../darc/identity";
-import IdentityWrapper from "../darc/identity-wrapper";
+import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 
 export interface ICounterUpdater {
-    getSignerCounters(signers: Identity[], increment: number): Promise<Long[]>;
+    getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
 }
 
 /**
@@ -30,7 +29,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * @param rpc       The RPC to use to fetch
      * @param signers   List of signers
      */
-    async updateCounters(rpc: ICounterUpdater, signers: Identity[]): Promise<void> {
+    async updateCounters(rpc: ICounterUpdater, signers: IIdentity[]): Promise<void> {
         if (this.instructions.length === 0) {
             return;
         }
@@ -199,7 +198,7 @@ export class Instruction extends Message<Instruction> {
      * @param rpc       the RPC to use to fetch
      * @param signers   the list of signers
      */
-    async updateCounters(rpc: ICounterUpdater, signers: Identity[]): Promise<void> {
+    async updateCounters(rpc: ICounterUpdater, signers: IIdentity[]): Promise<void> {
         const counters = await rpc.getSignerCounters(signers, 1);
         this.signerCounter = counters;
         this.signeridentities = signers.map((s) => s.toWrapper());
