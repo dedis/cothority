@@ -16,6 +16,7 @@ matrix:
       script:
         - go mod verify
         - env GO111MODULE=on make test
+        - make -C conode bindist
 
     - language: go
       name: "Go v1.10.x build"
@@ -28,7 +29,6 @@ matrix:
       script:
         - go get ./...
         - go build ./...
-        - make -C conode bindist
 
     - language: java
       name: "Java Tests"

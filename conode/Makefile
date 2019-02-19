@@ -75,4 +75,4 @@ bindist: clean verify exe/conode.Linux.x86_64
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
-	rm -rf $(OUTPUT_DIR)
+	#rm -rf $(OUTPUT_DIR)
