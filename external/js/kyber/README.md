@@ -19,7 +19,7 @@ npm run bundle
 
 Check index.html for a browser-based usage
 
-In NodeJS using typescript:
+In NodeJS:
 
 ```js
 import kyber from "@dedis/kyber";

@@ -21,5 +21,5 @@ else
     npm run doc
     cp -r doc dist/doc
 
-    npm publish dist
+    npm publish dist --access public
 fi
