@@ -1,17 +1,21 @@
 package ch.epfl.dedis.lib.network;
 
-import ch.epfl.dedis.lib.crypto.Ed25519;
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.UUIDType5;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.OnetProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +52,31 @@ public class Roster {
         }
     }
 
+    /**
+     * Get the ID of the roster
+     *
+     * @return the id as bytes
+     */
+    public UUID getID() {
+        final MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            return null;
+        }
+
+        for (ServerIdentity id : nodes) {
+            digest.update(id.getPublic().toBytes());
+
+            for (ServiceIdentity srvid: id.getServiceIdentities()) {
+                digest.update(srvid.getPublic().toBytes());
+            }
+        }
+
+        byte[] h = digest.digest();
+        return UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, Hex.printHexBinary(h).toLowerCase());
+    }
+
     public List<ServerIdentity> getNodes() {
         return nodes;
     }
@@ -60,7 +89,7 @@ public class Roster {
 
     public OnetProto.Roster toProto() {
         OnetProto.Roster.Builder r = OnetProto.Roster.newBuilder();
-        r.setId(ByteString.copyFrom(Ed25519.uuid4()));
+        r.setId(ByteString.copyFrom(UUIDType5.toBytes(getID())));
         nodes.forEach(n -> r.addList(n.toProto()));
         r.setAggregate(aggregate.toProto());
 

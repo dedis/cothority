@@ -73,7 +73,11 @@ export class Roster extends Message<Roster> {
         if (!id || !aggregate) {
             const h = createHash("sha256");
             list.forEach((srvid) => {
-                h.update(srvid.getPublic().toProto());
+                h.update(srvid.getPublic().marshalBinary());
+
+                for (const srviceId of srvid.serviceIdentities) {
+                    h.update(srviceId.getPublic().marshalBinary());
+                }
 
                 if (!this._agg) {
                     this._agg = srvid.getPublic();
@@ -212,8 +216,23 @@ export class ServiceIdentity extends Message<ServiceIdentity> {
     readonly suite: string;
     readonly public: Buffer;
 
+    private _point: Point;
+
     constructor(properties: Properties<ServiceIdentity>) {
         super(properties);
+    }
+
+    /**
+     * Get the public key as a Kyber point
+     *
+     * @returns the public key
+     */
+    getPublic(): Point {
+        if (!this._point) {
+            this._point = PointFactory.fromProto(this.public);
+        }
+
+        return this._point;
     }
 }
 
