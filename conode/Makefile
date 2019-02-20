@@ -67,7 +67,6 @@ bindist: clean verify exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
 	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
-	GO111MODULE=on GOOS=linux  GOARCH=arm go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.Linux.armv7l
 	GO111MODULE=on GOOS=darwin GOARCH=amd64 go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.Darwin.x86_64
 	GO111MODULE=on GOOS=freebsd GOARCH=amd64 go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
 	GO111MODULE=on GOOS=windows GOARCH=amd64 go build -ldflags="$(ldflags)" -o $(OUTPUT_DIR)/conode.exe
