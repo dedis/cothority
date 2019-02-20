@@ -1,7 +1,9 @@
-Copyright 2016 by EPFL/DEDIS. All rights reserved.
+Copyright 2016-2019 by EPFL/DEDIS. All rights reserved.
 
-This project and all its files are licensed under
-GNU AGPLv3 or later version.
+Cothority client libraries (external/java and external/js) are licensed
+under GNU LGPlv3 or later version.
+
+This balance of the files are licensed under GNU AGPLv3 or later version.
 
 If this license is not suitable for your business or project
 please contact us for a full commercial license.

@@ -19,9 +19,6 @@ has a share of the key, the original data is never revealed. However, the end
 result is encrypted to a new public key and can be decrypted using the corresponding
 private key.
 
-We use this _re-encryption_ in our onchain-secrets implementation that will
-soon be added to the cothority.
-
 ## Files
 
 The re-encryption protocol is called _ocs_ and is defined in the following files:

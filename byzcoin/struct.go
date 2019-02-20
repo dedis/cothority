@@ -16,9 +16,9 @@ import (
 	bbolt "go.etcd.io/bbolt"
 )
 
-const defaultMaxSize = 2 * 1024 * 1024 * 1024 // 2GB
-const versionLength = 64 / 8                  // bytes
-const prefixLength = 32                       // bytes
+const defaultMaxSize = (1 << 31) - 1 // maximum 32-bit int
+const versionLength = 64 / 8         // bytes
+const prefixLength = 32              // bytes
 const cleanThreshold = 0.8
 
 var bucketStateChangeStorage = []byte("statechangestorage")

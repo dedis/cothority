@@ -9,7 +9,7 @@ Here you find some general information about how to run a conode. For command
 line examples, please refer to:
 - [Command Line](CLI.md) for running a conode in a virtual machine or on a
 server
-- [Docker](Docker.md) how to run a conode with the pre-compiled docker image
+- [Docker](Docker.md) how to run a conode with the pre-compiled Docker image
 
 ## Reverse proxy
 

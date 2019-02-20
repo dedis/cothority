@@ -35,18 +35,12 @@ used in the `docker run`-command.
 Once a conode is setup, you can start it like that:
 
 ```
-docker run --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+docker run --restart always -d -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
-### Using Crontab
+Because it will run detached, you can use `docker logs -f conode` to see the logs.
 
-An easy way to start a conode upon system-startup is crontab. Add the following
-line to your crontab (`crontab -e`) and your conode will start with the next
-system-startup:
-
-```
-@reboot docker run --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
-```
+It will be restarted on the next boot as well.
 
 ### Using systemd
 

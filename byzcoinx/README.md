@@ -9,9 +9,9 @@ ByzCoinX is an improved version of [BFTCoSi](../bftcosi/README.md). Like
 BFTCoSi it is based on a two-round (fault-tolerant) collective signature scheme
 but optimized for common use cases with 100-200 nodes.
 
-Unlike BFTCoSi that may operate using a deep tree, making it difficult to
-tolerate fault, ByzCoinX operates on a simpler, three level tree. This is
-described in [ftCoSi](../ftcosi/README.md). The rest of the protocol is very
+Unlike BFTCoSi which may operate using a deep tree, making it difficult to
+tolerate faults, ByzCoinX operates on a simpler, three level tree. This is
+described in [blscosi](../blscosi/README.md). The rest of the protocol is very
 similar to BFTCoSi with two signing-rounds: a _prepare_ and a _commit_ round.
 During the first round, all nodes are asked whether they are willing to sign,
 and during the _commit_ round the actual signature is produced.

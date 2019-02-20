@@ -14,7 +14,9 @@ matrix:
         - go get github.com/dedis/Coding || true
 
       script:
+        - env GO111MODULE=on go mod verify
         - env GO111MODULE=on make test
+        - make -C conode bindist
 
     - language: go
       name: "Go v1.10.x build"
@@ -48,18 +50,20 @@ matrix:
       node_js: "lts/*"
       cache: npm
   
+      before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
       script:
         - cd $TRAVIS_BUILD_DIR/external/js/kyber
-        - npm install
+        - npm ci
         - npm run test
         - npm run build
-    
+
     - language: node_js
       name: "cothority-js Tests"
 
       node_js: "lts/*"
       cache: npm
 
+      before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
       install:
         - gimme 1.11
         - . $HOME/.gimme/envs/go1.11.env
@@ -72,18 +76,15 @@ matrix:
 
         # build the kyber library to use the local version
         - cd $TRAVIS_BUILD_DIR/external/js/kyber
-        - npm install
+        - npm ci
         - npm run build
         - npm run link
 
         - cd $TRAVIS_BUILD_DIR/external/js/cothority
-        - npm install
+        - npm ci
         # use the local library
         - npm link @dedis/kyber
         - npm run test
-
-after_success:
-  - npm run coveralls
 
 notifications:
   email: false

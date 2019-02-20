@@ -18,7 +18,7 @@ import (
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 func main() {

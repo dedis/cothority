@@ -7,7 +7,7 @@ Collective Signing
 
 *WARNING*: this package is kept here for historical and research purposes. It
 should not be used in other services as it has been deprecated by the
-[ftcosi](../ftcosi)
+[blscosi](../blscosi)
 package.
 
 CoSi is a protocol that enables a decentralized (potentially large) group of

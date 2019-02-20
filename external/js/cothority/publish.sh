@@ -20,5 +20,5 @@ else
     npm run doc
     cp -r doc dist/doc
 
-    npm publish dist/ --dry-run
+    npm publish dist
 fi

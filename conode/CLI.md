@@ -9,14 +9,14 @@ This document describes how to run a conode from the command line. This is usefu
 if you have ssh access to a server or a virtual server. To use the code of this
 package you need to:
 
-- Install [Golang](https://golang.org/doc/install) - version 1.9 or later
+- Install [Golang](https://golang.org/doc/install) - version 1.11 or later
 - Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
 - Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
 To build and install the cothority server, execute:
 
 ```
-go get -u github.com/dedis/cothority/conode
+go install ./conode
 ```
 
 ## Configuration
@@ -38,7 +38,7 @@ to this port, as well as to this port + 1 (for websocket connections).
 
 The setup routine writes the config files into a directory depending on the
 operating system:
-- Linux: `$HOME/.local/share/conode`
+- Linux: `$HOME/.config/conode`
 - MacOS: `$HOME/Library/Application Support/conode`
 - Windows:`%AppData%\Conode`
 
@@ -47,17 +47,17 @@ your conode.
 
 ## Running the conode
 
-To start your conode with the default (private) configuration file, located at `$HOME/.config/conode/private.toml`, execute:
+To start your conode with the default configuration file, execute:
 
 ```
-conode
+conode server
 ```
 
 ### Using screen
 
 Or if you want to run the server in the background, you can use the `screen`-program:
 ```
-screen -S conode -d -m conode -d 2
+screen -S conode -d -m conode -d 2 server
 ```
 
 To enter the screen, type `screen -r conode`, you can quit it with `<ctrl-a> d`.
@@ -67,18 +67,8 @@ To enter the screen, type `screen -r conode`, you can quit it with `<ctrl-a> d`.
 If everything runs correctly, you can check the configuration with:
 
 ```
-conode check ~/.local/share/conode/public.toml
+conode -d 3 check ~/.local/share/conode/public.toml
 ```
-
-## Updating
-
-To update, enter the following command:
-
-```
-go get -u github.com/cothority/conode
-```
-
-Then you'll have to enter `screen -r conode`, stop it, and launch it again.
 
 ### Conode Help
 
@@ -90,18 +80,17 @@ USAGE:
    conode [global options] command [command options] [arguments...]
 
 VERSION:
-   2.0
+   3.0.0
 
 COMMANDS:
-     setup, s   Setup server configuration (interactive)
-     server     Start cothority server
-     check, c   Check if the servers in the group definition are up and running
-     convert64  convert a base64 toml file to a hex toml file
-     help, h    Shows a list of commands or help for one command
+     setup, s  Setup server configuration (interactive)
+     server    Start cothority server
+     check, c  Check if the servers in the group definition are up and running
+     help, h   Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --debug value, -d value   debug-level: 1 for terse, 5 for maximal (default: 0)
-   --config value, -c value  Configuration file of the server (default: "/Users/ligasser/Library/Application Support/conode/private.toml")
+   --config value, -c value  Configuration file of the server (default: os-specific)
    --help, -h                show help
    --version, -v             print the version
 ```

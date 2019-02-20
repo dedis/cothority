@@ -16,14 +16,18 @@ collective signatures as a base to build a PBFT-like consensus protocol.
 Based on that we implemented a skipchain that can store arbitrary data in blocks
 and use a verification function to make sure all nodes agree on every block.
 
+- [Collective Signing](../blscosi/README.md)
+is the current signing algorithm we are using (deprecates cosi and ftcosi).
+- [ByzCoinX](../byzcoinx/README.md) is
+the an improved implementation of the consensus protocol in the OmniLedger paper.
+
+Deprecated:
 - [Collective Signing](../cosi/README.md)
 is the basic signing algorithm we've been using - replaced by:
 - [Fault Tolerant Collective Signing](../ftcosi/README.md)
-a more fault tolerant version of the CoSi protocol with only a 3-level tree
+a fault tolerant version of the CoSi protocol with only a 3-level tree
 - [Byzantine Fault Tolerant CoSi](../bftcosi/README.md)
 is an implementation inspired by PBFT using two rounds of CoSi
-- [ByzCoinX](../byzcoinx/README.md)
-the implementation of the basic consensus protocol in the OmniLedger paper
 
 ## Key Sharding
 
@@ -41,13 +45,6 @@ takes an ElGamal encrypted ciphertext and decrypts it using nodes
 - [Re-encryption](../calypso/protocol/Reencrypt.md)
 re-encrypts an ElGamal encryption to a new key while never revealing the original
 data
-
-## General Crypto
-
-This is our _one size fits all_ collection of blocks that are useful in different
-places, but not tied to one specific application.
-
-- [Neff](../evoting/protocol/Neff.md)
 
 ## Messaging
 

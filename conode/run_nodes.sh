@@ -87,7 +87,7 @@ for n in $( seq $nbr_nodes -1 1 ); do
         $CONODE_BIN -d $verbose -c $co/private.toml server > $LOG-$(date +%y%m%d-%H%M).log 2>&1
       fi
       if [[ "$single" ]]; then
-        echo "Don't restarting conode because in single mode"
+        echo "Will not restart conode in single mode."
         exit
       fi
       sleep 1

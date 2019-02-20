@@ -189,7 +189,9 @@ func (p *Propagate) Dispatch() error {
 					log.Lvlf2("Unmarshal failed with %v", err)
 				} else {
 					err := p.onData(netMsg)
-					log.Lvlf2("Propagation callback failed: %v", err)
+					if err != nil {
+						log.Lvlf2("Propagation callback failed: %v", err)
+					}
 				}
 			}
 			if !p.IsRoot() {

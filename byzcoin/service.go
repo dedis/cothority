@@ -1246,7 +1246,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 
 	err = s.stateChangeStorage.append(scs, sb)
 	if err != nil {
-		panic("Couldn't append the state changes to the storage - this might" +
+		panic("Couldn't append the state changes to the storage - this might " +
 			"mean that the db is broken. Error: " + err.Error())
 	}
 
@@ -1273,7 +1273,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// ClientTransactions received.
 	bcConfig, err := s.LoadConfig(sb.SkipChainID())
 	if err != nil {
-		panic("Couldn't get configuration of the block - this might" +
+		panic("Couldn't get configuration of the block - this might " +
 			"mean that the db is broken. Error: " + err.Error())
 	}
 
@@ -1511,7 +1511,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 		for {
 			bcConfig, err := s.LoadConfig(scID)
 			if err != nil {
-				panic("couldn't get configuration - this is bad and probably" +
+				panic("couldn't get configuration - this is bad and probably " +
 					"a problem with the database! " + err.Error())
 			}
 			select {
@@ -1523,7 +1523,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				// arrived with a possible new configuration.
 				bcConfig, err = s.LoadConfig(scID)
 				if err != nil {
-					panic("couldn't get configuration - this is bad and probably" +
+					panic("couldn't get configuration - this is bad and probably " +
 						"a problem with the database! " + err.Error())
 				}
 
