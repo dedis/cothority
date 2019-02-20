@@ -26,7 +26,7 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
 }
 
 /**
- * Identitiy is an abstract class for all the Darcs's identities
+ * Identity is an abstract class for all the Darcs's identities
  */
 export interface IIdentity {
   /**
