@@ -48,15 +48,22 @@ func (s *Service) tryLoad() error {
 }
 
 type storage1 struct {
+	RoPaSci        []*RoPaSci
 	Messages       map[string]*Message
 	Read           map[string]*readMsg
 	Questionnaires map[string]*Questionnaire
 	Replies        map[string]*Reply
 	Parties        map[string]*Party
+	Ts             TestStore
+	Polls          map[string]*storagePolls
 
 	sync.Mutex
 }
 
 type readMsg struct {
 	Readers []byzcoin.InstanceID
+}
+
+type storagePolls struct {
+	Polls []*PollStruct
 }

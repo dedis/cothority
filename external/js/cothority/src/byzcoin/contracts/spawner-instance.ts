@@ -545,5 +545,9 @@ interface ICreatePopParty {
     reward: Long;
 }
 
+<<<<<<< 12789cc9cbe6d17b05d7992cba3358792e452833
 // TODO: remove comment after personhood.online is merged
 // SpawnerStruct.register();
+=======
+registerMessage("personhood.SpawnerStruct", SpawnerStruct);
+>>>>>>> Adding latest personhood service and contracts

@@ -58,7 +58,7 @@ async function createInstance(
 }
 
 // TODO: enable after the personhood.online branch is merged
-xdescribe("Rock-Paper-Scisors Instance Tests", () => {
+describe("Rock-Paper-Scisors Instance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {

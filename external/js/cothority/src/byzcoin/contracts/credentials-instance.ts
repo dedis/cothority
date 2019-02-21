@@ -182,8 +182,14 @@ export class Attribute extends Message<Attribute> {
     }
 }
 
+<<<<<<< 12789cc9cbe6d17b05d7992cba3358792e452833
 /* TODO: remove comment after personhood.online is merged
 CredentialStruct.register();
 Credential.register();
 Attribute.register();
 */
+=======
+registerMessage("personhood.CredentialStruct", CredentialStruct);
+registerMessage("personhood.Credential", Credential);
+registerMessage("personhood.Attribute", Attribute);
+>>>>>>> Adding latest personhood service and contracts

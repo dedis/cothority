@@ -1301,7 +1301,7 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 	if ok {
 		s.verifyFollowBlockBuffer.Delete(arr)
 	} else {
-		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+		log.Errorf("%s ack failed for msg %x", s.ServerIdentity().Address, msg)
 	}
 	return ok
 }
