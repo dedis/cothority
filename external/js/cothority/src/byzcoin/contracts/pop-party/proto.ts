@@ -1,6 +1,6 @@
 import { Point, PointFactory } from "@dedis/kyber";
 import Moment from "moment";
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../../protobuf";
 
 export class PopPartyStruct extends Message<PopPartyStruct> {

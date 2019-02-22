@@ -1,4 +1,4 @@
-import { Message, util } from "protobufjs";
+import { Message, util } from "protobufjs/light";
 import shuffle from "shuffle-array";
 import Logger from "../log";
 import { Roster } from "./proto";
@@ -58,7 +58,7 @@ export class WebSocketConnection implements IConnection {
     /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         if (!message.$type) {
-            return Promise.reject(new Error(`message "${message}" is not registered`));
+            return Promise.reject(new Error(`message "${message.constructor.name}" is not registered`));
         }
 
         if (!reply.$type) {
@@ -70,12 +70,6 @@ export class WebSocketConnection implements IConnection {
             Logger.lvl4(`Socket: new WebSocket(${path})`);
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
-
-            const timerId = setTimeout(() => {
-                Logger.lvl3("websocket timeout - retrying");
-                // Not response from the server so we try to send it once more
-                ws.send(bytes);
-            }, 10000);
 
             ws.onOpen(() => {
                 ws.send(bytes);
@@ -93,7 +87,9 @@ export class WebSocketConnection implements IConnection {
                     if (err instanceof util.ProtocolError) {
                         reject(err);
                     } else {
-                        reject(new Error("Error when trying to decode the message"));
+                        reject(
+                            new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
+                        );
                     }
                 }
 
@@ -101,7 +97,6 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onClose((code: number, reason: string) => {
-                clearTimeout(timerId);
                 if (code !== 1000) {
                     Logger.error("Got close:", code, reason);
                     reject(new Error(reason));

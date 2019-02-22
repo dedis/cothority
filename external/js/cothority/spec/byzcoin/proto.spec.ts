@@ -1,7 +1,8 @@
 import Long from "long";
+import DataBody from "../../src/byzcoin/proto/data-body";
 import {
     AddTxRequest, CreateGenesisBlock,
-} from "../../src/byzcoin/proto";
+} from "../../src/byzcoin/proto/requests";
 import Darc from "../../src/darc/darc";
 
 describe("ByzCoin Proto Tests", () => {
@@ -25,5 +26,14 @@ describe("ByzCoin Proto Tests", () => {
         expect(req.skipchainID).toEqual(Buffer.from([1, 2, 3]));
 
         expect(new AddTxRequest()).toBeDefined();
+    });
+
+    it("should instantiate DataBody", () => {
+        const obj = new DataBody();
+        expect(obj.txResults).toEqual([]);
+
+        const obj2 = new DataBody({ txResults: [] });
+        // @ts-ignore
+        expect(obj2.txresults).toEqual([]);
     });
 });

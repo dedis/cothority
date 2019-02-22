@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import { ServerIdentity } from "../network/proto";
 import { registerMessage } from "../protobuf";
 

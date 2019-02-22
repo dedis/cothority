@@ -1,7 +1,7 @@
 import { Point } from "@dedis/kyber";
 import { createHash } from "crypto";
 import Long from "long";
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import Darc from "../../darc/darc";
 import IdentityDarc from "../../darc/identity-darc";
 import IdentityEd25519 from "../../darc/identity-ed25519";

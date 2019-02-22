@@ -18,7 +18,7 @@ import {
     GetProofResponse,
     GetSignerCounters,
     GetSignerCountersResponse,
-} from "./proto";
+} from "./proto/requests";
 
 export const currentVersion = 1;
 
@@ -59,7 +59,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         rpc.conn = new RosterWSConnection(roster, "ByzCoin");
 
         const skipchain = new SkipchainRPC(roster);
-        rpc.genesis = await skipchain.getSkipblock(skipchainID);
+        rpc.genesis = await skipchain.getSkipBlock(skipchainID);
 
         const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID);
         rpc.config = ChainConfig.fromProof(ccProof);

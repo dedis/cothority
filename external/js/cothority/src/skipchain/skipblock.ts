@@ -1,7 +1,7 @@
 import { Point, sign } from "@dedis/kyber";
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { createHash } from "crypto";
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { Roster } from "../network/proto";
 import { registerMessage } from "../protobuf";
 
@@ -33,6 +33,18 @@ export class SkipBlock extends Message<SkipBlock> {
     readonly roster: Roster;
     readonly forward: ForwardLink[];
     readonly payload: Buffer;
+
+    constructor(props?: Properties<SkipBlock>) {
+        super(props);
+
+        this.backlinks = this.backlinks || [];
+        this.verifiers = this.verifiers || [];
+        this.forward = this.forward || [];
+        this.hash = Buffer.from(this.hash);
+        this.data = Buffer.from(this.data);
+        this.genesis = Buffer.from(this.genesis);
+        this.payload = Buffer.from(this.payload);
+    }
 
     /**
      * Getter for the forward links

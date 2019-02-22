@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import _ from "lodash";
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 import { SkipchainRPC } from "../skipchain";
 import { ForwardLink, SkipBlock } from "../skipchain/skipblock";

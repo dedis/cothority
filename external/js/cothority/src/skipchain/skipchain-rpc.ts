@@ -2,7 +2,11 @@ import Logger from "../log";
 import { IConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import {
+    GetAllSkipChainIDs,
+    GetAllSkipChainIDsReply,
     GetSingleBlock,
+    GetSingleBlockByIndex,
+    GetSingleBlockByIndexReply,
     GetUpdateChain,
     GetUpdateChainReply,
     StoreSkipBlock,
@@ -29,10 +33,10 @@ export default class SkipchainRPC {
 
     /**
      * Create a skipchain with a base and a max height
+     *
      * @param baseHeight    base height of the skipchain
      * @param maxHeight     maximum height of the skipchain
      * @returns a promise that resolves with the genesis block
-     * @throws an error if the request is not successful
      */
     createSkipchain(baseHeight: number = 1, maxHeight: number = 3): Promise<StoreSkipBlockReply> {
         const newBlock = new SkipBlock({ roster: this.roster, maxHeight, baseHeight });
@@ -59,24 +63,79 @@ export default class SkipchainRPC {
 
     /**
      * Get the block with the given ID
+     *
      * @param bid   block ID being the hash
-     * @returns a   promise that resolves with the block
-     * @throws an error if the request is not successful
+     * @returns a promise that resolves with the block
      */
-    getSkipblock(bid: Buffer): Promise<SkipBlock> {
+    async getSkipBlock(bid: Buffer): Promise<SkipBlock> {
         const req = new GetSingleBlock({ id: bid });
 
-        return this.conn[0].send(req, SkipBlock);
+        const block = await this.conn[0].send<SkipBlock>(req, SkipBlock);
+        if (!block.computeHash().equals(block.hash)) {
+            throw new Error("invalid block: hash does not match");
+        }
+
+        return block;
+    }
+
+    /**
+     * Get the block by its index and the genesis block ID
+     *
+     * @param genesis   Genesis block ID
+     * @param index     Index of the block
+     * @returns a promise that resolves with the block, or reject with an error
+     */
+    async getSkipBlockByIndex(genesis: Buffer, index: number): Promise<GetSingleBlockByIndexReply> {
+        const req = new GetSingleBlockByIndex({ genesis, index });
+
+        const reply = await this.conn[0].send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
+        if (!reply.skipblock.computeHash().equals(reply.skipblock.hash)) {
+            throw new Error("invalid block: hash does not match");
+        }
+
+        return reply;
+    }
+
+    /**
+     * Get the list of known skipchains
+     *
+     * @returns a promise that resolves with the list of skipchain IDs
+     */
+    async getAllSkipChainIDs(): Promise<Buffer[]> {
+        const req = new GetAllSkipChainIDs();
+
+        const ret = await this.conn[0].send<GetAllSkipChainIDsReply>(req, GetAllSkipChainIDsReply);
+
+        return ret.skipChainIDs.map((id) => Buffer.from(id));
+    }
+
+    /**
+     * Get the shortest path to the more recent block starting from latestID
+     *
+     * @param latestID ID of the block
+     * @returns a promise that resolves with the list of blocks
+     */
+    async getUpdateChain(latestID: Buffer): Promise<SkipBlock[]> {
+        const req = new GetUpdateChain({ latestID });
+        const ret = await this.conn[0].send<GetUpdateChainReply>(req, GetUpdateChainReply);
+
+        const err = this.verifyChain(ret.update, latestID);
+        if (err) {
+            throw new Error(`invalid chain received: ${err.message}`);
+        }
+
+        return ret.update;
     }
 
     /**
      * Get the latest known block of the skipchain. It will follow the forward
      * links as much as possible and it is resistant to roster changes.
+     *
      * @param latestID  the current latest block
      * @param roster    use a different roster than the RPC
-     * @throws an error if the latest block can't be fetched
+     * @returns a promise that resolves with the block, or reject with an error
      */
-    async getLatestBlock(latestID: Buffer, roster?: Roster): Promise<SkipBlock> {
+    async getLatestBlock(latestID: Buffer): Promise<SkipBlock> {
         const req = new GetUpdateChain({ latestID });
         let reply: GetUpdateChainReply;
 
@@ -84,7 +143,7 @@ export default class SkipchainRPC {
             try {
                 reply = await c.send(req, GetUpdateChainReply);
             } catch (err) {
-                Logger.error(`Failed to reach ${c.getURL()}`);
+                Logger.lvl3(`error from ${c.getURL()}: ${err.message}`);
                 continue;
             }
 
@@ -106,12 +165,13 @@ export default class SkipchainRPC {
         }
 
         // in theory that should not happen as at least the leader has the latest block
-        throw new Error("No conode has the latest block");
+        throw new Error("no conode has the latest block");
     }
 
     /**
      * Check the given chain of blocks to insure the integrity of the
      * chain by following the forward links and verifying the signatures
+     *
      * @param blocks    the chain to check
      * @param firstID   optional parameter to check the first block identity
      * @returns null for a correct chain or a detailed error otherwise
@@ -119,7 +179,7 @@ export default class SkipchainRPC {
     verifyChain(blocks: SkipBlock[], firstID?: Buffer): Error {
         if (blocks.length === 0) {
             // expect to have blocks
-            return new Error("No block returned in the chain");
+            return new Error("no block returned in the chain");
         }
 
         if (firstID && !blocks[0].computeHash().equals(firstID)) {
@@ -136,17 +196,17 @@ export default class SkipchainRPC {
             }
 
             if (prev.forwardLinks.length === 0) {
-                return new Error("No forward link included in the skipblock");
+                return new Error("no forward link included in the skipblock");
             }
 
             const link = prev.forwardLinks.find((l) => l.to.equals(curr.hash));
             if (!link) {
-                return new Error("No forward link associated with the next block");
+                return new Error("no forward link associated with the next block");
             }
 
             const err = link.verify(curr.roster.getServicePublics(SkipchainRPC.serviceName));
             if (err) {
-                return err;
+                return new Error(`invalid link: ${err.message}`);
             }
         }
 

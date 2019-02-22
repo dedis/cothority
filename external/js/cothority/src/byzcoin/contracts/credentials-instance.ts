@@ -1,4 +1,4 @@
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
 import { registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";

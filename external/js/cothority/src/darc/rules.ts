@@ -1,4 +1,4 @@
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 import { IIdentity } from "./identity-wrapper";
 

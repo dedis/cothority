@@ -1,10 +1,10 @@
-import { Message, Properties } from "protobufjs";
-import Darc from "../darc/darc";
-import { Roster } from "../network/proto";
-import { registerMessage } from "../protobuf";
-import { SkipBlock } from "../skipchain/skipblock";
-import ClientTransaction from "./client-transaction";
-import Proof, { registerProofMessages } from "./proof";
+import { Message, Properties } from "protobufjs/light";
+import Darc from "../../darc/darc";
+import { Roster } from "../../network/proto";
+import { registerMessage } from "../../protobuf";
+import { SkipBlock } from "../../skipchain/skipblock";
+import ClientTransaction from "../client-transaction";
+import Proof, { registerProofMessages } from "../proof";
 
 /**
  * Request to create a byzcoin skipchain

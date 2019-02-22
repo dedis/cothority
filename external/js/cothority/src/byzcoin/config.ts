@@ -1,4 +1,4 @@
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { Roster } from "../network/proto";
 import { registerMessage } from "../protobuf";
 import Proof from "./proof";

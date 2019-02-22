@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import Long from "long";
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
 
