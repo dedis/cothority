@@ -5,6 +5,8 @@ import { Message, Properties } from "protobufjs/light";
 import { Roster } from "../network/proto";
 import { registerMessage } from "../protobuf";
 
+const EMPTY_BUFFER = Buffer.allocUnsafe(0);
+
 const { bls, Mask } = sign;
 
 /**
@@ -40,10 +42,10 @@ export class SkipBlock extends Message<SkipBlock> {
         this.backlinks = this.backlinks || [];
         this.verifiers = this.verifiers || [];
         this.forward = this.forward || [];
-        this.hash = Buffer.from(this.hash);
-        this.data = Buffer.from(this.data);
-        this.genesis = Buffer.from(this.genesis);
-        this.payload = Buffer.from(this.payload);
+        this.hash = Buffer.from(this.hash || EMPTY_BUFFER);
+        this.data = Buffer.from(this.data || EMPTY_BUFFER);
+        this.genesis = Buffer.from(this.genesis || EMPTY_BUFFER);
+        this.payload = Buffer.from(this.payload || EMPTY_BUFFER);
     }
 
     /**
@@ -94,6 +96,13 @@ export class ForwardLink extends Message<ForwardLink> {
     readonly newRoster: Roster;
     readonly signature: ByzcoinSignature;
 
+    constructor(props?: Properties<ForwardLink>) {
+        super(props);
+
+        this.from = Buffer.from(this.from || EMPTY_BUFFER);
+        this.to = Buffer.from(this.to || EMPTY_BUFFER);
+    }
+
     /**
      * Compute the hash of the forward link
      *
@@ -135,6 +144,13 @@ export class ForwardLink extends Message<ForwardLink> {
 export class ByzcoinSignature extends Message<ByzcoinSignature> {
     readonly msg: Buffer;
     readonly sig: Buffer;
+
+    constructor(props?: Properties<ByzcoinSignature>) {
+        super(props);
+
+        this.msg = Buffer.from(this.msg || EMPTY_BUFFER);
+        this.sig = Buffer.from(this.sig || EMPTY_BUFFER);
+    }
 
     /**
      * Get the actual bytes of the signature. The remaining part is the mask.

@@ -1,10 +1,11 @@
 import { createHash } from "crypto";
 import _ from "lodash";
-import { Message } from "protobufjs/light";
+import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../protobuf";
 import { SkipchainRPC } from "../skipchain";
 import { ForwardLink, SkipBlock } from "../skipchain/skipblock";
 import { InstanceID } from "./instance";
+import DataHeader from "./proto/data-header";
 
 /**
  * The proof class represents a proof that a given instance with its data is either present or absent in the global
@@ -23,6 +24,12 @@ export default class Proof extends Message<Proof> {
     readonly links: ForwardLink[];
 
     private _state: StateChangeBody;
+
+    constructor(props: Properties<Proof>) {
+        super(props);
+
+        this.links = this.links || [];
+    }
 
     /**
      * Get the state change stored in the inclusion proof
@@ -87,7 +94,7 @@ export default class Proof extends Message<Proof> {
         }
 
         const header = DataHeader.decode(this.latest.data);
-        if (!this.inclusionproof.hashInterior(0).equals(header.trieroot)) {
+        if (!this.inclusionproof.hashInterior(0).equals(header.trieRoot)) {
             return new Error("invalid root");
         }
 
@@ -246,6 +253,12 @@ class InteriorNode extends Message<InteriorNode> {
  */
 class EmptyNode extends Message<EmptyNode> {
     readonly prefix: boolean[];
+
+    constructor(props?: Properties<EmptyNode>) {
+        super(props);
+
+        this.prefix = this.prefix || [];
+    }
 }
 
 /**
@@ -255,6 +268,12 @@ class LeafNode extends Message<LeafNode> {
     readonly prefix: boolean[];
     readonly key: Buffer;
     readonly value: Buffer;
+
+    constructor(props?: Properties<LeafNode>) {
+        super(props);
+
+        this.prefix = this.prefix || [];
+    }
 }
 
 /**
@@ -265,6 +284,12 @@ class InclusionProof extends Message<InclusionProof> {
     leaf: LeafNode;
     empty: EmptyNode;
     nonce: Buffer;
+
+    constructor(props?: Properties<InclusionProof>) {
+        super(props);
+
+        this.interiors = this.interiors || [];
+    }
 
     /**
      * @return {Buffer} the key in the leaf for this inclusionProof. This is not the same as the key this proof has
@@ -356,19 +381,9 @@ class StateChangeBody extends Message<StateChangeBody> {
     }
 }
 
-class DataHeader extends Message<DataHeader> {
-    readonly trieroot: Buffer;
-    readonly clienttransactionhash: Buffer;
-    readonly statechangeshash: Buffer;
-    readonly timestamp: Long;
-}
-
-export function registerProofMessages() {
-    registerMessage("byzcoin.Proof", Proof);
-    registerMessage("byzcoin.DataHeader", DataHeader);
-    registerMessage("trie.Proof", InclusionProof);
-    registerMessage("trie.InteriorNode", InteriorNode);
-    registerMessage("trie.LeafNode", LeafNode);
-    registerMessage("trie.EmptyNode", EmptyNode);
-    registerMessage("StateChangeBody", StateChangeBody);
-}
+registerMessage("byzcoin.Proof", Proof);
+registerMessage("trie.Proof", InclusionProof);
+registerMessage("trie.InteriorNode", InteriorNode);
+registerMessage("trie.LeafNode", LeafNode);
+registerMessage("trie.EmptyNode", EmptyNode);
+registerMessage("StateChangeBody", StateChangeBody);

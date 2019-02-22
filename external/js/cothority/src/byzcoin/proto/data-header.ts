@@ -1,40 +1,52 @@
-import { Message } from "protobufjs/light";
+import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
+
+const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
 /**
  * ByzCoin metadata
  */
 export default class DataHeader extends Message<DataHeader> {
-    readonly trieroot: Buffer;
-    readonly clienttransactionhash: Buffer;
-    readonly statechangehash: Buffer;
+    readonly trieRoot: Buffer;
+    readonly clientTransactionHash: Buffer;
+    readonly stateChangeHash: Buffer;
     readonly timestamp: Long;
 
-    /**
-     * Getter for the trie root
-     *
-     * @returns the trie root
-     */
-    get trieRoot(): Buffer {
-        return this.trieroot;
-    }
+    constructor(props?: Properties<DataHeader>) {
+        super(props);
 
-    /**
-     * Getter for the client transactions' hash
-     *
-     * @returns the hash
-     */
-    get clientTransactionHash(): Buffer {
-        return this.clienttransactionhash;
-    }
+        this.trieRoot = Buffer.from(this.trieRoot || EMPTY_BUFFER);
+        this.clientTransactionHash = Buffer.from(this.clientTransactionHash || EMPTY_BUFFER);
+        this.stateChangeHash = Buffer.from(this.stateChangeHash || EMPTY_BUFFER);
 
-    /**
-     * Getter for the state changes' hash
-     *
-     * @returns the hash
-     */
-    get stateChangeHash(): Buffer {
-        return this.statechangehash;
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "trieroot", {
+            get(): Buffer {
+                return this.trieRoot;
+            },
+            set(value: Buffer) {
+                this.trieRoot = value;
+            },
+        });
+
+        Object.defineProperty(this, "clienttransactionhash", {
+            get(): Buffer {
+                return this.clientTransactionHash;
+            },
+            set(value: Buffer) {
+                this.clientTransactionHash = value;
+            },
+        });
+
+        Object.defineProperty(this, "statechangehash", {
+            get(): Buffer {
+                return this.stateChangeHash;
+            },
+            set(value: Buffer) {
+                this.stateChangeHash = value;
+            },
+        });
     }
 }
 

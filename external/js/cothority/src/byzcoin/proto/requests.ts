@@ -4,7 +4,14 @@ import { Roster } from "../../network/proto";
 import { registerMessage } from "../../protobuf";
 import { SkipBlock } from "../../skipchain/skipblock";
 import ClientTransaction from "../client-transaction";
-import Proof, { registerProofMessages } from "../proof";
+import Proof from "../proof";
+
+// messages registration
+import "../../darc";
+import "../../network/proto";
+import "../../skipchain/skipblock";
+import "../client-transaction";
+import "../proof";
 
 /**
  * Request to create a byzcoin skipchain
@@ -12,54 +19,53 @@ import Proof, { registerProofMessages } from "../proof";
 export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
     readonly version: number;
     readonly roster: Roster;
-    private genesisdarc: Darc;
-    private blockinterval: Long;
-    private maxblocksize: number;
-    private darccontractids: string[];
+    readonly genesisDarc: Darc;
+    readonly blockInterval: Long;
+    readonly maxBlockSize: number;
+    readonly darcContractIDs: string[];
 
-    constructor(properties?: Properties<CreateGenesisBlock>) {
-        const props: { [k: string]: any } = {};
-        if (properties) {
-            // convert camel-cased fields to protobuf fields
-            Object.keys(properties).forEach((key) => {
-                // @ts-ignore
-                props[key.toLowerCase()] = properties[key];
-            });
-        }
-
+    constructor(props?: Properties<CreateGenesisBlock>) {
         super(props);
-    }
 
-    /**
-     * Getter for the genesis darc
-     * @returns the genesis darc
-     */
-    get genesisDarc(): Darc {
-        return this.genesisdarc;
-    }
+        this.darcContractIDs = this.darcContractIDs || [];
 
-    /**
-     * Getter for the block interval
-     * @returns the interval
-     */
-    get blockInterval(): Long {
-        return this.blockinterval;
-    }
+        /* Protobuf aliases */
 
-    /**
-     * Getter for the block maximum size
-     * @returns the maximum size
-     */
-    get maxBlockSize(): number {
-        return this.maxblocksize;
-    }
+        Object.defineProperty(this, "genesisdarc", {
+            get(): Darc {
+                return this.genesisDarc;
+            },
+            set(value: Darc) {
+                this.genesisDarc = value;
+            },
+        });
 
-    /**
-     * Getter for the darc contract ids
-     * @returns the list of contract names
-     */
-    get darcContractIDs(): string[] {
-        return this.darccontractids;
+        Object.defineProperty(this, "blockinterval", {
+            get(): Long {
+                return this.blockInterval;
+            },
+            set(value: Long) {
+                this.blockInterval = value;
+            },
+        });
+
+        Object.defineProperty(this, "maxblocksize", {
+            get(): number {
+                return this.maxBlockSize;
+            },
+            set(value: number) {
+                this.maxBlockSize = value;
+            },
+        });
+
+        Object.defineProperty(this, "darccontractids", {
+            get(): string[] {
+                return this.darcContractIDs;
+            },
+            set(value: string[]) {
+                this.darcContractIDs = value;
+            },
+        });
     }
 }
 
@@ -95,28 +101,21 @@ export class AddTxRequest extends Message<AddTxRequest> {
     readonly version: number;
     readonly transaction: ClientTransaction;
     readonly inclusionwait: number;
-    private skipchainid: Buffer;
+    readonly skipchainID: Buffer;
 
-    constructor(properties?: Properties<AddTxRequest>) {
-        const props: { [k: string]: any } = {};
-
-        if (properties) {
-            // convert camel-cased fields to protobuf fields
-            Object.keys(properties).forEach((key) => {
-                // @ts-ignore
-                props[key.toLowerCase()] = properties[key];
-            });
-        }
-
+    constructor(props?: Properties<AddTxRequest>) {
         super(props);
-    }
 
-    /**
-     * Getter for the skipchain id
-     * @returns the id
-     */
-    get skipchainID(): Buffer {
-        return this.skipchainid;
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "skipchainid", {
+            get(): Buffer {
+                return this.skipchainID;
+            },
+            set(value: Buffer) {
+                this.skipchainID = value;
+            },
+        });
     }
 }
 
@@ -131,8 +130,34 @@ export class AddTxResponse extends Message<AddTxResponse> {
  * Request to get the current counters for given signers
  */
 export class GetSignerCounters extends Message<GetSignerCounters> {
-    readonly signerids: string[];
-    readonly skipchainid: Buffer;
+    readonly signerIDs: string[];
+    readonly skipchainID: Buffer;
+
+    constructor(props?: Properties<GetSignerCounters>) {
+        super(props);
+
+        this.signerIDs = this.signerIDs || [];
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "signerids", {
+            get(): string[] {
+                return this.signerIDs;
+            },
+            set(value: string[]) {
+                this.signerIDs = value;
+            },
+        });
+
+        Object.defineProperty(this, "skipchainid", {
+            get(): Buffer {
+                return this.skipchainID;
+            },
+            set(value: Buffer) {
+                this.skipchainID = value;
+            },
+        });
+    }
 }
 
 /**
@@ -140,12 +165,13 @@ export class GetSignerCounters extends Message<GetSignerCounters> {
  */
 export class GetSignerCountersResponse extends Message<GetSignerCountersResponse> {
     readonly counters: Long[];
-}
 
-// Add the registration here because the Proof module is optimized
-// during compilation and is ignored because we use Proof only as
-// a type definition
-registerProofMessages();
+    constructor(props?: Properties<GetSignerCountersResponse>) {
+        super(props);
+
+        this.counters = this.counters || [];
+    }
+}
 
 registerMessage("CreateGenesisBlock", CreateGenesisBlock);
 registerMessage("CreateGenesisBlockResponse", CreateGenesisBlockResponse);

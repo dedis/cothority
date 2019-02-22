@@ -1,6 +1,6 @@
 import { curve, Point, PointFactory, sign } from "@dedis/kyber";
-import { Message } from "protobufjs/light";
-import { registerMessage } from "../protobuf";
+import { Message, Properties } from "protobufjs/light";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import IdentityWrapper, { IIdentity } from "./identity-wrapper";
 
 const { schnorr } = sign;
@@ -13,6 +13,12 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
   readonly point: Buffer;
 
   private _public: Point;
+
+  constructor(props?: Properties<IdentityEd25519>) {
+    super(props);
+
+    this.point = Buffer.from(this.point || EMPTY_BUFFER);
+  }
 
   /**
    * Get the public key as a point

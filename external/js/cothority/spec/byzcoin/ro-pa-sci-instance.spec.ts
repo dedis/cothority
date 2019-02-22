@@ -22,10 +22,10 @@ async function createInstance(
 
     const rps = new RoPaSciStruct({
         description: "test game",
-        firstplayer: -1,
-        firstplayerhash: fph.digest(),
-        secondplayer: -1,
-        secondplayeraccount: null,
+        firstPlayer: -1,
+        firstPlayerHash: fph.digest(),
+        secondPlayer: -1,
+        secondPlayerAccount: null,
         stake: stake.getCoin(),
     });
 
@@ -38,7 +38,7 @@ async function createInstance(
                 [new Argument({ name: "coins", value: Buffer.from(Long.fromNumber(100).toBytesLE()) })],
             ),
             Instruction.createSpawn(
-                darc.baseID,
+                darc.getGenesisDarcID(),
                 RoPaSciInstance.contractID,
                 [new Argument({ name: "struct", value: rps.toBytes() })],
             ),
@@ -73,10 +73,10 @@ xdescribe("Rock-Paper-Scisors Instance Tests", () => {
         darc.addIdentity("spawn:ropasci", SIGNER, Rules.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const p1 = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        const p1 = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER]);
         await p1.mint([SIGNER], Long.fromNumber(1000));
         await p1.update();
-        const p2 = await CoinInstance.create(rpc, darc.baseID, [SIGNER, SIGNER]);
+        const p2 = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER, SIGNER]);
         await p2.mint([SIGNER], Long.fromNumber(1000));
         await p2.update();
 

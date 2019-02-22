@@ -2,6 +2,8 @@ import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
 import TxResult from "./tx-result";
 
+import "./tx-result"; // messages registration
+
 /**
  * ByzCoin block payload
  */
@@ -10,17 +12,19 @@ export default class DataBody extends Message<DataBody> {
 
     constructor(props?: Properties<DataBody>) {
         super(props);
-    }
 
-    /* Protobuf fields */
+        this.txResults = this.txResults || [];
 
-    private get txresults(): TxResult[] {
-        return this.txResults;
-    }
+        /* Protobuf aliases */
 
-    private set txresults(value: TxResult[]) {
-        // @ts-ignore
-        this.txResults = value;
+        Object.defineProperty(this, "txresults", {
+            get(): TxResult[] {
+                return this.txResults;
+            },
+            set(value: TxResult[]) {
+                this.txResults = value;
+            },
+        });
     }
 }
 

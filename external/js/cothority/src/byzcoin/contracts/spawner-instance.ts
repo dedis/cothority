@@ -1,7 +1,7 @@
 import { Point } from "@dedis/kyber";
 import { createHash } from "crypto";
 import Long from "long";
-import { Message } from "protobufjs/light";
+import { Message, Properties } from "protobufjs/light";
 import Darc from "../../darc/darc";
 import IdentityDarc from "../../darc/identity-darc";
 import IdentityEd25519 from "../../darc/identity-ed25519";
@@ -184,7 +184,7 @@ export default class SpawnerInstance {
     async createUserDarc(coin: CoinInstance, signers: Signer[], pubKey: Point, alias: string): Promise<DarcInstance> {
         const d = SpawnerInstance.prepareUserDarc(pubKey, alias);
         try {
-            const darc = await DarcInstance.fromByzcoin(this.rpc, d.baseID);
+            const darc = await DarcInstance.fromByzcoin(this.rpc, d.getGenesisDarcID());
             Log.lvl2("this darc is already registerd");
             return darc;
         } catch (e) {
@@ -211,7 +211,7 @@ export default class SpawnerInstance {
 
         await this.rpc.sendTransactionAndWait(ctx);
 
-        return DarcInstance.fromByzcoin(this.rpc, d.baseID);
+        return DarcInstance.fromByzcoin(this.rpc, d.getGenesisDarcID());
     }
 
     /**
@@ -350,7 +350,7 @@ export default class SpawnerInstance {
                     this.iid,
                     PopPartyInstance.contractID,
                     [
-                        new Argument({ name: "darcID", value: orgDarc.baseID }),
+                        new Argument({ name: "darcID", value: orgDarc.getGenesisDarcID() }),
                         new Argument({ name: "description", value: desc.toBytes() }),
                         new Argument({ name: "miningReward", value: Buffer.from(reward.toBytesLE()) }),
                     ],
@@ -393,10 +393,10 @@ export default class SpawnerInstance {
         fph.update(fillup);
         const rps = new RoPaSciStruct({
             description: desc,
-            firstplayer: -1,
-            firstplayerhash: fph.digest(),
-            secondplayer: -1,
-            secondplayeraccount: null,
+            firstPlayer: -1,
+            firstPlayerHash: fph.digest(),
+            secondPlayer: -1,
+            secondPlayerAccount: null,
             stake: c,
         });
 
@@ -431,31 +431,62 @@ export default class SpawnerInstance {
  * Data of a spawner instance
  */
 export class SpawnerStruct extends Message<SpawnerStruct> {
-    readonly costdarc: Coin;
-    readonly costcoin: Coin;
-    readonly costcredential: Coin;
-    readonly costparty: Coin;
-    readonly costropasci: Coin;
+    readonly costDarc: Coin;
+    readonly costCoin: Coin;
+    readonly costCredential: Coin;
+    readonly costParty: Coin;
+    readonly costRoPaSci: Coin;
     readonly beneficiary: InstanceID;
 
-    get costDarc(): Coin {
-        return this.costdarc;
-    }
+    constructor(props?: Properties<SpawnerStruct>) {
+        super(props);
 
-    get costCoin(): Coin {
-        return this.costcoin;
-    }
+        /* Protobuf aliases */
 
-    get costCredential(): Coin {
-        return this.costcredential;
-    }
+        Object.defineProperty(this, "costdarc", {
+            get(): Coin {
+                return this.costDarc;
+            },
+            set(value: Coin) {
+                this.costDarc = value;
+            },
+        });
 
-    get costParty(): Coin {
-        return this.costparty;
-    }
+        Object.defineProperty(this, "costcoin", {
+            get(): Coin {
+                return this.costCoin;
+            },
+            set(value: Coin) {
+                this.costCoin = value;
+            },
+        });
 
-    get costRoPaSci(): Coin {
-        return this.costropasci;
+        Object.defineProperty(this, "costcredential", {
+            get(): Coin {
+                return this.costCredential;
+            },
+            set(value: Coin) {
+                this.costCredential = value;
+            },
+        });
+
+        Object.defineProperty(this, "costparty", {
+            get(): Coin {
+                return this.costParty;
+            },
+            set(value: Coin) {
+                this.costParty = value;
+            },
+        });
+
+        Object.defineProperty(this, "costropasci", {
+            get(): Coin {
+                return this.costRoPaSci;
+            },
+            set(value: Coin) {
+                this.costRoPaSci = value;
+            },
+        });
     }
 }
 

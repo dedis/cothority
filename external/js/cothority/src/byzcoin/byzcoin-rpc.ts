@@ -196,8 +196,8 @@ export default class ByzCoinRPC implements ICounterUpdater {
      */
     async getSignerCounters(ids: IIdentity[], add: number = 0): Promise<Long[]> {
         const req = new GetSignerCounters({
-            signerids: ids.map((id) => id.toString()),
-            skipchainid: this.genesis.hash,
+            signerIDs: ids.map((id) => id.toString()),
+            skipchainID: this.genesis.hash,
         });
 
         const rep = await this.conn.send<GetSignerCountersResponse>(req, GetSignerCountersResponse);

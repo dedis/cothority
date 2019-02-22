@@ -1,5 +1,5 @@
-import { Message } from "protobufjs/light";
-import { registerMessage } from "../protobuf";
+import { Message, Properties } from "protobufjs/light";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import IdentityWrapper, { IIdentity } from "./identity-wrapper";
 
 /**
@@ -7,6 +7,12 @@ import IdentityWrapper, { IIdentity } from "./identity-wrapper";
  */
 export default class IdentityDarc extends Message<IdentityDarc> implements IIdentity {
     readonly id: Buffer;
+
+    constructor(props?: Properties<IdentityDarc>) {
+        super(props);
+
+        this.id = Buffer.from(this.id || EMPTY_BUFFER);
+    }
 
     /** @inheritdoc */
     verify(msg: Buffer, signature: Buffer): boolean {

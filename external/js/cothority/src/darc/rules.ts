@@ -1,13 +1,19 @@
 import { Message, Properties } from "protobufjs/light";
-import { registerMessage } from "../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { IIdentity } from "./identity-wrapper";
 
 /**
  * A rule will give who is allowed to use a given action
  */
 export class Rule extends Message<Rule> {
-    action: string;
-    expr: Buffer;
+    readonly action: string;
+    readonly expr: Buffer;
+
+    constructor(props?: Properties<Rule>) {
+        super(props);
+
+        this.expr = Buffer.from(this.expr || EMPTY_BUFFER);
+    }
 
     /**
      * Get a deep clone of the rule
@@ -54,10 +60,14 @@ export default class Rules extends Message<Rules> {
      * @param op        the operator to use if the rule exists
      */
     appendToRule(action: string, identity: IIdentity, op: string): void {
-        const rule = this.list.find((r) => r.action === action);
+        const idx = this.list.findIndex((r) => r.action === action);
 
-        if (rule) {
-            rule.expr = Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]);
+        if (idx >= 0) {
+            const rule = this.list[idx];
+            this.list[idx] = new Rule({
+                action: rule.action,
+                expr: Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]),
+            });
         } else {
             this.list.push(new Rule({ action, expr: Buffer.from(identity.toString()) }));
         }

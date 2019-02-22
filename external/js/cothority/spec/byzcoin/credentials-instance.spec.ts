@@ -10,10 +10,10 @@ async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cr
     const ctx = new ClientTransaction({
         instructions: [
             Instruction.createSpawn(
-                darc.baseID,
+                darc.getGenesisDarcID(),
                 CredentialsInstance.contractID,
                 [
-                    new Argument({ name: "darcID", value: darc.baseID }),
+                    new Argument({ name: "darcID", value: darc.getGenesisDarcID() }),
                     new Argument({ name: "credential", value: cred.toBytes() }),
                 ],
             ),
@@ -45,7 +45,7 @@ xdescribe("CredentialsInstance Tests", () => {
         const cred = new CredentialStruct();
         const ci = await createInstance(rpc, [SIGNER], darc, cred);
         expect(ci).toBeDefined();
-        expect(ci.darcID).toEqual(darc.baseID);
+        expect(ci.darcID).toEqual(darc.getGenesisDarcID());
 
         // set non-existing credential
         await ci.setAttribute(SIGNER, "personhood", "ed25519", SIGNER.toBytes());

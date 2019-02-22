@@ -3,7 +3,7 @@ import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
 import Proof from "../byzcoin/proof";
-import { registerMessage } from "../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { IIdentity } from "./identity-wrapper";
 import Rules from "./rules";
 
@@ -36,9 +36,9 @@ export default class Darc extends Message<Darc> {
      */
     static newDarc(owners: IIdentity[], signers: IIdentity[], desc?: Buffer): Darc {
         const darc = new Darc({
-            baseid: Buffer.from([]),
+            baseID: Buffer.from([]),
             description: desc,
-            previd: createHash("sha256").digest(),
+            prevID: createHash("sha256").digest(),
             rules: initRules(owners, signers),
             version: Long.fromNumber(0, true),
         });
@@ -66,16 +66,37 @@ export default class Darc extends Message<Darc> {
 
     readonly version: Long;
     readonly description: Buffer;
-    readonly baseid: Buffer;
-    readonly previd: Buffer;
+    readonly baseID: Buffer;
+    readonly prevID: Buffer;
     readonly rules: Rules;
 
     constructor(properties?: Properties<Darc>) {
         super(properties);
 
-        if (!properties || !properties.rules) {
-            this.rules = new Rules();
-        }
+        this.description = Buffer.from(this.description || EMPTY_BUFFER);
+        this.baseID = Buffer.from(this.baseID || EMPTY_BUFFER);
+        this.prevID = Buffer.from(this.prevID || EMPTY_BUFFER);
+        this.rules = this.rules || new Rules();
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "baseid", {
+            get(): Buffer {
+                return this.baseID;
+            },
+            set(value: Buffer) {
+                this.baseID = value;
+            },
+        });
+
+        Object.defineProperty(this, "previd", {
+            get(): Buffer {
+                return this.prevID;
+            },
+            set(value: Buffer) {
+                this.prevID = value;
+            },
+        });
     }
 
     /**
@@ -86,20 +107,19 @@ export default class Darc extends Message<Darc> {
         const h = createHash("sha256");
         const versionBuf = Buffer.from(this.version.toBytesLE());
         h.update(versionBuf);
-        h.update(Buffer.from(this.description));
-        if (this.baseid) {
-            h.update(Buffer.from(this.baseid));
+        h.update(this.description);
+
+        if (this.baseID.length > 0) {
+            h.update(this.baseID);
         }
-        if (this.previd) {
-            h.update(Buffer.from(this.previd));
+        if (this.prevID.length > 0) {
+            h.update(this.prevID);
         }
 
-        if (this.rules) {
-            this.rules.list.forEach((r) => {
-                h.update(r.action);
-                h.update(r.expr);
-            });
-        }
+        this.rules.list.forEach((r) => {
+            h.update(r.action);
+            h.update(r.expr);
+        });
 
         return h.digest();
     }
@@ -108,20 +128,12 @@ export default class Darc extends Message<Darc> {
      * Get the id of the genesis darc
      * @returns the id as a buffer
      */
-    get baseID(): Buffer {
+    getGenesisDarcID(): Buffer {
         if (this.version.eq(0)) {
             return this.id;
         } else {
-            return this.baseid;
+            return this.baseID;
         }
-    }
-
-    /**
-     * Get the darc ID of the previous version
-     * @returns the id as a buffer
-     */
-    get prevID(): Buffer {
-        return this.previd;
     }
 
     /**
@@ -142,9 +154,9 @@ export default class Darc extends Message<Darc> {
      */
     evolve(): Darc {
         return new Darc({
-            baseid: this.baseID,
+            baseID: this.getGenesisDarcID(),
             description: this.description,
-            previd: this.id,
+            prevID: this.id,
             rules: this.rules.clone(),
             version: this.version.add(1),
         });
@@ -157,7 +169,7 @@ export default class Darc extends Message<Darc> {
     toString(): string {
         return "ID: " + this.id.toString("hex") + "\n" +
             "Base: " + this.baseID.toString("hex") + "\n" +
-            "Prev: " + this.previd.toString("hex") + "\n" +
+            "Prev: " + this.prevID.toString("hex") + "\n" +
             "Version: " + this.version + "\n" +
             "Rules: " + this.rules;
     }

@@ -1,5 +1,6 @@
 import Long from "long";
-import DataBody from "../../src/byzcoin/proto/data-body";
+import ClientTransaction from "../../src/byzcoin/client-transaction";
+import { DataBody, DataHeader, TxResult } from "../../src/byzcoin/proto";
 import {
     AddTxRequest, CreateGenesisBlock,
 } from "../../src/byzcoin/proto/requests";
@@ -35,5 +36,31 @@ describe("ByzCoin Proto Tests", () => {
         const obj2 = new DataBody({ txResults: [] });
         // @ts-ignore
         expect(obj2.txresults).toEqual([]);
+    });
+
+    it("should instantiate DataHeader", () => {
+        const dh = new DataHeader();
+        expect(dh.trieRoot).toEqual(Buffer.from([]));
+
+        const dh2 = new DataHeader({
+            clientTransactionHash: Buffer.from([1, 2, 3]),
+            stateChangeHash: Buffer.from([7, 8, 9]),
+            trieRoot: Buffer.from([4, 5, 6]),
+        });
+        // @ts-ignore
+        expect(dh2.clienttransactionhash).toEqual(Buffer.from([1, 2, 3]));
+        // @ts-ignore
+        expect(dh2.statechangehash).toEqual(Buffer.from([7, 8, 9]));
+        // @ts-ignore
+        expect(dh2.trieroot).toEqual(Buffer.from([4, 5, 6]));
+    });
+
+    it("should instantiate a transaction result", () => {
+        const tr = new TxResult();
+        expect(tr.clientTransaction).toBeUndefined();
+
+        const tr2 = new TxResult({ clientTransaction: new ClientTransaction() });
+        // @ts-ignore
+        expect(tr2.clienttransaction).toBeDefined();
     });
 });

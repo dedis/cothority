@@ -28,6 +28,8 @@ if (protobuf.build !== "light") {
 
 const root = protobuf.Root.fromJSON(models);
 
+export const EMPTY_BUFFER = Buffer.allocUnsafe(0);
+
 export function registerMessage(name: string, ctor: protobuf.Constructor<{}>): void {
     const m = root.lookupType(name);
 

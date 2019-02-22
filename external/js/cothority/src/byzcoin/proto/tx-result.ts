@@ -1,18 +1,26 @@
-import { Message } from "protobufjs/light";
+import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
 import ClientTransaction from "../client-transaction";
 
+import "../client-transaction"; // messages registration
+
 export default class TxResult extends Message<TxResult> {
-    readonly clienttransaction: ClientTransaction;
+    readonly clientTransaction: ClientTransaction;
     readonly accepted: boolean;
 
-    /**
-     * Getter for the client transaction
-     *
-     * @returns the transaction
-     */
-    get clientTransaction(): ClientTransaction {
-        return this.clienttransaction;
+    constructor(props?: Properties<TxResult>) {
+        super(props);
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "clienttransaction", {
+            get(): ClientTransaction {
+                return this.clientTransaction;
+            },
+            set(value: ClientTransaction) {
+                this.clientTransaction = value;
+            },
+        });
     }
 }
 
