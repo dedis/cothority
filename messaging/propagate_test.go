@@ -49,10 +49,9 @@ func propagate(t *testing.T, nbrNodes, nbrFailures []int) {
 						recvCount++
 						iMut.Unlock()
 						return nil
-					} else {
-						t.Error("Didn't receive correct data")
-						return errors.New("Didn't receive correct data")
 					}
+					t.Error("Didn't receive correct data")
+					return errors.New("Didn't receive correct data")
 				}, nbrFailures[i])
 			log.ErrFatal(err)
 		}

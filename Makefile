@@ -29,3 +29,5 @@ docker:
 test_java: docker
 	cd external/java; mvn test
 
+lint:
+	golint ./...
