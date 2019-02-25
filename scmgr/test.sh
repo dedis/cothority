@@ -216,11 +216,11 @@ testFailure() {
 
 	# Kill number 4
 	pkill -f "conode.*co4.*server"
-	sleep .1
+	sleep 10
 	testOK runSc skipchain block add --roster public.toml $ID
 
 	runCoBG 4
-	sleep .1
+	sleep 10
 	testOK runSc skipchain block add --roster public.toml $ID
 }
 
