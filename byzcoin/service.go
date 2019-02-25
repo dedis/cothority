@@ -16,15 +16,14 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
-
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
@@ -942,12 +941,12 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			var nonce uint64
 			for {
 				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
+				if err != nil {
+					return errors.New("cannot download trie: " + err.Error())
+				}
 				if db == nil {
 					db, bucketName = s.GetAdditionalBucket([]byte(idStr))
 					nonce = resp.Nonce
-				}
-				if err != nil {
-					return errors.New("cannot download trie: " + err.Error())
 				}
 				// And store all entries in our local database.
 				err = db.Update(func(tx *bbolt.Tx) error {

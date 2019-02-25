@@ -367,7 +367,7 @@ runCoBG(){
     # This makes `pkill conode` not outputting errors here
     disown
   done
-  sleep 1
+  sleep 10
   for nb in "$@"; do
     dbgOut "checking conode-server #$nb"
     if [ -f "$COLOG$nb.log.dead" ]; then
