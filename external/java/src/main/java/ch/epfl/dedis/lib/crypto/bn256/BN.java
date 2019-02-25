@@ -228,6 +228,13 @@ public class BN {
 
             return this;
         }
+
+        /**
+         * Map a byte array to a point.
+         */
+        public static G1 hashToPoint(byte[] msg) {
+            return new G1(CurvePoint.hashToPoint(msg));
+        }
     }
 
     /**
