@@ -25,7 +25,7 @@ xdescribe("SpawnerInstance Tests", () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        const ci = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER]);
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
@@ -36,7 +36,7 @@ xdescribe("SpawnerInstance Tests", () => {
             costParty: Long.fromNumber(1000),
         };
 
-        const params = { bc: rpc, darcID: darc.baseID, signers: [SIGNER], costs, beneficiary: ci.id };
+        const params = { bc: rpc, darcID: darc.getGenesisDarcID(), signers: [SIGNER], costs, beneficiary: ci.id };
         const si = await SpawnerInstance.create(params);
 
         expect(si.signupCost.toNumber()).toBe(3000);
@@ -50,7 +50,7 @@ xdescribe("SpawnerInstance Tests", () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        const ci = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER]);
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
@@ -61,24 +61,25 @@ xdescribe("SpawnerInstance Tests", () => {
             costParty: Long.fromNumber(1000),
         };
 
-        const params = { bc: rpc, darcID: darc.baseID, signers: [SIGNER], costs, beneficiary: ci.id };
+        const params = { bc: rpc, darcID: darc.getGenesisDarcID(), signers: [SIGNER], costs, beneficiary: ci.id };
         const si = await SpawnerInstance.create(params);
 
         // Get an organiser
         const org = SignerEd25519.fromBytes(Buffer.from([1, 2, 3, 4, 5, 6]));
         const darcOrg = await si.createUserDarc(ci, [SIGNER], org.public, "org");
-        const orgCred =
-            await si.createCredential(ci, [SIGNER], darcOrg.getDarc().baseID, generateCredential(org.public));
+        const orgCred = await si.createCredential(
+            ci, [SIGNER], darcOrg.getDarc().getGenesisDarcID(), generateCredential(org.public));
 
         // Get an organiser without key
         const org2 = SignerEd25519.fromBytes(Buffer.from("deadbeef"));
         const darcOrg2 = await si.createUserDarc(ci, [SIGNER], org2.public, "org2");
-        const orgCred2 = await si.createCredential(ci, [SIGNER], darcOrg2.getDarc().baseID, new CredentialStruct());
+        const orgCred2 = await si.createCredential(
+            ci, [SIGNER], darcOrg2.getDarc().getGenesisDarcID(), new CredentialStruct());
 
         // get an attendee
         const attendee = SignerEd25519.fromBytes(Buffer.from([5, 6, 7, 8]));
         const darcAtt = await si.createUserDarc(ci, [SIGNER], attendee.public, "attendee");
-        const ciAtt = await si.createCoin(ci, [SIGNER], darcAtt.getDarc().baseID);
+        const ciAtt = await si.createCoin(ci, [SIGNER], darcAtt.getDarc().getGenesisDarcID());
 
         // Spawn a pop party
         const desc = new PopDesc({ name: "spawned pop party" });
@@ -131,7 +132,7 @@ xdescribe("SpawnerInstance Tests", () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        const ci = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER]);
 
         const costs = {
             costCoin: Long.fromNumber(1000),
@@ -140,7 +141,7 @@ xdescribe("SpawnerInstance Tests", () => {
             costParty: Long.fromNumber(1000),
         };
 
-        const params = { bc: rpc, darcID: darc.baseID, signers: [SIGNER], costs, beneficiary: ci.id };
+        const params = { bc: rpc, darcID: darc.getGenesisDarcID(), signers: [SIGNER], costs, beneficiary: ci.id };
         const si = await SpawnerInstance.create(params);
 
         const stake = Long.fromNumber(100);
@@ -166,7 +167,7 @@ xdescribe("SpawnerInstance Tests", () => {
         const darc = await makeDarc(roster);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        const ci = await CoinInstance.create(rpc, darc.baseID, [SIGNER]);
+        const ci = await CoinInstance.create(rpc, darc.getGenesisDarcID(), [SIGNER]);
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
@@ -177,7 +178,7 @@ xdescribe("SpawnerInstance Tests", () => {
             costParty: Long.fromNumber(1000),
         };
 
-        const params = { bc: rpc, darcID: darc.baseID, signers: [SIGNER], costs, beneficiary: ci.id };
+        const params = { bc: rpc, darcID: darc.getGenesisDarcID(), signers: [SIGNER], costs, beneficiary: ci.id };
         const si = await SpawnerInstance.create(params);
 
         const user = SignerEd25519.fromBytes(Buffer.from([1, 2, 3, 4, 5, 6]));
@@ -185,14 +186,14 @@ xdescribe("SpawnerInstance Tests", () => {
         const userDarc2 = await si.createUserDarc(ci, [SIGNER], user.public, "org");
         expect(userDarc.getDarc().id).toEqual(userDarc2.getDarc().id);
 
-        const userCred =
-            await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
-        const userCred2 =
-            await si.createCredential(ci, [SIGNER], userDarc.getDarc().baseID, generateCredential(user.public));
+        const userCred = await si.createCredential(
+            ci, [SIGNER], userDarc.getDarc().getGenesisDarcID(), generateCredential(user.public));
+        const userCred2 = await si.createCredential(
+            ci, [SIGNER], userDarc.getDarc().getGenesisDarcID(), generateCredential(user.public));
         expect(userCred.darcID).toEqual(userCred2.darcID);
 
-        const userCoin = await si.createCoin(ci, [SIGNER], userDarc.getDarc().baseID);
-        const userCoin2 = await si.createCoin(ci, [SIGNER], userDarc.getDarc().baseID);
+        const userCoin = await si.createCoin(ci, [SIGNER], userDarc.getDarc().getGenesisDarcID());
+        const userCoin2 = await si.createCoin(ci, [SIGNER], userDarc.getDarc().getGenesisDarcID());
         expect(userCoin.id).toEqual(userCoin2.id);
     });
 });

@@ -48,3 +48,15 @@ Publishing
 You must use the given script instead of `npm publish` because we need to publish
 the _dist_ folder instead. If you try to use the official command, you will get
 an error on purpose.
+
+### Side note on Buffer
+
+Protobuf definition and classes implemented expect a _Buffer_ for _bytes_ but
+as you should know, in a browser environment _bytes_ are instantiated with
+Uint8Array. You should then be aware that the actual type will be Uint8Array
+when using the library in a browser environment *but* the buffer interface
+will be provided thanks to the [buffer package](https://www.npmjs.com/package/buffer).
+
+As this is a [polyfill](https://remysharp.com/2010/10/08/what-is-a-polyfill), please
+check that what you need is implemented or you will need to use a different approach. Of
+course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.html).

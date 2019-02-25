@@ -1,9 +1,9 @@
 import { Point, PointFactory } from "@dedis/kyber";
 import { createHash } from "crypto";
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import UUID from "pure-uuid";
 import toml from "toml";
-import { registerMessage } from "../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
 const BASE_URL_WS = "ws://";
 const BASE_URL_TLS = "tls://";
@@ -220,6 +220,8 @@ export class ServiceIdentity extends Message<ServiceIdentity> {
 
     constructor(properties: Properties<ServiceIdentity>) {
         super(properties);
+
+        this.public = Buffer.from(this.public || EMPTY_BUFFER);
     }
 
     /**

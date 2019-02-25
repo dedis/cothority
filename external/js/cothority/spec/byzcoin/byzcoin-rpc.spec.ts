@@ -19,17 +19,17 @@ describe("ByzCoinRPC Tests", () => {
         const proof = await rpc.getProof(Buffer.alloc(32, 0));
         expect(proof).toBeDefined();
 
-        const instance = await DarcInstance.fromByzcoin(rpc, darc.baseID);
+        const instance = await DarcInstance.fromByzcoin(rpc, darc.getGenesisDarcID());
 
         const evolveDarc = darc.evolve();
         const evolveInstance = await instance.evolveDarcAndWait(evolveDarc, [SIGNER], 10);
-        expect(evolveInstance.getDarc().baseID).toEqual(darc.baseID);
+        expect(evolveInstance.getDarc().getGenesisDarcID()).toEqual(darc.getGenesisDarcID());
 
         await evolveInstance.update();
 
         const newDarc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, "another darc");
         const newInstance = await instance.spawnDarcAndWait(newDarc, [SIGNER], 10);
-        expect(newInstance.getDarc().baseID.equals(newDarc.baseID)).toBeTruthy();
+        expect(newInstance.getDarc().getGenesisDarcID().equals(newDarc.getGenesisDarcID())).toBeTruthy();
     });
 
     it("should create an rpc and get it from byzcoin", async () => {

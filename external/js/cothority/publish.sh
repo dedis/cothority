@@ -4,6 +4,7 @@ npm run build
 
 cp README.md dist/.
 cp package.json dist/.
+cp package-lock.json dist/.
 cp index.html dist/.
 
 # remove the private field of the package json

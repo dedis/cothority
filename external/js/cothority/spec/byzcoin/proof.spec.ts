@@ -17,7 +17,7 @@ describe("Proof Tests", () => {
 
         darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
-        di = await DarcInstance.fromByzcoin(rpc, darc.baseID);
+        di = await DarcInstance.fromByzcoin(rpc, darc.getGenesisDarcID());
     });
 
     it("should get proofs and verify them", async () => {
@@ -27,7 +27,7 @@ describe("Proof Tests", () => {
         for (let i = 0; i < n; i++) {
             const newDarc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster, `Darc n°${i}`);
             await di.spawnDarcAndWait(newDarc, [SIGNER], 10);
-            ids.push(newDarc.baseID);
+            ids.push(newDarc.getGenesisDarcID());
         }
 
         for (const id of ids) {
@@ -41,17 +41,17 @@ describe("Proof Tests", () => {
     it("should refuse a proof for a non-existing key", async () => {
         const badKey = Buffer.from("123");
         const badProof = await rpc.getProof(badKey);
-        expect(badProof.exists(Buffer.from(badKey))).toBeFalsy();
+        expect(badProof.exists(badKey)).toBeFalsy();
     });
 
     it("should throw for corrupted proofs", async () => {
-        let p = await rpc.getProof(darc.baseID);
+        let p = await rpc.getProof(darc.getGenesisDarcID());
         p.inclusionproof.interiors[p.inclusionproof.interiors.length - 1].right.writeInt32LE(1, 0);
-        expect(() => p.exists(darc.baseID)).toThrowError("invalid interior node");
+        expect(() => p.exists(darc.getGenesisDarcID())).toThrowError("invalid interior node");
 
-        p = await rpc.getProof(darc.baseID);
+        p = await rpc.getProof(darc.getGenesisDarcID());
         p.inclusionproof.leaf.key.writeInt32LE(1, 0);
-        expect(() => p.exists(darc.baseID))
+        expect(() => p.exists(darc.getGenesisDarcID()))
             .toThrowError("no corresponding leaf/empty node with respect to the interior node");
     });
 });

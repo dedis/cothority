@@ -1,7 +1,7 @@
 import { Point, PointFactory } from "@dedis/kyber";
 import Moment from "moment";
-import { Message, Properties } from "protobufjs";
-import { registerMessage } from "../../../protobuf";
+import { Message, Properties } from "protobufjs/light";
+import { EMPTY_BUFFER, registerMessage } from "../../../protobuf";
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
     readonly state: number;
@@ -10,9 +10,29 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
     readonly description: PopDesc;
     readonly attendees: Attendees;
     readonly miners: LRSTag[];
-    readonly miningreward: Long;
+    readonly miningReward: Long;
     readonly previous: Buffer;
     readonly next: Buffer;
+
+    constructor(props?: Properties<PopPartyStruct>) {
+        super(props);
+
+        this.finalizations = this.finalizations || [];
+        this.miners = this.miners || [];
+        this.previous = Buffer.from(this.previous || EMPTY_BUFFER);
+        this.next = Buffer.from(this.next || EMPTY_BUFFER);
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "miningreward", {
+            get(): Long {
+                return this.miningReward;
+            },
+            set(value: Long) {
+                this.miningReward = value;
+            },
+        });
+    }
 
     /**
      * Replace the current attendees by the new ones
@@ -76,9 +96,7 @@ export class Attendees extends Message<Attendees> {
     constructor(properties?: Properties<Attendees>) {
         super(properties);
 
-        if (!properties || !properties.keys) {
-            this.keys = [];
-        }
+        this.keys = this.keys || [];
     }
 
     /**
@@ -100,6 +118,12 @@ export class Attendees extends Message<Attendees> {
 
 export class LRSTag extends Message<LRSTag> {
     readonly tag: Buffer;
+
+    constructor(props?: Properties<LRSTag>) {
+        super(props);
+
+        this.tag = Buffer.from(this.tag || EMPTY_BUFFER);
+    }
 }
 
 /* TODO: remove after personhood.online is merged

@@ -11,7 +11,7 @@ describe("Darc Tests", () => {
         expect(darc3.version.toNumber()).toBe(2);
         expect(darc3.prevID).toEqual(darc2.id);
         expect(darc3.id).not.toEqual(darc2.id);
-        expect(darc3.baseID).toEqual(darc.baseID);
+        expect(darc3.getGenesisDarcID()).toEqual(darc.getGenesisDarcID());
         expect(darc3.toString()).toBeDefined();
     });
 });

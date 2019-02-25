@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { ServerIdentity } from "../network/proto";
 import { registerMessage } from "../protobuf";
 
@@ -12,6 +12,12 @@ export class StatusRequest extends Message<StatusRequest> {}
  */
 export class Status extends Message<Status> {
     readonly field: { [k: string]: string };
+
+    constructor(props?: Properties<Status>) {
+        super(props);
+
+        this.field = this.field || {};
+    }
 
     /**
      * Get the value of a field
@@ -36,7 +42,24 @@ export class Status extends Message<Status> {
  */
 export class StatusResponse extends Message<StatusResponse> {
     readonly status: { [k: string]: Status };
-    readonly serveridentity: ServerIdentity;
+    readonly serverIdentity: ServerIdentity;
+
+    constructor(props?: Properties<StatusResponse>) {
+        super(props);
+
+        this.status = this.status || {};
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "serveridentity", {
+            get(): ServerIdentity {
+                return this.serverIdentity;
+            },
+            set(value: ServerIdentity) {
+                this.serverIdentity = value;
+            },
+        });
+    }
 
     /**
      * Get the status of a service
@@ -45,14 +68,6 @@ export class StatusResponse extends Message<StatusResponse> {
      */
     getStatus(key: string): Status {
         return this.status[key];
-    }
-
-    /**
-     * Get the server identity of the requested conode
-     * @returns the server identity
-     */
-    get serverIdentity(): ServerIdentity {
-        return this.serveridentity;
     }
 
     /**

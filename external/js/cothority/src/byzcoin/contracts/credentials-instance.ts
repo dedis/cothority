@@ -1,6 +1,6 @@
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
-import { registerMessage } from "../../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
@@ -121,9 +121,7 @@ export class CredentialStruct extends Message<CredentialStruct> {
     constructor(properties?: Properties<CredentialStruct>) {
         super(properties);
 
-        if (!properties || !properties.credentials) {
-            this.credentials = [];
-        }
+        this.credentials = this.credentials || [];
     }
 
     /**
@@ -141,6 +139,12 @@ export class CredentialStruct extends Message<CredentialStruct> {
 export class Credential extends Message<Credential> {
     readonly name: string;
     readonly attributes: Attribute[];
+
+    constructor(props?: Properties<Credential>) {
+        super(props);
+
+        this.attributes = this.attributes || [];
+    }
 }
 
 /**
@@ -149,6 +153,12 @@ export class Credential extends Message<Credential> {
 export class Attribute extends Message<Attribute> {
     readonly name: string;
     readonly value: Buffer;
+
+    constructor(props?: Properties<Attribute>) {
+        super(props);
+
+        this.value = Buffer.from(this.value || EMPTY_BUFFER);
+    }
 }
 
 /* TODO: remove comment after personhood.online is merged

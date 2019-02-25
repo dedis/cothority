@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import IdentityDarc from "./identity-darc";
 import IdentityEd25519 from "./identity-ed25519";
 

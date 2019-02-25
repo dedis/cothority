@@ -48,8 +48,8 @@ export default class DarcInstance {
      * @return a promise that resolves once the data is up-to-date
      */
     async update(): Promise<DarcInstance> {
-        const proof = await this.rpc.getProof(this.darc.baseID);
-        this.darc = Darc.fromProof(this.darc.baseID, proof);
+        const proof = await this.rpc.getProof(this.darc.getGenesisDarcID());
+        this.darc = Darc.fromProof(this.darc.getGenesisDarcID(), proof);
 
         return this;
     }
@@ -65,7 +65,7 @@ export default class DarcInstance {
      */
     async evolveDarcAndWait(newDarc: Darc, signers: Signer[], wait: number): Promise<DarcInstance> {
         const args = [new Argument({ name: "darc", value: Buffer.from(Darc.encode(newDarc).finish()) })];
-        const instr = Instruction.createInvoke(this.darc.baseID, DarcInstance.contractID, "evolve", args);
+        const instr = Instruction.createInvoke(this.darc.getGenesisDarcID(), DarcInstance.contractID, "evolve", args);
 
         const ctx = new ClientTransaction({ instructions: [instr] });
         await ctx.updateCounters(this.rpc, signers);
@@ -73,7 +73,7 @@ export default class DarcInstance {
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
-        return DarcInstance.fromByzcoin(this.rpc, this.darc.baseID);
+        return DarcInstance.fromByzcoin(this.rpc, this.darc.getGenesisDarcID());
     }
 
     /**
@@ -91,7 +91,7 @@ export default class DarcInstance {
                 value: Buffer.from(Darc.encode(d).finish()),
             }),
         ];
-        const instr = Instruction.createSpawn(this.darc.baseID, DarcInstance.contractID, args);
+        const instr = Instruction.createSpawn(this.darc.getGenesisDarcID(), DarcInstance.contractID, args);
 
         const ctx = new ClientTransaction({ instructions: [instr] });
         await ctx.updateCounters(this.rpc, signers);
@@ -99,6 +99,6 @@ export default class DarcInstance {
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
 
-        return DarcInstance.fromByzcoin(this.rpc, d.baseID);
+        return DarcInstance.fromByzcoin(this.rpc, d.getGenesisDarcID());
     }
 }

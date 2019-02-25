@@ -1,6 +1,6 @@
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
-import { registerMessage } from "../../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
 import ClientTransaction, {Argument, Instruction} from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
@@ -46,7 +46,7 @@ export default class RoPaSciInstance {
      * @returns id as a buffer
      */
     get adversaryID(): Buffer {
-        return this.struct.secondplayeraccount;
+        return this.struct.secondPlayerAccount;
     }
 
     /**
@@ -177,25 +177,52 @@ export default class RoPaSciInstance {
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
     readonly description: string;
     readonly stake: Coin;
-    readonly firstplayerhash: Buffer;
-    readonly firstplayer: number;
-    readonly secondplayer: number;
-    readonly secondplayeraccount: Buffer;
+    readonly firstPlayerHash: Buffer;
+    readonly firstPlayer: number;
+    readonly secondPlayer: number;
+    readonly secondPlayerAccount: Buffer;
 
-    /**
-     * Getter for the first player choice
-     * @returns the choice as a number
-     */
-    get firstPlayer(): number {
-        return this.firstplayer;
-    }
+    constructor(props?: Properties<RoPaSciStruct>) {
+        super(props);
 
-    /**
-     * Getter for the second player
-     * @returns the choice as a number
-     */
-    get secondPlayer(): number {
-        return this.secondplayer;
+        this.firstPlayerHash = Buffer.from(this.firstPlayerHash || EMPTY_BUFFER);
+        this.secondPlayerAccount = Buffer.from(this.secondPlayerAccount || EMPTY_BUFFER);
+
+        Object.defineProperty(this, "firstplayer", {
+            get(): number {
+                return this.firstPlayer;
+            },
+            set(value: number) {
+                this.firstPlayer = value;
+            },
+        });
+
+        Object.defineProperty(this, "firstplayerhash", {
+            get(): Buffer {
+                return this.firstPlayerHash;
+            },
+            set(value: Buffer) {
+                this.firstPlayerHash = value;
+            },
+        });
+
+        Object.defineProperty(this, "secondplayer", {
+            get(): number {
+                return this.secondPlayer;
+            },
+            set(value: number) {
+                this.secondPlayer = value;
+            },
+        });
+
+        Object.defineProperty(this, "secondplayeraccount", {
+            get(): Buffer {
+                return this.secondPlayerAccount;
+            },
+            set(value: Buffer) {
+                this.secondPlayerAccount = value;
+            },
+        });
     }
 
     /**

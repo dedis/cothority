@@ -13,7 +13,7 @@ describe("Status Proto Tests", () => {
 
     it("should get the status of a service", () => {
         const res = new StatusResponse({
-            serveridentity: new ServerIdentity({ id: Buffer.from([]) }),
+            serverIdentity: new ServerIdentity({ id: Buffer.from([]) }),
             status: { service: new Status() },
         });
 

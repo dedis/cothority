@@ -1,7 +1,7 @@
 import Long from "long";
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
-import { registerMessage } from "../../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import { InstanceID } from "../instance";
@@ -166,6 +166,12 @@ export default class CoinInstance {
 export class Coin extends Message<Coin> {
     name: Buffer;
     value: Long;
+
+    constructor(props?: Properties<Coin>) {
+        super(props);
+
+        this.name = Buffer.from(this.name || EMPTY_BUFFER);
+    }
 
     toBytes(): Buffer {
         return Buffer.from(Coin.encode(this).finish());

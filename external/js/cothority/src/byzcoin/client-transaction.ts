@@ -1,8 +1,10 @@
 import { createHash } from "crypto";
 import Long from "long";
-import { Message } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
+import { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
@@ -13,6 +15,12 @@ export interface ICounterUpdater {
  */
 export default class ClientTransaction extends Message<ClientTransaction> {
     readonly instructions: Instruction[];
+
+    constructor(props?: Properties<ClientTransaction>) {
+        super(props);
+
+        this.instructions = this.instructions || [];
+    }
 
     /**
      * Sign the hash of the instructions using the list of signers
@@ -37,8 +45,9 @@ export default class ClientTransaction extends Message<ClientTransaction> {
         await this.instructions[0].updateCounters(rpc, signers);
 
         for (let i = 1; i < this.instructions.length; i++) {
-            this.instructions[i].signerCounter = this.instructions[0].signerCounter.map((v) => v.add(i));
-            this.instructions[i].signerIdentities = signers.map((s) => s.toWrapper());
+            const counters = this.instructions[0].signerCounter.map((v) => v.add(i));
+            const identities = signers.map((s) => s.toWrapper());
+            this.instructions[i].setCounters(counters, identities);
         }
     }
 
@@ -101,70 +110,50 @@ export class Instruction extends Message<Instruction> {
             signerCounter: [],
         });
     }
+
     readonly spawn: Spawn;
     readonly invoke: Invoke;
     readonly delete: Delete;
-    private instanceid: Buffer;
-    private signercounter: Long[];
-    private signeridentities: IdentityWrapper[];
+    readonly instanceID: InstanceID;
+    readonly signerCounter: Long[];
+    readonly signerIdentities: IdentityWrapper[];
+    readonly signatures: Buffer[];
 
-    private _signatures: Buffer[];
+    constructor(props?: Properties<Instruction>) {
+        super(props);
 
-    /**
-     * Getter for the instance ID
-     * @returns the instance ID
-     */
-    get instanceID(): Buffer {
-        return this.instanceid;
-    }
+        this.signerCounter = this.signerCounter || [];
+        this.signerIdentities = this.signerIdentities || [];
+        this.signatures = this.signatures || [];
 
-    /**
-     * Setter for the instance ID
-     * @param v The value to set
-     */
-    set instanceID(v: Buffer) {
-        this.instanceid = v;
-    }
+        /* Protobuf aliases */
 
-    /**
-     * Getter for the signer counters
-     * @returns the counters
-     */
-    get signerCounter(): Long[] {
-        return this.signercounter;
-    }
+        Object.defineProperty(this, "instanceid", {
+            get(): InstanceID {
+                return this.instanceID;
+            },
+            set(value: InstanceID) {
+                this.instanceID = value;
+            },
+        });
 
-    /**
-     * Setter for the signer counters
-     * @param v The value to set
-     */
-    set signerCounter(v: Long[]) {
-        this.signercounter = v;
-    }
+        Object.defineProperty(this, "signercounter", {
+            get(): Long[] {
+                return this.signerCounter;
+            },
+            set(value: Long[]) {
+                this.signerCounter = value;
+            },
+        });
 
-    /**
-     * Getter for the signer identites
-     * @returns the signer identities
-     */
-    get signerIdentities(): IdentityWrapper[] {
-        return this.signeridentities;
-    }
-
-    /**
-     * Setter for the signer identities
-     * @param v The list of identity wrappers
-     */
-    set signerIdentities(v: IdentityWrapper[]) {
-        this.signeridentities = v;
-    }
-
-    /**
-     * Getter for the signatures
-     * @returns the list of signatures
-     */
-    get signatures(): Buffer[] {
-        // readonly access with internal modification via signWith
-        return this._signatures;
+        Object.defineProperty(this, "signeridentities", {
+            get(): IdentityWrapper[] {
+                return this.signerIdentities;
+            },
+            set(value: IdentityWrapper[]) {
+                this.signerIdentities = value;
+            },
+        });
     }
 
     /**
@@ -190,7 +179,21 @@ export class Instruction extends Message<Instruction> {
      * @param signers The list of signers
      */
     signWith(ctxHash: Buffer, signers: Signer[]): void {
-        this._signatures = signers.map((s) => s.sign(ctxHash));
+        // @ts-ignore
+        this.signatures = signers.map((s) => s.sign(ctxHash));
+    }
+
+    /**
+     * Set the signer counters and identities
+     * @param counters      List of counters
+     * @param identities    List of identities
+     */
+    setCounters(counters: Long[], identities: IdentityWrapper[]): void {
+        // @ts-ignore
+        this.signerCounter = counters;
+
+        // @ts-ignore
+        this.signerIdentities = identities;
     }
 
     /**
@@ -200,8 +203,8 @@ export class Instruction extends Message<Instruction> {
      */
     async updateCounters(rpc: ICounterUpdater, signers: IIdentity[]): Promise<void> {
         const counters = await rpc.getSignerCounters(signers, 1);
-        this.signerCounter = counters;
-        this.signeridentities = signers.map((s) => s.toWrapper());
+
+        this.setCounters(counters, signers.map((s) => s.toWrapper()));
     }
 
     /**
@@ -210,7 +213,7 @@ export class Instruction extends Message<Instruction> {
      */
     hash(): Buffer {
         const h = createHash("sha256");
-        h.update(this.instanceid);
+        h.update(this.instanceID);
         h.update(Buffer.from([this.type]));
         let args: Argument[] = [];
         switch (this.type) {
@@ -276,76 +279,88 @@ export class Instruction extends Message<Instruction> {
 export class Argument extends Message<Argument> {
     readonly name: string;
     readonly value: Buffer;
+
+    constructor(props?: Properties<Argument>) {
+        super(props);
+
+        this.value = Buffer.from(this.value || EMPTY_BUFFER);
+    }
 }
 
 /**
  * Spawn instruction that will create instances
  */
 export class Spawn extends Message<Spawn> {
-
-    /**
-     * Getter for the contract ID
-     * @returns the contract ID
-     */
-    get contractID(): string {
-        return this.contractid;
-    }
-
-    /**
-     * Setter for the contract ID
-     * @param v The value to set
-     */
-    set contractID(v: string) {
-        this.contractid = v;
-    }
     readonly args: Argument[];
-    private contractid: string;
+    readonly contractID: string;
+
+    constructor(props?: Properties<Spawn>) {
+        super(props);
+
+        this.args = this.args || [];
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "contractid", {
+            get(): string {
+                return this.contractID;
+            },
+            set(value: string) {
+                this.contractID = value;
+            },
+        });
+    }
 }
 
 /**
  * Invoke instruction that will update an existing instance
  */
 export class Invoke extends Message<Invoke> {
-
-    /**
-     * Getter for the contract ID
-     * @returns the contract ID
-     */
-    get contractID(): string {
-        return this.contractid;
-    }
-
-    /**
-     * Setter for the contract ID
-     * @param v The value to set
-     */
-    set contractID(v: string) {
-        this.contractid = v;
-    }
     readonly command: string;
     readonly args: Argument[];
-    private contractid: string;
+    readonly contractID: string;
+
+    constructor(props?: Properties<Invoke>) {
+        super(props);
+
+        this.args = this.args || [];
+
+        /* Protobuf aliases */
+
+        Object.defineProperty(this, "contractid", {
+            get(): string {
+                return this.contractID;
+            },
+            set(value: string) {
+                this.contractID = value;
+            },
+        });
+    }
 }
 
 /**
  * Delete instruction that will delete an instance
  */
 export class Delete extends Message<Delete> {
-    private contractid: string;
+    readonly contractID: string;
 
-    /**
-     * Getter for the contract ID
-     * @returns the contract ID
-     */
-    get contractID(): string {
-        return this.contractid;
-    }
+    constructor(props?: Properties<Delete>) {
+        super(props);
 
-    /**
-     * Setter for the contract ID
-     * @param v The value to set
-     */
-    set contractID(v: string) {
-        this.contractid = v;
+        Object.defineProperty(this, "contractid", {
+            get(): string {
+                return this.contractID;
+            },
+            set(value: string) {
+                this.contractID = value;
+            },
+        });
     }
 }
+
+registerMessage("byzcoin.ClientTransaction", ClientTransaction);
+registerMessage("byzcoin.Instruction", Instruction);
+registerMessage("byzcoin.Argument", Argument);
+registerMessage("byzcoin.Spawn", Spawn);
+registerMessage("byzcoin.Invoke", Invoke);
+registerMessage("byzcoin.Delete", Delete);
