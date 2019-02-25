@@ -206,7 +206,7 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
             },
         });
 
-        Object.defineProperty(this, "secondPlayer", {
+        Object.defineProperty(this, "secondplayer", {
             get(): number {
                 return this.secondPlayer;
             },
