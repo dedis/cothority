@@ -13,7 +13,8 @@ describe('BLS Signature Tests', () => {
     it('should sign the message and verify the signature', () => {
         const sig = sign(message, secret);
         
-        expect(sig.toString('hex')).toBe('8a82be45c20d81aa0c0ff319af108a61bf35e5aea2d17d0ead3b92fb1e77d22504dcab863dd0166539e75371efc4466d5f1645b45e7d29840547928cea382527');
+        // reference test with Go implementation
+        expect(sig.toString('hex')).toBe('3bcac305c40c84155faa4c03899a2083cd601f6eb43ca7bd2e2b675311fd6fdc4295b573f6725e47a94d77015c89d81b562f6eba2c2d3755e8ce390af56688ca');
 
         const p = new BN256G2Point();
         p.unmarshalBinary(Buffer.from(pub, 'hex'));

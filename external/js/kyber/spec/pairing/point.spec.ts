@@ -78,6 +78,16 @@ describe('BN256 Point Tests', () => {
         }
     });
 
+    it('should hash the message to a point', () => {
+        const p1 = BN256G1Point.hashToPoint(Buffer.from('abc'));
+        const ref1 = Buffer.from('2ac314dc445e47f096d15425fc294601c1a7d8d27561c4fe9bb452f593f77f4705230e9663123b93c06ce0cd49a893619a92019566f326829a39d6f5ce10579d', 'hex');
+        expect(p1.marshalBinary().equals(ref1)).toBeTruthy();
+
+        const p2 = BN256G1Point.hashToPoint(Buffer.from('e0a05cbb37fd6c159732a8c57b981773f7480695328b674d8a9cc083377f1811', 'hex'));
+        const ref2 = Buffer.from('1444853e16a3f959e9ff1da9c226958f9ee4067f82451bcf88ecc5980cf2c4d50095605d82d456fbb24b21f283842746935e0c42c7f7a8f579894d9bccede5ae', 'hex');
+        expect(p2.marshalBinary().equals(ref2)).toBeTruthy();
+    });
+
     it('should get the string representation of G1', () => {
         const a = new BN256G1Point().null();
 

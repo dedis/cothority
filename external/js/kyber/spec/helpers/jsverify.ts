@@ -15,7 +15,7 @@ beforeEach(function () {
           var r = jsc.check(actual);
           if (done) {
             Promise.resolve().then(function () { return r; }).then(function (v) {
-              // TODO: update jsverify after the fix is merged
+              // TODO: update jsverify after the fix is merged: https://github.com/jsverify/jsverify/pull/283
               // @ts-ignore
               if (v === true) {
                 done();

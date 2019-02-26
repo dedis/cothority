@@ -1,8 +1,9 @@
+import { createHash } from 'crypto';
 import BN from 'bn.js';
 import GfP from './gfp';
 import { p } from './constants';
-
-type BNType = Buffer | string | number | BN;
+import { modSqrt } from '../utils/tonelli-shanks';
+import { BNType, oneBN } from '../constants';
 
 const curveB = new GfP(3);
 
@@ -11,6 +12,30 @@ const curveB = new GfP(3);
  */
 export default class CurvePoint {
     static generator = new CurvePoint(1, -2, 1, 1);
+
+    /**
+     * Hash the message to a point
+     * @param msg The message to hash
+     * @returns a valid point
+     */
+    static hashToPoint(msg: Buffer): CurvePoint {
+        const h = createHash('sha256');
+        h.update(msg);
+
+        let x = new BN(h.digest(), null, 'be').mod(p);
+
+        for (;;) {
+            const xxx = x.mul(x).mul(x).mod(p);
+            const t = xxx.add(curveB.getValue());
+
+            const y = modSqrt(t, p);
+            if (y != null) {
+                return new CurvePoint(x, y, 1, 1);
+            }
+
+            x = x.add(oneBN);
+        }
+    }
     
     private x: GfP;
     private y: GfP;
