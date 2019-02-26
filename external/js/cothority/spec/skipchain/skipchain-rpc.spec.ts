@@ -38,6 +38,20 @@ describe("SkipchainRPC Tests", () => {
         expect(chainIDs).toContain(genesis.hash);
     });
 
+    it("should create a chain with different roster", async () => {
+        const rpc = new SkipchainRPC(roster);
+        const rpc2 = new SkipchainRPC(roster.slice(0, 2));
+        const { latest: genesis } = await rpc.createSkipchain();
+
+        for (let i = 0; i < 3; i++) {
+            await rpc.addBlock(genesis.hash, Buffer.from("abc"));
+            await rpc2.addBlock(genesis.hash, Buffer.from("def"));
+        }
+
+        const chain = await rpc.getUpdateChain(genesis.hash);
+        expect(chain.length).toBe(7);
+    });
+
     it("should fail to get the block", async () => {
         const rpc = new SkipchainRPC(roster);
 
