@@ -16,6 +16,8 @@ APPDIR=${APPDIR:-$(pwd)}
 APP=${APP:-$(basename $APPDIR)}
 # Name of conode-log
 COLOG=conode
+# Base port when generating the configurations
+BASE_PORT=2000
 
 RUNOUT=$( mktemp )
 
@@ -338,7 +340,8 @@ setupConode(){
     co=co$n
     rm -f $co/*
     mkdir -p $co
-    echo -e "localhost:200$(( 2 * $n ))\nCot-$n\n$co\n" | dbgRun runCo $n setup
+    local port=`echo "$BASE_PORT + 2 * $n" | bc`
+    echo -e "localhost:$port\nCot-$n\n$co\n" | dbgRun runCo $n setup
     if [ ! -f $co/public.toml ]; then
       echo "Setup failed: file $co/public.toml is missing."
       exit
@@ -367,15 +370,30 @@ runCoBG(){
     # This makes `pkill conode` not outputting errors here
     disown
   done
-  sleep 10
-  for nb in "$@"; do
-    dbgOut "checking conode-server #$nb"
-    if [ -f "$COLOG$nb.log.dead" ]; then
-      echo "Server $nb failed to start:"
-      cat "$COLOG$nb.log"
-      exit 1
-    fi
+  
+  local allStarted=0
+  # wait for conodes to start but maximum 10 seconds
+  for (( k=0; k < 20 && allStarted == 0; k++ )) do
+    sleep .5
+    allStarted=1
+
+    for nb in "$@"; do
+      local port=`echo "$BASE_PORT + $nb * 2 + 1" | bc`
+      
+      if ! (echo >"/dev/tcp/localhost/$port") &>/dev/null; then
+        allStarted=0
+      fi
+    done
   done
+
+  if [ "$allStarted" -ne "1" ]; then
+    echo "Servers failed to start"
+    cat *.log
+    cat *.log.dead
+    exit 1
+  fi
+
+  dbgOut "All conodes have started"
 }
 
 runCo(){
