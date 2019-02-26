@@ -340,7 +340,7 @@ setupConode(){
     co=co$n
     rm -f $co/*
     mkdir -p $co
-    local port=`echo "$BASE_PORT + 2 * $n" | bc`
+    local port="$(( $BASE_PORT + 2 * $n ))"
     echo -e "localhost:$port\nCot-$n\n$co\n" | dbgRun runCo $n setup
     if [ ! -f $co/public.toml ]; then
       echo "Setup failed: file $co/public.toml is missing."
@@ -378,7 +378,7 @@ runCoBG(){
     allStarted=1
 
     for nb in "$@"; do
-      local port=`echo "$BASE_PORT + $nb * 2 + 1" | bc`
+      local port="$(( $BASE_PORT + $nb * 2 + 1 ))"
       
       if ! (echo >"/dev/tcp/localhost/$port") &>/dev/null; then
         allStarted=0
