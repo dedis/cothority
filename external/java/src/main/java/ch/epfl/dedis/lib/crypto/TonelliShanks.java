@@ -43,7 +43,7 @@ public class TonelliShanks {
             if (t.equals(ONE)) return r;
             BigInteger i = ZERO;
             BigInteger zz = t;
-            while (!zz.equals(BigInteger.ONE) && i.compareTo(m.subtract(ONE)) < 0) {
+            while (!zz.equals(ONE) && i.compareTo(m.subtract(ONE)) < 0) {
                 zz = zz.multiply(zz).mod(p);
                 i = i.add(ONE);
             }
