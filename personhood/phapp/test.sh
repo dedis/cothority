@@ -14,7 +14,7 @@ ZERO_KEY=0000000000000000000000000000000000000000000000000000000000000000
 
 main(){
     startTest
-    buildConode github.com/dedis/cothority/byzcoin github.com/dedis/cothority/byzcoin/contracts github.com/dedis/cothority/personhood
+    buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts go.dedis.ch/cothority/v3/personhood
     build $APPDIR/../../byzcoin/bcadmin
     run testSpawner
     run testWipe
@@ -37,7 +37,7 @@ testWipe(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  testOK runPH wipe config/bc*cfg
+  testOK runPH wipeParties config/bc*cfg
   testFileGrep "Wiping party cache" ${COLOG}1.log
   testFileGrep "Wiping party cache" ${COLOG}2.log
   testFileGrep "Wiping party cache" ${COLOG}3.log
@@ -53,7 +53,7 @@ testRegister(){
   pub="public_ed25519=$ZERO_KEY"
   alias="alias=foo"
   testOK runPH register config/bc*cfg config/key*cfg "https://pop.dedis.ch/qrcode/unregistered-1?$pub&$alias"
-  testGrep "" runPH show config/bc*cfg ad85845de51f6609587a545311d845cb803df2a02ab868930fd07e85b05fb4bc
+  testGrep "" runPH show config/bc*cfg dbee6bfba5b05e79b4310a96fa50dcca6274ddd225be20703b934202f9e16eac
   testReGrep "ed25519: 0000000000000000000000000000000000000000000000000000000000000000"
   testReGrep "darcID: 1ca978335adb086275ac35e8b338831b6a2c38202e95a7d5e0541d8d074aa9c9"
   testReGrep "coinIID: ff2eac64567ddca91e64344cfb896f92fa375f6850ddb28b829594cf38b92449"

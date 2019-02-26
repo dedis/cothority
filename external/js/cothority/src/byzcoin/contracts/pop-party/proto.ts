@@ -161,18 +161,8 @@ export class LRSTag extends Message<LRSTag> {
     }
 }
 
-<<<<<<< 12789cc9cbe6d17b05d7992cba3358792e452833
-/* TODO: remove after personhood.online is merged
 PopPartyStruct.register();
 FinalStatement.register();
 PopDesc.register();
 Attendees.register();
 LRSTag.register();
-*/
-=======
-registerMessage("personhood.PopPartyStruct", PopPartyStruct);
-registerMessage("personhood.FinalStatement", FinalStatement);
-registerMessage("personhood.PopDesc", PopDesc);
-registerMessage("personhood.Attendees", Attendees);
-registerMessage("personhood.LRSTag", LRSTag);
->>>>>>> Adding latest personhood service and contracts

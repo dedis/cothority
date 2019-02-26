@@ -7,8 +7,6 @@ import (
 	"fmt"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 )
 
@@ -21,22 +19,6 @@ type Client struct {
 // NewClient instantiates a new personhood.Client
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
-}
-
-// TestData stores a byzcoin-ID and a spawner-IID in the system for the other clients to pick up. This is a
-// test-endpoint, not used in the final personhood.online app.
-func (c *Client) TestData(r onet.Roster, bcID skipchain.SkipBlockID, spawnIID byzcoin.InstanceID) (errs []error) {
-	td := TestStore{
-		ByzCoinID:  bcID,
-		SpawnerIID: spawnIID,
-	}
-	for _, si := range r.List {
-		err := c.SendProtobuf(si, &td, nil)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("error in node %s: %s", si.Address, err))
-		}
-	}
-	return
 }
 
 // WipeParties removes all parties stored in the system.

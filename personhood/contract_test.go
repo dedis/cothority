@@ -95,8 +95,6 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 			Roster:     *s.roster,
 			ByzCoinID:  s.olID,
 			InstanceID: s.popI,
-			Signer:     s.serSig,
-			CoinIID:    s.serCoin,
 		},
 	})
 	require.Nil(t, err)

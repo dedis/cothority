@@ -5,6 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -16,9 +20,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"os"
-	"regexp"
-	"strings"
 
 	"gopkg.in/urfave/cli.v1"
 )
@@ -169,8 +170,9 @@ func spawnerUpdate(c *cli.Context) error {
 	ctx, err := combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(spIIDBuf),
 		Invoke: &byzcoin.Invoke{
-			Command: "update",
-			Args:    args,
+			ContractID: personhood.ContractCredentialID,
+			Command:    "update",
+			Args:       args,
 		},
 	})
 	if err != nil {
@@ -233,13 +235,6 @@ func spawner(c *cli.Context) error {
 	_, err = cl.AddTransactionAndWait(ctx, 5)
 	if err != nil {
 		return err
-	}
-
-	log.Infof("Storing in TestData")
-	clph := personhood.NewClient()
-	errs := clph.TestData(cfg.Roster, cfg.ByzCoinID, spawnerIID)
-	if len(errs) > 0 {
-		return errsToErr(errs)
 	}
 
 	log.Infof("For Defaults.ts:")
@@ -345,9 +340,9 @@ func register(c *cli.Context) error {
 
 	gdID := byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID())
 	id := darc.NewIdentityEd25519(pub)
-	rules := darc.InitRulesWith([]darc.Identity{id}, []darc.Identity{id}, "invoke:evolve")
+	rules := darc.InitRulesWith([]darc.Identity{id}, []darc.Identity{id}, "invoke:"+byzcoin.ContractDarcID+".evolve")
 	expr := id.String()
-	for _, s := range []string{"update", "fetch", "transfer"} {
+	for _, s := range []string{personhood.ContractCredentialID + ".update", contracts.ContractCoinID + ".fetch", contracts.ContractCoinID + ".transfer"} {
 		rules.AddRule(darc.Action("invoke:"+s), expression.Expr(expr))
 	}
 	d := darc.NewDarc(rules, []byte("user "+alias))
@@ -514,16 +509,9 @@ func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzc
 		gscr.Counters[0]++
 		instrs[i].SignerCounter = gscr.Counters
 	}
-	t := byzcoin.ClientTransaction{
-		Instructions: instrs,
-	}
-	h := t.Instructions.Hash()
-	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(h, signer); err != nil {
-			return t, err
-		}
-	}
-	return t, nil
+	ctx.Instructions = instrs
+	err = ctx.FillSignersAndSignWith(signer)
+	return
 }
 
 func verifyGenesisDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) error {
@@ -542,7 +530,7 @@ func verifyGenesisDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) e
 	}
 	found := 0
 	spawners := []string{"credential", "coin", "spawner"}
-	invokes := []string{"update"}
+	invokes := []string{personhood.ContractCredentialID + ".update"}
 	actions := regexp.MustCompile("(spawn:" +
 		strings.Join(spawners, "|spawn:") +
 		"|invoke:" + strings.Join(invokes, "|invoke:") + ")")
@@ -576,7 +564,8 @@ func verifyGenesisDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) e
 		ctx, err := combineInstrsAndSign(cl, signer, byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(gdID),
 			Invoke: &byzcoin.Invoke{
-				Command: "evolve",
+				Command:    "evolve",
+				ContractID: byzcoin.ContractDarcID,
 				Args: byzcoin.Arguments{{
 					Name:  "darc",
 					Value: darcBuf,

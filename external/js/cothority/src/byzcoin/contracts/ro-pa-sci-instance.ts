@@ -242,9 +242,4 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     }
 }
 
-<<<<<<< 12789cc9cbe6d17b05d7992cba3358792e452833
-// TODO: remove comment after personhood.online is merged
-// RoPaSciStruct.register();
-=======
-registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);
->>>>>>> Adding latest personhood service and contracts
+RoPaSciStruct.register();
