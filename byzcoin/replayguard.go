@@ -38,8 +38,14 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 		// back to 0, this is the intended behaviour, otherwise the
 		// client will not be able to make more transactions.
 		binary.LittleEndian.PutUint64(verBuf, ver+1)
+		// If we're at version 0, then it means the counter is not set,
+		// so we use the Create action
+		action := Update
+		if ver == 0 {
+			action = Create
+		}
 		scs = append(scs, StateChange{
-			StateAction: Update,
+			StateAction: action,
 			InstanceID:  publicVersionKey(id),
 			ContractID:  []byte{},
 			Value:       verBuf,
