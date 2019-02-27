@@ -16,9 +16,14 @@ func TestReplayGuard(t *testing.T) {
 	for _, signer := range signers {
 		ids = append(ids, signer.Identity())
 	}
-	sc, err := incrementSignerCounters(sst, ids)
+	scs, err := incrementSignerCounters(sst, ids)
 	require.NoError(t, err)
-	require.NoError(t, sst.StoreAll(sc))
+	require.NoError(t, sst.StoreAll(scs))
+
+	// checke that the state changes use the Create action
+	for _, sc := range scs {
+		require.Equal(t, Create, sc.StateAction)
+	}
 
 	// check that they're 1 using getSignerCounter
 	ctr0, err := getSignerCounter(sst, signers[0].Identity().String())
@@ -30,9 +35,14 @@ func TestReplayGuard(t *testing.T) {
 	require.Equal(t, uint64(1), ctr1)
 
 	// increment again, now the counter state is at 2
-	sc, err = incrementSignerCounters(sst, ids)
+	scs, err = incrementSignerCounters(sst, ids)
 	require.NoError(t, err)
-	require.NoError(t, sst.StoreAll(sc))
+	require.NoError(t, sst.StoreAll(scs))
+
+	// check that state changes use the Update action
+	for _, sc := range scs {
+		require.Equal(t, Update, sc.StateAction)
+	}
 
 	// verify, the new counter state must be 3
 	err = verifySignerCounters(sst, []uint64{3, 3}, ids)
