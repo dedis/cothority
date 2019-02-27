@@ -114,10 +114,11 @@ export default class SkipchainRPC {
     /**
      * Get the shortest path to the more recent block starting from latestID
      *
-     * @param latestID ID of the block
+     * @param latestID  ID of the block
+     * @param verify    Verify the integrity of the chain when true
      * @returns a promise that resolves with the list of blocks
      */
-    async getUpdateChain(latestID: Buffer): Promise<SkipBlock[]> {
+    async getUpdateChain(latestID: Buffer, verify = true): Promise<SkipBlock[]> {
         const req = new GetUpdateChain({ latestID });
         const ret = await this.pool.send<GetUpdateChainReply>(req, GetUpdateChainReply);
         const blocks = ret.update;
@@ -126,14 +127,16 @@ export default class SkipchainRPC {
         if (last && last.forwardLinks.length > 0) {
             // more blocks exist but typically the roster has changed
             const rpc = new SkipchainRPC(last.roster);
-            const more = await rpc.getUpdateChain(last.hash);
+            const more = await rpc.getUpdateChain(last.hash, verify);
 
             blocks.splice(-1, 1, ...more);
         }
 
-        const err = this.verifyChain(blocks, latestID);
-        if (err) {
-            throw new Error(`invalid chain received: ${err.message}`);
+        if (verify) {
+            const err = this.verifyChain(blocks, latestID);
+            if (err) {
+                throw new Error(`invalid chain received: ${err.message}`);
+            }
         }
 
         return blocks;
@@ -144,10 +147,11 @@ export default class SkipchainRPC {
      * links as much as possible and it is resistant to roster changes.
      *
      * @param latestID  the current latest block
+     * @param verify    Verify the integrity of the chain
      * @returns a promise that resolves with the block, or reject with an error
      */
-    async getLatestBlock(latestID: Buffer): Promise<SkipBlock> {
-        const blocks = await this.getUpdateChain(latestID);
+    async getLatestBlock(latestID: Buffer, verify = true): Promise<SkipBlock> {
+        const blocks = await this.getUpdateChain(latestID, verify);
 
         return blocks.pop();
     }
