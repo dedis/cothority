@@ -49,7 +49,7 @@ func TestTransaction_Signing(t *testing.T) {
 		{
 			InstanceID:  NewInstanceID(nil).Slice(),
 			StateAction: Create,
-			ContractID:  []byte("config"),
+			ContractID:  ContractConfigID,
 			Value:       configBuf,
 		},
 	})
@@ -67,7 +67,7 @@ func TestTransaction_Signing(t *testing.T) {
 	sc := StateChange{
 		InstanceID:  d.GetBaseID(),
 		StateAction: Create,
-		ContractID:  []byte("darc"),
+		ContractID:  ContractDarcID,
 		Value:       darcBuf,
 		DarcID:      d.GetBaseID(),
 	}
@@ -81,7 +81,7 @@ func setSignerCounter(sst *stagingStateTrie, id string, v uint64) error {
 	binary.LittleEndian.PutUint64(verBuf, v)
 	body := StateChangeBody{
 		StateAction: Update,
-		ContractID:  []byte{},
+		ContractID:  "",
 		Value:       verBuf,
 		DarcID:      darc.ID([]byte{}),
 	}

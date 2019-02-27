@@ -12,7 +12,7 @@ import (
 )
 
 // ContractCoinID denotes a contract that can store and transfer coins.
-var ContractCoinID = "coin"
+const ContractCoinID = "coin"
 
 // CoinName is a well-known InstanceID that identifies coins as belonging
 // to this contract.

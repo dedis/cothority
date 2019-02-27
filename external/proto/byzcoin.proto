@@ -225,7 +225,7 @@ message StateChange {
   // InstanceID of the state to change
   required bytes instanceid = 2;
   // ContractID points to the contract that can interpret the value
-  required bytes contractid = 3;
+  required string contractid = 3;
   // Value is the data needed by the contract
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
@@ -294,7 +294,7 @@ message DBKeyValue {
 // part that needs to be serialised and stored in a merkle tree.
 message StateChangeBody {
   required sint32 stateaction = 1;
-  required bytes contractid = 2;
+  required string contractid = 2;
   required bytes value = 3;
   required uint64 version = 4;
   required bytes darcid = 5;

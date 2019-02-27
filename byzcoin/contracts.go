@@ -95,9 +95,6 @@ const ContractConfigID = "config"
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = InstanceID{}
 
-// CmdDarcEvolve is needed to evolve a darc.
-const CmdDarcEvolve = "evolve"
-
 type contractConfig struct {
 	BasicContract
 	ChainConfig

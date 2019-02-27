@@ -389,7 +389,7 @@ func NewStateChange(sa StateAction, iID InstanceID, contractID string, value []b
 	return StateChange{
 		StateAction: sa,
 		InstanceID:  append([]byte{}, iID[:]...),
-		ContractID:  append([]byte{}, []byte(contractID)...),
+		ContractID:  contractID,
 		Value:       value,
 		DarcID:      darcID,
 	}

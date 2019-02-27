@@ -26,12 +26,7 @@ public class StateChange {
         instanceId = new InstanceId(sc.getInstanceid());
         value = sc.getValue();
         version = sc.getVersion();
-
-        try {
-            contractId = sc.getContractid().toString("utf8");
-        } catch (UnsupportedEncodingException e) {
-            contractId = "";
-        }
+        contractId = sc.getContractid();
 
         if (!sc.getDarcid().isEmpty()) {
             darcBaseID = new DarcId(sc.getDarcid());

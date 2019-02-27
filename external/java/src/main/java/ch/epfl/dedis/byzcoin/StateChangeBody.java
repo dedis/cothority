@@ -10,7 +10,7 @@ import ch.epfl.dedis.lib.proto.ByzCoinProto;
  */
 public class StateChangeBody {
     private int stateAction;
-    private byte[] contractID;
+    private String contractID;
     private byte[] value;
     private long version;
     private DarcId darcBaseId;
@@ -20,7 +20,7 @@ public class StateChangeBody {
      */
     public StateChangeBody(ByzCoinProto.StateChangeBody proto) throws CothorityCryptoException {
         stateAction = proto.getStateaction();
-        contractID = proto.getContractid().toByteArray();
+        contractID = proto.getContractid();
         value = proto.getValue().toByteArray();
         version = proto.getVersion();
         if (proto.getDarcid().toByteArray().length != Sha256id.length) {
@@ -39,7 +39,7 @@ public class StateChangeBody {
     /**
      * Getter for the contract ID.
      */
-    public byte[] getContractID() {
+    public String getContractID() {
         return contractID;
     }
 

@@ -312,7 +312,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
-	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
+	instr1 := createInvokeInstr(NewInstanceID(dcID), ContractDarcID, cmdDarcEvolve, "data", dcID)
 	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	instr1.SignerCounter = []uint64{2}
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
@@ -337,7 +337,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
-	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractDarcID, "evolve", "data", dcID)
+	instr1 = createInvokeInstr(NewInstanceID(dcID), ContractDarcID, cmdDarcEvolve, "data", dcID)
 	instr1.SignerCounter = []uint64{2}
 	instr1.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	dcID2 := random.Bits(256, true, random.New())
@@ -899,7 +899,7 @@ func TestService_StateChange(t *testing.T) {
 				StateChange{
 					StateAction: Create,
 					InstanceID:  inst.DeriveID("add").Slice(),
-					ContractID:  []byte(cid),
+					ContractID:  cid,
 					Value:       zeroBuf,
 				},
 			}, nil, nil
@@ -918,7 +918,7 @@ func TestService_StateChange(t *testing.T) {
 				StateChange{
 					StateAction: Update,
 					InstanceID:  inst.InstanceID.Slice(),
-					ContractID:  []byte(cid),
+					ContractID:  cid,
 					Value:       vBuf,
 				},
 			}, nil, nil
@@ -936,7 +936,7 @@ func TestService_StateChange(t *testing.T) {
 	err = cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  inst.Slice(),
-		ContractID:  []byte("add"),
+		ContractID:  "add",
 		Value:       make([]byte, 8),
 	}}, 0)
 	require.Nil(t, err)
@@ -1001,19 +1001,19 @@ func TestService_StateChangeVerification(t *testing.T) {
 			StateChange{
 				StateAction: Create,
 				InstanceID:  inst.DeriveID("").Slice(),
-				ContractID:  []byte(cid),
+				ContractID:  cid,
 				Value:       zeroBuf,
 			},
 			StateChange{
 				StateAction: Update,
 				InstanceID:  inst.DeriveID("").Slice(),
-				ContractID:  []byte(cid),
+				ContractID:  cid,
 				Value:       zeroBuf,
 			},
 			StateChange{
 				StateAction: sa,
 				InstanceID:  iid2.Slice(),
-				ContractID:  []byte(cid),
+				ContractID:  cid,
 				Value:       zeroBuf,
 			},
 		}, nil, nil
@@ -1027,7 +1027,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 	err = cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  iid.Slice(),
-		ContractID:  []byte(cid),
+		ContractID:  cid,
 		Value:       make([]byte, 8),
 	}}, 0)
 	require.Nil(t, err)
@@ -1100,7 +1100,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 		require.Nil(t, err)
 		invoke := Invoke{
 			// Because field ContractID is missing, this Invoke should fail.
-			Command: "evolve",
+			Command: cmdDarcEvolve,
 			Args: []Argument{
 				Argument{
 					Name:  "darc",
@@ -1972,7 +1972,7 @@ func TestService_StateChangeCache(t *testing.T) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
-	s.service().registerContract(contractID, adaptor(contract))
+	require.NoError(t, s.service().registerContract(contractID, adaptor(contract)))
 
 	scID := s.genesis.SkipChainID()
 	st, err := s.service().getStateTrie(scID)
@@ -1993,7 +1993,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 1, ctr)
 	// we expect one state change to increment the signature counter
 	require.Equal(t, 1, len(states))
-	require.Equal(t, []byte{}, states[0].ContractID)
+	require.Equal(t, "", states[0].ContractID)
 	require.Equal(t, []byte{}, []byte(states[0].DarcID))
 
 	// If we call createStateChanges on the new txOut (as it will happen in production
@@ -2170,7 +2170,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 		sc1 := StateChange{
 			StateAction: Update,
 			InstanceID:  iid,
-			ContractID:  []byte(stateChangeCacheContract),
+			ContractID:  stateChangeCacheContract,
 			Version:     ver + 1,
 		}
 		if err != nil {
@@ -2296,7 +2296,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) Client
 	require.Nil(t, err)
 	invoke := Invoke{
 		ContractID: ContractDarcID,
-		Command:    "evolve",
+		Command:    cmdDarcEvolve,
 		Args: []Argument{
 			Argument{
 				Name:  "darc",

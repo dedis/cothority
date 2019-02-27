@@ -184,7 +184,7 @@ public class Proof {
         if (body == null) {
             return null;
         }
-        return new String(body.getContractID());
+        return body.getContractID();
     }
 
     /**

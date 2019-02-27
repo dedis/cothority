@@ -41,7 +41,7 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 		scs = append(scs, StateChange{
 			StateAction: Update,
 			InstanceID:  publicVersionKey(id),
-			ContractID:  []byte{},
+			ContractID:  "",
 			Value:       verBuf,
 			Version:     ver + 1,
 			DarcID:      darc.ID([]byte{}),
