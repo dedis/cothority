@@ -1373,8 +1373,13 @@ func TestService_SetConfigInterval(t *testing.T) {
 	require.Nil(t, err)
 	s.sendTxAndWait(t, ctx, 10)
 
-	intervals := []time.Duration{testInterval, testInterval / 5,
-		testInterval * 2, testInterval / 5, testInterval * 20}
+	intervals := []time.Duration{
+		2 * time.Second,
+		5 * time.Second,
+		10 * time.Second,
+		20 * time.Second,
+		30 * time.Second,
+	}
 	if testing.Short() {
 		intervals = intervals[0:3]
 	}
@@ -1391,10 +1396,11 @@ func TestService_SetConfigInterval(t *testing.T) {
 		// is bigger, due to dedis/cothority#1409
 		s.sendTxAndWait(t, ctx, 10)
 
-		start := time.Now()
-
 		dummyCtx, _ := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
 		counter++
+
+		start := time.Now()
+
 		s.sendTxAndWait(t, dummyCtx, 10)
 
 		dur := time.Now().Sub(start)
