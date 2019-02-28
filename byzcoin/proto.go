@@ -245,7 +245,7 @@ type StateChange struct {
 	// InstanceID of the state to change
 	InstanceID []byte
 	// ContractID points to the contract that can interpret the value
-	ContractID []byte
+	ContractID string
 	// Value is the data needed by the contract
 	Value []byte
 	// DarcID is the Darc controlling access to this key.
@@ -314,7 +314,7 @@ type DBKeyValue struct {
 // part that needs to be serialised and stored in a merkle tree.
 type StateChangeBody struct {
 	StateAction StateAction
-	ContractID  []byte
+	ContractID  string
 	Value       []byte
 	Version     uint64
 	DarcID      darc.ID

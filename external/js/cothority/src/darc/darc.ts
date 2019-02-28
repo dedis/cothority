@@ -54,7 +54,7 @@ export default class Darc extends Message<Darc> {
      */
     static fromProof(key: Buffer, p: Proof): Darc {
         if (!p.matchContract(DarcInstance.contractID)) {
-            throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID.toString()}`);
+            throw new Error(`mismatch contract ID: ${DarcInstance.contractID} != ${p.contractID}`);
         }
 
         if (!p.exists(key)) {

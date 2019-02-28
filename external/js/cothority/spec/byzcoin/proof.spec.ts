@@ -34,7 +34,7 @@ describe("Proof Tests", () => {
             const p = await rpc.getProof(id);
             expect(p.exists(id)).toBeTruthy();
             expect(p.toString()).toBeDefined();
-            expect(p.matchContract(id));
+            expect(p.matchContract(id.toString()));
         }
     });
 

@@ -19,7 +19,7 @@ func TestStateTrie(t *testing.T) {
 	require.NotEqual(t, -1, st.GetIndex())
 
 	key := []byte("testInstance")
-	contractID := []byte("testContract")
+	contractID := "testContract"
 	value := []byte("testValue")
 	version := uint64(123)
 	darcID := darc.ID([]byte("123"))

@@ -57,7 +57,7 @@ func (sc StateChange) Copy() StateChange {
 		Version:     sc.Version,
 	}
 	c.InstanceID = append([]byte{}, sc.InstanceID...)
-	c.ContractID = append([]byte{}, sc.ContractID...)
+	c.ContractID = sc.ContractID
 	c.Value = append([]byte{}, sc.Value...)
 	c.DarcID = append([]byte{}, sc.DarcID...)
 	return c

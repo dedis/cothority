@@ -19820,7 +19820,7 @@ public final class ByzCoinProto {
      * ContractID points to the contract that can interpret the value
      * </pre>
      *
-     * <code>required bytes contractid = 3;</code>
+     * <code>required string contractid = 3;</code>
      */
     boolean hasContractid();
     /**
@@ -19828,9 +19828,18 @@ public final class ByzCoinProto {
      * ContractID points to the contract that can interpret the value
      * </pre>
      *
-     * <code>required bytes contractid = 3;</code>
+     * <code>required string contractid = 3;</code>
      */
-    com.google.protobuf.ByteString getContractid();
+    java.lang.String getContractid();
+    /**
+     * <pre>
+     * ContractID points to the contract that can interpret the value
+     * </pre>
+     *
+     * <code>required string contractid = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getContractidBytes();
 
     /**
      * <pre>
@@ -19902,7 +19911,7 @@ public final class ByzCoinProto {
     private StateChange() {
       stateaction_ = 0;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
-      contractid_ = com.google.protobuf.ByteString.EMPTY;
+      contractid_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
       version_ = 0L;
@@ -19943,8 +19952,9 @@ public final class ByzCoinProto {
               break;
             }
             case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
-              contractid_ = input.readBytes();
+              contractid_ = bs;
               break;
             }
             case 34: {
@@ -20042,13 +20052,13 @@ public final class ByzCoinProto {
     }
 
     public static final int CONTRACTID_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString contractid_;
+    private volatile java.lang.Object contractid_;
     /**
      * <pre>
      * ContractID points to the contract that can interpret the value
      * </pre>
      *
-     * <code>required bytes contractid = 3;</code>
+     * <code>required string contractid = 3;</code>
      */
     public boolean hasContractid() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -20058,10 +20068,41 @@ public final class ByzCoinProto {
      * ContractID points to the contract that can interpret the value
      * </pre>
      *
-     * <code>required bytes contractid = 3;</code>
+     * <code>required string contractid = 3;</code>
      */
-    public com.google.protobuf.ByteString getContractid() {
-      return contractid_;
+    public java.lang.String getContractid() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          contractid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * ContractID points to the contract that can interpret the value
+     * </pre>
+     *
+     * <code>required string contractid = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getContractidBytes() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        contractid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int VALUE_FIELD_NUMBER = 4;
@@ -20178,7 +20219,7 @@ public final class ByzCoinProto {
         output.writeBytes(2, instanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, contractid_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, contractid_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, value_);
@@ -20207,8 +20248,7 @@ public final class ByzCoinProto {
           .computeBytesSize(2, instanceid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, contractid_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, contractid_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
@@ -20445,7 +20485,7 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         instanceid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
-        contractid_ = com.google.protobuf.ByteString.EMPTY;
+        contractid_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
         value_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -20561,7 +20601,9 @@ public final class ByzCoinProto {
           setInstanceid(other.getInstanceid());
         }
         if (other.hasContractid()) {
-          setContractid(other.getContractid());
+          bitField0_ |= 0x00000004;
+          contractid_ = other.contractid_;
+          onChanged();
         }
         if (other.hasValue()) {
           setValue(other.getValue());
@@ -20719,13 +20761,13 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString contractid_ = com.google.protobuf.ByteString.EMPTY;
+      private java.lang.Object contractid_ = "";
       /**
        * <pre>
        * ContractID points to the contract that can interpret the value
        * </pre>
        *
-       * <code>required bytes contractid = 3;</code>
+       * <code>required string contractid = 3;</code>
        */
       public boolean hasContractid() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -20735,19 +20777,51 @@ public final class ByzCoinProto {
        * ContractID points to the contract that can interpret the value
        * </pre>
        *
-       * <code>required bytes contractid = 3;</code>
+       * <code>required string contractid = 3;</code>
        */
-      public com.google.protobuf.ByteString getContractid() {
-        return contractid_;
+      public java.lang.String getContractid() {
+        java.lang.Object ref = contractid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            contractid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
        * <pre>
        * ContractID points to the contract that can interpret the value
        * </pre>
        *
-       * <code>required bytes contractid = 3;</code>
+       * <code>required string contractid = 3;</code>
        */
-      public Builder setContractid(com.google.protobuf.ByteString value) {
+      public com.google.protobuf.ByteString
+          getContractidBytes() {
+        java.lang.Object ref = contractid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          contractid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ContractID points to the contract that can interpret the value
+       * </pre>
+       *
+       * <code>required string contractid = 3;</code>
+       */
+      public Builder setContractid(
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -20761,11 +20835,28 @@ public final class ByzCoinProto {
        * ContractID points to the contract that can interpret the value
        * </pre>
        *
-       * <code>required bytes contractid = 3;</code>
+       * <code>required string contractid = 3;</code>
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000004);
         contractid_ = getDefaultInstance().getContractid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ContractID points to the contract that can interpret the value
+       * </pre>
+       *
+       * <code>required string contractid = 3;</code>
+       */
+      public Builder setContractidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        contractid_ = value;
         onChanged();
         return this;
       }
@@ -25394,13 +25485,18 @@ public final class ByzCoinProto {
     int getStateaction();
 
     /**
-     * <code>required bytes contractid = 2;</code>
+     * <code>required string contractid = 2;</code>
      */
     boolean hasContractid();
     /**
-     * <code>required bytes contractid = 2;</code>
+     * <code>required string contractid = 2;</code>
      */
-    com.google.protobuf.ByteString getContractid();
+    java.lang.String getContractid();
+    /**
+     * <code>required string contractid = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getContractidBytes();
 
     /**
      * <code>required bytes value = 3;</code>
@@ -25448,7 +25544,7 @@ public final class ByzCoinProto {
     }
     private StateChangeBody() {
       stateaction_ = 0;
-      contractid_ = com.google.protobuf.ByteString.EMPTY;
+      contractid_ = "";
       value_ = com.google.protobuf.ByteString.EMPTY;
       version_ = 0L;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
@@ -25484,8 +25580,9 @@ public final class ByzCoinProto {
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              contractid_ = input.readBytes();
+              contractid_ = bs;
               break;
             }
             case 26: {
@@ -25552,18 +25649,45 @@ public final class ByzCoinProto {
     }
 
     public static final int CONTRACTID_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString contractid_;
+    private volatile java.lang.Object contractid_;
     /**
-     * <code>required bytes contractid = 2;</code>
+     * <code>required string contractid = 2;</code>
      */
     public boolean hasContractid() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes contractid = 2;</code>
+     * <code>required string contractid = 2;</code>
      */
-    public com.google.protobuf.ByteString getContractid() {
-      return contractid_;
+    public java.lang.String getContractid() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          contractid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string contractid = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getContractidBytes() {
+      java.lang.Object ref = contractid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        contractid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int VALUE_FIELD_NUMBER = 3;
@@ -25649,7 +25773,7 @@ public final class ByzCoinProto {
         output.writeSInt32(1, stateaction_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, contractid_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, contractid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, value_);
@@ -25674,8 +25798,7 @@ public final class ByzCoinProto {
           .computeSInt32Size(1, stateaction_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, contractid_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, contractid_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
@@ -25902,7 +26025,7 @@ public final class ByzCoinProto {
         super.clear();
         stateaction_ = 0;
         bitField0_ = (bitField0_ & ~0x00000001);
-        contractid_ = com.google.protobuf.ByteString.EMPTY;
+        contractid_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
         value_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -26011,7 +26134,9 @@ public final class ByzCoinProto {
           setStateaction(other.getStateaction());
         }
         if (other.hasContractid()) {
-          setContractid(other.getContractid());
+          bitField0_ |= 0x00000002;
+          contractid_ = other.contractid_;
+          onChanged();
         }
         if (other.hasValue()) {
           setValue(other.getValue());
@@ -26099,23 +26224,51 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString contractid_ = com.google.protobuf.ByteString.EMPTY;
+      private java.lang.Object contractid_ = "";
       /**
-       * <code>required bytes contractid = 2;</code>
+       * <code>required string contractid = 2;</code>
        */
       public boolean hasContractid() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes contractid = 2;</code>
+       * <code>required string contractid = 2;</code>
        */
-      public com.google.protobuf.ByteString getContractid() {
-        return contractid_;
+      public java.lang.String getContractid() {
+        java.lang.Object ref = contractid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            contractid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>required bytes contractid = 2;</code>
+       * <code>required string contractid = 2;</code>
        */
-      public Builder setContractid(com.google.protobuf.ByteString value) {
+      public com.google.protobuf.ByteString
+          getContractidBytes() {
+        java.lang.Object ref = contractid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          contractid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string contractid = 2;</code>
+       */
+      public Builder setContractid(
+          java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -26125,11 +26278,24 @@ public final class ByzCoinProto {
         return this;
       }
       /**
-       * <code>required bytes contractid = 2;</code>
+       * <code>required string contractid = 2;</code>
        */
       public Builder clearContractid() {
         bitField0_ = (bitField0_ & ~0x00000002);
         contractid_ = getDefaultInstance().getContractid();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string contractid = 2;</code>
+       */
+      public Builder setContractidBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        contractid_ = value;
         onChanged();
         return this;
       }
@@ -36988,7 +37154,7 @@ public final class ByzCoinProto {
       "esult\0225\n\021clienttransaction\030\001 \002(\0132\032.byzco" +
       "in.ClientTransaction\022\020\n\010accepted\030\002 \002(\010\"z" +
       "\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\nin" +
-      "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005va" +
+      "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\t\022\r\n\005va" +
       "lue\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030\006 \002" +
       "(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"" +
       "\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021Strea" +
@@ -36999,7 +37165,7 @@ public final class ByzCoinProto {
       "2\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\"(\n\n" +
       "DBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j" +
       "\n\017StateChangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022" +
-      "\n\ncontractid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017\n\007ver" +
+      "\n\ncontractid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007ver" +
       "sion\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerC" +
       "ounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchaini" +
       "d\030\002 \002(\014\"1\n\031GetSignerCountersResponse\022\024\n\010" +

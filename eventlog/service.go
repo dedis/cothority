@@ -279,7 +279,7 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 			byzcoin.StateChange{
 				StateAction: byzcoin.Update,
 				InstanceID:  bID,
-				ContractID:  []byte(contractName),
+				ContractID:  contractName,
 				Value:       bucketBuf,
 			})
 	}
@@ -325,9 +325,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
-
-	byzcoin.RegisterContract(s, contractName, contractFromBytes)
-	return s, nil
+	return s, byzcoin.RegisterContract(s, contractName, contractFromBytes)
 }
 
 func getEventByID(view byzcoin.ReadOnlyStateTrie, eid []byte) (*Event, error) {

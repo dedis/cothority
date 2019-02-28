@@ -38,7 +38,7 @@ public class Instance {
      */
     public static Instance fromProof(Proof p) {
         StateChangeBody body = p.getValues();
-        return new Instance(new InstanceId(p.getKey()), new String(body.getContractID()), body.getDarcBaseId(), body.getValue());
+        return new Instance(new InstanceId(p.getKey()), body.getContractID(), body.getDarcBaseId(), body.getValue());
     }
 
     /**

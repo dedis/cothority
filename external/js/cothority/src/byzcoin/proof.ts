@@ -51,7 +51,7 @@ export default class Proof extends Message<Proof> {
      *
      * @returns the contract ID as a buffer
      */
-    get contractID(): Buffer {
+    get contractID(): string {
         return this.stateChangeBody.contractID;
     }
 
@@ -183,11 +183,7 @@ export default class Proof extends Message<Proof> {
      * @param cid contractID to check
      * @returns true if it is a proof of existence and the given type of contract matches.
      */
-    matchContract(cid: string | Buffer): boolean {
-        if (cid instanceof Buffer) {
-            return this.stateChangeBody.contractID.equals(cid);
-        }
-
+    matchContract(cid: string): boolean {
         return this.stateChangeBody.contractID.toString() === cid;
     }
 
@@ -195,7 +191,7 @@ export default class Proof extends Message<Proof> {
      * @returns a nicely formatted representation of the proof.
      */
     toString(): string {
-        return `Proof for contractID(${this.contractID.toString()}) for ${this.key}`;
+        return `Proof for contractID(${this.contractID}) for ${this.key}`;
     }
 }
 
@@ -367,12 +363,12 @@ class InclusionProof extends Message<InclusionProof> {
 
 class StateChangeBody extends Message<StateChangeBody> {
     readonly stateaction: number;
-    readonly contractid: Buffer;
+    readonly contractid: string;
     readonly value: Buffer;
     readonly version: Long;
     readonly darcid: Buffer;
 
-    get contractID(): Buffer {
+    get contractID(): string {
         return this.contractid;
     }
 

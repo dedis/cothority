@@ -33,11 +33,11 @@ export default class Instance {
     }
 
     readonly id: InstanceID;
-    readonly contractID: Buffer;
+    readonly contractID: string;
     readonly darcID: InstanceID;
     readonly data: Buffer;
 
-    protected constructor(id: Buffer, contractID: Buffer, darcID: Buffer, data: Buffer) {
+    protected constructor(id: Buffer, contractID: string, darcID: Buffer, data: Buffer) {
         this.id = id;
         this.contractID = contractID;
         this.darcID = darcID;
