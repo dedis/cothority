@@ -3,8 +3,8 @@ package unicore
 import (
 	"log"
 
-	"go.dedis.ch/cothority/byzcoin"
-	"go.dedis.ch/onet"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/onet/v3"
 )
 
 // ServiceName is the identifier of the service

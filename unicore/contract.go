@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/onet/log"
+	"go.dedis.ch/onet/v3/log"
 )
 
 type contract struct {
@@ -53,7 +53,12 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, instr byzcoin.Instructi
 		return nil, nil, err
 	}
 
-	cmd := exec.Command(path.Join(tmpDir, "exec"), "1", "2")
+	args := []string{}
+	for _, a := range instr.Invoke.Args {
+		args = append(args, string(a.Value))
+	}
+
+	cmd := exec.Command(path.Join(tmpDir, "exec"), args...)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out

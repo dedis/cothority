@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"go.dedis.ch/onet/log"
+	"go.dedis.ch/onet/v3/log"
 	cli "gopkg.in/urfave/cli.v1"
 )
 

@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io/ioutil"
 
-	"go.dedis.ch/cothority/byzcoin"
-	"go.dedis.ch/cothority/darc"
-	"go.dedis.ch/cothority/unicore"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/unicore"
 	"go.dedis.ch/protobuf"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -34,7 +35,15 @@ func exec(c *cli.Context) error {
 		return err
 	}
 
-	return client.Exec()
+	args := []byzcoin.Argument{}
+	for i, a := range c.Args() {
+		args = append(args, byzcoin.Argument{
+			Name:  fmt.Sprintf("%d", i),
+			Value: []byte(a),
+		})
+	}
+
+	return client.Exec(args)
 }
 
 func newClient(c *cli.Context) (*unicore.Client, error) {

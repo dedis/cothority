@@ -3,10 +3,10 @@ package unicore
 import (
 	"fmt"
 
-	"go.dedis.ch/cothority/byzcoin"
-	"go.dedis.ch/cothority/darc"
-	"go.dedis.ch/cothority/skipchain"
-	"go.dedis.ch/onet"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3"
 )
 
 // BcConfig is
@@ -67,12 +67,13 @@ func (c *Client) Create(binary []byte) error {
 }
 
 // Exec invoke the given instance and tries to execute the binary stored inside it
-func (c *Client) Exec() error {
+func (c *Client) Exec(args []byzcoin.Argument) error {
 	instr := byzcoin.Instruction{
 		InstanceID: c.Instance,
 		Invoke: &byzcoin.Invoke{
 			ContractID: contractName,
 			Command:    "exec",
+			Args:       args,
 		},
 		SignerCounter: []uint64(c.Counters),
 	}
