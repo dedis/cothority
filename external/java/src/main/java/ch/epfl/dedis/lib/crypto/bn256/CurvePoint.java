@@ -1,6 +1,10 @@
 package ch.epfl.dedis.lib.crypto.bn256;
 
+import ch.epfl.dedis.lib.crypto.TonelliShanks;
+
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 class CurvePoint {
     BigInteger x, y, z, t;
@@ -201,5 +205,30 @@ class CurvePoint {
         this.y = a.y.negate();
         this.z = a.z;
         this.t = BigInteger.ZERO;
+    }
+
+    static CurvePoint hashToPoint(byte[] m) {
+        MessageDigest h;
+        try {
+            h = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        h.update(m);
+        BigInteger x = new BigInteger(1, h.digest());
+        x = x.mod(p);
+
+        for (;;) {
+            BigInteger xxx = x.multiply(x).multiply(x).mod(p);
+            BigInteger t = xxx.add(CurvePoint.curveB);
+
+            BigInteger y = TonelliShanks.modSqrt(t, p);
+            if (y != null) {
+                return new CurvePoint(x, y, BigInteger.ONE, BigInteger.ONE);
+            }
+
+            x = x.add(BigInteger.ONE);
+        }
     }
 }

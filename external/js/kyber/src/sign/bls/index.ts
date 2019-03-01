@@ -1,17 +1,7 @@
-import { createHash } from 'crypto';
 import BN256Scalar from '../../pairing/scalar';
 import { BN256G2Point, BN256G1Point } from '../../pairing/point';
 
 export type BlsSignature = Buffer;
-
-function hashToPoint(msg: Buffer): BN256G1Point {
-    const h = createHash('sha256');
-    h.update(msg);
-
-    const p = new BN256G1Point(h.digest());
-
-    return p;
-}
 
 /**
  * Sign the message with the given secret key
@@ -19,7 +9,7 @@ function hashToPoint(msg: Buffer): BN256G1Point {
  * @param secret the private key
  */
 export function sign(msg: Buffer, secret: BN256Scalar): BlsSignature {
-    const HM = hashToPoint(msg);
+    const HM = BN256G1Point.hashToPoint(msg);
     HM.mul(secret, HM);
 
     return HM.marshalBinary();
@@ -32,7 +22,7 @@ export function sign(msg: Buffer, secret: BN256Scalar): BlsSignature {
  * @param sig the signature as a buffer
  */
 export function verify(msg: Buffer, pub: BN256G2Point, sig: Buffer): boolean {
-    const HM = hashToPoint(msg);
+    const HM = BN256G1Point.hashToPoint(msg);
     const left = HM.pair(pub);
 
     const s = new BN256G1Point();

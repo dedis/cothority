@@ -28,8 +28,6 @@ func init() {
 type CoSi struct {
 	// The node that represents us
 	*onet.TreeNodeInstance
-	// TreeNodeId cached
-	treeNodeID onet.TreeNodeID
 	// the cosi struct we use (since it is a cosi protocol)
 	// Public because we will need it from other protocols.
 	cosi *crypto.CoSi

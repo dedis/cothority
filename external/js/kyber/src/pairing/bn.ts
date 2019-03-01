@@ -13,6 +13,18 @@ export type BNType = number | string | number[] | Buffer | BN;
  * then every modification is done in-place.
  */
 export class G1 {
+    /**
+     * Hash the message to a point
+     * @param msg The message to hash
+     * @returns a valid point
+     */
+    public static hashToPoint(msg: Buffer): G1 {
+        const g1 = new G1();
+        g1.p = CurvePoint.hashToPoint(msg);
+
+        return g1;
+    }
+
     private static ELEM_SIZE = 256/8;
     private static MARSHAL_SIZE = G1.ELEM_SIZE * 2;
 

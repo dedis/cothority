@@ -9,6 +9,18 @@ import BN256Scalar from './scalar';
 export class BN256G1Point implements Point {
     public static MARSHAL_ID = Buffer.from('bn256.g1');
 
+    /**
+     * Hash the message into a point
+     * @param msg The message to hash
+     * @returns a valid point
+     */
+    public static hashToPoint(msg: Buffer): BN256G1Point {
+        const p = new BN256G1Point();
+        p.g1 = G1.hashToPoint(msg);
+
+        return p;
+    }
+
     private g1: G1;
 
     constructor(k?: BNType) {

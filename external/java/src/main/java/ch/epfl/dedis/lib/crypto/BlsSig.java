@@ -4,8 +4,6 @@ import ch.epfl.dedis.lib.crypto.bn256.BN;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Class that represents a BLS signature.
@@ -30,7 +28,7 @@ public class BlsSig {
      * @param x is the secret.
      */
     public BlsSig(byte[] msg, Scalar x) {
-        Bn256G1Point HM = hashToPoint(msg);
+        Bn256G1Point HM = new Bn256G1Point(BN.G1.hashToPoint(msg));
         Point xHM = HM.mul(x);
         this.sig = xHM.toBytes();
     }
@@ -46,7 +44,7 @@ public class BlsSig {
      * @return true if the verification is successful.
      */
     public boolean verify(byte[] msg, Bn256G2Point X) {
-        Bn256G1Point HM = hashToPoint(msg);
+        Bn256G1Point HM = new Bn256G1Point(BN.G1.hashToPoint(msg));
         BN.GT left = HM.pair(X);
         try {
             Bn256G1Point s = new Bn256G1Point(sig);
@@ -65,17 +63,5 @@ public class BlsSig {
      */
     public byte[] getSig() {
         return sig;
-    }
-
-
-    private static Bn256G1Point hashToPoint(byte[] msg) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(msg);
-            BigInteger scalar = new BigInteger(1, digest.digest());
-            return new Bn256G1Point(scalar);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

@@ -1,6 +1,5 @@
 import BN from 'bn.js';
-
-type BNType = Buffer | string | number | BN;
+import { BNType } from '../constants';
 
 /**
  * Field of size p
