@@ -130,6 +130,7 @@ export class RosterWSConnection extends WebSocketConnection {
         const addresses = this.addresses.slice();
         shuffle(addresses);
 
+        const errors = [];
         for (const addr of addresses) {
             this.url = addr;
 
@@ -138,10 +139,11 @@ export class RosterWSConnection extends WebSocketConnection {
                 return await super.send(message, reply);
             } catch (e) {
                 Logger.lvl3(`fail to send on ${addr} with error:`, e);
+                errors.push(e.message);
             }
         }
 
-        throw new Error("no conodes are available or all conodes returned an error");
+        throw new Error(`send fails with errors: [${errors.join("; ")}]`);
     }
 }
 

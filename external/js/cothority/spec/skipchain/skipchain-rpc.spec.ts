@@ -63,7 +63,7 @@ describe("SkipchainRPC Tests", () => {
         }
 
         expect(err).toBeDefined();
-        expect(err.message).toBe("No such block");
+        expect(err.message).toContain("No such block");
         err = null;
 
         try {
@@ -72,7 +72,7 @@ describe("SkipchainRPC Tests", () => {
             err = e;
         }
 
-        expect(err.message).toBe("no conode has the latest block");
+        expect(err.message).toContain("Couldn't find latest skipblock");
     });
 
     it("should verify the chain", async () => {

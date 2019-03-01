@@ -1,5 +1,5 @@
 import Logger from "../log";
-import { IConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import {
     GetAllSkipChainIDs,
@@ -22,10 +22,12 @@ export default class SkipchainRPC {
     static serviceName = "Skipchain";
 
     private roster: Roster;
+    private pool: IConnection;
     private conn: IConnection[];
 
     constructor(roster: Roster) {
         this.roster = roster;
+        this.pool = new RosterWSConnection(roster, SkipchainRPC.serviceName);
         this.conn = roster.list.map((srvid) => {
             return new WebSocketConnection(srvid.getWebSocketAddress(), SkipchainRPC.serviceName);
         });
@@ -70,7 +72,7 @@ export default class SkipchainRPC {
     async getSkipBlock(bid: Buffer): Promise<SkipBlock> {
         const req = new GetSingleBlock({ id: bid });
 
-        const block = await this.conn[0].send<SkipBlock>(req, SkipBlock);
+        const block = await this.pool.send<SkipBlock>(req, SkipBlock);
         if (!block.computeHash().equals(block.hash)) {
             throw new Error("invalid block: hash does not match");
         }
@@ -88,7 +90,7 @@ export default class SkipchainRPC {
     async getSkipBlockByIndex(genesis: Buffer, index: number): Promise<GetSingleBlockByIndexReply> {
         const req = new GetSingleBlockByIndex({ genesis, index });
 
-        const reply = await this.conn[0].send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
+        const reply = await this.pool.send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
         if (!reply.skipblock.computeHash().equals(reply.skipblock.hash)) {
             throw new Error("invalid block: hash does not match");
         }
@@ -104,7 +106,7 @@ export default class SkipchainRPC {
     async getAllSkipChainIDs(): Promise<Buffer[]> {
         const req = new GetAllSkipChainIDs();
 
-        const ret = await this.conn[0].send<GetAllSkipChainIDsReply>(req, GetAllSkipChainIDsReply);
+        const ret = await this.pool.send<GetAllSkipChainIDsReply>(req, GetAllSkipChainIDsReply);
 
         return ret.skipChainIDs.map((id) => Buffer.from(id));
     }
@@ -112,19 +114,32 @@ export default class SkipchainRPC {
     /**
      * Get the shortest path to the more recent block starting from latestID
      *
-     * @param latestID ID of the block
+     * @param latestID  ID of the block
+     * @param verify    Verify the integrity of the chain when true
      * @returns a promise that resolves with the list of blocks
      */
-    async getUpdateChain(latestID: Buffer): Promise<SkipBlock[]> {
+    async getUpdateChain(latestID: Buffer, verify = true): Promise<SkipBlock[]> {
         const req = new GetUpdateChain({ latestID });
-        const ret = await this.conn[0].send<GetUpdateChainReply>(req, GetUpdateChainReply);
+        const ret = await this.pool.send<GetUpdateChainReply>(req, GetUpdateChainReply);
+        const blocks = ret.update;
 
-        const err = this.verifyChain(ret.update, latestID);
-        if (err) {
-            throw new Error(`invalid chain received: ${err.message}`);
+        const last = blocks[blocks.length - 1];
+        if (last && last.forwardLinks.length > 0) {
+            // more blocks exist but typically the roster has changed
+            const rpc = new SkipchainRPC(last.roster);
+            const more = await rpc.getUpdateChain(last.hash, verify);
+
+            blocks.splice(-1, 1, ...more);
         }
 
-        return ret.update;
+        if (verify) {
+            const err = this.verifyChain(blocks, latestID);
+            if (err) {
+                throw new Error(`invalid chain received: ${err.message}`);
+            }
+        }
+
+        return blocks;
     }
 
     /**
@@ -132,40 +147,13 @@ export default class SkipchainRPC {
      * links as much as possible and it is resistant to roster changes.
      *
      * @param latestID  the current latest block
-     * @param roster    use a different roster than the RPC
+     * @param verify    Verify the integrity of the chain
      * @returns a promise that resolves with the block, or reject with an error
      */
-    async getLatestBlock(latestID: Buffer): Promise<SkipBlock> {
-        const req = new GetUpdateChain({ latestID });
-        let reply: GetUpdateChainReply;
+    async getLatestBlock(latestID: Buffer, verify = true): Promise<SkipBlock> {
+        const blocks = await this.getUpdateChain(latestID, verify);
 
-        for (const c of this.conn) {
-            try {
-                reply = await c.send(req, GetUpdateChainReply);
-            } catch (err) {
-                Logger.lvl3(`error from ${c.getURL()}: ${err.message}`);
-                continue;
-            }
-
-            const err = this.verifyChain(reply.update, latestID);
-            if (!err) {
-                const b = reply.update.pop();
-
-                if (b.forwardLinks.length === 0) {
-                    return b;
-                } else {
-                    // it might happen a conode doesn't have the latest
-                    // block stored so we contact the most updated
-                    // roster to try to get it
-                    return new SkipchainRPC(b.roster).getLatestBlock(b.hash);
-                }
-            } else {
-                Logger.lvl3("Received corrupted skipchain with error:", err);
-            }
-        }
-
-        // in theory that should not happen as at least the leader has the latest block
-        throw new Error("no conode has the latest block");
+        return blocks.pop();
     }
 
     /**
