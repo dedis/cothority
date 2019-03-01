@@ -18,9 +18,9 @@ import (
 	"net"
 	"os"
 	"path"
-	"reflect" // Services that will be compiled in.
+	"reflect"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3" // Services that will be compiled in.
 	_ "go.dedis.ch/cothority/v3/authprox"
 	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
 	_ "go.dedis.ch/cothority/v3/byzcoin"

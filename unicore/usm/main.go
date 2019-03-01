@@ -54,6 +54,29 @@ var cmds = cli.Commands{
 		},
 		Action: exec,
 	},
+	{
+		Name:    "state",
+		Usage:   "get the state of a smart contract",
+		Aliases: []string{"s"},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "key",
+				EnvVar: "PRIVATE_KEY",
+				Usage:  "the ed25519 private key that will sign the create transaction",
+			},
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config",
+			},
+			cli.StringFlag{
+				Name:   "instance",
+				EnvVar: "INSTANCE_ID",
+				Usage:  "The instance ID",
+			},
+		},
+		Action: state,
+	},
 }
 
 var cliApp = cli.NewApp()

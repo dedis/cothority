@@ -3,6 +3,7 @@ package unicore
 import (
 	"fmt"
 
+	"go.dedis.ch/cothority"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -22,6 +23,8 @@ type Client struct {
 	Signers       []darc.Signer
 	Counters      []uint64
 	Instance      byzcoin.InstanceID
+
+	oc *onet.Client
 }
 
 // NewClient is
@@ -30,6 +33,7 @@ func NewClient(cfg *BcConfig) *Client {
 		ByzCoinClient: byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster),
 		Signers:       []darc.Signer{},
 		Counters:      []uint64{},
+		oc:            onet.NewClient(cothority.Suite, ServiceName),
 	}
 }
 
@@ -90,6 +94,22 @@ func (c *Client) Exec(args []byzcoin.Argument) error {
 	c.increaseCounters()
 
 	return nil
+}
+
+// GetState returns the state of the smart contract
+func (c *Client) GetState(iid byzcoin.InstanceID) ([]byte, error) {
+	req := &GetStateRequest{
+		ByzCoinID:  c.ByzCoinClient.ID,
+		InstanceID: iid.Slice(),
+	}
+
+	reply := &GetStateReply{}
+	err := c.oc.SendProtobuf(c.ByzCoinClient.Roster.List[0], req, reply)
+	if err != nil {
+		return nil, err
+	}
+
+	return reply.Value, nil
 }
 
 // AddSigner assigns a new signer to the client

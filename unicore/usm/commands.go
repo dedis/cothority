@@ -46,6 +46,21 @@ func exec(c *cli.Context) error {
 	return client.Exec(args)
 }
 
+func state(c *cli.Context) error {
+	client, err := newClient(c)
+	if err != nil {
+		return err
+	}
+
+	state, err := client.GetState(client.Instance)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%x\n", state)
+	return nil
+}
+
 func newClient(c *cli.Context) (*unicore.Client, error) {
 	bc := c.String("bc")
 	if bc == "" {
