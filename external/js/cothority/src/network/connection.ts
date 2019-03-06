@@ -32,6 +32,12 @@ export interface IConnection {
      * @returns the address as a string
      */
     getURL(): string;
+
+    /**
+     * Set the timeout value for new connections
+     * @param value Timeout in milliseconds
+     */
+    setTimeout(value: number): void;
 }
 
 /**
@@ -40,6 +46,7 @@ export interface IConnection {
 export class WebSocketConnection implements IConnection {
     protected url: string;
     private service: string;
+    private timeout: number;
 
     /**
      * @param addr      Address of the distant peer
@@ -48,11 +55,17 @@ export class WebSocketConnection implements IConnection {
     constructor(addr: string, service: string) {
         this.url = addr;
         this.service = service;
+        this.timeout = 30 * 1000; // 30s by default
     }
 
     /** @inheritdoc */
     getURL(): string {
         return this.url;
+    }
+
+    /** @inheritdoc */
+    setTimeout(value: number): void {
+        this.timeout = value;
     }
 
     /** @inheritdoc */
@@ -71,11 +84,14 @@ export class WebSocketConnection implements IConnection {
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
+            const timer = setTimeout(() => ws.close(4000, "timeout"), this.timeout);
+
             ws.onOpen(() => {
                 ws.send(bytes);
             });
 
             ws.onMessage((data: Buffer) => {
+                clearTimeout(timer);
                 const buf = Buffer.from(data);
                 Logger.lvl4("Getting message with length:", buf.length);
 
@@ -104,6 +120,8 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onError((err: Error) => {
+                clearTimeout(timer);
+
                 reject(new Error("error in websocket " + path + ": " + err));
             });
         });

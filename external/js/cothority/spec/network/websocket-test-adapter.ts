@@ -7,8 +7,9 @@ export default class TestWebSocket extends WebSocketAdapter {
     error: Error;
     code: number;
     sent: Buffer;
+    onclose: (code: number, reason: string) => void;
 
-    constructor(data: Buffer, error: Error, code: number = 1000) {
+    constructor(data: Buffer, error: Error, code: number) {
         super("");
 
         this.data = data;
@@ -28,7 +29,11 @@ export default class TestWebSocket extends WebSocketAdapter {
     }
 
     onClose(callback: (code: number, reason: string) => void): void {
-        callback(this.code, "reason to close");
+        if (this.code) {
+            callback(this.code, "reason to close");
+        } else {
+            this.onclose = callback;
+        }
     }
 
     onError(callback: (err: Error) => void): void {
@@ -41,7 +46,11 @@ export default class TestWebSocket extends WebSocketAdapter {
         this.sent = bytes;
     }
 
-    close(code: number): void {
+    close(code: number, reason = ""): void {
         this.isClosed = true;
+
+        if (this.onclose) {
+            this.onclose(code, reason);
+        }
     }
 }

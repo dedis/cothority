@@ -46,7 +46,7 @@ export abstract class WebSocketAdapter {
      * Close the websocket connection
      * @param code The code to use when closing
      */
-    abstract close(code: number): void;
+    abstract close(code: number, reason?: string): void;
 }
 
 /**
@@ -101,7 +101,7 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
     }
 
     /** @inheritdoc */
-    close(code: number): void {
-        this.ws.close(code);
+    close(code: number, reason = ""): void {
+        this.ws.close(code, reason);
     }
 }
