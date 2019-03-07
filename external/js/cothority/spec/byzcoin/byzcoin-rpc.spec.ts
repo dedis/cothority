@@ -47,7 +47,8 @@ describe("ByzCoinRPC Tests", () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
-        expectAsync(Instance.fromByzCoin(rpc, Buffer.from([1, 2, 3]))).toBeRejectedWith("key not in proof: 010203");
-        expectAsync(DarcInstance.fromByzcoin(rpc, Buffer.alloc(32, 0))).toBeRejected();
+        await expectAsync(Instance.fromByzCoin(rpc, Buffer.from([1, 2, 3])))
+            .toBeRejectedWith(new Error("key not in proof: 010203"));
+        await expectAsync(DarcInstance.fromByzcoin(rpc, Buffer.alloc(32, 0))).toBeRejected();
     });
 });

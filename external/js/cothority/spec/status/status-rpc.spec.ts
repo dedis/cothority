@@ -10,14 +10,15 @@ describe("StatusRPC", () => {
 
     it("should get the status of the conode", async () => {
         const rpc = new StatusRPC(roster);
+        rpc.setTimeout(1000);
 
         expect(roster.length).toBeGreaterThan(0);
-        expectAsync(rpc.getStatus()).toBeResolved();
+        await expectAsync(rpc.getStatus()).toBeResolved();
 
         for (let i = 1; i < roster.length; i++) {
-            expectAsync(rpc.getStatus(i)).toBeResolved();
+            await expectAsync(rpc.getStatus(i)).toBeResolved();
         }
 
-        expectAsync(rpc.getStatus(roster.length)).toBeRejected();
+        await expectAsync(rpc.getStatus(roster.length)).toBeRejected();
     });
 });
