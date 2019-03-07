@@ -3,6 +3,7 @@ package eventlog
 import (
 	"bytes"
 	"errors"
+	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -201,4 +202,54 @@ func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 		return nil, err
 	}
 	return reply, nil
+}
+
+// StreamEvents streams TODO
+func (c *Client) StreamEvents(handler func(Event, error)) error {
+	h := func(resp byzcoin.StreamingResponse, err error) {
+		if err != nil {
+			handler(Event{}, err)
+			return
+		}
+		// Get the DataHeader and the DataBody of the block.
+		sb := resp.Block
+		var header byzcoin.DataHeader
+		err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			handler(Event{}, errors.New("could not unmarshal header while streaming events " + err.Error()))
+			return
+		}
+
+		var body byzcoin.DataBody
+		err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			handler(Event{}, errors.New("could not unmarshal body while streaming events " + err.Error()))
+			return
+		}
+
+		for _, tx := range body.TxResults {
+			if tx.Accepted {
+				for _, instr := range tx.ClientTransaction.Instructions {
+					if instr.Invoke == nil {
+						continue
+					}
+					if instr.Invoke.ContractID != contractName || instr.Invoke.Command != logCmd {
+						continue
+					}
+					eventBuf := instr.Invoke.Args.Search("event")
+					if eventBuf == nil {
+						continue
+					}
+					event := &Event{}
+					if err := protobuf.Decode(eventBuf, event); err != nil {
+						handler(Event{}, errors.New("could not decode the event " + err.Error()))
+						continue
+					}
+					handler(*event, nil)
+				}
+			}
+		}
+	}
+	// the following blocks
+	return c.ByzCoin.StreamTransactions(h)
 }
