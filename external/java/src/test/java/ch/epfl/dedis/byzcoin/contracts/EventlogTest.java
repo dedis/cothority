@@ -141,4 +141,40 @@ class EventLogTest {
         resp = el.search("", now - 2000, now - 1000);
         assertEquals(0, resp.events.size());
     }
+
+    class TestEventHandler implements EventLogInstance.EventHandler {
+        public List<Event> events = new ArrayList<>();
+        public List<String> errors = new ArrayList<>();
+        @Override
+        public void process(Event e, byte[] id) {
+            events.add(e);
+        }
+        @Override
+        public void error(String s) {
+            errors.add(s);
+        }
+    }
+
+    @Test
+    void subscribe() throws Exception {
+        TestEventHandler handler = new TestEventHandler();
+        int tag = el.subscribeEvents(handler);
+
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+        List<Event> events = new ArrayList<>();
+        events.add(new Event("hello", "goodbye"));
+        events.add(new Event("bonjour", "au revoir"));
+        events.add(new Event("hola", "adios"));
+
+        el.log(events, Arrays.asList(admin), adminCtrs.getCounters());
+        Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
+
+        for (int i = 0; i < events.size(); i++) {
+            assertEquals(events.get(i), handler.events.get(i));
+        }
+        assertEquals(0, handler.errors.size());
+
+        el.unsubscribeEvents(tag);
+    }
 }

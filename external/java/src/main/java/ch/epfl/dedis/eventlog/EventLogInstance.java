@@ -2,21 +2,21 @@ package ch.epfl.dedis.eventlog;
 
 import ch.epfl.dedis.byzcoin.*;
 import ch.epfl.dedis.byzcoin.transaction.*;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.lib.proto.EventLogProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +50,8 @@ public class EventLogInstance {
     public static String LogCmd = "log";
     private Instance instance;
     private ByzCoinRPC bc;
+    private HashMap<Integer, Subscription.SkipBlockReceiver> handlers;
+    private Random rnd;
 
     private final static Logger logger = LoggerFactory.getLogger(EventLogInstance.class);
 
@@ -74,6 +76,8 @@ public class EventLogInstance {
             throw new CothorityException(e);
         }
         this.setInstance(id);
+        this.handlers = new HashMap<>();
+        this.rnd = new Random();
     }
 
     /**
@@ -170,6 +174,95 @@ public class EventLogInstance {
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
+    }
+
+    /**
+     * This is the interface that must be used for handling new events.
+     */
+    public interface EventHandler {
+        void process(Event e, byte[] id);
+        void error(String s);
+    }
+
+    /**
+     * Register the handler to listen to new events.
+     *
+     * @param handler is the event handler, it will be called in a different thread.
+     * @return an integer tag that can be used to unregister the handler.
+     * @throws CothorityCommunicationException when the server fails or refuses to accept the subscription.
+     */
+    public int subscribeEvents(EventHandler handler) throws CothorityCommunicationException {
+        Subscription.SkipBlockReceiver sbr = new Subscription.SkipBlockReceiver() {
+            @Override
+            public void receive(SkipBlock block) {
+                // check the header is correct
+                try {
+                    ByzCoinProto.DataHeader.parseFrom(block.getData());
+                } catch (InvalidProtocolBufferException e) {
+                    handler.error(e.getMessage());
+                    return;
+                }
+                // parse the payload
+                DataBody body;
+                try {
+                    body = new DataBody(ByzCoinProto.DataBody.parseFrom(block.getPayload()));
+                } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+                    handler.error(e.getMessage());
+                    return;
+                }
+
+                // parse the transactions
+                for (TxResult tx : body.getTxResults()) {
+                    if (!tx.isAccepted()){
+                        continue;
+                    }
+                    for (Instruction instr : tx.getClientTransaction().getInstructions()) {
+                        if (instr.getInvoke() == null) {
+                            continue;
+                        }
+                        if (!instr.getInvoke().getContractID().equals(ContractId) || !instr.getInvoke().getCommand().equals(LogCmd)) {
+                            continue;
+                        }
+                        // try to find the event argument
+                        Optional<Argument> opArg = instr.getInvoke().getArguments().stream()
+                                .filter(x -> x.getName().equals("event"))
+                                .findFirst();
+                        if (!opArg.isPresent()) {
+                            continue;
+                        }
+                        // parse the event argument
+                        Event event;
+                        try {
+                            event = new Event(EventLogProto.Event.parseFrom(opArg.get().getValue()));
+                        } catch (InvalidProtocolBufferException e) {
+                            handler.error(e.getMessage());
+                            continue;
+                        }
+                        handler.process(event, block.getId().getId());
+                    }
+                }
+            }
+
+            @Override
+            public void error(String s) {
+                handler.error(s);
+            }
+        };
+        int tag = rnd.nextInt();
+        this.handlers.put(tag, sbr);
+        this.bc.subscribeSkipBlock(sbr);
+        return tag;
+    }
+
+    /**
+     * Unsubscribe a handler.
+     *
+     * @param tag is the ID for the handler, it is created in subscribeEvents.
+     */
+    public void unsubscribeEvents(int tag) {
+        Subscription.SkipBlockReceiver sbr = this.handlers.get(tag);
+        this.handlers.remove(tag);
+        this.bc.unsubscribeBlock(sbr);
     }
 
     /**
