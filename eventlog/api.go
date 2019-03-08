@@ -3,6 +3,8 @@ package eventlog
 import (
 	"bytes"
 	"errors"
+
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/cothority/v3"
@@ -22,6 +24,7 @@ type Client struct {
 	Signers    []darc.Signer
 	Instance   byzcoin.InstanceID
 	c          *onet.Client
+	sc         *skipchain.Client
 	signerCtrs []uint64
 }
 
@@ -31,6 +34,7 @@ func NewClient(ol *byzcoin.Client) *Client {
 	return &Client{
 		ByzCoin:    ol,
 		c:          onet.NewClient(cothority.Suite, ServiceName),
+		sc:         skipchain.NewClient(),
 		signerCtrs: nil,
 	}
 }
@@ -204,52 +208,133 @@ func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 	return reply, nil
 }
 
-// StreamEvents streams TODO
-func (c *Client) StreamEvents(handler func(Event, error)) error {
+// StreamHandler is the signature of the handler used when streaming events.
+type StreamHandler func(event Event, blockID []byte, err error)
+
+// Close closes all the websocket connections.
+func (c *Client) Close() error {
+	err := c.ByzCoin.Close()
+	if err2 := c.sc.Close(); err != nil {
+		err = err2
+	}
+	if err2 := c.c.Close(); err != nil {
+		err = err2
+	}
+	return err
+}
+
+// StreamEvents is a blocking call where it calls the handler on even new event until the connection is closed or the
+// server stops.
+func (c *Client) StreamEvents(handler StreamHandler) error {
 	h := func(resp byzcoin.StreamingResponse, err error) {
 		if err != nil {
-			handler(Event{}, err)
+			handler(Event{}, nil, err)
 			return
 		}
-		// Get the DataHeader and the DataBody of the block.
-		sb := resp.Block
-		var header byzcoin.DataHeader
-		err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			handler(Event{}, errors.New("could not unmarshal header while streaming events " + err.Error()))
-			return
-		}
-
-		var body byzcoin.DataBody
-		err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			handler(Event{}, errors.New("could not unmarshal body while streaming events " + err.Error()))
-			return
-		}
-
-		for _, tx := range body.TxResults {
-			if tx.Accepted {
-				for _, instr := range tx.ClientTransaction.Instructions {
-					if instr.Invoke == nil {
-						continue
-					}
-					if instr.Invoke.ContractID != contractName || instr.Invoke.Command != logCmd {
-						continue
-					}
-					eventBuf := instr.Invoke.Args.Search("event")
-					if eventBuf == nil {
-						continue
-					}
-					event := &Event{}
-					if err := protobuf.Decode(eventBuf, event); err != nil {
-						handler(Event{}, errors.New("could not decode the event " + err.Error()))
-						continue
-					}
-					handler(*event, nil)
-				}
-			}
-		}
+		// don't need to handle error because it's given to the handler
+		_ = handleBlocks(handler, resp.Block)
 	}
 	// the following blocks
 	return c.ByzCoin.StreamTransactions(h)
+}
+
+// StreamEventsFrom is a blocking call where it calls the handler on even new event from (inclusive) the given block ID
+// until the connection is closed or the server stops.
+func (c *Client) StreamEventsFrom(handler StreamHandler, id []byte) error {
+	// 1. stream to a buffer (because we don't know which ones will be duplicates yet)
+	blockChan := make(chan blockOrErr, 100)
+	streamDone := make(chan error)
+	go func() {
+		err := c.ByzCoin.StreamTransactions(func(resp byzcoin.StreamingResponse, err error) {
+			blockChan <- blockOrErr{resp.Block, err}
+		})
+		streamDone <- err
+	}()
+
+	// 2. use GetUpdateChain to find the missing events and call handler
+	blocks, err := c.sc.GetUpdateChainLevel(&c.ByzCoin.Roster, id, 0, -1)
+	if err != nil {
+		return err
+	}
+	for _, b := range blocks {
+		// to keep the behaviour of the other streaming functions, we don't return an error but let the handler decide
+		// what to do with the error
+		_ = handleBlocks(handler, b)
+	}
+
+	var latest *skipchain.SkipBlock
+	if len(blocks) > 0 {
+		latest = blocks[len(blocks)-1]
+	}
+
+	// 3. read from the buffer, remove duplicates and call the handler
+	var foundLink bool
+	for {
+		select {
+		case bOrErr := <-blockChan:
+			if bOrErr.err != nil {
+				handler(Event{}, nil, bOrErr.err)
+				break
+			}
+			if !foundLink {
+				if bOrErr.block.BackLinkIDs[0].Equal(latest.Hash) {
+					foundLink = true
+				}
+			}
+			if foundLink {
+				_ = handleBlocks(handler, bOrErr.block)
+			}
+		case err := <-streamDone:
+			return err
+		}
+	}
+}
+
+type blockOrErr struct {
+	block *skipchain.SkipBlock
+	err   error
+}
+
+// handleBlocks calls the handler on the events of the block
+func handleBlocks(handler StreamHandler, sb *skipchain.SkipBlock) error {
+	var err error
+	var header byzcoin.DataHeader
+	err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		err = errors.New("could not unmarshal header while streaming events " + err.Error())
+		handler(Event{}, nil, err)
+		return err
+	}
+
+	var body byzcoin.DataBody
+	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		err = errors.New("could not unmarshal body while streaming events " + err.Error())
+		handler(Event{}, nil, err)
+		return err
+	}
+
+	for _, tx := range body.TxResults {
+		if tx.Accepted {
+			for _, instr := range tx.ClientTransaction.Instructions {
+				if instr.Invoke == nil {
+					continue
+				}
+				if instr.Invoke.ContractID != contractName || instr.Invoke.Command != logCmd {
+					continue
+				}
+				eventBuf := instr.Invoke.Args.Search("event")
+				if eventBuf == nil {
+					continue
+				}
+				event := &Event{}
+				if err := protobuf.Decode(eventBuf, event); err != nil {
+					handler(Event{}, nil, errors.New("could not decode the event "+err.Error()))
+					continue
+				}
+				handler(*event, sb.Hash, nil)
+			}
+		}
+	}
+	return nil
 }

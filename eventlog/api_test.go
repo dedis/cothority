@@ -273,11 +273,6 @@ func TestClient_StreamEvents(t *testing.T) {
 	leader := s.services[0]
 	defer s.close()
 
-	require.Nil(t, c.Create())
-	require.NotNil(t, c.Instance)
-	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), testBlockInterval)
-
-
 	events := []Event{
 		NewEvent("auth", "user alice logged out"),
 		NewEvent("auth", "user bob logged out"),
@@ -288,18 +283,18 @@ func TestClient_StreamEvents(t *testing.T) {
 	done := make(chan bool)
 	var ctr int
 	var ctrMutex sync.Mutex
-	h := func(e Event, err error) {
+	h := func(e Event, sb []byte, err error) {
 		ctrMutex.Lock()
 		defer ctrMutex.Unlock()
 
-		// we only care about the first three events
-		if ctr >= len(events) - 1 {
+		if ctr >= len(events)-1 {
 			return
 		}
 
 		require.NoError(t, err)
 		require.Equal(t, e.Topic, events[ctr].Topic)
 		require.Equal(t, e.Content, events[ctr].Content)
+		require.NotNil(t, sb)
 		ctr++
 
 		if ctr == len(events)-1 {
@@ -309,6 +304,12 @@ func TestClient_StreamEvents(t *testing.T) {
 	go func() {
 		require.NoError(t, c.StreamEvents(h))
 	}()
+
+	// we do the create after starting the listener because it'll add a new transaction that is not an event
+	// so the stream function should filter it out
+	require.Nil(t, c.Create())
+	require.NotNil(t, c.Instance)
+	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), testBlockInterval)
 
 	// log the events
 	ids, err := c.Log(events...)
@@ -326,7 +327,90 @@ func TestClient_StreamEvents(t *testing.T) {
 		checkProof(t, leader.omni, id, c.ByzCoin.ID)
 	}
 
-	require.NoError(t, c.ByzCoin.Close())
+	require.NoError(t, c.Close())
+
+	// send a couple more to close the stream, see byzcoin/api_test.go:TestClient_Streaming
+	for i := 0; i < 2; i++ {
+		finalID, err := c.Log(NewEvent("dummy", "dummy"))
+		require.NoError(t, err)
+		waitForKey(t, leader.omni, c.ByzCoin.ID, finalID[0], testBlockInterval)
+	}
+}
+
+func TestClient_StreamEventsFrom(t *testing.T) {
+	s, c := newSer(t)
+	leader := s.services[0]
+	defer s.close()
+
+	require.Nil(t, c.Create())
+	require.NotNil(t, c.Instance)
+	waitForKey(t, leader.omni, c.ByzCoin.ID, c.Instance.Slice(), testBlockInterval)
+
+	// instead of starting the streaming at the beginning, we start it after adding some events
+	batch1 := []Event{
+		NewEvent("auth", "user alice logged out"),
+		NewEvent("auth", "user bob logged out"),
+		NewEvent("auth", "user bob logged back in"),
+	}
+	batch2 := []Event{
+		NewEvent("read", "user alice read X"),
+		NewEvent("writ", "user bob wrote Y"),
+		NewEvent("read", "user bob read Z"),
+	}
+	events := append(batch1, batch2...)
+
+	// log the first batch
+	ids, err := c.Log(batch1...)
+	require.NoError(t, err)
+	waitForKey(t, leader.omni, c.ByzCoin.ID, ids[len(batch1)-1], testBlockInterval)
+	for _, id := range ids {
+		checkProof(t, leader.omni, id, c.ByzCoin.ID)
+	}
+
+	// set up the listener, it starts listening from the genesis block so even when we start after logging the first
+	// batch, it should see the events from the first batch
+	done := make(chan bool)
+	var ctr int
+	var ctrMutex sync.Mutex
+	h := func(e Event, sb []byte, err error) {
+		ctrMutex.Lock()
+		defer ctrMutex.Unlock()
+
+		if ctr >= len(events)-1 {
+			return
+		}
+
+		require.NoError(t, err)
+		require.Equal(t, e.Topic, events[ctr].Topic)
+		require.Equal(t, e.Content, events[ctr].Content)
+		require.NotNil(t, sb)
+		ctr++
+
+		if ctr == len(events)-1 {
+			close(done)
+		}
+	}
+	go func() {
+		require.NoError(t, c.StreamEventsFrom(h, c.ByzCoin.ID))
+	}()
+
+	// write the second batch
+	ids2, err := c.Log(batch2...)
+	require.NoError(t, err)
+
+	// all the events should've been streamed to us.
+	select {
+	case <-done:
+	case <-time.After(2*testBlockInterval + time.Second):
+		require.Fail(t, "should have got n transactions")
+	}
+
+	// check the proof
+	for _, id := range ids2 {
+		checkProof(t, leader.omni, id, c.ByzCoin.ID)
+	}
+
+	require.NoError(t, c.Close())
 
 	// send a couple more to close the stream, see byzcoin/api_test.go:TestClient_Streaming
 	for i := 0; i < 2; i++ {
