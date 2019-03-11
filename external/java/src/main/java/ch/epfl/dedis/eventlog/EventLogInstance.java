@@ -312,6 +312,7 @@ public class EventLogInstance {
 
     /**
      * Register the handler to listen to new events.
+     * If an error is thrown, the caller should unsubscribe the tag.
      *
      * @param handler is the event handler, it will be called in a different thread.
      * @return an integer tag that can be used to unregister the handler.
@@ -326,7 +327,9 @@ public class EventLogInstance {
     }
 
     /**
-     * Register the handler to listen to new events from a certain block.
+     * Register the handler to listen to new events from the given block.
+     * The function blocks while it reads old events from the given block.
+     * If an error is thrown, the caller should unsubscribe the tag.
      *
      * @param handler is the event handler, it will be called in a different thread.
      * @param from is the block which marks the beginning of the subscription.
@@ -342,6 +345,7 @@ public class EventLogInstance {
         this.bc.subscribeSkipBlock(r);
 
         // 2. use GetUpdateChain to find the missing events and call handler
+        // if the skipblock ID is wrong or does not exist the function will throw an exception
         List<SkipBlock> blocks = this.bc.getSkipchain().getUpdateChain(new SkipblockId(from));
 
         // 3. read from the buffer, remove duplicates and call the handler

@@ -194,8 +194,8 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 	return &tx, keys, nil
 }
 
-// Search executes a search on the filter in req. See the definition of
-// type SearchRequest for additional details about how the filter is interpreted.
+// Search executes a search on the filter in req. See the definition of type
+// SearchRequest for additional details about how the filter is interpreted.
 // The ID and Instance fields of the SearchRequest will be filled in from c.
 func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 	req.ID = c.ByzCoin.ID
@@ -223,8 +223,8 @@ func (c *Client) Close() error {
 	return err
 }
 
-// StreamEvents is a blocking call where it calls the handler on even new event until the connection is closed or the
-// server stops.
+// StreamEvents is a blocking call where it calls the handler on even new event
+// until the connection is closed or the server stops.
 func (c *Client) StreamEvents(handler StreamHandler) error {
 	h := func(resp byzcoin.StreamingResponse, err error) {
 		if err != nil {
@@ -238,8 +238,9 @@ func (c *Client) StreamEvents(handler StreamHandler) error {
 	return c.ByzCoin.StreamTransactions(h)
 }
 
-// StreamEventsFrom is a blocking call where it calls the handler on even new event from (inclusive) the given block ID
-// until the connection is closed or the server stops.
+// StreamEventsFrom is a blocking call where it calls the handler on even new
+// event from (inclusive) the given block ID until the connection is closed or
+// the server stops.
 func (c *Client) StreamEventsFrom(handler StreamHandler, id []byte) error {
 	// 1. stream to a buffer (because we don't know which ones will be duplicates yet)
 	blockChan := make(chan blockOrErr, 100)
@@ -257,8 +258,9 @@ func (c *Client) StreamEventsFrom(handler StreamHandler, id []byte) error {
 		return err
 	}
 	for _, b := range blocks {
-		// to keep the behaviour of the other streaming functions, we don't return an error but let the handler decide
-		// what to do with the error
+		// to keep the behaviour of the other streaming functions, we
+		// don't return an error but let the handler decide what to do
+		// with the error
 		_ = handleBlocks(handler, b)
 	}
 
