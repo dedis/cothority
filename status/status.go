@@ -52,7 +52,10 @@ func main() {
 		log.SetDebugVisible(c.GlobalInt("debug"))
 		return action(c)
 	}
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 type se struct {
@@ -76,7 +79,11 @@ func action(c *cli.Context) error {
 		if !strings.HasPrefix(host, "tls://") {
 			addr = network.NewAddress(network.TLS, host)
 		}
-		list = append(list, network.NewServerIdentity(nil, addr))
+		si := network.NewServerIdentity(nil, addr)
+		if si.Address.Port() == "" {
+			return errors.New("port not found, must provide host:port")
+		}
+		list = append(list, si)
 	} else {
 
 		ro, err := readGroup(groupToml)
