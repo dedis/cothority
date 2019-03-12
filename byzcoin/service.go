@@ -1815,119 +1815,57 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 	sstTemp = sst.Clone()
 	var cin []Coin
-clientTransactions:
+
 	for _, tx := range txIn {
 		txsz := txSize(tx)
 
 		// Make a new trie for each instruction. If the instruction is
 		// sucessfully implemented and changes applied, then keep it
-		// (via cdbTemp = cdbI.c), otherwise dump it.
+		// otherwise dump it.
 		sstTempC := sstTemp.Clone()
-		h := tx.ClientTransaction.Instructions.Hash()
+
 		var statesTemp StateChanges
-		for _, instr := range tx.ClientTransaction.Instructions {
-			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, h)
-			if err != nil {
-				_, _, cid, _, err2 := sstTempC.GetValues(instr.InstanceID.Slice())
-				if err2 != nil {
-					err = fmt.Errorf("%s - while getting value: %s", err, err2)
+		statesTemp, sstTempC, cin, err = s.processOneTx(sstTempC, cin, tx.ClientTransaction)
+		if err != nil {
+			tx.Accepted = false
+			txOut = append(txOut, tx)
+			log.Error(s.ServerIdentity(), err)
+		} else {
+			// We would like to be able to check if this txn is so big it could never fit into a block,
+			// and if so, drop it. But we can't with the current API of createStateChanges.
+			// For now, the only thing we can do is accept or refuse them, but they will go into a block
+			// one way or the other.
+			// TODO: In issue #1409, we will refactor things such that we can drop transactions in here.
+			//if txsz > maxsz {
+			//	log.Errorf("%s transaction size %v is bigger than one block (%v), dropping it.", s.ServerIdentity(), txsz, maxsz)
+			//	continue clientTransactions
+			//}
+
+			// Planning mode:
+			//
+			// Timeout is used when the leader calls createStateChanges as
+			// part of planning which transactions fit into one block.
+			if timeout != noTimeout {
+				if time.Now().After(deadline) {
+					log.Warnf("%s ran out of time after %v", s.ServerIdentity(), timeout)
+					return
 				}
-				log.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(),
-					cid, instr, err)
-				tx.Accepted = false
-				txOut = append(txOut, tx)
-				continue clientTransactions
-			}
-			var counterScs StateChanges
-			if counterScs, err = incrementSignerCounters(sstTempC, instr.SignerIdentities); err != nil {
-				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
-				tx.Accepted = false
-				txOut = append(txOut, tx)
-				continue clientTransactions
+
+				// If the last txn would have made the state changes too big, return
+				// just like we do for a timeout. The caller will make a block with
+				// what's in txOut.
+				if blocksz+txsz > maxsz {
+					log.Lvlf3("stopping block creation when %v > %v, with len(txOut) of %v", blocksz+txsz, maxsz, len(txOut))
+					return
+				}
 			}
 
-			// Verify the validity of the state-changes:
-			//  - refuse to update non-existing instances
-			//  - refuse to create existing instances
-			//  - refuse to delete non-existing instances
-			for _, sc := range scs {
-				var reason string
-				switch sc.StateAction {
-				case Create:
-					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v != nil {
-						reason = "tried to create existing instanceID"
-					}
-				case Update:
-					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v == nil {
-						reason = "tried to update non-existing instanceID"
-					}
-				case Remove:
-					if v, err := sstTempC.Get(sc.InstanceID); err != nil || v == nil {
-						reason = "tried to remove non-existing instanceID"
-					}
-				}
-				err = sstTempC.StoreAll(StateChanges{sc})
-				if reason != "" || err != nil {
-					tx.Accepted = false
-					txOut = append(txOut, tx)
-					if err != nil {
-						log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
-					} else {
-						_, _, contractID, _, err := sstTempC.GetValues(instr.InstanceID.Slice())
-						if err != nil {
-							log.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(),
-								instr)
-						}
-						log.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
-					}
-					continue clientTransactions
-				}
-			}
-			if err = sstTempC.StoreAll(counterScs); err != nil {
-				log.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
-				tx.Accepted = false
-				txOut = append(txOut, tx)
-				continue clientTransactions
-			}
-			statesTemp = append(statesTemp, scs...)
-			statesTemp = append(statesTemp, counterScs...)
-			cin = cout
+			tx.Accepted = true
+			sstTemp = sstTempC
+			blocksz += txsz
+			states = append(states, statesTemp...)
+			txOut = append(txOut, tx)
 		}
-
-		// We would like to be able to check if this txn is so big it could never fit into a block,
-		// and if so, drop it. But we can't with the current API of createStateChanges.
-		// For now, the only thing we can do is accept or refuse them, but they will go into a block
-		// one way or the other.
-		// TODO: In issue #1409, we will refactor things such that we can drop transactions in here.
-		//if txsz > maxsz {
-		//	log.Errorf("%s transaction size %v is bigger than one block (%v), dropping it.", s.ServerIdentity(), txsz, maxsz)
-		//	continue clientTransactions
-		//}
-
-		// Planning mode:
-		//
-		// Timeout is used when the leader calls createStateChanges as
-		// part of planning which transactions fit into one block.
-		if timeout != noTimeout {
-			if time.Now().After(deadline) {
-				log.Warnf("%s ran out of time after %v", s.ServerIdentity(), timeout)
-				return
-			}
-
-			// If the last txn would have made the state changes too big, return
-			// just like we do for a timeout. The caller will make a block with
-			// what's in txOut.
-			if blocksz+txsz > maxsz {
-				log.Lvlf3("stopping block creation when %v > %v, with len(txOut) of %v", blocksz+txsz, maxsz, len(txOut))
-				return
-			}
-		}
-
-		sstTemp = sstTempC
-		tx.Accepted = true
-		txOut = append(txOut, tx)
-		blocksz += txsz
-		states = append(states, statesTemp...)
 	}
 
 	// Store the result in the cache before returning.
@@ -1936,6 +1874,66 @@ clientTransactions:
 		s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
 	}
 	return
+}
+
+func (s *Service) processOneTx(sst *stagingStateTrie, cin []Coin, tx ClientTransaction) (StateChanges, *stagingStateTrie, []Coin, error) {
+	h := tx.Instructions.Hash()
+	var statesTemp StateChanges
+	for _, instr := range tx.Instructions {
+		scs, cout, err := s.executeInstruction(sst, cin, instr, h)
+		if err != nil {
+			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
+			if err2 != nil {
+				err = fmt.Errorf("%s - while getting value: %s", err, err2)
+			}
+			return nil, nil, nil, fmt.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(),
+				cid, instr, err)
+		}
+		var counterScs StateChanges
+		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
+			return nil, nil, nil, fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+		}
+
+		// Verify the validity of the state-changes:
+		//  - refuse to update non-existing instances
+		//  - refuse to create existing instances
+		//  - refuse to delete non-existing instances
+		for _, sc := range scs {
+			var reason string
+			switch sc.StateAction {
+			case Create:
+				if v, err := sst.Get(sc.InstanceID); err != nil || v != nil {
+					reason = "tried to create existing instanceID"
+				}
+			case Update:
+				if v, err := sst.Get(sc.InstanceID); err != nil || v == nil {
+					reason = "tried to update non-existing instanceID"
+				}
+			case Remove:
+				if v, err := sst.Get(sc.InstanceID); err != nil || v == nil {
+					reason = "tried to remove non-existing instanceID"
+				}
+			}
+			if reason != "" {
+				_, _, contractID, _, err := sst.GetValues(instr.InstanceID.Slice())
+				if err != nil {
+					return nil, nil, nil, fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
+				}
+				return nil, nil, nil, fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+			}
+			err = sst.StoreAll(StateChanges{sc})
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+			}
+		}
+		if err = sst.StoreAll(counterScs); err != nil {
+			return nil, nil, nil, fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
+		}
+		statesTemp = append(statesTemp, scs...)
+		statesTemp = append(statesTemp, counterScs...)
+		cin = cout
+	}
+	return statesTemp, sst, cin, nil
 }
 
 // GetContractConstructor gets the contract constructor of the contract

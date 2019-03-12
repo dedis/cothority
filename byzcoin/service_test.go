@@ -1018,7 +1018,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 			},
 		}, nil, nil
 	}
-	RegisterContract(s.hosts[0], cid, adaptorNoVerify(f))
+	require.NoError(t, RegisterContract(s.hosts[0], cid, adaptorNoVerify(f)))
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, cdb)
@@ -1033,37 +1033,39 @@ func TestService_StateChangeVerification(t *testing.T) {
 	require.Nil(t, err)
 
 	log.Lvl1("Failing updating and removing non-existing instances")
-	_, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	mkroot1, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Invoke:     &Invoke{},
 	}}}), noTimeout)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
-	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
+	mkroot2, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Delete:     &Delete{},
 	}}}), noTimeout)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
+	require.True(t, bytes.Equal(mkroot1, mkroot2))
 
 	log.Lvl1("Create new instance, but fail to create it twice")
 	txs := NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Spawn:      &Spawn{ContractID: cid},
 	}}})
-	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
+	mkroot1, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
 	require.Nil(t, cdb.StoreAll(scs, 0))
 	// Clear cache so that the transactions get re-evaluated
 	delete(s.service().stateChangeCache.cache, string(s.genesis.SkipChainID()))
-	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
+	mkroot2, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
+	require.True(t, bytes.Equal(mkroot1, mkroot2))
 
 	log.Lvl1("Accept updating and removing existing instance")
 	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
