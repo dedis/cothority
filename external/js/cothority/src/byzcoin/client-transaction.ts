@@ -6,6 +6,9 @@ import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { InstanceID } from "./instance";
 
+// messages registration
+import "../darc/identity-wrapper";
+
 export interface ICounterUpdater {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
 }

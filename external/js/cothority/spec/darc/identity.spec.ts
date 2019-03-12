@@ -1,5 +1,6 @@
 import IdentityDarc from "../../src/darc/identity-darc";
 import IdentityEd25519 from "../../src/darc/identity-ed25519";
+import IdentityWrapper from "../../src/darc/identity-wrapper";
 import { SIGNER } from "../support/conondes";
 
 describe("Identity Tests", () => {
@@ -21,5 +22,12 @@ describe("Identity Tests", () => {
         expect(id.toWrapper().ed25519).toBeDefined();
         expect(id.toBytes()).toEqual(SIGNER.point);
         expect(id.toString()).toBe(`ed25519:${SIGNER.public.toString()}`);
+    });
+
+    it("should return the string representation", () => {
+        const id = new IdentityEd25519({ point: SIGNER.point });
+        const wrapper = new IdentityWrapper({ ed25519: id });
+
+        expect(id.toString()).toBe(wrapper.toString());
     });
 });

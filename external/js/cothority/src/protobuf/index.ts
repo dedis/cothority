@@ -1,3 +1,4 @@
+import Long from "long";
 import protobuf, { Reader } from "protobufjs/light";
 import models from "./models.json";
 
@@ -16,6 +17,9 @@ if (!protobuf.util.isNode) {
     // @ts-ignore
     protobuf.Reader.prototype._slice = buffer.Buffer.prototype.slice;
     protobuf.Reader.create = (buf) => new Reader(buffer.Buffer.from(buf));
+
+    protobuf.util.Long = Long;
+    protobuf.configure();
 }
 
 /**
