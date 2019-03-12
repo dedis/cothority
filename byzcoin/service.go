@@ -1866,20 +1866,17 @@ clientTransactions:
 						reason = "tried to remove non-existing instanceID"
 					}
 				}
-				err = sstTempC.StoreAll(StateChanges{sc})
-				if reason != "" || err != nil {
+				if reason != "" {
 					tx.Accepted = false
 					txOut = append(txOut, tx)
-					if err != nil {
-						log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
-					} else {
-						_, _, contractID, _, err := sstTempC.GetValues(instr.InstanceID.Slice())
-						if err != nil {
-							log.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(),
-								instr)
-						}
-						log.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
-					}
+					log.Errorf("%s: invalid statechange %s", s.ServerIdentity(), reason)
+					continue clientTransactions
+				}
+				err = sstTempC.StoreAll(StateChanges{sc})
+				if err != nil {
+					tx.Accepted = false
+					txOut = append(txOut, tx)
+					log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
 					continue clientTransactions
 				}
 			}
