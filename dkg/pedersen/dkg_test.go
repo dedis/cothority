@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestSetupDKG(t *testing.T) {
-	nodes := []int{3, 5, 7}
+	nodes := []int{4}
 	for _, nbrNodes := range nodes {
 		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
 		setupDKG(t, nbrNodes)
@@ -29,12 +29,13 @@ func setupDKG(t *testing.T, nbrNodes int) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
-	log.Lvl3(tree.Dump())
+	log.LLvl3(tree.Dump())
 
 	pi, err := local.CreateProtocol(Name, tree)
 	protocol := pi.(*Setup)
 	protocol.Wait = true
 	protocol.KeyPair = key.NewKeyPair(cothority.Suite)
+	protocol.Threshold = uint32(nbrNodes)
 
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)

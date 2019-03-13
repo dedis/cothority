@@ -202,7 +202,9 @@ func (o *OCS) getUI(U, Xc kyber.Point) (*share.PubShare, error) {
 }
 
 func (o *OCS) finish(result bool) {
-	o.timeout.Stop()
+	if o.timeout != nil {
+		o.timeout.Stop()
+	}
 	select {
 	case o.Reencrypted <- result:
 		// suceeded
