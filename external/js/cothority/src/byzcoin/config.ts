@@ -4,6 +4,10 @@ import { registerMessage } from "../protobuf";
 import Proof from "./proof";
 
 export default class ChainConfig extends Message<ChainConfig> {
+    static register() {
+        registerMessage("byzcoin.ChainConfig", ChainConfig);
+    }
+
     /**
      * Create a chain configuration from a known instance
      * @param proof The proof for the instance
@@ -41,4 +45,4 @@ export default class ChainConfig extends Message<ChainConfig> {
     }
 }
 
-registerMessage("byzcoin.ChainConfig", ChainConfig);
+ChainConfig.register();

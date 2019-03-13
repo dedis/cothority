@@ -26,6 +26,10 @@ function initRules(owners: IIdentity[], signers: IIdentity[]): Rules {
  * Distributed Access Right Controls
  */
 export default class Darc extends Message<Darc> {
+    static register() {
+        registerMessage("Darc", Darc, Rules);
+    }
+
     /**
      * Create a genesis darc using the owners and signers to populate the
      * rules
@@ -183,4 +187,4 @@ export default class Darc extends Message<Darc> {
     }
 }
 
-registerMessage("Darc", Darc);
+Darc.register();

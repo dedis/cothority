@@ -6,9 +6,6 @@ import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { InstanceID } from "./instance";
 
-// messages registration
-import "../darc/identity-wrapper";
-
 export interface ICounterUpdater {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
 }
@@ -17,6 +14,10 @@ export interface ICounterUpdater {
  * List of instructions to send to a byzcoin chain
  */
 export default class ClientTransaction extends Message<ClientTransaction> {
+    static register() {
+        registerMessage("byzcoin.ClientTransaction", ClientTransaction, Instruction);
+    }
+
     readonly instructions: Instruction[];
 
     constructor(props?: Properties<ClientTransaction>) {
@@ -69,6 +70,10 @@ export default class ClientTransaction extends Message<ClientTransaction> {
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
+    static register() {
+        registerMessage("byzcoin.Instruction", Instruction, IdentityWrapper, Spawn, Invoke, Delete);
+    }
+
     /**
      * Helper to create a spawn instruction
      * @param iid           The instance ID
@@ -280,6 +285,10 @@ export class Instruction extends Message<Instruction> {
  * Argument of an instruction
  */
 export class Argument extends Message<Argument> {
+    static register() {
+        registerMessage("byzcoin.Argument", Argument);
+    }
+
     readonly name: string;
     readonly value: Buffer;
 
@@ -294,6 +303,10 @@ export class Argument extends Message<Argument> {
  * Spawn instruction that will create instances
  */
 export class Spawn extends Message<Spawn> {
+    static register() {
+        registerMessage("byzcoin.Spawn", Spawn, Argument);
+    }
+
     readonly args: Argument[];
     readonly contractID: string;
 
@@ -319,6 +332,10 @@ export class Spawn extends Message<Spawn> {
  * Invoke instruction that will update an existing instance
  */
 export class Invoke extends Message<Invoke> {
+    static register() {
+        registerMessage("byzcoin.Invoke", Invoke, Argument);
+    }
+
     readonly command: string;
     readonly args: Argument[];
     readonly contractID: string;
@@ -345,6 +362,10 @@ export class Invoke extends Message<Invoke> {
  * Delete instruction that will delete an instance
  */
 export class Delete extends Message<Delete> {
+    static register() {
+        registerMessage("byzcoin.Delete", Delete);
+    }
+
     readonly contractID: string;
 
     constructor(props?: Properties<Delete>) {
@@ -361,9 +382,9 @@ export class Delete extends Message<Delete> {
     }
 }
 
-registerMessage("byzcoin.ClientTransaction", ClientTransaction);
-registerMessage("byzcoin.Instruction", Instruction);
-registerMessage("byzcoin.Argument", Argument);
-registerMessage("byzcoin.Spawn", Spawn);
-registerMessage("byzcoin.Invoke", Invoke);
-registerMessage("byzcoin.Delete", Delete);
+ClientTransaction.register();
+Instruction.register();
+Argument.register();
+Spawn.register();
+Invoke.register();
+Delete.register();

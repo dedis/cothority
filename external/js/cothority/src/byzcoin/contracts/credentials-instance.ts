@@ -116,6 +116,10 @@ export default class CredentialsInstance {
  * credentials.
  */
 export class CredentialStruct extends Message<CredentialStruct> {
+    static register() {
+        registerMessage("personhood.CredentialStruct", CredentialStruct, Credential);
+    }
+
     readonly credentials: Credential[];
 
     constructor(properties?: Properties<CredentialStruct>) {
@@ -137,6 +141,10 @@ export class CredentialStruct extends Message<CredentialStruct> {
  * A credential has a given name used as a key and one or more attributes
  */
 export class Credential extends Message<Credential> {
+    static register() {
+        registerMessage("personhood.Credential", Credential, Attribute);
+    }
+
     readonly name: string;
     readonly attributes: Attribute[];
 
@@ -151,6 +159,10 @@ export class Credential extends Message<Credential> {
  * Attribute of a credential
  */
 export class Attribute extends Message<Attribute> {
+    static register() {
+        registerMessage("personhood.Attribute", Attribute);
+    }
+
     readonly name: string;
     readonly value: Buffer;
 
@@ -162,7 +174,7 @@ export class Attribute extends Message<Attribute> {
 }
 
 /* TODO: remove comment after personhood.online is merged
-registerMessage("personhood.CredentialStruct", CredentialStruct);
-registerMessage("personhood.Credential", Credential);
-registerMessage("personhood.Attribute", Attribute);
+CredentialStruct.register();
+Credential.register();
+Attribute.register();
 */

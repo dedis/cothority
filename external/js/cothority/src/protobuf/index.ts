@@ -1,5 +1,6 @@
 import Long from "long";
 import protobuf, { Reader } from "protobufjs/light";
+import Log from "../log";
 import models from "./models.json";
 
 /**
@@ -34,8 +35,31 @@ const root = protobuf.Root.fromJSON(models);
 
 export const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
-export function registerMessage(name: string, ctor: protobuf.Constructor<{}>): void {
+interface IRegistrationMessage extends protobuf.Constructor<{}> {
+    /**
+     * Register the message to be used as the default class for
+     * the given protobuf type
+     */
+    register(): void;
+}
+
+export function registerMessage(
+    name: string,
+    ctor: protobuf.Constructor<{}>,
+    ...dependencies: IRegistrationMessage[]
+): void {
+    // register the messages used inside the new one
+    dependencies.forEach((d) => {
+        // as we can have cycle dependencies, this will deal with them by retarding
+        // the registration until everything is defined
+        if (d && d.register) {
+            d.register();
+        }
+    });
+
     const m = root.lookupType(name);
 
     m.ctor = ctor;
+
+    Log.lvl3(`Message registered: ${ctor.name}`);
 }

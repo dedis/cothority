@@ -6,6 +6,10 @@ import { IIdentity } from "./identity-wrapper";
  * A rule will give who is allowed to use a given action
  */
 export class Rule extends Message<Rule> {
+    static register() {
+        registerMessage("Rule", Rule);
+    }
+
     readonly action: string;
     readonly expr: Buffer;
 
@@ -42,6 +46,10 @@ export class Rule extends Message<Rule> {
 export default class Rules extends Message<Rules> {
     static OR = "|";
     static AND = "&";
+
+    static register() {
+        registerMessage("Rules", Rules, Rule);
+    }
 
     readonly list: Rule[];
 
@@ -90,5 +98,5 @@ export default class Rules extends Message<Rules> {
     }
 }
 
-registerMessage("Rule", Rule);
-registerMessage("Rules", Rules);
+Rule.register();
+Rules.register();

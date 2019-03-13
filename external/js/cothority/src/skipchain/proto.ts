@@ -2,9 +2,17 @@ import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { ForwardLink, SkipBlock } from "./skipblock";
 
-export class GetAllSkipChainIDs extends Message<GetAllSkipChainIDs> { }
+export class GetAllSkipChainIDs extends Message<GetAllSkipChainIDs> {
+    static register() {
+        registerMessage("GetAllSkipChainIDs", GetAllSkipChainIDs);
+    }
+}
 
 export class GetAllSkipChainIDsReply extends Message<GetAllSkipChainIDsReply> {
+    static register() {
+        registerMessage("GetAllSkipChainIDsReply", GetAllSkipChainIDsReply);
+    }
+
     readonly skipChainIDs: Buffer[];
 
     constructor(props?: Properties<GetAllSkipChainIDsReply>) {
@@ -15,6 +23,10 @@ export class GetAllSkipChainIDsReply extends Message<GetAllSkipChainIDsReply> {
 }
 
 export class StoreSkipBlock extends Message<StoreSkipBlock> {
+    static register() {
+        registerMessage("StoreSkipBlock", StoreSkipBlock, SkipBlock);
+    }
+
     readonly targetSkipChainID: Buffer;
     readonly newBlock: SkipBlock;
     readonly signature: Buffer;
@@ -28,11 +40,19 @@ export class StoreSkipBlock extends Message<StoreSkipBlock> {
 }
 
 export class StoreSkipBlockReply extends Message<StoreSkipBlock> {
+    static register() {
+        registerMessage("StoreSkipBlockReply", StoreSkipBlockReply, SkipBlock);
+    }
+
     readonly latest: SkipBlock;
     readonly previous: SkipBlock;
 }
 
 export class GetSingleBlock extends Message<GetSingleBlock> {
+    static register() {
+        registerMessage("GetSingleBlock", GetSingleBlock);
+    }
+
     readonly id: Buffer;
 
     constructor(props?: Properties<GetSingleBlock>) {
@@ -43,6 +63,10 @@ export class GetSingleBlock extends Message<GetSingleBlock> {
 }
 
 export class GetSingleBlockByIndex extends Message<GetSingleBlockByIndex> {
+    static register() {
+        registerMessage("GetSingleBlockByIndex", GetSingleBlockByIndex);
+    }
+
     readonly genesis: Buffer;
     readonly index: number;
 
@@ -54,6 +78,10 @@ export class GetSingleBlockByIndex extends Message<GetSingleBlockByIndex> {
 }
 
 export class GetSingleBlockByIndexReply extends Message<GetSingleBlockByIndexReply> {
+    static register() {
+        registerMessage("GetSingleBlockByIndexReply", GetSingleBlockByIndexReply);
+    }
+
     readonly skipblock: SkipBlock;
     readonly links: ForwardLink[];
 
@@ -65,6 +93,10 @@ export class GetSingleBlockByIndexReply extends Message<GetSingleBlockByIndexRep
 }
 
 export class GetUpdateChain extends Message<GetUpdateChain> {
+    static register() {
+        registerMessage("GetUpdateChain", GetUpdateChain);
+    }
+
     readonly latestID: Buffer;
 
     constructor(props?: Properties<GetUpdateChain>) {
@@ -75,6 +107,10 @@ export class GetUpdateChain extends Message<GetUpdateChain> {
 }
 
 export class GetUpdateChainReply extends Message<GetUpdateChainReply> {
+    static register() {
+        registerMessage("GetUpdateChainReply", GetUpdateChainReply, SkipBlock);
+    }
+
     readonly update: SkipBlock[];
 
     constructor(props: Properties<GetUpdateChainReply>) {
@@ -84,12 +120,12 @@ export class GetUpdateChainReply extends Message<GetUpdateChainReply> {
     }
 }
 
-registerMessage("GetAllSkipChainIDs", GetAllSkipChainIDs);
-registerMessage("GetAllSkipChainIDsReply", GetAllSkipChainIDsReply);
-registerMessage("StoreSkipBlock", StoreSkipBlock);
-registerMessage("StoreSkipBlockReply", StoreSkipBlockReply);
-registerMessage("GetSingleBlock", GetSingleBlock);
-registerMessage("GetSingleBlockByIndex", GetSingleBlockByIndex);
-registerMessage("GetSingleBlockByIndexReply", GetSingleBlockByIndexReply);
-registerMessage("GetUpdateChain", GetUpdateChain);
-registerMessage("GetUpdateChainReply", GetUpdateChainReply);
+GetAllSkipChainIDs.register();
+GetAllSkipChainIDsReply.register();
+StoreSkipBlock.register();
+StoreSkipBlockReply.register();
+GetSingleBlock.register();
+GetSingleBlockByIndex.register();
+GetSingleBlockByIndexReply.register();
+GetUpdateChain.register();
+GetUpdateChainReply.register();

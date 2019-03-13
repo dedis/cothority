@@ -15,6 +15,10 @@ const PORT_MAX = 65535;
  * List of server identities
  */
 export class Roster extends Message<Roster> {
+    static register() {
+        registerMessage("Roster", Roster, ServerIdentity);
+    }
+
     /**
      * Parse cothority roster toml string into a Roster object.
      * @example
@@ -130,6 +134,10 @@ export class Roster extends Message<Roster> {
  * Identity of a conode
  */
 export class ServerIdentity extends Message<ServerIdentity> {
+    static register() {
+        registerMessage("ServerIdentity", ServerIdentity, ServiceIdentity);
+    }
+
     /**
      * Checks wether the address given as parameter has the right format.
      * @param address the address to check
@@ -212,6 +220,10 @@ export class ServerIdentity extends Message<ServerIdentity> {
  * key pair and don't the default one.
  */
 export class ServiceIdentity extends Message<ServiceIdentity> {
+    static register() {
+        registerMessage("ServiceIdentity", ServiceIdentity);
+    }
+
     readonly name: string;
     readonly suite: string;
     readonly public: Buffer;
@@ -238,6 +250,6 @@ export class ServiceIdentity extends Message<ServiceIdentity> {
     }
 }
 
-registerMessage("Roster", Roster);
-registerMessage("ServerIdentity", ServerIdentity);
-registerMessage("ServiceIdentity", ServiceIdentity);
+Roster.register();
+ServerIdentity.register();
+ServiceIdentity.register();

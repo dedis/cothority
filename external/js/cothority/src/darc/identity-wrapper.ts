@@ -3,14 +3,14 @@ import { registerMessage } from "../protobuf";
 import IdentityDarc from "./identity-darc";
 import IdentityEd25519 from "./identity-ed25519";
 
-// messages registration
-import "./identity-darc";
-import "./identity-ed25519";
-
 /**
  * Protobuf representation of an identity
  */
 export default class IdentityWrapper extends Message<IdentityWrapper> {
+  static register() {
+    registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc);
+  }
+
   readonly ed25519: IdentityEd25519;
   readonly darc: IdentityDarc;
 
@@ -77,4 +77,4 @@ export interface IIdentity {
   toString(): string;
 }
 
-registerMessage("Identity", IdentityWrapper);
+IdentityWrapper.register();

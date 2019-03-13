@@ -10,6 +10,10 @@ const ed25519 = curve.newCurve("edwards25519");
  * Identity of an Ed25519 signer
  */
 export default class IdentityEd25519 extends Message<IdentityEd25519> implements IIdentity {
+  static register() {
+    registerMessage("IdentityEd25519", IdentityEd25519);
+  }
+
   readonly point: Buffer;
 
   private _public: Point;
@@ -51,5 +55,3 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
     return `ed25519:${this.public.toString().toLowerCase()}`;
   }
 }
-
-registerMessage("IdentityEd25519", IdentityEd25519);

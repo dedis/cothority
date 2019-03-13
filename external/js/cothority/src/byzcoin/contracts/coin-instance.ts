@@ -164,6 +164,10 @@ export default class CoinInstance {
 }
 
 export class Coin extends Message<Coin> {
+    static register() {
+        registerMessage("byzcoin.Coin", Coin);
+    }
+
     name: Buffer;
     value: Long;
 
@@ -178,4 +182,4 @@ export class Coin extends Message<Coin> {
     }
 }
 
-registerMessage("byzcoin.Coin", Coin);
+Coin.register();
