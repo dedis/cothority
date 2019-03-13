@@ -1528,6 +1528,19 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	return config.BlockInterval, config.MaxBlockSize, nil
 }
 
+func (s *Service) startPolling2(scID skipchain.SkipBlockID) chan bool {
+	pipeline := txPipeline{}
+	st, err := s.getStateTrie(scID)
+	if err != nil {
+		panic("the state trie must exist because we only start polling after creating/loading the skipchain")
+	}
+	// TODO check if we're already closing
+	initialState := txProcessorState{
+		sst: st.MakeStagingStateTrie(),
+	}
+	return pipeline.start(&initialState)
+}
+
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	s.pollChanWG.Add(1)
 	closeSignal := make(chan bool)
@@ -1661,6 +1674,10 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 		}
 	}()
 	return closeSignal
+}
+
+func (s *Service) collectTxCallback() ([]ClientTransaction, error) {
+	return nil, nil
 }
 
 // We use the ByzCoin as a receiver (as is done in the identity service),
@@ -1853,11 +1870,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	for _, tx := range txIn {
 		txsz := txSize(tx)
 
-		// Make a new trie for each instruction. If the instruction is
-		// sucessfully implemented and changes applied, then keep it
-		// otherwise dump it.
-		sstTempC := sstTemp.Clone()
-
+		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
 		statesTemp, sstTempC, err = s.processOneTx(sstTempC, tx.ClientTransaction)
 		if err != nil {
@@ -1911,6 +1924,10 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 }
 
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
+	// Make a new trie for each instruction. If the instruction is
+	// sucessfully implemented and changes applied, then keep it
+	// otherwise dump it.
+	sst = sst.Clone()
 	h := tx.Instructions.Hash()
 	var statesTemp StateChanges
 	var cin []Coin
