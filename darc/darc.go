@@ -41,6 +41,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"go.dedis.ch/cothority/v3"
@@ -464,7 +465,8 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 
 // String returns a human-readable string representation of the darc.
 func (d Darc) String() string {
-	s := fmt.Sprintf("ID:\t%x\nBase:\t%x\nPrev:\t%x\nVer:\t%d\nRules:", d.GetID(), d.GetBaseID(), d.PrevID, d.Version)
+	s := fmt.Sprintf("ID:\tdarc:%x (Description: %-v)\nBase:\tdarc:%x\nPrev:\tdarc:%x\nVer:\t%d\nRules:",
+		d.GetID(), strconv.Quote(string(d.Description)), d.GetBaseID(), d.PrevID, d.Version)
 	for _, v := range d.Rules.List {
 		s += fmt.Sprintf("\n\t%s - \"%s\"", v.Action, v.Expr)
 	}

@@ -28,6 +28,7 @@ type suite interface {
 // under the collective public key created by the DKG. As this method uses
 // `Embed` to encode the key, depending on the key-length more than one point
 // is needed to encode the data.
+// TODO: FIX THIS COMMENT
 //
 // Input:
 //   - suite - the cryptographic suite to use

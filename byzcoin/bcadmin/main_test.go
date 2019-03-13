@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCli(t *testing.T) {
-	dir, err := ioutil.TempDir("", "ol-test")
+	dir, err := ioutil.TempDir("", "bc-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestCli(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Created")
 
-	// Collect the OL config filename that create() left for us,
+	// Collect the BC config filename that create() left for us,
 	// and make it available for the next tests.
 	ol := cliApp.Metadata["BC"]
 	require.IsType(t, "", ol)
@@ -69,24 +69,4 @@ func TestCli(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
 	require.Contains(t, string(b.Bytes()), "spawn:darc")
-
-	log.Lvl1("add: ")
-	b = &bytes.Buffer{}
-	cliApp.Writer = b
-	cliApp.ErrWriter = b
-	args = []string{"bcadmin", "add", "--identity", "ed25519:XXX", "spawn:xxx"}
-	err = cliApp.Run(args)
-	require.NoError(t, err)
-
-	time.Sleep(2 * interval)
-
-	log.Lvl1("show after add: ")
-	b = &bytes.Buffer{}
-	cliApp.Writer = b
-	cliApp.ErrWriter = b
-	args = []string{"bcadmin", "show"}
-	err = cliApp.Run(args)
-	require.NoError(t, err)
-	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
-	require.Contains(t, string(b.Bytes()), "spawn:xxx - \"ed25519:XXX\"")
 }

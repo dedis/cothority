@@ -315,7 +315,7 @@ buildConode(){
   local incl="$@"
   if [ -z "$incl" ]; then
       echo "buildConode: No import paths provided."
-	  exit 1
+      exit 1
   fi
 
   echo "Building conode"
@@ -366,9 +366,9 @@ runCoBG(){
         ./conode -d $DBG_SRV -c co$nb/private.toml server >& "$COLOG$nb.log"
       fi
       touch "$COLOG$nb.log.dead"
-    ) &
+    ) 2>/dev/null &
     # This makes `pkill conode` not outputting errors here
-    disown
+    disown %1
   done
   
   local allStarted=0

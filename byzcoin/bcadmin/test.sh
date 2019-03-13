@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 DBG_TEST=1
-DBG_SRV=2
-DBG_BA=2
+DBG_SRV=1
+DBG_BCADMIN=1
 
 NBR_SERVERS=4
 NBR_SERVERS_GROUP=3
@@ -12,6 +12,7 @@ NBR_SERVERS_GROUP=3
 main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
+	[ ! -x ./bcadmin ] && exit 1
     run testCoin
     run testRoster
     run testCreateStoreRead
@@ -61,23 +62,16 @@ testRoster(){
   testOK runBA roster leader $bc $key co3/public.toml
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
-  testGrep "Roster: tls://localhost:2006" runBA show $bc
+  testGrep "Roster: tls://localhost:2006" runBA show -server 2 $bc
 }
 
+# create a ledger, and read the genesis darc.
 testCreateStoreRead(){
   runCoBG 1 2 3
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
-  testOK runBA add spawn:xxx -identity ed25519:foo
-  testGrep "spawn:xxx - \"ed25519:foo\"" runBA show
-  # Should not allow overwrite on rule without replace.
-  testFail runBA add spawn:xxx -identity "& ed25519:foo ed25519:bar"
-  testOK runBA add spawn:xxx -replace -identity "& ed25519:foo ed25519:bar"
-  testGrep "spawn:xxx - \"& ed25519:foo ed25519:bar\"" runBA show
-  # Do not allow both, neither.
-  testFail runBA add spawn:xxx -identity id -expression exp
-  testFail runBA add spawn:xxx
+  testGrep "Description: \"genesis darc\"" runBA show
 }
 
 testAddDarc(){
@@ -99,9 +93,10 @@ testRuleDarc(){
   eval $SED
   [ -z "$BC" ] && exit 1
 
-  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt
+  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing -unrestricted
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
+  testGrep "Description: \"testing\"" runBA darc show -darc $ID
   testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo -darc "$ID" -sign "$KEY"
   testGrep "spawn:xxx - \"ed25519:foo\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:foo | ed25519:oof" -darc "$ID" -sign "$KEY"
@@ -116,7 +111,7 @@ testAddDarcFromOtherOne(){
   eval $SED
   [ -z "$BC" ] && exit 1
 
-  testOK runBA darc add -out_key ./key.txt -out_id ./id.txt
+  testOK runBA darc add -out_key ./key.txt -out_id ./id.txt -unrestricted
   KEY=`cat ./key.txt`
   ID=`cat ./id.txt`
   testOK runBA darc rule -rule spawn:darc -identity "$KEY" -darc "$ID" -sign "$KEY"
@@ -142,7 +137,7 @@ testExpression(){
   eval $SED
   [ -z "$BC" ] && exit 1
 
-  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt
+  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
   testOK runBA key -save ./key.txt
@@ -159,7 +154,7 @@ testExpression(){
 }
 
 runBA(){
-  ./bcadmin -c config/ --debug $DBG_BA "$@"
+  ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
 }
 
 testQR() {

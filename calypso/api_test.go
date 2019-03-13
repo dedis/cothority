@@ -162,4 +162,6 @@ func TestClient_Calypso(t *testing.T) {
 		dk1.C, dk1.XhatEnc, reader1.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
+
+	// use keyCopy to unlock the stuff in writeInstance.Data
 }
