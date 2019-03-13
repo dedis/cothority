@@ -18,7 +18,3 @@ require (
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/urfave/cli.v1 v1.20.0
 )
-
-replace go.dedis.ch/onet/v3 => ../onet
-
-replace go.dedis.ch/kyber/v3 => ../kyber
