@@ -16,6 +16,13 @@ const PORT_MAX = 65535;
  */
 export class Roster extends Message<Roster> {
     /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("Roster", Roster, ServerIdentity);
+    }
+
+    /**
      * Parse cothority roster toml string into a Roster object.
      * @example
      * // Toml needs to adhere to the following format
@@ -131,6 +138,13 @@ export class Roster extends Message<Roster> {
  */
 export class ServerIdentity extends Message<ServerIdentity> {
     /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("ServerIdentity", ServerIdentity, ServiceIdentity);
+    }
+
+    /**
      * Checks wether the address given as parameter has the right format.
      * @param address the address to check
      * @returns true if and only if the address has the right format
@@ -212,6 +226,13 @@ export class ServerIdentity extends Message<ServerIdentity> {
  * key pair and don't the default one.
  */
 export class ServiceIdentity extends Message<ServiceIdentity> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("ServiceIdentity", ServiceIdentity);
+    }
+
     readonly name: string;
     readonly suite: string;
     readonly public: Buffer;
@@ -238,6 +259,6 @@ export class ServiceIdentity extends Message<ServiceIdentity> {
     }
 }
 
-registerMessage("Roster", Roster);
-registerMessage("ServerIdentity", ServerIdentity);
-registerMessage("ServiceIdentity", ServiceIdentity);
+Roster.register();
+ServerIdentity.register();
+ServiceIdentity.register();

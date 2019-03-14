@@ -2,12 +2,17 @@ import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
 import TxResult from "./tx-result";
 
-import "./tx-result"; // messages registration
-
 /**
  * ByzCoin block payload
  */
 export default class DataBody extends Message<DataBody> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("byzcoin.DataBody", DataBody, TxResult);
+    }
+
     readonly txResults: TxResult[];
 
     constructor(props?: Properties<DataBody>) {
@@ -28,4 +33,4 @@ export default class DataBody extends Message<DataBody> {
     }
 }
 
-registerMessage("byzcoin.DataBody", DataBody);
+DataBody.register();

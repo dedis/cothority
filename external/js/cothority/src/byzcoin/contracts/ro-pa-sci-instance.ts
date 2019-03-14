@@ -175,6 +175,13 @@ export default class RoPaSciInstance {
  * Data hold by a rock-paper-scisors instance
  */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);
+    }
+
     readonly description: string;
     readonly stake: Coin;
     readonly firstPlayerHash: Buffer;
@@ -236,4 +243,4 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
 }
 
 // TODO: remove comment after personhood.online is merged
-// registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);
+// RoPaSciStruct.register();

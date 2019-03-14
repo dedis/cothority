@@ -1,4 +1,5 @@
 import { Message } from "protobufjs/light";
+import { registerMessage } from "../protobuf";
 import IdentityDarc from "./identity-darc";
 import IdentityEd25519 from "./identity-ed25519";
 
@@ -6,6 +7,13 @@ import IdentityEd25519 from "./identity-ed25519";
  * Protobuf representation of an identity
  */
 export default class IdentityWrapper extends Message<IdentityWrapper> {
+  /**
+   * @see README#Message classes
+   */
+  static register() {
+    registerMessage("Identity", IdentityWrapper, IdentityEd25519, IdentityDarc);
+  }
+
   readonly ed25519: IdentityEd25519;
   readonly darc: IdentityDarc;
 
@@ -22,6 +30,21 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
     }
 
     return Buffer.from([]);
+  }
+
+  /**
+   * Get the string representation of the identity
+   * @returns a string of the identity
+   */
+  toString(): string {
+    if (this.ed25519) {
+      return this.ed25519.toString();
+    }
+    if (this.darc) {
+      return this.darc.toString();
+    }
+
+    return "empty signer";
   }
 }
 
@@ -56,3 +79,5 @@ export interface IIdentity {
    */
   toString(): string;
 }
+
+IdentityWrapper.register();

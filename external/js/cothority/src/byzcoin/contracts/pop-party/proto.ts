@@ -4,6 +4,13 @@ import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../../../protobuf";
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.PopPartyStruct", PopPartyStruct, PopDesc, Attendees, LRSTag);
+    }
+
     readonly state: number;
     readonly organizers: number;
     readonly finalizations: string[];
@@ -46,11 +53,25 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
 }
 
 export class FinalStatement extends Message<FinalStatement> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.FinalStatement", FinalStatement, PopDesc, Attendees);
+    }
+
     readonly desc: PopDesc;
     readonly attendees: Attendees;
 }
 
 export class PopDesc extends Message<PopDesc> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.PopDesc", PopDesc);
+    }
+
     readonly name: string;
     readonly purpose: string;
     readonly datetime: Long; // in seconds
@@ -91,6 +112,13 @@ export class PopDesc extends Message<PopDesc> {
 }
 
 export class Attendees extends Message<Attendees> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.Attendees", Attendees);
+    }
+
     readonly keys: Buffer[];
 
     constructor(properties?: Properties<Attendees>) {
@@ -117,6 +145,13 @@ export class Attendees extends Message<Attendees> {
 }
 
 export class LRSTag extends Message<LRSTag> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.LRSTag", LRSTag);
+    }
+
     readonly tag: Buffer;
 
     constructor(props?: Properties<LRSTag>) {
@@ -127,9 +162,9 @@ export class LRSTag extends Message<LRSTag> {
 }
 
 /* TODO: remove after personhood.online is merged
-registerMessage("personhood.PopPartyStruct", PopPartyStruct);
-registerMessage("personhood.FinalStatement", FinalStatement);
-registerMessage("personhood.PopDesc", PopDesc);
-registerMessage("personhood.Attendees", Attendees);
-registerMessage("personhood.LRSTag", LRSTag);
+PopPartyStruct.register();
+FinalStatement.register();
+PopDesc.register();
+Attendees.register();
+LRSTag.register();
 */

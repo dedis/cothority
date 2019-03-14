@@ -49,6 +49,37 @@ You must use the given script instead of `npm publish` because we need to publis
 the _dist_ folder instead. If you try to use the official command, you will get
 an error on purpose.
 
+### Message classes
+
+You can write a class that will be used when decoding protobuf messages by using
+this template:
+```javascript
+class MyMessage extends Message<MyMessage> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("abc.MyMessage", MyMessage, MyMessageDependency);
+    }
+
+    readonly myField: MyMessageDependency;
+
+    constructor(props?: Properties<MyMessage>) {
+        super(props);
+
+        // whatever you need to do for initialization
+    }
+}
+
+MyMessage.register();
+```
+
+Note that protobuf will instantiate with an empty object and then fill the fields
+so this happens after the constructor has been called.
+The _register_ is used to register the dependencies of the message but you also
+have to use it as a side effect of the package so that as soon as the class is
+imported, the message will be known by protobuf and used during decoding.
+
 ### Side note on Buffer
 
 Protobuf definition and classes implemented expect a _Buffer_ for _bytes_ but

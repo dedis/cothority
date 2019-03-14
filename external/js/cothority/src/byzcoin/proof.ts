@@ -19,6 +19,13 @@ import DataHeader from "./proto/data-header";
  * instance data in case it is a proof of existence. For absence proofs, these methods will throw an error.
  */
 export default class Proof extends Message<Proof> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
+    }
+
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;
     readonly links: ForwardLink[];
@@ -240,6 +247,13 @@ function boolToBuffer(bits: boolean[]): Buffer {
  * Interior node of an inclusion proof
  */
 class InteriorNode extends Message<InteriorNode> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("trie.InteriorNode", InteriorNode);
+    }
+
     readonly left: Buffer;
     readonly right: Buffer;
 }
@@ -248,6 +262,13 @@ class InteriorNode extends Message<InteriorNode> {
  * Empty node of an inclusion proof
  */
 class EmptyNode extends Message<EmptyNode> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("trie.EmptyNode", EmptyNode);
+    }
+
     readonly prefix: boolean[];
 
     constructor(props?: Properties<EmptyNode>) {
@@ -261,6 +282,13 @@ class EmptyNode extends Message<EmptyNode> {
  * Leaf node of an inclusion proof
  */
 class LeafNode extends Message<LeafNode> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("trie.LeafNode", LeafNode);
+    }
+
     readonly prefix: boolean[];
     readonly key: Buffer;
     readonly value: Buffer;
@@ -276,6 +304,13 @@ class LeafNode extends Message<LeafNode> {
  * InclusionProof represents the proof that an instance is present or not in the global state trie.
  */
 class InclusionProof extends Message<InclusionProof> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("trie.Proof", InclusionProof, InteriorNode, LeafNode, EmptyNode);
+    }
+
     interiors: InteriorNode[];
     leaf: LeafNode;
     empty: EmptyNode;
@@ -362,6 +397,13 @@ class InclusionProof extends Message<InclusionProof> {
 }
 
 class StateChangeBody extends Message<StateChangeBody> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("StateChangeBody", StateChangeBody);
+    }
+
     readonly stateaction: number;
     readonly contractid: string;
     readonly value: Buffer;
@@ -377,9 +419,9 @@ class StateChangeBody extends Message<StateChangeBody> {
     }
 }
 
-registerMessage("byzcoin.Proof", Proof);
-registerMessage("trie.Proof", InclusionProof);
-registerMessage("trie.InteriorNode", InteriorNode);
-registerMessage("trie.LeafNode", LeafNode);
-registerMessage("trie.EmptyNode", EmptyNode);
-registerMessage("StateChangeBody", StateChangeBody);
+Proof.register();
+InclusionProof.register();
+InteriorNode.register();
+LeafNode.register();
+EmptyNode.register();
+StateChangeBody.register();

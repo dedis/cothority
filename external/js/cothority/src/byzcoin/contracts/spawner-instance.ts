@@ -431,6 +431,13 @@ export default class SpawnerInstance {
  * Data of a spawner instance
  */
 export class SpawnerStruct extends Message<SpawnerStruct> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.SpawnerStruct", SpawnerStruct, Coin);
+    }
+
     readonly costDarc: Coin;
     readonly costCoin: Coin;
     readonly costCredential: Coin;
@@ -539,4 +546,4 @@ interface ICreatePopParty {
 }
 
 // TODO: remove comment after personhood.online is merged
-// registerMessage("personhood.SpawnerStruct", SpawnerStruct);
+// SpawnerStruct.register();

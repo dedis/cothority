@@ -6,6 +6,13 @@ import IdentityWrapper, { IIdentity } from "./identity-wrapper";
  * Identity based on a DARC identifier
  */
 export default class IdentityDarc extends Message<IdentityDarc> implements IIdentity {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("IdentityDarc", IdentityDarc);
+    }
+
     readonly id: Buffer;
 
     constructor(props?: Properties<IdentityDarc>) {
@@ -34,5 +41,3 @@ export default class IdentityDarc extends Message<IdentityDarc> implements IIden
         return `darc:${this.id.toString("hex")}`;
     }
 }
-
-registerMessage("IdentityDarc", IdentityDarc);

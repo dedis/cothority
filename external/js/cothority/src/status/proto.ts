@@ -5,12 +5,26 @@ import { registerMessage } from "../protobuf";
 /**
  * Status request message
  */
-export class StatusRequest extends Message<StatusRequest> {}
+export class StatusRequest extends Message<StatusRequest> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("Request", StatusRequest);
+    }
+}
 
 /**
  * Status of a service
  */
 export class Status extends Message<Status> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("Status", Status);
+    }
+
     readonly field: { [k: string]: string };
 
     constructor(props?: Properties<Status>) {
@@ -41,6 +55,13 @@ export class Status extends Message<Status> {
  * Status response message
  */
 export class StatusResponse extends Message<StatusResponse> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("Response", StatusResponse, Status, ServerIdentity);
+    }
+
     readonly status: { [k: string]: Status };
     readonly serverIdentity: ServerIdentity;
 
@@ -79,6 +100,6 @@ export class StatusResponse extends Message<StatusResponse> {
     }
 }
 
-registerMessage("Request", StatusRequest);
-registerMessage("Response", StatusResponse);
-registerMessage("Status", Status);
+StatusRequest.register();
+StatusResponse.register();
+Status.register();

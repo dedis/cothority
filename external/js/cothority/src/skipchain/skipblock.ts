@@ -23,6 +23,13 @@ function int2buf(v: number): Buffer {
 }
 
 export class SkipBlock extends Message<SkipBlock> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("SkipBlock", SkipBlock, Roster, ForwardLink);
+    }
+
     readonly hash: Buffer;
     readonly index: number;
     readonly height: number;
@@ -91,6 +98,13 @@ export class SkipBlock extends Message<SkipBlock> {
 }
 
 export class ForwardLink extends Message<ForwardLink> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("ForwardLink", ForwardLink, Roster, ByzcoinSignature);
+    }
+
     readonly from: Buffer;
     readonly to: Buffer;
     readonly newRoster: Roster;
@@ -142,6 +156,13 @@ export class ForwardLink extends Message<ForwardLink> {
 }
 
 export class ByzcoinSignature extends Message<ByzcoinSignature> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("ByzcoinSig", ByzcoinSignature);
+    }
+
     readonly msg: Buffer;
     readonly sig: Buffer;
 
@@ -174,6 +195,6 @@ export class ByzcoinSignature extends Message<ByzcoinSignature> {
     }
 }
 
-registerMessage("SkipBlock", SkipBlock);
-registerMessage("ForwardLink", ForwardLink);
-registerMessage("ByzcoinSig", ByzcoinSignature);
+SkipBlock.register();
+ForwardLink.register();
+ByzcoinSignature.register();

@@ -6,17 +6,17 @@ import { SkipBlock } from "../../skipchain/skipblock";
 import ClientTransaction from "../client-transaction";
 import Proof from "../proof";
 
-// messages registration
-import "../../darc";
-import "../../network/proto";
-import "../../skipchain/skipblock";
-import "../client-transaction";
-import "../proof";
-
 /**
  * Request to create a byzcoin skipchain
  */
 export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("CreateGenesisBlock", CreateGenesisBlock, Roster, Darc);
+    }
+
     readonly version: number;
     readonly roster: Roster;
     readonly genesisDarc: Darc;
@@ -73,6 +73,13 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
  * Response of a request to create byzcoin skipchain
  */
 export class CreateGenesisBlockResponse extends Message<CreateGenesisBlockResponse> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("CreateGenesisBlockResponse", CreateGenesisBlockResponse, SkipBlock);
+    }
+
     readonly version: number;
     readonly skipblock: SkipBlock;
 }
@@ -81,6 +88,13 @@ export class CreateGenesisBlockResponse extends Message<CreateGenesisBlockRespon
  * Request to get the proof of presence/absence of a given key
  */
 export class GetProof extends Message<GetProof> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("GetProof", GetProof);
+    }
+
     readonly version: number;
     readonly key: Buffer;
     readonly id: Buffer;
@@ -90,6 +104,13 @@ export class GetProof extends Message<GetProof> {
  * Response of a proof request
  */
 export class GetProofResponse extends Message<GetProofResponse> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("GetProofResponse", GetProofResponse, Proof);
+    }
+
     readonly version: number;
     readonly proof: Proof;
 }
@@ -98,6 +119,13 @@ export class GetProofResponse extends Message<GetProofResponse> {
  * Request to add a transaction
  */
 export class AddTxRequest extends Message<AddTxRequest> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("AddTxRequest", AddTxRequest, ClientTransaction);
+    }
+
     readonly version: number;
     readonly transaction: ClientTransaction;
     readonly inclusionwait: number;
@@ -123,6 +151,13 @@ export class AddTxRequest extends Message<AddTxRequest> {
  * Response of a request to add a transaction
  */
 export class AddTxResponse extends Message<AddTxResponse> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("AddTxResponse", AddTxResponse);
+    }
+
     readonly version: number;
 }
 
@@ -130,6 +165,13 @@ export class AddTxResponse extends Message<AddTxResponse> {
  * Request to get the current counters for given signers
  */
 export class GetSignerCounters extends Message<GetSignerCounters> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("GetSignerCounters", GetSignerCounters);
+    }
+
     readonly signerIDs: string[];
     readonly skipchainID: Buffer;
 
@@ -164,6 +206,13 @@ export class GetSignerCounters extends Message<GetSignerCounters> {
  * Response of a counter request in the same order as the signers array
  */
 export class GetSignerCountersResponse extends Message<GetSignerCountersResponse> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("GetSignerCountersResponse", GetSignerCountersResponse);
+    }
+
     readonly counters: Long[];
 
     constructor(props?: Properties<GetSignerCountersResponse>) {
@@ -173,11 +222,11 @@ export class GetSignerCountersResponse extends Message<GetSignerCountersResponse
     }
 }
 
-registerMessage("CreateGenesisBlock", CreateGenesisBlock);
-registerMessage("CreateGenesisBlockResponse", CreateGenesisBlockResponse);
-registerMessage("GetProof", GetProof);
-registerMessage("GetProofResponse", GetProofResponse);
-registerMessage("AddTxRequest", AddTxRequest);
-registerMessage("AddTxResponse", AddTxResponse);
-registerMessage("GetSignerCounters", GetSignerCounters);
-registerMessage("GetSignerCountersResponse", GetSignerCountersResponse);
+CreateGenesisBlock.register();
+CreateGenesisBlockResponse.register();
+GetProof.register();
+GetProofResponse.register();
+AddTxRequest.register();
+AddTxResponse.register();
+GetSignerCounters.register();
+GetSignerCountersResponse.register();

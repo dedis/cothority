@@ -27,6 +27,13 @@ function initRules(owners: IIdentity[], signers: IIdentity[]): Rules {
  */
 export default class Darc extends Message<Darc> {
     /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("Darc", Darc, Rules);
+    }
+
+    /**
      * Create a genesis darc using the owners and signers to populate the
      * rules
      * @param owners    those you can evolve the darc
@@ -183,4 +190,4 @@ export default class Darc extends Message<Darc> {
     }
 }
 
-registerMessage("Darc", Darc);
+Darc.register();

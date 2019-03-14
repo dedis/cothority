@@ -2,9 +2,14 @@ import { Message, Properties } from "protobufjs/light";
 import { registerMessage } from "../../protobuf";
 import ClientTransaction from "../client-transaction";
 
-import "../client-transaction"; // messages registration
-
 export default class TxResult extends Message<TxResult> {
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("byzcoin.TxResult", TxResult, ClientTransaction);
+    }
+
     readonly clientTransaction: ClientTransaction;
     readonly accepted: boolean;
 
@@ -24,4 +29,4 @@ export default class TxResult extends Message<TxResult> {
     }
 }
 
-registerMessage("byzcoin.TxResult", TxResult);
+TxResult.register();
