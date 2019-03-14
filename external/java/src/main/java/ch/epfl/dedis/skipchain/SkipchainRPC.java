@@ -86,6 +86,12 @@ public class SkipchainRPC {
             SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
             SkipBlock ret = new SkipBlock(sb);
 
+            if (!Arrays.equals(id.getId(), ret.getHash())) {
+                // we don't want a malicious peer to send a block with tempered
+                // data like a different roster with different public keys
+                throw new CothorityCommunicationException("invalid block integrity");
+            }
+
             // simple verification (we do not check the links, just the signature)
             if (!ret.verifyForwardSignatures()) {
                 throw new CothorityCommunicationException("invalid forward signatures");
