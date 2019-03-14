@@ -3,6 +3,9 @@ import { registerMessage } from "../../protobuf";
 import ClientTransaction from "../client-transaction";
 
 export default class TxResult extends Message<TxResult> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.TxResult", TxResult, ClientTransaction);
     }

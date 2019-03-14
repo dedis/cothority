@@ -116,6 +116,9 @@ export default class CredentialsInstance {
  * credentials.
  */
 export class CredentialStruct extends Message<CredentialStruct> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.CredentialStruct", CredentialStruct, Credential);
     }
@@ -141,6 +144,9 @@ export class CredentialStruct extends Message<CredentialStruct> {
  * A credential has a given name used as a key and one or more attributes
  */
 export class Credential extends Message<Credential> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.Credential", Credential, Attribute);
     }
@@ -159,6 +165,9 @@ export class Credential extends Message<Credential> {
  * Attribute of a credential
  */
 export class Attribute extends Message<Attribute> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.Attribute", Attribute);
     }

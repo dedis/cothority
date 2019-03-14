@@ -10,6 +10,9 @@ const ed25519 = curve.newCurve("edwards25519");
  * Identity of an Ed25519 signer
  */
 export default class IdentityEd25519 extends Message<IdentityEd25519> implements IIdentity {
+  /**
+   * @see README#Message classes
+   */
   static register() {
     registerMessage("IdentityEd25519", IdentityEd25519);
   }

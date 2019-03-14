@@ -431,6 +431,9 @@ export default class SpawnerInstance {
  * Data of a spawner instance
  */
 export class SpawnerStruct extends Message<SpawnerStruct> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.SpawnerStruct", SpawnerStruct, Coin);
     }

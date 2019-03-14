@@ -6,6 +6,9 @@ import TxResult from "./tx-result";
  * ByzCoin block payload
  */
 export default class DataBody extends Message<DataBody> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.DataBody", DataBody, TxResult);
     }

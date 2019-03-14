@@ -4,6 +4,9 @@ import { registerMessage } from "../protobuf";
 import Proof from "./proof";
 
 export default class ChainConfig extends Message<ChainConfig> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.ChainConfig", ChainConfig);
     }

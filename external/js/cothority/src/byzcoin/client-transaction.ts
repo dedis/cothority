@@ -14,6 +14,9 @@ export interface ICounterUpdater {
  * List of instructions to send to a byzcoin chain
  */
 export default class ClientTransaction extends Message<ClientTransaction> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.ClientTransaction", ClientTransaction, Instruction);
     }
@@ -70,6 +73,9 @@ export default class ClientTransaction extends Message<ClientTransaction> {
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Instruction", Instruction, IdentityWrapper, Spawn, Invoke, Delete);
     }
@@ -285,6 +291,9 @@ export class Instruction extends Message<Instruction> {
  * Argument of an instruction
  */
 export class Argument extends Message<Argument> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Argument", Argument);
     }
@@ -303,6 +312,9 @@ export class Argument extends Message<Argument> {
  * Spawn instruction that will create instances
  */
 export class Spawn extends Message<Spawn> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Spawn", Spawn, Argument);
     }
@@ -332,6 +344,9 @@ export class Spawn extends Message<Spawn> {
  * Invoke instruction that will update an existing instance
  */
 export class Invoke extends Message<Invoke> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Invoke", Invoke, Argument);
     }
@@ -362,6 +377,9 @@ export class Invoke extends Message<Invoke> {
  * Delete instruction that will delete an instance
  */
 export class Delete extends Message<Delete> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Delete", Delete);
     }

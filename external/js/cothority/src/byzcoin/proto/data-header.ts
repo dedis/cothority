@@ -7,6 +7,9 @@ const EMPTY_BUFFER = Buffer.allocUnsafe(0);
  * ByzCoin metadata
  */
 export default class DataHeader extends Message<DataHeader> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.DataHeader", DataHeader);
     }

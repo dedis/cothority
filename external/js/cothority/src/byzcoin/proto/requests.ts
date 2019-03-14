@@ -10,6 +10,9 @@ import Proof from "../proof";
  * Request to create a byzcoin skipchain
  */
 export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("CreateGenesisBlock", CreateGenesisBlock, Roster, Darc);
     }
@@ -70,6 +73,9 @@ export class CreateGenesisBlock extends Message<CreateGenesisBlock> {
  * Response of a request to create byzcoin skipchain
  */
 export class CreateGenesisBlockResponse extends Message<CreateGenesisBlockResponse> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("CreateGenesisBlockResponse", CreateGenesisBlockResponse, SkipBlock);
     }
@@ -82,6 +88,9 @@ export class CreateGenesisBlockResponse extends Message<CreateGenesisBlockRespon
  * Request to get the proof of presence/absence of a given key
  */
 export class GetProof extends Message<GetProof> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetProof", GetProof);
     }
@@ -95,6 +104,9 @@ export class GetProof extends Message<GetProof> {
  * Response of a proof request
  */
 export class GetProofResponse extends Message<GetProofResponse> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetProofResponse", GetProofResponse, Proof);
     }
@@ -107,6 +119,9 @@ export class GetProofResponse extends Message<GetProofResponse> {
  * Request to add a transaction
  */
 export class AddTxRequest extends Message<AddTxRequest> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("AddTxRequest", AddTxRequest, ClientTransaction);
     }
@@ -136,6 +151,9 @@ export class AddTxRequest extends Message<AddTxRequest> {
  * Response of a request to add a transaction
  */
 export class AddTxResponse extends Message<AddTxResponse> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("AddTxResponse", AddTxResponse);
     }
@@ -147,6 +165,9 @@ export class AddTxResponse extends Message<AddTxResponse> {
  * Request to get the current counters for given signers
  */
 export class GetSignerCounters extends Message<GetSignerCounters> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetSignerCounters", GetSignerCounters);
     }
@@ -185,6 +206,9 @@ export class GetSignerCounters extends Message<GetSignerCounters> {
  * Response of a counter request in the same order as the signers array
  */
 export class GetSignerCountersResponse extends Message<GetSignerCountersResponse> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetSignerCountersResponse", GetSignerCountersResponse);
     }

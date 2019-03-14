@@ -3,12 +3,18 @@ import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { ForwardLink, SkipBlock } from "./skipblock";
 
 export class GetAllSkipChainIDs extends Message<GetAllSkipChainIDs> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetAllSkipChainIDs", GetAllSkipChainIDs);
     }
 }
 
 export class GetAllSkipChainIDsReply extends Message<GetAllSkipChainIDsReply> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetAllSkipChainIDsReply", GetAllSkipChainIDsReply);
     }
@@ -23,6 +29,9 @@ export class GetAllSkipChainIDsReply extends Message<GetAllSkipChainIDsReply> {
 }
 
 export class StoreSkipBlock extends Message<StoreSkipBlock> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("StoreSkipBlock", StoreSkipBlock, SkipBlock);
     }
@@ -40,6 +49,9 @@ export class StoreSkipBlock extends Message<StoreSkipBlock> {
 }
 
 export class StoreSkipBlockReply extends Message<StoreSkipBlock> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("StoreSkipBlockReply", StoreSkipBlockReply, SkipBlock);
     }
@@ -49,6 +61,9 @@ export class StoreSkipBlockReply extends Message<StoreSkipBlock> {
 }
 
 export class GetSingleBlock extends Message<GetSingleBlock> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetSingleBlock", GetSingleBlock);
     }
@@ -63,6 +78,9 @@ export class GetSingleBlock extends Message<GetSingleBlock> {
 }
 
 export class GetSingleBlockByIndex extends Message<GetSingleBlockByIndex> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetSingleBlockByIndex", GetSingleBlockByIndex);
     }
@@ -78,6 +96,9 @@ export class GetSingleBlockByIndex extends Message<GetSingleBlockByIndex> {
 }
 
 export class GetSingleBlockByIndexReply extends Message<GetSingleBlockByIndexReply> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetSingleBlockByIndexReply", GetSingleBlockByIndexReply);
     }
@@ -93,6 +114,9 @@ export class GetSingleBlockByIndexReply extends Message<GetSingleBlockByIndexRep
 }
 
 export class GetUpdateChain extends Message<GetUpdateChain> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetUpdateChain", GetUpdateChain);
     }
@@ -107,6 +131,9 @@ export class GetUpdateChain extends Message<GetUpdateChain> {
 }
 
 export class GetUpdateChainReply extends Message<GetUpdateChainReply> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("GetUpdateChainReply", GetUpdateChainReply, SkipBlock);
     }

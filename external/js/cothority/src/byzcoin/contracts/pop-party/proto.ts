@@ -4,6 +4,9 @@ import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../../../protobuf";
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.PopPartyStruct", PopPartyStruct, PopDesc, Attendees, LRSTag);
     }
@@ -50,6 +53,9 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
 }
 
 export class FinalStatement extends Message<FinalStatement> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.FinalStatement", FinalStatement, PopDesc, Attendees);
     }
@@ -59,6 +65,9 @@ export class FinalStatement extends Message<FinalStatement> {
 }
 
 export class PopDesc extends Message<PopDesc> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.PopDesc", PopDesc);
     }
@@ -103,6 +112,9 @@ export class PopDesc extends Message<PopDesc> {
 }
 
 export class Attendees extends Message<Attendees> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.Attendees", Attendees);
     }
@@ -133,6 +145,9 @@ export class Attendees extends Message<Attendees> {
 }
 
 export class LRSTag extends Message<LRSTag> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.LRSTag", LRSTag);
     }

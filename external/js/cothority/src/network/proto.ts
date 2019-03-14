@@ -15,6 +15,9 @@ const PORT_MAX = 65535;
  * List of server identities
  */
 export class Roster extends Message<Roster> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Roster", Roster, ServerIdentity);
     }
@@ -134,6 +137,9 @@ export class Roster extends Message<Roster> {
  * Identity of a conode
  */
 export class ServerIdentity extends Message<ServerIdentity> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("ServerIdentity", ServerIdentity, ServiceIdentity);
     }
@@ -220,6 +226,9 @@ export class ServerIdentity extends Message<ServerIdentity> {
  * key pair and don't the default one.
  */
 export class ServiceIdentity extends Message<ServiceIdentity> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("ServiceIdentity", ServiceIdentity);
     }

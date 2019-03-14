@@ -19,6 +19,9 @@ import DataHeader from "./proto/data-header";
  * instance data in case it is a proof of existence. For absence proofs, these methods will throw an error.
  */
 export default class Proof extends Message<Proof> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
     }
@@ -244,6 +247,9 @@ function boolToBuffer(bits: boolean[]): Buffer {
  * Interior node of an inclusion proof
  */
 class InteriorNode extends Message<InteriorNode> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("trie.InteriorNode", InteriorNode);
     }
@@ -256,6 +262,9 @@ class InteriorNode extends Message<InteriorNode> {
  * Empty node of an inclusion proof
  */
 class EmptyNode extends Message<EmptyNode> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("trie.EmptyNode", EmptyNode);
     }
@@ -273,6 +282,9 @@ class EmptyNode extends Message<EmptyNode> {
  * Leaf node of an inclusion proof
  */
 class LeafNode extends Message<LeafNode> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("trie.LeafNode", LeafNode);
     }
@@ -292,6 +304,9 @@ class LeafNode extends Message<LeafNode> {
  * InclusionProof represents the proof that an instance is present or not in the global state trie.
  */
 class InclusionProof extends Message<InclusionProof> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("trie.Proof", InclusionProof, InteriorNode, LeafNode, EmptyNode);
     }
@@ -382,6 +397,9 @@ class InclusionProof extends Message<InclusionProof> {
 }
 
 class StateChangeBody extends Message<StateChangeBody> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("StateChangeBody", StateChangeBody);
     }

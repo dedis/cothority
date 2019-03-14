@@ -23,6 +23,9 @@ function int2buf(v: number): Buffer {
 }
 
 export class SkipBlock extends Message<SkipBlock> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("SkipBlock", SkipBlock, Roster, ForwardLink);
     }
@@ -95,6 +98,9 @@ export class SkipBlock extends Message<SkipBlock> {
 }
 
 export class ForwardLink extends Message<ForwardLink> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("ForwardLink", ForwardLink, Roster, ByzcoinSignature);
     }
@@ -150,6 +156,9 @@ export class ForwardLink extends Message<ForwardLink> {
 }
 
 export class ByzcoinSignature extends Message<ByzcoinSignature> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("ByzcoinSig", ByzcoinSignature);
     }

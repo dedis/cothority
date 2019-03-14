@@ -164,6 +164,9 @@ export default class CoinInstance {
 }
 
 export class Coin extends Message<Coin> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("byzcoin.Coin", Coin);
     }

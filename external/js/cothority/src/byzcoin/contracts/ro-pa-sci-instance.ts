@@ -175,6 +175,9 @@ export default class RoPaSciInstance {
  * Data hold by a rock-paper-scisors instance
  */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("personhood.RoPaSciStruct", RoPaSciStruct);
     }

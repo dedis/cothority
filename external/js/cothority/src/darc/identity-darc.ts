@@ -6,6 +6,9 @@ import IdentityWrapper, { IIdentity } from "./identity-wrapper";
  * Identity based on a DARC identifier
  */
 export default class IdentityDarc extends Message<IdentityDarc> implements IIdentity {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("IdentityDarc", IdentityDarc);
     }

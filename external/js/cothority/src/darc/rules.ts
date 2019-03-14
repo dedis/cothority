@@ -6,6 +6,9 @@ import { IIdentity } from "./identity-wrapper";
  * A rule will give who is allowed to use a given action
  */
 export class Rule extends Message<Rule> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Rule", Rule);
     }
@@ -47,6 +50,9 @@ export default class Rules extends Message<Rules> {
     static OR = "|";
     static AND = "&";
 
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Rules", Rules, Rule);
     }

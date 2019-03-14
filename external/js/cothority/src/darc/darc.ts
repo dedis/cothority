@@ -26,6 +26,9 @@ function initRules(owners: IIdentity[], signers: IIdentity[]): Rules {
  * Distributed Access Right Controls
  */
 export default class Darc extends Message<Darc> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Darc", Darc, Rules);
     }

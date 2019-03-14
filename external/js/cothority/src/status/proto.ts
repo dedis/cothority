@@ -6,6 +6,9 @@ import { registerMessage } from "../protobuf";
  * Status request message
  */
 export class StatusRequest extends Message<StatusRequest> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Request", StatusRequest);
     }
@@ -15,6 +18,9 @@ export class StatusRequest extends Message<StatusRequest> {
  * Status of a service
  */
 export class Status extends Message<Status> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Status", Status);
     }
@@ -49,6 +55,9 @@ export class Status extends Message<Status> {
  * Status response message
  */
 export class StatusResponse extends Message<StatusResponse> {
+    /**
+     * @see README#Message classes
+     */
     static register() {
         registerMessage("Response", StatusResponse, Status, ServerIdentity);
     }
