@@ -153,6 +153,36 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	c.Close()
 }
 
+func TestClient_StoreSkipBlockCorrupted(t *testing.T) {
+	defer func() {
+		testCorruptSSBResponse = nil
+	}()
+
+	nbrHosts := 3
+	l := onet.NewTCPTest(cothority.Suite)
+	_, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+	genesis, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
+
+	testCorruptSSBResponse = &StoreSkipBlockReply{}
+
+	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
+	require.Nil(t, err) // empty reply
+
+	testCorruptSSBResponse.Previous = NewSkipBlock()
+	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+
+	testCorruptSSBResponse.Previous = nil
+	testCorruptSSBResponse.Latest = NewSkipBlock()
+	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+}
+
 func TestClient_GetAllSkipchains(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
@@ -211,6 +241,37 @@ func TestClient_GetAllSkipChainIDs(t *testing.T) {
 	}
 }
 
+func TestClient_GetSingleBlock(t *testing.T) {
+	defer func() {
+		testCorruptSkipBlock = nil
+	}()
+
+	nbrHosts := 3
+	l := onet.NewTCPTest(cothority.Suite)
+	_, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+
+	sb, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
+	require.Nil(t, err)
+
+	ret, err := c.GetSingleBlock(ro, sb.Hash)
+	require.Nil(t, err)
+	require.Equal(t, ret.Hash, sb.Hash)
+
+	testCorruptSkipBlock = NewSkipBlock()
+	testCorruptSkipBlock.Roster = ro
+	_, err = c.GetSingleBlock(ro, sb.Hash)
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+
+	testCorruptSkipBlock.updateHash()
+	_, err = c.GetSingleBlock(ro, sb.Hash)
+	require.NotNil(t, err)
+	require.Equal(t, "Got the wrong block in return", err.Error())
+}
+
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
@@ -258,6 +319,37 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	// non existing
 	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, nbrBlocks+1)
 	require.NotNil(t, err)
+}
+
+func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
+	defer func() {
+		testCorruptGSBIReply = nil
+	}()
+
+	nbrHosts := 3
+	l := onet.NewTCPTest(cothority.Suite)
+	_, roster, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+
+	sb, err := c.CreateGenesis(roster, 2, 4, VerificationNone, nil)
+	require.Nil(t, err)
+
+	testCorruptGSBIReply = &GetSingleBlockByIndexReply{}
+	_, err = c.GetSingleBlockByIndex(roster, sb.Hash, 0)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Got an empty reply")
+
+	testCorruptGSBIReply.SkipBlock = NewSkipBlock()
+	_, err = c.GetSingleBlockByIndex(roster, sb.Hash, 0)
+	require.Contains(t, err.Error(), "Calculated hash does not match")
+
+	testCorruptGSBIReply.SkipBlock.Index = 1
+	testCorruptGSBIReply.SkipBlock.Roster = roster
+	testCorruptGSBIReply.SkipBlock.updateHash()
+	_, err = c.GetSingleBlockByIndex(roster, sb.Hash, 0)
+	require.Contains(t, err.Error(), "Got the wrong block in reply")
 }
 
 func TestClient_CreateLinkPrivate(t *testing.T) {

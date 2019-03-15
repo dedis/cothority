@@ -16,6 +16,11 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+// mock replies until we have proper interfaces
+var testCorruptSSBResponse *StoreSkipBlockReply
+var testCorruptSkipBlock *SkipBlock
+var testCorruptGSBIReply *GetSingleBlockByIndexReply
+
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -81,6 +86,23 @@ func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d n
 	if err != nil {
 		return nil, err
 	}
+
+	// corrupted response for testing purpose
+	if testCorruptSSBResponse != nil {
+		reply = testCorruptSSBResponse
+	}
+
+	if reply.Latest != nil {
+		if err = reply.Latest.VerifyForwardSignatures(); err != nil {
+			return nil, err
+		}
+	}
+	if reply.Previous != nil {
+		if err = reply.Previous.VerifyForwardSignatures(); err != nil {
+			return nil, err
+		}
+	}
+
 	return reply, nil
 }
 
@@ -224,6 +246,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 				}
 			}
 
+			// Check the integrity of the block
 			if err := b.VerifyForwardSignatures(); err != nil {
 				return nil, err
 			}
@@ -297,11 +320,27 @@ func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSk
 
 // GetSingleBlock searches for a block with the given ID and returns that block,
 // or an error if that block is not found.
-func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *SkipBlock, err error) {
-	reply = &SkipBlock{}
-	err = c.SendProtobuf(roster.RandomServerIdentity(),
-		&GetSingleBlock{id}, reply)
-	return
+func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, error) {
+	var reply = &SkipBlock{}
+	err := c.SendProtobuf(roster.RandomServerIdentity(), &GetSingleBlock{id}, reply)
+	if err != nil {
+		return nil, err
+	}
+
+	// for testing purpose
+	if testCorruptSkipBlock != nil {
+		reply = testCorruptSkipBlock
+	}
+
+	if err = reply.VerifyForwardSignatures(); err != nil {
+		return nil, err
+	}
+
+	if !reply.Hash.Equal(id) {
+		return nil, errors.New("Got the wrong block in return")
+	}
+
+	return reply, nil
 }
 
 // GetSingleBlockByIndex searches for a block with the given index following the genesis-block.
@@ -311,14 +350,42 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 	perms := rand.Perm(len(roster.List))
 	var errs []string
 	for _, ind := range perms {
-		err = c.SendProtobuf(roster.List[ind],
-			&GetSingleBlockByIndex{genesis, index}, reply)
+		reply, err = c.getBlockByIndex(roster.List[ind], genesis, index)
 		if err == nil {
 			return
 		}
 		errs = append(errs, err.Error())
 	}
 	return nil, errors.New("all nodes failed to return block: " + strings.Join(errs, " :: "))
+}
+
+func (c *Client) getBlockByIndex(si *network.ServerIdentity, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
+	reply = &GetSingleBlockByIndexReply{}
+
+	err = c.SendProtobuf(si, &GetSingleBlockByIndex{genesis, index}, reply)
+	if err != nil {
+		return
+	}
+
+	// for testing purpose
+	if testCorruptGSBIReply != nil {
+		reply = testCorruptGSBIReply
+	}
+
+	if reply.SkipBlock == nil {
+		err = errors.New("Got an empty reply")
+		return
+	}
+
+	if err = reply.SkipBlock.VerifyForwardSignatures(); err != nil {
+		return
+	}
+
+	if reply.SkipBlock.Index != index {
+		err = errors.New("Got the wrong block in reply")
+	}
+
+	return
 }
 
 // CreateLinkPrivate asks the conode to create a link by sending a public
