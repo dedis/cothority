@@ -74,8 +74,7 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 
 // Commit commits the staged data to the source trie.
 func (t *stagingStateTrie) Commit() error {
-	// TODO if this is implemented, we can replace the stateChangeCache.
-	return errors.New("not implemented")
+	return t.StagingTrie.Commit()
 }
 
 // GetIndex returns the index of the current trie.

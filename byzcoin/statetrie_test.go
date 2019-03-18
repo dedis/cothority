@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,4 +52,20 @@ func TestStateTrie(t *testing.T) {
 	require.Equal(t, version, ver)
 	require.Equal(t, cid, string(contractID))
 	require.True(t, did.Equal(darcID))
+
+	// test the staging state trie, most of the tests are done in the trie package
+	key2 := []byte("key2")
+	val2 := []byte("val2")
+	sst := st.MakeStagingStateTrie()
+	oldRoot := sst.GetRoot()
+	require.NoError(t, sst.Set(key2, val2))
+	newRoot := sst.GetRoot()
+	require.False(t, bytes.Equal(oldRoot, newRoot))
+	candidateVal2, err := sst.Get(key2)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(val2, candidateVal2))
+
+	// test the commit of staging state trie, root should be computed differently now, but it should be the same
+	require.NoError(t, sst.Commit())
+	require.True(t, bytes.Equal(sst.GetRoot(), newRoot))
 }
