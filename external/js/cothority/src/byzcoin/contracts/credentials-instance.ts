@@ -1,9 +1,10 @@
-import { Message, Properties } from "protobufjs/light";
+import {Message, Properties} from "protobufjs/light";
 import Signer from "../../darc/signer";
-import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
+import {EMPTY_BUFFER, registerMessage} from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../client-transaction";
-import Instance, { InstanceID } from "../instance";
+import ClientTransaction, {Argument, Instruction} from "../client-transaction";
+import Instance, {InstanceID} from "../instance";
+import Log from "../../log";
 
 export default class CredentialsInstance {
     static readonly contractID = "credential";
@@ -25,7 +26,7 @@ export default class CredentialsInstance {
     constructor(bc: ByzCoinRPC, inst: Instance) {
         this.rpc = bc;
         this.instance = inst;
-        this.credential = CredentialStruct.decode(inst.data);
+        this.credential = CredentialStruct.fromData(inst.data);
     }
 
     /**
@@ -45,7 +46,7 @@ export default class CredentialsInstance {
      */
     async update(): Promise<CredentialsInstance> {
         this.instance = await Instance.fromByzCoin(this.rpc, this.instance.id);
-        this.credential = CredentialStruct.decode(this.instance.data);
+        this.credential = CredentialStruct.fromData(this.instance.data);
         return this;
     }
 
@@ -82,11 +83,11 @@ export default class CredentialsInstance {
     async setAttribute(owner: Signer, credential: string, attribute: string, value: Buffer): Promise<any> {
         let cred = this.credential.credentials.find((c) => c.name === credential);
         if (!cred) {
-            cred = new Credential({ name: credential, attributes: [new Attribute({ name: attribute, value })] });
+            cred = new Credential({name: credential, attributes: [new Attribute({name: attribute, value})]});
             this.credential.credentials.push(cred);
         } else {
             const idx = cred.attributes.findIndex((a) => a.name === attribute);
-            const attr = new Attribute({ name: attribute, value });
+            const attr = new Attribute({name: attribute, value});
             if (idx === -1) {
                 cred.attributes.push(attr);
             } else {
@@ -98,11 +99,11 @@ export default class CredentialsInstance {
             this.instance.id,
             CredentialsInstance.contractID,
             "update",
-            [new Argument({ name: "credential", value: this.credential.toBytes() })],
+            [new Argument({name: "credential", value: this.credential.toBytes()})],
         );
         await instr.updateCounters(this.rpc, [owner]);
 
-        const ctx = new ClientTransaction({ instructions: [instr] });
+        const ctx = new ClientTransaction({instructions: [instr]});
         ctx.signWith([owner]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -123,12 +124,16 @@ export class CredentialStruct extends Message<CredentialStruct> {
         registerMessage("personhood.CredentialStruct", CredentialStruct, Credential);
     }
 
-    readonly credentials: Credential[];
+    public credentials: Credential[];
 
     constructor(properties?: Properties<CredentialStruct>) {
         super(properties);
 
-        this.credentials = this.credentials || [];
+        if (this.credentials) {
+            this.credentials = this.credentials.map(c => new Credential(c));
+        } else {
+            this.credentials = [];
+        }
     }
 
     /**
@@ -137,6 +142,14 @@ export class CredentialStruct extends Message<CredentialStruct> {
      */
     toBytes(): Buffer {
         return Buffer.from(CredentialStruct.encode(this).finish());
+    }
+
+    /**
+     * Returns a new CredentialStruct class
+     * @param d
+     */
+    static fromData(d: Buffer): CredentialStruct {
+        return new CredentialStruct(CredentialStruct.decode(d));
     }
 }
 
@@ -151,13 +164,17 @@ export class Credential extends Message<Credential> {
         registerMessage("personhood.Credential", Credential, Attribute);
     }
 
-    readonly name: string;
-    readonly attributes: Attribute[];
+    public name: string;
+    public attributes: Attribute[];
 
     constructor(props?: Properties<Credential>) {
         super(props);
 
-        this.attributes = this.attributes || [];
+        if (this.attributes) {
+            this.attributes = this.attributes.map(a => new Attribute(a));
+        } else {
+            this.attributes = [];
+        }
     }
 }
 
@@ -172,8 +189,8 @@ export class Attribute extends Message<Attribute> {
         registerMessage("personhood.Attribute", Attribute);
     }
 
-    readonly name: string;
-    readonly value: Buffer;
+    public name: string;
+    public value: Buffer;
 
     constructor(props?: Properties<Attribute>) {
         super(props);

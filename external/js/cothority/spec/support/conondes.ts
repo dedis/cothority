@@ -17,6 +17,7 @@ export const BLOCK_INTERVAL = Long.fromNumber(1 * 1000 * 1000 * 1000); // 5s in 
 export const SIGNER = SignerEd25519.fromBytes(Buffer.from("0cb119094dbf72dfd169f8ba605069ce66a0c8ba402eb22952b544022d33b90c", "hex"));
 
 export async function startConodes(): Promise<void> {
+    return;
     const containers = await docker.listContainers({ all: true, filters: FILTERS });
     const container = containers[0];
 
