@@ -13,7 +13,6 @@ import (
 // type :darc.ID:bytes
 // package personhood;
 //
-// import "darc.proto";
 // import "byzcoin.proto";
 // import "onet.proto";
 //

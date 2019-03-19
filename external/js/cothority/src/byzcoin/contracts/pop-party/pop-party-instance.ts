@@ -215,7 +215,6 @@ export class PopPartyInstance {
             // Remove leading "darc:" from expression
             orgDarc = orgDarc.substr(5);
             const orgCred = SpawnerInstance.credentialIID(Buffer.from(orgDarc, "hex"));
-            Log.lvl2("Searching personhood-identity of organizer", orgDarc, orgCred);
             const cred = await CredentialInstance.fromByzcoin(this.bc, orgCred);
             const credPers = cred.getAttribute("personhood", "ed25519");
             if (!credPers) {

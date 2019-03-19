@@ -172,7 +172,7 @@ export default class RoPaSciInstance {
 }
 
 /**
- * Data hold by a rock-paper-scisors instance
+ * Data hold by a rock-paper-scissors instance
  */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
     /**

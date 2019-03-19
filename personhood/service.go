@@ -78,7 +78,6 @@ func (s *Service) Capabilities(rq *Capabilities) (*CapabilitiesResponse, error) 
 // just locally, perhaps via bluetooth or sound.
 func (s *Service) Meetup(rq *Meetup) (*MeetupResponse, error) {
 	if rq.Wipe != nil && *rq.Wipe {
-		log.Print("Wiping Meetups")
 		s.meetups = []UserLocation{}
 		return &MeetupResponse{}, nil
 	}
@@ -87,12 +86,10 @@ func (s *Service) Meetup(rq *Meetup) (*MeetupResponse, error) {
 		// Prune old entries, supposing they're in chronological order
 		for i := len(s.meetups) - 1; i >= 0; i-- {
 			if s.meetups[i].PublicKey.Equal(rq.UserLocation.PublicKey) {
-				log.Print("found same meetup")
 				s.meetups = append(s.meetups[:i], s.meetups[i+1:]...)
 				continue
 			}
 			if time.Now().Unix()-(s.meetups[i].Time) > 60 {
-				log.Print("deleting", i)
 				s.meetups = append(s.meetups[0:i], s.meetups[i+1:]...)
 			}
 		}
@@ -104,7 +101,6 @@ func (s *Service) Meetup(rq *Meetup) (*MeetupResponse, error) {
 	}
 	reply := &MeetupResponse{}
 	for _, m := range s.meetups {
-		log.Printf("adding %+v", m)
 		reply.Users = append(reply.Users, m)
 	}
 	return reply, nil

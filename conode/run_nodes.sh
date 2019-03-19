@@ -14,7 +14,7 @@ show_all="true"
 show_time="false"
 single=""
 
-while getopts "h?v:n:p:i:d:qfts" opt; do
+while getopts "h?v:n:p:i:d:qftsc" opt; do
     case "$opt" in
     h|\?)
         echo "Allowed arguments:
@@ -49,6 +49,8 @@ while getopts "h?v:n:p:i:d:qfts" opt; do
         export DEBUG_TIME
         ;;
     s)  single="true"
+        ;;
+    c)  export DEBUG_COLOR=true
         ;;
     esac
 done

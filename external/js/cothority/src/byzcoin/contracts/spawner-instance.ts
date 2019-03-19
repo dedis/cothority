@@ -185,7 +185,7 @@ export default class SpawnerInstance {
         const d = SpawnerInstance.prepareUserDarc(pubKey, alias);
         try {
             const darc = await DarcInstance.fromByzcoin(this.rpc, d.getGenesisDarcID());
-            Log.lvl2("this darc is already registerd");
+            Log.warn("this darc is already registerd");
             return darc;
         } catch (e) {
             // darc already exists
@@ -226,7 +226,7 @@ export default class SpawnerInstance {
     async createCoin(coin: CoinInstance, signers: Signer[], darcID: Buffer, balance?: Long): Promise<CoinInstance> {
         try {
             const ci = await CoinInstance.fromByzcoin(this.rpc, SpawnerInstance.coinIID(darcID));
-            Log.lvl2("this coin is already registered");
+            Log.warn("this coin is already registered");
             return ci;
         } catch (e) {
             // doesn't exist
@@ -277,7 +277,7 @@ export default class SpawnerInstance {
     ): Promise<CredentialInstance> {
         try {
             const c = await CredentialInstance.fromByzcoin(this.rpc, SpawnerInstance.credentialIID(darcID));
-            Log.lvl2("this credential is already registerd");
+            Log.warn("this credential is already registerd");
             return c;
         } catch (e) {
             // credential doesn't exist
@@ -396,7 +396,7 @@ export default class SpawnerInstance {
             firstPlayer: -1,
             firstPlayerHash: fph.digest(),
             secondPlayer: -1,
-            secondPlayerAccount: null,
+            secondPlayerAccount: Buffer.alloc(32),
             stake: c,
         });
 

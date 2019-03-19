@@ -26269,68 +26269,67 @@ public final class Personhood {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\020personhood.proto\022\npersonhood\032\ndarc.pro" +
-      "to\032\rbyzcoin.proto\032\nonet.proto\"E\n\tPartyLi" +
-      "st\022#\n\010newparty\030\001 \001(\0132\021.personhood.Party\022" +
-      "\023\n\013wipeparties\030\002 \001(\010\"7\n\021PartyListRespons" +
-      "e\022\"\n\007parties\030\001 \003(\0132\021.personhood.Party\"L\n" +
-      "\005Party\022\034\n\006roster\030\001 \002(\0132\014.onet.Roster\022\021\n\t" +
-      "byzcoinid\030\002 \002(\014\022\022\n\ninstanceid\030\003 \002(\014\"D\n\013R" +
-      "oPaSciList\022\'\n\nnewropasci\030\001 \001(\0132\023.personh" +
-      "ood.RoPaSci\022\014\n\004wipe\030\002 \001(\010\"<\n\023RoPaSciList" +
-      "Response\022%\n\010ropascis\030\001 \003(\0132\023.personhood." +
-      "RoPaSci\"/\n\007RoPaSci\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n" +
-      "\tropasciid\030\002 \002(\014\"\034\n\013StringReply\022\r\n\005reply" +
-      "\030\001 \002(\t\"\243\001\n\rRoPaSciStruct\022\023\n\013description\030" +
-      "\001 \002(\t\022\034\n\005stake\030\002 \002(\0132\r.byzcoin.Coin\022\027\n\017f" +
-      "irstplayerhash\030\003 \002(\014\022\023\n\013firstplayer\030\004 \001(" +
-      "\021\022\024\n\014secondplayer\030\005 \001(\021\022\033\n\023secondplayera" +
-      "ccount\030\006 \001(\014\"?\n\020CredentialStruct\022+\n\013cred" +
-      "entials\030\001 \003(\0132\026.personhood.Credential\"E\n" +
-      "\nCredential\022\014\n\004name\030\001 \002(\t\022)\n\nattributes\030" +
-      "\002 \003(\0132\025.personhood.Attribute\"(\n\tAttribut" +
-      "e\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"\323\001\n\rSpawn" +
-      "erStruct\022\037\n\010costdarc\030\001 \002(\0132\r.byzcoin.Coi" +
-      "n\022\037\n\010costcoin\030\002 \002(\0132\r.byzcoin.Coin\022%\n\016co" +
-      "stcredential\030\003 \002(\0132\r.byzcoin.Coin\022 \n\tcos" +
-      "tparty\030\004 \002(\0132\r.byzcoin.Coin\022\023\n\013beneficia" +
-      "ry\030\005 \002(\014\022\"\n\013costropasci\030\006 \001(\0132\r.byzcoin." +
-      "Coin\"\370\001\n\016PopPartyStruct\022\r\n\005state\030\001 \002(\021\022\022" +
-      "\n\norganizers\030\002 \002(\021\022\025\n\rfinalizations\030\003 \003(" +
-      "\t\022(\n\013description\030\004 \002(\0132\023.personhood.PopD" +
-      "esc\022(\n\tattendees\030\005 \002(\0132\025.personhood.Atte" +
-      "ndees\022\"\n\006miners\030\006 \003(\0132\022.personhood.LRSTa" +
-      "g\022\024\n\014miningreward\030\007 \002(\004\022\020\n\010previous\030\010 \001(" +
-      "\014\022\014\n\004next\030\t \001(\014\"L\n\007PopDesc\022\014\n\004name\030\001 \002(\t" +
-      "\022\017\n\007purpose\030\002 \002(\t\022\020\n\010datetime\030\003 \002(\004\022\020\n\010l" +
-      "ocation\030\004 \002(\t\"]\n\016FinalStatement\022!\n\004desc\030" +
-      "\001 \001(\0132\023.personhood.PopDesc\022(\n\tattendees\030" +
-      "\002 \002(\0132\025.personhood.Attendees\"\031\n\tAttendee" +
-      "s\022\014\n\004keys\030\001 \003(\014\"\025\n\006LRSTag\022\013\n\003tag\030\001 \002(\014\"\216" +
-      "\001\n\004Poll\022\021\n\tbyzcoinid\030\001 \002(\014\022\'\n\007newpoll\030\002 " +
-      "\001(\0132\026.personhood.PollStruct\022\"\n\004list\030\003 \001(" +
-      "\0132\024.personhood.PollList\022&\n\006answer\030\004 \001(\0132" +
-      "\026.personhood.PollAnswer\"\034\n\010PollList\022\020\n\010p" +
-      "artyids\030\001 \003(\014\"9\n\nPollAnswer\022\016\n\006pollid\030\001 " +
-      "\002(\014\022\016\n\006choice\030\002 \002(\021\022\013\n\003lrs\030\003 \002(\014\"\215\001\n\nPol" +
-      "lStruct\022\022\n\npersonhood\030\001 \002(\014\022\016\n\006pollid\030\002 " +
-      "\001(\014\022\r\n\005title\030\003 \002(\t\022\023\n\013description\030\004 \002(\t\022" +
-      "\017\n\007choices\030\005 \003(\t\022&\n\006chosen\030\006 \003(\0132\026.perso" +
-      "nhood.PollChoice\",\n\nPollChoice\022\016\n\006choice" +
-      "\030\001 \002(\021\022\016\n\006lrstag\030\002 \002(\014\"5\n\014PollResponse\022%" +
-      "\n\005polls\030\001 \003(\0132\026.personhood.PollStruct\"\016\n" +
-      "\014Capabilities\"D\n\024CapabilitiesResponse\022,\n" +
-      "\014capabilities\030\001 \003(\0132\026.personhood.Capabil" +
-      "ity\"/\n\nCapability\022\020\n\010endpoint\030\001 \002(\t\022\017\n\007v" +
-      "ersion\030\002 \002(\014\"\212\001\n\014UserLocation\022\021\n\tpublick" +
-      "ey\030\001 \002(\014\022\025\n\rcredentialiid\030\002 \001(\014\0220\n\ncrede" +
-      "ntial\030\003 \001(\0132\034.personhood.CredentialStruc" +
-      "t\022\020\n\010location\030\004 \001(\t\022\014\n\004time\030\005 \002(\022\"F\n\006Mee" +
-      "tup\022.\n\014userlocation\030\001 \001(\0132\030.personhood.U" +
-      "serLocation\022\014\n\004wipe\030\002 \001(\010\"9\n\016MeetupRespo" +
-      "nse\022\'\n\005users\030\001 \003(\0132\030.personhood.UserLoca" +
-      "tionB%\n\027ch.epfl.dedis.lib.protoB\nPersonh" +
-      "ood"
+      "\n\020personhood.proto\022\npersonhood\032\rbyzcoin." +
+      "proto\032\nonet.proto\"E\n\tPartyList\022#\n\010newpar" +
+      "ty\030\001 \001(\0132\021.personhood.Party\022\023\n\013wipeparti" +
+      "es\030\002 \001(\010\"7\n\021PartyListResponse\022\"\n\007parties" +
+      "\030\001 \003(\0132\021.personhood.Party\"L\n\005Party\022\034\n\006ro" +
+      "ster\030\001 \002(\0132\014.onet.Roster\022\021\n\tbyzcoinid\030\002 " +
+      "\002(\014\022\022\n\ninstanceid\030\003 \002(\014\"D\n\013RoPaSciList\022\'" +
+      "\n\nnewropasci\030\001 \001(\0132\023.personhood.RoPaSci\022" +
+      "\014\n\004wipe\030\002 \001(\010\"<\n\023RoPaSciListResponse\022%\n\010" +
+      "ropascis\030\001 \003(\0132\023.personhood.RoPaSci\"/\n\007R" +
+      "oPaSci\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tropasciid\030\002" +
+      " \002(\014\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"\243\001\n\rR" +
+      "oPaSciStruct\022\023\n\013description\030\001 \002(\t\022\034\n\005sta" +
+      "ke\030\002 \002(\0132\r.byzcoin.Coin\022\027\n\017firstplayerha" +
+      "sh\030\003 \002(\014\022\023\n\013firstplayer\030\004 \001(\021\022\024\n\014secondp" +
+      "layer\030\005 \001(\021\022\033\n\023secondplayeraccount\030\006 \001(\014" +
+      "\"?\n\020CredentialStruct\022+\n\013credentials\030\001 \003(" +
+      "\0132\026.personhood.Credential\"E\n\nCredential\022" +
+      "\014\n\004name\030\001 \002(\t\022)\n\nattributes\030\002 \003(\0132\025.pers" +
+      "onhood.Attribute\"(\n\tAttribute\022\014\n\004name\030\001 " +
+      "\002(\t\022\r\n\005value\030\002 \002(\014\"\323\001\n\rSpawnerStruct\022\037\n\010" +
+      "costdarc\030\001 \002(\0132\r.byzcoin.Coin\022\037\n\010costcoi" +
+      "n\030\002 \002(\0132\r.byzcoin.Coin\022%\n\016costcredential" +
+      "\030\003 \002(\0132\r.byzcoin.Coin\022 \n\tcostparty\030\004 \002(\013" +
+      "2\r.byzcoin.Coin\022\023\n\013beneficiary\030\005 \002(\014\022\"\n\013" +
+      "costropasci\030\006 \001(\0132\r.byzcoin.Coin\"\370\001\n\016Pop" +
+      "PartyStruct\022\r\n\005state\030\001 \002(\021\022\022\n\norganizers" +
+      "\030\002 \002(\021\022\025\n\rfinalizations\030\003 \003(\t\022(\n\013descrip" +
+      "tion\030\004 \002(\0132\023.personhood.PopDesc\022(\n\tatten" +
+      "dees\030\005 \002(\0132\025.personhood.Attendees\022\"\n\006min" +
+      "ers\030\006 \003(\0132\022.personhood.LRSTag\022\024\n\014miningr" +
+      "eward\030\007 \002(\004\022\020\n\010previous\030\010 \001(\014\022\014\n\004next\030\t " +
+      "\001(\014\"L\n\007PopDesc\022\014\n\004name\030\001 \002(\t\022\017\n\007purpose\030" +
+      "\002 \002(\t\022\020\n\010datetime\030\003 \002(\004\022\020\n\010location\030\004 \002(" +
+      "\t\"]\n\016FinalStatement\022!\n\004desc\030\001 \001(\0132\023.pers" +
+      "onhood.PopDesc\022(\n\tattendees\030\002 \002(\0132\025.pers" +
+      "onhood.Attendees\"\031\n\tAttendees\022\014\n\004keys\030\001 " +
+      "\003(\014\"\025\n\006LRSTag\022\013\n\003tag\030\001 \002(\014\"\216\001\n\004Poll\022\021\n\tb" +
+      "yzcoinid\030\001 \002(\014\022\'\n\007newpoll\030\002 \001(\0132\026.person" +
+      "hood.PollStruct\022\"\n\004list\030\003 \001(\0132\024.personho" +
+      "od.PollList\022&\n\006answer\030\004 \001(\0132\026.personhood" +
+      ".PollAnswer\"\034\n\010PollList\022\020\n\010partyids\030\001 \003(" +
+      "\014\"9\n\nPollAnswer\022\016\n\006pollid\030\001 \002(\014\022\016\n\006choic" +
+      "e\030\002 \002(\021\022\013\n\003lrs\030\003 \002(\014\"\215\001\n\nPollStruct\022\022\n\np" +
+      "ersonhood\030\001 \002(\014\022\016\n\006pollid\030\002 \001(\014\022\r\n\005title" +
+      "\030\003 \002(\t\022\023\n\013description\030\004 \002(\t\022\017\n\007choices\030\005" +
+      " \003(\t\022&\n\006chosen\030\006 \003(\0132\026.personhood.PollCh" +
+      "oice\",\n\nPollChoice\022\016\n\006choice\030\001 \002(\021\022\016\n\006lr" +
+      "stag\030\002 \002(\014\"5\n\014PollResponse\022%\n\005polls\030\001 \003(" +
+      "\0132\026.personhood.PollStruct\"\016\n\014Capabilitie" +
+      "s\"D\n\024CapabilitiesResponse\022,\n\014capabilitie" +
+      "s\030\001 \003(\0132\026.personhood.Capability\"/\n\nCapab" +
+      "ility\022\020\n\010endpoint\030\001 \002(\t\022\017\n\007version\030\002 \002(\014" +
+      "\"\212\001\n\014UserLocation\022\021\n\tpublickey\030\001 \002(\014\022\025\n\r" +
+      "credentialiid\030\002 \001(\014\0220\n\ncredential\030\003 \001(\0132" +
+      "\034.personhood.CredentialStruct\022\020\n\010locatio" +
+      "n\030\004 \001(\t\022\014\n\004time\030\005 \002(\022\"F\n\006Meetup\022.\n\014userl" +
+      "ocation\030\001 \001(\0132\030.personhood.UserLocation\022" +
+      "\014\n\004wipe\030\002 \001(\010\"9\n\016MeetupResponse\022\'\n\005users" +
+      "\030\001 \003(\0132\030.personhood.UserLocationB%\n\027ch.e" +
+      "pfl.dedis.lib.protoB\nPersonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -26343,7 +26342,6 @@ public final class Personhood {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.lib.proto.DarcProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
         }, assigner);
@@ -26521,7 +26519,6 @@ public final class Personhood {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_MeetupResponse_descriptor,
         new java.lang.String[] { "Users", });
-    ch.epfl.dedis.lib.proto.DarcProto.getDescriptor();
     ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor();
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
   }

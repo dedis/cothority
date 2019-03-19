@@ -25,7 +25,7 @@ async function createInstance(
         firstPlayer: -1,
         firstPlayerHash: fph.digest(),
         secondPlayer: -1,
-        secondPlayerAccount: null,
+        secondPlayerAccount: stake.id,
         stake: stake.getCoin(),
     });
 
@@ -57,8 +57,7 @@ async function createInstance(
     return instance;
 }
 
-// TODO: enable after the personhood.online branch is merged
-describe("Rock-Paper-Scisors Instance Tests", () => {
+describe("Rock-Paper-scissors Instance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {

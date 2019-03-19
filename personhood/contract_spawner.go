@@ -67,7 +67,6 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	}
 
 	// Spawn creates a new coin account as a separate instance.
-	log.Printf("%+v", inst)
 	ca := inst.DeriveID("")
 	var instBuf []byte
 	cID := inst.Spawn.ContractID
@@ -144,7 +143,6 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		}
 		return ContractRoPaSci{}.Spawn(rst, inst, cout)
 	default:
-		log.Print("Unknown contract", cID)
 		return nil, nil, errors.New("don't know how to spawn this type of contract")
 	}
 	sc = []byzcoin.StateChange{
