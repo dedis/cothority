@@ -12,7 +12,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.3.0
 	go.dedis.ch/kyber/v3 v3.0.0
-	go.dedis.ch/onet/v3 v3.0.1
+	go.dedis.ch/onet/v3 v3.0.2
 	go.dedis.ch/protobuf v1.0.6
 	go.etcd.io/bbolt v1.3.0
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c
