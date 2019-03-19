@@ -119,16 +119,12 @@ export class Attendees extends Message<Attendees> {
         registerMessage("personhood.Attendees", Attendees);
     }
 
-    public keys: Buffer[];
+    readonly keys: Buffer[];
 
     constructor(properties?: Properties<Attendees>) {
         super(properties);
 
-        if (this.keys){
-            this.keys = this.keys.map(k => Buffer.from(k));
-        } else {
-            this.keys = [];
-        }
+        this.keys = this.keys.slice() || [];
     }
 
     /**

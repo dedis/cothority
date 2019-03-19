@@ -14,7 +14,20 @@
             true,
             "no-public"
         ],
-        "max-classes-per-file": false
+        "max-classes-per-file": false,
+        "whitespace": [
+            true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-module",
+            "check-separator",
+            "check-type",
+            "check-typecast",
+            "check-type-operator",
+            "check-preblock",
+            "check-rest-spread"
+        ]
     },
     "rulesDirectory": []
 }

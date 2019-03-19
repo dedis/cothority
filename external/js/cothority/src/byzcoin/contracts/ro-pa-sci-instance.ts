@@ -2,7 +2,7 @@ import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
-import ClientTransaction, {Argument, Instruction} from "../client-transaction";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
 
