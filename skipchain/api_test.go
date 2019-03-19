@@ -350,6 +350,11 @@ func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
 	testCorruptGSBIReply.SkipBlock.updateHash()
 	_, err = c.GetSingleBlockByIndex(roster, sb.Hash, 0)
 	require.Contains(t, err.Error(), "Got the wrong block in reply")
+
+	testCorruptGSBIReply.SkipBlock.Index = 0
+	testCorruptGSBIReply.SkipBlock.updateHash()
+	_, err = c.GetSingleBlockByIndex(roster, sb.Hash, 0)
+	require.Contains(t, err.Error(), "Got a block of a different chain")
 }
 
 func TestClient_CreateLinkPrivate(t *testing.T) {

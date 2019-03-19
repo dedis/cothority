@@ -383,6 +383,12 @@ func (c *Client) getBlockByIndex(si *network.ServerIdentity, genesis SkipBlockID
 
 	if reply.SkipBlock.Index != index {
 		err = errors.New("Got the wrong block in reply")
+		return
+	}
+
+	if !reply.SkipBlock.SkipChainID().Equal(genesis) {
+		err = errors.New("Got a block of a different chain")
+		return
 	}
 
 	return

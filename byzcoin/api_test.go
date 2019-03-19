@@ -8,11 +8,92 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
+
+func TestClient_NewLedgerCorrupted(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(3, true)
+	registerDummy(servers)
+	defer l.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
+	msg.BlockInterval = 100 * time.Millisecond
+	require.Nil(t, err)
+
+	sb := skipchain.NewSkipBlock()
+	testCorruptNewLedgerResponse = &CreateGenesisBlockResponse{Skipblock: sb}
+	defer func() {
+		testCorruptNewLedgerResponse = nil
+	}()
+
+	sb.Roster = &onet.Roster{ID: onet.RosterID{}}
+	sb.Hash = sb.CalculateHash()
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Equal(t, "wrong roster in genesis block", err.Error())
+
+	sb.Roster = roster
+	sb.Payload = []byte{1, 2, 3}
+	sb.Hash = testCorruptNewLedgerResponse.Skipblock.CalculateHash()
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "fail to decode data:")
+
+	sb.Payload = []byte{}
+	sb.Hash = sb.CalculateHash()
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Equal(t, "didn't get only one instruction", err.Error())
+
+	data := &DataBody{
+		TxResults: []TxResult{
+			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}}}},
+		},
+	}
+	sb.Payload, err = protobuf.Encode(data)
+	sb.Hash = sb.CalculateHash()
+	require.NoError(t, err)
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Equal(t, "didn't get a spawn instruction", err.Error())
+
+	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
+		Args: []Argument{
+			Argument{
+				Name:  "darc",
+				Value: []byte{1, 2, 3},
+			},
+		},
+	}
+	sb.Payload, err = protobuf.Encode(data)
+	sb.Hash = sb.CalculateHash()
+	require.NoError(t, err)
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "fail to decode the darc:")
+
+	darcBytes, _ := protobuf.Encode(&darc.Darc{})
+	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
+		Args: []Argument{
+			Argument{
+				Name:  "darc",
+				Value: darcBytes,
+			},
+		},
+	}
+	sb.Payload, err = protobuf.Encode(data)
+	sb.Hash = sb.CalculateHash()
+	require.NoError(t, err)
+	_, _, err = NewLedger(msg, false)
+	require.Error(t, err)
+	require.Equal(t, "wrong darc spawned", err.Error())
+}
 
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
@@ -62,6 +143,37 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, k, newID)
 	require.Equal(t, value, v0)
+}
+
+func TestClient_GetProofCorrupted(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(3, true)
+	registerDummy(servers)
+	defer l.CloseAll()
+
+	// Initialise the genesis message and send it to the service.
+	signer := darc.NewSignerEd25519(nil, nil)
+	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
+	msg.BlockInterval = 100 * time.Millisecond
+	require.Nil(t, err)
+
+	// The darc inside it should be valid.
+	d := msg.GenesisDarc
+	require.Nil(t, d.Verify(true))
+
+	c, _, err := NewLedger(msg, false)
+	require.Nil(t, err)
+
+	sb := skipchain.NewSkipBlock()
+	sb.Data = []byte{1, 2, 3}
+	testCorruptProofResponse = &GetProofResponse{
+		Proof: Proof{Latest: *sb},
+	}
+
+	_, err = c.GetProof([]byte{})
+	require.Error(t, err)
+
+	testCorruptProofResponse = nil
 }
 
 // Create a streaming client and add blocks in the background. The client

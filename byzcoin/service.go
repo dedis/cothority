@@ -34,6 +34,9 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
+// for testing purpose until we have proper interfaces
+var testCorruptSSBReply *skipchain.StoreSkipBlockReply
+
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // This is to boost the acceptable timestamp window when dealing with
@@ -883,6 +886,28 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
 		ssbReply = &skipchain.StoreSkipBlockReply{}
 		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
+		if err != nil {
+			return nil, err
+		}
+
+		if testCorruptSSBReply != nil {
+			ssbReply = testCorruptSSBReply
+		}
+
+		if ssbReply.Latest == nil {
+			return nil, errors.New("got an empty reply")
+		}
+
+		// simple integrity check because the block will be used to cache
+		// the state changes
+		if !ssbReply.Latest.CalculateHash().Equal(ssbReply.Latest.Hash) {
+			return nil, errors.New("block in reply is corrupted")
+		}
+
+		// and check that we got the expected block
+		if ssbReply.Latest.Index != sb.Index {
+			return nil, errors.New("got a different block")
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -940,6 +965,8 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			var bucketName []byte
 			var nonce uint64
 			for {
+				// Note: we trust the chain therefore even if the reply is corrupted,
+				// it will be detected by difference in the root hash
 				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
 				if err != nil {
 					return errors.New("cannot download trie: " + err.Error())
@@ -974,9 +1001,8 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			}
 			if sb.Index != st.GetIndex() {
 				log.Lvl2("Downloading corresponding block")
-				cl := skipchain.NewClient()
-				// TODO: make sure the downloaded block is correct
-				search, err := cl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
+				skCl := skipchain.NewClient()
+				search, err := skCl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
 				if err != nil {
 					return errors.New("couldn't get correct block for verification: " + err.Error())
 				}

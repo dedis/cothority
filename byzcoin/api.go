@@ -3,21 +3,25 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"math"
 	"time"
-
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
+
+// for testing purpose until correct interfaces
+var testCorruptNewLedgerResponse *CreateGenesisBlockResponse
+var testCorruptProofResponse *GetProofResponse
 
 // ServiceName is used for registration on the onet.
 const ServiceName = "ByzCoin"
@@ -60,7 +64,18 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
 		return nil, nil, err
 	}
-	c.ID = reply.Skipblock.CalculateHash()
+
+	// for testing purpose
+	if testCorruptNewLedgerResponse != nil {
+		reply = testCorruptNewLedgerResponse
+	}
+
+	// checks if the returned genesis block has the same parameters
+	if err := verifyGenesisBlock(reply.Skipblock, msg); err != nil {
+		return nil, nil, err
+	}
+
+	c.ID = reply.Skipblock.Hash
 	return c, reply, nil
 }
 
@@ -91,8 +106,8 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 }
 
 // GetProof returns a proof for the key stored in the skipchain by sending a
-// message to the node on index 0 of the roster. The proof can be verified with
-// the genesis skipblock and can prove the existence or the absence of the key.
+// message to the node on index 0 of the roster. The proof can prove the existence
+// or the absence of the key. Note that the integrity of the proof is verified.
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
@@ -105,6 +120,17 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if testCorruptProofResponse != nil {
+		reply = testCorruptProofResponse
+	}
+
+	// verify the integrity of the proof only
+	err = reply.Proof.Verify(c.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return reply, nil
 }
 
@@ -251,11 +277,12 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 // StreamTransactions sends a streaming request to the service. If successful,
 // the handler will be called whenever a new response (a new block) is
 // available. This function blocks, the streaming stops if the client or the
-// service stops.
+// service stops. Only the integrity of the new block is verified.
 func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) error {
 	req := StreamingRequest{
 		ID: c.ID,
 	}
+	// TODO: what if the leader is down ?
 	conn, err := c.Stream(c.Roster.List[0], &req)
 	if err != nil {
 		return err
@@ -266,7 +293,13 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 			handler(StreamingResponse{}, err)
 			return nil
 		}
-		handler(resp, nil)
+
+		if resp.Block.CalculateHash().Equal(resp.Block.Hash) {
+			// send the block only if the integrity is correct
+			handler(resp, nil)
+		} else {
+			log.Warnf("got a corrupted block from %v", c.Roster.List[0])
+		}
 	}
 }
 
@@ -416,4 +449,55 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		DarcContractIDs: []string{ContractDarcID},
 	}
 	return &m, nil
+}
+
+func verifyGenesisBlock(sb *skipchain.SkipBlock, req *CreateGenesisBlock) error {
+	if !sb.CalculateHash().Equal(sb.Hash) {
+		return errors.New("got a corrupted block")
+	}
+
+	// check the block is like the proposal
+	ok, err := sb.Roster.Equal(&req.Roster)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("wrong roster in genesis block")
+	}
+
+	darcID, err := extractDarcID(sb)
+	if err != nil {
+		return err
+	}
+
+	if !darcID.Equal(req.GenesisDarc.GetID()) {
+		return errors.New("wrong darc spawned")
+	}
+
+	return nil
+}
+
+func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
+	var data DataBody
+	err := protobuf.Decode(sb.Payload, &data)
+	if err != nil {
+		return nil, fmt.Errorf("fail to decode data: %v", err)
+	}
+
+	if len(data.TxResults) != 1 || len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
+		return nil, errors.New("didn't get only one instruction")
+	}
+
+	instr := data.TxResults[0].ClientTransaction.Instructions[0]
+	if instr.Spawn == nil {
+		return nil, errors.New("didn't get a spawn instruction")
+	}
+
+	var darc darc.Darc
+	err = protobuf.Decode(instr.Spawn.Args.Search("darc"), &darc)
+	if err != nil {
+		return nil, fmt.Errorf("fail to decode the darc: %v", err)
+	}
+
+	return darc.GetID(), nil
 }

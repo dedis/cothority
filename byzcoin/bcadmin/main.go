@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,27 +16,23 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"go.dedis.ch/cothority/v3/byzcoin/contracts"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/util/encoding"
-	"go.dedis.ch/protobuf"
-
+	"github.com/qantik/qrgo"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-
-	"encoding/json"
-
-	"github.com/qantik/qrgo"
+	"go.dedis.ch/protobuf"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -326,10 +323,7 @@ func create(c *cli.Context) error {
 	}
 	req.BlockInterval = interval
 
-	cl := onet.NewClient(cothority.Suite, byzcoin.ServiceName)
-
-	var resp byzcoin.CreateGenesisBlockResponse
-	err = cl.SendProtobuf(r.List[0], req, &resp)
+	_, resp, err := byzcoin.NewLedger(req, false)
 	if err != nil {
 		return err
 	}
