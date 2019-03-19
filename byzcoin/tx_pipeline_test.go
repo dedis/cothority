@@ -121,7 +121,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 		}
 	}
 
-	processor := mockTxProcessor{
+	processor := &mockTxProcessor{
 		batch:  batch,
 		txs:    txs,
 		done:   make(chan bool, 1),
@@ -130,7 +130,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 	}
 
 	pipeline := txPipeline{
-		processor: &processor,
+		processor: processor,
 	}
 	sst, err := newMemStagingStateTrie([]byte(""))
 	require.NoError(t, err)

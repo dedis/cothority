@@ -153,9 +153,12 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 // ProposeBlock basically calls s.createNewBlock which might block. There is nothing we can do about it other than
 // waiting for the timeout.
 func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
-	// s.createNewBlock()
-	// TODO
-	return nil
+	config, err := LoadConfigFromTrie(state.sst)
+	if err != nil {
+		return err
+	}
+	_, err = s.createNewBlock(s.scID, &config.Roster, state.txs)
+	return err
 }
 
 func (s *defaultTxProcessor) GetInterval() (time.Duration, error) {
@@ -166,6 +169,12 @@ func (s *defaultTxProcessor) GetInterval() (time.Duration, error) {
 		return 0, err
 	}
 	return bcConfig.BlockInterval, nil
+}
+
+
+func (s *defaultTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
+	// TODO
+	return nil, nil
 }
 
 func (s *defaultTxProcessor) Stop() {
@@ -262,6 +271,7 @@ func (p *txPipeline) processTxs(txChan <- chan ClientTransaction, initialState *
 					break
 				}
 
+				// TODO here we need to take the appropriate number of transactions to propose.
 				inState := currentState.copy()
 				currentState.reset()
 				go func(state *txProcessorState) {

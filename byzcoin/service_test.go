@@ -282,7 +282,8 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	// to know about the skipchain but we're not testing that here
 	proof, err := s.service().db().GetProof(s.genesis.Hash)
 	require.NoError(t, err)
-	outside.db().StoreBlocks(proof)
+	_, err = outside.db().StoreBlocks(proof)
+	require.NoError(t, err)
 
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)

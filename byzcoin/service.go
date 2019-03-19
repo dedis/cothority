@@ -1322,7 +1322,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if nodeIsLeader {
 		if _, ok := s.pollChan[scIDstr]; !ok {
 			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-			s.pollChan[scIDstr] = s.startPolling(sb.SkipChainID())
+			s.pollChan[scIDstr] = s.startPolling2(sb.SkipChainID())
 		}
 	} else {
 		if c, ok := s.pollChan[scIDstr]; ok {
@@ -1529,7 +1529,14 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling2(scID skipchain.SkipBlockID) chan bool {
-	pipeline := txPipeline{}
+	pipeline := txPipeline{
+		processor: &defaultTxProcessor{
+			stopCollect: make(chan bool, 1),
+			stopProcess: make(chan bool, 1),
+			scID: scID,
+			Service: s,
+		},
+	}
 	st, err := s.getStateTrie(scID)
 	if err != nil {
 		panic("the state trie must exist because we only start polling after creating/loading the skipchain")
@@ -2294,7 +2301,7 @@ func (s *Service) startAllChains() error {
 		if leader.Equal(s.ServerIdentity()) {
 			log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
 			s.pollChanMut.Lock()
-			s.pollChan[string(gen)] = s.startPolling(gen)
+			s.pollChan[string(gen)] = s.startPolling2(gen)
 			s.pollChanMut.Unlock()
 		}
 
