@@ -283,6 +283,7 @@ func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
 
 // processTxs consumes transactions and computes the
 func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *txProcessorState) chan<- bool {
+	var proposing bool
 	stopChan := make(chan bool, 1)
 	// always use the latest one when adding new
 	currentState := []*txProcessorState{initialState}
@@ -322,6 +323,16 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					break
 				}
 
+				// if we're already proposing a block, then don't propose another one yet,
+				// because the followers won't be able to verify
+				if proposing {
+					log.Warn("block proposal is taking a longer time than the interval to complete," +
+						" consider using a longer block interval or check your network connection")
+					break
+				}
+				proposing = true
+
+				// find the right state and propose it in the block
 				var inState *txProcessorState
 				currentState, inState = proposeInputState(currentState)
 
@@ -329,7 +340,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					if state == nil {
 						proposalResult <- nil
 					} else {
-						// ProposeBlock might block, but there's nothing we can do about it at the moment
+						// ProposeBlock might block for a long time,
+						// but there's nothing we can do about it at the moment
 						// other than waiting for the timeout.
 						if err := p.processor.ProposeBlock(state); err != nil {
 							log.Error("failed to propose block: " + err.Error())
@@ -340,6 +352,7 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					}
 				}(inState)
 			case err := <-proposalResult:
+				proposing = false // only the ProposeBlock sends back results and it sends only one
 				if err != nil {
 					log.Error("reverting to last known state because proposal refused:", err.Error())
 					newCurrentState, err := p.processor.GetLatestGoodState()

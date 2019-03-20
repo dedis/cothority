@@ -697,6 +697,7 @@ func waitInclusion(t *testing.T, client int) {
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
+// TODO check counter
 func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
