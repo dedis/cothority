@@ -16,6 +16,25 @@ func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 		log.Lvl2("verifyBlock failed")
 		return false
 	}
+
+	prev := s.db.GetByID(newSB.BackLinkIDs[0])
+	if prev == nil {
+		return false
+	}
+
+	if !prev.SkipChainID().Equal(newSB.SkipChainID()) {
+		return false
+	}
+	if prev.MaximumHeight != newSB.MaximumHeight {
+		return false
+	}
+	if prev.BaseHeight != newSB.BaseHeight {
+		return false
+	}
+	if prev.Index+1 != newSB.Index {
+		return false
+	}
+
 	log.Lvl4("No verification - accepted")
 	return true
 }

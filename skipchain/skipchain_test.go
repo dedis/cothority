@@ -143,6 +143,58 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	assert.Equal(t, blockCount+1, service.db.Length())
 }
 
+func TestService_StoreCorruptedSkipBlock(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, el, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+	service := genService.(*Service)
+
+	sbRoot, err := makeGenesisRoster(service, el)
+	require.NoError(t, err)
+
+	genesis := NewSkipBlock()
+	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
+	genesis.MaximumHeight = 2
+	genesis.BaseHeight = 2
+	genesis.Roster = sbRoot.Roster
+	genesis.VerifierIDs = VerificationStandard
+	psbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: genesis})
+	require.NoError(t, err)
+
+	// bypass StoreSkipBlock to simulate a malicious node
+	csb := NewSkipBlock()
+	csb.Roster = el
+	csb.VerifierIDs = VerificationStandard
+	csb.BackLinkIDs = []SkipBlockID{psbr.Latest.Hash}
+	csb.Index = 1
+	csb.MaximumHeight = 2
+	csb.BaseHeight = 2
+	csb.Height = 1
+
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.GenesisID = psbr.Latest.Hash
+	csb.Index = 2
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.Index = 1
+	csb.MaximumHeight = 42
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.MaximumHeight = 2
+	csb.BaseHeight = 42
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.BaseHeight = 2
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.NoError(t, err)
+}
+
 func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
