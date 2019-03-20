@@ -28,7 +28,6 @@ func TestHeartbeat_Start(t *testing.T) {
 }
 
 func TestHeartbeat_Timeout(t *testing.T) {
-	t.Skip("https://github.com/dedis/cothority/issues/1473")
 	hb := newHeartbeats()
 	defer hb.closeAll()
 
