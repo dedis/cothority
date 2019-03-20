@@ -19,8 +19,8 @@ func getSmartContract(nameOfContract string) (string, string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	contractPath := dir + "/contracts/" + nameOfContract+ "/"+ nameOfContract + "_sol_" + nameOfContract
-	abi, err := ioutil.ReadFile(contractPath+ ".abi")
+	contractPath := dir + "/contracts/" + nameOfContract + "/" + nameOfContract + "_sol_" + nameOfContract
+	abi, err := ioutil.ReadFile(contractPath + ".abi")
 	if err != nil {
 		err = errors.New("Problem generating contract ABI")
 		log.ErrFatal(err)
@@ -79,7 +79,6 @@ func getVMConfig() vm.Config {
 	return *vmconfig
 }
 
-
 func returnCanTransfer() func(vm.StateDB, common.Address, *big.Int) bool {
 	canTransfer := func(vm.StateDB, common.Address, *big.Int) bool {
 		return true
@@ -105,15 +104,15 @@ func getContext() vm.Context {
 	placeHolder := common.HexToAddress("0")
 	return vm.Context{
 		CanTransfer: returnCanTransfer(),
-		Transfer: returnTransfer(),
-		GetHash: returnGetHash(),
-		Origin: placeHolder,
-		GasPrice: big.NewInt(0),
-		Coinbase: placeHolder,
-		GasLimit: 10000000000,
+		Transfer:    returnTransfer(),
+		GetHash:     returnGetHash(),
+		Origin:      placeHolder,
+		GasPrice:    big.NewInt(0),
+		Coinbase:    placeHolder,
+		GasLimit:    10000000000,
 		BlockNumber: big.NewInt(0),
-		Time: big.NewInt(1),
-		Difficulty: big.NewInt(1),
+		Time:        big.NewInt(1),
+		Difficulty:  big.NewInt(1),
 	}
 
 }

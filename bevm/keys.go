@@ -26,7 +26,7 @@ func GenerateKeys() (address string, privateKey string) {
 	}
 	addressB := crypto.PubkeyToAddress(private.PublicKey)
 	address = addressB.Hex()
-	log.Lvlf2("Public key : %x ",  elliptic.Marshal(crypto.S256(), private.PublicKey.X, private.PublicKey.Y))
+	log.Lvlf2("Public key : %x ", elliptic.Marshal(crypto.S256(), private.PublicKey.X, private.PublicKey.Y))
 	log.Lvl2("Address generated : ", address)
 	privateKey = common.Bytes2Hex(crypto.FromECDSA(private))
 	return
@@ -36,9 +36,9 @@ func GenerateKeys() (address string, privateKey string) {
 func NewKeyFromECDSA(privateKeyECDSA *ecdsa.PrivateKey) *Key {
 	id := uuid.NewRandom()
 	key := &Key{
-	Id:         id,
-	Address:    crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),
-	PrivateKey: privateKeyECDSA,
+		Id:         id,
+		Address:    crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),
+		PrivateKey: privateKeyECDSA,
 	}
-return key
+	return key
 }

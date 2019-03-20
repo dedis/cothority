@@ -16,14 +16,12 @@ type KeyValue struct {
 	Value []byte
 }
 
-
 // KeyValueData is the structure that will hold all key/value pairs.
 type KeyValueData struct {
 	Storage []KeyValue
 }
 
-
-type Bvm struct{
+type Bvm struct {
 	Name byzcoin.InstanceID
 }
 
@@ -31,5 +29,3 @@ type Bvm struct{
 type ContractDeploymentData struct {
 	gas uint64
 }
-
-

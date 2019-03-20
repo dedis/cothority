@@ -25,12 +25,10 @@ import (
 
 	"go.dedis.ch/onet/v3/log"
 
-	"go.dedis.ch/protobuf"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"go.dedis.ch/protobuf"
 )
-
-
 
 //MemDatabase structure
 type MemDatabase struct {
@@ -42,23 +40,23 @@ type KeyValues struct {
 	KVs []KeyValueEntry
 }
 
-type KeyValueEntry struct{
-	Key []byte
+type KeyValueEntry struct {
+	Key   []byte
 	Value []byte
 }
 
 //NewMemDatabase creates a new memory database
 func NewMemDatabase(data []byte) (*MemDatabase, error) {
-    kvs := &KeyValues{}
+	kvs := &KeyValues{}
 	err := protobuf.Decode(data, kvs)
-	if err != nil{
+	if err != nil {
 		log.LLvl1("error decoding data")
 		return nil, err
 	}
 	DB := &MemDatabase{
 		DB: map[string][]byte{},
 	}
-	for _, kv := range kvs.KVs{
+	for _, kv := range kvs.KVs {
 		DB.DB[string(kv.Key)] = kv.Value
 	}
 	if err != nil {
@@ -78,10 +76,10 @@ func NewMemDatabaseWithCap(size int) *MemDatabase {
 //Dump encodes the data back
 func (db *MemDatabase) Dump() ([]byte, error) {
 	kvs := &KeyValues{}
-	for key, value := range db.DB{
+	for key, value := range db.DB {
 		kvs.KVs = append(kvs.KVs, KeyValueEntry{Key: []byte(key), Value: value})
 	}
-	sort.Slice(kvs.KVs, func(i, j int) bool{
+	sort.Slice(kvs.KVs, func(i, j int) bool {
 		return bytes.Compare(kvs.KVs[i].Key, kvs.KVs[j].Key) < 0
 	})
 	return protobuf.Encode(kvs)

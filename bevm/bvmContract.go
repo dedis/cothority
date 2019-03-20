@@ -1,19 +1,17 @@
 package byzcoin
 
 import (
-
 	"errors"
-	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/protobuf"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/cothority/v3/byzcoin"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 	"math/big"
 )
-
 
 var ContractBvmID = "bvm"
 var nilAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
@@ -37,7 +35,7 @@ func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 	cout = coins
 	es := c.ES
 	memdb, db, _, err := spawnEvm()
-	if err != nil{
+	if err != nil {
 		return nil, nil, err
 	}
 	es.RootHash, err = db.Commit(true)
@@ -58,9 +56,9 @@ func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractBvmID, esBuf, darc.ID(inst.InstanceID.Slice())),
 	}
 	/*
-	for i, sc := range sc{
-		log.Printf("state-change %d is %x", i, sha256.Sum256(sc.Value))
-	}*/
+		for i, sc := range sc{
+			log.Printf("state-change %d is %x", i, sha256.Sum256(sc.Value))
+		}*/
 	return
 }
 
@@ -82,7 +80,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 		address := common.HexToAddress(string(addressBuf))
 		_, db, err := getDB(es)
-		if err !=nil {
+		if err != nil {
 			return nil, nil, err
 		}
 		ret := db.GetBalance(address)
@@ -110,7 +108,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		//Commits the general stateDb
 		es.RootHash, err = db.Commit(true)
 		if err != nil {
-			return nil, nil ,err
+			return nil, nil, err
 		}
 
 		//Commits the low level trieDB
@@ -128,7 +126,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		//Saves the Ethereum structure
 		esBuf, err := protobuf.Encode(&es)
 		if err != nil {
-			return nil, nil , err
+			return nil, nil, err
 		}
 		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
@@ -138,7 +136,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	case "transaction":
 		//Restores Ethereum state from ES struct
 		memdb, db, err := getDB(es)
-		if err != nil{
+		if err != nil {
 			return nil, nil, err
 		}
 		//Gets Ethereum transaction buffer
@@ -163,7 +161,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		if transactionReceipt.ContractAddress.Hex() != nilAddress.Hex() {
 			log.LLvl1("contract deployed at:", transactionReceipt.ContractAddress.Hex(), "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
 		} else {
-			log.LLvl1( "transaction to", ethTx.To().Hex(),"from","tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
+			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
 		}
 
 		//Commits the general stateDb
@@ -188,7 +186,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		//Encodes the Ethereum structure
 		esBuf, err := protobuf.Encode(&es)
 		if err != nil {
-			return nil, nil , err
+			return nil, nil, err
 		}
 
 		//Saves structure in Byzcoin state
@@ -197,7 +195,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 				ContractBvmID, esBuf, darcID),
 		}
 
-	default :
+	default:
 		err = errors.New("Contract can only display, credit and receive transactions")
 		return
 
@@ -206,7 +204,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 }
 
 //sendTx is a helper function that applies the signed transaction to a general state
-func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error){
+func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error) {
 
 	//Gets parameters defined in params
 	chainconfig := getChainConfig()
@@ -222,16 +220,16 @@ func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error){
 	var bc core.ChainContext
 
 	// Header represents a block header in the Ethereum blockchain.
-	var header  *types.Header
+	var header *types.Header
 	header = &types.Header{
-		Number: big.NewInt(0),
+		Number:     big.NewInt(0),
 		Difficulty: big.NewInt(0),
 		ParentHash: common.Hash{0},
-		Time: big.NewInt(0),
+		Time:       big.NewInt(0),
 	}
 	//Applies transaction to the general state
 	receipt, usedGas, err := core.ApplyTransaction(chainconfig, bc, &nilAddress, gp, db, header, tx, ug, config)
-	if err !=nil {
+	if err != nil {
 		log.Error()
 		return nil, err
 	}
@@ -241,10 +239,8 @@ func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error){
 	return receipt, nil
 }
 
-
 //EthereumState structure contains DbBuf the general state and RootHash the hash of the last commit
 type ES struct {
-	DbBuf []byte
+	DbBuf    []byte
 	RootHash common.Hash
 }
-
