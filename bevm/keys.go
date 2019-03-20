@@ -1,4 +1,4 @@
-package byzcoin
+package bevm
 
 import (
 	"crypto/ecdsa"

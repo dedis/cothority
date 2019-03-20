@@ -1,4 +1,4 @@
-package byzcoin
+package bevm
 
 import (
 	"go.dedis.ch/cothority/v3/byzcoin"

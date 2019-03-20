@@ -1,4 +1,4 @@
-package byzcoin
+package bevm
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
