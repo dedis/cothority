@@ -1814,7 +1814,6 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	deadline := time.Now().Add(timeout)
 
 	sstTemp = sst.Clone()
-	var cin []Coin
 
 	for _, tx := range txIn {
 		txsz := txSize(tx)
@@ -1825,7 +1824,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 		sstTempC := sstTemp.Clone()
 
 		var statesTemp StateChanges
-		statesTemp, sstTempC, cin, err = s.processOneTx(sstTempC, cin, tx.ClientTransaction)
+		statesTemp, sstTempC, err = s.processOneTx(sstTempC, tx.ClientTransaction)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -1876,9 +1875,10 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
-func (s *Service) processOneTx(sst *stagingStateTrie, cin []Coin, tx ClientTransaction) (StateChanges, *stagingStateTrie, []Coin, error) {
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
 	h := tx.Instructions.Hash()
 	var statesTemp StateChanges
+	var cin []Coin
 	for _, instr := range tx.Instructions {
 		scs, cout, err := s.executeInstruction(sst, cin, instr, h)
 		if err != nil {
@@ -1886,12 +1886,11 @@ func (s *Service) processOneTx(sst *stagingStateTrie, cin []Coin, tx ClientTrans
 			if err2 != nil {
 				err = fmt.Errorf("%s - while getting value: %s", err, err2)
 			}
-			return nil, nil, nil, fmt.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(),
-				cid, instr, err)
+			return nil, nil, fmt.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(), cid, instr, err)
 		}
 		var counterScs StateChanges
 		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
-			return nil, nil, nil, fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+			return nil, nil, fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
 		}
 
 		// Verify the validity of the state-changes:
@@ -1917,23 +1916,26 @@ func (s *Service) processOneTx(sst *stagingStateTrie, cin []Coin, tx ClientTrans
 			if reason != "" {
 				_, _, contractID, _, err := sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
-					return nil, nil, nil, fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
+					return nil, nil, fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
 				}
-				return nil, nil, nil, fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+				return nil, nil, fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
 			}
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
-				return nil, nil, nil, fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				return nil, nil, fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
 			}
 		}
 		if err = sst.StoreAll(counterScs); err != nil {
-			return nil, nil, nil, fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
+			return nil, nil, fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
 		}
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
 		cin = cout
 	}
-	return statesTemp, sst, cin, nil
+	if len(cin) != 0 {
+		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
+	}
+	return statesTemp, sst, nil
 }
 
 // GetContractConstructor gets the contract constructor of the contract
