@@ -81,25 +81,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	genesisMsg.BlockInterval = 100 * time.Millisecond
 	genesisMsg.MaxBlockSize = 1 * 1e6
 
-	// corrupted reply
-	testCorruptSSBReply = &skipchain.StoreSkipBlockReply{}
-	_, err = service.CreateGenesisBlock(genesisMsg)
-	require.Error(t, err)
-	require.Equal(t, "got an empty reply", err.Error())
-
-	testCorruptSSBReply.Latest = skipchain.NewSkipBlock()
-	_, err = service.CreateGenesisBlock(genesisMsg)
-	require.Error(t, err)
-	require.Equal(t, "block in reply is corrupted", err.Error())
-
-	testCorruptSSBReply.Latest.Index = 1
-	testCorruptSSBReply.Latest.Hash = testCorruptSSBReply.Latest.CalculateHash()
-	_, err = service.CreateGenesisBlock(genesisMsg)
-	require.Error(t, err)
-	require.Equal(t, "got a different block", err.Error())
-
 	// finally passing
-	testCorruptSSBReply = nil
 	resp, err = service.CreateGenesisBlock(genesisMsg)
 	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)

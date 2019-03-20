@@ -34,9 +34,6 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
-// for testing purpose until we have proper interfaces
-var testCorruptSSBReply *skipchain.StoreSkipBlockReply
-
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // This is to boost the acceptable timestamp window when dealing with
@@ -890,24 +887,14 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			return nil, err
 		}
 
-		if testCorruptSSBReply != nil {
-			ssbReply = testCorruptSSBReply
-		}
-
 		if ssbReply.Latest == nil {
 			return nil, errors.New("got an empty reply")
 		}
 
-		// simple integrity check because the block will be used to cache
-		// the state changes
-		if !ssbReply.Latest.CalculateHash().Equal(ssbReply.Latest.Hash) {
-			return nil, errors.New("block in reply is corrupted")
-		}
-
-		// and check that we got the expected block
-		if ssbReply.Latest.Index != sb.Index {
-			return nil, errors.New("got a different block")
-		}
+		// we're not doing more verification because the block should not be used
+		// as is. It's up to the client to fetch the forward link of the previous
+		// block to insure the new one has been validated but at this moment we
+		// can't do it because it might not be propagated to this node yet
 	}
 	if err != nil {
 		return nil, err
