@@ -1,0 +1,1 @@
+[{"constant":false,"inputs":[{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[{"name":"from","type":"address"},{"name":"_total","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]
