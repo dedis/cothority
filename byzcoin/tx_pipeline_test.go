@@ -37,7 +37,7 @@ func txEqual(a, b ClientTransaction) bool {
 	return bytes.Equal(a.Instructions.Hash(), b.Instructions.Hash())
 }
 
-func (p *mockTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) (*txProcessorState, error) {
+func (p *mockTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
 	sc := StateChange {
 		StateAction: Create,
 		InstanceID: tx.Instructions.Hash(),
@@ -49,12 +49,11 @@ func (p *mockTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorSt
 	if err := inState.sst.Set(sc.Key(), sc.Val()); err != nil {
 		return nil, err
 	}
-	return &txProcessorState{
-		sst: inState.sst,
-		coins: []Coin{},
-		scs: append(inState.scs, sc),
-		txs: append(inState.txs, TxResult{tx, true}),
-	}, nil
+	return []*txProcessorState{{
+			sst: inState.sst,
+			scs: append(inState.scs, sc),
+			txs: append(inState.txs, TxResult{tx, true}),
+	}}, nil
 }
 
 func (p *mockTxProcessor) ProposeBlock(state *txProcessorState) error {
@@ -94,6 +93,10 @@ func (p *mockTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
 	return &txProcessorState{
 		 sst: goodState,
 	}, nil
+}
+
+func (p *mockTxProcessor) GetBlockSize() int {
+	return 1e6
 }
 
 func TestTxPipeline(t *testing.T) {

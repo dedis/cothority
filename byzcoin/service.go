@@ -1879,7 +1879,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.processOneTx(sstTempC, tx.ClientTransaction)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -1930,6 +1930,8 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
+// TODO there are two types of errors, one of them we can handle - transaction errors, the other we cannot -
+// when something goes wrong while trying to store the state changes
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it

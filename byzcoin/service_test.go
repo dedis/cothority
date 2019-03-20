@@ -623,15 +623,22 @@ func waitInclusion(t *testing.T, client int) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
+	// Get counter
+	counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.genesis.SkipChainID(),
+	})
+	require.NoError(t, err)
+
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
-	pr, k, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
+	pr, k, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 0, counterResponse.Counters[0]+1)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.False(t, pr.InclusionProof.Match(k))
 
 	log.Lvl1("Create correct transaction and wait")
-	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	pr, k, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counterResponse.Counters[0]+2)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -729,7 +736,7 @@ func TestService_BigTx(t *testing.T) {
 	latest := reply.Update[len(reply.Update)-1]
 	require.Equal(t, 0, latest.Index)
 
-	save := s.value
+	smallVal := s.value
 
 	// Try to send a value so big it will be refused.
 	s.value = make([]byte, defaultMaxBlockSize+1)
@@ -750,7 +757,7 @@ func TestService_BigTx(t *testing.T) {
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
-	s.value = save
+	s.value = smallVal
 	p, k, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, 3)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
