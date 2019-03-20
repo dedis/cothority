@@ -36,6 +36,59 @@ func TestClient_CreateGenesis(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestClient_CreateGenesisCorrupted(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+
+	testCorruptSSBResponse = &StoreSkipBlockReply{}
+	defer func() {
+		testCorruptSSBResponse = nil
+	}()
+
+	_, err := c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got an empty reply", err.Error())
+
+	sb := NewSkipBlock()
+	testCorruptSSBResponse.Latest = sb
+	sb.Roster = roster.NewRosterWithRoot(servers[1].ServerIdentity)
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different roster", err.Error())
+
+	sb.Roster = roster
+	sb.VerifierIDs = []VerifierID{VerifyBase}
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different list of verifiers", err.Error())
+
+	sb.VerifierIDs = []VerifierID{}
+	sb.Data = []byte{1}
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "data field does not match", err.Error())
+
+	sb.Data = []byte{}
+	sb.MaximumHeight = 2
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different maximum height", err.Error())
+
+	sb.MaximumHeight = 1
+	sb.BaseHeight = 2
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different base height", err.Error())
+}
+
 func TestClient_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks

@@ -65,6 +65,25 @@ func (vId VerifierID) IsNil() bool {
 	return vId.Equal(VerifierID(uuid.Nil))
 }
 
+// VerifierIDs provides helpers to compare arrays of verifierID
+type VerifierIDs []VerifierID
+
+// Equal returns true when both array contains the same verifiers
+// in the same order
+func (vids VerifierIDs) Equal(others []VerifierID) bool {
+	if len(vids) != len(others) {
+		return false
+	}
+
+	for i, vid := range vids {
+		if !vid.Equal(others[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // SkipBlockVerifier is function that should return whether this skipblock is
 // accepted or not. This function is used during a BFTCosi round, but wrapped
 // around so it accepts a block.

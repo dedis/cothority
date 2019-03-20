@@ -989,6 +989,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			if sb.Index != st.GetIndex() {
 				log.Lvl2("Downloading corresponding block")
 				skCl := skipchain.NewClient()
+				// TODO: add a client API to fetch a specific block and its proof
 				search, err := skCl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
 				if err != nil {
 					return errors.New("couldn't get correct block for verification: " + err.Error())

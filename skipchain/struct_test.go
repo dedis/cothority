@@ -13,6 +13,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	bbolt "go.etcd.io/bbolt"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
@@ -144,6 +145,18 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	sbd2.Height = 1
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
+}
+
+func TestSkipBlock_VerifierIDs(t *testing.T) {
+	require.True(t, VerifierIDs(VerificationNone).Equal(VerificationNone))
+	require.False(t, VerifierIDs(VerificationStandard).Equal(VerificationNone))
+	require.True(t, VerifierIDs(VerificationStandard).Equal(VerificationStandard))
+
+	vv1 := VerifierIDs{VerifyBase, VerifierID(uuid.NewV5(uuid.NamespaceURL, "abc"))}
+	vv2 := make(VerifierIDs, 2)
+	vv2[0] = vv1[1]
+	vv2[1] = vv1[0]
+	require.False(t, vv1.Equal(vv2))
 }
 
 func TestBlockLink_Copy(t *testing.T) {

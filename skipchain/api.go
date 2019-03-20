@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -157,7 +158,54 @@ func (c *Client) CreateGenesisSignature(ro *onet.Roster, baseH, maxH int, ver []
 	if err != nil {
 		return nil, err
 	}
+
+	if testCorruptSSBResponse != nil {
+		sb = testCorruptSSBResponse
+	}
+
+	// at this point we only know that the hash is correct but we need to compare
+	// what is inside the block (e.g. roster, verifiers, ...) because the distant
+	// node could have changed that
+	err = compareGenesisBlocks(genesis, sb.Latest)
+	if err != nil {
+		return nil, err
+	}
+
 	return sb.Latest, nil
+}
+
+// CompareGenesisBlocks compares the content of two blocks and returns an error
+// if there is any difference
+func compareGenesisBlocks(prop *SkipBlock, ret *SkipBlock) error {
+	if ret == nil {
+		return errors.New("got an empty reply")
+	}
+
+	ok, err := ret.Roster.Equal(prop.Roster)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("got a different roster")
+	}
+
+	if !VerifierIDs(ret.VerifierIDs).Equal(prop.VerifierIDs) {
+		return errors.New("got a different list of verifiers")
+	}
+
+	if !bytes.Equal(ret.Data, prop.Data) {
+		return errors.New("data field does not match")
+	}
+
+	if ret.MaximumHeight != prop.MaximumHeight {
+		return errors.New("got a different maximum height")
+	}
+
+	if ret.BaseHeight != prop.BaseHeight {
+		return errors.New("got a different base height")
+	}
+
+	return nil
 }
 
 // CreateGenesis is a convenience function to create a new SkipChain with the
