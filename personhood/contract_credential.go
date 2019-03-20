@@ -30,7 +30,6 @@ type ContractCredential struct {
 }
 
 // Spawn creates a new credential contract and takes the following arguments:
-//  - instID to set a static instanceID where to spawn the contract
 //  - darcIDBuf to set which darc is responsible for the contract
 //  - credential for the credential to be spawned.
 func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
@@ -44,9 +43,6 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 
 	// Spawn creates a new credential as a separate instance.
 	ca := inst.DeriveID("")
-	if caBuf := inst.Spawn.Args.Search("instID"); caBuf != nil {
-		ca = byzcoin.NewInstanceID(caBuf)
-	}
 	if darcIDBuf := inst.Spawn.Args.Search("darcIDBuf"); darcIDBuf != nil {
 		darcID = darc.ID(darcIDBuf)
 	}
@@ -56,6 +52,11 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 		ciBuf, err = protobuf.Encode(&c.CredentialStruct)
 		if err != nil {
 			return nil, nil, errors.New("couldn't encode CredentialInstance: " + err.Error())
+		}
+	} else {
+		err = protobuf.Decode(ciBuf, &c.CredentialStruct)
+		if err != nil {
+			return nil, nil, errors.New("got wrong credential data: " + err.Error())
 		}
 	}
 	sc = []byzcoin.StateChange{

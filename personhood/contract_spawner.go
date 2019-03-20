@@ -44,15 +44,16 @@ func (c ContractSpawner) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst b
 }
 
 // Spawn creates a new spawner. Depending on what the client wants to spawn, this method will check the
-// price for that instance, and spawn a new instance if the price is correct. The following instances
-// and their arguments can be spawned:
+// price for that instance, and spawn a new instance if the price is correct.
+// Currently the coins are simply burned and will never be seen again. In future versions, the coins will
+// be part of the mining reward for the nodes participating in the consensus.
+// The following instances and their arguments can be spawned:
 //   - ContractSpawnerID only with a valid darc. The arguments will be parsed for the costs:
 //     cost(Darc|Coin|Credential|Party|RoPaSci)
 //   - ContractDarcID takes the 'darc' argument and puts the calling darc as the parent darc
 //   - ContractCoinID takes 'coinName' and 'darcID' as arguments creates a coin using all inputs from
 //     'coinName' to the new coin, protected by the darcID. The IID of the coin is defined by
 //     sha256( "coin" | darcID )
-//     TODO: avoid that the payment is put in the newly created coin
 //   - ContractCredentialID takes 'credential' and 'darcID' as arguments and creates a new credential instance
 //     with the content of 'credential', protected by 'darcID' and at IID of sha256( "credential" | darcID )
 //   - ContractPopPartyID directly calls ContractPopParty.Spawn
@@ -158,8 +159,7 @@ func (c ContractSpawner) getCoins(coins []byzcoin.Coin, cost byzcoin.Coin) error
 	for i := range coins {
 		if coins[i].Name.Equal(cost.Name) {
 			if coins[i].Value >= cost.Value {
-				coins[i].SafeSub(cost.Value)
-				return nil
+				return coins[i].SafeSub(cost.Value)
 			}
 		}
 	}

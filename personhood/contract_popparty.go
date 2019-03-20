@@ -192,12 +192,6 @@ func (c *ContractPopParty) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 			c.State = 3
 		}
 
-	case "addParty":
-		if c.State != 3 {
-			return nil, nil, errors.New("cannot add party when party is not finalized")
-		}
-		return nil, nil, errors.New("not yet implemented")
-
 	case "mine":
 		if c.State != 3 {
 			return nil, nil, errors.New("cannot mine when party is not finalized")
@@ -285,7 +279,7 @@ func (c *ContractPopParty) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 
 // PopPartySpawn returns the instanceID of the newly created pop-party, or an error if it
 // wasn't successful.
-func PopPartySpawn(cl *byzcoin.Client, fs FinalStatement, dID darc.ID, reward uint64, signers ...darc.Signer) (popIID byzcoin.InstanceID, err error) {
+func PopPartySpawn(cl *byzcoin.Client, desc PopDesc, dID darc.ID, reward uint64, signers ...darc.Signer) (popIID byzcoin.InstanceID, err error) {
 	var sigStrs []string
 	for _, sig := range signers {
 		sigStrs = append(sigStrs, sig.Identity().String())
@@ -295,7 +289,7 @@ func PopPartySpawn(cl *byzcoin.Client, fs FinalStatement, dID darc.ID, reward ui
 		return
 	}
 
-	fsBuf, err := protobuf.Encode(&fs)
+	descBuf, err := protobuf.Encode(&desc)
 	if err != nil {
 		return
 	}
@@ -308,7 +302,7 @@ func PopPartySpawn(cl *byzcoin.Client, fs FinalStatement, dID darc.ID, reward ui
 				ContractID: ContractPopPartyID,
 				Args: byzcoin.Arguments{{
 					Name:  "description",
-					Value: fsBuf,
+					Value: descBuf,
 				}, {
 					Name:  "darcID",
 					Value: dID,
@@ -399,13 +393,25 @@ func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attend
 	return
 }
 
-// PopPartyMine collects the reward. If 'atts' is nil, the party will be fetched from
-// byzcoin. One of 'coinIID' or 'd' must be set to either mine the coin, or spawn
-// a new darc and coin.
+// PopPartyMine is a method to be called by an outside client. It collects the reward for a given
+// attendee of the party. For convenience, this can be called with some of the arguments being 'nil'.
+//
+//   - atts - the list of the public keys of the attendees. If it is nil, the party will be fetched from
+//     byzcoin.
+//   - coinIID - if set, 'd' must be nil. coinIID points to the coin InstanceID where the reward will be stored.
+//   - d - if set, 'coinIID' must be nil. d is the darc that will be used to create a new coinInstance.
 func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 	atts *Attendees, coinIID *byzcoin.InstanceID, d *darc.Darc) (err error) {
+	if (coinIID == nil && d == nil) ||
+		(coinIID != nil && d != nil) {
+		return errors.New("either set coinIID or d, but not both")
+	}
 	if atts == nil {
 		popProof, err := cl.GetProof(popIID.Slice())
+		if err != nil {
+			return err
+		}
+		err = popProof.Proof.Verify(cl.ID)
 		if err != nil {
 			return err
 		}

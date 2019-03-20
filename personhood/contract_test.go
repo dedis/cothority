@@ -50,7 +50,7 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 	log.Lvl2("Publishing the party to the ledger")
 
 	var err error
-	s.popI, err = PopPartySpawn(s.cl, s.party, s.genesisDarc.GetBaseID(), 1e6, s.signer)
+	s.popI, err = PopPartySpawn(s.cl, *s.party.Desc, s.genesisDarc.GetBaseID(), 1e6, s.signer)
 	require.Nil(t, err)
 	// Activate the barrier point
 	log.Lvl2("activating barrier point")
