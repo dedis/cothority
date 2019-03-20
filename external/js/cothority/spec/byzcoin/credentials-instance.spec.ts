@@ -27,8 +27,7 @@ async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cr
     return CredentialsInstance.fromByzcoin(rpc, ctx.instructions[0].deriveId());
 }
 
-// TODO: enable after personhood.online is merged
-xdescribe("CredentialsInstance Tests", () => {
+describe("CredentialsInstance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {

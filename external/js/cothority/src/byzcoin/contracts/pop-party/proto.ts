@@ -124,7 +124,7 @@ export class Attendees extends Message<Attendees> {
     constructor(properties?: Properties<Attendees>) {
         super(properties);
 
-        this.keys = this.keys || [];
+        this.keys = this.keys.slice() || [];
     }
 
     /**
@@ -161,10 +161,8 @@ export class LRSTag extends Message<LRSTag> {
     }
 }
 
-/* TODO: remove after personhood.online is merged
 PopPartyStruct.register();
 FinalStatement.register();
 PopDesc.register();
 Attendees.register();
 LRSTag.register();
-*/

@@ -14,7 +14,7 @@ import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/cononde
 const ed25519 = curve.newCurve("edwards25519");
 
 // TODO: enable after personhood.online is merged
-xdescribe("SpawnerInstance Tests", () => {
+describe("SpawnerInstance Tests", () => {
     const roster = ROSTER.slice(0, 4);
 
     beforeAll(async () => {
@@ -40,8 +40,8 @@ xdescribe("SpawnerInstance Tests", () => {
         const si = await SpawnerInstance.create(params);
 
         expect(si.signupCost.toNumber()).toBe(3000);
-        expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from("deadbeef"))).toBeRejected();
-        expectAsync(SpawnerInstance.fromByzcoin(rpc, si.iid)).toBeResolved();
+        await expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from("deadbeef"))).toBeRejected();
+        await SpawnerInstance.fromByzcoin(rpc, si.iid);
 
         await si.update();
     });
@@ -91,20 +91,20 @@ xdescribe("SpawnerInstance Tests", () => {
             reward: Long.fromNumber(10000),
             signers: [SIGNER],
         };
-        expectAsync(si.createPopParty(popParams)).toBeRejected();
+        await expectAsync(si.createPopParty(popParams)).toBeRejected();
 
         popParams.orgs = [orgCred];
         const party = await si.createPopParty(popParams);
         expect(party).toBeDefined();
 
         // must have started
-        expectAsync(party.finalize([org])).toBeRejected();
+        await expectAsync(party.finalize([org])).toBeRejected();
         expect(() => party.addAttendee(ed25519.point())).toThrow();
         expect(() => party.removeAttendee(ed25519.point())).toThrow();
 
         await party.activateBarrier([org]);
         // already activated
-        expectAsync(party.activateBarrier([org])).toBeRejected();
+        await expectAsync(party.activateBarrier([org])).toBeRejected();
 
         party.addAttendee(ed25519.point().pick());
         party.addAttendee(ed25519.point().pick());
@@ -115,7 +115,7 @@ xdescribe("SpawnerInstance Tests", () => {
         party.removeAttendee(pub);
 
         // cannot mine before finalizing
-        expectAsync(party.mine(attendee.secret, ciAtt.id)).toBeRejected();
+        await expectAsync(party.mine(attendee.secret, ciAtt.id)).toBeRejected();
         expect(() => party.finalStatement).toThrow();
 
         await party.finalize([org]);
@@ -150,10 +150,10 @@ xdescribe("SpawnerInstance Tests", () => {
 
         // fill up too small
         const rpsParams = { desc: "abc", coin: ci, signers: [SIGNER], stake, choice, fillup: Buffer.from([]) };
-        expectAsync(si.createRoPaSci(rpsParams)).toBeRejected();
+        await expectAsync(si.createRoPaSci(rpsParams)).toBeRejected();
         // not enough coins
         rpsParams.fillup = fillup;
-        expectAsync(si.createRoPaSci(rpsParams)).toBeRejected();
+        await expectAsync(si.createRoPaSci(rpsParams)).toBeRejected();
 
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();

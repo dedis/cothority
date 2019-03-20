@@ -25,7 +25,7 @@ export default class CredentialsInstance {
     constructor(bc: ByzCoinRPC, inst: Instance) {
         this.rpc = bc;
         this.instance = inst;
-        this.credential = CredentialStruct.decode(inst.data);
+        this.credential = CredentialStruct.fromData(inst.data);
     }
 
     /**
@@ -45,7 +45,7 @@ export default class CredentialsInstance {
      */
     async update(): Promise<CredentialsInstance> {
         this.instance = await Instance.fromByzCoin(this.rpc, this.instance.id);
-        this.credential = CredentialStruct.decode(this.instance.data);
+        this.credential = CredentialStruct.fromData(this.instance.data);
         return this;
     }
 
@@ -82,7 +82,7 @@ export default class CredentialsInstance {
     async setAttribute(owner: Signer, credential: string, attribute: string, value: Buffer): Promise<any> {
         let cred = this.credential.credentials.find((c) => c.name === credential);
         if (!cred) {
-            cred = new Credential({ name: credential, attributes: [new Attribute({ name: attribute, value })] });
+            cred = new Credential({ name: credential, attributes: [new Attribute({name: attribute, value})] });
             this.credential.credentials.push(cred);
         } else {
             const idx = cred.attributes.findIndex((a) => a.name === attribute);
@@ -123,12 +123,20 @@ export class CredentialStruct extends Message<CredentialStruct> {
         registerMessage("personhood.CredentialStruct", CredentialStruct, Credential);
     }
 
+    /**
+     * Returns a new CredentialStruct class
+     * @param d
+     */
+    static fromData(d: Buffer): CredentialStruct {
+        return CredentialStruct.decode(d);
+    }
+
     readonly credentials: Credential[];
 
     constructor(properties?: Properties<CredentialStruct>) {
         super(properties);
 
-        this.credentials = this.credentials || [];
+        this.credentials = this.credentials.slice() || [];
     }
 
     /**
@@ -157,7 +165,7 @@ export class Credential extends Message<Credential> {
     constructor(props?: Properties<Credential>) {
         super(props);
 
-        this.attributes = this.attributes || [];
+        this.attributes = this.attributes.slice() || [];
     }
 }
 
@@ -182,8 +190,6 @@ export class Attribute extends Message<Attribute> {
     }
 }
 
-/* TODO: remove comment after personhood.online is merged
 CredentialStruct.register();
 Credential.register();
 Attribute.register();
-*/

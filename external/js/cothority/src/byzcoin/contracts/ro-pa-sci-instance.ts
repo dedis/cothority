@@ -2,7 +2,7 @@ import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
-import ClientTransaction, {Argument, Instruction} from "../client-transaction";
+import ClientTransaction, { Argument, Instruction } from "../client-transaction";
 import Instance, { InstanceID } from "../instance";
 import CoinInstance, { Coin } from "./coin-instance";
 
@@ -172,7 +172,7 @@ export default class RoPaSciInstance {
 }
 
 /**
- * Data hold by a rock-paper-scisors instance
+ * Data hold by a rock-paper-scissors instance
  */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
     /**
@@ -242,5 +242,4 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     }
 }
 
-// TODO: remove comment after personhood.online is merged
-// RoPaSciStruct.register();
+RoPaSciStruct.register();

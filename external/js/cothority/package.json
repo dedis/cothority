@@ -12,7 +12,7 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "npm run protobuf && tsc",
-    "linter": "node_modules/.bin/tslint src/*.ts src/**/*.ts spec/*.ts spec/**/*.ts",
+    "linter": "node_modules/.bin/tslint src/{,**/}*.ts spec/{,**/}*.ts",
     "test": "npm run linter && npm run cover",
     "test:nocover": "ts-node node_modules/jasmine/bin/jasmine.js",
     "cover": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",

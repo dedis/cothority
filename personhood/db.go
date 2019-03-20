@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
@@ -48,15 +47,13 @@ func (s *Service) tryLoad() error {
 }
 
 type storage1 struct {
-	Messages       map[string]*Message
-	Read           map[string]*readMsg
-	Questionnaires map[string]*Questionnaire
-	Replies        map[string]*Reply
-	Parties        map[string]*Party
+	RoPaSci []*RoPaSci
+	Parties map[string]*Party
+	Polls   map[string]*storagePolls
 
 	sync.Mutex
 }
 
-type readMsg struct {
-	Readers []byzcoin.InstanceID
+type storagePolls struct {
+	Polls []*PollStruct
 }
