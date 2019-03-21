@@ -29,3 +29,8 @@ type Bvm struct {
 type ContractDeploymentData struct {
 	gas uint64
 }
+
+type AmountData struct {
+	Ether int64
+	Wei   int64
+}

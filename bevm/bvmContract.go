@@ -101,9 +101,21 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, err
 		}
 
-		//By default credit, credits 5*1e18 wei. To change this, add a new parameter to the byzcoin transaction with the desired value
-		db.AddBalance(address, big.NewInt(1e18*5))
-		log.Lvl1("default balance set, 5 eth")
+		amountBuf := inst.Invoke.Args.Search("amount")
+		if amountBuf == nil {
+			return nil, nil, errors.New("no amount provided")
+		}
+		var amountData AmountData
+		err = protobuf.Decode(amountBuf, &amountData)
+		if err != nil {
+			return nil, nil, errors.New("invalid amount provided: " + err.Error())
+		}
+		amount := big.NewInt(amountData.Ether)
+		amount = amount.Mul(amount, big.NewInt(WeiPerEther))
+		amount = amount.Add(amount, big.NewInt(amountData.Wei))
+
+		db.AddBalance(address, amount)
+		log.Lvl1("balance set to", amount, "wei")
 
 		//Commits the general stateDb
 		es.RootHash, err = db.Commit(true)

@@ -16,109 +16,81 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/protobuf"
 )
+
+const WeiPerEther = 1e18
 
 //Spawn a bvm
 func Test_Spawn(t *testing.T) {
 	log.LLvl1("test: instantiating evm")
+
 	// Create a new ledger and prepare for proper closing
-	bct := newBCTest(t)
-	bct.local.Check = onet.CheckNone
-	defer bct.local.CloseAll()
-
-	// Create an empty argument
-	args := byzcoin.Arguments{}
-
-	// And send it to the ledger.
-	instID := bct.createInstance(t, args)
-
-	// Get the proof from byzcoin
-	reply, err := bct.cl.GetProof(instID.Slice())
-	require.Nil(t, err)
-	// Make sure the proof is a matching proof and not a proof of absence.
-	pr := reply.Proof
-	require.True(t, pr.InclusionProof.Match(instID.Slice()))
-}
-
-//Credits and displays an account balance
-func TestInvoke_Credit(t *testing.T) {
-	log.LLvl1("test: crediting and displaying an account balance")
 	bct := newBCTest(t)
 	bct.local.Check = onet.CheckNone
 	defer bct.Close()
-	address := "0x2afd357E96a3aCbcd01615681C1D7e3398d5fb61"
-	addressB := []byte(address)
-	args := byzcoin.Arguments{
-		{
-			Name:  "address",
-			Value: addressB,
-		},
-	}
-	instID := bct.createInstance(t, args)
-	_, err := bct.cl.WaitProof(instID, bct.gMsg.BlockInterval, nil)
-	require.Nil(t, err)
 
-	bct.creditAccountInstance(t, instID, args)
-	reply, err := bct.cl.GetProof(instID.Slice())
-	require.Nil(t, err)
-	pr := reply.Proof
-	require.True(t, pr.InclusionProof.Match(instID.Slice()))
-
-	bct.displayAccountInstance(t, instID, args)
+	// Spawn a new BEVM instance
+	bct.createInstance(t, byzcoin.Arguments{})
 }
 
-//Credits and displays three accounts balances
-func TestInvoke_Credit_Accounts(t *testing.T) {
-	log.LLvl1("test: crediting and checking accounts balances")
+//Credits and displays an account balance
+func Test_InvokeCredit(t *testing.T) {
+	log.LLvl1("test: crediting and displaying an account balance")
+
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
 	bct.local.Check = onet.CheckNone
-	defer bct.local.CloseAll()
+	defer bct.Close()
 
-	// Create an empty argument
-	args := byzcoin.Arguments{}
+	// Spawn a new BEVM instance
+	instID := bct.createInstance(t, byzcoin.Arguments{})
 
-	// And send it to the ledger.
-	instID := bct.createInstance(t, args)
-
-	// Get the proof from byzcoin
-	reply, err := bct.cl.GetProof(instID.Slice())
+	// Credit an account
+	address := []byte("0x2afd357E96a3aCbcd01615681C1D7e3398d5fb61")
+	amount, err := protobuf.Encode(&AmountData{Ether: 3, Wei: .1415926535 * WeiPerEther})
 	require.Nil(t, err)
-	// Make sure the proof is a matching proof and not a proof of absence.
-	pr := reply.Proof
-	require.True(t, pr.InclusionProof.Match(instID.Slice()))
+	bct.creditAccountInstance(t, instID, byzcoin.Arguments{
+		{Name: "address", Value: address},
+		{Name: "amount", Value: amount},
+	})
 
-	addresses := [3]string{"0x627306090abab3a6e1400e9345bc60c78a8bef57", "0xf17f52151ebef6c7334fad080c5704d77216b732", "0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef"}
-	for i := 0; i < 3; i++ {
-		addressBuf := []byte(addresses[i])
-		args := byzcoin.Arguments{
-			{
-				Name:  "address",
-				Value: addressBuf,
-			},
-		}
-		bct.creditAccountInstance(t, instID, args)
-		// Get the proof from byzcoin
-		reply, err := bct.cl.GetProof(instID.Slice())
+	// Display its balance
+	bct.displayAccountInstance(t, instID, byzcoin.Arguments{
+		{Name: "address", Value: address},
+	})
+}
+
+//Credits and displays three accounts balances
+func Test_InvokeCreditAccounts(t *testing.T) {
+	log.LLvl1("test: crediting and checking accounts balances")
+
+	// Create a new ledger and prepare for proper closing
+	bct := newBCTest(t)
+	bct.local.Check = onet.CheckNone
+	defer bct.Close()
+
+	// Spawn a new BEVM instance
+	instID := bct.createInstance(t, byzcoin.Arguments{})
+
+	addresses := [3]string{
+		"0x627306090abab3a6e1400e9345bc60c78a8bef57",
+		"0xf17f52151ebef6c7334fad080c5704d77216b732",
+		"0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef",
+	}
+	for i, addr := range addresses {
+		address := []byte(addr)
+		amount, err := protobuf.Encode(&AmountData{Ether: int64(i) + 1})
 		require.Nil(t, err)
 
-		//Make sure the proof is a matching proof and not a proof of absence.
-		pr := reply.Proof
-		require.True(t, pr.InclusionProof.Match(instID.Slice()))
+		bct.creditAccountInstance(t, instID, byzcoin.Arguments{
+			{Name: "address", Value: address},
+			{Name: "amount", Value: amount},
+		})
 
-		_, err = bct.cl.WaitProof(instID, bct.gMsg.BlockInterval, nil)
-		require.Nil(t, err)
-		bct.displayAccountInstance(t, instID, args)
-		// Get the proof from byzcoin
-		reply, err = bct.cl.GetProof(instID.Slice())
-		require.Nil(t, err)
-
-		//Make sure the proof is a matching proof and not a proof of absence.
-		pr = reply.Proof
-		require.True(t, pr.InclusionProof.Match(instID.Slice()))
-
-		_, err = bct.cl.WaitProof(instID, bct.gMsg.BlockInterval, nil)
-		require.Nil(t, err)
+		bct.displayAccountInstance(t, instID, byzcoin.Arguments{
+			{Name: "address", Value: address},
+		})
 	}
 }
 
