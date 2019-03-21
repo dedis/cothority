@@ -17,6 +17,7 @@ import (
 )
 
 func init() {
+	onet.RegisterNewServiceWithSuite(testServiceName, suite, newCorruptedTestService)
 	network.RegisterMessage(&testData{})
 }
 
@@ -34,6 +35,57 @@ func TestClient_CreateGenesis(t *testing.T) {
 	require.NotNil(t, err)
 	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, &testData{})
 	require.Nil(t, err)
+}
+
+func TestClient_CreateGenesisCorrupted(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+
+	service := servers[0].Service(testServiceName).(*corruptedService)
+	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+
+	service.StoreSkipBlockReply = &StoreSkipBlockReply{}
+
+	_, err := c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got an empty reply", err.Error())
+
+	sb := NewSkipBlock()
+	service.StoreSkipBlockReply.Latest = sb
+	sb.Roster = roster.NewRosterWithRoot(servers[1].ServerIdentity)
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different roster", err.Error())
+
+	sb.Roster = roster
+	sb.VerifierIDs = []VerifierID{VerifyBase}
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different list of verifiers", err.Error())
+
+	sb.VerifierIDs = []VerifierID{}
+	sb.Data = []byte{1}
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "data field does not match", err.Error())
+
+	sb.Data = []byte{}
+	sb.MaximumHeight = 2
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different maximum height", err.Error())
+
+	sb.MaximumHeight = 1
+	sb.BaseHeight = 2
+	sb.updateHash()
+	_, err = c.CreateGenesis(roster, 1, 1, VerificationNone, []byte{})
+	require.Error(t, err)
+	require.Equal(t, "got a different base height", err.Error())
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
@@ -153,6 +205,34 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	c.Close()
 }
 
+func TestClient_StoreSkipBlockCorrupted(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	service := servers[0].Service(testServiceName).(*corruptedService)
+	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+	genesis := NewSkipBlock()
+	genesis.Roster = ro
+
+	service.StoreSkipBlockReply = &StoreSkipBlockReply{}
+
+	_, err := c.StoreSkipBlock(genesis, ro, []byte{})
+	require.Nil(t, err) // empty reply
+
+	service.StoreSkipBlockReply.Previous = NewSkipBlock()
+	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+
+	service.StoreSkipBlockReply.Previous = nil
+	service.StoreSkipBlockReply.Latest = NewSkipBlock()
+	_, err = c.StoreSkipBlock(genesis, ro, []byte{})
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+}
+
 func TestClient_GetAllSkipchains(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
@@ -211,6 +291,36 @@ func TestClient_GetAllSkipChainIDs(t *testing.T) {
 	}
 }
 
+func TestClient_GetSingleBlock(t *testing.T) {
+	nbrHosts := 1
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	service := servers[0].Service(testServiceName).(*corruptedService)
+	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+
+	sb := NewSkipBlock()
+	sb.Roster = ro
+	sb.updateHash()
+	service.SkipBlock = sb
+
+	ret, err := c.GetSingleBlock(ro, sb.Hash)
+	require.Nil(t, err)
+	require.Equal(t, ret.Hash, sb.Hash)
+
+	service.SkipBlock = NewSkipBlock()
+	service.SkipBlock.Roster = ro
+	_, err = c.GetSingleBlock(ro, sb.Hash)
+	require.NotNil(t, err)
+	require.Equal(t, "Calculated hash does not match", err.Error())
+
+	service.SkipBlock.updateHash()
+	_, err = c.GetSingleBlock(ro, SkipBlockID{})
+	require.NotNil(t, err)
+	require.Equal(t, "Got the wrong block in return", err.Error())
+}
+
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
@@ -258,6 +368,43 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	// non existing
 	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, nbrBlocks+1)
 	require.NotNil(t, err)
+}
+
+func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(1, true)
+	defer l.CloseAll()
+
+	service := servers[0].Service(testServiceName).(*corruptedService)
+	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+
+	genesis := NewSkipBlock()
+	genesis.Roster = roster
+	genesis.updateHash()
+
+	service.GetSingleBlockByIndexReply = &GetSingleBlockByIndexReply{}
+	_, err := c.GetSingleBlockByIndex(roster, genesis.Hash, 0)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Got an empty reply")
+
+	sb := NewSkipBlock()
+	service.GetSingleBlockByIndexReply.SkipBlock = sb
+	_, err = c.GetSingleBlockByIndex(roster, genesis.Hash, 0)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Calculated hash does not match")
+
+	sb.Index = 1
+	sb.Roster = roster
+	sb.updateHash()
+	_, err = c.GetSingleBlockByIndex(roster, genesis.Hash, 0)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Got the wrong block in reply")
+
+	sb.Index = 0
+	sb.updateHash()
+	_, err = c.GetSingleBlockByIndex(roster, SkipBlockID{}, 0)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "Got a block of a different chain")
 }
 
 func TestClient_CreateLinkPrivate(t *testing.T) {
@@ -481,4 +628,40 @@ func TestClient_ParallelWrite(t *testing.T) {
 			t.Errorf("block %v: %v", i, string(x.Data))
 		}
 	}
+}
+
+const testServiceName = "TestSkipChain"
+
+type corruptedService struct {
+	*Service
+
+	// corrupted responses
+	StoreSkipBlockReply        *StoreSkipBlockReply
+	SkipBlock                  *SkipBlock
+	GetSingleBlockByIndexReply *GetSingleBlockByIndexReply
+}
+
+func newCorruptedTestService(c *onet.Context) (onet.Service, error) {
+	s := &Service{
+		ServiceProcessor: onet.NewServiceProcessor(c),
+		Storage:          &Storage{},
+		closing:          make(chan bool),
+	}
+	cs := &corruptedService{Service: s}
+
+	err := s.RegisterHandlers(cs.StoreSkipBlock, cs.GetSingleBlock, cs.GetSingleBlockByIndex)
+
+	return cs, err
+}
+
+func (cs *corruptedService) StoreSkipBlock(req *StoreSkipBlock) (*StoreSkipBlockReply, error) {
+	return cs.StoreSkipBlockReply, nil
+}
+
+func (cs *corruptedService) GetSingleBlock(req *GetSingleBlock) (*SkipBlock, error) {
+	return cs.SkipBlock, nil
+}
+
+func (cs *corruptedService) GetSingleBlockByIndex(req *GetSingleBlockByIndex) (*GetSingleBlockByIndexReply, error) {
+	return cs.GetSingleBlockByIndexReply, nil
 }

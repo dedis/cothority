@@ -13,6 +13,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	bbolt "go.etcd.io/bbolt"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
@@ -79,8 +80,16 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	block1.BackLinkIDs = append(block1.BackLinkIDs, root.Hash)
 	block1.Index++
 	db.Store(block1)
+	require.NotNil(t, block1.VerifyForwardSignatures())
+	block1.updateHash()
 	require.Nil(t, block1.VerifyForwardSignatures())
 	require.NotNil(t, db.VerifyLinks(block1))
+
+	block1.Roster = nil
+	block1.updateHash()
+	err := block1.VerifyForwardSignatures()
+	require.NotNil(t, err)
+	require.Equal(t, "Missing roster in the block", err.Error())
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -136,6 +145,18 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	sbd2.Height = 1
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
+}
+
+func TestSkipBlock_VerifierIDs(t *testing.T) {
+	require.True(t, VerifierIDs(VerificationNone).Equal(VerificationNone))
+	require.False(t, VerifierIDs(VerificationStandard).Equal(VerificationNone))
+	require.True(t, VerifierIDs(VerificationStandard).Equal(VerificationStandard))
+
+	vv1 := VerifierIDs{VerifyBase, VerifierID(uuid.NewV5(uuid.NamespaceURL, "abc"))}
+	vv2 := make(VerifierIDs, 2)
+	vv2[0] = vv1[1]
+	vv2[1] = vv1[0]
+	require.False(t, vv1.Equal(vv2))
 }
 
 func TestBlockLink_Copy(t *testing.T) {
@@ -255,6 +276,19 @@ func TestGetProof(t *testing.T) {
 
 	_, err = db.GetProof(root.Hash)
 	require.NotNil(t, err)
+}
+
+// Test the edge cases of the verification function
+func TestProof_Verify(t *testing.T) {
+	sb := NewSkipBlock()
+	sb.updateHash()
+
+	require.NotNil(t, Proof{}.Verify())
+	sb.Index = 1
+	require.NotNil(t, Proof{sb}.Verify())
+
+	require.NotNil(t, Proof{}.VerifyFromID(sb.Hash))
+	require.NotNil(t, Proof{sb}.VerifyFromID(SkipBlockID{}))
 }
 
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.

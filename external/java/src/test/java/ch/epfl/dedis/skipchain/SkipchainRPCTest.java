@@ -4,7 +4,6 @@ import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
-import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -14,6 +13,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
+import ch.epfl.dedis.lib.proto.OnetProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -108,6 +108,14 @@ class SkipchainRPCTest {
         }
     }
 
+    @Test
+    void testGetBadBlock() throws Exception {
+        final SkipblockId id = new SkipblockId(new byte[32]);
+        final SkipchainRPC rpc = new SkipchainRPC(new TestBadBlockRoster(), id);
+
+        assertThrows(CothorityCommunicationException.class, () -> rpc.getSkipblock(id));
+    }
+
     private SkipBlock makeGenesisRosterArgs(Roster roster, List<byte[]> verifierIDs, int base, int maxHeight) throws CothorityException {
         SkipchainProto.SkipBlock.Builder b = SkipchainProto.SkipBlock.newBuilder();
         b.setRoster(roster.toProto());
@@ -150,6 +158,30 @@ class SkipchainRPCTest {
             return SkipchainProto.StoreSkipBlockReply.parseFrom(msg);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCryptoException(e.getMessage());
+        }
+    }
+
+    /**
+     * Simple test class that overrides the sendMessage function to always return a bad block
+     */
+    private class TestBadBlockRoster extends Roster {
+        TestBadBlockRoster() {
+            super(new ArrayList<>());
+        }
+
+        @Override
+        public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) {
+            return SkipchainProto.SkipBlock.newBuilder()
+                    .setIndex(0)
+                    .setHeight(0)
+                    .setMaxHeight(0)
+                    .setBaseHeight(0)
+                    .setGenesis(ByteString.EMPTY)
+                    .setData(ByteString.EMPTY)
+                    .setRoster(OnetProto.Roster.newBuilder().setAggregate(ByteString.EMPTY).build())
+                    .setHash(ByteString.EMPTY)
+                    .build()
+                    .toByteString();
         }
     }
 }

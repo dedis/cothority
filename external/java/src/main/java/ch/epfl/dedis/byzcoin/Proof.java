@@ -114,12 +114,11 @@ public class Proof {
             throw new CothorityCryptoException("root of trie is not in skipblock");
         }
 
-        SkipblockId sbID = null;
+        SkipblockId sbID = scID;
         List<Point> publics = null;
 
         for (int i = 0; i < this.links.size(); i++) {
             if (i == 0) {
-                sbID = scID;
                 publics = getPoints(this.links.get(i).getNewRoster().getListList());
                 continue;
             }
@@ -138,6 +137,11 @@ public class Proof {
             } catch (URISyntaxException e) {
                 throw new CothorityCryptoException(e.getMessage());
             }
+        }
+
+        // Check that the latest block is correct
+        if (!Arrays.equals(sbID.getId(), this.latest.getHash())) {
+            throw new CothorityCryptoException("last forward link does not point to the latest block");
         }
     }
 
