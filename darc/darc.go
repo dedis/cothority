@@ -38,6 +38,7 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -49,6 +50,8 @@ import (
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/eddsa"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
@@ -946,6 +949,70 @@ func (idp IdentityProxy) Verify(msg, s []byte) error {
 	msg2 := h.Sum(nil)
 
 	return eddsa.Verify(idp.Public, msg2, s)
+}
+
+// ParseIdentity returns an Identity structure that matches
+// the given string.
+func ParseIdentity(in string) (Identity, error) {
+	fields := strings.SplitN(in, ":", 2)
+	if len(fields) != 2 {
+		return Identity{}, errors.New("missing identity type")
+	}
+	switch fields[0] {
+	case "darc":
+		return parseIDDarc(fields[1])
+	case "ed25519":
+		return parseIDEd25519(fields[1])
+	case "x509ec":
+		return parseIDX509ec(fields[1])
+	case "proxy":
+		return parseIDProxy(fields[1])
+	default:
+		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
+	}
+}
+
+func parseIDEd25519(in string) (Identity, error) {
+	p, err := encoding.StringHexToPoint(suites.MustFind("ed25519"), in)
+	if err != nil {
+		return Identity{}, err
+	}
+	return Identity{Ed25519: &IdentityEd25519{Point: p}}, nil
+}
+
+func parseIDX509ec(in string) (Identity, error) {
+	id := make([]byte, hex.DecodedLen(len(in)))
+	_, err := hex.Decode(id, []byte(in))
+	if err != nil {
+		return Identity{}, err
+	}
+	return Identity{X509EC: &IdentityX509EC{Public: id}}, nil
+}
+
+func parseIDDarc(in string) (Identity, error) {
+	id := make([]byte, hex.DecodedLen(len(in)))
+	_, err := hex.Decode(id, []byte(in))
+	if err != nil {
+		return Identity{}, err
+	}
+	return Identity{Darc: &IdentityDarc{ID: id}}, nil
+}
+
+func parseIDProxy(in string) (Identity, error) {
+	fields := strings.SplitN(in, ":", 2)
+	if len(fields) != 2 {
+		return Identity{}, errors.New("expected proxy format of proxy:public-key:data")
+	}
+
+	p, err := encoding.StringHexToPoint(suites.MustFind("ed25519"), fields[0])
+	if err != nil {
+		return Identity{}, err
+	}
+
+	return Identity{Proxy: &IdentityProxy{
+		Public: p,
+		Data:   fields[1],
+	}}, nil
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and

@@ -53,7 +53,8 @@ testRoster(){
   testOK runBA roster del $bc $key co2/public.toml
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
-  testNGrep 2004 runBA show $bc
+  sleep 10
+  testNGrep "Roster:.*tls://localhost:2004" runBA show $bc
 
   testFail runBA roster del $bc $key co3/public.toml
 
@@ -71,7 +72,8 @@ testCreateStoreRead(){
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
-  testGrep "Description: \"genesis darc\"" runBA show
+  bcid=`echo $BC | awk -F- '{print $2}'| sed 's/.cfg$//'`
+  testGrep "ByzCoinID: $bcid" runBA show
 }
 
 testAddDarc(){

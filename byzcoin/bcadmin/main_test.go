@@ -56,9 +56,9 @@ func TestCli(t *testing.T) {
 
 	// Collect the BC config filename that create() left for us,
 	// and make it available for the next tests.
-	ol := cliApp.Metadata["BC"]
-	require.IsType(t, "", ol)
-	os.Setenv("BC", ol.(string))
+	bc := cliApp.Metadata["BC"]
+	require.IsType(t, "", bc)
+	os.Setenv("BC", bc.(string))
 
 	log.Lvl1("show: ")
 	b = &bytes.Buffer{}
@@ -67,6 +67,35 @@ func TestCli(t *testing.T) {
 	args = []string{"bcadmin", "show"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
+	require.Contains(t, string(b.Bytes()), "Index: 0")
 	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
-	require.Contains(t, string(b.Bytes()), "spawn:darc")
+
+	log.Lvl1("darc show: ")
+	b = &bytes.Buffer{}
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
+	args = []string{"bcadmin", "darc", "show"}
+	err = cliApp.Run(args)
+	require.NoError(t, err)
+	require.Contains(t, string(b.Bytes()), "Ver:\t0")
+
+	log.Lvl1("darc rule: ")
+	b = &bytes.Buffer{}
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
+	args = []string{"bcadmin", "darc", "rule", "-identity", "foo", "-rule", "spawn:xxx"}
+	err = cliApp.Run(args)
+	require.NoError(t, err)
+	require.Equal(t, string(b.Bytes()), "")
+
+	log.Lvl1("darc show: ")
+	b = &bytes.Buffer{}
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
+	args = []string{"bcadmin", "darc", "show"}
+	err = cliApp.Run(args)
+	require.NoError(t, err)
+	require.Contains(t, string(b.Bytes()), "Ver:\t1")
+	require.Contains(t, string(b.Bytes()), "spawn:xxx")
+
 }
