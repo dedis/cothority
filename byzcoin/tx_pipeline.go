@@ -2,21 +2,22 @@ package byzcoin
 
 import (
 	"fmt"
+	"time"
+
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"time"
 )
 
 // txProcessor TODO ...
 type txProcessor interface {
 	CollectTx() ([]ClientTransaction, error)
-	// ProcessTx should only return error when there is a catastrophic failure,
-	// if the transaction is refused then it should not return error, but mark
-	// the transaction's Accept flag as false.
+	// ProcessTx should only return error when there is a catastrophic
+	// failure, if the transaction is refused then it should not return
+	// error, but mark the transaction's Accept flag as false.
 	ProcessTx(ClientTransaction, *txProcessorState) ([]*txProcessorState, error)
-	// ProposeBlock should be the only stateful operation because if it returns
-	// successfully then it will store the new block.
+	// ProposeBlock should be the only stateful operation because if it
+	// returns successfully then it will store the new block.
 	ProposeBlock(*txProcessorState) error
 	GetInterval() (time.Duration, error)
 	GetLatestGoodState() (*txProcessorState, error)
@@ -25,12 +26,13 @@ type txProcessor interface {
 }
 
 type txProcessorState struct {
-	// TODO we should say where the starting point is
+	// NOTE: we should say where the starting point is
 	sst *stagingStateTrie
 
-	// metadata, changes that were made that led up to the state in sst from some starting point
-	scs   StateChanges
-	txs   TxResults
+	// metadata, changes that were made that led up to the state in sst
+	// from some starting point
+	scs StateChanges
+	txs TxResults
 }
 
 func (s *txProcessorState) size() int {
@@ -105,9 +107,9 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 		return nil, err
 	}
 
-	// When we poll, the child nodes must reply within half of the block interval,
-	// because we'll use the other half to process the transactions.
-	// TODO collection protocol may not depend on block interval anymore
+	// When we poll, the child nodes must reply within half of the block
+	// interval, because we'll use the other half to process the
+	// transactions.
 	protocolTimeout := time.After(bcConfig.BlockInterval / 2)
 
 	var txs []ClientTransaction
@@ -117,7 +119,6 @@ collectTxLoop:
 		case newTxs, more := <-root.TxsChan:
 			if more {
 				for _, ct := range newTxs {
-					// TODO ?????
 					txsz := txSize(TxResult{ClientTransaction: ct})
 					if txsz < bcConfig.MaxBlockSize {
 						txs = append(txs, ct)
@@ -142,9 +143,10 @@ collectTxLoop:
 	return txs, nil
 }
 
-// ProcessTx attempts to apply the given tx to inState and then produce a new state.
-// If the new tx is too big to fit inside a new state, the function will return more states.
-// Where the older states (low index) must be committed before the newer state (high index) can be used.
+// ProcessTx attempts to apply the given tx to inState and then produce a new
+// state. If the new tx is too big to fit inside a new state, the function will
+// return more states. Where the older states (low index) must be committed
+// before the newer state (high index) can be used.
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
 	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 
@@ -187,8 +189,8 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 	return newStates, nil
 }
 
-// ProposeBlock basically calls s.createNewBlock which might block. There is nothing we can do about it other than
-// waiting for the timeout.
+// ProposeBlock basically calls s.createNewBlock which might block. There is
+// nothing we can do about it other than waiting for the timeout.
 func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
 	config, err := LoadConfigFromTrie(state.sst)
 	if err != nil {
@@ -304,7 +306,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 				log.Lvl3("stopping txs processor")
 				return
 			case tx := <-txChan:
-				// when processing, we take the latest state (the last one) and then apply the new transaction to it
+				// when processing, we take the latest state
+				// (the last one) and then apply the new transaction to it
 				newStates, err := p.processor.ProcessTx(tx, currentState[len(currentState)-1])
 				if err != nil {
 					log.Error("processing transaction failed with error: " + err.Error())
@@ -352,13 +355,15 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					}
 				}(inState)
 			case err := <-proposalResult:
-				proposing = false // only the ProposeBlock sends back results and it sends only one
+				// only the ProposeBlock sends back results and it sends only one
+				proposing = false
 				if err != nil {
 					log.Error("reverting to last known state because proposal refused:", err.Error())
 					newCurrentState, err := p.processor.GetLatestGoodState()
 					if err != nil || currentState == nil {
-						// A good state must exist because we're working on a known skipchain, it must at least
-						// contain the genesis state. If there is an error, then the database must've failed,
+						// A good state must exist because we're working on a known skipchain,
+						// it must at least contain the genesis state. If there is an error,
+						// then the database must've failed,
 						// so there is nothing we can do to recover so we panic.
 						panic(fmt.Sprintf("failed to get a good state: %v", err))
 					}
@@ -370,8 +375,9 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 	return stopChan
 }
 
-// proposeInputState generates the next input state that is used in ProposeBlock.
-// It returns a new state for the pipeline and the state for ProposeBlock.
+// proposeInputState generates the next input state that is used in
+// ProposeBlock. It returns a new state for the pipeline and the state for
+// ProposeBlock.
 func proposeInputState(currStates []*txProcessorState) ([]*txProcessorState, *txProcessorState) {
 	if len(currStates) == 0 {
 		panic("wut")

@@ -25,10 +25,10 @@ type mockTxProcessor struct {
 
 func (p *mockTxProcessor) CollectTx() ([]ClientTransaction, error) {
 	time.Sleep(p.collectDelay) // simulate slow network/protocol
-	if p.txCtr + p.batch > len(p.txs) {
+	if p.txCtr+p.batch > len(p.txs) {
 		return nil, nil
 	}
-	out := p.txs[p.txCtr : p.txCtr + p.batch]
+	out := p.txs[p.txCtr : p.txCtr+p.batch]
 	p.txCtr += p.batch
 	return out, nil
 }
@@ -38,21 +38,21 @@ func txEqual(a, b ClientTransaction) bool {
 }
 
 func (p *mockTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
-	sc := StateChange {
+	sc := StateChange{
 		StateAction: Create,
-		InstanceID: tx.Instructions.Hash(),
-		ContractID: "",
-		Value: tx.Instructions.Hash(),
-		DarcID: darc.ID{},
-		Version: 0,
+		InstanceID:  tx.Instructions.Hash(),
+		ContractID:  "",
+		Value:       tx.Instructions.Hash(),
+		DarcID:      darc.ID{},
+		Version:     0,
 	}
 	if err := inState.sst.Set(sc.Key(), sc.Val()); err != nil {
 		return nil, err
 	}
 	return []*txProcessorState{{
-			sst: inState.sst,
-			scs: append(inState.scs, sc),
-			txs: append(inState.txs, TxResult{tx, true}),
+		sst: inState.sst,
+		scs: append(inState.scs, sc),
+		txs: append(inState.txs, TxResult{tx, true}),
 	}}, nil
 }
 
@@ -61,7 +61,7 @@ func (p *mockTxProcessor) ProposeBlock(state *txProcessorState) error {
 	time.Sleep(p.proposeDelay)
 
 	// simulate failure
-	if len(p.proposed) <= p.failAt && p.failAt < len(p.proposed) + len(state.txs) {
+	if len(p.proposed) <= p.failAt && p.failAt < len(p.proposed)+len(state.txs) {
 		// we only fail it once, so reset it here
 		p.failAt = len(p.txs)
 		return errors.New("simulating proposal failure")
@@ -91,7 +91,7 @@ func (p *mockTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
 		goodState = sst
 	}
 	return &txProcessorState{
-		 sst: goodState,
+		sst: goodState,
 	}, nil
 }
 
@@ -118,7 +118,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 				InstanceID: NewInstanceID([]byte{byte(i)}),
 				Invoke: &Invoke{
 					ContractID: "",
-					Command: string(i),
+					Command:    string(i),
 				},
 			},
 		}
@@ -149,7 +149,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 		select {
 		case <-processor.done:
 			require.Fail(t, "block proposal should have failed")
-		case <- time.After(5 * time.Duration(n/batch) * interval):
+		case <-time.After(5 * time.Duration(n/batch) * interval):
 		}
 		// the list of proposed transactions should have some missing blocks
 		require.True(t, len(processor.proposed) > 0)
@@ -158,7 +158,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 		// done chan should be closed after all txs are processed
 		select {
 		case <-processor.done:
-		case <- time.After(5 * time.Duration(n/batch) * interval):
+		case <-time.After(5 * time.Duration(n/batch) * interval):
 			require.Fail(t, "tx processor did not finish in time")
 		}
 	}

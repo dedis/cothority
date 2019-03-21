@@ -1533,8 +1533,8 @@ func (s *Service) startPolling2(scID skipchain.SkipBlockID) chan bool {
 		processor: &defaultTxProcessor{
 			stopCollect: make(chan bool, 1),
 			stopProcess: make(chan bool, 1),
-			scID: scID,
-			Service: s,
+			scID:        scID,
+			Service:     s,
 		},
 	}
 	st, err := s.getStateTrie(scID)

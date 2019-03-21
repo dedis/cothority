@@ -278,8 +278,9 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
 
-	// force the synchronization as the new node needs to get the propagation
-	// to know about the skipchain but we're not testing that here
+	// force the synchronization as the new node needs to get the
+	// propagation to know about the skipchain but we're not testing that
+	// here
 	proof, err := s.service().db().GetProof(s.genesis.Hash)
 	require.NoError(t, err)
 	_, err = outside.db().StoreBlocks(proof)
@@ -292,8 +293,8 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// Tests what happens if a transaction with two instructions is sent: one valid and one invalid
-// instruction.
+// Tests what happens if a transaction with two instructions is sent: one valid
+// and one invalid instruction.
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	log.SetShowTime(true)
 	s := newSerN(t, 1, time.Second, 4, false)
@@ -434,9 +435,10 @@ func TestService_DarcProxy(t *testing.T) {
 		h.Write(msg)
 		msg2 := h.Sum(nil)
 
-		// In this simulation, we can make a signature the simple way: eddsa.Sign
-		// With auth proxies which are using DSS, the client will contact proxies
-		// to get signatures, then interpolate them into the final signature.
+		// In this simulation, we can make a signature the simple way:
+		// eddsa.Sign With auth proxies which are using DSS, the client
+		// will contact proxies to get signatures, then interpolate
+		// them into the final signature.
 		return ed.Sign(msg2)
 	}
 
@@ -493,8 +495,8 @@ func TestService_Depending(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	// Create a client tx with two instructions in it where the second one depends on
-	// the first one having executed.
+	// Create a client tx with two instructions in it where the second one
+	// depends on the first one having executed.
 
 	// First instruction: spawn a dummy value.
 	in1 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", []byte("something to delete"))
@@ -548,8 +550,8 @@ func TestService_LateBlock(t *testing.T) {
 	ser := s.services[0]
 	c := ser.Context
 	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Make this block arrive late compared to it's timestamp. The window will be
-		// 1000ms, so sleep 1200 more, just to be sure.
+		// Make this block arrive late compared to it's timestamp. The
+		// window will be 1000ms, so sleep 1200 more, just to be sure.
 		time.Sleep(2200 * time.Millisecond)
 		return ser.verifySkipBlock(newID, newSB)
 	})
@@ -696,8 +698,8 @@ func waitInclusion(t *testing.T, client int) {
 	time.Sleep(time.Second)
 }
 
-// Sends too many transactions to the ledger and waits for all blocks to be done.
-// TODO check counter
+// Sends too many transactions to the ledger and waits for all blocks to be
+// done.
 func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
@@ -715,7 +717,8 @@ func TestService_FloodLedger(t *testing.T) {
 	// Send a last transaction and wait for it to be included
 	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
 
-	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval for each execution)
+	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
+	// for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
@@ -725,9 +728,10 @@ func TestService_FloodLedger(t *testing.T) {
 }
 
 func TestService_BigTx(t *testing.T) {
-	// Use longer block interval for this test, as sending around these big blocks
-	// gets to be too close to the edge with the normal short testing interval, and
-	// starts generating errors-that-might-not-be-errors.
+	// Use longer block interval for this test, as sending around these big
+	// blocks gets to be too close to the edge with the normal short
+	// testing interval, and starts generating
+	// errors-that-might-not-be-errors.
 	s := newSer(t, 1, 1*time.Second)
 	defer s.local.CloseAll()
 
@@ -1391,7 +1395,6 @@ func TestService_SetConfigInterval(t *testing.T) {
 		5 * time.Second,
 		10 * time.Second,
 		20 * time.Second,
-		30 * time.Second,
 	}
 	if testing.Short() {
 		intervals = intervals[0:3]
@@ -1409,11 +1412,17 @@ func TestService_SetConfigInterval(t *testing.T) {
 		// is bigger, due to dedis/cothority#1409
 		s.sendTxAndWait(t, ctx, 10)
 
+		// We send an extra transaction first because the new interval is only loaded after a delay
+		// caused by the pipeline feature, i.e., the new interval is only used after an existing wait-interval
+		// is finished and not immediately after receiving the new configuration.
 		dummyCtx, _ := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
 		counter++
+		s.sendTxAndWait(t, dummyCtx, 10)
 
 		start := time.Now()
 
+		dummyCtx, _ = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
+		counter++
 		s.sendTxAndWait(t, dummyCtx, 10)
 
 		dur := time.Now().Sub(start)
