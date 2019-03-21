@@ -499,6 +499,9 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 	}
 	select {
 	case result := <-pisc.GetBlocksReply:
+		if err := Proof(result).VerifyFromID(id); err != nil {
+			return nil, err
+		}
 		return result, nil
 	case <-time.After(s.propTimeout):
 		return nil, errors.New("timeout waiting for GetBlocks reply")
@@ -1231,6 +1234,9 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		// Retrieve the src and dst blocks and make sure the basic parameters
 		// are ok.
 		dst := fs.Newest
+		if !dst.CalculateHash().Equal(dst.Hash) {
+			return errors.New("Newest block does not match its hash")
+		}
 		if fs.TargetHeight > len(dst.BackLinkIDs) {
 			return errors.New("Asked for signing too high a backlink")
 		}

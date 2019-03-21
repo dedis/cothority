@@ -69,7 +69,8 @@ public class SkipchainRPC {
     }
 
     /**
-     * Returns the skipblock from the skipchain, given its id. Note that the block that is returned is not verified.
+     * Returns the skipblock from the skipchain, given its id. Note that only the integrity of the block
+     * is verified but the caller must insure it belongs to the chain.
      *
      * @param id the id of the skipblock
      * @return the proto-representation of the skipblock.
@@ -85,6 +86,12 @@ public class SkipchainRPC {
         try {
             SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
             SkipBlock ret = new SkipBlock(sb);
+
+            if (!Arrays.equals(id.getId(), ret.getHash())) {
+                // we don't want a malicious peer to send a block with tempered
+                // data like a different roster with different public keys
+                throw new CothorityCommunicationException("invalid block integrity");
+            }
 
             // simple verification (we do not check the links, just the signature)
             if (!ret.verifyForwardSignatures()) {

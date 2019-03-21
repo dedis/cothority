@@ -883,6 +883,18 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
 		ssbReply = &skipchain.StoreSkipBlockReply{}
 		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
+		if err != nil {
+			return nil, err
+		}
+
+		if ssbReply.Latest == nil {
+			return nil, errors.New("got an empty reply")
+		}
+
+		// we're not doing more verification because the block should not be used
+		// as is. It's up to the client to fetch the forward link of the previous
+		// block to insure the new one has been validated but at this moment we
+		// can't do it because it might not be propagated to this node yet
 	}
 	if err != nil {
 		return nil, err
@@ -940,6 +952,8 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			var bucketName []byte
 			var nonce uint64
 			for {
+				// Note: we trust the chain therefore even if the reply is corrupted,
+				// it will be detected by difference in the root hash
 				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
 				if err != nil {
 					return errors.New("cannot download trie: " + err.Error())
@@ -974,9 +988,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			}
 			if sb.Index != st.GetIndex() {
 				log.Lvl2("Downloading corresponding block")
-				cl := skipchain.NewClient()
-				// TODO: make sure the downloaded block is correct
-				search, err := cl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
+				skCl := skipchain.NewClient()
+				// TODO: add a client API to fetch a specific block and its proof
+				search, err := skCl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
 				if err != nil {
 					return errors.New("couldn't get correct block for verification: " + err.Error())
 				}

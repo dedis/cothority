@@ -47,6 +47,9 @@ func TestVerify(t *testing.T) {
 
 	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
 
+	p.Latest.BaseHeight = 123
+	require.Equal(t, ErrorVerifyHash, p.Verify(s.genesis.SkipChainID()))
+
 	p.Latest.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: getSBID("123"),
 	})
@@ -108,8 +111,8 @@ func createSC(t *testing.T) (s sc) {
 		TrieRoot: s.c.GetRoot(),
 	})
 	require.Nil(t, err)
-	s.sb2.Hash = s.sb2.CalculateHash()
 	s.sb2.Index = 1
+	s.sb2.Hash = s.sb2.CalculateHash()
 	s.genesis.ForwardLink = genForwardLink(t, s.genesis, s.sb2, s.genesisPrivs)
 
 	_, err = s.s.StoreBlocks([]*skipchain.SkipBlock{s.genesis, s.sb2})

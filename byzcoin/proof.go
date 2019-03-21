@@ -67,6 +67,10 @@ var ErrorVerifyTrieRoot = errors.New("root of trie is not in skipblock")
 // have a proper proof that it comes from the genesis block.
 var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved from genesis block")
 
+// ErrorVerifyHash is returned if the latest block hash does not match
+// the target of the last forward link
+var ErrorVerifyHash = errors.New("last forward link does not point to the latest block")
+
 // Verify takes a skipchain id and verifies that the proof is valid for this
 // skipchain. It verifies the proof, that the merkle-root is stored in the
 // skipblock of the proof and the fact that the skipblock is indeed part of the
@@ -81,13 +85,13 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	if !bytes.Equal(p.InclusionProof.GetRoot(), header.TrieRoot) {
 		return ErrorVerifyTrieRoot
 	}
-	var sbID skipchain.SkipBlockID
+
+	sbID := scID
 	var publics []kyber.Point
 	for i, l := range p.Links {
 		if i == 0 {
 			// The first forward link is a pointer from []byte{} to the genesis
 			// block and holds the roster of the genesis block.
-			sbID = scID
 			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 			continue
 		}
@@ -102,6 +106,12 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 		}
 	}
+
+	// Check that the given latest block matches the last forward link target
+	if !p.Latest.CalculateHash().Equal(sbID) {
+		return ErrorVerifyHash
+	}
+
 	return nil
 }
 

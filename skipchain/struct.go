@@ -65,6 +65,25 @@ func (vId VerifierID) IsNil() bool {
 	return vId.Equal(VerifierID(uuid.Nil))
 }
 
+// VerifierIDs provides helpers to compare arrays of verifierID
+type VerifierIDs []VerifierID
+
+// Equal returns true when both array contains the same verifiers
+// in the same order
+func (vids VerifierIDs) Equal(others []VerifierID) bool {
+	if len(vids) != len(others) {
+		return false
+	}
+
+	for i, vid := range vids {
+		if !vid.Equal(others[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // SkipBlockVerifier is function that should return whether this skipblock is
 // accepted or not. This function is used during a BFTCosi round, but wrapped
 // around so it accepts a block.
@@ -343,6 +362,16 @@ func NewSkipBlock() *SkipBlock {
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
+	if !sb.Hash.Equal(sb.CalculateHash()) {
+		// Because we extract the public keys from the block, we need to insure
+		// the hash is correct with respect to what is stored
+		return errors.New("Calculated hash does not match")
+	}
+
+	if sb.Roster == nil {
+		return errors.New("Missing roster in the block")
+	}
+
 	publics := sb.Roster.ServicePublics(ServiceName)
 
 	for _, fl := range sb.ForwardLink {
@@ -467,6 +496,25 @@ func (sbs Proof) Verify() error {
 		return errors.New("First element must be a genesis")
 	}
 
+	return sbs.verifyChain()
+}
+
+// VerifyFromID checks that the proof is correct starting from a given
+// block and verifies the back and forward links up to the last block
+func (sbs Proof) VerifyFromID(id SkipBlockID) error {
+	if len(sbs) == 0 {
+		return errors.New("Empty list of blocks")
+	}
+
+	// the hash will be checked afterwards
+	if !sbs[0].Hash.Equal(id) {
+		return errors.New("Proof does not start with the correct block")
+	}
+
+	return sbs.verifyChain()
+}
+
+func (sbs Proof) verifyChain() error {
 	for i, sb := range sbs {
 		if !sb.CalculateHash().Equal(sb.Hash) {
 			return errors.New("Wrong hash")

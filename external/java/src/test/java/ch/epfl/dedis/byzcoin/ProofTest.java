@@ -11,6 +11,7 @@ import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
+import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.lib.proto.TrieProto;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,5 +116,15 @@ class ProofTest {
                 .build();
         assertThrows(CothorityCryptoException.class,
                 () -> new Proof(badProtoProof4, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
+
+        // wrong block hash
+        SkipchainProto.SkipBlock badBlock = p.getLatest().getProto().toBuilder()
+                .setBaseHeight(123)
+                .build();
+        ByzCoinProto.Proof badProtoProof5 = p.toProto().toBuilder()
+                .setLatest(badBlock)
+                .build();
+        assertThrows(CothorityCryptoException.class,
+                () -> new Proof(badProtoProof5, bc.getGenesisBlock().getId(), iid).exists(iid.getId()));
     }
 }
