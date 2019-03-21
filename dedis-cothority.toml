@@ -1,5 +1,5 @@
 [[servers]]
-  Address = "tls://128.179.33.44:7000"
+  Address = "tls://conode.dedis.ch:7000"
   Suite = "Ed25519"
   Public = "ec5c65a3c922d1df32075640e3de606197be24af76059a2ef145501122884bd3"
   Description = "EPFL Cothority-server"
@@ -37,7 +37,7 @@
       Suite = "bn256.adapter"
 
 [[servers]]
-  Address = "tls://198.137.202.74:7770"
+  Address = "tls://accordion.employees.org:7770"
   Suite = "Ed25519"
   Public = "a86f3496bd78a741ebe27915b7d02c8a5a403d0baed32b1fec6da057aa56519d"
   Description = "jra@employees.org"
