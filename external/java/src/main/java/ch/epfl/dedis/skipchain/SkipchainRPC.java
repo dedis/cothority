@@ -69,7 +69,8 @@ public class SkipchainRPC {
     }
 
     /**
-     * Returns the skipblock from the skipchain, given its id. Note that the block that is returned is not verified.
+     * Returns the skipblock from the skipchain, given its id. Note that only the integrity of the block
+     * is verified but the caller must insure it belongs to the chain.
      *
      * @param id the id of the skipblock
      * @return the proto-representation of the skipblock.

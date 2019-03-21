@@ -15,41 +15,46 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
+func init() {
+	// register a service for the test that will do nothing but reply with a chosen response
+	onet.RegisterNewServiceWithSuite(testServiceName, pairingSuite, newTestService)
+}
+
 func TestClient_NewLedgerCorrupted(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
 	defer l.CloseAll()
 
+	service := servers[0].Service(testServiceName).(*corruptedService)
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	msg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
+	c := &Client{
+		Client: onet.NewClient(cothority.Suite, testServiceName),
+		Roster: *roster,
+	}
 
 	sb := skipchain.NewSkipBlock()
-	testCorruptNewLedgerResponse = &CreateGenesisBlockResponse{Skipblock: sb}
-	defer func() {
-		testCorruptNewLedgerResponse = nil
-	}()
+	service.CreateGenesisBlockResponse = &CreateGenesisBlockResponse{Skipblock: sb}
 
 	sb.Roster = &onet.Roster{ID: onet.RosterID{}}
 	sb.Hash = sb.CalculateHash()
-	_, _, err = NewLedger(msg, false)
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
 	require.Equal(t, "wrong roster in genesis block", err.Error())
 
 	sb.Roster = roster
 	sb.Payload = []byte{1, 2, 3}
-	sb.Hash = testCorruptNewLedgerResponse.Skipblock.CalculateHash()
-	_, _, err = NewLedger(msg, false)
+	sb.Hash = sb.CalculateHash()
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "fail to decode data:")
 
 	sb.Payload = []byte{}
 	sb.Hash = sb.CalculateHash()
-	_, _, err = NewLedger(msg, false)
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "didn't get only one instruction", err.Error())
+	require.Equal(t, "genesis darc tx should only have one instruction", err.Error())
 
 	data := &DataBody{
 		TxResults: []TxResult{
@@ -59,7 +64,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Payload, err = protobuf.Encode(data)
 	sb.Hash = sb.CalculateHash()
 	require.NoError(t, err)
-	_, _, err = NewLedger(msg, false)
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
 	require.Equal(t, "didn't get a spawn instruction", err.Error())
 
@@ -74,7 +79,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Payload, err = protobuf.Encode(data)
 	sb.Hash = sb.CalculateHash()
 	require.NoError(t, err)
-	_, _, err = NewLedger(msg, false)
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "fail to decode the darc:")
 
@@ -90,7 +95,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Payload, err = protobuf.Encode(data)
 	sb.Hash = sb.CalculateHash()
 	require.NoError(t, err)
-	_, _, err = NewLedger(msg, false)
+	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
 	require.Equal(t, "wrong darc spawned", err.Error())
 }
@@ -148,32 +153,24 @@ func TestClient_GetProof(t *testing.T) {
 func TestClient_GetProofCorrupted(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
 	defer l.CloseAll()
 
-	// Initialise the genesis message and send it to the service.
-	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	msg.BlockInterval = 100 * time.Millisecond
-	require.Nil(t, err)
+	service := servers[0].Service(testServiceName).(*corruptedService)
 
-	// The darc inside it should be valid.
-	d := msg.GenesisDarc
-	require.Nil(t, d.Verify(true))
-
-	c, _, err := NewLedger(msg, false)
-	require.Nil(t, err)
+	c := &Client{
+		Client: onet.NewClient(cothority.Suite, testServiceName),
+		Roster: *roster,
+	}
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
-	testCorruptProofResponse = &GetProofResponse{
+	service.GetProofResponse = &GetProofResponse{
 		Proof: Proof{Latest: *sb},
 	}
 
-	_, err = c.GetProof([]byte{})
+	_, err := c.GetProof([]byte{})
 	require.Error(t, err)
-
-	testCorruptProofResponse = nil
+	require.Contains(t, err.Error(), "Error while decoding field")
 }
 
 // Create a streaming client and add blocks in the background. The client
@@ -270,4 +267,45 @@ func TestClient_Streaming(t *testing.T) {
 		_, err = c.AddTransactionAndWait(tx, 4)
 		require.Nil(t, err)
 	}
+}
+
+const testServiceName = "TestByzCoin"
+
+type corruptedService struct {
+	*Service
+
+	// corrupted replies
+	GetProofResponse           *GetProofResponse
+	CreateGenesisBlockResponse *CreateGenesisBlockResponse
+}
+
+func newTestService(c *onet.Context) (onet.Service, error) {
+	s := &Service{
+		ServiceProcessor:       onet.NewServiceProcessor(c),
+		contracts:              make(map[string]ContractFn),
+		txBuffer:               newTxBuffer(),
+		storage:                &bcStorage{},
+		darcToSc:               make(map[string]skipchain.SkipBlockID),
+		stateChangeCache:       newStateChangeCache(),
+		stateChangeStorage:     newStateChangeStorage(c),
+		heartbeatsTimeout:      make(chan string, 1),
+		closeLeaderMonitorChan: make(chan bool, 1),
+		heartbeats:             newHeartbeats(),
+		viewChangeMan:          newViewChangeManager(),
+		streamingMan:           streamingManager{},
+		closed:                 true,
+	}
+
+	cs := &corruptedService{Service: s}
+	err := s.RegisterHandlers(cs.GetProof, cs.CreateGenesisBlock)
+
+	return cs, err
+}
+
+func (cs *corruptedService) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+	return cs.GetProofResponse, nil
+}
+
+func (cs *corruptedService) CreateGenesisBlock(req *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
+	return cs.CreateGenesisBlockResponse, nil
 }

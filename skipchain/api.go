@@ -17,11 +17,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-// mock replies until we have proper interfaces
-var testCorruptSSBResponse *StoreSkipBlockReply
-var testCorruptSkipBlock *SkipBlock
-var testCorruptGSBIReply *GetSingleBlockByIndexReply
-
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -88,11 +83,6 @@ func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d n
 		return nil, err
 	}
 
-	// corrupted response for testing purpose
-	if testCorruptSSBResponse != nil {
-		reply = testCorruptSSBResponse
-	}
-
 	if reply.Latest != nil {
 		if err = reply.Latest.VerifyForwardSignatures(); err != nil {
 			return nil, err
@@ -157,10 +147,6 @@ func (c *Client) CreateGenesisSignature(ro *onet.Roster, baseH, maxH int, ver []
 	sb, err := c.StoreSkipBlockSignature(genesis, nil, nil, priv)
 	if err != nil {
 		return nil, err
-	}
-
-	if testCorruptSSBResponse != nil {
-		sb = testCorruptSSBResponse
 	}
 
 	// at this point we only know that the hash is correct but we need to compare
@@ -375,11 +361,6 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 		return nil, err
 	}
 
-	// for testing purpose
-	if testCorruptSkipBlock != nil {
-		reply = testCorruptSkipBlock
-	}
-
 	if err = reply.VerifyForwardSignatures(); err != nil {
 		return nil, err
 	}
@@ -413,11 +394,6 @@ func (c *Client) getBlockByIndex(si *network.ServerIdentity, genesis SkipBlockID
 	err = c.SendProtobuf(si, &GetSingleBlockByIndex{genesis, index}, reply)
 	if err != nil {
 		return
-	}
-
-	// for testing purpose
-	if testCorruptGSBIReply != nil {
-		reply = testCorruptGSBIReply
 	}
 
 	if reply.SkipBlock == nil {

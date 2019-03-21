@@ -19,10 +19,6 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-// for testing purpose until correct interfaces
-var testCorruptNewLedgerResponse *CreateGenesisBlockResponse
-var testCorruptProofResponse *GetProofResponse
-
 // ServiceName is used for registration on the onet.
 const ServiceName = "ByzCoin"
 
@@ -60,23 +56,28 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	} else {
 		c = NewClient(nil, msg.Roster)
 	}
-	reply := &CreateGenesisBlockResponse{}
-	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
-		return nil, nil, err
-	}
 
-	// for testing purpose
-	if testCorruptNewLedgerResponse != nil {
-		reply = testCorruptNewLedgerResponse
-	}
-
-	// checks if the returned genesis block has the same parameters
-	if err := verifyGenesisBlock(reply.Skipblock, msg); err != nil {
+	reply, err := newLedgerWithClient(msg, c)
+	if err != nil {
 		return nil, nil, err
 	}
 
 	c.ID = reply.Skipblock.Hash
 	return c, reply, nil
+}
+
+func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBlockResponse, error) {
+	reply := &CreateGenesisBlockResponse{}
+	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
+		return nil, err
+	}
+
+	// checks if the returned genesis block has the same parameters
+	if err := verifyGenesisBlock(reply.Skipblock, msg); err != nil {
+		return nil, err
+	}
+
+	return reply, nil
 }
 
 // AddTransaction adds a transaction. It does not return any feedback
@@ -119,10 +120,6 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	}, reply)
 	if err != nil {
 		return nil, err
-	}
-
-	if testCorruptProofResponse != nil {
-		reply = testCorruptProofResponse
 	}
 
 	// verify the integrity of the proof only
@@ -282,9 +279,9 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	req := StreamingRequest{
 		ID: c.ID,
 	}
-	// TODO: what if the leader is down ?
 	conn, err := c.Stream(c.Roster.List[0], &req)
 	if err != nil {
+		handler(StreamingResponse{}, err)
 		return err
 	}
 	for {
@@ -298,7 +295,9 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 			// send the block only if the integrity is correct
 			handler(resp, nil)
 		} else {
-			log.Warnf("got a corrupted block from %v", c.Roster.List[0])
+			err := fmt.Errorf("got a corrupted block from %v", c.Roster.List[0])
+			log.Warn(err.Error())
+			handler(StreamingResponse{}, err)
 		}
 	}
 }
@@ -451,13 +450,13 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	return &m, nil
 }
 
-func verifyGenesisBlock(sb *skipchain.SkipBlock, req *CreateGenesisBlock) error {
-	if !sb.CalculateHash().Equal(sb.Hash) {
+func verifyGenesisBlock(actual *skipchain.SkipBlock, expected *CreateGenesisBlock) error {
+	if !actual.CalculateHash().Equal(actual.Hash) {
 		return errors.New("got a corrupted block")
 	}
 
 	// check the block is like the proposal
-	ok, err := sb.Roster.Equal(&req.Roster)
+	ok, err := actual.Roster.Equal(&expected.Roster)
 	if err != nil {
 		return err
 	}
@@ -465,12 +464,12 @@ func verifyGenesisBlock(sb *skipchain.SkipBlock, req *CreateGenesisBlock) error 
 		return errors.New("wrong roster in genesis block")
 	}
 
-	darcID, err := extractDarcID(sb)
+	darcID, err := extractDarcID(actual)
 	if err != nil {
 		return err
 	}
 
-	if !darcID.Equal(req.GenesisDarc.GetID()) {
+	if !darcID.Equal(expected.GenesisDarc.GetID()) {
 		return errors.New("wrong darc spawned")
 	}
 
@@ -485,7 +484,7 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 	}
 
 	if len(data.TxResults) != 1 || len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
-		return nil, errors.New("didn't get only one instruction")
+		return nil, errors.New("genesis darc tx should only have one instruction")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]
