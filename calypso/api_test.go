@@ -9,7 +9,9 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 )
 
 // Tests the client function CreateLTS
@@ -158,10 +160,48 @@ func TestClient_Calypso(t *testing.T) {
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
-	keyCopy1, err := DecodeKey(cothority.Suite, calypsoClient.ltsReply.X,
+	keyCopy1, err := decodeKey(cothority.Suite, calypsoClient.ltsReply.X,
 		dk1.C, dk1.XhatEnc, reader1.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 
 	// use keyCopy to unlock the stuff in writeInstance.Data
+}
+
+// decodeKey can be used by the reader of ByzCoin to convert the
+// re-encrypted secret back to a symmetric key that can be used later to decode
+// the document.
+//
+// Input:
+//   - suite - the cryptographic suite to use
+//   - X - the aggregate public key of the DKG
+//   - C - the encrypted key-slices
+//   - XhatEnc - the re-encrypted schnorr-commit
+//   - xc - the private key of the reader
+//
+// Output:
+//   - key - the re-assembled key
+//   - err - an eventual error when trying to recover the data from the points
+func decodeKey(suite kyber.Group, X kyber.Point, C kyber.Point, XhatEnc kyber.Point,
+	xc kyber.Scalar) (key []byte, err error) {
+	log.Lvl4("xc:", xc)
+	xcInv := suite.Scalar().Neg(xc)
+	log.Lvl4("xcInv:", xcInv)
+	sum := suite.Scalar().Add(xc, xcInv)
+	log.Lvl4("xc + xcInv:", sum, "::", xc)
+	log.Lvl4("X:", X)
+	XhatDec := suite.Point().Mul(xcInv, X)
+	log.Lvl4("XhatDec:", XhatDec)
+	log.Lvl4("XhatEnc:", XhatEnc)
+	Xhat := suite.Point().Add(XhatEnc, XhatDec)
+	log.Lvl4("Xhat:", Xhat)
+	XhatInv := suite.Point().Neg(Xhat)
+	log.Lvl4("XhatInv:", XhatInv)
+
+	// Decrypt C to keyPointHat
+	log.Lvl4("C:", C)
+	keyPointHat := suite.Point().Add(C, XhatInv)
+	log.Lvl4("keyPointHat:", keyPointHat)
+	key, err = keyPointHat.Data()
+	return
 }
