@@ -1322,7 +1322,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if nodeIsLeader {
 		if _, ok := s.pollChan[scIDstr]; !ok {
 			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
-			s.pollChan[scIDstr] = s.startPolling2(sb.SkipChainID())
+			s.pollChan[scIDstr] = s.startPolling(sb.SkipChainID())
 		}
 	} else {
 		if c, ok := s.pollChan[scIDstr]; ok {
@@ -1528,7 +1528,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	return config.BlockInterval, config.MaxBlockSize, nil
 }
 
-func (s *Service) startPolling2(scID skipchain.SkipBlockID) chan bool {
+func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	pipeline := txPipeline{
 		processor: &defaultTxProcessor{
 			stopCollect: make(chan bool, 1),
@@ -1546,145 +1546,6 @@ func (s *Service) startPolling2(scID skipchain.SkipBlockID) chan bool {
 		sst: st.MakeStagingStateTrie(),
 	}
 	return pipeline.start(&initialState)
-}
-
-func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
-	s.pollChanWG.Add(1)
-	closeSignal := make(chan bool)
-	go func() {
-		s.closedMutex.Lock()
-		defer s.pollChanWG.Done()
-		if s.closed {
-			s.closedMutex.Unlock()
-			return
-		}
-		s.working.Add(1)
-		defer s.working.Done()
-		s.closedMutex.Unlock()
-		var txs []ClientTransaction
-		for {
-			bcConfig, err := s.LoadConfig(scID)
-			if err != nil {
-				panic("couldn't get configuration - this is bad and probably " +
-					"a problem with the database! " + err.Error())
-			}
-			select {
-			case <-closeSignal:
-				log.Lvl2(s.ServerIdentity(), "abort waiting for next block")
-				return
-			case <-time.After(bcConfig.BlockInterval):
-				// Need to update the config, as in the meantime a new block should have
-				// arrived with a possible new configuration.
-				bcConfig, err = s.LoadConfig(scID)
-				if err != nil {
-					panic("couldn't get configuration - this is bad and probably " +
-						"a problem with the database! " + err.Error())
-				}
-
-				latest, err := s.db().GetLatestByID(scID)
-				if err != nil {
-					log.Errorf("Error while searching for %x", scID[:])
-					log.Error("DB is in bad state and cannot find skipchain anymore: " + err.Error() +
-						" This function should never be called on a skipchain that does not exist.")
-					return
-				}
-
-				log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, scID)
-				tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
-
-				proto, err := s.CreateProtocol(collectTxProtocol, tree)
-				if err != nil {
-					panic("Protocol creation failed with error: " + err.Error() +
-						" This panic indicates that there is most likely a programmer error," +
-						" e.g., the protocol does not exist." +
-						" Hence, we cannot recover from this failure without putting" +
-						" the server in a strange state, so we panic.")
-				}
-				root := proto.(*CollectTxProtocol)
-				root.SkipchainID = scID
-				root.LatestID = latest.Hash
-				if err := root.Start(); err != nil {
-					panic("Failed to start the protocol with error: " + err.Error() +
-						" Start() only returns an error when the protocol is not initialised correctly," +
-						" e.g., not all the required fields are set." +
-						" If you see this message then there may be a programmer error.")
-				}
-
-				// When we poll, the child nodes must reply within half of the block interval,
-				// because we'll use the other half to process the transactions.
-				protocolTimeout := time.After(bcConfig.BlockInterval / 2)
-
-			collectTxLoop:
-				for {
-					select {
-					case newTxs, more := <-root.TxsChan:
-						if more {
-							for _, ct := range newTxs {
-								txsz := txSize(TxResult{ClientTransaction: ct})
-								if txsz < bcConfig.MaxBlockSize {
-									txs = append(txs, ct)
-								} else {
-									log.Lvl2(s.ServerIdentity(), "dropping collected transaction with length", txsz)
-								}
-							}
-						} else {
-							break collectTxLoop
-						}
-					case <-protocolTimeout:
-						log.Lvl2(s.ServerIdentity(), "timeout while collecting transactions from other nodes")
-						close(root.Finish)
-						break collectTxLoop
-					case <-closeSignal:
-						log.Lvl2(s.ServerIdentity(), "abort collection of transactions")
-						close(root.Finish)
-						return
-					}
-				}
-
-				log.Lvl3("Collected all new transactions:", len(txs))
-
-				if len(txs) == 0 {
-					log.Lvl3(s.ServerIdentity(), "no new transactions, not creating new block")
-					continue
-				}
-
-				txIn := make([]TxResult, len(txs))
-				for i := range txIn {
-					txIn[i].ClientTransaction = txs[i]
-				}
-
-				// Pre-run transactions to look how many we can fit in the alloted time
-				// slot. Perhaps we can run this in parallel during the wait-phase?
-				log.Lvl3("Counting how many transactions fit in", bcConfig.BlockInterval/2)
-				then := time.Now()
-				st, err := s.getStateTrie(scID)
-				if err != nil {
-					panic("the state trie must exist because we only start polling after creating/loading the skipchain")
-				}
-				_, txOut, _, sstTemp := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, bcConfig.BlockInterval/2)
-				bcConfig, err = LoadConfigFromTrie(sstTemp)
-				if err != nil {
-					panic("couldn't load config from temp stage Trie, this should never happen: " + err.Error())
-				}
-
-				txs = txs[len(txOut):]
-				if len(txs) > 0 {
-					sz := txSize(txOut...)
-					log.Warnf("%d transactions (%v bytes) included in block in %v, %d transactions left for the next block", len(txOut), sz, time.Now().Sub(then), len(txs))
-				}
-
-				_, err = s.createNewBlock(scID, &bcConfig.Roster, txOut)
-				if err != nil {
-					log.Error(s.ServerIdentity(), "couldn't create new block: "+err.Error())
-				}
-			}
-		}
-	}()
-	return closeSignal
-}
-
-func (s *Service) collectTxCallback() ([]ClientTransaction, error) {
-	return nil, nil
 }
 
 // We use the ByzCoin as a receiver (as is done in the identity service),
@@ -2303,7 +2164,7 @@ func (s *Service) startAllChains() error {
 		if leader.Equal(s.ServerIdentity()) {
 			log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
 			s.pollChanMut.Lock()
-			s.pollChan[string(gen)] = s.startPolling2(gen)
+			s.pollChan[string(gen)] = s.startPolling(gen)
 			s.pollChanMut.Unlock()
 		}
 

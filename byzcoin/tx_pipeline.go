@@ -9,10 +9,14 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-// txProcessor TODO ...
+// txProcessor is the interface that must be implemented. It is used in the
+// stateful pipeline txPipeline that takes transactions and creates blocks.
 type txProcessor interface {
+	// CollectTx implements a blocking function that returns transactions
+	// that should go into new blocks. These transactions are not verified.
 	CollectTx() ([]ClientTransaction, error)
-	// ProcessTx should only return error when there is a catastrophic
+	// ProcessTx
+	// It should only return error when there is a catastrophic
 	// failure, if the transaction is refused then it should not return
 	// error, but mark the transaction's Accept flag as false.
 	ProcessTx(ClientTransaction, *txProcessorState) ([]*txProcessorState, error)
@@ -36,7 +40,7 @@ type txProcessorState struct {
 }
 
 func (s *txProcessorState) size() int {
-	// TODO is there a better way to estimate the size before creating the block?
+	// TODO encoding again is wasting CPU, is there a better way?
 	body := &DataBody{TxResults: s.txs}
 	payload, err := protobuf.Encode(body)
 	if err != nil {
@@ -50,8 +54,9 @@ func (s *txProcessorState) reset() {
 	s.txs = []TxResult{}
 }
 
+// copy creates a shallow copy the state, we don't have the need for deep copy
+// yet.
 func (s *txProcessorState) copy() *txProcessorState {
-	// TODO this is not a deep copy because StateChanges and TxResults contain reference types
 	return &txProcessorState{
 		s.sst.Clone(),
 		append([]StateChange{}, s.scs...),
@@ -321,7 +326,9 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 				intervalChan = getInterval()
 
 				// wait for the next interval if there are no changes
-				// TODO check length
+				// we do not check for the length because currentState
+				// should always be non-empty, otherwise it's a
+				// programmer error
 				if len(currentState[0].txs) == 0 {
 					break
 				}
@@ -379,9 +386,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 // ProposeBlock. It returns a new state for the pipeline and the state for
 // ProposeBlock.
 func proposeInputState(currStates []*txProcessorState) ([]*txProcessorState, *txProcessorState) {
-	if len(currStates) == 0 {
-		panic("wut")
-	}
+	// currStates should always be non empty
+	// I wish we had a type like Data.List.NonEmpty
 	if len(currStates) == 1 {
 		inState := currStates[0].copy()
 		currStates[0].reset()
