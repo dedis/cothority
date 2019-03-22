@@ -4,10 +4,8 @@ import (
 	"errors"
 	"github.com/stretchr/testify/require"
 	"math/big"
-	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"go.dedis.ch/onet/v3/log"
@@ -22,7 +20,8 @@ func TestTokenContract(t *testing.T) {
 	getHash := func(uint64) common.Hash { return common.HexToHash("O") }
 
 	//Get smart contract abi and bytecode
-	simpleAbi, simpleBin := getSmartContract("ModifiedToken")
+	contract, err := getSmartContract("ModifiedToken")
+	require.Nil(t, err)
 
 	//Create dummy addresses for testing token transfers
 	addressA := common.HexToAddress("a")
@@ -30,34 +29,29 @@ func TestTokenContract(t *testing.T) {
 
 	accountRef := vm.AccountRef(common.HexToAddress("0"))
 
-	//Cration of the abi object
-	abi, err := abi.JSON(strings.NewReader(simpleAbi))
-	require.Nil(t, err)
-
 	//Helper functions for contract calls, uses the abi object defined above
 
 	//Constructor (function create), mints 12 tokens and credits them to public key A
-	create, err := abi.Pack("create", uint64(12), addressA)
+	create, err := contract.Abi.Pack("create", uint64(12), addressA)
 	require.Nil(t, err)
 
 	//Get balance function to check if tokens where indeed credited
-	get, err := abi.Pack("getBalance", addressA)
+	get, err := contract.Abi.Pack("getBalance", addressA)
 	require.Nil(t, err)
 
 	//Transfer function, with parameters to transfer from addressA to addressB, one token
-	send, err := abi.Pack("transfer", addressA, addressB, uint64(1))
+	send, err := contract.Abi.Pack("transfer", addressA, addressB, uint64(1))
 	require.Nil(t, err)
 
 	//Get balance function to check if token was indeed credited
-	get1, err := abi.Pack("getBalance", addressB)
+	get1, err := contract.Abi.Pack("getBalance", addressB)
 	require.Nil(t, err)
 	//Get balance function to check if token was indeed credited
-	//Get balance function to check if token was indeed credited
-	get2, err := abi.Pack("getBalance", addressA)
+	get2, err := contract.Abi.Pack("getBalance", addressA)
 	require.Nil(t, err)
 
 	//Transfer function, with parameters to transfer from addressA to addressB, one more token
-	transferTests, err := abi.Pack("transfer", addressA, addressB, uint64(1))
+	transferTests, err := contract.Abi.Pack("transfer", addressA, addressB, uint64(1))
 	require.Nil(t, err)
 
 	//Empty general Ethereum state database to instantiate EVM
@@ -71,9 +65,9 @@ func TestTokenContract(t *testing.T) {
 	bvm := vm.NewEVM(ctx, sdb, getChainConfig(), getVMConfig())
 
 	//Contract deployment
-	retContractCreation, addrContract, leftOverGas, err := bvm.Create(accountRef, common.Hex2Bytes(simpleBin), 100000000, big.NewInt(0))
+	retContractCreation, addrContract, leftOverGas, err := bvm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
 	if err != nil {
-		err = errors.New("contract deployment unsuccessful")
+		err = errors.New("contract deployment unsuccessful: " + err.Error())
 		log.LLvl1("return of contract creation", common.Bytes2Hex(retContractCreation))
 		log.ErrFatal(err)
 	}

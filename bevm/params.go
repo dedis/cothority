@@ -2,35 +2,48 @@ package bevm
 
 import (
 	"errors"
-	"go.dedis.ch/onet/v3/log"
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
 )
 
+type EvmContract struct {
+	Abi      abi.ABI
+	Bytecode []byte
+}
+
 //returns abi and bytecode of solidity contract
-func getSmartContract(nameOfContract string) (string, string) {
+func getSmartContract(nameOfContract string) (*EvmContract, error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
 	contractPath := dir + "/contracts/" + nameOfContract + "/" + nameOfContract + "_sol_" + nameOfContract
-	abi, err := ioutil.ReadFile(contractPath + ".abi")
+
+	abiJson, err := ioutil.ReadFile(contractPath + ".abi")
 	if err != nil {
-		err = errors.New("Problem generating contract ABI")
-		log.ErrFatal(err)
+		return nil, errors.New("Error reading contract ABI: " + err.Error())
 	}
-	bin, err := ioutil.ReadFile(contractPath + ".bin")
+
+	contractAbi, err := abi.JSON(strings.NewReader(string(abiJson)))
 	if err != nil {
-		err = errors.New("Problem generating contract bytecode")
-		log.ErrFatal(err)
+		return nil, errors.New("Error decoding contract ABI JSON: " + err.Error())
 	}
-	return string(abi), string(bin)
+
+	contractBytecode, err := ioutil.ReadFile(contractPath + ".bin")
+	if err != nil {
+		return nil, errors.New("Error reading contract Bytecode: " + err.Error())
+	}
+
+	return &EvmContract{contractAbi, common.Hex2Bytes(string(contractBytecode))}, nil
 }
 
 func getChainConfig() *params.ChainConfig {
