@@ -316,17 +316,26 @@ public class ByzCoinRPCTest {
         );
         logger.info("Setting interval to 5 seconds");
         bc.setBlockInterval(Duration.ofMillis(5000), admins, counters.getCounters(), 10);
-        ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
 
-        // Need to set the blockInterval manually, else it will complain.
-        logger.info("Setting interval back to default");
+        // we need to make one dummy transaction before timing the block interval because there is a delay
+        // for the new block interval to take effect
+        counters.increment();
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head(), 10);
+
         Instant now = Instant.now();
+        counters.increment();
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head(), 10);
+        assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000-10);
+
+
+        // Need to set the blockInterval back manually, else it will complain.
+        logger.info("Setting interval back to default");
         // The value is in nanoseconds.
+        ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
         newCCD.setBlockinterval(BLOCK_INTERVAL.toNanos());
 
         counters.increment();
         ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
-        assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000);
     }
 
     @Test
