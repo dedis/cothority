@@ -90,9 +90,8 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	updateCollectionLock sync.Mutex
-	stateTries           map[string]*stateTrie
-	stateTriesLock       sync.Mutex
+	stateTries     map[string]*stateTrie
+	stateTriesLock sync.Mutex
 	// We need to store the state changes for keeping track
 	// of the history of an instance
 	stateChangeStorage *stateChangeStorage
@@ -1063,13 +1062,13 @@ func (s *Service) catchupAll() error {
 // skipchain. This is useful in case there is no block stored yet in the system, but
 // we get a roster, e.g., from getTxs
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
-	s.updateCollectionLock.Lock()
+	s.updateTrieLock.Lock()
 	if s.catchingUp {
-		s.updateCollectionLock.Unlock()
+		s.updateTrieLock.Unlock()
 		return errors.New("already catching up")
 	}
 	s.catchingUp = true
-	s.updateCollectionLock.Unlock()
+	s.updateTrieLock.Unlock()
 
 	cl := skipchain.NewClient()
 	search, err := cl.GetUpdateChain(r, scID)
