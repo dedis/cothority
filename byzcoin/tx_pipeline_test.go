@@ -3,6 +3,7 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
 
@@ -76,14 +77,14 @@ func (p *mockTxProcessor) ProposeBlock(state *txProcessorState) error {
 	return nil
 }
 
-func (p *mockTxProcessor) GetInterval() (time.Duration, error) {
-	return 100 * time.Millisecond, nil
+func (p *mockTxProcessor) GetInterval() time.Duration {
+	return 100 * time.Millisecond
 }
 
 func (p *mockTxProcessor) Stop() {
 }
 
-func (p *mockTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
+func (p *mockTxProcessor) GetLatestGoodState() *txProcessorState {
 	goodState := p.goodState
 	if goodState == nil {
 		sst, err := newMemStagingStateTrie([]byte(""))
@@ -92,11 +93,11 @@ func (p *mockTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
 	}
 	return &txProcessorState{
 		sst: goodState,
-	}, nil
+	}
 }
 
 func (p *mockTxProcessor) GetBlockSize() int {
-	return 1e6
+	return 1e3
 }
 
 func TestTxPipeline(t *testing.T) {
@@ -105,7 +106,7 @@ func TestTxPipeline(t *testing.T) {
 	testTxPipeline(t, 4, 2, 4)
 }
 
-func TestTxPipelineFailure(t *testing.T) {
+func TestTxPipeline_Failure(t *testing.T) {
 	testTxPipeline(t, 8, 2, 1)
 	testTxPipeline(t, 8, 2, 2)
 }
@@ -141,8 +142,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 		sst: sst,
 	})
 
-	interval, err := processor.GetInterval()
-	require.NoError(t, err)
+	interval := processor.GetInterval()
 
 	if failAt < n {
 		// we should not hear from processor.done
@@ -165,4 +165,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 
 	close(stopChan)
 
+	// Wait for go-routines to finish otherwise the leak detection will
+	// complains.
+	time.Sleep(time.Second / 2)
 }

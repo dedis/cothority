@@ -15,26 +15,35 @@ type txProcessor interface {
 	// CollectTx implements a blocking function that returns transactions
 	// that should go into new blocks. These transactions are not verified.
 	CollectTx() ([]ClientTransaction, error)
-	// ProcessTx
-	// It should only return error when there is a catastrophic
-	// failure, if the transaction is refused then it should not return
-	// error, but mark the transaction's Accept flag as false.
+	// ProcessTx attempts to apply the given tx to the input state and then
+	// produce new state(s). If the new tx is too big to fit inside a new
+	// state, the function will return more states. Where the older states
+	// (low index) must be committed before the newer state (high index)
+	// can be used. The function should only return error when there is a
+	// catastrophic failure, if the transaction is refused then it should
+	// not return error, but mark the transaction's Accept flag as false.
 	ProcessTx(ClientTransaction, *txProcessorState) ([]*txProcessorState, error)
-	// ProposeBlock should be the only stateful operation because if it
-	// returns successfully then it will store the new block.
+	// ProposeBlock should take the input state and propose the block. The
+	// function should only return when a decision has been made regarding
+	// the proposal.
 	ProposeBlock(*txProcessorState) error
-	GetInterval() (time.Duration, error)
-	GetLatestGoodState() (*txProcessorState, error)
+	// GetLatestGoodState should return the latest state that the processor
+	// trusts.
+	GetLatestGoodState() *txProcessorState
+	// GetBlockSize should return the maximum block size.
 	GetBlockSize() int
+	// GetInterval should return the block interval.
+	GetInterval() time.Duration
+	// Stop stops the txProcessor. Once it is called, the caller should not
+	// expect the other functions in the interface to work as expected.
 	Stop()
 }
 
 type txProcessorState struct {
-	// NOTE: we should say where the starting point is
 	sst *stagingStateTrie
 
-	// metadata, changes that were made that led up to the state in sst
-	// from some starting point
+	// Below are changes that were made that led up to the state in sst
+	// from the starting point.
 	scs StateChanges
 	txs TxResults
 }
@@ -148,10 +157,6 @@ collectTxLoop:
 	return txs, nil
 }
 
-// ProcessTx attempts to apply the given tx to inState and then produce a new
-// state. If the new tx is too big to fit inside a new state, the function will
-// return more states. Where the older states (low index) must be committed
-// before the newer state (high index) can be used.
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
 	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 
@@ -205,24 +210,28 @@ func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
 	return err
 }
 
-func (s *defaultTxProcessor) GetInterval() (time.Duration, error) {
+func (s *defaultTxProcessor) GetInterval() time.Duration {
 	bcConfig, err := s.LoadConfig(s.scID)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
 			"a problem with the database! "+err.Error())
-		return 0, err
+		return defaultInterval
 	}
-	return bcConfig.BlockInterval, nil
+	return bcConfig.BlockInterval
 }
 
-func (s *defaultTxProcessor) GetLatestGoodState() (*txProcessorState, error) {
+func (s *defaultTxProcessor) GetLatestGoodState() *txProcessorState {
 	st, err := s.getStateTrie(s.scID)
 	if err != nil {
-		return nil, err
+		// A good state must exist because we're working on a known
+		// skipchain. If there is an error, then the database must've
+		// failed, so there is nothing we can do to recover so we
+		// panic.
+		panic(fmt.Sprintf("failed to get a good state: %v", err))
 	}
 	return &txProcessorState{
 		sst: st.MakeStagingStateTrie(),
-	}, nil
+	}
 }
 
 func (s *defaultTxProcessor) GetBlockSize() int {
@@ -265,11 +274,7 @@ func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
 	// set the polling interval to half of the block interval
 	go func() {
 		for {
-			interval, err := p.processor.GetInterval()
-			if err != nil {
-				log.Error("failed to get interval: " + err.Error())
-				interval = time.Second
-			}
+			interval := p.processor.GetInterval()
 			select {
 			case <-stopChan:
 				log.Lvl3("stopping tx collector")
@@ -296,11 +301,7 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 	currentState := []*txProcessorState{initialState}
 	proposalResult := make(chan error, 1)
 	getInterval := func() <-chan time.Time {
-		interval, err := p.processor.GetInterval()
-		if err != nil {
-			log.Error("failed to get interval: " + err.Error())
-			interval = time.Second
-		}
+		interval := p.processor.GetInterval()
 		return time.After(interval)
 	}
 	go func() {
@@ -350,11 +351,11 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					if state == nil {
 						proposalResult <- nil
 					} else {
-						// ProposeBlock might block for a long time,
+						// NOTE: ProposeBlock might block for a long time,
 						// but there's nothing we can do about it at the moment
 						// other than waiting for the timeout.
 						if err := p.processor.ProposeBlock(state); err != nil {
-							log.Error("failed to propose block: " + err.Error())
+							log.Error("failed to propose block: ", err)
 							proposalResult <- err
 						} else {
 							proposalResult <- nil
@@ -365,16 +366,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 				// only the ProposeBlock sends back results and it sends only one
 				proposing = false
 				if err != nil {
-					log.Error("reverting to last known state because proposal refused:", err.Error())
-					newCurrentState, err := p.processor.GetLatestGoodState()
-					if err != nil || currentState == nil {
-						// A good state must exist because we're working on a known skipchain,
-						// it must at least contain the genesis state. If there is an error,
-						// then the database must've failed,
-						// so there is nothing we can do to recover so we panic.
-						panic(fmt.Sprintf("failed to get a good state: %v", err))
-					}
-					currentState = []*txProcessorState{newCurrentState}
+					log.Error("reverting to last known state because proposal refused:", err)
+					currentState = []*txProcessorState{p.processor.GetLatestGoodState()}
 				}
 			}
 		}
