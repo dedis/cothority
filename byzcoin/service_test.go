@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -1940,6 +1941,36 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sent two tx")
+}
+
+// Tests that a view change can happen when the leader index is out of bound
+func TestService_ViewChangeForced(t *testing.T) {
+	s := newSerN(t, 1, time.Second, 5, true)
+	defer s.local.CloseAll()
+
+	err := s.services[0].sendViewChangeReq(viewchange.View{LeaderIndex: -1})
+	require.Error(t, err)
+	require.Equal(t, "leader index must be positive", err.Error())
+
+	for i := 0; i < 5; i++ {
+		err := s.services[i].sendViewChangeReq(viewchange.View{
+			ID:          s.genesis.SkipChainID(),
+			Gen:         s.genesis.SkipChainID(),
+			LeaderIndex: 7,
+		})
+		require.NoError(t, err)
+	}
+
+	// more than enough for a view change to complete
+	time.Sleep(10 * time.Second)
+
+	for _, service := range s.services {
+		// everyone should have the same leader after the genesis block is stored
+		leader, err := service.getLeader(s.genesis.SkipChainID())
+		require.NoError(t, err)
+		require.NotNil(t, leader)
+		require.True(t, leader.Equal(s.services[2].ServerIdentity()))
+	}
 }
 
 func TestService_DarcToSc(t *testing.T) {
