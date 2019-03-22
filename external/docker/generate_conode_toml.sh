@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=$GOPATH/src/github.com/dedis/cothority
+dir=$GOPATH/src/go.dedis.ch/cothority
 cwd=$PWD
 
 cd $dir/conode
