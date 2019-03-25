@@ -118,8 +118,13 @@ func (bct *bcTest) bank(instID byzcoin.InstanceID, command string, addresses ...
 	}
 }
 
-func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, contract *EvmContract, constructorArgs []byte, account *EvmAccount) {
-	data := append(contract.Bytecode, constructorArgs...)
+func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) error {
+	packedArgs, err := contract.packConstructor(args...)
+	if err != nil {
+		return err
+	}
+
+	data := append(contract.Bytecode, packedArgs...)
 	deployTx := types.NewContractCreation(account.Nonce, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
@@ -133,9 +138,16 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParamet
 
 	contract.Address = crypto.CreateAddress(account.Address, account.Nonce)
 	account.Nonce += 1
+
+	return nil
 }
 
-func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, contract EvmContract, data []byte, account *EvmAccount) {
+func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, account *EvmAccount, contract EvmContract, method string, args ...interface{}) error {
+	data, err := contract.packMethod(method, args...)
+	if err != nil {
+		return err
+	}
+
 	deployTx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
@@ -145,6 +157,8 @@ func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParam
 	})
 
 	account.Nonce += 1
+
+	return nil
 }
 
 func Test_InvokeToken(t *testing.T) {
@@ -175,17 +189,16 @@ func Test_InvokeToken(t *testing.T) {
 	require.Nil(t, err)
 
 	bct.bank(instID, "credit", a.Address, b.Address)
-	bct.deploy(instID, txParams, 0, erc20Contract, nil, a)
-
-	data, err := erc20Contract.packMethod("transfer", b.Address, big.NewInt(100))
+	err = bct.deploy(instID, txParams, 0, a, erc20Contract)
 	require.Nil(t, err)
-	bct.transact(instID, txParams, 0, *erc20Contract, data, a)
+
+	err = bct.transact(instID, txParams, 0, a, *erc20Contract, "transfer", b.Address, big.NewInt(100))
+	require.Nil(t, err)
 
 	bct.bank(instID, "display", a.Address, b.Address)
 
-	data, err = erc20Contract.packMethod("transfer", a.Address, big.NewInt(101))
+	err = bct.transact(instID, txParams, 0, b, *erc20Contract, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
-	bct.transact(instID, txParams, 0, *erc20Contract, data, b)
 
 	bct.bank(instID, "display", a.Address, b.Address)
 }
@@ -224,21 +237,20 @@ func Test_InvokeLoanContract(t *testing.T) {
 	bct.bank(instID, "credit", a.Address, b.Address)
 	bct.bank(instID, "display", a.Address, b.Address)
 
-	bct.deploy(instID, txParams, 0, erc20Contract, nil, a)
+	err = bct.deploy(instID, txParams, 0, a, erc20Contract)
+	require.Nil(t, err)
 	log.LLvl1("erc20 deployed", erc20Contract)
 
 	//Constructor LoanContract
 	//constructor (uint256 _wantedAmount, uint256 _interest, uint256 _tokenAmount, string _tokenName, ERC20Token _tokenContractAddress, uint256 _length) public {
-	data, err := loanContract.packConstructor(big.NewInt(1*1e18), big.NewInt(0), big.NewInt(10000), "TestCoin", erc20Contract.Address, big.NewInt(0))
+	err = bct.deploy(instID, txParams, 0, a, loanContract,
+		big.NewInt(1*1e18), big.NewInt(0), big.NewInt(10000), "TestCoin", erc20Contract.Address, big.NewInt(0))
 	require.Nil(t, err)
-
-	bct.deploy(instID, txParams, 0, loanContract, data, a)
 	log.LLvl1("LoanContract deployed", loanContract)
 
 	// Check if there are enough tokens
-	data, err = loanContract.packMethod("checkTokens")
+	err = bct.transact(instID, txParams, 0, a, *loanContract, "checkTokens")
 	require.Nil(t, err)
-	bct.transact(instID, txParams, 0, *loanContract, data, a)
 	log.LLvl1("check tokens passed")
 
 	log.LLvl1("test avant lend")
@@ -258,18 +270,14 @@ func Test_InvokeLoanContract(t *testing.T) {
 		log.LLvl1("this should fail")
 	*/
 
-	//LEND
-	data, err = loanContract.packMethod("lend")
+	err = bct.transact(instID, txParams, 2*WeiPerEther, b, *loanContract, "lend")
 	require.Nil(t, err)
-	bct.transact(instID, txParams, 2*WeiPerEther, *loanContract, data, b)
 	log.LLvl1("lend passed")
 
 	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
 
-	//    function payback () public payable {
-	//paybackData, err := abiMethodPack(erc20ABI, "payback")
+	err = bct.transact(instID, txParams, 2*WeiPerEther, a, *loanContract, "payback")
 	require.Nil(t, err)
-	bct.transact(instID, txParams, 2*WeiPerEther, *loanContract, []byte{}, a)
 	log.LLvl1("payback, curious of what this does :")
 
 	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
