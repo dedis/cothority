@@ -1,14 +1,12 @@
 package bevm
 
 import (
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/onet/v3/log"
 	"math/big"
-	"strings"
 	"testing"
 	"time"
 
@@ -19,6 +17,13 @@ import (
 )
 
 const WeiPerEther = 1e18
+
+type TransactionParameters struct {
+	GasLimit uint64
+	GasPrice *big.Int
+}
+
+var txParams TransactionParameters = TransactionParameters{GasLimit: uint64(1e7), GasPrice: big.NewInt(1)}
 
 //Spawn a bvm
 func Test_Spawn(t *testing.T) {
@@ -91,34 +96,32 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 	}
 }
 
-func (bct *bcTest) bank(instID byzcoin.InstanceID, instruction string, args ...string) {
-	amount := new(big.Int).SetUint64(5 * WeiPerEther).Bytes()
+func (bct *bcTest) bank(instID byzcoin.InstanceID, command string, addresses ...common.Address) {
+	amount := new(big.Int).SetUint64(5 * WeiPerEther)
 
-	for _, address := range args {
-		switch instruction {
+	for _, address := range addresses {
+		switch command {
 		case "credit":
 			//Send credit instructions to Byzcoin and incrementing nonce counter
 			bct.creditAccountInstance(instID, byzcoin.Arguments{
-				{Name: "address", Value: []byte(address)},
-				{Name: "amount", Value: amount},
+				{Name: "address", Value: address.Bytes()},
+				{Name: "amount", Value: amount.Bytes()},
 			})
+			log.LLvl1("credited", address.Hex(), amount, "wei")
 		case "display":
 			bct.displayAccountInstance(instID, byzcoin.Arguments{
-				{Name: "address", Value: []byte(address)},
+				{Name: "address", Value: address.Bytes()},
 			})
 		default:
 			log.LLvl1("incorrect instruction")
 		}
 	}
-	if instruction == "credit" {
-		log.LLvl1("credited", args, 5*1e18, "wei")
-	}
 }
 
-func (bct *bcTest) deploy(instID byzcoin.InstanceID, gasLimit uint64, gasPrice *big.Int, nonce uint64, value uint64, bytecode []byte, constructorArgs []byte, address common.Address, privateKey string) (uint64, common.Address) {
-	data := append(bytecode, constructorArgs...)
-	deployTx := types.NewContractCreation(nonce, big.NewInt(int64(value)), gasLimit, gasPrice, data)
-	signedTxBuffer, err := signAndMarshalTx(privateKey, deployTx)
+func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, contract *EvmContract, constructorArgs []byte, account *EvmAccount) {
+	data := append(contract.Bytecode, constructorArgs...)
+	deployTx := types.NewContractCreation(account.Nonce, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
+	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
 	bct.transactionInstance(instID, byzcoin.Arguments{
@@ -128,21 +131,20 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, gasLimit uint64, gasPrice *
 	//log.LLvl1("deployed new contract at", crypto.CreateAddress(common.HexToAddress(A), deployTx.Nonce()).Hex())
 	//log.LLvl1("nonce tx", deployTx.Nonce(), "should check", nonce)
 
-	contractAddress := crypto.CreateAddress(address, nonce)
-
-	return nonce + 1, contractAddress
+	contract.Address = crypto.CreateAddress(account.Address, account.Nonce)
+	account.Nonce += 1
 }
 
-func (bct *bcTest) transact(instID byzcoin.InstanceID, gasLimit uint64, gasPrice *big.Int, nonce uint64, value uint64, data []byte, contractAddress string, privateKey string) uint64 {
-	deployTx := types.NewTransaction(nonce, common.HexToAddress(contractAddress), big.NewInt(int64(value)), gasLimit, gasPrice, data)
-	signedTxBuffer, err := signAndMarshalTx(privateKey, deployTx)
+func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, contract EvmContract, data []byte, account *EvmAccount) {
+	deployTx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
+	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
 	bct.transactionInstance(instID, byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 
-	return nonce + 1
+	account.Nonce += 1
 }
 
 func Test_InvokeToken(t *testing.T) {
@@ -163,27 +165,29 @@ func Test_InvokeToken(t *testing.T) {
 		A, AKey := GenerateKeys()
 		B, BKey := GenerateKeys()
 	*/
-	A, AKey := "0x627306090abab3a6e1400e9345bc60c78a8bef57", "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
-	B, BKey := "0xf17f52151ebef6c7334fad080c5704d77216b732", "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
-	nonceA, nonceB := uint64(0), uint64(0)
-
-	// Get transaction parameters
-	gasLimit, gasPrice := transactionGasParameters()
-
-	bct.bank(instID, "credit", A, B)
-	nonceA, erc20Address := bct.deploy(instID, gasLimit, gasPrice, nonceA, 0, erc20Contract.Bytecode, nil, common.HexToAddress(A), AKey)
-
-	transferData, err := erc20Contract.Abi.Pack("transfer", common.HexToAddress(B), big.NewInt(100))
+	a, err := NewEvmAccount(
+		"0x627306090abab3a6e1400e9345bc60c78a8bef57",
+		"c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3")
 	require.Nil(t, err)
-	nonceA = bct.transact(instID, gasLimit, gasPrice, nonceA, 0, transferData, erc20Address.Hex(), AKey)
-
-	bct.bank(instID, "display", A, B)
-
-	transferData, err = erc20Contract.Abi.Pack("transfer", common.HexToAddress(A), big.NewInt(101))
+	b, err := NewEvmAccount(
+		"0xf17f52151ebef6c7334fad080c5704d77216b732",
+		"ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f")
 	require.Nil(t, err)
-	nonceB = bct.transact(instID, gasLimit, gasPrice, nonceB, 0, transferData, erc20Address.Hex(), BKey)
 
-	bct.bank(instID, "display", A, B)
+	bct.bank(instID, "credit", a.Address, b.Address)
+	bct.deploy(instID, txParams, 0, erc20Contract, nil, a)
+
+	data, err := erc20Contract.packMethod("transfer", b.Address, big.NewInt(100))
+	require.Nil(t, err)
+	bct.transact(instID, txParams, 0, *erc20Contract, data, a)
+
+	bct.bank(instID, "display", a.Address, b.Address)
+
+	data, err = erc20Contract.packMethod("transfer", a.Address, big.NewInt(101))
+	require.Nil(t, err)
+	bct.transact(instID, txParams, 0, *erc20Contract, data, b)
+
+	bct.bank(instID, "display", a.Address, b.Address)
 }
 
 func Test_InvokeLoanContract(t *testing.T) {
@@ -208,36 +212,37 @@ func Test_InvokeLoanContract(t *testing.T) {
 		A, AKey := GenerateKeys()
 		B, Bkey := GenerateKeys()
 	*/
+	a, err := NewEvmAccount(
+		"0x627306090abab3a6e1400e9345bc60c78a8bef57",
+		"c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3")
+	require.Nil(t, err)
+	b, err := NewEvmAccount(
+		"0xf17f52151ebef6c7334fad080c5704d77216b732",
+		"ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f")
+	require.Nil(t, err)
 
-	A, AKey := "0x627306090abab3a6e1400e9345bc60c78a8bef57", "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
-	B, Bkey := "0xf17f52151ebef6c7334fad080c5704d77216b732", "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
-	nonceA, nonceB := uint64(0), uint64(0)
+	bct.bank(instID, "credit", a.Address, b.Address)
+	bct.bank(instID, "display", a.Address, b.Address)
 
-	// Get transaction parameters
-	gasLimit, gasPrice := transactionGasParameters()
-
-	bct.bank(instID, "credit", A, B)
-	bct.bank(instID, "display", A, B)
-
-	nonceA, erc20Address := bct.deploy(instID, gasLimit, gasPrice, nonceA, 0, erc20Contract.Bytecode, nil, common.HexToAddress(A), AKey)
-	log.LLvl1("erc20 deployed @", erc20Address.Hex())
+	bct.deploy(instID, txParams, 0, erc20Contract, nil, a)
+	log.LLvl1("erc20 deployed", erc20Contract)
 
 	//Constructor LoanContract
 	//constructor (uint256 _wantedAmount, uint256 _interest, uint256 _tokenAmount, string _tokenName, ERC20Token _tokenContractAddress, uint256 _length) public {
-	constructorData, err := loanContract.Abi.Pack("", big.NewInt(1*1e18), big.NewInt(0), big.NewInt(10000), "TestCoin", erc20Address, big.NewInt(0))
+	data, err := loanContract.packConstructor(big.NewInt(1*1e18), big.NewInt(0), big.NewInt(10000), "TestCoin", erc20Contract.Address, big.NewInt(0))
 	require.Nil(t, err)
 
-	nonceA, loanContractAddress := bct.deploy(instID, gasLimit, gasPrice, nonceA, 0, loanContract.Bytecode, constructorData, common.HexToAddress(A), AKey)
-	log.LLvl1("LoanContract deployed @", loanContractAddress.Hex())
+	bct.deploy(instID, txParams, 0, loanContract, data, a)
+	log.LLvl1("LoanContract deployed", loanContract)
 
 	// Check if there are enough tokens
-	checkTokenData, err := loanContract.Abi.Pack("checkTokens")
+	data, err = loanContract.packMethod("checkTokens")
 	require.Nil(t, err)
-	nonceA = bct.transact(instID, gasLimit, gasPrice, nonceA, 0, checkTokenData, loanContractAddress.Hex(), AKey)
+	bct.transact(instID, txParams, 0, *loanContract, data, a)
 	log.LLvl1("check tokens passed")
 
 	log.LLvl1("test avant lend")
-	bct.bank(instID, "display", A, B, loanContractAddress.Hex())
+	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
 
 	/*
 		balanceOfTest, err := abiMethodPack(erc20ABI, "balanceOf", common.HexToAddress(A))
@@ -254,30 +259,26 @@ func Test_InvokeLoanContract(t *testing.T) {
 	*/
 
 	//LEND
-	lendData, err := loanContract.Abi.Pack("lend")
+	data, err = loanContract.packMethod("lend")
 	require.Nil(t, err)
-	nonceB = bct.transact(instID, gasLimit, gasPrice, nonceB, 2*WeiPerEther, lendData, loanContractAddress.Hex(), Bkey)
+	bct.transact(instID, txParams, 2*WeiPerEther, *loanContract, data, b)
 	log.LLvl1("lend passed")
 
-	bct.bank(instID, "display", A, B, loanContractAddress.Hex())
+	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
 
 	//    function payback () public payable {
 	//paybackData, err := abiMethodPack(erc20ABI, "payback")
 	require.Nil(t, err)
-	nonceA = bct.transact(instID, gasLimit, gasPrice, nonceA, 2*WeiPerEther, []byte{}, loanContractAddress.Hex(), AKey)
+	bct.transact(instID, txParams, 2*WeiPerEther, *loanContract, []byte{}, a)
 	log.LLvl1("payback, curious of what this does :")
 
-	bct.bank(instID, "display", A, B, loanContractAddress.Hex())
+	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
 }
 
 //Signs the transaction with a private key and returns the transaction in byte format, ready to be included into the Byzcoin transaction
-func signAndMarshalTx(privateKey string, tx *types.Transaction) ([]byte, error) {
-	private, err := crypto.HexToECDSA(privateKey)
-	if err != nil {
-		return nil, err
-	}
+func (account EvmAccount) signAndMarshalTx(tx *types.Transaction) ([]byte, error) {
 	var signer types.Signer = types.HomesteadSigner{}
-	signedTx, err := types.SignTx(tx, signer, private)
+	signedTx, err := types.SignTx(tx, signer, account.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -286,27 +287,6 @@ func signAndMarshalTx(privateKey string, tx *types.Transaction) ([]byte, error) 
 		return nil, err
 	}
 	return signedBuffer, err
-}
-
-//Creates the data to interact with an existing contract, with a variadic number of arguments
-func abiMethodPack(contractABI string, methodCall string, args ...interface{}) (data []byte, err error) {
-	ABI, err := abi.JSON(strings.NewReader(contractABI))
-	if err != nil {
-		return nil, err
-	}
-	abiCall, err := ABI.Pack(methodCall, args...)
-	if err != nil {
-		log.LLvl1("error in packing args", err)
-		return nil, err
-	}
-	return abiCall, nil
-}
-
-//Return gas parameters for easy modification
-func transactionGasParameters() (gasLimit uint64, gasPrice *big.Int) {
-	gasLimit = uint64(1e7)
-	gasPrice = big.NewInt(1)
-	return
 }
 
 // bcTest is used here to provide some simple test structure for different

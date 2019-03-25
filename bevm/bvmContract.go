@@ -78,7 +78,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		if addressBuf == nil {
 			return nil, nil, errors.New("no address provided")
 		}
-		address := common.HexToAddress(string(addressBuf))
+		address := common.BytesToAddress(addressBuf)
 		_, db, err := getDB(es)
 		if err != nil {
 			return nil, nil, err
@@ -95,7 +95,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		if addressBuf == nil {
 			return nil, nil, errors.New("no address provided")
 		}
-		address := common.HexToAddress(string(addressBuf))
+		address := common.BytesToAddress(addressBuf)
 		memdb, db, err := getDB(es)
 		if err != nil {
 			return nil, nil, err
