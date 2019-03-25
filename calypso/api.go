@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+// TODO: add LTSID of type kyber.Point
+// TODO: think about authentication
+// TODO: add CreateAndAuthorise
+// TODO: add REST interface
+
 // Client is a class to communicate to the calypso service.
 type Client struct {
 	*onet.Client
@@ -27,6 +32,8 @@ func NewClient() *Client {
 // COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
 //
 // In case of error, X is nil, and the error indicates what is wrong.
+//
+// TODO: return the DKG proof instead of the aggregate public key
 func (c *Client) CreateLTS(ltsRoster *onet.Roster) (X kyber.Point, err error) {
 	return
 }
@@ -60,7 +67,8 @@ func (c *Client) Reencrypt(X kyber.Point, grant Grant) (XHat kyber.Point, err er
 // Authorise, only one of the fields must be non-nil.
 type Auth struct {
 	ByzCoin           *AuthByzCoin
-	HyperLedgerFabric *AuthHLFabric
+	// TODO: rename to X509Cert
+	HyperLedgerFabric *AuthX509Cert
 	Ethereum          *AuthEthereum
 }
 
@@ -73,15 +81,14 @@ type AuthByzCoin struct {
 	TTL       time.Time
 }
 
-// AuthHLFabric holds the information necessary to authenticate a HyperLedger/Fabric
+// AuthX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
 // request. In its simplest form, it is simply the CA that will have to sign the
 // certificates of the requesters.
-// The TTL is to avoid that too old requests are re-used. If it is 0, it is disabled.
 // The Threshold indicates how many clients must have signed the request before it
 // is accepted.
-type AuthHLFabric struct {
-	CA        []byte
-	TTL       time.Time
+type AuthX509Cert struct {
+	// Slice of ASN.1 encoded X509 certificates.
+	CA        [][]byte
 	Threshold int
 }
 
@@ -98,7 +105,7 @@ type AuthEthereum struct {
 // schemes, this proof will be different.
 type Grant struct {
 	ByzCoin  *GrantByzCoin
-	HLFabric *GrantHLFabric
+	X509Cert *GrantX509Cert
 	Ethereum *GrantEthereum
 }
 
@@ -112,18 +119,15 @@ type GrantByzCoin struct {
 	Read byzcoin.Proof
 }
 
-// GrantHLFabric holds the proof that at least a threshold number of clients
+// GrantX509Cert holds the proof that at least a threshold number of clients
 // accepted the reencryption.
 // For each client, there must exist a certificate that can be verified by the
-// CA certificate from AuthHLFabric. Additionally, each client must sign the
+// CA certificate from AuthX509Cert. Additionally, each client must sign the
 // following message:
 //   sha256( Secret | Ephemeral | Time )
-type GrantHLFabric struct {
+type GrantX509Cert struct {
 	Secret       kyber.Point
-	Ephemeral    kyber.Point
-	Time         time.Time
 	Certificates [][]byte
-	Signatures   [][]byte
 }
 
 // GrantEthereum holds the proof that the read request has been successfully stored
