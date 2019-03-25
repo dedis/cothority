@@ -56,6 +56,8 @@ clean:
 
 verify:
 	GO111MODULE=on go mod verify
+	@echo "Checking for replace in go.mod..."
+	@if GO111MODULE=on go list -m all | grep --quiet '=>'; then exit 1; fi
 
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
