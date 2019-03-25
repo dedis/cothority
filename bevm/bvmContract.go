@@ -105,15 +105,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		if amountBuf == nil {
 			return nil, nil, errors.New("no amount provided")
 		}
-		var amountData AmountData
-		err = protobuf.Decode(amountBuf, &amountData)
-		if err != nil {
-			return nil, nil, errors.New("invalid amount provided: " + err.Error())
-		}
-		amount := big.NewInt(amountData.Ether)
-		amount = amount.Mul(amount, big.NewInt(WeiPerEther))
-		amount = amount.Add(amount, big.NewInt(amountData.Wei))
-
+		amount := new(big.Int).SetBytes(amountBuf)
 		db.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
 

@@ -16,7 +16,6 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/protobuf"
 )
 
 const WeiPerEther = 1e18
@@ -48,8 +47,7 @@ func Test_InvokeCredit(t *testing.T) {
 
 	// Credit an account
 	address := []byte("0x2afd357E96a3aCbcd01615681C1D7e3398d5fb61")
-	amount, err := protobuf.Encode(&AmountData{Ether: 3, Wei: .1415926535 * WeiPerEther})
-	require.Nil(t, err)
+	amount := new(big.Int).SetUint64(3.1415926535 * WeiPerEther).Bytes()
 	bct.creditAccountInstance(instID, byzcoin.Arguments{
 		{Name: "address", Value: address},
 		{Name: "amount", Value: amount},
@@ -80,8 +78,7 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 	}
 	for i, addr := range addresses {
 		address := []byte(addr)
-		amount, err := protobuf.Encode(&AmountData{Ether: int64(i) + 1})
-		require.Nil(t, err)
+		amount := new(big.Int).SetUint64(uint64((i + 1) * WeiPerEther)).Bytes()
 
 		bct.creditAccountInstance(instID, byzcoin.Arguments{
 			{Name: "address", Value: address},
@@ -95,8 +92,7 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 }
 
 func (bct *bcTest) bank(instID byzcoin.InstanceID, instruction string, args ...string) {
-	amount, err := protobuf.Encode(&AmountData{Ether: 5})
-	require.Nil(bct.t, err)
+	amount := new(big.Int).SetUint64(5 * WeiPerEther).Bytes()
 
 	for _, address := range args {
 		switch instruction {
