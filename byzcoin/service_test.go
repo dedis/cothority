@@ -2170,7 +2170,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: res.BlockID})
 			require.Nil(t, err)
 			var header DataHeader
-			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			err = protobuf.Decode(sb.Data, &header)
 			require.Nil(t, err)
 			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
@@ -2191,6 +2191,60 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Nil(t, err, "signer key not found")
 		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 	}
+}
+
+// Tests that the state change storage will be caught up by a new conode
+func TestService_StateChangeStorageCatchUp(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	n := 2
+	for i := 0; i < n; i++ {
+		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 10,
+		})
+		require.Nil(t, err)
+	}
+
+	newServer, newRoster, newService := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
+	registerDummy(newServer)
+
+	newRoster = onet.NewRoster(append(s.roster.List, newRoster.List...))
+	ctx, _ := createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, 5)
+	s.sendTxAndWait(t, ctx, 10)
+
+	// wait for the new roster to propagate
+	tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(6))
+	require.NoError(t, err)
+	_, err = s.service().AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 10,
+	})
+	require.NoError(t, err)
+
+	// wait for new conode to catch up
+	tx, err = createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(8))
+	require.NoError(t, err)
+	_, err = newService.(*Service).AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 10,
+	})
+	require.NoError(t, err)
+
+	scs, _ := newService.(*Service).stateChangeStorage.getByBlock(s.genesis.Hash, 2)
+	require.Equal(t, Create, scs[0].StateChange.StateAction)
+	require.Equal(t, Update, scs[1].StateChange.StateAction)
+	require.Equal(t, uint64(3), scs[1].StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
