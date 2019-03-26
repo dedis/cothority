@@ -102,7 +102,7 @@ runSrvCfg(){
 }
 
 runSrv(){
-    ( ./blscosi -d $DBG_SRV server -c srv$1/private.toml & )
+    ./blscosi -d $DBG_SRV server -c srv$1/private.toml &
 
     sleep 10
 }
