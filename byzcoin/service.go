@@ -1450,12 +1450,16 @@ func (s *Service) skService() *skipchain.Service {
 }
 
 func (s *Service) isLeader(view viewchange.View) bool {
-	sb := s.db().GetByID(view.ID)
-	if view.LeaderIndex < len(sb.Roster.List) {
-		sid := sb.Roster.List[view.LeaderIndex]
-		return sid.ID.Equal(s.ServerIdentity().ID)
+	if view.LeaderIndex < 0 {
+		// no guaranties on the leader index value
+		return false
 	}
-	return false
+
+	sb := s.db().GetByID(view.ID)
+
+	idx := view.LeaderIndex % len(sb.Roster.List)
+	sid := sb.Roster.List[idx]
+	return sid.ID.Equal(s.ServerIdentity().ID)
 }
 
 // gives us access to the skipchain's database, so we can get blocks by ID

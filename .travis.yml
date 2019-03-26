@@ -37,8 +37,8 @@ matrix:
       # defaults to Go 1.8 and does not respect the go version
       # specifier.
       install:
-        - gimme 1.11
-        - . $HOME/.gimme/envs/go1.11.env
+        - gimme 1.11.6
+        - . $HOME/.gimme/envs/go1.11.6.env
         - env GO111MODULE=off go get github.com/dedis/Coding || true
 
       script:
@@ -65,8 +65,8 @@ matrix:
 
       before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
       install:
-        - gimme 1.11
-        - . $HOME/.gimme/envs/go1.11.env
+        - gimme 1.11.6
+        - . $HOME/.gimme/envs/go1.11.6.env
         - env GO111MODULE=off go get github.com/dedis/Coding || true
 
       script:

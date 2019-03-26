@@ -119,13 +119,17 @@ func (m *viewChangeManager) closeAll() {
 // needed. It uses SendRaw to send the message to all other nodes. This
 // function should only be used as a callback in viewchange.Controller.
 func (s *Service) sendViewChangeReq(view viewchange.View) error {
+	if view.LeaderIndex < 0 {
+		return errors.New("leader index must be positive")
+	}
+
 	log.Lvl2(s.ServerIdentity(), "sending view-change request for view:", view)
 	latest, err := s.db().GetLatestByID(view.ID)
 	if err != nil {
 		return err
 	}
 	log.Lvlf2("%s: current leader: %s - asking to elect leader: %s", s.ServerIdentity(), latest.Roster.List[0],
-		latest.Roster.List[view.LeaderIndex])
+		latest.Roster.List[view.LeaderIndex%len(latest.Roster.List)])
 	req := viewchange.InitReq{
 		SignerID: s.ServerIdentity().ID,
 		View:     view,
@@ -418,5 +422,9 @@ func (s *Service) getPrivateKey() kyber.Scalar {
 }
 
 func rotateRoster(roster *onet.Roster, i int) *onet.Roster {
+	// handle catastrophic situations where a round of the roster
+	// is not enough to find a new leader
+	i = i % len(roster.List)
+
 	return onet.NewRoster(append(roster.List[i:], roster.List[:i]...))
 }
