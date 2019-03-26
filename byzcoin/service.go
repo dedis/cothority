@@ -1042,18 +1042,6 @@ func (s *Service) catchupAll() error {
 			return err
 		}
 		s.catchUp(sb)
-
-		// the MT root is not checked so we don't need the correct nonce
-		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-			continue
-		}
-
-		_, err = s.buildStateChanges(sb.Hash, sst, []Coin{})
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
 	}
 	return nil
 }
@@ -1190,7 +1178,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// create state trie here.
 	if sb.Index == 0 && !s.hasStateTrie(sb.SkipChainID()) {
 		var body DataBody
-		err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+		err := protobuf.Decode(sb.Payload, &body)
 		if err != nil {
 			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
 			return errors.New("couldn't unmarshal body for genesis block")
@@ -1234,14 +1222,14 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 
 	// Get the DataHeader and the DataBody of the block.
 	var header DataHeader
-	err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.Decode(sb.Data, &header)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
 		return errors.New("couldn't unmarshal header")
 	}
 
 	var body DataBody
-	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.Decode(sb.Payload, &body)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "could not unmarshal body", err)
 		return errors.New("couldn't unmarshal body")

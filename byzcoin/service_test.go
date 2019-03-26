@@ -24,7 +24,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	bbolt "go.etcd.io/bbolt"
 )
 
 var tSuite = suites.MustFind("Ed25519")
@@ -2192,104 +2191,6 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Nil(t, err, "signer key not found")
 		require.Equal(t, uint64(n*2), sc.StateChange.Version)
 	}
-}
-
-// This tests that the service will restore the state changes
-// after a (re)boot and catch up potential new blocks
-func TestService_StateChangeCatchUp(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
-
-	n := 5
-	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-		// Check the state trie is created from the known global state
-		iid := inst.Hash()
-		if !bytes.Equal(inst.InstanceID.Slice(), s.darc.GetBaseID()) {
-			iid = inst.InstanceID.Slice()
-		}
-		_, ver, _, _, err := cdb.GetValues(iid)
-		sc1 := StateChange{
-			StateAction: Update,
-			InstanceID:  iid,
-			ContractID:  stateChangeCacheContract,
-			Version:     ver + 1,
-		}
-		if err != nil {
-			sc1.StateAction = Create
-		}
-		return []StateChange{sc1}, []Coin{}, nil
-	}
-	for _, s := range s.hosts {
-		RegisterContract(s, stateChangeCacheContract, adaptorNoVerify(contract))
-	}
-
-	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
-		instr := Instruction{
-			InstanceID:       NewInstanceID(iid),
-			Spawn:            &Spawn{ContractID: stateChangeCacheContract},
-			SignerIdentities: []darc.Identity{s.signer.Identity()},
-			SignerCounter:    []uint64{counter},
-		}
-		tx := ClientTransaction{Instructions: Instructions{instr}}
-		err := tx.Instructions[0].SignWith(tx.Instructions.Hash(), s.signer)
-		require.Nil(t, err)
-
-		_, err = s.service().AddTransaction(&AddTxRequest{
-			Version:       CurrentVersion,
-			SkipchainID:   s.genesis.SkipChainID(),
-			Transaction:   tx,
-			InclusionWait: wait,
-		})
-		require.Nil(t, err)
-
-		return &instr
-	}
-
-	instr := createTx(s.darc.GetBaseID(), uint64(1), 1)
-
-	for i := 0; i < n-1; i++ {
-		// add transactions that must be recreated
-		createTx(instr.Hash(), uint64(i+1), 0)
-	}
-	createTx(instr.Hash(), uint64(n), 2)
-
-	// Remove some entries to check it will recreate them
-	err := s.service().stateChangeStorage.db.Update(func(tx *bbolt.Tx) error {
-		b := s.service().stateChangeStorage.getBucket(tx, s.genesis.SkipChainID())
-		if b == nil {
-			return errors.New("missing bucket")
-		}
-
-		c := b.Cursor()
-		// Remove entries associated with the second block
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if k[len(k)-1] == byte(2) {
-				err := c.Delete()
-				if err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	})
-	require.Nil(t, err)
-
-	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
-	require.Nil(t, err)
-	require.Equal(t, 1, len(scs))
-
-	s.service().catchupAll()
-
-	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
-	require.Nil(t, err)
-	require.Equal(t, n+1, len(scs))
-	require.Equal(t, uint64(n), scs[n].StateChange.Version)
-
-	counterID := publicVersionKey(s.signer.Identity().String())
-	sc, ok, err := s.service().stateChangeStorage.getLast(counterID, s.genesis.SkipChainID())
-	require.Nil(t, err)
-	require.True(t, ok)
-	require.Equal(t, uint64(n+1), sc.StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
