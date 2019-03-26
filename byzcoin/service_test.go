@@ -36,6 +36,7 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
+	log.MainTestWait = 15 * time.Minute
 	log.MainTest(m)
 }
 
@@ -171,7 +172,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
-		InclusionWait: 5,
+		InclusionWait: 10,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -186,7 +187,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx2,
-		InclusionWait: 5,
+		InclusionWait: 10,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -849,6 +850,9 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
+
+	// TODO need to wait a bit because ??
+	time.Sleep(testInterval)
 
 	// Check that tx1 is _not_ stored.
 	pr, err := s.service().GetProof(&GetProof{
@@ -1600,6 +1604,9 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
+
+		// send a dummy tx to make sure everyone's caught up
+		counter = addDummyTxs(t, s, 1, 1, counter)
 	}
 }
 

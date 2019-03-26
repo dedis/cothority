@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -75,7 +76,6 @@ func (s *txProcessorState) copy() *txProcessorState {
 
 type defaultTxProcessor struct {
 	stopCollect chan bool
-	stopProcess chan bool
 	scID        skipchain.SkipBlockID
 	*Service
 }
@@ -246,26 +246,23 @@ func (s *defaultTxProcessor) GetBlockSize() int {
 
 func (s *defaultTxProcessor) Stop() {
 	close(s.stopCollect)
-	close(s.stopProcess)
 }
 
 type txPipeline struct {
+	wg        sync.WaitGroup
 	processor txProcessor
 }
 
-func (p *txPipeline) start(initialState *txProcessorState) chan bool {
-	stopChan := make(chan bool)
-
+func (p *txPipeline) start(initialState *txProcessorState, stopChan chan bool) {
 	ctxChan, stopChan1 := p.collectTx()
 	stopChan2 := p.processTxs(ctxChan, initialState)
 
-	go func() {
-		<-stopChan
-		close(stopChan1)
-		close(stopChan2)
-	}()
-
-	return stopChan
+	// wait for signal and then stop
+	<-stopChan
+	close(stopChan1)
+	close(stopChan2)
+	p.processor.Stop()
+	p.wg.Wait()
 }
 
 func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
@@ -273,6 +270,8 @@ func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
 	outChan := make(chan ClientTransaction, 200)
 	// set the polling interval to half of the block interval
 	go func() {
+		p.wg.Add(1)
+		defer p.wg.Done()
 		for {
 			interval := p.processor.GetInterval()
 			select {
@@ -305,6 +304,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 		return time.After(interval)
 	}
 	go func() {
+		p.wg.Add(1)
+		defer p.wg.Done()
 		intervalChan := getInterval()
 		for {
 			select {
@@ -348,6 +349,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 				currentState, inState = proposeInputState(currentState)
 
 				go func(state *txProcessorState) {
+					p.wg.Add(1)
+					defer p.wg.Done()
 					if state == nil {
 						proposalResult <- nil
 					} else {

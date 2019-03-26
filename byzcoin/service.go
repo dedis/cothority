@@ -1107,7 +1107,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		s.catchingUp = false
 		s.updateTrieLock.Unlock()
 	}()
-	log.Lvlf2("Catching up %x / %d", sb.SkipChainID(), sb.Index)
+	log.Lvlf2("%v Catching up %x / %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
 	download := false
@@ -1529,10 +1529,10 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
+	// TODO is closing??
 	pipeline := txPipeline{
 		processor: &defaultTxProcessor{
 			stopCollect: make(chan bool, 1),
-			stopProcess: make(chan bool, 1),
 			scID:        scID,
 			Service:     s,
 		},
@@ -1541,11 +1541,18 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	if err != nil {
 		panic("the state trie must exist because we only start polling after creating/loading the skipchain")
 	}
-	// TODO check if we're already closing
 	initialState := txProcessorState{
 		sst: st.MakeStagingStateTrie(),
 	}
-	return pipeline.start(&initialState)
+
+	stopChan := make(chan bool)
+	go func() {
+		s.pollChanWG.Add(1)
+		defer s.pollChanWG.Done()
+		pipeline.start(&initialState, stopChan)
+	}()
+
+	return stopChan
 }
 
 // We use the ByzCoin as a receiver (as is done in the identity service),

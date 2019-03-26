@@ -3,7 +3,6 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
-
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
 
@@ -138,9 +137,14 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 	}
 	sst, err := newMemStagingStateTrie([]byte(""))
 	require.NoError(t, err)
-	stopChan := pipeline.start(&txProcessorState{
-		sst: sst,
-	})
+	stopChan := make(chan bool)
+	pipelineDone := make(chan bool)
+	go func() {
+		pipeline.start(&txProcessorState{
+			sst: sst,
+		}, stopChan)
+		close(pipelineDone)
+	}()
 
 	interval := processor.GetInterval()
 
@@ -165,7 +169,9 @@ func testTxPipeline(t *testing.T, n, batch, failAt int) {
 
 	close(stopChan)
 
-	// Wait for go-routines to finish otherwise the leak detection will
-	// complains.
-	time.Sleep(time.Second / 2)
+	select {
+	case <-pipelineDone:
+	case <-time.After(time.Second):
+		require.Fail(t, "pipeline.start should have returned")
+	}
 }
