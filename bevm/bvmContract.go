@@ -34,19 +34,19 @@ func contractBvmFromBytes(in []byte) (byzcoin.Contract, error) {
 func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 	es := c.ES
-	memdb, db, _, err := spawnEvm()
+	memDb, stateDb, _, err := spawnEvm()
 	if err != nil {
 		return nil, nil, err
 	}
-	es.RootHash, err = db.Commit(true)
+	es.RootHash, err = stateDb.Commit(true)
 	if err != nil {
 		return nil, nil, err
 	}
-	err = db.Database().TrieDB().Commit(es.RootHash, true)
+	err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
 	if err != nil {
 		return nil, nil, err
 	}
-	es.DbBuf, err = memdb.Dump()
+	es.DbBuf, err = memDb.Dump()
 	esBuf, err := protobuf.Encode(&es)
 	// Then create a StateChange request with the data of the instance. The
 	// InstanceID is given by the DeriveID method of the instruction that allows
@@ -79,11 +79,11 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, errors.New("no address provided")
 		}
 		address := common.BytesToAddress(addressBuf)
-		_, db, err := getDB(es)
+		_, stateDb, err := getDB(es)
 		if err != nil {
 			return nil, nil, err
 		}
-		ret := db.GetBalance(address)
+		ret := stateDb.GetBalance(address)
 		if ret == big.NewInt(0) {
 			log.LLvl1(address.Hex(), "balance", "0")
 		}
@@ -96,7 +96,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, errors.New("no address provided")
 		}
 		address := common.BytesToAddress(addressBuf)
-		memdb, db, err := getDB(es)
+		memDb, stateDb, err := getDB(es)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,23 +106,23 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, errors.New("no amount provided")
 		}
 		amount := new(big.Int).SetBytes(amountBuf)
-		db.AddBalance(address, amount)
+		stateDb.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
 
 		//Commits the general stateDb
-		es.RootHash, err = db.Commit(true)
+		es.RootHash, err = stateDb.Commit(true)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		//Commits the low level trieDB
-		err = db.Database().TrieDB().Commit(es.RootHash, true)
+		err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		//Saves the general Ethereum State
-		es.DbBuf, err = memdb.Dump()
+		es.DbBuf, err = memDb.Dump()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -139,7 +139,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 
 	case "transaction":
 		//Restores Ethereum state from ES struct
-		memdb, db, err := getDB(es)
+		memDb, stateDb, err := getDB(es)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -156,7 +156,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 
 		//Sends transaction
-		transactionReceipt, err := sendTx(&ethTx, db)
+		transactionReceipt, err := sendTx(&ethTx, stateDb)
 		if err != nil {
 			log.ErrFatal(err)
 			return nil, nil, err
@@ -169,20 +169,20 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 
 		//Commits the general stateDb
-		es.RootHash, err = db.Commit(true)
+		es.RootHash, err = stateDb.Commit(true)
 		if err != nil {
 			return nil, nil, err
 		}
-		//log.LLvl1(db.GetBalance())
+		//log.LLvl1(stateDb.GetBalance())
 
 		//Commits the low level trieDB
-		err = db.Database().TrieDB().Commit(es.RootHash, true)
+		err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		//Saves the general Ethereum State
-		es.DbBuf, err = memdb.Dump()
+		es.DbBuf, err = memDb.Dump()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -208,11 +208,11 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 }
 
 //sendTx is a helper function that applies the signed transaction to a general state
-func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error) {
+func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, error) {
 
 	//Gets parameters defined in params
-	chainconfig := getChainConfig()
-	config := getVMConfig()
+	chainConfig := getChainConfig()
+	vmConfig := getVMConfig()
 
 	// GasPool tracks the amount of gas available during execution of the transactions in a block.
 	gp := new(core.GasPool).AddGas(uint64(1e18))
@@ -232,13 +232,13 @@ func sendTx(tx *types.Transaction, db *state.StateDB) (*types.Receipt, error) {
 		Time:       big.NewInt(0),
 	}
 	//Applies transaction to the general state
-	receipt, usedGas, err := core.ApplyTransaction(chainconfig, bc, &nilAddress, gp, db, header, tx, ug, config)
+	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
 		log.Error()
 		return nil, err
 	}
-	//logs := db.GetLogs(receipt.TxHash)
-	//log.LLvl1("the log we are looking for", db.GetLogs(common.HexToHash("0x47386f9020e5b01eccee6f293ab2b0dc47479f0793e980a4e49bd0c6473e30b1")))
+	//logs := stateDb.GetLogs(receipt.TxHash)
+	//log.LLvl1("the log we are looking for", stateDb.GetLogs(common.HexToHash("0x47386f9020e5b01eccee6f293ab2b0dc47479f0793e980a4e49bd0c6473e30b1")))
 	//log.LLvl1(logs)
 	return receipt, nil
 }

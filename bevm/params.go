@@ -170,24 +170,24 @@ func getContext() vm.Context {
 
 //getDB returns the Memory Database and the general State database given the old Ethereum general state
 func getDB(es ES) (*MemDatabase, *state.StateDB, error) {
-	memDB, err := NewMemDatabase(es.DbBuf)
+	memDb, err := NewMemDatabase(es.DbBuf)
 	if err != nil {
 		return nil, nil, err
 	}
-	db := state.NewDatabase(memDB)
-	sdb, err := state.New(es.RootHash, db)
+	db := state.NewDatabase(memDb)
+	stateDb, err := state.New(es.RootHash, db)
 	if err != nil {
 		return nil, nil, err
 	}
-	return memDB, sdb, nil
+	return memDb, stateDb, nil
 }
 
 //spawnEvm will return the memory database, the general state database and the EVM on which transactions will be applied
 func spawnEvm() (*MemDatabase, *state.StateDB, *vm.EVM, error) {
-	mdb, sdb, err := getDB(ES{DbBuf: []byte{}})
+	memDb, stateDb, err := getDB(ES{DbBuf: []byte{}})
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	bvm := vm.NewEVM(getContext(), sdb, getChainConfig(), getVMConfig())
-	return mdb, sdb, bvm, nil
+	bvm := vm.NewEVM(getContext(), stateDb, getChainConfig(), getVMConfig())
+	return memDb, stateDb, bvm, nil
 }
