@@ -632,16 +632,29 @@ func waitInclusion(t *testing.T, client int) {
 		SkipchainID: s.genesis.SkipChainID(),
 	})
 	require.NoError(t, err)
+	counter := uint64(counterResponse.Counters[0])
 
-	// Create a transaction without waiting
+	// Create a transaction without waiting, we do not use sendTransactionWithCounter
+	// because it might slow us down since it gets a proof which causes the
+	// transactions to end up in two blocks.
 	log.Lvl1("Create transaction and don't wait")
-	pr, k, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 0, counterResponse.Counters[0]+1)
-	require.NoError(t, err)
-	require.NoError(t, err2)
-	require.False(t, pr.InclusionProof.Match(k))
+	counter++
+	{
+		tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
+		require.Nil(t, err)
+		ser := s.services[client]
+		_, err = ser.AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 0,
+		})
+		require.NoError(t, err)
+	}
 
 	log.Lvl1("Create correct transaction and wait")
-	pr, k, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counterResponse.Counters[0]+2)
+	counter++
+	pr, k, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -652,7 +665,8 @@ func waitInclusion(t *testing.T, client int) {
 	require.Equal(t, len(txr), 2)
 
 	log.Lvl1("Create wrong transaction and wait")
-	pr, _, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
+	counter++
+	pr, _, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
 	require.Contains(t, err.Error(), "transaction is in block, but got refused")
 	require.NoError(t, err2)
 
@@ -664,9 +678,9 @@ func waitInclusion(t *testing.T, client int) {
 	require.False(t, txr[0].Accepted)
 
 	log.Lvl1("Create wrong transaction, no wait")
-	sendTransaction(t, s, client, invalidContract, 0)
+	sendTransactionWithCounter(t, s, client, invalidContract, 0, counter)
 	log.Lvl1("Create second correct transaction and wait")
-	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	pr, k, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -1604,9 +1618,6 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		s.sendTxAndWait(t, ctx, 10)
-
-		// send a dummy tx to make sure everyone's caught up
-		counter = addDummyTxs(t, s, 1, 1, counter)
 	}
 }
 

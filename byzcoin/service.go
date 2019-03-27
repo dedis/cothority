@@ -1113,7 +1113,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	download := false
 	st, err := s.getStateTrie(sb.SkipChainID())
 	if err != nil {
-		log.Warn("problem with trie:", err)
+		log.Warn(s.ServerIdentity(), "problem with trie:", err)
 		download = true
 	} else {
 		download = sb.Index-st.GetIndex() > catchupDownloadAll
@@ -1121,7 +1121,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 
 	// Check if we are updating the right index.
 	if download {
-		log.Lvl2("Downloading whole DB for catching up")
+		log.Lvl2(s.ServerIdentity(), "Downloading whole DB for catching up")
 		err := s.downloadDB(sb)
 		if err != nil {
 			log.Error("Error while downloading trie:", err)
@@ -1529,7 +1529,6 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
-	// TODO is closing??
 	pipeline := txPipeline{
 		processor: &defaultTxProcessor{
 			stopCollect: make(chan bool, 1),
@@ -1549,6 +1548,17 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	go func() {
 		s.pollChanWG.Add(1)
 		defer s.pollChanWG.Done()
+
+		s.closedMutex.Lock()
+		if s.closed {
+			s.closedMutex.Unlock()
+			return
+		}
+
+		s.working.Add(1)
+		defer s.working.Done()
+		s.closedMutex.Unlock()
+
 		pipeline.start(&initialState, stopChan)
 	}()
 
