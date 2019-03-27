@@ -2238,6 +2238,31 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	require.True(t, false, "the new conode has never caught up in the last 10s")
 }
 
+// Tests that a conode can't be overflowed by catching requests
+func TestService_TestCatchUpHistory(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	require.Equal(t, 0, len(s.service().catchingUpHistory))
+
+	// unknown skipchain, we shouldn't try to catch up
+	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{})
+	require.Equal(t, 0, len(s.service().catchingUpHistory))
+	require.Error(t, err)
+
+	// catch up
+	err = s.service().catchupFromID(s.roster, s.genesis.Hash)
+	require.Equal(t, 1, len(s.service().catchingUpHistory))
+	require.NoError(t, err)
+
+	ts := s.service().catchingUpHistory[string(s.genesis.Hash)]
+
+	// ... but not twice
+	err = s.service().catchupFromID(s.roster, s.genesis.Hash)
+	require.True(t, s.service().catchingUpHistory[string(s.genesis.Hash)].Equal(ts))
+	require.Error(t, err)
+}
+
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:

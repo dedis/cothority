@@ -46,6 +46,9 @@ var minTimestampWindow = 10 * time.Second
 // some blocks are missing.
 var catchupDownloadAll = 100
 
+// How much minimum time between two catch up requests
+var catchupMinimumInterval = 10 * time.Minute
+
 // How many blocks it should fetch in one go.
 var catchupFetchBlocks = 10
 
@@ -133,8 +136,10 @@ type Service struct {
 
 	streamingMan streamingManager
 
-	updateTrieLock sync.Mutex
-	catchingUp     bool
+	updateTrieLock        sync.Mutex
+	catchingUp            bool
+	catchingUpHistory     map[string]time.Time
+	catchingUpHistoryLock sync.Mutex
 
 	downloadState downloadState
 }
@@ -1048,8 +1053,29 @@ func (s *Service) catchupAll() error {
 
 // catchupFromID takes a roster and a skipchain-ID, and then searches to update this
 // skipchain. This is useful in case there is no block stored yet in the system, but
-// we get a roster, e.g., from getTxs
+// we get a roster, e.g., from getTxs.
+// To prevent distributed denial-of-service, we first check that the skipchain is
+// known and then we limit the number of catch up requests per skipchain by waiting
+// for a minimal amount of time
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
+	// Catch up only friendly skipchains to avoid unnecessary requests
+	if s.db().GetByID(scID) == nil {
+		return fmt.Errorf("%s: Got asked for an unknown skipchain: %x", s.ServerIdentity(), scID)
+	}
+
+	// The size of the map is limited here by the number of known skipchains
+	s.catchingUpHistoryLock.Lock()
+	ts := s.catchingUpHistory[string(scID)]
+	if ts.After(time.Now()) {
+		s.catchingUpHistoryLock.Unlock()
+		return errors.New("catch up request already processed recently")
+	}
+
+	s.catchingUpHistory[string(scID)] = time.Now().Add(catchupMinimumInterval)
+	s.catchingUpHistoryLock.Unlock()
+
+	log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
+
 	s.updateTrieLock.Lock()
 	if s.catchingUp {
 		s.updateTrieLock.Unlock()
@@ -2058,18 +2084,24 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	s.working.Add(1)
 	s.closedMutex.Unlock()
 	defer s.working.Done()
+
+	// First we check if we are up-to-date with this chain (and that we know it)
+	latestSB := s.db().GetByID(latestID)
+	if latestSB == nil {
+		// The function will prevent multiple request to catch up so we can securely call it here
+		err := s.catchupFromID(roster, scID)
+		if err != nil {
+			log.Error(err)
+		}
+		// Give up the current request and wait for the next one, and keep skipping requests
+		// until the catching up is done
+		return []ClientTransaction{}
+	}
+
+	// Then we make sure who's the leader
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
 		log.Lvlf2("%s: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
-		if s.skService().ChainIsFriendly(scID) {
-			log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
-			err = s.catchupFromID(roster, scID)
-			if err != nil {
-				log.Error(err)
-			}
-		} else {
-			log.Lvlf1("%s: Got asked for transactions of unknown, non-friendly chain %x", s.ServerIdentity(), scID)
-		}
 		return []ClientTransaction{}
 	}
 	if !leader.Equal(actualLeader) {
@@ -2077,32 +2109,8 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 			"should be", actualLeader)
 		return []ClientTransaction{}
 	}
-	s.heartbeats.beat(string(scID))
 
-	// If the leader's latestID is something we do not know about, then we
-	// need to synchronise.
-	// NOTE: there is a potential denial of service when the leader sends
-	// an invalid latestID, but our current implementation assumes that the
-	// leader cannot be byzantine (i.e., it can only exhibit crash
-	// failure).
-	ourLatest, err := s.db().GetLatestByID(scID)
-	if err != nil {
-		log.Warnf("%s: we do not know about the skipchain ID %x: %s", s.ServerIdentity(), scID, err)
-		err = s.catchupFromID(roster, scID)
-		if err != nil {
-			log.Error(err)
-		}
-		return []ClientTransaction{}
-	}
-	latestSB := s.db().GetByID(latestID)
-	if latestSB == nil {
-		log.Lvl3(s.ServerIdentity(), "chain is out of date")
-		if err := s.skService().SyncChain(roster, ourLatest.Hash); err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
-	} else {
-		log.Lvl3(s.ServerIdentity(), "chain is up to date")
-	}
+	s.heartbeats.beat(string(scID))
 
 	return s.txBuffer.take(string(scID))
 }
@@ -2430,6 +2438,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		viewChangeMan:          newViewChangeManager(),
 		streamingMan:           streamingManager{},
 		closed:                 true,
+		catchingUpHistory:      make(map[string]time.Time),
 	}
 	err := s.RegisterHandlers(
 		s.CreateGenesisBlock,
