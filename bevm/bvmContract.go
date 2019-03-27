@@ -33,27 +33,23 @@ func contractBvmFromBytes(in []byte) (byzcoin.Contract, error) {
 //Spawn deploys an EVM
 func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
-	es := c.ES
-	memDb, stateDb, _, err := spawnEvm()
+
+	evmDb, err := NewEvmDb(&c.ES)
 	if err != nil {
 		return nil, nil, err
 	}
-	es.RootHash, err = stateDb.Commit(true)
+
+	newEvmState, err := evmDb.getNewEvmState()
 	if err != nil {
 		return nil, nil, err
 	}
-	err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
-	if err != nil {
-		return nil, nil, err
-	}
-	es.DbBuf, err = memDb.Dump()
-	esBuf, err := protobuf.Encode(&es)
+
 	// Then create a StateChange request with the data of the instance. The
 	// InstanceID is given by the DeriveID method of the instruction that allows
 	// to create multiple instanceIDs out of a given instruction in a pseudo-
 	// random way that will be the same for all nodes.
 	sc = []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractBvmID, esBuf, darc.ID(inst.InstanceID.Slice())),
+		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractBvmID, newEvmState, darc.ID(inst.InstanceID.Slice())),
 	}
 	/*
 		for i, sc := range sc{
@@ -70,25 +66,25 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	if err != nil {
 		return
 	}
-	es := c.ES
-	switch inst.Invoke.Command {
 
+	evmDb, err := NewEvmDb(&c.ES)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	switch inst.Invoke.Command {
 	case "display":
 		addressBuf := inst.Invoke.Args.Search("address")
 		if addressBuf == nil {
 			return nil, nil, errors.New("no address provided")
 		}
 		address := common.BytesToAddress(addressBuf)
-		_, stateDb, err := getDB(es)
-		if err != nil {
-			return nil, nil, err
-		}
-		ret := stateDb.GetBalance(address)
-		if ret == big.NewInt(0) {
+
+		balance := evmDb.stateDb.GetBalance(address)
+		if balance == big.NewInt(0) {
 			log.LLvl1(address.Hex(), "balance", "0")
 		}
-		log.LLvl1(address.Hex(), "balance", ret.Uint64(), "wei")
-		return nil, nil, nil
+		log.LLvl1(address.Hex(), "balance", balance.Uint64(), "wei")
 
 	case "credit":
 		addressBuf := inst.Invoke.Args.Search("address")
@@ -96,54 +92,26 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, errors.New("no address provided")
 		}
 		address := common.BytesToAddress(addressBuf)
-		memDb, stateDb, err := getDB(es)
-		if err != nil {
-			return nil, nil, err
-		}
 
 		amountBuf := inst.Invoke.Args.Search("amount")
 		if amountBuf == nil {
 			return nil, nil, errors.New("no amount provided")
 		}
 		amount := new(big.Int).SetBytes(amountBuf)
-		stateDb.AddBalance(address, amount)
+		evmDb.stateDb.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
 
-		//Commits the general stateDb
-		es.RootHash, err = stateDb.Commit(true)
+		newEvmState, err := evmDb.getNewEvmState()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		//Commits the low level trieDB
-		err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		//Saves the general Ethereum State
-		es.DbBuf, err = memDb.Dump()
-		if err != nil {
-			return nil, nil, err
-		}
-
-		//Saves the Ethereum structure
-		esBuf, err := protobuf.Encode(&es)
-		if err != nil {
-			return nil, nil, err
-		}
 		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBvmID, esBuf, darcID),
+				ContractBvmID, newEvmState, darcID),
 		}
 
 	case "transaction":
-		//Restores Ethereum state from ES struct
-		memDb, stateDb, err := getDB(es)
-		if err != nil {
-			return nil, nil, err
-		}
-		//Gets Ethereum transaction buffer
 		txBuffer := inst.Invoke.Args.Search("tx")
 		if txBuffer == nil {
 			log.LLvl1("no transaction provided in byzcoin transaction")
@@ -155,8 +123,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, err
 		}
 
-		//Sends transaction
-		transactionReceipt, err := sendTx(&ethTx, stateDb)
+		transactionReceipt, err := sendTx(&ethTx, evmDb.stateDb)
 		if err != nil {
 			log.ErrFatal(err)
 			return nil, nil, err
@@ -168,42 +135,20 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
 		}
 
-		//Commits the general stateDb
-		es.RootHash, err = stateDb.Commit(true)
-		if err != nil {
-			return nil, nil, err
-		}
-		//log.LLvl1(stateDb.GetBalance())
-
-		//Commits the low level trieDB
-		err = stateDb.Database().TrieDB().Commit(es.RootHash, true)
+		newEvmState, err := evmDb.getNewEvmState()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		//Saves the general Ethereum State
-		es.DbBuf, err = memDb.Dump()
-		if err != nil {
-			return nil, nil, err
-		}
-
-		//Encodes the Ethereum structure
-		esBuf, err := protobuf.Encode(&es)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		//Saves structure in Byzcoin state
 		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBvmID, esBuf, darcID),
+				ContractBvmID, newEvmState, darcID),
 		}
 
 	default:
 		err = errors.New("Contract can only display, credit and receive transactions")
-		return
-
 	}
+
 	return
 }
 

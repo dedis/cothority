@@ -55,8 +55,9 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	//Empty general Ethereum state database to instantiate EVM
-	_, sdb, err := getDB(ES{DbBuf: []byte{}})
+	evmDb, err := NewEvmDb(&ES{})
 	require.Nil(t, err)
+	sdb := evmDb.stateDb
 
 	//Context for instantiating EVM
 	ctx := vm.Context{CanTransfer: canTransfer, Transfer: transfer, GetHash: getHash, Origin: addressA, GasPrice: big.NewInt(1), Coinbase: addressA, GasLimit: 10000000000, BlockNumber: big.NewInt(0), Time: big.NewInt(1), Difficulty: big.NewInt(1)}

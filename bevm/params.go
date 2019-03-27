@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+	"go.dedis.ch/protobuf"
 )
 
 type EvmContract struct {
@@ -168,26 +169,57 @@ func getContext() vm.Context {
 
 }
 
-//getDB returns the Memory Database and the general State database given the old Ethereum general state
-func getDB(es ES) (*MemDatabase, *state.StateDB, error) {
+type EvmDb struct {
+	memDb   *MemDatabase
+	stateDb *state.StateDB
+}
+
+func NewEvmDb(es *ES) (*EvmDb, error) {
+	if es.DbBuf == nil {
+		// First creation
+		es.DbBuf = []byte{}
+	}
+
 	memDb, err := NewMemDatabase(es.DbBuf)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+
 	db := state.NewDatabase(memDb)
 	stateDb, err := state.New(es.RootHash, db)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return memDb, stateDb, nil
+
+	return &EvmDb{memDb: memDb, stateDb: stateDb}, nil
 }
 
-//spawnEvm will return the memory database, the general state database and the EVM on which transactions will be applied
-func spawnEvm() (*MemDatabase, *state.StateDB, *vm.EVM, error) {
-	memDb, stateDb, err := getDB(ES{DbBuf: []byte{}})
+func (db *EvmDb) getNewEvmState() ([]byte, error) {
+	// Commit the underlying databases first
+	root, err := db.stateDb.Commit(true)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
-	bvm := vm.NewEVM(getContext(), stateDb, getChainConfig(), getVMConfig())
-	return memDb, stateDb, bvm, nil
+
+	err = db.stateDb.Database().TrieDB().Commit(root, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// Dump the low-level database
+	dbBuf, err := db.memDb.Dump()
+	if err != nil {
+		return nil, err
+	}
+
+	// Build the new EVM state
+	es := ES{RootHash: root, DbBuf: dbBuf}
+
+	// Serialize it
+	data, err := protobuf.Encode(&es)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

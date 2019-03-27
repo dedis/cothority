@@ -18,7 +18,6 @@ package bevm
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"sort"
 	"sync"
@@ -114,18 +113,6 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	return nil, errors.New("not found")
 }
 
-//Keys :
-func (db *MemDatabase) Keys() [][]byte {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
-
-	keys := [][]byte{}
-	for key := range db.DB {
-		keys = append(keys, []byte(key))
-	}
-	return keys
-}
-
 //Delete :
 func (db *MemDatabase) Delete(key []byte) error {
 	db.lock.Lock()
@@ -158,10 +145,6 @@ type memBatch struct {
 }
 
 func (b *memBatch) Put(key, value []byte) error {
-	h := sha256.New()
-	h.Write(key)
-	h.Write(value)
-	//log.Printf("%x: %x / %x", h.Sum(nil), key, value)
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value), false})
 	b.size += len(value)
 	return nil
@@ -178,10 +161,6 @@ func (b *memBatch) Write() error {
 	defer b.db.lock.Unlock()
 
 	for _, kv := range b.writes {
-		h := sha256.New()
-		h.Write(kv.k)
-		h.Write(kv.v)
-		//log.Printf("%x: %x / %x", h.Sum(nil), kv.k, kv.v)
 		if kv.del {
 			delete(b.db.DB, string(kv.k))
 			continue
