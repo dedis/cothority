@@ -2,6 +2,9 @@ package bevm
 
 import (
 	"errors"
+	"fmt"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -10,7 +13,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
-	"math/big"
 )
 
 var ContractBvmID = "bvm"
@@ -58,6 +60,21 @@ func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 	return
 }
 
+func getArguments(inst byzcoin.Instruction, names ...string) (args map[string][]byte, err error) {
+	args = make(map[string][]byte)
+
+	for _, name := range names {
+		buf := inst.Invoke.Args.Search(name)
+		if buf == nil {
+			return nil, errors.New(fmt.Sprintf("Missing '%s' argument", name))
+		}
+
+		args[name] = buf
+	}
+
+	return
+}
+
 //Invoke provides three instructions : display, credit and transaction
 func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
@@ -74,11 +91,12 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 
 	switch inst.Invoke.Command {
 	case "display":
-		addressBuf := inst.Invoke.Args.Search("address")
-		if addressBuf == nil {
-			return nil, nil, errors.New("no address provided")
+		args, err := getArguments(inst, "address")
+		if err != nil {
+			return nil, nil, err
 		}
-		address := common.BytesToAddress(addressBuf)
+
+		address := common.BytesToAddress(args["address"])
 
 		balance := evmDb.stateDb.GetBalance(address)
 		if balance == big.NewInt(0) {
@@ -87,17 +105,14 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		log.LLvl1(address.Hex(), "balance", balance.Uint64(), "wei")
 
 	case "credit":
-		addressBuf := inst.Invoke.Args.Search("address")
-		if addressBuf == nil {
-			return nil, nil, errors.New("no address provided")
+		args, err := getArguments(inst, "address", "amount")
+		if err != nil {
+			return nil, nil, err
 		}
-		address := common.BytesToAddress(addressBuf)
 
-		amountBuf := inst.Invoke.Args.Search("amount")
-		if amountBuf == nil {
-			return nil, nil, errors.New("no amount provided")
-		}
-		amount := new(big.Int).SetBytes(amountBuf)
+		address := common.BytesToAddress(args["address"])
+		amount := new(big.Int).SetBytes(args["amount"])
+
 		evmDb.stateDb.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
 
@@ -112,13 +127,13 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 
 	case "transaction":
-		txBuffer := inst.Invoke.Args.Search("tx")
-		if txBuffer == nil {
-			log.LLvl1("no transaction provided in byzcoin transaction")
+		args, err := getArguments(inst, "tx")
+		if err != nil {
 			return nil, nil, err
 		}
+
 		var ethTx types.Transaction
-		err = ethTx.UnmarshalJSON(txBuffer)
+		err = ethTx.UnmarshalJSON(args["tx"])
 		if err != nil {
 			return nil, nil, err
 		}
