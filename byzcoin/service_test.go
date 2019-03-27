@@ -2195,6 +2195,9 @@ func TestService_StateChangeStorage(t *testing.T) {
 
 // Tests that the state change storage will be caught up by a new conode
 func TestService_StateChangeStorageCatchUp(t *testing.T) {
+	// we don't want a db download
+	catchupDownloadAll = 100
+
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
@@ -2219,32 +2222,20 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, 5)
 	s.sendTxAndWait(t, ctx, 10)
 
-	// wait for the new roster to propagate
-	tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(6))
-	require.NoError(t, err)
-	_, err = s.service().AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
-		Transaction:   tx,
-		InclusionWait: 10,
-	})
-	require.NoError(t, err)
+	for i := 0; i < 10; i++ {
+		log.Lvl1("Sleeping for 1 second...")
+		time.Sleep(time.Second)
+		scs, _ := newService.(*Service).stateChangeStorage.getByBlock(s.genesis.Hash, 2)
 
-	// wait for new conode to catch up
-	tx, err = createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(8))
-	require.NoError(t, err)
-	_, err = newService.(*Service).AddTransaction(&AddTxRequest{
-		Version:       CurrentVersion,
-		SkipchainID:   s.genesis.SkipChainID(),
-		Transaction:   tx,
-		InclusionWait: 10,
-	})
-	require.NoError(t, err)
+		if len(scs) > 0 {
+			require.Equal(t, Create, scs[0].StateChange.StateAction)
+			require.Equal(t, Update, scs[1].StateChange.StateAction)
+			require.Equal(t, uint64(3), scs[1].StateChange.Version)
+			return
+		}
+	}
 
-	scs, _ := newService.(*Service).stateChangeStorage.getByBlock(s.genesis.Hash, 2)
-	require.Equal(t, Create, scs[0].StateChange.StateAction)
-	require.Equal(t, Update, scs[1].StateChange.StateAction)
-	require.Equal(t, uint64(3), scs[1].StateChange.Version)
+	require.True(t, false, "the new conode has never caught up in the last 10s")
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {

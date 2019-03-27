@@ -996,7 +996,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 				sb = search.SkipBlock
 			}
 			var header DataHeader
-			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			err = protobuf.Decode(sb.Data, &header)
 			if err != nil {
 				return errors.New("couldn't unmarshal header: " + err.Error())
 			}
@@ -1100,6 +1100,10 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		if err != nil {
 			log.Error("Error while downloading trie:", err)
 		}
+
+		// Note: in that case we don't get the previous blocks and therefore we can't
+		// recreate the state changes. The storage will then be filled with new
+		// incoming blocks
 		return
 	}
 
@@ -1370,7 +1374,7 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 		return nil
 	}
 	var req viewchange.NewViewReq
-	if err := protobuf.DecodeWithConstructors(invoke.Args.Search("newview"), &req, network.DefaultConstructors(cothority.Suite)); err != nil {
+	if err := protobuf.Decode(invoke.Args.Search("newview"), &req); err != nil {
 		log.Error("failed to decode new-view req")
 		return nil
 	}
@@ -1642,7 +1646,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	}()
 
 	var header DataHeader
-	err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
+	err := protobuf.Decode(newSB.Data, &header)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "verifySkipblock: couldn't unmarshal header")
 		return false
@@ -1669,7 +1673,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	}
 
 	var body DataBody
-	err = protobuf.DecodeWithConstructors(newSB.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.Decode(newSB.Payload, &body)
 	if err != nil {
 		log.Error("verifySkipblock: couldn't unmarshal body")
 		return false
@@ -2349,7 +2353,7 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 	}
 
 	var body DataBody
-	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.Decode(sb.Payload, &body)
 	if err != nil {
 		return nil, nil, err
 	}
