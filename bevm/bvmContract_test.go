@@ -50,18 +50,14 @@ func Test_InvokeCredit(t *testing.T) {
 	// Spawn a new BEVM instance
 	instID := bct.createInstance(byzcoin.Arguments{})
 
+	address := common.HexToAddress("0x2afd357E96a3aCbcd01615681C1D7e3398d5fb61")
+	amount := uint64(3.1415926535 * WeiPerEther)
+
 	// Credit an account
-	address := []byte("0x2afd357E96a3aCbcd01615681C1D7e3398d5fb61")
-	amount := new(big.Int).SetUint64(3.1415926535 * WeiPerEther).Bytes()
-	bct.creditAccountInstance(instID, byzcoin.Arguments{
-		{Name: "address", Value: address},
-		{Name: "amount", Value: amount},
-	})
+	bct.creditAccounts(instID, amount, address)
 
 	// Display its balance
-	bct.displayAccountInstance(instID, byzcoin.Arguments{
-		{Name: "address", Value: address},
-	})
+	bct.displayAccounts(instID, address)
 }
 
 //Credits and displays three accounts balances
@@ -81,40 +77,30 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 		"0xf17f52151ebef6c7334fad080c5704d77216b732",
 		"0xc5fdf4076b8f3a5357c5e395ab970b5b54098fef",
 	}
-	for i, addr := range addresses {
-		address := []byte(addr)
-		amount := new(big.Int).SetUint64(uint64((i + 1) * WeiPerEther)).Bytes()
 
-		bct.creditAccountInstance(instID, byzcoin.Arguments{
-			{Name: "address", Value: address},
-			{Name: "amount", Value: amount},
-		})
+	for i, addrHex := range addresses {
+		address := common.HexToAddress(addrHex)
+		amount := uint64((i + 1) * WeiPerEther)
 
-		bct.displayAccountInstance(instID, byzcoin.Arguments{
-			{Name: "address", Value: address},
+		bct.creditAccounts(instID, amount, address)
+		bct.displayAccounts(instID, address)
+	}
+}
+
+func (bct *bcTest) creditAccounts(instID byzcoin.InstanceID, amount uint64, addresses ...common.Address) {
+	for _, address := range addresses {
+		bct.invokeInstance(instID, "credit", byzcoin.Arguments{
+			{Name: "address", Value: address.Bytes()},
+			{Name: "amount", Value: new(big.Int).SetUint64(amount).Bytes()},
 		})
 	}
 }
 
-func (bct *bcTest) bank(instID byzcoin.InstanceID, command string, addresses ...common.Address) {
-	amount := new(big.Int).SetUint64(5 * WeiPerEther)
-
+func (bct *bcTest) displayAccounts(instID byzcoin.InstanceID, addresses ...common.Address) {
 	for _, address := range addresses {
-		switch command {
-		case "credit":
-			//Send credit instructions to Byzcoin and incrementing nonce counter
-			bct.creditAccountInstance(instID, byzcoin.Arguments{
-				{Name: "address", Value: address.Bytes()},
-				{Name: "amount", Value: amount.Bytes()},
-			})
-			log.LLvl1("credited", address.Hex(), amount, "wei")
-		case "display":
-			bct.displayAccountInstance(instID, byzcoin.Arguments{
-				{Name: "address", Value: address.Bytes()},
-			})
-		default:
-			log.LLvl1("incorrect instruction")
-		}
+		bct.invokeInstance(instID, "display", byzcoin.Arguments{
+			{Name: "address", Value: address.Bytes()},
+		})
 	}
 }
 
@@ -129,7 +115,7 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParamet
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
-	bct.transactionInstance(instID, byzcoin.Arguments{
+	bct.invokeInstance(instID, "transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 
@@ -152,7 +138,7 @@ func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParam
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
-	bct.transactionInstance(instID, byzcoin.Arguments{
+	bct.invokeInstance(instID, "transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 
@@ -188,19 +174,19 @@ func Test_InvokeToken(t *testing.T) {
 		"ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f")
 	require.Nil(t, err)
 
-	bct.bank(instID, "credit", a.Address, b.Address)
+	bct.creditAccounts(instID, 5*WeiPerEther, a.Address, b.Address)
 	err = bct.deploy(instID, txParams, 0, a, erc20Contract)
 	require.Nil(t, err)
 
 	err = bct.transact(instID, txParams, 0, a, *erc20Contract, "transfer", b.Address, big.NewInt(100))
 	require.Nil(t, err)
 
-	bct.bank(instID, "display", a.Address, b.Address)
+	bct.displayAccounts(instID, a.Address, b.Address)
 
 	err = bct.transact(instID, txParams, 0, b, *erc20Contract, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
 
-	bct.bank(instID, "display", a.Address, b.Address)
+	bct.displayAccounts(instID, a.Address, b.Address)
 }
 
 func Test_InvokeLoanContract(t *testing.T) {
@@ -234,8 +220,8 @@ func Test_InvokeLoanContract(t *testing.T) {
 		"ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f")
 	require.Nil(t, err)
 
-	bct.bank(instID, "credit", a.Address, b.Address)
-	bct.bank(instID, "display", a.Address, b.Address)
+	bct.creditAccounts(instID, 5*WeiPerEther, a.Address, b.Address)
+	bct.displayAccounts(instID, a.Address, b.Address)
 
 	err = bct.deploy(instID, txParams, 0, a, erc20Contract)
 	require.Nil(t, err)
@@ -254,7 +240,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	log.LLvl1("check tokens passed")
 
 	log.LLvl1("test avant lend")
-	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
+	bct.displayAccounts(instID, a.Address, b.Address, loanContract.Address)
 
 	/*
 		balanceOfTest, err := abiMethodPack(erc20ABI, "balanceOf", common.HexToAddress(A))
@@ -274,13 +260,13 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Nil(t, err)
 	log.LLvl1("lend passed")
 
-	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
+	bct.displayAccounts(instID, a.Address, b.Address, loanContract.Address)
 
 	err = bct.transact(instID, txParams, 2*WeiPerEther, a, *loanContract, "payback")
 	require.Nil(t, err)
 	log.LLvl1("payback, curious of what this does :")
 
-	bct.bank(instID, "display", a.Address, b.Address, loanContract.Address)
+	bct.displayAccounts(instID, a.Address, b.Address, loanContract.Address)
 }
 
 //Signs the transaction with a private key and returns the transaction in byte format, ready to be included into the Byzcoin transaction
@@ -369,66 +355,20 @@ func (bct *bcTest) createInstance(args byzcoin.Arguments) byzcoin.InstanceID {
 	return ctx.Instructions[0].DeriveID("")
 }
 
-func (bct *bcTest) displayAccountInstance(instID byzcoin.InstanceID, args byzcoin.Arguments) {
+func (bct *bcTest) invokeInstance(instID byzcoin.InstanceID, command string, args byzcoin.Arguments) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID:    instID,
 			SignerCounter: []uint64{bct.ct},
 			Invoke: &byzcoin.Invoke{
-				Command: "display",
-				Args:    args,
+				ContractID: "bvm",
+				Command:    command,
+				Args:       args,
 			},
 		}},
 	}
 	bct.ct++
-	ctx.Instructions[0].Invoke.ContractID = "bvm"
-	// And we need to sign the instruction with the signer that has his
-	// public key stored in the darc.
-	require.NoError(bct.t, ctx.FillSignersAndSignWith(bct.signer))
-	// Sending this transaction to ByzCoin does not directly include it in the
-	// global state - first we must wait for the new block to be created.
-	var err error
-	_, err = bct.cl.AddTransactionAndWait(ctx, 30)
-	require.Nil(bct.t, err)
-}
 
-func (bct *bcTest) creditAccountInstance(instID byzcoin.InstanceID, args byzcoin.Arguments) {
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    instID,
-			SignerCounter: []uint64{bct.ct},
-			Invoke: &byzcoin.Invoke{
-				Command: "credit",
-				Args:    args,
-			},
-		}},
-	}
-	bct.ct++
-	ctx.Instructions[0].Invoke.ContractID = "bvm"
-	// And we need to sign the instruction with the signer that has his
-	// public key stored in the darc.
-	require.NoError(bct.t, ctx.FillSignersAndSignWith(bct.signer))
-
-	// Sending this transaction to ByzCoin does not directly include it in the
-	// global state - first we must wait for the new block to be created.
-	var err error
-	_, err = bct.cl.AddTransactionAndWait(ctx, 30)
-	require.Nil(bct.t, err)
-}
-
-func (bct *bcTest) transactionInstance(instID byzcoin.InstanceID, args byzcoin.Arguments) {
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    instID,
-			SignerCounter: []uint64{bct.ct},
-			Invoke: &byzcoin.Invoke{
-				Command: "transaction",
-				Args:    args,
-			},
-		}},
-	}
-	bct.ct++
-	ctx.Instructions[0].Invoke.ContractID = "bvm"
 	// And we need to sign the instruction with the signer that has his
 	// public key stored in the darc.
 	require.NoError(bct.t, ctx.FillSignersAndSignWith(bct.signer))
