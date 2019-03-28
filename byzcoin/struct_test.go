@@ -23,6 +23,53 @@ func createBlock() *skipchain.SkipBlock {
 	return sb
 }
 
+// Checks that the size of the storage is correctly restored
+// after reading the DB and that the indices are correct
+func TestStateChangeStorage_Init(t *testing.T) {
+	scs, name := generateDB(t)
+	defer os.Remove(name)
+
+	n := 3
+	k := 10
+
+	size := 0
+	sbs := make([]*skipchain.SkipBlock, n)
+	for i := range sbs {
+		sbs[i] = skipchain.NewSkipBlock()
+		sbs[i].Data = []byte{byte(i)}
+		sbs[i].Hash = sbs[i].CalculateHash()
+	}
+
+	// Put random values and increment the block indices to
+	// check the size and indices initialisation
+	err := scs.db.Update(func(tx *bbolt.Tx) error {
+		for i := 0; i < n; i++ {
+			b := tx.Bucket(scs.bucket)
+
+			scb, err := b.CreateBucketIfNotExists(sbs[i].Hash)
+			if err != nil {
+				return err
+			}
+
+			for j := 0; j < k; j++ {
+				key := make([]byte, prefixLength+versionLength+8)
+				key[len(key)-1] = byte(j)
+
+				d := GenNonce()
+				scb.Put(key, d[:])
+				size += len(d)
+			}
+		}
+
+		return nil
+	})
+	require.Nil(t, err)
+
+	err = scs.calculateSize()
+	require.Nil(t, err)
+	require.Equal(t, size, scs.size)
+}
+
 // Checks basic usage of the state change storage
 func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	scs, name := generateDB(t)
@@ -152,7 +199,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 	defer os.Remove(name)
 
 	n := 20
-	size := 10
+	size := 2
 	iid1 := genID().Slice()
 	iid2 := genID().Slice()
 	// check over 2 skipchains as we clean independently from the skipchain
@@ -171,6 +218,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		sc.Version = uint64(i)
+		sb1.Index = i
 		err = store.append(StateChanges{sc}, sb1)
 		require.Nil(t, err)
 	}
@@ -179,6 +227,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		sc.Version = uint64(i)
+		sb2.Index = i
 		err = store.append(StateChanges{sc}, sb2)
 		require.Nil(t, err)
 	}
