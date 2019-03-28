@@ -1,10 +1,10 @@
 package byzcoin
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,54 +12,6 @@ import (
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
 )
-
-// Checks that the size of the storage is correctly restored
-// after reading the DB and that the indices are correct
-func TestStateChangeStorage_Init(t *testing.T) {
-	scs, name := generateDB(t)
-	defer os.Remove(name)
-
-	n := 3
-	k := 10
-
-	size := 0
-	sbs := make([]*skipchain.SkipBlock, n)
-	for i := range sbs {
-		sbs[i] = skipchain.NewSkipBlock()
-		sbs[i].Data = []byte{byte(i)}
-		sbs[i].Hash = sbs[i].CalculateHash()
-	}
-
-	// Put random values and increment the block indices to
-	// check the size and indices initialisation
-	err := scs.db.Update(func(tx *bbolt.Tx) error {
-		for i := 0; i < n; i++ {
-			b := tx.Bucket(scs.bucket)
-
-			scb, err := b.CreateBucketIfNotExists(sbs[i].Hash)
-			if err != nil {
-				return err
-			}
-
-			for j := 0; j < k; j++ {
-				key := make([]byte, prefixLength+versionLength+8)
-				key[len(key)-1] = byte(j)
-
-				d := GenNonce()
-				scb.Put(key, d[:])
-				size += len(d)
-			}
-		}
-
-		return nil
-	})
-	require.Nil(t, err)
-
-	indices, err := scs.loadFromDB()
-	require.Nil(t, err)
-	require.Equal(t, k, indices[fmt.Sprintf("%x", sbs[0].Hash)])
-	require.Equal(t, size, scs.size)
-}
 
 func createBlock() *skipchain.SkipBlock {
 	sb := skipchain.NewSkipBlock()
@@ -76,7 +28,7 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	scs, name := generateDB(t)
 	defer os.Remove(name)
 
-	ss := append(generateStateChanges(), generateStateChanges()...)
+	ss := append(generateStateChanges(10), generateStateChanges(10)...)
 	perm := rand.Perm(len(ss))
 	for i, j := range perm {
 		ss[i], ss[j] = ss[j], ss[i]
@@ -85,6 +37,12 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	sb := createBlock()
 	err := scs.append(ss, sb)
 	require.Nil(t, err)
+
+	// check the size remains the same with already seen state changes
+	size := scs.size
+	err = scs.append(ss, sb)
+	require.NoError(t, err)
+	require.Equal(t, size, scs.size)
 
 	entries, err := scs.getAll(ss[0].InstanceID, sb.SkipChainID())
 	require.Nil(t, err)
@@ -277,11 +235,39 @@ func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 	require.Equal(t, n/l-store.maxNbrBlock, entries[0].BlockIndex)
 }
 
-func generateStateChanges() StateChanges {
+func TestStateChangeStorage_Race(t *testing.T) {
+	store, name := generateDB(t)
+	defer os.Remove(name)
+
+	store.setMaxSize(100)
+
+	sb1 := createBlock()
+	sb2 := createBlock()
+	sb3 := createBlock()
+	scs := generateStateChanges(1000)
+
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+
+		go func() {
+			store.append(scs, sb1)
+			store.append(scs, sb2)
+			store.append(scs, sb3)
+
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+}
+
+func generateStateChanges(n int) StateChanges {
 	id := genID().Slice()
 
 	scs := StateChanges{}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < n; i++ {
 		scs = append(scs, StateChange{
 			InstanceID: id,
 			Value:      []byte{byte(i)},

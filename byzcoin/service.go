@@ -2253,12 +2253,6 @@ func (s *Service) startAllChains() error {
 			continue
 		}
 
-		// recreate state changes for this chain
-		// Note: this should optimized but for the moment we need to start from the genesis
-		// to populate the statistics used to clean the storage to prevent overflow
-		// TODO: use loadFromDB to recreate the storage state
-		s.buildStateChanges(gen)
-
 		interval, _, err := s.LoadBlockInfo(gen)
 		if err != nil {
 			log.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s", s.ServerIdentity(), gen, err)
@@ -2369,54 +2363,6 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 	return body.TxResults, sb, nil
 }
 
-// buildStateChanges recursively gets the TXs of a skipchain's blocks and populates
-// the state changes storage by restoring them from the TXs. We don't need to worry
-// about overriding thanks to the key generation.
-func (s *Service) buildStateChanges(sid skipchain.SkipBlockID) error {
-	txs, sb, err := s.getBlockTx(sid)
-	if err != nil {
-		return err
-	}
-
-	sst, err := newMemStagingStateTrie([]byte{})
-	if err != nil {
-		return err
-	}
-
-	// when an error occured, we stop where we are because those state changes
-	// should be generated without errors then something else went wrong
-	// (e.g. storage issue)
-	for _, tx := range txs {
-		if tx.Accepted {
-			// Only accepted transactions must be used
-			// to create the state changes
-			var scs StateChanges
-			scs, sst, err = s.processOneTx(sst, tx.ClientTransaction)
-			if err != nil {
-				return err
-			}
-
-			err = s.stateChangeStorage.append(scs, sb)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(sb.ForwardLink) > 0 {
-		// There might be skips in the blockchain, so take the first
-		// link that points to an existing block.
-		for _, link := range sb.ForwardLink {
-			if block := s.db().GetByID(link.To); block != nil {
-				return s.buildStateChanges(block.Hash)
-			}
-		}
-		return errors.New("last block has forwardlinks that are not available")
-	}
-
-	return nil
-}
-
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
 
 // newService receives the context that holds information about the node it's
@@ -2521,6 +2467,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	default:
 		return nil, fmt.Errorf("unknown db version number %v", ver)
 	}
+
+	// initialize the stats of the storage
+	s.stateChangeStorage.calculateSize()
 
 	if err := s.startAllChains(); err != nil {
 		return nil, err
