@@ -11,7 +11,6 @@ import (
 
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
 )
@@ -560,61 +559,6 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 	})
 
 	return
-}
-
-func (s *stateChangeStorage) dumpAll(sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
-	s.accessLock.Lock()
-	defer s.accessLock.Unlock()
-	err = s.db.View(func(tx *bbolt.Tx) error {
-		b := s.getBucket(tx, sid)
-		c := b.Cursor()
-		k, _ := c.First()
-		for k != nil {
-			log.Lvlf1("%x", k)
-			k, _ = c.Next()
-		}
-		return nil
-	})
-
-	return
-}
-
-func (s *stateChangeStorage) getStateTrie(scid skipchain.SkipBlockID) (*stagingStateTrie, error) {
-	s.accessLock.Lock()
-	defer s.accessLock.Unlock()
-	nonce := GenNonce()
-	sst, err := newMemStagingStateTrie(nonce[:])
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.db.View(func(tx *bbolt.Tx) error {
-		b := s.getBucket(tx, scid)
-		if b == nil {
-			// nothing so we return an empty trie
-			return nil
-		}
-
-		c := b.Cursor()
-
-		var sce StateChangeEntry
-		for k, v := c.Last(); k != nil; k, v = c.Prev() {
-			err := protobuf.Decode(v, &sce)
-			if err != nil {
-				return err
-			}
-
-			sst.StoreAll(StateChanges{sce.StateChange})
-
-			// Move to the oldest version of the same instance
-			// (i.e. the first element after the last of the previous instance)
-			c.Seek(k[:prefixLength])
-		}
-
-		return nil
-	})
-
-	return sst, err
 }
 
 // SafeAdd will add a to the value of the coin if there will be no
