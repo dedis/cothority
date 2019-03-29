@@ -7,6 +7,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
@@ -125,7 +126,7 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 //   - write - A Write structure
 //   - signer - The data owner who will sign the transaction
 //   - signerCtr - A monotonically increaing counter for every signer
-//   - darc - The darc governing this instance
+//   - darc - The DARC with a spawn:calypsoWrite rule on it
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
@@ -168,18 +169,17 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 }
 
 // AddRead creates a Read Instance by adding a transaction on the byzcoin client.
+//
 // Input:
 //   - proof - A ByzCoin proof of the Write Operation.
 //   - signer - The data owner who will sign the transaction
-//   - signerCtr - A monotonically increaing counter for every signer
-//   - darc - The darc governing this instance
+//   - signerCtr - A monotonically increasing counter for the signer
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
 //   - reply - ReadReply containing the transaction response and instance id
 //   - err - Error if any, nil otherwise.
-func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64,
-	darc darc.Darc, wait int) (
+func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64, wait int) (
 	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
@@ -258,4 +258,28 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 		return nil, err
 	}
 	return c.bcClient.AddTransactionAndWait(ctx, wait)
+}
+
+// RecoverKey is used to recover the secret key once it has been
+// re-encrypted to a given public key by the DecryptKey method
+// in the Calypso service. The resulting secret key can be used
+// with a symmetric decryption algorithm to decrypt the data
+// stored in the Data field of the WriteInstance.
+//
+// Input:
+//   - xc - the private key of the reader
+//
+// Output:
+//   - key - the re-assembled key
+//   - err - a possible error when trying to recover the data from the point
+func (r *DecryptKeyReply) RecoverKey(xc kyber.Scalar) (key []byte, err error) {
+	xcInv := xc.Clone().Neg(xc)
+	XhatDec := r.X.Clone().Mul(xcInv, r.X)
+	Xhat := XhatDec.Clone().Add(r.XhatEnc, XhatDec)
+	XhatInv := Xhat.Clone().Neg(Xhat)
+
+	// Decrypt r.C to keyPointHat
+	XhatInv.Add(r.C, XhatInv)
+	key, err = XhatInv.Data()
+	return
 }

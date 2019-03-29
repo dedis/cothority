@@ -368,7 +368,7 @@ runCoBG(){
       touch "$COLOG$nb.log.dead"
     ) 2>/dev/null &
     # This makes `pkill conode` not outputting errors here
-    disown %1
+    disown
   done
   
   local allStarted=0
