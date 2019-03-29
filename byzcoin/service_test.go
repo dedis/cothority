@@ -36,7 +36,6 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
-	log.MainTestWait = 15 * time.Minute
 	log.MainTest(m)
 }
 
@@ -864,9 +863,6 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
-
-	// TODO need to wait a bit because ??
-	time.Sleep(testInterval)
 
 	// Check that tx1 is _not_ stored.
 	pr, err := s.service().GetProof(&GetProof{
