@@ -256,7 +256,10 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 		return nil, err
 	}
 	cosiSubProtocol := pi.(*SubBlsCosi)
-	cosiSubProtocol.Msg = p.Msg
+	msg := p.Msg
+	AddPrefix(&msg)
+	// msg := append([]byte{'b', 'l', 's'}, p.Msg...)
+	cosiSubProtocol.Msg = msg
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
 	// at least three leaves as new subleader
@@ -384,7 +387,7 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 	return responseMap, nil
 }
 
-// Sign the message with this node and aggregates with all child signatures (in structResponses)
+// Sign the message with this node and aggregates with all child signatures (in struct Responses)
 // Also aggregates the child bitmasks
 func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.Mask, error) {
 	publics := p.Publics()
@@ -396,7 +399,9 @@ func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.M
 	}
 
 	// generate personal signature and append to other sigs
-	personalSig, err := bls.Sign(p.suite, p.Private(), p.Msg)
+	msg := p.Msg
+	AddPrefix(&msg)
+	personalSig, err := bls.Sign(p.suite, p.Private(), msg)
 	if err != nil {
 		return nil, nil, err
 	}
