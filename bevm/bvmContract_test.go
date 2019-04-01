@@ -1,14 +1,18 @@
 package bevm
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/onet/v3/log"
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/crypto"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -110,8 +114,8 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParamet
 		return err
 	}
 
-	data := append(contract.Bytecode, packedArgs...)
-	deployTx := types.NewContractCreation(account.Nonce, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
+	callData := append(contract.Bytecode, packedArgs...)
+	deployTx := types.NewContractCreation(account.Nonce, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, callData)
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
@@ -129,12 +133,12 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParamet
 }
 
 func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, account *EvmAccount, contract EvmContract, method string, args ...interface{}) error {
-	data, err := contract.packMethod(method, args...)
+	callData, err := contract.packMethod(method, args...)
 	if err != nil {
 		return err
 	}
 
-	deployTx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, data)
+	deployTx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(value)), txParams.GasLimit, txParams.GasPrice, callData)
 	signedTxBuffer, err := account.signAndMarshalTx(deployTx)
 	require.Nil(bct.t, err)
 
@@ -143,6 +147,60 @@ func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParam
 	})
 
 	account.Nonce += 1
+
+	return nil
+}
+
+func (bct *bcTest) call(instID byzcoin.InstanceID, account *EvmAccount, result interface{}, contract EvmContract, method string, args ...interface{}) error {
+	// Pack the method call and arguments
+	callData, err := contract.packMethod(method, args...)
+	if err != nil {
+		return err
+	}
+
+	// Retrieve the proof of the Byzcoin instance
+	proofResponse, err := bct.cl.GetProof(instID[:])
+	if err != nil {
+		return err
+	}
+
+	// Validate the proof
+	err = proofResponse.Proof.Verify(bct.cl.ID)
+	if err != nil {
+		return err
+	}
+
+	// Extract the value from the proof
+	_, value, _, _, err := proofResponse.Proof.KeyValue()
+	if err != nil {
+		return err
+	}
+
+	// Decode the proof value into an EVM State
+	var es ES
+	err = protobuf.Decode(value, &es)
+	if err != nil {
+		return err
+	}
+	evmDb, err := NewEvmDb(&es)
+	if err != nil {
+		return err
+	}
+
+	// Instantiate a new EVM
+	evm := vm.NewEVM(getContext(), evmDb.stateDb, getChainConfig(), getVMConfig())
+
+	// Perform the call (1 Ether should be enough for everyone [tm]...)
+	ret, _, err := evm.Call(vm.AccountRef(account.Address), contract.Address, callData, uint64(1*WeiPerEther), big.NewInt(0))
+	if err != nil {
+		return err
+	}
+
+	// Unpack the result into the caller's variable
+	err = contract.unpackResult(&result, method, ret)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -178,13 +236,36 @@ func Test_InvokeToken(t *testing.T) {
 	err = bct.deploy(instID, txParams, 0, a, erc20Contract)
 	require.Nil(t, err)
 
+	balance := big.NewInt(0)
+
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", a.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of A --> %d\n", balance)
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", b.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of B --> %d\n", balance)
+
 	err = bct.transact(instID, txParams, 0, a, *erc20Contract, "transfer", b.Address, big.NewInt(100))
 	require.Nil(t, err)
 
 	bct.displayAccounts(instID, a.Address, b.Address)
 
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", a.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of A --> %d\n", balance)
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", b.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of B --> %d\n", balance)
+
 	err = bct.transact(instID, txParams, 0, b, *erc20Contract, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
+
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", a.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of A --> %d\n", balance)
+	err = bct.call(instID, a, &balance, *erc20Contract, "balanceOf", b.Address)
+	require.Nil(t, err)
+	fmt.Printf("Balance of B --> %d\n", balance)
 
 	bct.displayAccounts(instID, a.Address, b.Address)
 }
@@ -258,13 +339,11 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	err = bct.transact(instID, txParams, 2*WeiPerEther, b, *loanContract, "lend")
 	require.Nil(t, err)
-	log.LLvl1("lend passed")
 
 	bct.displayAccounts(instID, a.Address, b.Address, loanContract.Address)
 
 	err = bct.transact(instID, txParams, 2*WeiPerEther, a, *loanContract, "payback")
 	require.Nil(t, err)
-	log.LLvl1("payback, curious of what this does :")
 
 	bct.displayAccounts(instID, a.Address, b.Address, loanContract.Address)
 }

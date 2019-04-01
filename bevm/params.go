@@ -32,6 +32,10 @@ func (contract EvmContract) packMethod(method string, args ...interface{}) ([]by
 	return contract.Abi.Pack(method, args...)
 }
 
+func (contract EvmContract) unpackResult(result interface{}, method string, resultBytes []byte) error {
+	return contract.Abi.Unpack(result, method, resultBytes)
+}
+
 func (contract EvmContract) String() string {
 	return fmt.Sprintf("EvmContract@%s", contract.Address.Hex())
 }

@@ -161,7 +161,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 
 	default:
-		err = errors.New("Contract can only display, credit and receive transactions")
+		err = errors.New(fmt.Sprintf("Unknown Invoke command: '%s'", inst.Invoke.Command))
 	}
 
 	return
