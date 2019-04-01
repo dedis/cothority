@@ -45,23 +45,27 @@ type txProcessorState struct {
 
 	// Below are changes that were made that led up to the state in sst
 	// from the starting point.
-	scs StateChanges
-	txs TxResults
+	scs     StateChanges
+	txs     TxResults
+	txsSize int
 }
 
 func (s *txProcessorState) size() int {
-	// TODO encoding again is wasting CPU, is there a better way?
-	body := &DataBody{TxResults: s.txs}
-	payload, err := protobuf.Encode(body)
-	if err != nil {
-		return 0
+	if s.txsSize == 0 {
+		body := &DataBody{TxResults: s.txs}
+		payload, err := protobuf.Encode(body)
+		if err != nil {
+			return 0
+		}
+		s.txsSize = len(payload)
 	}
-	return len(payload)
+	return s.txsSize
 }
 
 func (s *txProcessorState) reset() {
 	s.scs = []StateChange{}
 	s.txs = []TxResult{}
+	s.txsSize = 0
 }
 
 // copy creates a shallow copy the state, we don't have the need for deep copy
@@ -71,6 +75,7 @@ func (s *txProcessorState) copy() *txProcessorState {
 		s.sst.Clone(),
 		append([]StateChange{}, s.scs...),
 		append([]TxResult{}, s.txs...),
+		s.txsSize,
 	}
 }
 
@@ -167,12 +172,14 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 				inState.sst,
 				inState.scs,
 				append(inState.txs, TxResult{tx, false}),
+				0,
 			}
 		}
 		return &txProcessorState{
 			sstOut,
 			append(inState.scs, scsOut...),
 			append(inState.txs, TxResult{tx, true}),
+			0,
 		}
 	}()
 
@@ -188,12 +195,14 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 			inState.sst,
 			inState.scs,
 			[]TxResult{{tx, false}},
+			0,
 		})
 	} else {
 		newStates = append(newStates, &txProcessorState{
 			sstOut,
 			scsOut,
 			[]TxResult{{tx, true}},
+			0,
 		})
 	}
 	return newStates, nil
@@ -266,7 +275,7 @@ func (p *txPipeline) start(initialState *txProcessorState, stopChan chan bool) {
 }
 
 func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
-	stopChan := make(chan bool, 1)
+	stopChan := make(chan bool)
 	outChan := make(chan ClientTransaction, 200)
 	// set the polling interval to half of the block interval
 	go func() {

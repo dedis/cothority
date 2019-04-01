@@ -1531,7 +1531,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	pipeline := txPipeline{
 		processor: &defaultTxProcessor{
-			stopCollect: make(chan bool, 1),
+			stopCollect: make(chan bool),
 			scID:        scID,
 			Service:     s,
 		},
