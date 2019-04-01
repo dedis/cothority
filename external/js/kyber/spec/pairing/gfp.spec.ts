@@ -35,8 +35,14 @@ describe('GfP', () => {
     });
 
     it('should compute the modulo', () => {
-        const v = new GfP(-3);
+        const v = new GfP(-3n);
 
-        expect(v.mod(new BN(5)).getValue().toNumber()).toBe(2);
+        expect(v.mod(5n).getValue()).toBe(2n);
+    });
+
+    it('should compute the inverse modulo', () => {
+        const a = new GfP(42);
+
+        expect(a.invmod(2017n).getValue()).toBe(1969n);
     });
 });

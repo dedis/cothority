@@ -1,11 +1,12 @@
-import { createHash } from 'crypto';
 import BN from 'bn.js';
-import GfP from './gfp';
-import { p } from './constants';
+import { createHash } from 'crypto';
+import { BNType } from '../constants';
 import { modSqrt } from '../utils/tonelli-shanks';
-import { BNType, oneBN } from '../constants';
+import GfP from './gfp';
 
 const curveB = new GfP(3);
+
+const p = BigInt("65000549695646603732796438742359905742825358107623003571877145026864184071783");
 
 /**
  * Point class used by G1
@@ -22,21 +23,21 @@ export default class CurvePoint {
         const h = createHash('sha256');
         h.update(msg);
 
-        let x = new BN(h.digest(), null, 'be').mod(p);
+        let x = BigInt(`0x${h.digest()}`) % BigInt(p);
 
-        for (;;) {
-            const xxx = x.mul(x).mul(x).mod(p);
-            const t = xxx.add(curveB.getValue());
+        for (; ;) {
+            const xxx = (x * x * x) % BigInt(p);
+            const t = xxx + curveB.getValue();
 
-            const y = modSqrt(t, p);
+            const y = modSqrt(new BN(t.toString(16), 16), new BN(p.toString(16), 16));
             if (y != null) {
-                return new CurvePoint(x, y, 1, 1);
+                return new CurvePoint(new BN(x.toString(16), 16), y, 1, 1);
             }
 
-            x = x.add(oneBN);
+            x = x + 1n;
         }
     }
-    
+
     private x: GfP;
     private y: GfP;
     private z: GfP;
@@ -74,7 +75,7 @@ export default class CurvePoint {
      */
     isOnCurve(): boolean {
         let yy = this.y.sqr();
-        const xxx = this.x.pow(new BN(3));
+        const xxx = this.x.pow(3n);
 
         yy = yy.sub(xxx);
         yy = yy.sub(curveB);

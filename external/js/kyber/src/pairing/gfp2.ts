@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import GfP from './gfp';
-import { p } from './constants';
+
+const p = BigInt("65000549695646603732796438742359905742825358107623003571877145026864184071783");
 
 type BNType = Buffer | string | number | BN;
 
@@ -50,7 +51,7 @@ export default class GfP2 {
      * @returns true when zero, false otherwise
      */
     isZero(): boolean {
-        return this.x.getValue().eqn(0) && this.y.getValue().eqn(0);
+        return this.x.getValue() === 0n && this.y.getValue() === 0n;
     }
 
     /**
@@ -58,7 +59,7 @@ export default class GfP2 {
      * @returns true when one, false otherwise
      */
     isOne(): boolean {
-        return this.x.getValue().eqn(0) && this.y.getValue().eqn(1);
+        return this.x.getValue() === 0n && this.y.getValue() === 1n;
     }
 
     /**
@@ -156,7 +157,7 @@ export default class GfP2 {
         // intermediate modulo is due to a missing implementation
         // in the library that is actually using the unsigned left
         // shift any time
-        const tx = this.x.mul(this.y).mod(p).shiftLeft(1).mod(p);
+        const tx = this.x.mul(this.y).mod(p).shiftLeft(1n).mod(p);
 
         return new GfP2(tx, ty);
     }

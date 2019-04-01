@@ -1,4 +1,3 @@
-import BN from 'bn.js';
 import { BNType } from '../constants';
 
 /**
@@ -9,17 +8,17 @@ import { BNType } from '../constants';
 export default class GfP {
     private static ELEM_SIZE = 256 / 8;
 
-    private v: BN;
+    private v: bigint;
 
-    constructor(value: BNType) {
-        this.v = new BN(value);
+    constructor(value: BNType | bigint) {
+        this.v = BigInt(value);
     }
 
     /**
      * Get the BigNumber value
      * @returns the BN object
      */
-    getValue(): BN {
+    getValue(): bigint {
         return this.v;
     }
 
@@ -28,7 +27,7 @@ export default class GfP {
      * @returns -1 for a negative, 1 for a positive and 0 for zero
      */
     signum(): -1 | 0 | 1 {
-        return this.v.cmpn(0);
+        return this.v < 0 ? -1 : (this.v > 0 ? 1 : 0);
     }
 
     /**
@@ -36,7 +35,7 @@ export default class GfP {
      * @returns true for one, false otherwise
      */
     isOne(): boolean {
-        return this.v.eq(new BN(1));
+        return this.v === 1n;
     }
 
     /**
@@ -44,7 +43,7 @@ export default class GfP {
      * @returns true for zero, false otherwise
      */
     isZero(): boolean {
-        return this.v.isZero();
+        return this.v === 0n;
     }
 
     /**
@@ -53,7 +52,7 @@ export default class GfP {
      * @returns the new value
      */
     add(a: GfP): GfP {
-        return new GfP(this.v.add(a.v));
+        return new GfP(this.v + a.v);
     }
 
     /**
@@ -62,7 +61,7 @@ export default class GfP {
      * @return the new value
      */
     sub(a: GfP): GfP {
-        return new GfP(this.v.sub(a.v));
+        return new GfP(this.v - a.v);
     }
 
     /**
@@ -71,7 +70,7 @@ export default class GfP {
      * @returns the new value
      */
     mul(a: GfP): GfP {
-        return new GfP(this.v.mul(a.v));
+        return new GfP(this.v * a.v);
     }
 
     /**
@@ -79,7 +78,7 @@ export default class GfP {
      * @returns the new value
      */
     sqr(): GfP {
-        return new GfP(this.v.sqr());
+        return new GfP(this.v ** 2n);
     }
 
     /**
@@ -87,8 +86,8 @@ export default class GfP {
      * @param k the coefficient
      * @returns the new value
      */
-    pow(k: BN) {
-        return new GfP(this.v.pow(k));
+    pow(k: bigint) {
+        return new GfP(this.v ** k);
     }
 
     /**
@@ -96,8 +95,13 @@ export default class GfP {
      * @param p the modulus
      * @returns the new value
      */
-    mod(p: BN): GfP {
-        return new GfP(this.v.umod(p));
+    mod(p: bigint): GfP {
+        let t = this.v % p;
+        if (t < 0n) {
+            t += p
+        }
+
+        return new GfP(t);
     }
 
     /**
@@ -105,8 +109,27 @@ export default class GfP {
      * @param p the modulus
      * @returns the new value
      */
-    invmod(p: BN): GfP {
-        return new GfP(this.v.invm(p));
+    invmod(p: bigint): GfP {
+        let b0 = p;
+        let t, q: bigint;
+        let x0 = 0n;
+        let x1 = 1n;
+        let a = this.v;
+        while (a > 1n) {
+            q = a / p;
+            t = p;
+            p = a % p;
+            a = t;
+            t = x0;
+            x0 = x1 - q * x0;
+            x1 = t;
+        }
+
+        if (x1 < 0n) {
+            x1 += b0;
+        }
+
+        return new GfP(x1);
     }
 
     /**
@@ -114,7 +137,7 @@ export default class GfP {
      * @returns the new value
      */
     negate(): GfP {
-        return new GfP(this.v.neg());
+        return new GfP(-this.v);
     }
 
     /**
@@ -122,8 +145,8 @@ export default class GfP {
      * @param k number of positions to switch
      * @returns the new value
      */
-    shiftLeft(k: number): GfP {
-        return new GfP(this.v.shln(k));
+    shiftLeft(k: bigint): GfP {
+        return new GfP(this.v << k);
     }
 
     /**
@@ -131,8 +154,14 @@ export default class GfP {
      * @param o the value to compare
      * @returns -1 when o is greater, 1 when smaller and 0 when equal
      */
-    compareTo(o: any): 0 | -1 | 1 {
-        return this.v.cmp(o.v);
+    compareTo(o: GfP): 0 | -1 | 1 {
+        if (this.v === o.v) {
+            return 0;
+        } else if (this.v > o.v) {
+            return 1;
+        }
+
+        return -1;
     }
 
     /**
@@ -141,7 +170,7 @@ export default class GfP {
      * @returns true when equal, false otherwise
      */
     equals(o: any): o is GfP {
-        return this.v.eq(o.v);
+        return this.v === o.v;
     }
 
     /**
@@ -150,7 +179,7 @@ export default class GfP {
      * @returns the buffer
      */
     toBytes(): Buffer {
-        return this.v.toArrayLike(Buffer, 'be', GfP.ELEM_SIZE);
+        return Buffer.from(this.v.toString(16), 'hex');
     }
 
     /**
@@ -166,6 +195,6 @@ export default class GfP {
      * @returns the hex shape in a string
      */
     toHex(): string {
-        return this.v.toString('hex');
+        return this.v.toString(16);
     }
 }
