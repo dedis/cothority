@@ -6,7 +6,76 @@ bcadmin
 
 # bcadmin - the CLI to configure ByzCoin ledgers
 
-## Create a new ByzCoin, saving the config
+## Example usage
+
+Let's suppose an _admin_ wants to start a new byzcoin blockchain and give
+access to a user _foo_, so that _foo_ can onboard new users, too, but cannot
+change the byzcoin-configuration.
+
+There is a set of nodes stored in `roster.toml` that are online and ready 
+to accept new byzcoins.
+
+Commands on _admin_'s machine are prepended with `admin $ `, while commands
+on _foo_'s machine are prepended with `foo $ `
+
+### Create a new ByzCoin
+
+First the admin will create a new byzcoin and get a private key so he can
+interact with the blockchain:
+
+```bash
+admin $ bcadmin -c . create -roster roster.toml 
+```
+
+This stores the byzcoin-configuration holding the roster, the byzcoin-id,
+as well as the darc and the identity of the _admin_ in a file called
+`bc-xxxx.cfg`, where `xxxx` is the id of the new byzcoin-instance. 
+The private key of the _admin_ is stored in `key-ed25519:pub_admin.cfg`, 
+where `pub_admin` is the public key of the _admin_. 
+
+### Sign up a new user
+
+To sign up the new user _foo_, he needs to create a new keypair:
+
+```bash
+foo $ bcadmin -c . key
+```
+
+This will create a `key-ed25519:pub_foo.cfg` file, where `pub_foo` is in fact the public key
+of the new user. Now _foo_ needs to send `pub_foo` to the admin, so that he can
+create a new darc for the user _foo_:
+
+```bash
+admin $ bcadmin -c . darc add --bc bc-xxxx.cfg --unrestricted --sign ed25519:pub_admin \
+                --owner ed25519:pub_foo --desc "Darc for Foo"  
+```
+
+This command will output the darc-id `darc:darc_foo` that has been created. The _admin_ can
+now transfer this darc-id to the user _foo_.
+
+### Using the new darc
+
+Now for _foo_ to use this new darc, he will first have to create a configuration-file
+`bc-xxxx.cfg` with the new darc inside:
+
+```bash
+foo $ bcadmin -c . link roster.toml xxxx --pub ed25519:pub_foo --darc darc:darc_foo
+``` 
+
+This will create a file `bc-xxxx.cfg` in _foo_'s directory that points to _foo_'s
+darc. If _foo_ wants to onboard other users, he needs to evolve his darc to allow
+for spawning new darcs:
+
+```bash
+foo $ bcadmin -c . darc rule --bc bc-xxxx.cfg --darc darc:darc_foo --sign ed25519:pub_foo \
+                --rule spawn:darc --identity ed25519:pub_foo
+```
+
+If everything was OK, _foo_ has now the possibility to sign up _bar_.
+
+## Command reference
+
+### Create a new ByzCoin, saving the config
 
 ```
 $ bcadmin create -roster roster.toml
@@ -29,7 +98,7 @@ shared!
 
 To see the config you just made, use `bcadmin show -bc $file`.
 
-## Granting access to contracts
+### Granting access to contracts
 
 The user who wants to use ByzCoin generates a private key and shares the
 public key with you, the ByzCoin admin. You grant access to a given contract
@@ -47,12 +116,12 @@ Using the ByzCoin config file you give them and their private key to sign
 transactions, they will now be able to use their application to send
 transactions.
 
-## Environmnet variables
+### Environmnet variables
 
 You can set the environment variable BC to the config file for the ByzCoin
 you are currently working with. (Client apps should follow this same standard.)
 
-## Generating a new keypair
+### Generating a new keypair
 
 ```
 $ bcadmin key
@@ -63,7 +132,8 @@ Generates a new keypair and prints the result in the console
 Optional flags:
 
 -save file.txt            Outputs the key in file.txt instead of stdout
-## Managing DARCS
+
+### Managing DARCS
 
 ```
 $ bcadmin darc add -bc $file

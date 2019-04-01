@@ -13,6 +13,7 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
 	[ ! -x ./bcadmin ] && exit 1
+    run testLink
     run testCoin
     run testRoster
     run testCreateStoreRead
@@ -23,6 +24,22 @@ main(){
     run testExpression
     run testQR
     stopTest
+}
+
+testLink(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  rm -rf linkDir
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  testGrep $bcID runBA -c linkDri link public.toml
+  bcIDWrong=$( printf "%032d" 1234 )
+  testNGrep $bcIDWrong runBA -c linkDri link public.toml
+  testFail runBA -c linkDir link public.toml $bcIDWrong
+  testOK runBA -c linkDir link public.toml $bcID
+  testFile linkDir/bc*
 }
 
 testCoin(){

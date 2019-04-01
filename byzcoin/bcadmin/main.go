@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func init() {
@@ -60,6 +61,24 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: create,
+	},
+
+	{
+		Name:      "link",
+		Usage:     "link to existing ledger",
+		Aliases:   []string{"ln"},
+		ArgsUsage: "roster.toml [bcid]",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "darc, ad",
+				Usage: "a darc that has 'evolve_unrestricted'",
+			},
+			cli.StringFlag{
+				Name:  "pub, ap",
+				Usage: "the public key with rights to sing on the darc",
+			},
+		},
+		Action: link,
 	},
 
 	{
@@ -115,7 +134,7 @@ var cmds = cli.Commands{
 	{
 		Name:      "mint",
 		Usage:     "mint coins on account",
-		ArgsUsage: "bc-xxx.cfg key-xxx.cfg public-key",
+		ArgsUsage: "bc-xxx.cfg key-xxx.cfg public-key #coins",
 		Action:    mint,
 	},
 
@@ -212,7 +231,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "DARC with the right to create a new DARC (default is the genesis DARC)",
+						Usage: "DARC with the right to create a new DARC (default is the admin DARC)",
 					},
 					cli.StringFlag{
 						Name:  "owner",
@@ -256,7 +275,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "sign",
-						Usage: "public key of the signing entity (default is the genesis admin public key)",
+						Usage: "public key of the signing entity (default is the admin public key)",
 					},
 					cli.StringFlag{
 						Name:  "identity",
@@ -365,7 +384,7 @@ func create(c *cli.Context) error {
 	cfg := lib.Config{
 		ByzCoinID:     resp.Skipblock.SkipChainID(),
 		Roster:        *r,
-		GenesisDarc:   req.GenesisDarc,
+		AdminDarc:     req.GenesisDarc,
 		AdminIdentity: owner.Identity(),
 	}
 	fn, err = lib.SaveConfig(cfg)
@@ -384,6 +403,132 @@ func create(c *cli.Context) error {
 	// For the tests to use.
 	c.App.Metadata["BC"] = fn
 
+	return nil
+}
+
+func link(c *cli.Context) error {
+	if c.NArg() < 1 {
+		return errors.New("please give the following args: roster.toml [bcid]")
+	}
+	r, err := lib.ReadRoster(c.Args().First())
+	if err != nil {
+		return err
+	}
+
+	scl := skipchain.NewClient()
+	if c.NArg() == 1 {
+		log.Info("Fetching all byzcoin-ids from the roster")
+		var scIDs []skipchain.SkipBlockID
+		for _, si := range r.List {
+			reply, err := scl.GetAllSkipChainIDs(si)
+			if err != nil {
+				log.Warn("Couldn't contact", si.Address, err)
+			} else {
+				scIDs = append(scIDs, reply.IDs...)
+				log.Infof("Got %d id(s) from %s", len(reply.IDs), si.Address)
+			}
+		}
+		sort.Slice(scIDs, func(i, j int) bool {
+			return bytes.Compare(scIDs[i], scIDs[j]) < 0
+		})
+		for i := len(scIDs) - 1; i > 0; i-- {
+			if scIDs[i].Equal(scIDs[i-1]) {
+				scIDs = append(scIDs[0:i], scIDs[i+1:]...)
+			}
+		}
+		log.Info("All IDs available in this roster:")
+		for _, id := range scIDs {
+			log.Infof("%x", id[:])
+		}
+	} else {
+		id, err := hex.DecodeString(c.Args().Get(1))
+		if err != nil || len(id) != 32 {
+			return errors.New("second argument is not a valid ID")
+		}
+		var cl *byzcoin.Client
+		var cc *byzcoin.ChainConfig
+		for _, si := range r.List {
+			reply, err := scl.GetAllSkipChainIDs(si)
+			if err != nil {
+				log.Warn("Got error while asking", si.Address, "for skipchains")
+			}
+			found := false
+			for _, idc := range reply.IDs {
+				if idc.Equal(id) {
+					found = true
+					break
+				}
+			}
+			if found {
+				cl = byzcoin.NewClient(id, *onet.NewRoster([]*network.ServerIdentity{si}))
+				cc, err = cl.GetChainConfig()
+				if err != nil {
+					cl = nil
+					continue
+				}
+				cl.Roster = cc.Roster
+				break
+			}
+		}
+		if cl == nil {
+			return errors.New("didn't manage to find a node with a valid copy of the given skipchain-id")
+		}
+		ad := &darc.Darc{}
+		adPub := cothority.Suite.Point()
+		if adIDStr := c.String("darc"); len(adIDStr) == 69 {
+			adID, err := hex.DecodeString(adIDStr[5:])
+			if err != nil {
+				return errors.New("couldn't parse given admin: " + err.Error())
+			}
+			var adPubBuf []byte
+			if pubStr := c.String("pub"); len(pubStr) == 72 {
+				adPubBuf, err = hex.DecodeString(pubStr[8:])
+				if len(adPubBuf) != 32 || err != nil {
+					return errors.New("please give valid admin public key in hex: " + err.Error())
+				}
+			} else {
+				return errors.New("please give a key in the following format: ed25519:public_key_in_hex")
+			}
+			adPub = cothority.Suite.Point()
+			if err = adPub.UnmarshalBinary(adPubBuf); err != nil {
+				return errors.New("got an invalid admin public key: " + err.Error())
+			}
+			p, err := cl.GetProof(adID)
+			if err != nil {
+				return errors.New("couldn't get proof for admin-darc: " + err.Error())
+			}
+			if err = p.Proof.Verify(id); err != nil {
+				return errors.New("proof for admin is wrong: " + err.Error())
+			}
+			_, adBuf, cid, _, err := p.Proof.KeyValue()
+			if err != nil {
+				return errors.New("cannot get value for darc: " + err.Error())
+			}
+			if cid != byzcoin.ContractDarcID {
+				return errors.New("please give a darc-instance ID, not: " + cid)
+			}
+			ad, err = darc.NewFromProtobuf(adBuf)
+			if err != nil {
+				return errors.New("invalid darc stored in byzcoin: " + err.Error())
+			}
+		}
+		log.Infof("ByzCoin-config for %+x:\n"+
+			"\tRoster: %s\n"+
+			"\tBlockInterval: %s\n"+
+			"\tMacBlockSize: %d\n"+
+			"\tDarcContracts: %s",
+			id[:], cc.Roster.List, cc.BlockInterval, cc.MaxBlockSize, cc.DarcContractIDs)
+		fn, err := lib.SaveConfig(lib.Config{
+			Roster:        cc.Roster,
+			ByzCoinID:     id,
+			AdminDarc:     *ad,
+			AdminIdentity: darc.NewIdentityEd25519(adPub),
+		})
+		if err != nil {
+			return errors.New("while writing config-file: " + err.Error())
+		}
+		log.Info("Wrote config to", path.Join(lib.ConfigPath, fn))
+	}
 	return nil
 }
 
@@ -408,7 +553,7 @@ func show(c *cli.Context) error {
 	}
 
 	fmt.Fprintln(c.App.Writer, "ByzCoinID:", fmt.Sprintf("%x", cfg.ByzCoinID))
-	fmt.Fprintln(c.App.Writer, "Genesis DARC:", cfg.GenesisDarc.GetIdentityString())
+	fmt.Fprintf(c.App.Writer, "Admin DARC: %x\n", cfg.AdminDarc.GetBaseID())
 	fmt.Fprintln(c.App.Writer, "local roster:", fmtRoster(&cfg.Roster))
 	fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
 
@@ -639,7 +784,7 @@ func mint(c *cli.Context) error {
 		counters[0]++
 		ctx := byzcoin.ClientTransaction{
 			Instructions: byzcoin.Instructions{{
-				InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
+				InstanceID: byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID()),
 				Spawn: &byzcoin.Spawn{
 					ContractID: byzcoin.ContractDarcID,
 					Args: byzcoin.Arguments{{
@@ -715,7 +860,7 @@ func mint(c *cli.Context) error {
 		return err
 	}
 
-	log.Info("Account created and filled with coins")
+	log.Infof("Account %x created and filled with %d coins", account[:], coins)
 	return nil
 }
 
@@ -847,7 +992,7 @@ func darcShow(c *cli.Context) error {
 
 	dstr := c.String("darc")
 	if dstr == "" {
-		dstr = cfg.GenesisDarc.GetIdentityString()
+		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 
 	d, err := getDarcByString(cl, dstr)
@@ -985,7 +1130,7 @@ func darcAdd(c *cli.Context) error {
 
 	dstr := c.String("darc")
 	if dstr == "" {
-		dstr = cfg.GenesisDarc.GetIdentityString()
+		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 	dSpawn, err := getDarcByString(cl, dstr)
 	if err != nil {
@@ -1113,7 +1258,7 @@ func darcRule(c *cli.Context) error {
 
 	dstr := c.String("darc")
 	if dstr == "" {
-		dstr = cfg.GenesisDarc.GetIdentityString()
+		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 	d, err := getDarcByString(cl, dstr)
 	if err != nil {

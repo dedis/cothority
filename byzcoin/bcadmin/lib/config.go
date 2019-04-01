@@ -21,12 +21,12 @@ import (
 var ConfigPath = "."
 
 // Config is the structure used by ol to save its configuration. It holds everything
-// necessary to talk to a ByzCoin instance. The GenesisDarc and AdminIdentity
+// necessary to talk to a ByzCoin instance. The AdminDarc and AdminIdentity
 // can change over the lifetime of a ledger.
 type Config struct {
 	Roster        onet.Roster
 	ByzCoinID     skipchain.SkipBlockID
-	GenesisDarc   darc.Darc
+	AdminDarc     darc.Darc
 	AdminIdentity darc.Identity
 }
 
