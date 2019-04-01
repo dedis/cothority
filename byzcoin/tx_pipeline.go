@@ -262,20 +262,18 @@ type txPipeline struct {
 	processor txProcessor
 }
 
-func (p *txPipeline) start(initialState *txProcessorState, stopChan chan bool) {
-	ctxChan, stopChan1 := p.collectTx()
-	stopChan2 := p.processTxs(ctxChan, initialState)
+func (p *txPipeline) start(initialState *txProcessorState, stopSignal chan bool) {
+	stopCollect := make(chan bool)
+	ctxChan := p.collectTx(stopCollect)
+	p.processTxs(ctxChan, initialState)
 
-	// wait for signal and then stop
-	<-stopChan
-	close(stopChan1)
-	close(stopChan2)
+	<-stopSignal
+	close(stopCollect)
 	p.processor.Stop()
 	p.wg.Wait()
 }
 
-func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
-	stopChan := make(chan bool)
+func (p *txPipeline) collectTx(stopChan chan bool) <-chan ClientTransaction {
 	outChan := make(chan ClientTransaction, 200)
 	// set the polling interval to half of the block interval
 	go func() {
@@ -286,6 +284,7 @@ func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
 			select {
 			case <-stopChan:
 				log.Lvl3("stopping tx collector")
+				close(outChan)
 				return
 			case <-time.After(interval / 2):
 				txs, err := p.processor.CollectTx()
@@ -293,18 +292,22 @@ func (p *txPipeline) collectTx() (<-chan ClientTransaction, chan<- bool) {
 					log.Error("failed to collect transactions")
 				}
 				for _, tx := range txs {
-					outChan <- tx
+					select {
+					case outChan <- tx:
+						// channel not full, do nothing
+					default:
+						log.Warn("dropping transactions because there are too many")
+					}
 				}
 			}
 		}
 	}()
-	return outChan, stopChan
+	return outChan
 }
 
 // processTxs consumes transactions and computes the
-func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *txProcessorState) chan<- bool {
+func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *txProcessorState) {
 	var proposing bool
-	stopChan := make(chan bool, 1)
 	// always use the latest one when adding new
 	currentState := []*txProcessorState{initialState}
 	proposalResult := make(chan error, 1)
@@ -318,10 +321,11 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 		intervalChan := getInterval()
 		for {
 			select {
-			case <-stopChan:
-				log.Lvl3("stopping txs processor")
-				return
-			case tx := <-txChan:
+			case tx, ok := <-txChan:
+				if !ok {
+					log.Lvl3("stopping txs processor")
+					return
+				}
 				// when processing, we take the latest state
 				// (the last one) and then apply the new transaction to it
 				newStates, err := p.processor.ProcessTx(tx, currentState[len(currentState)-1])
@@ -384,7 +388,6 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 			}
 		}
 	}()
-	return stopChan
 }
 
 // proposeInputState generates the next input state that is used in

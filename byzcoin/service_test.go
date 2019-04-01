@@ -105,31 +105,30 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 }
 
 func TestService_AddTransaction(t *testing.T) {
-	testAddTransaction(t, 0, false)
+	testAddTransaction(t, time.Second, 0, false)
 }
 
 func TestService_AddTransaction_ToFollower(t *testing.T) {
-	testAddTransaction(t, 1, false)
+	testAddTransaction(t, time.Second, 1, false)
 }
 
 func TestService_AddTransaction_WithFailure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("test takes too long for Travis")
 	}
-	testAddTransaction(t, 0, true)
+	testAddTransaction(t, 2*time.Second, 0, true)
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
-	testAddTransaction(t, 1, true)
+	testAddTransaction(t, 2*time.Second, 1, true)
 }
 
-func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
-	log.SetShowTime(true)
+func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, time.Second, 4, false)
+		s = newSerN(t, 1, blockInterval, 4, false)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(4 * time.Second)
+			service.SetPropagationTimeout(blockInterval / 2)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)
@@ -246,11 +245,12 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 		log.Lvl1("done")
 		// Wait for tasks to finish.
-		time.Sleep(time.Second)
+		time.Sleep(blockInterval)
 	}
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
+	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
 	s := newSerN(t, 1, time.Second, 4, false)
 	defer s.local.CloseAll()
@@ -296,6 +296,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 // Tests what happens if a transaction with two instructions is sent: one valid
 // and one invalid instruction.
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
+	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
 	s := newSerN(t, 1, time.Second, 4, false)
 	defer s.local.CloseAll()

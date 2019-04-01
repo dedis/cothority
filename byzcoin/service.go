@@ -1107,6 +1107,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		s.catchingUp = false
 		s.updateTrieLock.Unlock()
 	}()
+
 	log.Lvlf2("%v Catching up %x / %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
@@ -1160,6 +1161,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		latest = updates[len(updates)-1]
 		trieIndex = latest.Index
 	}
+	log.Lvlf2("%v Done catch up %x / %d", s.ServerIdentity(), sb.SkipChainID(), trieIndex)
 }
 
 // updateTrieCallback is registered in skipchain and is called after a
@@ -1993,7 +1995,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 		// The function will prevent multiple request to catch up so we can securely call it here
 		err := s.catchupFromID(roster, scID)
 		if err != nil {
-			log.Error(err)
+			log.Error(s.ServerIdentity(), err)
 		}
 		// Give up the current request and wait for the next one, and keep skipping requests
 		// until the catching up is done
