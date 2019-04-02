@@ -77,6 +77,7 @@ class ProofTest {
         // useful variables for constructing a bad proof
         TrieProto.Proof inclusionProof = p.toProto().getInclusionproof();
         TrieProto.LeafNode leaf = inclusionProof.getLeaf();
+        assertTrue(inclusionProof.getInteriorsCount() > 1);
         TrieProto.InteriorNode interior1 = inclusionProof.getInteriors(1);
         List<Boolean> prefixList = leaf.getPrefixList();
         assertTrue(prefixList.size() > 0);
