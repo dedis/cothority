@@ -90,20 +90,6 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	}
 
 	switch inst.Invoke.Command {
-	case "display":
-		args, err := getArguments(inst, "address")
-		if err != nil {
-			return nil, nil, err
-		}
-
-		address := common.BytesToAddress(args["address"])
-
-		balance := evmDb.stateDb.GetBalance(address)
-		if balance == big.NewInt(0) {
-			log.LLvl1(address.Hex(), "balance", "0")
-		}
-		log.LLvl1(address.Hex(), "balance", balance.Uint64(), "wei")
-
 	case "credit":
 		args, err := getArguments(inst, "address", "amount")
 		if err != nil {

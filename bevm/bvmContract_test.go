@@ -134,14 +134,6 @@ func (bct *bcTest) creditAccounts(instID byzcoin.InstanceID, amount *big.Int, ad
 	}
 }
 
-func (bct *bcTest) displayAccounts(instID byzcoin.InstanceID, addresses ...common.Address) {
-	for _, address := range addresses {
-		bct.invokeInstance(instID, "display", byzcoin.Arguments{
-			{Name: "address", Value: address.Bytes()},
-		})
-	}
-}
-
 func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) error {
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
