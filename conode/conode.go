@@ -25,6 +25,7 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	_ "go.dedis.ch/cothority/v3/authprox"
+	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
 	_ "go.dedis.ch/cothority/v3/byzcoin"
 	_ "go.dedis.ch/cothority/v3/byzcoin/contracts"
 	_ "go.dedis.ch/cothority/v3/calypso"
@@ -209,7 +210,7 @@ func checkConfig(c *cli.Context) error {
 		}
 	}
 
-	return nil
+	return check.CothorityCheck(tomlFileName, c.Bool("detail"))
 }
 
 func setup(c *cli.Context) error {
