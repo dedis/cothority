@@ -32,7 +32,13 @@ func contractBvmFromBytes(in []byte) (byzcoin.Contract, error) {
 	return cv, nil
 }
 
-//Spawn deploys an EVM
+// Ethereum State
+type ES struct {
+	DbBuf    []byte      // General state
+	RootHash common.Hash // Hash of the last commit
+}
+
+// Spawn a new BVM contract
 func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
@@ -53,26 +59,19 @@ func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 	sc = []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractBvmID, newEvmState, darc.ID(inst.InstanceID.Slice())),
 	}
-	/*
-		for i, sc := range sc{
-			log.Printf("state-change %d is %x", i, sha256.Sum256(sc.Value))
-		}*/
+
 	return
 }
 
-func getArguments(inst byzcoin.Instruction, names ...string) (args map[string][]byte, err error) {
-	args = make(map[string][]byte)
-
+// Helper function to check all required arguments are provided
+func checkArguments(inst byzcoin.Instruction, names ...string) error {
 	for _, name := range names {
-		buf := inst.Invoke.Args.Search(name)
-		if buf == nil {
-			return nil, errors.New(fmt.Sprintf("Missing '%s' argument", name))
+		if inst.Invoke.Args.Search(name) == nil {
+			return errors.New(fmt.Sprintf("Missing '%s' argument", name))
 		}
-
-		args[name] = buf
 	}
 
-	return
+	return nil
 }
 
 //Invoke provides three instructions : display, credit and transaction
@@ -91,13 +90,13 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 
 	switch inst.Invoke.Command {
 	case "credit":
-		args, err := getArguments(inst, "address", "amount")
+		err := checkArguments(inst, "address", "amount")
 		if err != nil {
 			return nil, nil, err
 		}
 
-		address := common.BytesToAddress(args["address"])
-		amount := new(big.Int).SetBytes(args["amount"])
+		address := common.BytesToAddress(inst.Invoke.Args.Search("address"))
+		amount := new(big.Int).SetBytes(inst.Invoke.Args.Search("amount"))
 
 		evmDb.stateDb.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
@@ -113,13 +112,13 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 
 	case "transaction":
-		args, err := getArguments(inst, "tx")
+		err := checkArguments(inst, "tx")
 		if err != nil {
 			return nil, nil, err
 		}
 
 		var ethTx types.Transaction
-		err = ethTx.UnmarshalJSON(args["tx"])
+		err = ethTx.UnmarshalJSON(inst.Invoke.Args.Search("tx"))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -153,10 +152,10 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	return
 }
 
-//sendTx is a helper function that applies the signed transaction to a general state
+// Helper function that applies the signed EVM transaction to a general state
 func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, error) {
 
-	//Gets parameters defined in params
+	// Gets parameters defined in params
 	chainConfig := getChainConfig()
 	vmConfig := getVMConfig()
 
@@ -177,20 +176,13 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 		ParentHash: common.Hash{0},
 		Time:       big.NewInt(0),
 	}
-	//Applies transaction to the general state
+
+	// Apply transaction to the general state
 	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
 		log.Error()
 		return nil, err
 	}
-	//logs := stateDb.GetLogs(receipt.TxHash)
-	//log.LLvl1("the log we are looking for", stateDb.GetLogs(common.HexToHash("0x47386f9020e5b01eccee6f293ab2b0dc47479f0793e980a4e49bd0c6473e30b1")))
-	//log.LLvl1(logs)
-	return receipt, nil
-}
 
-//EthereumState structure contains DbBuf the general state and RootHash the hash of the last commit
-type ES struct {
-	DbBuf    []byte
-	RootHash common.Hash
+	return receipt, nil
 }
