@@ -258,7 +258,6 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	cosiSubProtocol := pi.(*SubBlsCosi)
 	msg := p.Msg
 	AddPrefix(&msg)
-	// msg := append([]byte{'b', 'l', 's'}, p.Msg...)
 	cosiSubProtocol.Msg = msg
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
