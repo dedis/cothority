@@ -83,7 +83,7 @@ This will first contact each server individually and then check a few random col
 
 ## Further Information
 
-During the sign and verify operations, each message is prefixed with a constant token. Withtout it, the BLSCoSi service could be used as an oracle, allowing a malicious user to lead an attack by getting the service to sign a malicious block, for example.
+During the sign and verify operations, each message is prefixed with a constant token. Without it, the BLSCoSi service could be used as an oracle, allowing a malicious user to lead an attack by getting the service to sign a malicious block, for example.
 
 For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](../../conode/README.md).
 The same applies to blscosi.
