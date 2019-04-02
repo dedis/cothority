@@ -1,9 +1,9 @@
 package ch.epfl.dedis.skipchain;
 
-import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

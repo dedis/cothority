@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class Bn256G2PointTest {
     private Random rnd = new SecureRandom();

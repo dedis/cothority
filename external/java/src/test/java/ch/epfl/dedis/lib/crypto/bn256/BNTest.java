@@ -3,12 +3,12 @@ package ch.epfl.dedis.lib.crypto.bn256;
 import ch.epfl.dedis.lib.Hex;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class BNTest {
 

@@ -1,12 +1,11 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
-import java.security.*;
 import java.security.Signature;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;

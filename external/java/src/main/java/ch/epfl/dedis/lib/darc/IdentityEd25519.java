@@ -6,7 +6,6 @@ import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.DarcProto;
-import com.google.protobuf.ByteString;
 
 public class IdentityEd25519 implements Identity {
     private Point pub;

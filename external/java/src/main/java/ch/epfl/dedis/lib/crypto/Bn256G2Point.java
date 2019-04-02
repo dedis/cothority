@@ -1,9 +1,9 @@
 package ch.epfl.dedis.lib.crypto;
 
 import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.crypto.bn256.BN;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
-import ch.epfl.dedis.lib.crypto.bn256.BN;
 
 import java.math.BigInteger;
 import java.util.Arrays;

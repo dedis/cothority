@@ -6,12 +6,11 @@ import ch.epfl.dedis.lib.crypto.Bn256G2Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.network.ServerIdentity;
-import ch.epfl.dedis.lib.proto.NetworkProto;
-import ch.epfl.dedis.lib.proto.TrieProto;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
+import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
+import ch.epfl.dedis.lib.proto.TrieProto;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import com.google.protobuf.InvalidProtocolBufferException;
 

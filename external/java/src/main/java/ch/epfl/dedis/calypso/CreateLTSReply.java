@@ -2,14 +2,10 @@ package ch.epfl.dedis.calypso;
 
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.PointFactory;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.Calypso;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * LTS represents a Long Term Secret, which is the result of a DKG among multiple nodes in the cothority. Each node

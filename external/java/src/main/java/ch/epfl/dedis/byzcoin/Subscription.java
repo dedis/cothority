@@ -1,8 +1,8 @@
 package ch.epfl.dedis.byzcoin;
 
-import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 
 import java.util.HashSet;
 import java.util.Set;

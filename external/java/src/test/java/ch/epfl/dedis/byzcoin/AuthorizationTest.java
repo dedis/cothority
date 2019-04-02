@@ -1,12 +1,15 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.byzgen.CalypsoFactory;
+import ch.epfl.dedis.calypso.CalypsoRPC;
+import ch.epfl.dedis.calypso.Document;
+import ch.epfl.dedis.calypso.LTSId;
+import ch.epfl.dedis.calypso.WriteInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
-import ch.epfl.dedis.calypso.*;
 import ch.epfl.dedis.lib.darc.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,9 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AuthorizationTest {

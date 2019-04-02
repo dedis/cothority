@@ -1,18 +1,16 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.calypso.CalypsoRPC;
+import ch.epfl.dedis.calypso.LTSId;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.crypto.Ed25519;
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.PointFactory;
-import ch.epfl.dedis.lib.network.ServerIdentity;
-import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.calypso.LTSId;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
-import ch.epfl.dedis.calypso.CalypsoRPC;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

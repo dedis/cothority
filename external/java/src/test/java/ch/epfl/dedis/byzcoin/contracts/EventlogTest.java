@@ -1,18 +1,18 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
-import ch.epfl.dedis.byzcoin.SignerCounters;
-import ch.epfl.dedis.integration.TestServerController;
-import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.byzcoin.SignerCounters;
+import ch.epfl.dedis.eventlog.Event;
+import ch.epfl.dedis.eventlog.EventLogInstance;
+import ch.epfl.dedis.eventlog.SearchResponse;
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
-import ch.epfl.dedis.eventlog.Event;
-import ch.epfl.dedis.eventlog.EventLogInstance;
-import ch.epfl.dedis.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,9 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventLogTest {
     private static ByzCoinRPC bc;

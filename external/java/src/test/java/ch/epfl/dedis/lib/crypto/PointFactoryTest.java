@@ -3,7 +3,8 @@ package ch.epfl.dedis.lib.crypto;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * It tests different creation of points from different inputs and kinds of points

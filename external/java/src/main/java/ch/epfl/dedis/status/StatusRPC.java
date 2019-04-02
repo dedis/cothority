@@ -1,7 +1,7 @@
 package ch.epfl.dedis.status;
 
-import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.OnetProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
