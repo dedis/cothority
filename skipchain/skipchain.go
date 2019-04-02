@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -24,6 +25,7 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/cothority/v3/messaging"
+	"go.dedis.ch/cothority/v3/pki"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/kyber/v3/sign/cosi"
@@ -33,6 +35,8 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 )
+
+const envAcceptUnverified = "BLS_ACCEPT_UNVERIFIED_PK"
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "Skipchain"
@@ -936,12 +940,40 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	// create the message we want to sign for this round
 	roster := src.Roster
 
+	// get the list of new conodes and their respective proofs of
+	// their key pairs
+	pkiService := s.Service(pki.ServiceName).(*pki.Service)
+	newRoster := []*network.ServerIdentity{}
+	proofs := []pki.PkProof{}
+	_, acceptUnverified := os.LookupEnv(envAcceptUnverified)
+
+	if !acceptUnverified {
+		// don't make the request if we accept unverified public key because
+		// it doesn't protect anyway
+		for _, si := range dst.Roster.List {
+			if i, _ := src.Roster.Search(si.ID); i < 0 {
+				newRoster = append(newRoster, si)
+
+				// Get the proofs of possession of the public keys
+				pr, err := pkiService.GetProof(si)
+				if err != nil {
+					// new conodes appended to the cothority need to be online to send
+					// their proof
+					return fmt.Errorf("Couldn't get the proof of possession for %v", si)
+				}
+
+				proofs = append(proofs, pr...)
+			}
+		}
+	}
+
 	log.Lvlf2("%s is adding forward-link level 0 to: %d->%d with roster %s", s.ServerIdentity(),
 		src.Index, dst.Index, roster.List)
 	fs := &ForwardSignature{
 		TargetHeight: len(src.ForwardLink),
 		Previous:     src.Hash,
 		Newest:       dst,
+		PkProofs:     proofs,
 	}
 	data, err := network.Marshal(fs)
 	if err != nil {
@@ -979,13 +1011,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	proof, err := s.db.GetProof(src.SkipChainID())
 	if err != nil {
 		return err
-	}
-
-	newRoster := []*network.ServerIdentity{}
-	for _, si := range dst.Roster.List {
-		if i, _ := src.Roster.Search(si.ID); i < 0 {
-			newRoster = append(newRoster, si)
-		}
 	}
 
 	if len(newRoster) == 0 {
@@ -1079,6 +1104,27 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 	if len(prevSB.ForwardLink) > 0 {
 		log.Lvl2("previous block already has forward-link")
 		return false
+	}
+
+	// Verify the correctness of the proofs of possession of the service key pairs
+	// of the new conodes
+	_, acceptUnverified := os.LookupEnv(envAcceptUnverified)
+
+	if !acceptUnverified {
+		// don't verify if we accept unverified because it wouldn't protect against malicious nodes
+		for _, si := range fs.Newest.Roster.List {
+			if i, _ := prevSB.Roster.Search(si.ID); i < 0 {
+				for _, srvid := range si.ServiceIdentities {
+					// For backwards compatibility, we allow admins to run their conodes
+					// with an environment variable to accept unverified public keys if
+					// the PKI service is not available
+					if !fs.PkProofs.Verify(&srvid) {
+						log.Error("a service key pair cannot be verified")
+						return false
+					}
+				}
+			}
+		}
 	}
 
 	ok = func() bool {

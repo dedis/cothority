@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"sync"
 	"testing"
@@ -192,6 +193,38 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 
 	csb.BaseHeight = 2
 	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.NoError(t, err)
+}
+
+func TestService_RoguePublicKey(t *testing.T) {
+	log.OutputToBuf()
+	defer log.OutputToOs()
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, ro, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+
+	service := genService.(*Service)
+
+	genesis, err := makeGenesisRoster(service, ro)
+	require.NoError(t, err)
+
+	rogue := local.GenServers(1)[0]
+	// simulate a public key invalid for the private key
+	rogue.ServerIdentity.ServiceIdentities[0].Public = suite.Point().Base()
+
+	newRoster := onet.NewRoster(append(ro.List, rogue.ServerIdentity))
+	newBlock := NewSkipBlock()
+	newBlock.Roster = newRoster
+
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: genesis.Hash, NewBlock: newBlock})
+	require.Error(t, err)
+	require.Contains(t, log.GetStdErr(), "a service key pair cannot be verified")
+
+	// backwards compatibility check
+	os.Setenv(envAcceptUnverified, "true")
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: genesis.Hash, NewBlock: newBlock})
 	require.NoError(t, err)
 }
 

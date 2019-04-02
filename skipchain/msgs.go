@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"go.dedis.ch/cothority/v3/pki"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -162,6 +163,9 @@ type ForwardSignature struct {
 	// Links holds the forwardlinks to prove that 'Newest' is valid. For
 	// the level-0 forwardlink, this is empty.
 	Links []*ForwardLink
+	// PkProofs holds the list of proofs of possession for the new conodes
+	// that the block is trying to insert in the Cothority
+	PkProofs pki.PkProofs
 }
 
 // GetSingleBlock asks for a single block.
