@@ -127,7 +127,7 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, prWr1)
 
-	re1, err := calypsoClient.AddRead(prWr1, reader1, 1, *darc1, 10)
+	re1, err := calypsoClient.AddRead(prWr1, reader1, 1, 10)
 	require.Nil(t, err)
 	prRe1, err := calypsoClient.WaitProof(re1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
@@ -142,7 +142,7 @@ func TestClient_Calypso(t *testing.T) {
 	prWr2, err := calypsoClient.WaitProof(wr2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.True(t, prWr2.InclusionProof.Match(wr2.InstanceID.Slice()))
-	re2, err := calypsoClient.AddRead(prWr2, reader2, 1, *darc2, 10)
+	re2, err := calypsoClient.AddRead(prWr2, reader2, 1, 10)
 	require.Nil(t, err)
 	prRe2, err := calypsoClient.WaitProof(re2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
@@ -158,8 +158,9 @@ func TestClient_Calypso(t *testing.T) {
 	dk1, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(calypsoClient.ltsReply.X))
-	keyCopy1, err := DecodeKey(cothority.Suite, calypsoClient.ltsReply.X,
-		dk1.C, dk1.XhatEnc, reader1.Ed25519.Secret)
+	keyCopy1, err := dk1.RecoverKey(reader1.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
+
+	// use keyCopy to unlock the stuff in writeInstance.Data
 }

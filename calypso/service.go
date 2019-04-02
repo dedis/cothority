@@ -346,7 +346,6 @@ func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.Inst
 // Using the Read and the Write-instance, this method verifies that the
 // requests match and then re-encrypts the secret to the public key given
 // in the Read-instance.
-// TODO: support ephemeral keys.
 func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")

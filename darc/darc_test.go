@@ -465,3 +465,54 @@ func localEvolution(newDarc *Darc, oldDarc *Darc, signers ...Signer) error {
 	newDarc.VerificationDarcs = append(oldDarc.VerificationDarcs, oldDarc)
 	return nil
 }
+
+func TestParseIdentity(t *testing.T) {
+	_, err := ParseIdentity("")
+	require.Error(t, err)
+	_, err = ParseIdentity(":")
+	require.Error(t, err)
+	_, err = ParseIdentity("wat?")
+	require.Error(t, err)
+	_, err = ParseIdentity("wat?:this!")
+	require.Error(t, err)
+
+	in := "ed25519:8557024ed89b420674a18121072a31d35a56125185f4f4bbbc30b06a374c1113"
+	i, err := ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.Ed25519)
+	require.Equal(t, in, i.String())
+
+	in = "darc:xxx"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "darc:010203"
+	i, err = ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.Darc)
+	require.Equal(t, in, i.String())
+
+	in = "x509ec:xxx"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "x509ec:010203"
+	i, err = ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.X509EC)
+	require.Equal(t, in, i.String())
+
+	in = "proxy:"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "proxy:invalid point:data"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "proxy:8557024ed89b420674a18121072a31d35a56125185f4f4bbbc30b06a374c1113:data"
+	i, err = ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.Proxy)
+	require.Equal(t, in, i.String())
+}
