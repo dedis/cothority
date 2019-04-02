@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
-DBG_SRV=0
+DBG_TEST=2
+DBG_SRV=2
 
 # Use 3 servers, use all of them, don't leave one down.
 NBR=3
@@ -53,9 +53,8 @@ testCreate(){
 	eval $SED
 	[ -z "$BC" ] && exit 1
 	
-	testOK ./bcadmin -c . add spawn:eventlog -identity $ID
-	testOK ./bcadmin -c . add invoke:eventlog.log -identity $ID
-	testGrep $ID ./bcadmin -c . show
+	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity $ID
+	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity $ID
 
 	runGrepSed "export EL=" "" $el create
 	eval $SED
