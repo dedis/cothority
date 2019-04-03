@@ -37,7 +37,7 @@ func TestAPI_CorruptedGetProof(t *testing.T) {
 	service.response = &ResponsePkProof{Proofs: PkProofs{}}
 	_, err := client.GetProof(server.ServerIdentity)
 	require.Error(t, err)
-	require.Equal(t, "got a wrong proof for service testServiceA", err.Error())
+	require.Equal(t, "got a wrong proof for service testServiceA: couldn't find a proof", err.Error())
 
 	service.err = errors.New("test")
 	_, err = client.GetProof(server.ServerIdentity)

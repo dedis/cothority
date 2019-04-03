@@ -30,6 +30,17 @@ func TestService_GetProof(t *testing.T) {
 	require.Equal(t, 2, len(proofs))
 }
 
+func TestService_VerifyRoster(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	servers, ro, _ := local.GenTree(4, false)
+	service := servers[0].Service(ServiceName).(*Service)
+
+	err := service.VerifyRoster(ro)
+	require.NoError(t, err)
+}
+
 func TestService_RequestProof(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()

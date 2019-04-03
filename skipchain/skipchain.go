@@ -196,6 +196,16 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 	// If TargetSkipChainID is not given, it is a genesis block.
 	if psbd.TargetSkipChainID.IsNull() {
+		_, acceptUnverified := os.LookupEnv(envAcceptUnverified)
+		if !acceptUnverified {
+			// The roster needs to be verified before we can create the genesis block
+			pkiService := s.Service(pki.ServiceName).(*pki.Service)
+			err = pkiService.VerifyRoster(psbd.NewBlock.Roster)
+			if err != nil {
+				return nil, fmt.Errorf("roster verification failed: %v", err)
+			}
+		}
+
 		// A new chain is created
 		log.Lvl2("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight

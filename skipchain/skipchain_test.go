@@ -226,6 +226,35 @@ func TestService_RoguePublicKey(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestService_RoguePublicKeyGenesis(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, ro, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+
+	rogue := local.GenServers(1)[0]
+	// simulate a public key invalid for the private key
+	rogue.ServerIdentity.ServiceIdentities[0].Public = suite.Point().Base()
+
+	service := genService.(*Service)
+	ro = onet.NewRoster(append(ro.List, rogue.ServerIdentity))
+
+	genesis := NewSkipBlock()
+	genesis.Roster = ro
+	genesis.MaximumHeight = 32
+	genesis.BaseHeight = 32
+
+	_, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: genesis})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "roster verification failed:")
+
+	// backwards compatibility check
+	os.Setenv(envAcceptUnverified, "")
+	defer os.Unsetenv(envAcceptUnverified)
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: genesis})
+	require.NoError(t, err)
+}
+
 func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)

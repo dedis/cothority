@@ -5,6 +5,7 @@ package pki
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
@@ -77,9 +78,22 @@ func (s *Service) GetProof(srvid *network.ServerIdentity) ([]PkProof, error) {
 	}
 
 	// store the proofs as we can reuse them later on
+	// Note that proofs have been verified by the client already
 	err = s.storeProofs(proofs)
 
 	return proofs, err
+}
+
+// VerifyRoster takes a roster and make sure any server identity inside is honest
+func (s *Service) VerifyRoster(roster *onet.Roster) error {
+	for _, si := range roster.List {
+		_, err := s.GetProof(si)
+		if err != nil {
+			return fmt.Errorf("couldn't verify %v: %v", si, err)
+		}
+	}
+
+	return nil
 }
 
 // RequestProof returns the list of public-key proofs for the given server identity

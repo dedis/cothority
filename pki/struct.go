@@ -48,10 +48,12 @@ func (pp PkProofs) Verify(srvid *network.ServiceIdentity) error {
 			if err != nil {
 				return fmt.Errorf("signature verification failed: %v", err)
 			}
+
+			return nil
 		}
 	}
 
-	return nil
+	return errors.New("couldn't find a proof")
 }
 
 // RequestPkProof is the message for asking a proof
