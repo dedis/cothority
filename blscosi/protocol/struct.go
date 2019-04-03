@@ -26,7 +26,7 @@ const DefaultSubProtocolName = "blsSubCoSiProtoDefault"
 // AddPrefix adds a prefix to msg in order to prevent the use of
 // BLSCoSi service as an oracle.
 func AddPrefix(msg *[]byte) {
-	*msg = append([]byte{'b', 'l', 's'}, *msg...)
+	*msg = append([]byte("bls"), *msg...)
 }
 
 func init() {
