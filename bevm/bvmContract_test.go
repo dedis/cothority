@@ -160,7 +160,8 @@ func (bct *bcTest) deploy(instID byzcoin.InstanceID, txParams TransactionParamet
 }
 
 func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParameters, value uint64, account *EvmAccount, contract EvmContract, method string, args ...interface{}) error {
-	log.LLvl1("Invoking Byzcoin for EVM method:", method)
+	log.LLvl1(">>> Calling EVM method:", method)
+	defer log.LLvl1("<<< Calling EVM method:", method)
 
 	callData, err := contract.packMethod(method, args...)
 	if err != nil {
@@ -227,6 +228,9 @@ func getAccountBalance(client *byzcoin.Client, instID byzcoin.InstanceID, addres
 }
 
 func (bct *bcTest) call(instID byzcoin.InstanceID, account *EvmAccount, result interface{}, contract EvmContract, method string, args ...interface{}) error {
+	log.LLvl1(">>> Calling EVM view method:", method)
+	defer log.LLvl1("<<< Calling EVM view method:", method)
+
 	// Pack the method call and arguments
 	callData, err := contract.packMethod(method, args...)
 	if err != nil {
