@@ -85,8 +85,14 @@ func (db *MemDatabase) Dump() ([]byte, error) {
 func (db *MemDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
-	//log.Print(key, value)
+
+	return db.put(key, value)
+}
+
+// Actual implementation, callable from Batch.Write()
+func (db *MemDatabase) put(key []byte, value []byte) error {
 	db.DB[string(key)] = common.CopyBytes(value)
+
 	return nil
 }
 
@@ -96,6 +102,7 @@ func (db *MemDatabase) Has(key []byte) (bool, error) {
 	defer db.lock.RUnlock()
 
 	_, ok := db.DB[string(key)]
+
 	return ok, nil
 }
 
@@ -107,6 +114,7 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	if entry, ok := db.DB[string(key)]; ok {
 		return common.CopyBytes(entry), nil
 	}
+
 	return nil, errors.New("not found")
 }
 
@@ -115,7 +123,15 @@ func (db *MemDatabase) Delete(key []byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
+	return db.delete(key)
+
+	return nil
+}
+
+// Actual implementation, callable from Batch.Write()
+func (db *MemDatabase) delete(key []byte) error {
 	delete(db.DB, string(key))
+
 	return nil
 }
 
@@ -145,6 +161,7 @@ type MemBatch struct {
 func (b *MemBatch) Put(key, value []byte) error {
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value), false})
 	b.size += len(value)
+
 	return nil
 }
 
@@ -152,6 +169,7 @@ func (b *MemBatch) Put(key, value []byte) error {
 func (b *MemBatch) Delete(key []byte) error {
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil, true})
 	b.size++
+
 	return nil
 }
 
@@ -160,13 +178,20 @@ func (b *MemBatch) Write() error {
 	b.db.lock.Lock()
 	defer b.db.lock.Unlock()
 
+	var err error
+
+	// Apply batch commands to the underlying database
 	for _, kv := range b.writes {
 		if kv.del {
-			delete(b.db.DB, string(kv.k))
-			continue
+			err = b.db.delete(kv.k)
+		} else {
+			err = b.db.put(kv.k, kv.v)
 		}
-		b.db.DB[string(kv.k)] = kv.v
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
