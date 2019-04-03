@@ -2,10 +2,18 @@ package pki
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 
-	"go.dedis.ch/kyber/v3/sign/bls"
+	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
 )
+
+// SignFunc generates the signature of a message given the secret key
+type SignFunc func(secret kyber.Scalar, msg []byte) ([]byte, error)
+
+// VerifyFunc verifies the signature of a message given the public key
+type VerifyFunc func(pub kyber.Point, msg []byte, sig []byte) error
 
 // PkProof is the proof of possession of a key
 type PkProof struct {
@@ -18,30 +26,36 @@ type PkProof struct {
 type PkProofs []PkProof
 
 // Verify returns true if the service identity can be verified
-func (pp PkProofs) Verify(srvid *network.ServiceIdentity) bool {
+func (pp PkProofs) Verify(srvid *network.ServiceIdentity) error {
 	pub, err := srvid.Public.MarshalBinary()
 	if err != nil {
-		return false
+		return fmt.Errorf("couldn't marshal the public key: %v", err)
 	}
 
 	for _, p := range pp {
 		if bytes.Equal(p.Public, pub) {
+			if len(p.Nonce) != nonceLength {
+				return errors.New("nonce length does not match")
+			}
+
+			f := verifyRegister[srvid.Suite]
+			if f == nil {
+				return errors.New("unknown suite used for the service")
+			}
+
 			msg := append(p.Public, p.Nonce...)
-			if bls.Verify(pairingSuite, srvid.Public, msg, p.Signature) == nil {
-				return true
+			err = f(srvid.Public, msg, p.Signature)
+			if err != nil {
+				return fmt.Errorf("signature verification failed: %v", err)
 			}
 		}
 	}
 
-	return false
+	return nil
 }
 
 // RequestPkProof is the message for asking a proof
-type RequestPkProof struct {
-	// We use a nonce from the requester and the receiver to prevent
-	// forged proof of possession
-	Nonce []byte
-}
+type RequestPkProof struct{}
 
 // ResponsePkProof contains the response of a request
 type ResponsePkProof struct {

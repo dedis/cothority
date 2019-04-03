@@ -1,8 +1,7 @@
 package pki
 
 import (
-	"bytes"
-	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/onet/v3"
@@ -20,24 +19,17 @@ func NewClient() *Client {
 }
 
 // GetProof returns the proofs of possession for the BLS key pairs
-func (c *Client) GetProof(srvid *network.ServerIdentity) ([]PkProof, error) {
-	nonce, err := makeNonce()
-	if err != nil {
-		return nil, err
-	}
-
-	req := &RequestPkProof{Nonce: nonce}
+func (c *Client) GetProof(si *network.ServerIdentity) ([]PkProof, error) {
 	rep := &ResponsePkProof{}
-
-	err = c.SendProtobuf(srvid, req, rep)
+	err := c.SendProtobuf(si, &RequestPkProof{}, rep)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request failed with: %v", err)
 	}
 
-	// make sure correct nonce has been used
-	for _, proof := range rep.Proofs {
-		if !bytes.Equal(proof.Nonce[:nonceLength], nonce) {
-			return nil, errors.New("nonce does not match with the request")
+	// make sure the proofs are correct
+	for _, srvid := range si.ServiceIdentities {
+		if err := rep.Proofs.Verify(&srvid); err != nil {
+			return nil, fmt.Errorf("got a wrong proof for service %s: %v", srvid.Name, err)
 		}
 	}
 

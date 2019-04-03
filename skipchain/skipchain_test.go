@@ -197,9 +197,6 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 }
 
 func TestService_RoguePublicKey(t *testing.T) {
-	log.OutputToBuf()
-	defer log.OutputToOs()
-
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -220,10 +217,10 @@ func TestService_RoguePublicKey(t *testing.T) {
 
 	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: genesis.Hash, NewBlock: newBlock})
 	require.Error(t, err)
-	require.Contains(t, log.GetStdErr(), "a service key pair cannot be verified")
+	require.Contains(t, err.Error(), "got a wrong proof for service")
 
 	// backwards compatibility check
-	os.Setenv(envAcceptUnverified, "true")
+	os.Setenv(envAcceptUnverified, "")
 	defer os.Unsetenv(envAcceptUnverified)
 	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: genesis.Hash, NewBlock: newBlock})
 	require.NoError(t, err)

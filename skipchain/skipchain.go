@@ -36,7 +36,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-const envAcceptUnverified = "BLS_ACCEPT_UNVERIFIED_PK"
+const envAcceptUnverified = "ACCEPT_UNVERIFIED_PK"
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "Skipchain"
@@ -958,7 +958,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 			if err != nil && !acceptUnverified {
 				// new conodes appended to the cothority need to be online to send
 				// their proof
-				return fmt.Errorf("Couldn't get the proof of possession for %v", si)
+				return fmt.Errorf("Couldn't get the proof of possession for %v: %v", si, err)
 			}
 
 			proofs = append(proofs, pr...)
@@ -1116,8 +1116,8 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 					// For backwards compatibility, we allow admins to run their conodes
 					// with an environment variable to accept unverified public keys if
 					// the PKI service is not available
-					if !fs.PkProofs.Verify(&srvid) {
-						log.Error("a service key pair cannot be verified")
+					if err := fs.PkProofs.Verify(&srvid); err != nil {
+						log.Errorf("a service key pair cannot be verified: %v", err)
 						return false
 					}
 				}
