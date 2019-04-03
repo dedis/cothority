@@ -11,11 +11,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-	"go.dedis.ch/protobuf"
 )
 
 type EvmContract struct {
@@ -171,59 +169,4 @@ func getContext() vm.Context {
 		Difficulty:  big.NewInt(1),
 	}
 
-}
-
-type EvmDb struct {
-	memDb   *MemDatabase
-	stateDb *state.StateDB
-}
-
-func NewEvmDb(es *ES) (*EvmDb, error) {
-	if es.DbBuf == nil {
-		// First creation
-		es.DbBuf = []byte{}
-	}
-
-	memDb, err := NewMemDatabase(es.DbBuf)
-	if err != nil {
-		return nil, err
-	}
-
-	db := state.NewDatabase(memDb)
-	stateDb, err := state.New(es.RootHash, db)
-	if err != nil {
-		return nil, err
-	}
-
-	return &EvmDb{memDb: memDb, stateDb: stateDb}, nil
-}
-
-func (db *EvmDb) getNewEvmState() ([]byte, error) {
-	// Commit the underlying databases first
-	root, err := db.stateDb.Commit(true)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.stateDb.Database().TrieDB().Commit(root, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// Dump the low-level database
-	dbBuf, err := db.memDb.Dump()
-	if err != nil {
-		return nil, err
-	}
-
-	// Build the new EVM state
-	es := ES{RootHash: root, DbBuf: dbBuf}
-
-	// Serialize it
-	data, err := protobuf.Encode(&es)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
 }

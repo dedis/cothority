@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -179,7 +180,7 @@ func (bct *bcTest) transact(instID byzcoin.InstanceID, txParams TransactionParam
 	return nil
 }
 
-func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*EvmDb, error) {
+func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*state.StateDB, error) {
 	// Retrieve the proof of the Byzcoin instance
 	proofResponse, err := client.GetProof(instID[:])
 	if err != nil {
@@ -204,21 +205,21 @@ func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*EvmDb, error)
 	if err != nil {
 		return nil, err
 	}
-	evmDb, err := NewEvmDb(&es)
+	stateDb, err := NewEvmDb(&es)
 	if err != nil {
 		return nil, err
 	}
 
-	return evmDb, nil
+	return stateDb, nil
 }
 
 func getAccountBalance(client *byzcoin.Client, instID byzcoin.InstanceID, address common.Address) (*big.Int, error) {
-	evmDb, err := getEvmDb(client, instID)
+	stateDb, err := getEvmDb(client, instID)
 	if err != nil {
 		return nil, err
 	}
 
-	balance := evmDb.stateDb.GetBalance(address)
+	balance := stateDb.GetBalance(address)
 
 	log.Lvl1("balance of", address.Hex(), ":", balance, "wei")
 
@@ -233,13 +234,13 @@ func (bct *bcTest) call(instID byzcoin.InstanceID, account *EvmAccount, result i
 	}
 
 	// Retrieve the EVM state
-	evmDb, err := getEvmDb(bct.cl, instID)
+	stateDb, err := getEvmDb(bct.cl, instID)
 	if err != nil {
 		return err
 	}
 
 	// Instantiate a new EVM
-	evm := vm.NewEVM(getContext(), evmDb.stateDb, getChainConfig(), getVMConfig())
+	evm := vm.NewEVM(getContext(), stateDb, getChainConfig(), getVMConfig())
 
 	// Perform the call (1 Ether should be enough for everyone [tm]...)
 	ret, _, err := evm.Call(vm.AccountRef(account.Address), contract.Address, callData, uint64(1*WeiPerEther), big.NewInt(0))

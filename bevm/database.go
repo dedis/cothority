@@ -29,7 +29,7 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-//MemDatabase structure
+// Memory database
 type MemDatabase struct {
 	DB   map[string][]byte
 	lock sync.RWMutex
@@ -44,47 +44,44 @@ type KeyValueEntry struct {
 	Value []byte
 }
 
-//NewMemDatabase creates a new memory database
+// Deserialize the memory database
 func NewMemDatabase(data []byte) (*MemDatabase, error) {
 	kvs := &KeyValues{}
+
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
 		log.LLvl1("error decoding data")
 		return nil, err
 	}
+
 	DB := &MemDatabase{
 		DB: map[string][]byte{},
 	}
+
 	for _, kv := range kvs.KVs {
 		DB.DB[string(kv.Key)] = kv.Value
 	}
-	if err != nil {
-		log.Lvl1("Error with memory database", err)
-		return nil, err
-	}
+
 	return DB, nil
 }
 
-//NewMemDatabaseWithCap :
-func NewMemDatabaseWithCap(size int) *MemDatabase {
-	return &MemDatabase{
-		DB: make(map[string][]byte, size),
-	}
-}
-
-//Dump encodes the data back
+// Serialize the memory database
 func (db *MemDatabase) Dump() ([]byte, error) {
 	kvs := &KeyValues{}
+
 	for key, value := range db.DB {
 		kvs.KVs = append(kvs.KVs, KeyValueEntry{Key: []byte(key), Value: value})
 	}
 	sort.Slice(kvs.KVs, func(i, j int) bool {
 		return bytes.Compare(kvs.KVs[i].Key, kvs.KVs[j].Key) < 0
 	})
+
 	return protobuf.Encode(kvs)
 }
 
-//Put :
+// ethdb.Database interface implementation
+
+// Putter
 func (db *MemDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -93,7 +90,7 @@ func (db *MemDatabase) Put(key []byte, value []byte) error {
 	return nil
 }
 
-//Has :
+// Has()
 func (db *MemDatabase) Has(key []byte) (bool, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -102,7 +99,7 @@ func (db *MemDatabase) Has(key []byte) (bool, error) {
 	return ok, nil
 }
 
-//Get  :
+// Get()
 func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
@@ -113,7 +110,7 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	return nil, errors.New("not found")
 }
 
-//Delete :
+// Deleter
 func (db *MemDatabase) Delete(key []byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -122,41 +119,44 @@ func (db *MemDatabase) Delete(key []byte) error {
 	return nil
 }
 
-//Close :
+// Close()
 func (db *MemDatabase) Close() {}
 
-//NewBatch :
+// NewBatch()
 func (db *MemDatabase) NewBatch() ethdb.Batch {
-	return &memBatch{db: db}
+	return &MemBatch{db: db}
 }
 
-//Len :
-func (db *MemDatabase) Len() int { return len(db.DB) }
-
+// Batch database wrapper for MemDatabase
 type kv struct {
 	k, v []byte
 	del  bool
 }
 
-type memBatch struct {
+type MemBatch struct {
 	db     *MemDatabase
 	writes []kv
 	size   int
 }
 
-func (b *memBatch) Put(key, value []byte) error {
+// ethdb.Batch interface implementation
+
+// Putter
+func (b *MemBatch) Put(key, value []byte) error {
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value), false})
 	b.size += len(value)
 	return nil
 }
 
-func (b *memBatch) Delete(key []byte) error {
+// Deleter
+func (b *MemBatch) Delete(key []byte) error {
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil, true})
 	b.size++
 	return nil
 }
 
-func (b *memBatch) Write() error {
+// Write()
+func (b *MemBatch) Write() error {
 	b.db.lock.Lock()
 	defer b.db.lock.Unlock()
 
@@ -170,11 +170,13 @@ func (b *memBatch) Write() error {
 	return nil
 }
 
-func (b *memBatch) ValueSize() int {
+// ValueSize()
+func (b *MemBatch) ValueSize() int {
 	return b.size
 }
 
-func (b *memBatch) Reset() {
+// Reset()
+func (b *MemBatch) Reset() {
 	b.writes = b.writes[:0]
 	b.size = 0
 }
