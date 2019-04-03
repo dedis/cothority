@@ -224,6 +224,7 @@ func TestService_RoguePublicKey(t *testing.T) {
 
 	// backwards compatibility check
 	os.Setenv(envAcceptUnverified, "true")
+	defer os.Unsetenv(envAcceptUnverified)
 	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: genesis.Hash, NewBlock: newBlock})
 	require.NoError(t, err)
 }

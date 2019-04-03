@@ -947,23 +947,21 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	proofs := []pki.PkProof{}
 	_, acceptUnverified := os.LookupEnv(envAcceptUnverified)
 
-	if !acceptUnverified {
-		// don't make the request if we accept unverified public key because
-		// it doesn't protect anyway
-		for _, si := range dst.Roster.List {
-			if i, _ := src.Roster.Search(si.ID); i < 0 {
-				newRoster = append(newRoster, si)
+	// don't make the request if we accept unverified public key because
+	// it doesn't protect anyway
+	for _, si := range dst.Roster.List {
+		if i, _ := src.Roster.Search(si.ID); i < 0 {
+			newRoster = append(newRoster, si)
 
-				// Get the proofs of possession of the public keys
-				pr, err := pkiService.GetProof(si)
-				if err != nil {
-					// new conodes appended to the cothority need to be online to send
-					// their proof
-					return fmt.Errorf("Couldn't get the proof of possession for %v", si)
-				}
-
-				proofs = append(proofs, pr...)
+			// Get the proofs of possession of the public keys
+			pr, err := pkiService.GetProof(si)
+			if err != nil && !acceptUnverified {
+				// new conodes appended to the cothority need to be online to send
+				// their proof
+				return fmt.Errorf("Couldn't get the proof of possession for %v", si)
 			}
+
+			proofs = append(proofs, pr...)
 		}
 	}
 
@@ -1017,7 +1015,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return nil
 	}
 
-	log.Lvlf3("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
+	log.Lvlf2("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
 
 	// current conode needs to be in the propagation roster
 	newRoster = append(newRoster, s.ServerIdentity())
@@ -1515,7 +1513,7 @@ func (s *Service) propagateProofHandler(msg network.Message) error {
 		return err
 	}
 
-	log.Lvlf3("Proof has been propagated to %v", s.ServerIdentity())
+	log.Lvlf2("Proof has been propagated to %v", s.ServerIdentity())
 	return nil
 }
 
