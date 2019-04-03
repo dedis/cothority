@@ -61,6 +61,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pborman/uuid v1.2.0
+	github.com/pelletier/go-toml v1.3.0 // indirect
 	github.com/peterh/liner v1.1.0 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.8.1 // indirect
@@ -75,13 +76,13 @@ require (
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/shirou/gopsutil v2.18.12+incompatible // indirect
-	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
-	github.com/sirupsen/logrus v1.4.0 // indirect
-	github.com/spf13/afero v1.2.1 // indirect
+	github.com/shurcooL/go v0.0.0-20190330031554-6713ea532688 // indirect
+	github.com/sirupsen/logrus v1.4.1 // indirect
+	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.3 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.3.2 // indirect
-	github.com/stamblerre/gocode v0.0.0-20190213022308-8cc90faaf476 // indirect
+	github.com/stamblerre/gocode v0.0.0-20190327203809-810592086997 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
@@ -93,12 +94,12 @@ require (
 	golang.org/x/arch v0.0.0-20190312162104-788fe5ffcd8c // indirect
 	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
-	golang.org/x/net v0.0.0-20190326090315-15845e8f865b // indirect
+	golang.org/x/net v0.0.0-20190328230028-74de082e2cca // indirect
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
-	golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc // indirect
+	golang.org/x/sys v0.0.0-20190402142545-baf5eb976a8c // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
-	golang.org/x/tools v0.0.0-20190401205534-4c644d7e323d // indirect
+	golang.org/x/tools v0.0.0-20190402200628-202502a5a924 // indirect
 	gopkg.in/alecthomas/kingpin.v3-unstable v3.0.0-20180810215634-df19058c872c // indirect
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.2.2 // indirect
