@@ -257,7 +257,7 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	}
 	cosiSubProtocol := pi.(*SubBlsCosi)
 	msg := p.Msg
-	AddPrefix(&msg)
+	addPrefix(&msg)
 	cosiSubProtocol.Msg = msg
 	cosiSubProtocol.Data = p.Data
 	// Fail fast enough if the subleader is failing to try
@@ -399,8 +399,8 @@ func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.M
 
 	// generate personal signature and append to other sigs
 	msg := p.Msg
-	AddPrefix(&msg)
-	personalSig, err := bls.Sign(p.suite, p.Private(), msg)
+	addPrefix(&msg)
+	localSig, err := bls.Sign(p.suite, p.Private(), msg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -408,7 +408,7 @@ func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *cosi.M
 	// fill the map with the Root signature
 	responses[p.Public().String()] = &Response{
 		Mask:      personalMask.Mask(),
-		Signature: personalSig,
+		Signature: localSig,
 	}
 
 	// Aggregate all signatures

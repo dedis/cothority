@@ -23,9 +23,9 @@ const DefaultProtocolName = "blsCoSiProtoDefault"
 // main protocol.
 const DefaultSubProtocolName = "blsSubCoSiProtoDefault"
 
-// AddPrefix adds a prefix to msg in order to prevent the use of
+// Adds a prefix to msg in order to prevent the use of
 // BLSCoSi service as an oracle.
-func AddPrefix(msg *[]byte) {
+func addPrefix(msg *[]byte) {
 	*msg = append([]byte("bls"), *msg...)
 }
 
@@ -103,7 +103,7 @@ func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics [
 		return err
 	}
 
-	AddPrefix(&msg)
+	addPrefix(&msg)
 	err = bls.Verify(ps, mask.AggregatePublic, msg, signature)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
