@@ -54,3 +54,13 @@ For creating a new docker image, there are two commands:
 on your machine.
 * `make docker BUILD_TAG=v3.0.0-pre1` - creates a docker image from source at tag
 BUILD_TAG.
+
+# Version 3
+
+## BLS security for version <= 3.0.2
+
+Prior to version 3.0.3, the BLS signature scheme was open to rogue public-key
+attacks. A verification has been added using Proof of Possession but conodes
+lacking the update won't be able to provide it. In order to migrate a cothority
+incrementally, the environment variable `ACCEPT_UNVERIFIED_PK` can be set and
+then missing proofs will be ignored.

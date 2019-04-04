@@ -202,6 +202,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			pkiService := s.Service(pki.ServiceName).(*pki.Service)
 			err = pkiService.VerifyRoster(psbd.NewBlock.Roster)
 			if err != nil {
+				log.Lvlf1("Cannot verify the roster honesty. Use the environment variables %s to skip this verification", envAcceptUnverified)
 				return nil, fmt.Errorf("roster verification failed: %v", err)
 			}
 		}
@@ -966,6 +967,8 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 			// Get the proofs of possession of the public keys
 			pr, err := pkiService.GetProof(si)
 			if err != nil && !acceptUnverified {
+				log.Lvlf1("Request to get Proofs of Possession failed. Set the environment variable %s to skip this verification.", envAcceptUnverified)
+
 				// new conodes appended to the cothority need to be online to send
 				// their proof
 				return fmt.Errorf("Couldn't get the proof of possession for %v: %v", si, err)
@@ -1025,7 +1028,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return nil
 	}
 
-	log.Lvlf2("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
+	log.Lvlf3("%v is propagating %d blocks to %v", s.ServerIdentity(), len(proof), newRoster)
 
 	// current conode needs to be in the propagation roster
 	newRoster = append(newRoster, s.ServerIdentity())
@@ -1128,6 +1131,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 					// the PKI service is not available
 					if err := fs.PkProofs.Verify(&srvid); err != nil {
 						log.Errorf("a service key pair cannot be verified: %v", err)
+						log.Lvlf1("Use the environment variables %s to skip this verification", envAcceptUnverified)
 						return false
 					}
 				}
@@ -1523,7 +1527,7 @@ func (s *Service) propagateProofHandler(msg network.Message) error {
 		return err
 	}
 
-	log.Lvlf2("Proof has been propagated to %v", s.ServerIdentity())
+	log.Lvlf3("Proof has been propagated to %v", s.ServerIdentity())
 	return nil
 }
 

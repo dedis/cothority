@@ -9,6 +9,14 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+func init() {
+	network.RegisterMessages(
+		&PkProof{},
+		&RequestPkProof{},
+		&ResponsePkProof{},
+	)
+}
+
 // SignFunc generates the signature of a message given the secret key
 type SignFunc func(secret kyber.Scalar, msg []byte) ([]byte, error)
 
