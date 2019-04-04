@@ -467,7 +467,7 @@ func newBCTest(t *testing.T) (out *bcTest) {
 	// to create and update keyValue contracts.
 	var err error
 	out.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, out.roster,
-		[]string{"spawn:bvm", "invoke:bvm.display", "invoke:bvm.credit", "invoke:bvm.transaction"}, out.signer.Identity())
+		[]string{"spawn:bvm", "invoke:bvm.credit", "invoke:bvm.transaction"}, out.signer.Identity())
 	require.Nil(t, err)
 	out.gDarc = &out.gMsg.GenesisDarc
 

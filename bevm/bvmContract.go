@@ -82,16 +82,6 @@ func NewContractState(stateDb *state.StateDB) (*ES, error) {
 	return &ES{RootHash: root, DbBuf: dbBuf}, nil
 }
 
-/*
-	// Serialize it
-	data, err := protobuf.Encode(&es)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-*/
-
 // Spawn a new BVM contract
 func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
@@ -132,7 +122,6 @@ func checkArguments(inst byzcoin.Instruction, names ...string) error {
 	return nil
 }
 
-//Invoke provides three instructions : display, credit and transaction
 func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 	var darcID darc.ID
@@ -221,7 +210,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 }
 
 // Helper function that applies the signed EVM transaction to a general state
-func sendTx(tx *types.Transaction, StateDb *state.StateDB) (*types.Receipt, error) {
+func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, error) {
 
 	// Gets parameters defined in params
 	chainConfig := getChainConfig()
@@ -246,7 +235,7 @@ func sendTx(tx *types.Transaction, StateDb *state.StateDB) (*types.Receipt, erro
 	}
 
 	// Apply transaction to the general state
-	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, StateDb, header, tx, ug, vmConfig)
+	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
 		log.Error()
 		return nil, err
