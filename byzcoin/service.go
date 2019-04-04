@@ -1357,6 +1357,12 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			view := isViewChangeTx(body.TxResults)
 			if view != nil {
 				s.viewChangeMan.done(*view)
+			} else {
+				// clean previous states as a new block has been added in the mean time
+				// making them thus invalid
+				s.viewChangeMan.stop(sb.SkipChainID())
+				s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.SkipChainID()))
+				s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash))
 			}
 		} else {
 			// Start viewchange monitor that will fire if we don't get updates in time.

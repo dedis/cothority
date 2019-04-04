@@ -366,7 +366,9 @@ func (m *stateLog) add(req InitReq) {
 	// Invariant: requests must have the same view
 	for _, v := range m.received {
 		if !v.View.Equal(req.View) {
-			log.Error("view is not equal")
+			// This happens when the conode is out of sync with respect with the view change and it didn't
+			// received yet the new blocks so the state are not reset
+			log.Lvlf1("a request has been ignored because it does not match previously received views: %s", req.View.String())
 			return
 		}
 	}
