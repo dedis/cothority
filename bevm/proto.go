@@ -21,7 +21,7 @@ type KeyValueData struct {
 	Storage []KeyValue
 }
 
-type Bvm struct {
+type BEvm struct {
 	Name byzcoin.InstanceID
 }
 

@@ -6,21 +6,21 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 )
 
-var ContractBvmValueID = "bvm_value"
+var ContractBEvmValueID = "bevm_value"
 
-type BvmValue struct {
+type BEvmValue struct {
 	byzcoin.BasicContract
 
-	contents BvmValueContents
+	contents BEvmValueContents
 }
 
-type BvmValueContents struct {
+type BEvmValueContents struct {
 	Value []byte
 }
 
-func ComputeInstanceID(bvmContractID byzcoin.InstanceID, key []byte) byzcoin.InstanceID {
+func ComputeInstanceID(bevmContractID byzcoin.InstanceID, key []byte) byzcoin.InstanceID {
 	h := sha256.New()
-	h.Write(bvmContractID[:])
+	h.Write(bevmContractID[:])
 	h.Write(key)
 
 	return byzcoin.NewInstanceID(h.Sum(nil))

@@ -39,13 +39,13 @@ type LowLevelDb interface {
 }
 
 // ---------------------------------------------------------------------------
-// Database distributed among BvmValue instances
+// Database distributed among BEvmValue instances
 type ByzDatabase struct {
 	client       *byzcoin.Client
 	roStateTrie  byzcoin.ReadOnlyStateTrie
-	bvmIID       byzcoin.InstanceID    // ID of the associated BvmContract instance
+	bevmIID      byzcoin.InstanceID    // ID of the associated BEvmContract instance
 	stateChanges []byzcoin.StateChange // List of state changes to apply
-	keys         map[string]bool       // Keeps track of existing BvmValue instances
+	keys         map[string]bool       // Keeps track of existing BEvmValue instances
 	lock         sync.RWMutex
 }
 
@@ -58,18 +58,18 @@ func createKeyMap(keyList []string) map[string]bool {
 	return keys
 }
 
-func NewClientByzDatabase(keyList []string, client *byzcoin.Client, bvmIID byzcoin.InstanceID) (*ByzDatabase, error) {
+func NewClientByzDatabase(keyList []string, client *byzcoin.Client, bevmIID byzcoin.InstanceID) (*ByzDatabase, error) {
 	return &ByzDatabase{
-		client: client,
-		bvmIID: bvmIID,
-		keys:   createKeyMap(keyList),
+		client:  client,
+		bevmIID: bevmIID,
+		keys:    createKeyMap(keyList),
 	}, nil
 }
 
-func NewServerByzDatabase(keyList []string, roStateTrie byzcoin.ReadOnlyStateTrie, bvmIID byzcoin.InstanceID) (*ByzDatabase, error) {
+func NewServerByzDatabase(keyList []string, roStateTrie byzcoin.ReadOnlyStateTrie, bevmIID byzcoin.InstanceID) (*ByzDatabase, error) {
 	return &ByzDatabase{
 		roStateTrie: roStateTrie,
-		bvmIID:      bvmIID,
+		bevmIID:     bevmIID,
 		keys:        createKeyMap(keyList),
 	}, nil
 }
@@ -133,22 +133,22 @@ func (db *ByzDatabase) Put(key []byte, value []byte) error {
 
 // Actual implementation, callable from Batch.Write()
 func (db *ByzDatabase) put(key []byte, value []byte) error {
-	contents := &BvmValueContents{Value: value}
+	contents := &BEvmValueContents{Value: value}
 
 	contentsData, err := protobuf.Encode(contents)
 	if err != nil {
 		return err
 	}
 
-	instanceID := ComputeInstanceID(db.bvmIID, key)
+	instanceID := ComputeInstanceID(db.bevmIID, key)
 	var sc byzcoin.StateChange
 
 	if _, ok := db.keys[string(key)]; ok {
 		sc = byzcoin.NewStateChange(byzcoin.Update, instanceID,
-			ContractBvmValueID, contentsData, nil)
+			ContractBEvmValueID, contentsData, nil)
 	} else {
 		sc = byzcoin.NewStateChange(byzcoin.Create, instanceID,
-			ContractBvmValueID, contentsData, nil)
+			ContractBEvmValueID, contentsData, nil)
 	}
 	db.keys[string(key)] = true
 
@@ -157,9 +157,9 @@ func (db *ByzDatabase) put(key []byte, value []byte) error {
 	return nil
 }
 
-func (db *ByzDatabase) getBvmValue(key []byte) (value []byte, err error) {
-	// Compute the BVM Value instance ID
-	instID := ComputeInstanceID(db.bvmIID, key)
+func (db *ByzDatabase) getBEvmValue(key []byte) (value []byte, err error) {
+	// Compute the BEVM Value instance ID
+	instID := ComputeInstanceID(db.bevmIID, key)
 
 	if db.roStateTrie != nil {
 		// Calling from the contract
@@ -202,7 +202,7 @@ func (db *ByzDatabase) Has(key []byte) (bool, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 
-	_, err := db.getBvmValue(key)
+	_, err := db.getBEvmValue(key)
 
 	return (err == nil), nil
 }
@@ -212,13 +212,13 @@ func (db *ByzDatabase) Get(key []byte) ([]byte, error) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 
-	value, err := db.getBvmValue(key)
+	value, err := db.getBEvmValue(key)
 	if err != nil {
 		return nil, err
 	}
 
 	// Decode the value into an EVM State
-	var contents BvmValueContents
+	var contents BEvmValueContents
 	err = protobuf.Decode(value, &contents)
 	if err != nil {
 		return nil, err
@@ -239,10 +239,10 @@ func (db *ByzDatabase) Delete(key []byte) error {
 
 // Actual implementation, callable from Batch.Write()
 func (db *ByzDatabase) delete(key []byte) error {
-	instanceID := ComputeInstanceID(db.bvmIID, key)
+	instanceID := ComputeInstanceID(db.bevmIID, key)
 
 	sc := byzcoin.NewStateChange(byzcoin.Remove, instanceID,
-		ContractBvmValueID, nil, nil)
+		ContractBEvmValueID, nil, nil)
 
 	db.stateChanges = append(db.stateChanges, sc)
 

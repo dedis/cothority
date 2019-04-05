@@ -52,7 +52,7 @@ func assertBigInt0(t *testing.T, actual *big.Int) {
 	require.Equal(t, 0, big.NewInt(0).Cmp(actual))
 }
 
-// Spawn a bvm
+// Spawn a BEVM
 func Test_Spawn(t *testing.T) {
 	log.LLvl1("test: instantiating evm")
 
@@ -201,21 +201,21 @@ func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*state.StateDB
 	}
 
 	// Decode the proof value into an EVM State
-	var es ES
-	err = protobuf.Decode(value, &es)
+	var bs BEvmState
+	err = protobuf.Decode(value, &bs)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a client ByzDB instance
-	byzDb, err := NewClientByzDatabase(es.KeyList, client, instID)
+	byzDb, err := NewClientByzDatabase(bs.KeyList, client, instID)
 	if err != nil {
 		return nil, err
 	}
 
 	db := state.NewDatabase(byzDb)
 
-	return state.New(es.RootHash, db)
+	return state.New(bs.RootHash, db)
 }
 
 func getAccountBalance(client *byzcoin.Client, instID byzcoin.InstanceID, address common.Address) (*big.Int, error) {
@@ -471,7 +471,7 @@ func newBCTest(t *testing.T) (out *bcTest) {
 	// to create and update keyValue contracts.
 	var err error
 	out.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, out.roster,
-		[]string{"spawn:bvm", "invoke:bvm.credit", "invoke:bvm.transaction"}, out.signer.Identity())
+		[]string{"spawn:bevm", "invoke:bevm.credit", "invoke:bevm.transaction"}, out.signer.Identity())
 	require.Nil(t, err)
 	out.gDarc = &out.gMsg.GenesisDarc
 
@@ -499,7 +499,7 @@ func (bct *bcTest) createInstance(args byzcoin.Arguments) byzcoin.InstanceID {
 			InstanceID:    byzcoin.NewInstanceID(bct.gDarc.GetBaseID()),
 			SignerCounter: []uint64{bct.ct},
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractBvmID,
+				ContractID: ContractBEvmID,
 				Args:       args,
 			},
 		}},
@@ -523,7 +523,7 @@ func (bct *bcTest) invokeInstance(instID byzcoin.InstanceID, command string, arg
 			InstanceID:    instID,
 			SignerCounter: []uint64{bct.ct},
 			Invoke: &byzcoin.Invoke{
-				ContractID: "bvm",
+				ContractID: "bevm",
 				Command:    command,
 				Args:       args,
 			},

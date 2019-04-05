@@ -55,17 +55,17 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	//Empty general Ethereum state database to instantiate EVM
-	sdb, err := NewEvmMemDb(&ES{})
+	sdb, err := NewEvmMemDb(&BEvmState{})
 	require.Nil(t, err)
 
 	//Context for instantiating EVM
 	ctx := vm.Context{CanTransfer: canTransfer, Transfer: transfer, GetHash: getHash, Origin: addressA, GasPrice: big.NewInt(1), Coinbase: addressA, GasLimit: 10000000000, BlockNumber: big.NewInt(0), Time: big.NewInt(1), Difficulty: big.NewInt(1)}
 
 	//Setting up the Byzcoin Virtual Machine, a copy of EVM with our parameters
-	bvm := vm.NewEVM(ctx, sdb, getChainConfig(), getVMConfig())
+	bevm := vm.NewEVM(ctx, sdb, getChainConfig(), getVMConfig())
 
 	//Contract deployment
-	retContractCreation, addrContract, leftOverGas, err := bvm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
+	retContractCreation, addrContract, leftOverGas, err := bevm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
 	if err != nil {
 		err = errors.New("contract deployment unsuccessful: " + err.Error())
 		log.LLvl1("return of contract creation", common.Bytes2Hex(retContractCreation))
@@ -75,41 +75,41 @@ func TestTokenContract(t *testing.T) {
 
 	//Calling the methods from the contract we just deployed using the abi helpers function defined above
 	//Constructor (create method) call
-	_, _, err = bvm.Call(accountRef, addrContract, create, leftOverGas, big.NewInt(0))
+	_, _, err = bevm.Call(accountRef, addrContract, create, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 
 	//Getting balance of addressA
-	retBalanceOfAccountA, _, err := bvm.Call(accountRef, addrContract, get, leftOverGas, big.NewInt(0))
+	retBalanceOfAccountA, _, err := bevm.Call(accountRef, addrContract, get, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1(addressA.Hex(), "address, token balance :", retBalanceOfAccountA)
 
 	//Sending a token from A to B
-	_, _, err = bvm.Call(accountRef, addrContract, send, leftOverGas, big.NewInt(0))
+	_, _, err = bevm.Call(accountRef, addrContract, send, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
 	//Getting balance of addressA
-	retBalanceOfAccountB, _, err := bvm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
+	retBalanceOfAccountB, _, err := bevm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1(addressB.Hex(), "address, token balance :", retBalanceOfAccountB)
 
 	//Checking if the other account was updated accordingly
-	retBalanceOfAccountA, _, err = bvm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
+	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1(addressA.Hex(), "address, token balance :", retBalanceOfAccountA)
 
 	//Transfering one more token
-	_, _, err = bvm.Call(accountRef, addrContract, transferTests, leftOverGas, big.NewInt(0))
+	_, _, err = bevm.Call(accountRef, addrContract, transferTests, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
 	//Getting balance of addressB
-	retBalanceOfAccountB, _, err = bvm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
+	retBalanceOfAccountB, _, err = bevm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1(addressB.Hex(), "address, token balance :", retBalanceOfAccountB)
 
 	//Getting balance of addressA
-	retBalanceOfAccountA, _, err = bvm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
+	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1("balance of ", addressA.Hex(), " is ", retBalanceOfAccountA)
 	log.LLvl1("contract calls passed")
