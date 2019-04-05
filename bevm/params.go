@@ -1,91 +1,12 @@
 package bevm
 
 import (
-	"crypto/ecdsa"
-	"errors"
-	"fmt"
-	"io/ioutil"
 	"math/big"
-	"os"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 )
-
-type EvmContract struct {
-	Abi      abi.ABI
-	Bytecode []byte
-	Address  common.Address
-}
-
-func (contract EvmContract) packConstructor(args ...interface{}) ([]byte, error) {
-	return contract.packMethod("", args...)
-}
-
-func (contract EvmContract) packMethod(method string, args ...interface{}) ([]byte, error) {
-	return contract.Abi.Pack(method, args...)
-}
-
-func (contract EvmContract) unpackResult(result interface{}, method string, resultBytes []byte) error {
-	return contract.Abi.Unpack(result, method, resultBytes)
-}
-
-func (contract EvmContract) String() string {
-	return fmt.Sprintf("EvmContract@%s", contract.Address.Hex())
-}
-
-type EvmAccount struct {
-	Address    common.Address
-	PrivateKey *ecdsa.PrivateKey
-	Nonce      uint64
-}
-
-func (account EvmAccount) String() string {
-	return fmt.Sprintf("EvmAccount(%s)", account.Address.Hex())
-}
-
-func NewEvmAccount(address string, privateKey string) (*EvmAccount, error) {
-	key, err := crypto.HexToECDSA(privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &EvmAccount{
-		Address:    common.HexToAddress(address),
-		PrivateKey: key,
-	}, nil
-}
-
-//returns abi and bytecode of solidity contract
-func getSmartContract(nameOfContract string) (*EvmContract, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	contractPath := dir + "/contracts/" + nameOfContract + "/" + nameOfContract + "_sol_" + nameOfContract
-
-	abiJson, err := ioutil.ReadFile(contractPath + ".abi")
-	if err != nil {
-		return nil, errors.New("Error reading contract ABI: " + err.Error())
-	}
-
-	contractAbi, err := abi.JSON(strings.NewReader(string(abiJson)))
-	if err != nil {
-		return nil, errors.New("Error decoding contract ABI JSON: " + err.Error())
-	}
-
-	contractBytecode, err := ioutil.ReadFile(contractPath + ".bin")
-	if err != nil {
-		return nil, errors.New("Error reading contract Bytecode: " + err.Error())
-	}
-
-	return &EvmContract{Abi: contractAbi, Bytecode: common.Hex2Bytes(string(contractBytecode))}, nil
-}
 
 func getChainConfig() *params.ChainConfig {
 	///ChainConfig (adapted from Rinkeby test net)
@@ -133,33 +54,12 @@ func getVMConfig() vm.Config {
 	return *vmconfig
 }
 
-func returnCanTransfer() func(vm.StateDB, common.Address, *big.Int) bool {
-	canTransfer := func(vm.StateDB, common.Address, *big.Int) bool {
-		return true
-	}
-	return canTransfer
-}
-
-func returnTransfer() func(vm.StateDB, common.Address, common.Address, *big.Int) {
-	transfer := func(vm.StateDB, common.Address, common.Address, *big.Int) {
-	}
-	return transfer
-}
-
-func returnGetHash() func(uint64) common.Hash {
-	gethash := func(uint64) common.Hash {
-		return common.HexToHash("0")
-	}
-	return gethash
-
-}
-
 func getContext() vm.Context {
 	placeHolder := common.HexToAddress("0")
 	return vm.Context{
-		CanTransfer: returnCanTransfer(),
-		Transfer:    returnTransfer(),
-		GetHash:     returnGetHash(),
+		CanTransfer: func(vm.StateDB, common.Address, *big.Int) bool { return true },
+		Transfer:    func(vm.StateDB, common.Address, common.Address, *big.Int) {},
+		GetHash:     func(uint64) common.Hash { return common.HexToHash("0") },
 		Origin:      placeHolder,
 		GasPrice:    big.NewInt(0),
 		Coinbase:    placeHolder,
