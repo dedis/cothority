@@ -175,16 +175,16 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			return nil, nil, err
 		}
 
-		transactionReceipt, err := sendTx(&ethTx, stateDb)
+		txReceipt, err := sendTx(&ethTx, stateDb)
 		if err != nil {
 			log.ErrFatal(err)
 			return nil, nil, err
 		}
 
-		if transactionReceipt.ContractAddress.Hex() != nilAddress.Hex() {
-			log.LLvl1("contract deployed at:", transactionReceipt.ContractAddress.Hex(), "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
+		if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
+			log.LLvl1("contract deployed at:", txReceipt.ContractAddress.Hex(), "tx status:", txReceipt.Status, "gas used:", txReceipt.GasUsed, "tx receipt:", txReceipt.TxHash.Hex())
 		} else {
-			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
+			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", txReceipt.Status, "gas used:", txReceipt.GasUsed, "tx receipt:", txReceipt.TxHash.Hex())
 		}
 
 		contractState, stateChanges, err := NewContractState(stateDb)
