@@ -55,7 +55,7 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	//Empty general Ethereum state database to instantiate EVM
-	sdb, err := NewEvmDb(&ES{})
+	sdb, err := NewEvmMemDb(&ES{})
 	require.Nil(t, err)
 
 	//Context for instantiating EVM

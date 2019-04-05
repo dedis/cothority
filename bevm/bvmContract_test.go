@@ -206,12 +206,16 @@ func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*state.StateDB
 	if err != nil {
 		return nil, err
 	}
-	stateDb, err := NewEvmDb(&es)
+
+	// Create a client ByzDB instance
+	byzDb, err := NewClientByzDatabase(es.KeyList, client, instID)
 	if err != nil {
 		return nil, err
 	}
 
-	return stateDb, nil
+	db := state.NewDatabase(byzDb)
+
+	return state.New(es.RootHash, db)
 }
 
 func getAccountBalance(client *byzcoin.Client, instID byzcoin.InstanceID, address common.Address) (*big.Int, error) {
@@ -320,7 +324,7 @@ func Test_InvokeToken(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, newB, balance)
 
-	// Try to transfer 101 tokens from B to A; this should fail
+	// Try to transfer 101 tokens from B to A; this should be rejected by the EVM
 	err = bct.transact(instID, txParams, 0, b, *erc20Contract, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
 

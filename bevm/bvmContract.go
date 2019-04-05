@@ -34,12 +34,12 @@ func contractBvmFromBytes(in []byte) (byzcoin.Contract, error) {
 
 // Ethereum State
 type ES struct {
-	DbBuf    []byte      // General state
 	RootHash common.Hash // Hash of the last commit
+	KeyList  []string
+	DbBuf    []byte
 }
 
-// Create a new EVM state DB from the contract state
-func NewEvmDb(es *ES) (*state.StateDB, error) {
+func NewEvmMemDb(es *ES) (*state.StateDB, error) {
 	if es.DbBuf == nil {
 		// First creation
 		es.DbBuf = []byte{}
@@ -55,43 +55,57 @@ func NewEvmDb(es *ES) (*state.StateDB, error) {
 	return state.New(es.RootHash, db)
 }
 
+// Create a new EVM state DB from the contract state
+func NewEvmDb(es *ES, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID byzcoin.InstanceID) (*state.StateDB, error) {
+	byzDb, err := NewServerByzDatabase(es.KeyList, roStateTrie, instanceID)
+	if err != nil {
+		return nil, err
+	}
+
+	db := state.NewDatabase(byzDb)
+
+	return state.New(es.RootHash, db)
+}
+
 // Create a new contract state from the EVM state DB
-func NewContractState(stateDb *state.StateDB) (*ES, error) {
+func NewContractState(stateDb *state.StateDB) (*ES, []byzcoin.StateChange, error) {
 	// Commit the underlying databases first
 	root, err := stateDb.Commit(true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	err = stateDb.Database().TrieDB().Commit(root, true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Retrieve and dump the low-level database
-	memDb, ok := stateDb.Database().TrieDB().DiskDB().(*MemDatabase)
+	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ByzDatabase)
 	if !ok {
-		return nil, errors.New("Internal error: EVM State DB is not of expected type")
+		return nil, nil, errors.New("Internal error: EVM State DB is not of expected type")
 	}
-	dbBuf, err := memDb.Dump()
+	stateChanges, keyList, err := byzDb.Dump()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Build the new EVM state
-	return &ES{RootHash: root, DbBuf: dbBuf}, nil
+	return &ES{RootHash: root, KeyList: keyList}, stateChanges, nil
 }
 
 // Spawn a new BVM contract
 func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
-	stateDb, err := NewEvmDb(&c.ES)
+	instanceID := inst.DeriveID("")
+
+	stateDb, err := NewEvmDb(&c.ES, rst, instanceID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	contractState, err := NewContractState(stateDb)
+	contractState, _, err := NewContractState(stateDb)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,7 +119,7 @@ func (c *contractBvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 	// to create multiple instanceIDs out of a given instruction in a pseudo-
 	// random way that will be the same for all nodes.
 	sc = []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractBvmID, contractData, darc.ID(inst.InstanceID.Slice())),
+		byzcoin.NewStateChange(byzcoin.Create, instanceID, ContractBvmID, contractData, darc.ID(inst.InstanceID.Slice())),
 	}
 
 	return
@@ -130,7 +144,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		return
 	}
 
-	stateDb, err := NewEvmDb(&c.ES)
+	stateDb, err := NewEvmDb(&c.ES, rst, inst.InstanceID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -148,7 +162,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		stateDb.AddBalance(address, amount)
 		log.Lvl1("balance set to", amount, "wei")
 
-		contractState, err := NewContractState(stateDb)
+		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -158,10 +172,10 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, err
 		}
 
-		sc = []byzcoin.StateChange{
+		sc = append([]byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 				ContractBvmID, contractData, darcID),
-		}
+		}, stateChanges...)
 
 	case "transaction":
 		err := checkArguments(inst, "tx")
@@ -187,7 +201,7 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", transactionReceipt.Status, "gas used:", transactionReceipt.GasUsed, "tx receipt:", transactionReceipt.TxHash.Hex())
 		}
 
-		contractState, err := NewContractState(stateDb)
+		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -197,10 +211,10 @@ func (c *contractBvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 			return nil, nil, err
 		}
 
-		sc = []byzcoin.StateChange{
+		sc = append([]byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 				ContractBvmID, contractData, darcID),
-		}
+		}, stateChanges...)
 
 	default:
 		err = errors.New(fmt.Sprintf("Unknown Invoke command: '%s'", inst.Invoke.Command))
