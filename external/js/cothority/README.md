@@ -94,7 +94,7 @@ As this is a [polyfill](https://remysharp.com/2010/10/08/what-is-a-polyfill), pl
 check that what you need is implemented or you will need to use a different approach. Of
 course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.html).
 
-## Use a developpment version from an external app
+## Use a development version from an external app
 
 Steps to use `js/cothority` as a local module for a local external app:
 
