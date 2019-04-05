@@ -94,22 +94,9 @@ As this is a [polyfill](https://remysharp.com/2010/10/08/what-is-a-polyfill), pl
 check that what you need is implemented or you will need to use a different approach. Of
 course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.html).
 
-### Use a developpment version from an external app
+## Use a developpment version from an external app
 
-**Note**: Using the official command `yarn link` doesn't seem to work. We leave
-the steps at the end for informational purpose, but we found out that using symlink
-is simpler, clearer, and actually works.
-
-Build and Link the local `@dedis/cothority` module to a local app:
-
-```bash
-(cothority/external/js/cothority) $ npm run build
-$ ln -s /<cothority root path>/cothority/external/js/cothority/dist /<local app root path>/node_modules/@dedis/cothority
-```
-
-**For information purpose**: The "clean" way to symlink a local package is
-with the `yarn link` command. However it happens to link the root folder
-instead of the `root/dist` one. Hence this is not likely to work:
+Steps to use `js/cothority` as a local module for a local external app:
 
 1) Build a version
 
@@ -120,18 +107,18 @@ instead of the `root/dist` one. Hence this is not likely to work:
 2) Create a link
 
 ```bash
-(cothority/external/js/cothority/dist) $ yarn link
+(cothority/external/js/cothority) $ npm run link
 ```
 
 3) From the root folder of the external app, link the new package
 
 ```bash
-(external_app) $ yarn link "@dedis/cothority"
+(external_app) $ npm link @dedis/cothority
 ```
 
-4) If needed, install the new linked pachage
+4) To unlink
 
 ```bash
-(external_app) $ npm install --save @dedis/cothority
+(external_app) $ npm unlink @dedis/cothority
+(cothority/external/js/cothority) $ npm unlink
 ```
-
