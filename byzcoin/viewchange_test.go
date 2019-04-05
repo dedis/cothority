@@ -135,7 +135,6 @@ func TestViewChange_LeaderIndex(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// more than enough for a view change to complete
 	time.Sleep(2 * s.interval)
 
 	for _, service := range s.services {
@@ -223,7 +222,6 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// more than enough for a view change to complete
 	time.Sleep(2 * s.interval)
 
 	for _, service := range s.services {
