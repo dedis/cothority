@@ -2183,22 +2183,34 @@ func (s *Service) monitorLeaderFailure() {
 			case key := <-s.heartbeatsTimeout:
 				log.Lvlf3("%s: missed heartbeat for %x", s.ServerIdentity(), key)
 				gen := []byte(key)
-				latest, err := s.db().GetLatestByID(gen)
-				if err != nil {
-					log.Error("heartbeat monitors are started after "+
-						"the creation of the genesis block, "+
-						"so the block should always exist: ", err)
+
+				genBlock := s.db().GetByID(gen)
+				if genBlock == nil {
+					// This should not happen as the heartbeats are started after
+					// a new skipchain is created or when the conode starts ..
+					log.Error("heartbeat monitors are started after " +
+						"the creation of the genesis block, " +
+						"so the block should always exist")
+					// .. but just in case we stop the heartbeat
 					s.heartbeats.stop(key)
 				}
-				req := viewchange.InitReq{
-					SignerID: s.ServerIdentity().ID,
-					View: viewchange.View{
-						ID:          latest.Hash,
-						Gen:         gen,
-						LeaderIndex: 1,
-					},
+
+				latest, err := s.db().GetLatestByID(gen)
+				if err != nil {
+					log.Errorf("failed to get the latest block: %v", err)
+				} else {
+					// Send only if the latest block is consistent as it wouldn't
+					// anyway if we're out of sync with the chain
+					req := viewchange.InitReq{
+						SignerID: s.ServerIdentity().ID,
+						View: viewchange.View{
+							ID:          latest.Hash,
+							Gen:         gen,
+							LeaderIndex: 1,
+						},
+					}
+					s.viewChangeMan.addReq(req)
 				}
-				s.viewChangeMan.addReq(req)
 			case <-s.closeLeaderMonitorChan:
 				log.Lvl2(s.ServerIdentity(), "closing heartbeat timeout monitor")
 				return

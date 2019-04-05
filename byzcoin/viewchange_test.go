@@ -232,3 +232,20 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.True(t, leader.Equal(s.services[3].ServerIdentity()))
 	}
 }
+
+func TestViewChange_MonitorFailure(t *testing.T) {
+	s := newSerN(t, 1, time.Second, 3, true)
+	defer s.local.CloseAll()
+
+	log.OutputToBuf()
+	defer log.OutputToOs()
+
+	// heartbeats an unknown skipchain: this should NOT panic or crash
+	s.service().heartbeatsTimeout <- "abc"
+
+	time.Sleep(1 * time.Second)
+
+	stderr := log.GetStdErr()
+	require.Contains(t, stderr, "heartbeat monitors are started after the creation")
+	require.Contains(t, stderr, "failed to get the latest block")
+}
