@@ -214,7 +214,7 @@ export class ServerIdentity extends Message<ServerIdentity> {
     }
 
     /**
-     * Returns this.url if wset, otherwise converts the server
+     * Returns this.url if set, otherwise converts the server
      * address to match the websocket format
      * @returns the websocket address
      */
