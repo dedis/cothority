@@ -39,23 +39,6 @@ func contractBEvmFromBytes(in []byte) (byzcoin.Contract, error) {
 type BEvmState struct {
 	RootHash common.Hash // Hash of the last commit
 	KeyList  []string
-	DbBuf    []byte
-}
-
-func NewEvmMemDb(es *BEvmState) (*state.StateDB, error) {
-	if es.DbBuf == nil {
-		// First creation
-		es.DbBuf = []byte{}
-	}
-
-	memDb, err := NewMemDatabase(es.DbBuf)
-	if err != nil {
-		return nil, err
-	}
-
-	db := state.NewDatabase(memDb)
-
-	return state.New(es.RootHash, db)
 }
 
 // Create a new EVM state DB from the contract state

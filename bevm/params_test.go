@@ -2,69 +2,85 @@ package bevm
 
 import (
 	"errors"
-	"github.com/stretchr/testify/require"
 	"math/big"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"go.dedis.ch/onet/v3/log"
 )
 
+func newEvmMemDb() (*state.StateDB, error) {
+	buffer := []byte{}
+
+	memDb, err := NewMemDatabase(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	var root common.Hash
+	db := state.NewDatabase(memDb)
+
+	return state.New(root, db)
+}
+
 // TestTokenContract verifies that the EVM setup is correct by testing a dummy tokenContract
 func TestTokenContract(t *testing.T) {
 
-	//Parameters functions
+	// Parameters functions
 	canTransfer := func(vm.StateDB, common.Address, *big.Int) bool { return true }
 	transfer := func(vm.StateDB, common.Address, common.Address, *big.Int) {}
 	getHash := func(uint64) common.Hash { return common.HexToHash("O") }
 
-	//Get smart contract abi and bytecode
+	// Get smart contract abi and bytecode
 	contract, err := getSmartContract("ModifiedToken")
 	require.Nil(t, err)
 
-	//Create dummy addresses for testing token transfers
+	// Create dummy addresses for testing token transfers
 	addressA := common.HexToAddress("a")
 	addressB := common.HexToAddress("b")
 
 	accountRef := vm.AccountRef(common.HexToAddress("0"))
 
-	//Helper functions for contract calls, uses the abi object defined above
+	// Helper functions for contract calls, uses the abi object defined above
 
-	//Constructor (function create), mints 12 tokens and credits them to public key A
+	// Constructor (function create), mints 12 tokens and credits them to public key A
 	create, err := contract.Abi.Pack("create", uint64(12), addressA)
 	require.Nil(t, err)
 
-	//Get balance function to check if tokens where indeed credited
+	// Get balance function to check if tokens where indeed credited
 	get, err := contract.Abi.Pack("getBalance", addressA)
 	require.Nil(t, err)
 
-	//Transfer function, with parameters to transfer from addressA to addressB, one token
+	// Transfer function, with parameters to transfer from addressA to addressB, one token
 	send, err := contract.Abi.Pack("transfer", addressA, addressB, uint64(1))
 	require.Nil(t, err)
 
-	//Get balance function to check if token was indeed credited
-	get1, err := contract.Abi.Pack("getBalance", addressB)
+	// Get balance function to check if token was indeed credited
+	getB, err := contract.Abi.Pack("getBalance", addressB)
 	require.Nil(t, err)
-	//Get balance function to check if token was indeed credited
-	get2, err := contract.Abi.Pack("getBalance", addressA)
+	// Get balance function to check if token was indeed credited
+	getA, err := contract.Abi.Pack("getBalance", addressA)
 	require.Nil(t, err)
 
-	//Transfer function, with parameters to transfer from addressA to addressB, one more token
+	// Transfer function, with parameters to transfer from addressA to addressB, one more token
 	transferTests, err := contract.Abi.Pack("transfer", addressA, addressB, uint64(1))
 	require.Nil(t, err)
 
-	//Empty general Ethereum state database to instantiate EVM
-	sdb, err := NewEvmMemDb(&BEvmState{})
+	// Empty general Ethereum state database to instantiate EVM
+	sdb, err := newEvmMemDb()
 	require.Nil(t, err)
 
-	//Context for instantiating EVM
+	// Context for instantiating EVM
 	ctx := vm.Context{CanTransfer: canTransfer, Transfer: transfer, GetHash: getHash, Origin: addressA, GasPrice: big.NewInt(1), Coinbase: addressA, GasLimit: 10000000000, BlockNumber: big.NewInt(0), Time: big.NewInt(1), Difficulty: big.NewInt(1)}
 
-	//Setting up the Byzcoin Virtual Machine, a copy of EVM with our parameters
+	// Set up the Byzcoin Virtual Machine, a copy of EVM with our parameters
 	bevm := vm.NewEVM(ctx, sdb, getChainConfig(), getVMConfig())
 
-	//Contract deployment
+	// Contract deployment
 	retContractCreation, addrContract, leftOverGas, err := bevm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
 	if err != nil {
 		err = errors.New("contract deployment unsuccessful: " + err.Error())
@@ -73,44 +89,61 @@ func TestTokenContract(t *testing.T) {
 	}
 	log.LLvl1("contract deployed at", addrContract.Hex())
 
-	//Calling the methods from the contract we just deployed using the abi helpers function defined above
-	//Constructor (create method) call
+	// Call the methods from the contract we just deployed using the abi helpers function defined above
+	// Constructor (create method) call
 	_, _, err = bevm.Call(accountRef, addrContract, create, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 
-	//Getting balance of addressA
+	var balance uint64
+
+	// Get balance of addressA
 	retBalanceOfAccountA, _, err := bevm.Call(accountRef, addrContract, get, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1(addressA.Hex(), "address, token balance :", retBalanceOfAccountA)
+	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
+	require.Nil(t, err)
+	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
 
-	//Sending a token from A to B
+	// Send a token from A to B
 	_, _, err = bevm.Call(accountRef, addrContract, send, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
-	//Getting balance of addressA
-	retBalanceOfAccountB, _, err := bevm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
+	// Gett balance of addressA
+	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, getA, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1(addressB.Hex(), "address, token balance :", retBalanceOfAccountB)
-
-	//Checking if the other account was updated accordingly
-	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
+	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
 	require.Nil(t, err)
-	log.Lvl1(addressA.Hex(), "address, token balance :", retBalanceOfAccountA)
+	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
+	require.Equal(t, balance, uint64(11))
 
-	//Transfering one more token
+	// Check if the other account was updated accordingly
+	retBalanceOfAccountB, _, err := bevm.Call(accountRef, addrContract, getB, leftOverGas, big.NewInt(0))
+	require.Nil(t, err)
+	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountB)
+	require.Nil(t, err)
+	log.Lvl1(addressB.Hex(), "address, token balance :", balance)
+	require.Equal(t, balance, uint64(1))
+
+	// Transfer one more token
 	_, _, err = bevm.Call(accountRef, addrContract, transferTests, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
-	//Getting balance of addressB
-	retBalanceOfAccountB, _, err = bevm.Call(accountRef, addrContract, get1, leftOverGas, big.NewInt(0))
+	// Get balance of addressA
+	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, getA, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1(addressB.Hex(), "address, token balance :", retBalanceOfAccountB)
+	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
+	require.Nil(t, err)
+	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
+	require.Equal(t, balance, uint64(10))
 
-	//Getting balance of addressA
-	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, get2, leftOverGas, big.NewInt(0))
+	// Get balance of addressB
+	retBalanceOfAccountB, _, err = bevm.Call(accountRef, addrContract, getB, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1("balance of ", addressA.Hex(), " is ", retBalanceOfAccountA)
+	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountB)
+	require.Nil(t, err)
+	log.Lvl1(addressB.Hex(), "address, token balance :", balance)
+	require.Equal(t, balance, uint64(2))
+
 	log.LLvl1("contract calls passed")
 }
