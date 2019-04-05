@@ -220,7 +220,7 @@ func spawner(c *cli.Context) error {
 		})
 	}
 	ctx, err := combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
-		InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
+		InstanceID: byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
 			ContractID: personhood.ContractSpawnerID,
 			Args:       args,
@@ -338,7 +338,7 @@ func register(c *cli.Context) error {
 		}
 	}
 
-	gdID := byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID())
+	gdID := byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID())
 	id := darc.NewIdentityEd25519(pub)
 	rules := darc.InitRulesWith([]darc.Identity{id}, []darc.Identity{id}, "invoke:"+byzcoin.ContractDarcID+".evolve")
 	expr := id.String()
@@ -515,7 +515,7 @@ func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzc
 }
 
 func verifyGenesisDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) error {
-	gdID := cfg.GenesisDarc.GetBaseID()
+	gdID := cfg.AdminDarc.GetBaseID()
 	p, err := cl.GetProof(gdID)
 	if err != nil {
 		return err

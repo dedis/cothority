@@ -374,18 +374,18 @@ func loadConfig() (cfg config, cl *byzcoin.Client, err error) {
 	}
 
 	dj := cfgJSON.ByzcoinConfig.GenesisDarc
-	cfg.BCConfig.GenesisDarc.Version = dj.Version
-	cfg.BCConfig.GenesisDarc.Description = []byte(dj.Description)
-	cfg.BCConfig.GenesisDarc.BaseID, err = hex.DecodeString(dj.BaseID)
+	cfg.BCConfig.AdminDarc.Version = dj.Version
+	cfg.BCConfig.AdminDarc.Description = []byte(dj.Description)
+	cfg.BCConfig.AdminDarc.BaseID, err = hex.DecodeString(dj.BaseID)
 	if err != nil {
 		return
 	}
-	cfg.BCConfig.GenesisDarc.PrevID, err = hex.DecodeString(dj.PrevID)
+	cfg.BCConfig.AdminDarc.PrevID, err = hex.DecodeString(dj.PrevID)
 	if err != nil {
 		return
 	}
 	for _, rul := range dj.Rules {
-		cfg.BCConfig.GenesisDarc.Rules.List = append(cfg.BCConfig.GenesisDarc.Rules.List,
+		cfg.BCConfig.AdminDarc.Rules.List = append(cfg.BCConfig.AdminDarc.Rules.List,
 			darc.Rule{Action: darc.Action(rul.Action), Expr: expression.Expr(rul.Expression)})
 	}
 
@@ -418,7 +418,7 @@ func (cfg config) save() error {
 			Description: si.Description,
 		})
 	}
-	d := cfg.BCConfig.GenesisDarc
+	d := cfg.BCConfig.AdminDarc
 	jd := darcJSON{
 		Version:     d.Version,
 		Description: string(d.Description),
