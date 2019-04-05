@@ -1,6 +1,7 @@
 package darc
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -158,7 +159,7 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 			return nil
 		}
 		for _, d := range darcs {
-			if d.GetIdentityString() == id {
+			if fmt.Sprintf("darc:%x", d.GetID()) == id {
 				return d
 			}
 		}
