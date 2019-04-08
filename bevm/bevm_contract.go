@@ -16,6 +16,8 @@ import (
 )
 
 var ContractBEvmID = "bevm"
+var ContractBEvmValueID = "bevm_value"
+
 var nilAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
 
 type contractBEvm struct {
@@ -159,8 +161,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		}
 
 		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID, contractData, darcID),
 		}, stateChanges...)
 
 	case "transaction":
@@ -198,8 +199,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		}
 
 		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				ContractBEvmID, contractData, darcID),
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID, contractData, darcID),
 		}, stateChanges...)
 
 	default:

@@ -18,6 +18,7 @@ package bevm
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -84,7 +85,7 @@ func (db *ByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	for _, s := range db.stateChanges {
 		k := string(s.Key())
 		if _, ok := keyMap[k]; ok {
-			return nil, nil, errors.New("Internal error: the set of changes produced by Dump() is not unique on keys")
+			return nil, nil, errors.New("Internal error: the set of changes produced by the EVM is not unique on keys")
 		}
 	}
 
@@ -100,7 +101,7 @@ func (db *ByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	// This also must be sorted as Go maps traversal order is inherently non-deterministic
 	sort.Strings(keyList)
 
-	// Compute some statistics
+	// Compute some statistics for information purposes
 	nbCreate, nbUpdate, nbRemove := 0, 0, 0
 	for _, s := range db.stateChanges {
 		switch s.StateAction {
@@ -123,6 +124,16 @@ func (db *ByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 // ---------------------------------------------------------------------------
 // ethdb.Database interface implementation
 
+func (db *ByzDatabase) getValueInstanceID(key []byte) byzcoin.InstanceID {
+	// The instance ID of a value instance is given by the hash of the contract instance ID and the key
+
+	h := sha256.New()
+	h.Write(db.bevmIID[:])
+	h.Write(key)
+
+	return byzcoin.NewInstanceID(h.Sum(nil))
+}
+
 // Putter
 func (db *ByzDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
@@ -133,22 +144,15 @@ func (db *ByzDatabase) Put(key []byte, value []byte) error {
 
 // Actual implementation, callable from Batch.Write()
 func (db *ByzDatabase) put(key []byte, value []byte) error {
-	contents := &BEvmValueContents{Value: value}
-
-	contentsData, err := protobuf.Encode(contents)
-	if err != nil {
-		return err
-	}
-
-	instanceID := ComputeInstanceID(db.bevmIID, key)
+	instanceID := db.getValueInstanceID(key)
 	var sc byzcoin.StateChange
 
 	if _, ok := db.keys[string(key)]; ok {
 		sc = byzcoin.NewStateChange(byzcoin.Update, instanceID,
-			ContractBEvmValueID, contentsData, nil)
+			ContractBEvmValueID, value, nil)
 	} else {
 		sc = byzcoin.NewStateChange(byzcoin.Create, instanceID,
-			ContractBEvmValueID, contentsData, nil)
+			ContractBEvmValueID, value, nil)
 	}
 	db.keys[string(key)] = true
 
@@ -158,8 +162,7 @@ func (db *ByzDatabase) put(key []byte, value []byte) error {
 }
 
 func (db *ByzDatabase) getBEvmValue(key []byte) (value []byte, err error) {
-	// Compute the BEVM Value instance ID
-	instID := ComputeInstanceID(db.bevmIID, key)
+	instID := db.getValueInstanceID(key)
 
 	if db.roStateTrie != nil {
 		// Calling from the contract
@@ -217,14 +220,7 @@ func (db *ByzDatabase) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// Decode the value into an EVM State
-	var contents BEvmValueContents
-	err = protobuf.Decode(value, &contents)
-	if err != nil {
-		return nil, err
-	}
-
-	return contents.Value, nil
+	return value, nil
 }
 
 // Deleter
@@ -239,7 +235,7 @@ func (db *ByzDatabase) Delete(key []byte) error {
 
 // Actual implementation, callable from Batch.Write()
 func (db *ByzDatabase) delete(key []byte) error {
-	instanceID := ComputeInstanceID(db.bevmIID, key)
+	instanceID := db.getValueInstanceID(key)
 
 	sc := byzcoin.NewStateChange(byzcoin.Remove, instanceID,
 		ContractBEvmValueID, nil, nil)

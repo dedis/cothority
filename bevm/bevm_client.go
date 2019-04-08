@@ -309,7 +309,7 @@ func (bc *BEvmClient) spawn(args byzcoin.Arguments, gDarc *darc.Darc) error {
 
 	// Sending this transaction to ByzCoin does not directly include it in the
 	// global state - first we must wait for the new block to be created.
-	_, err = bc.client.AddTransactionAndWait(ctx, 20)
+	_, err = bc.client.AddTransactionAndWait(ctx, 5)
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func (bc *BEvmClient) invoke(command string, args byzcoin.Arguments) error {
 
 	// Sending this transaction to ByzCoin does not directly include it in the
 	// global state - first we must wait for the new block to be created.
-	_, err = bc.client.AddTransactionAndWait(ctx, 30)
+	_, err = bc.client.AddTransactionAndWait(ctx, 5)
 
 	return err
 }
