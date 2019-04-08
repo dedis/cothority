@@ -45,7 +45,7 @@ type BEvmState struct {
 
 // Create a new EVM state DB from the contract state
 func NewEvmDb(es *BEvmState, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID byzcoin.InstanceID) (*state.StateDB, error) {
-	byzDb, err := NewServerByzDatabase(es.KeyList, roStateTrie, instanceID)
+	byzDb, err := NewServerByzDatabase(instanceID, es.KeyList, roStateTrie)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func NewContractState(stateDb *state.StateDB) (*BEvmState, []byzcoin.StateChange
 	}
 
 	// Retrieve and dump the low-level database
-	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ByzDatabase)
+	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
 		return nil, nil, errors.New("Internal error: EVM State DB is not of expected type")
 	}

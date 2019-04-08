@@ -275,7 +275,7 @@ func getEvmDb(client *byzcoin.Client, instID byzcoin.InstanceID) (*state.StateDB
 	}
 
 	// Create a client ByzDB instance
-	byzDb, err := NewClientByzDatabase(bs.KeyList, client, instID)
+	byzDb, err := NewClientByzDatabase(instID, client)
 	if err != nil {
 		return nil, err
 	}
