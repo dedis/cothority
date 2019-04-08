@@ -21,7 +21,7 @@ export async function startConodes(): Promise<void> {
     const container = containers[0];
 
     if (container) {
-        if (container.State === "running" || container.State === "exited") {
+        if (container.State === "running") {
             // already running
             return;
         } else {

@@ -18,6 +18,7 @@ describe("Network Proto Tests", () => {
             Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
             Description = "conode2"
             Suite = "Ed25519"
+            Url = "ws:127.0.0.1:7010"
         `;
         const roster = Roster.fromTOML(str);
 
@@ -44,6 +45,45 @@ describe("Network Proto Tests", () => {
         const srvid = new ServerIdentity({ address: "tls://127.0.0.1:5000", id: Buffer.from([]) });
 
         expect(srvid.getWebSocketAddress()).toBe("ws://127.0.0.1:5001");
+
+        const str = `
+        [[servers]]
+        Address = "tls://127.0.0.1:7770"
+        Suite = "Ed25519"
+        Public = "741b3af1fa069b2b964102bae6bc707315f61f5564fae426c261f5b6ceda3590"
+        Description = "Conode_1"
+        [servers.Services]
+          [servers.Services.ByzCoin]
+            Public = "3a2fde872cde581442bd9d522f5d9c0d71a52acc739b3e826e1fef9112cc34d172613965c692465d0f11bf89dbea407c1c34ee6fe9767baaa0314501433e520a7504651c8b321a811ee0b3de86cd03a8b187a6f7b4a1d6f89316b4bfd22bae44738f890bbd608c9145e2e8fc10f11e8f42ba4800171c8d7555418919900d7d9d"
+            Suite = "bn256.adapter"
+          [servers.Services.Skipchain]
+            Public = "55eb6fdb543561dbb806e8357e013e17988ba60e210552d05b178c831c0caaa4241bf16bc3f8bafebf3b81bca839bd1696a45dfc3990f992ac165e132474894003bf57c3761eed667cb2af0f7056daec53619a833a26b446fe0c8762b63ed0f145a8b49f3a92704c21715aef5f3e1b2e5769a069123965df3f20b4310cb73fc0"
+            Suite = "bn256.adapter"
+        `;
+        const roster = Roster.fromTOML(str);
+
+        expect(roster.list[0].getWebSocketAddress()).toBe("ws://127.0.0.1:7771");
+    });
+
+    it("should get the specified url address if given", () => {
+        const str = `
+        [[servers]]
+        Address = "tls://127.0.0.1:7770"
+        Suite = "Ed25519"
+        Public = "741b3af1fa069b2b964102bae6bc707315f61f5564fae426c261f5b6ceda3590"
+        Description = "Conode_1"
+        Url = "any::127.0.0.1:7010"
+        [servers.Services]
+          [servers.Services.ByzCoin]
+            Public = "3a2fde872cde581442bd9d522f5d9c0d71a52acc739b3e826e1fef9112cc34d172613965c692465d0f11bf89dbea407c1c34ee6fe9767baaa0314501433e520a7504651c8b321a811ee0b3de86cd03a8b187a6f7b4a1d6f89316b4bfd22bae44738f890bbd608c9145e2e8fc10f11e8f42ba4800171c8d7555418919900d7d9d"
+            Suite = "bn256.adapter"
+          [servers.Services.Skipchain]
+            Public = "55eb6fdb543561dbb806e8357e013e17988ba60e210552d05b178c831c0caaa4241bf16bc3f8bafebf3b81bca839bd1696a45dfc3990f992ac165e132474894003bf57c3761eed667cb2af0f7056daec53619a833a26b446fe0c8762b63ed0f145a8b49f3a92704c21715aef5f3e1b2e5769a069123965df3f20b4310cb73fc0"
+            Suite = "bn256.adapter"
+        `;
+        const roster = Roster.fromTOML(str);
+
+        expect(roster.list[0].getWebSocketAddress()).toBe("any::127.0.0.1:7010");
     });
 
     it("should valid and invalid addresses", () => {

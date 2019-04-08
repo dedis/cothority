@@ -37,13 +37,13 @@ export class Roster extends Message<Roster> {
      *        Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
      *        Description = "conode2"
      *
-     * @param toml of the above format
+     * @param data toml with the above format
      * @returns the parsed roster
      */
     static fromTOML(data: string): Roster {
         const roster = toml.parse(data);
         const list = roster.servers.map((server: any) => {
-            const { Public, Suite, Address, Description, Services } = server;
+            const { Public, Suite, Address, Description, Services, Url } = server;
             const p = PointFactory.fromToml(Suite, Public);
 
             return new ServerIdentity({
@@ -56,6 +56,7 @@ export class Roster extends Message<Roster> {
 
                     return new ServiceIdentity({ name: key, public: point.toProto(), suite });
                 }),
+                url: Url,
             });
         });
 
@@ -213,11 +214,16 @@ export class ServerIdentity extends Message<ServerIdentity> {
     }
 
     /**
-     * Convert the address of the server to match the websocket format
+     * Returns this.url if set, otherwise converts the server
+     * address to match the websocket format
      * @returns the websocket address
      */
     getWebSocketAddress(): string {
-        return ServerIdentity.addressToWebsocket(this.address);
+        if (this.url) {
+            return this.url;
+        } else {
+            return ServerIdentity.addressToWebsocket(this.address);
+        }
     }
 }
 

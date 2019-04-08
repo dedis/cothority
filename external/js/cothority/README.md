@@ -31,6 +31,8 @@ You should be able to run the tests with
 npm run test
 ```
 
+To run the tests, be sure to have docker installed and `make docker` executed from the root of this repo.
+
 ## Protobuf generation
 
 To add a new protobuf file to the library, simply place your `*.proto` file
@@ -91,3 +93,32 @@ will be provided thanks to the [buffer package](https://www.npmjs.com/package/bu
 As this is a [polyfill](https://remysharp.com/2010/10/08/what-is-a-polyfill), please
 check that what you need is implemented or you will need to use a different approach. Of
 course for NodeJS, you will always get a [Buffer](https://nodejs.org/api/buffer.html).
+
+## Use a development version from an external app
+
+Steps to use `js/cothority` as a local module for a local external app:
+
+1) Build a version
+
+```bash
+(cothority/external/js/cothority) $ npm run build
+```
+
+2) Create a link
+
+```bash
+(cothority/external/js/cothority) $ npm run link
+```
+
+3) From the root folder of the external app, link the new package
+
+```bash
+(external_app) $ npm link @dedis/cothority
+```
+
+4) To unlink
+
+```bash
+(external_app) $ npm unlink @dedis/cothority
+(cothority/external/js/cothority) $ npm unlink
+```
