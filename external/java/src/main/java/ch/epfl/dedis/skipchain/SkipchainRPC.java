@@ -1,12 +1,12 @@
 package ch.epfl.dedis.skipchain;
 
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.network.Roster;
-import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

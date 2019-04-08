@@ -60,11 +60,11 @@ func TestCli(t *testing.T) {
 	require.IsType(t, "", bc)
 	os.Setenv("BC", bc.(string))
 
-	log.Lvl1("show: ")
+	log.Lvl1("latest: ")
 	b = &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b
-	args = []string{"bcadmin", "show"}
+	args = []string{"bcadmin", "latest"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Index: 0")

@@ -4,8 +4,6 @@ import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import com.google.protobuf.ByteString;
 
-import java.io.UnsupportedEncodingException;
-
 /**
  * Represents the state change of an instance and thus contains all the
  * information related.

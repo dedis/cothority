@@ -1,11 +1,9 @@
 package ch.epfl.dedis.byzcoin.transaction;
 
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.Identity;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
-import com.google.protobuf.ByteString;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

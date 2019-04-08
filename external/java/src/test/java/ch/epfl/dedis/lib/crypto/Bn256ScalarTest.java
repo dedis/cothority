@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Bn256ScalarTest {
     private Random rnd = new SecureRandom();

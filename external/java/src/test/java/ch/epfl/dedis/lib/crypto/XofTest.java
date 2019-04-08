@@ -4,7 +4,7 @@ import ch.epfl.dedis.lib.Hex;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class XofTest {
     @Test

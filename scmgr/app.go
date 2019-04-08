@@ -305,6 +305,30 @@ func scCreate(c *cli.Context) error {
 	return nil
 }
 
+// Gets blocks from -from ID to the end of the chain.
+func scUpdates(c *cli.Context) error {
+	group := readGroupArgs(c, 0)
+
+	from, err := hex.DecodeString(c.String("from"))
+	if err != nil {
+		return errors.New("Failed to decode " + c.String("from"))
+	}
+	if len(from) == 0 {
+		return errors.New("id is empty")
+	}
+
+	r, err := skipchain.NewClient().GetUpdateChainLevel(group.Roster, from, c.Int("level"), c.Int("count"))
+	if err != nil {
+		return err
+	}
+
+	for _, x := range r {
+		fmt.Fprintf(c.App.Writer, "index %v, hash %x\n", x.Index, x.Hash)
+	}
+
+	return nil
+}
+
 // Proposes a new block to the leader for appending to the skipchain.
 func scAdd(c *cli.Context) error {
 	if c.NArg() != 1 {

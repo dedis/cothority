@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.DarcProto;
 
 public class IdentityFactory {

@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.crypto;
 
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.calypso.Encryption;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

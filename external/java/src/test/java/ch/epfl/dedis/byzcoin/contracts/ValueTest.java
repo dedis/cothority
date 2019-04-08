@@ -1,23 +1,20 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
-import ch.epfl.dedis.byzcoin.SignerCounters;
-import ch.epfl.dedis.byzcoin.transaction.Instruction;
-import ch.epfl.dedis.integration.TestServerController;
-import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.SkipBlock;
-import ch.epfl.dedis.lib.SkipBlock;
-import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.byzcoin.Block;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.byzcoin.transaction.TxResult;
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -28,7 +25,6 @@ import java.util.List;
 
 import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ValueTest {
     private static ByzCoinRPC bc;

@@ -1,12 +1,12 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
 import ch.epfl.dedis.byzcoin.Instance;
-import ch.epfl.dedis.lib.network.Roster;
-import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.exception.CothorityPermissionException;
+import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;

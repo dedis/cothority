@@ -1,14 +1,14 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
-import ch.epfl.dedis.byzcoin.SignerCounters;
-import ch.epfl.dedis.integration.TestServerController;
-import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.byzcoin.Proof;
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;

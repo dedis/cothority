@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.Sha256id;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 
 /**

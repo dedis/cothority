@@ -1,16 +1,16 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.network.Roster;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.skipchain.ForwardLink;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class RestartTest {

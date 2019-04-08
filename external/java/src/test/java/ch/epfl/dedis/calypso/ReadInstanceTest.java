@@ -7,7 +7,6 @@ import ch.epfl.dedis.byzcoin.transaction.Spawn;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
-import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.crypto.Ed25519Pair;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
@@ -25,9 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static ch.epfl.dedis.byzcoin.ByzCoinRPCTest.BLOCK_INTERVAL;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadInstanceTest {
     private CalypsoRPC calypso;

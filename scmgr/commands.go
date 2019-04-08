@@ -149,6 +149,29 @@ func getCommands() cli.Commands {
 						},
 					},
 				},
+				{
+					Name:      "updates",
+					Usage:     "get the list of updated blocks for a chain",
+					Aliases:   []string{"u"},
+					ArgsUsage: groupsDef,
+					Action:    scUpdates,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "from",
+							Usage: "last known block hash",
+						},
+						cli.IntFlag{
+							Name:  "level",
+							Value: -1,
+							Usage: "maximum height links to use (default: longest forward links available)",
+						},
+						cli.IntFlag{
+							Name:  "count",
+							Value: -1,
+							Usage: "limit on how many blocks to fetch (default: all available blocks)",
+						},
+					},
+				},
 			},
 		},
 

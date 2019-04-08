@@ -980,7 +980,7 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 
 		sbs = append(sbs, sb)
 
-		for len(sb.ForwardLink) > 0 {
+		for sb != nil && len(sb.ForwardLink) > 0 {
 			id := sb.ForwardLink[len(sb.ForwardLink)-1].To
 			sb, err = db.getFromTx(tx, id)
 

@@ -2,11 +2,11 @@ package ch.epfl.dedis.byzcoin.transaction;
 
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.crypto.Ed25519Point;
-import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.darc.Identity;
+import ch.epfl.dedis.lib.darc.IdentityFactory;
+import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
-import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 import java.nio.ByteBuffer;

@@ -36,7 +36,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 func init() {
@@ -82,8 +82,8 @@ var cmds = cli.Commands{
 	},
 
 	{
-		Name:      "show",
-		Usage:     "show the config, contact ByzCoin to get Genesis Darc ID",
+		Name:      "latest",
+		Usage:     "show the latest block in the chain",
 		Aliases:   []string{"s"},
 		ArgsUsage: "[bc.cfg]",
 		Flags: []cli.Flag{
@@ -102,7 +102,7 @@ var cmds = cli.Commands{
 				Usage: "update the ByzCoin config file with the fetched roster",
 			},
 		},
-		Action: show,
+		Action: latest,
 	},
 
 	{
@@ -532,7 +532,7 @@ func link(c *cli.Context) error {
 	return nil
 }
 
-func show(c *cli.Context) error {
+func latest(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
 		bcArg = c.Args().First()
@@ -557,6 +557,8 @@ func show(c *cli.Context) error {
 	fmt.Fprintln(c.App.Writer, "local roster:", fmtRoster(&cfg.Roster))
 	fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
 
+	// Find the latest block by way of asking for the Proof of the
+	// config instance.
 	p, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return err

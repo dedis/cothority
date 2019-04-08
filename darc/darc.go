@@ -187,7 +187,7 @@ func (d Darc) GetID() ID {
 
 // GetIdentityString returns the string representation of the ID.
 func (d Darc) GetIdentityString() string {
-	return NewIdentityDarc(d.GetID()).String()
+	return NewIdentityDarc(d.GetBaseID()).String()
 }
 
 // GetBaseID returns the base ID or the ID of this darc if its the first darc.

@@ -1,7 +1,7 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.InstanceId;
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;

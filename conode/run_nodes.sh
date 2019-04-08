@@ -22,6 +22,7 @@ while getopts "h?v:n:p:i:d:qftsc" opt; do
         -h help
         -v verbosity level: none (0) - full (5)
         -t show timestamps on logging
+        -c show logs in color
         -n number of nodes (3)
         -p port base in case of new configuration (7000)
         -i IP in case of new configuration (localhost)

@@ -116,7 +116,7 @@ Using the ByzCoin config file you give them and their private key to sign
 transactions, they will now be able to use their application to send
 transactions.
 
-### Environmnet variables
+### Environment variables
 
 You can set the environment variable BC to the config file for the ByzCoin
 you are currently working with. (Client apps should follow this same standard.)

@@ -1,12 +1,15 @@
 package ch.epfl.dedis.byzgen;
 
 import ch.epfl.dedis.byzcoin.SignerCounters;
+import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
+import ch.epfl.dedis.calypso.CalypsoRPC;
+import ch.epfl.dedis.calypso.Document;
+import ch.epfl.dedis.calypso.LTSId;
+import ch.epfl.dedis.calypso.WriteInstance;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
-import ch.epfl.dedis.calypso.*;
 import ch.epfl.dedis.lib.crypto.SignerX509ECTest;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityException;

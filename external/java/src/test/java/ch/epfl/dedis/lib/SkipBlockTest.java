@@ -2,7 +2,9 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SkipBlockTest {
     @Test

@@ -1,10 +1,10 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
+import ch.epfl.dedis.byzcoin.transaction.TxResult;
 import ch.epfl.dedis.lib.Sha256id;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
-import ch.epfl.dedis.byzcoin.transaction.TxResult;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import com.google.protobuf.InvalidProtocolBufferException;
