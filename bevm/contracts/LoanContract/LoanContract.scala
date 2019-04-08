@@ -111,7 +111,7 @@ sealed case class LoanContract (
 
         if(currentState == WaitingForPayback) {
             dynRequire(now() > (start + daysToLend))
-            dynRequire(Msg.sender == lender)
+            dynRequire(Msg.sender == borrower)
 
             // Transfer all the guarantee to the lender
             var balance = tokenContractAddress.balanceOf(addr)

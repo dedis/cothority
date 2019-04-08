@@ -78,7 +78,7 @@ contract LoanContract {
     function payback () public payable {
         require(address(this).balance >= msg.value, "error");
         require(msg.value >= premiumAmount + wantedAmount, "error");
-        require(msg.sender == lender, "error");
+        require(msg.sender == borrower, "error");
         if (currentState == State.WaitingForPayback) {
             lender.transfer(msg.value);
             uint256 balance = tokenContractAddress.balanceOf(address(this));
