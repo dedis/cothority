@@ -75,7 +75,7 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "pub, ap",
-				Usage: "the public key with rights to sing on the darc",
+				Usage: "the public key with rights to sign on the darc",
 			},
 		},
 		Action: link,
@@ -211,7 +211,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the darc to show (no default)",
+						Usage: "the darc to show (the admin darc from the BC config)",
 					},
 				},
 			},
