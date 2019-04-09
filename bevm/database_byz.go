@@ -183,7 +183,7 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 			return nil, nil, fmt.Errorf("Unknown StateChange action: %d", s.StateAction)
 		}
 	}
-	log.LLvlf2("%d state changes (%d Create, %d Update, %d Remove), %d entries in store",
+	log.Lvlf2("%d state changes (%d Create, %d Update, %d Remove), %d entries in store",
 		len(db.stateChanges), nbCreate, nbUpdate, nbRemove, len(keyList))
 
 	return db.stateChanges, keyList, nil

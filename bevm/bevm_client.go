@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"path"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -31,13 +32,14 @@ type EvmContract struct {
 	Abi      abi.ABI
 	Bytecode []byte
 	Address  common.Address
+	name     string // For informational purposes only
 }
 
 // Return ABI and bytecode of a solidity contract.
-// 'path' represents the complete directory and name of the contract files,
+// 'filepath' represents the complete directory and name of the contract files,
 // without the extensions.
-func NewEvmContract(path string) (*EvmContract, error) {
-	abiJSON, err := ioutil.ReadFile(path + ".abi")
+func NewEvmContract(filepath string) (*EvmContract, error) {
+	abiJSON, err := ioutil.ReadFile(filepath + ".abi")
 	if err != nil {
 		return nil, errors.New("Error reading contract ABI: " + err.Error())
 	}
@@ -47,19 +49,20 @@ func NewEvmContract(path string) (*EvmContract, error) {
 		return nil, errors.New("Error decoding contract ABI JSON: " + err.Error())
 	}
 
-	contractBytecode, err := ioutil.ReadFile(path + ".bin")
+	contractBytecode, err := ioutil.ReadFile(filepath + ".bin")
 	if err != nil {
 		return nil, errors.New("Error reading contract Bytecode: " + err.Error())
 	}
 
 	return &EvmContract{
+		name:     path.Base(filepath),
 		Abi:      contractAbi,
 		Bytecode: common.Hex2Bytes(string(contractBytecode)),
 	}, nil
 }
 
 func (contract EvmContract) String() string {
-	return fmt.Sprintf("EvmContract[%s]", contract.Address.Hex())
+	return fmt.Sprintf("EvmContract[%s @%s]", contract.name, contract.Address.Hex())
 }
 
 func (contract EvmContract) packConstructor(args ...interface{}) ([]byte, error) {
@@ -170,6 +173,9 @@ func NewClient(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.
 }
 
 func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, value uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) error {
+	log.Lvlf2(">>> Deploy EVM contract '%s'", contract.name)
+	defer log.Lvlf2("<<< Deploy EVM contract '%s'", contract.name)
+
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
 		return err
@@ -195,9 +201,9 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, value uint64, a
 	return nil
 }
 
-func (client *Client) Transact(gasLimit uint64, gasPrice *big.Int, value uint64, account *EvmAccount, contract *EvmContract, method string, args ...interface{}) error {
-	log.LLvl1(">>> Calling EVM method:", method)
-	defer log.LLvl1("<<< Calling EVM method:", method)
+func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, value uint64, account *EvmAccount, contract *EvmContract, method string, args ...interface{}) error {
+	log.Lvlf2(">>> EVM method '%s()' on %s", method, contract)
+	defer log.Lvlf2("<<< EVM method '%s()' on %s", method, contract)
 
 	callData, err := contract.packMethod(method, args...)
 	if err != nil {
@@ -223,8 +229,8 @@ func (client *Client) Transact(gasLimit uint64, gasPrice *big.Int, value uint64,
 }
 
 func (client *Client) Call(account *EvmAccount, result interface{}, contract *EvmContract, method string, args ...interface{}) error {
-	log.LLvl1(">>> Calling EVM view method:", method)
-	defer log.LLvl1("<<< Calling EVM view method:", method)
+	log.Lvlf2(">>> EVM view method '%s()' on %s", method, contract)
+	defer log.Lvlf2("<<< EVM view method '%s()' on %s", method, contract)
 
 	// Pack the method call and arguments
 	callData, err := contract.packMethod(method, args...)
@@ -265,6 +271,8 @@ func (client *Client) CreditAccounts(amount *big.Int, addresses ...common.Addres
 		if err != nil {
 			return err
 		}
+
+		log.Lvlf2("Credited %d wei on '%s'", amount, address.Hex())
 	}
 
 	return nil
@@ -278,7 +286,7 @@ func (client *Client) GetAccountBalance(address common.Address) (*big.Int, error
 
 	balance := stateDb.GetBalance(address)
 
-	log.Lvl1("balance of", address.Hex(), ":", balance, "wei")
+	log.Lvlf2("Balance of '%s' is %d wei", address.Hex(), balance)
 
 	return balance, nil
 }

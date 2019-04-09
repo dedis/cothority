@@ -54,7 +54,6 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
-		log.LLvl1("error decoding data")
 		return nil, err
 	}
 

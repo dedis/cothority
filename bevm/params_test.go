@@ -1,7 +1,6 @@
 package bevm
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 
@@ -81,13 +80,8 @@ func TestTokenContract(t *testing.T) {
 	bevm := vm.NewEVM(ctx, sdb, getChainConfig(), getVMConfig())
 
 	// Contract deployment
-	retContractCreation, addrContract, leftOverGas, err := bevm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
-	if err != nil {
-		err = errors.New("contract deployment unsuccessful: " + err.Error())
-		log.LLvl1("return of contract creation", common.Bytes2Hex(retContractCreation))
-		log.ErrFatal(err)
-	}
-	log.LLvl1("contract deployed at", addrContract.Hex())
+	_, addrContract, leftOverGas, err := bevm.Create(accountRef, contract.Bytecode, 100000000, big.NewInt(0))
+	require.Nil(t, err)
 
 	// Call the methods from the contract we just deployed using the abi helpers function defined above
 	// Constructor (create method) call
@@ -101,19 +95,19 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
 	require.Nil(t, err)
-	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
+	log.Lvl2(addressA.Hex(), "address, token balance :", balance)
 
 	// Send a token from A to B
 	_, _, err = bevm.Call(accountRef, addrContract, send, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
+	log.Lvl2("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
-	// Gett balance of addressA
+	// Get balance of addressA
 	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, getA, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
 	require.Nil(t, err)
-	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
+	log.Lvl2(addressA.Hex(), "address, token balance :", balance)
 	require.Equal(t, balance, uint64(11))
 
 	// Check if the other account was updated accordingly
@@ -121,20 +115,20 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountB)
 	require.Nil(t, err)
-	log.Lvl1(addressB.Hex(), "address, token balance :", balance)
+	log.Lvl2(addressB.Hex(), "address, token balance :", balance)
 	require.Equal(t, balance, uint64(1))
 
 	// Transfer one more token
 	_, _, err = bevm.Call(accountRef, addrContract, transferTests, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
-	log.Lvl1("send one token from", addressA.Hex(), " to ", addressB.Hex())
+	log.Lvl2("send one token from", addressA.Hex(), " to ", addressB.Hex())
 
 	// Get balance of addressA
 	retBalanceOfAccountA, _, err = bevm.Call(accountRef, addrContract, getA, leftOverGas, big.NewInt(0))
 	require.Nil(t, err)
 	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountA)
 	require.Nil(t, err)
-	log.Lvl1(addressA.Hex(), "address, token balance :", balance)
+	log.Lvl2(addressA.Hex(), "address, token balance :", balance)
 	require.Equal(t, balance, uint64(10))
 
 	// Get balance of addressB
@@ -142,8 +136,6 @@ func TestTokenContract(t *testing.T) {
 	require.Nil(t, err)
 	err = contract.Abi.Unpack(&balance, "getBalance", retBalanceOfAccountB)
 	require.Nil(t, err)
-	log.Lvl1(addressB.Hex(), "address, token balance :", balance)
+	log.Lvl2(addressB.Hex(), "address, token balance :", balance)
 	require.Equal(t, balance, uint64(2))
-
-	log.LLvl1("contract calls passed")
 }

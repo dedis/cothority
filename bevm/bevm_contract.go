@@ -113,11 +113,11 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	return
 }
 
-// Helper function to check all required arguments are provided
+// Helper function to check that all required arguments are provided
 func checkArguments(inst byzcoin.Instruction, names ...string) error {
 	for _, name := range names {
 		if inst.Invoke.Args.Search(name) == nil {
-			return errors.New(fmt.Sprintf("Missing '%s' argument", name))
+			return fmt.Errorf("Missing '%s' argument", name)
 		}
 	}
 
@@ -148,7 +148,6 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		amount := new(big.Int).SetBytes(inst.Invoke.Args.Search("amount"))
 
 		stateDb.AddBalance(address, amount)
-		log.Lvl1("balance set to", amount, "wei")
 
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
@@ -178,15 +177,16 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 
 		txReceipt, err := sendTx(&ethTx, stateDb)
 		if err != nil {
-			log.ErrFatal(err)
 			return nil, nil, err
 		}
 
 		if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
-			log.LLvl1("contract deployed at:", txReceipt.ContractAddress.Hex(), "tx status:", txReceipt.Status, "gas used:", txReceipt.GasUsed, "tx receipt:", txReceipt.TxHash.Hex())
+			log.Lvlf2("Contract deployed at '%s'", txReceipt.ContractAddress.Hex())
 		} else {
-			log.LLvl1("transaction to", ethTx.To().Hex(), "from", "tx status:", txReceipt.Status, "gas used:", txReceipt.GasUsed, "tx receipt:", txReceipt.TxHash.Hex())
+			log.Lvlf2("Transaction to '%s'", ethTx.To().Hex())
 		}
+		log.Lvlf2("\\--> status = %d, gas used = %d, receipt = %s",
+			txReceipt.Status, txReceipt.GasUsed, txReceipt.TxHash.Hex())
 
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
@@ -203,7 +203,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		}, stateChanges...)
 
 	default:
-		err = errors.New(fmt.Sprintf("Unknown Invoke command: '%s'", inst.Invoke.Command))
+		err = fmt.Errorf("Unknown Invoke command: '%s'", inst.Invoke.Command)
 	}
 
 	return
@@ -237,7 +237,6 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 	// Apply transaction to the general state
 	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
-		log.Error()
 		return nil, err
 	}
 

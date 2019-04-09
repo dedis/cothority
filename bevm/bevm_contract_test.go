@@ -37,7 +37,7 @@ var testPrivateKeys = []string{
 
 // Spawn a BEVM
 func Test_Spawn(t *testing.T) {
-	log.LLvl1("test: instantiating evm")
+	log.LLvl1("BEVM instantiation")
 
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
@@ -49,43 +49,9 @@ func Test_Spawn(t *testing.T) {
 	require.Nil(t, err)
 }
 
-// Credit and display an account balance
-func Test_InvokeCredit(t *testing.T) {
-	log.LLvl1("test: crediting and displaying an account balance")
-
-	// Create a new ledger and prepare for proper closing
-	bct := newBCTest(t)
-	bct.local.Check = onet.CheckNone
-	defer bct.Close()
-
-	// Spawn a new BEVM instance
-	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
-
-	// Create a new BEVM client
-	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
-
-	// Initialize an account
-	account, err := NewEvmAccount(testAddresses[0], testPrivateKeys[0])
-	require.Nil(t, err)
-
-	amount := big.NewInt(3.1415926535 * WeiPerEther)
-
-	// Credit the account
-	err = bevmClient.CreditAccounts(amount, account.Address)
-	require.Nil(t, err)
-
-	// Retrieve its balance
-	balance, err := bevmClient.GetAccountBalance(account.Address)
-	require.Nil(t, err)
-
-	require.Equal(t, amount, balance)
-}
-
 // Credit and display three accounts balances
 func Test_InvokeCreditAccounts(t *testing.T) {
-	log.LLvl1("test: crediting and checking accounts balances")
+	log.LLvl1("Account credit and balance")
 
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
@@ -102,7 +68,7 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 
 	// Initialize some accounts
 	accounts := []*EvmAccount{}
-	for i, _ := range testAddresses {
+	for i := range testAddresses {
 		account, err := NewEvmAccount(testAddresses[i], testPrivateKeys[i])
 		require.Nil(t, err)
 		accounts = append(accounts, account)
@@ -123,7 +89,7 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 }
 
 func Test_InvokeTokenContract(t *testing.T) {
-	log.LLvl1("test: ERC20Token")
+	log.LLvl1("ERC20Token")
 
 	// Create a new ledger and prepare for proper closing
 	bct := newBCTest(t)
@@ -172,7 +138,7 @@ func Test_InvokeTokenContract(t *testing.T) {
 	assertBigInt0(t, balance)
 
 	// Transfer 100 tokens from A to B
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", b.Address, big.NewInt(100))
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", b.Address, big.NewInt(100))
 	require.Nil(t, err)
 
 	// Check the new balances
@@ -188,7 +154,7 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.Equal(t, newB, balance)
 
 	// Try to transfer 101 tokens from B to A; this should be rejected by the EVM
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, 0, b, erc20Contract, "transfer", a.Address, big.NewInt(101))
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, b, erc20Contract, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
 
 	// Check that the balances have not changed
@@ -202,7 +168,7 @@ func Test_InvokeTokenContract(t *testing.T) {
 }
 
 func Test_InvokeLoanContract(t *testing.T) {
-	log.LLvl1("Deploying Loan Contract")
+	log.LLvl1("LoanContract")
 	//Preparing ledger
 	bct := newBCTest(t)
 	bct.local.Check = onet.CheckNone
@@ -265,7 +231,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	assertBigInt0(t, tokBal)
 
 	// Transfer tokens from A as a guarantee (A owns all the tokens as he deployed the Token contract)
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", loanContract.Address, guarantee)
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", loanContract.Address, guarantee)
 	require.Nil(t, err)
 
 	tokBal, _ = getBalances(a, a.Address)
@@ -276,13 +242,13 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Equal(t, guarantee, tokBal)
 
 	// Check that there are enough tokens
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract, "checkTokens")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract, "checkTokens")
 	require.Nil(t, err)
 
 	// Lend
 	_, initEtherBalA := getBalances(a, a.Address)
 
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), b, loanContract, "lend")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), b, loanContract, "lend")
 	require.Nil(t, err)
 
 	_, bal = getBalances(a, a.Address)
@@ -292,7 +258,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	// Pay back
 	_, initEtherBalB := getBalances(a, b.Address)
 
-	err = bevmClient.Transact(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), a, loanContract, "payback")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), a, loanContract, "payback")
 	require.Nil(t, err)
 
 	_, bal = getBalances(a, b.Address)
