@@ -45,7 +45,7 @@ func Test_Spawn(t *testing.T) {
 	defer bct.Close()
 
 	// Spawn a new BEVM instance
-	_, err := NewBEvmClient(bct.cl, bct.signer, bct.gDarc)
+	_, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
 	require.Nil(t, err)
 }
 
@@ -59,7 +59,11 @@ func Test_InvokeCredit(t *testing.T) {
 	defer bct.Close()
 
 	// Spawn a new BEVM instance
-	bevmClient, err := NewBEvmClient(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	require.Nil(t, err)
+
+	// Create a new BEVM client
+	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
 	require.Nil(t, err)
 
 	// Initialize an account
@@ -89,7 +93,11 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 	defer bct.Close()
 
 	// Spawn a new BEVM instance
-	bevmClient, err := NewBEvmClient(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	require.Nil(t, err)
+
+	// Create a new BEVM client
+	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
 	require.Nil(t, err)
 
 	// Initialize some accounts
@@ -123,7 +131,11 @@ func Test_InvokeTokenContract(t *testing.T) {
 	defer bct.Close()
 
 	// Spawn a new BEVM instance
-	bevmClient, err := NewBEvmClient(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	require.Nil(t, err)
+
+	// Create a new BEVM client
+	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
 	require.Nil(t, err)
 
 	// Initialize two accounts
@@ -137,7 +149,7 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
-	erc20Contract, err := NewSmartContract(getContractPath(t, "ERC20Token"))
+	erc20Contract, err := NewEvmContract(getContractPath(t, "ERC20Token"))
 	require.Nil(t, err)
 	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
 	require.Nil(t, err)
@@ -197,7 +209,11 @@ func Test_InvokeLoanContract(t *testing.T) {
 	defer bct.Close()
 
 	// Spawn a new BEVM instance
-	bevmClient, err := NewBEvmClient(bct.cl, bct.signer, bct.gDarc)
+	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
+	require.Nil(t, err)
+
+	// Create a new BEVM client
+	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
 	require.Nil(t, err)
 
 	// Initialize two accounts
@@ -211,7 +227,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
-	erc20Contract, err := NewSmartContract(getContractPath(t, "ERC20Token"))
+	erc20Contract, err := NewEvmContract(getContractPath(t, "ERC20Token"))
 	require.Nil(t, err)
 	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
 	require.Nil(t, err)
@@ -220,7 +236,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	guarantee := big.NewInt(10000)
 	loanAmount := big.NewInt(1.5 * WeiPerEther)
 
-	loanContract, err := NewSmartContract(getContractPath(t, "LoanContract"))
+	loanContract, err := NewEvmContract(getContractPath(t, "LoanContract"))
 	require.Nil(t, err)
 	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract,
 		loanAmount,            // wantedAmount: the amount in Ether that the borrower wants to borrow

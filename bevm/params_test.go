@@ -36,7 +36,7 @@ func TestTokenContract(t *testing.T) {
 	getHash := func(uint64) common.Hash { return common.HexToHash("O") }
 
 	// Get smart contract abi and bytecode
-	contract, err := NewSmartContract(getContractPath(t, "ModifiedToken"))
+	contract, err := NewEvmContract(getContractPath(t, "ModifiedToken"))
 	require.Nil(t, err)
 
 	// Create dummy addresses for testing token transfers

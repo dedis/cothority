@@ -64,12 +64,6 @@ func (db *ClientByzDatabase) Put(key []byte, value []byte) error {
 func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	instID := db.getValueInstanceID(key)
 
-	// Calling from a client
-
-	if db.client == nil {
-		return nil, errors.New("Internal error: both roStateTrie and client are nil")
-	}
-
 	// Retrieve the proof of the Byzcoin instance
 	proofResponse, err := db.client.GetProof(instID[:])
 	if err != nil {
@@ -127,7 +121,7 @@ type ServerByzDatabase struct {
 	roStateTrie  byzcoin.ReadOnlyStateTrie
 	stateChanges []byzcoin.StateChange // List of state changes to apply
 	keys         map[string]bool       // Keeps track of existing value instances (identified by their key)
-	lock         sync.RWMutex
+	lock         sync.RWMutex          // Protects concurrent access to 'keys' and 'stateChanges'
 }
 
 func createKeyMap(keyList []string) map[string]bool {
@@ -180,13 +174,13 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	for _, s := range db.stateChanges {
 		switch s.StateAction {
 		case byzcoin.Create:
-			nbCreate += 1
+			nbCreate++
 		case byzcoin.Update:
-			nbUpdate += 1
+			nbUpdate++
 		case byzcoin.Remove:
-			nbRemove += 1
+			nbRemove++
 		default:
-			return nil, nil, errors.New(fmt.Sprintf("Unknown StateChange action: %d", s.StateAction))
+			return nil, nil, fmt.Errorf("Unknown StateChange action: %d", s.StateAction)
 		}
 	}
 	log.LLvlf2("%d state changes (%d Create, %d Update, %d Remove), %d entries in store",
@@ -256,8 +250,6 @@ func (db *ServerByzDatabase) Delete(key []byte) error {
 	defer db.lock.Unlock()
 
 	return db.delete(key)
-
-	return nil
 }
 
 // Actual implementation, callable from Batch.Write()
