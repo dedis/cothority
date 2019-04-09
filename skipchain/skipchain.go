@@ -587,7 +587,9 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBl
 			return &GetSingleBlockByIndexReply{sb, links}, nil
 		}
 	}
-	return nil, errors.New("No block with this index found")
+	err := fmt.Errorf("no block with index \"%d\" found", id.Index)
+	log.Error(s.ServerIdentity(), err)
+	return nil, err
 }
 
 // GetAllSkipchains currently returns a list of all the known blocks.

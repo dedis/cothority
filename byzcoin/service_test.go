@@ -103,31 +103,30 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 }
 
 func TestService_AddTransaction(t *testing.T) {
-	testAddTransaction(t, 0, false)
+	testAddTransaction(t, time.Second, 0, false)
 }
 
 func TestService_AddTransaction_ToFollower(t *testing.T) {
-	testAddTransaction(t, 1, false)
+	testAddTransaction(t, time.Second, 1, false)
 }
 
 func TestService_AddTransaction_WithFailure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("test takes too long for Travis")
 	}
-	testAddTransaction(t, 0, true)
+	testAddTransaction(t, 2*time.Second, 0, true)
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
-	testAddTransaction(t, 1, true)
+	testAddTransaction(t, 2*time.Second, 1, true)
 }
 
-func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
-	log.SetShowTime(true)
+func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, time.Second, 4, false)
+		s = newSerN(t, 1, blockInterval, 4, false)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(4 * time.Second)
+			service.SetPropagationTimeout(blockInterval / 2)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)
@@ -169,7 +168,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
-		InclusionWait: 5,
+		InclusionWait: 10,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -184,7 +183,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx2,
-		InclusionWait: 5,
+		InclusionWait: 10,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -244,11 +243,12 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 		log.Lvl1("done")
 		// Wait for tasks to finish.
-		time.Sleep(time.Second)
+		time.Sleep(blockInterval)
 	}
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
+	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
 	s := newSerN(t, 1, time.Second, 4, false)
 	defer s.local.CloseAll()
@@ -276,11 +276,13 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
 
-	// force the synchronization as the new node needs to get the propagation
-	// to know about the skipchain but we're not testing that here
+	// force the synchronization as the new node needs to get the
+	// propagation to know about the skipchain but we're not testing that
+	// here
 	proof, err := s.service().db().GetProof(s.genesis.Hash)
 	require.NoError(t, err)
-	outside.db().StoreBlocks(proof)
+	_, err = outside.db().StoreBlocks(proof)
+	require.NoError(t, err)
 
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
@@ -289,9 +291,10 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// Tests what happens if a transaction with two instructions is sent: one valid and one invalid
-// instruction.
+// Tests what happens if a transaction with two instructions is sent: one valid
+// and one invalid instruction.
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
+	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
 	s := newSerN(t, 1, time.Second, 4, false)
 	defer s.local.CloseAll()
@@ -431,9 +434,10 @@ func TestService_DarcProxy(t *testing.T) {
 		h.Write(msg)
 		msg2 := h.Sum(nil)
 
-		// In this simulation, we can make a signature the simple way: eddsa.Sign
-		// With auth proxies which are using DSS, the client will contact proxies
-		// to get signatures, then interpolate them into the final signature.
+		// In this simulation, we can make a signature the simple way:
+		// eddsa.Sign With auth proxies which are using DSS, the client
+		// will contact proxies to get signatures, then interpolate
+		// them into the final signature.
 		return ed.Sign(msg2)
 	}
 
@@ -490,8 +494,8 @@ func TestService_Depending(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	// Create a client tx with two instructions in it where the second one depends on
-	// the first one having executed.
+	// Create a client tx with two instructions in it where the second one
+	// depends on the first one having executed.
 
 	// First instruction: spawn a dummy value.
 	in1 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", []byte("something to delete"))
@@ -545,8 +549,8 @@ func TestService_LateBlock(t *testing.T) {
 	ser := s.services[0]
 	c := ser.Context
 	err := skipchain.RegisterVerification(c, Verify, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Make this block arrive late compared to it's timestamp. The window will be
-		// 1000ms, so sleep 1200 more, just to be sure.
+		// Make this block arrive late compared to it's timestamp. The
+		// window will be 1000ms, so sleep 1200 more, just to be sure.
 		time.Sleep(2200 * time.Millisecond)
 		return ser.verifySkipBlock(newID, newSB)
 	})
@@ -620,15 +624,35 @@ func waitInclusion(t *testing.T, client int) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	// Create a transaction without waiting
-	log.Lvl1("Create transaction and don't wait")
-	pr, k, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
+	// Get counter
+	counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.genesis.SkipChainID(),
+	})
 	require.NoError(t, err)
-	require.NoError(t, err2)
-	require.False(t, pr.InclusionProof.Match(k))
+	counter := uint64(counterResponse.Counters[0])
+
+	// Create a transaction without waiting, we do not use sendTransactionWithCounter
+	// because it might slow us down since it gets a proof which causes the
+	// transactions to end up in two blocks.
+	log.Lvl1("Create transaction and don't wait")
+	counter++
+	{
+		tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
+		require.Nil(t, err)
+		ser := s.services[client]
+		_, err = ser.AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 0,
+		})
+		require.NoError(t, err)
+	}
 
 	log.Lvl1("Create correct transaction and wait")
-	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	counter++
+	pr, k, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -639,7 +663,8 @@ func waitInclusion(t *testing.T, client int) {
 	require.Equal(t, len(txr), 2)
 
 	log.Lvl1("Create wrong transaction and wait")
-	pr, _, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
+	counter++
+	pr, _, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
 	require.Contains(t, err.Error(), "transaction is in block, but got refused")
 	require.NoError(t, err2)
 
@@ -651,9 +676,9 @@ func waitInclusion(t *testing.T, client int) {
 	require.False(t, txr[0].Accepted)
 
 	log.Lvl1("Create wrong transaction, no wait")
-	sendTransaction(t, s, client, invalidContract, 0)
+	sendTransactionWithCounter(t, s, client, invalidContract, 0, counter)
 	log.Lvl1("Create second correct transaction and wait")
-	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	pr, k, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
 	require.NoError(t, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
@@ -686,7 +711,8 @@ func waitInclusion(t *testing.T, client int) {
 	time.Sleep(time.Second)
 }
 
-// Sends too many transactions to the ledger and waits for all blocks to be done.
+// Sends too many transactions to the ledger and waits for all blocks to be
+// done.
 func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
@@ -704,7 +730,8 @@ func TestService_FloodLedger(t *testing.T) {
 	// Send a last transaction and wait for it to be included
 	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
 
-	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval for each execution)
+	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
+	// for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
@@ -714,9 +741,10 @@ func TestService_FloodLedger(t *testing.T) {
 }
 
 func TestService_BigTx(t *testing.T) {
-	// Use longer block interval for this test, as sending around these big blocks
-	// gets to be too close to the edge with the normal short testing interval, and
-	// starts generating errors-that-might-not-be-errors.
+	// Use longer block interval for this test, as sending around these big
+	// blocks gets to be too close to the edge with the normal short
+	// testing interval, and starts generating
+	// errors-that-might-not-be-errors.
 	s := newSer(t, 1, 1*time.Second)
 	defer s.local.CloseAll()
 
@@ -726,7 +754,7 @@ func TestService_BigTx(t *testing.T) {
 	latest := reply.Update[len(reply.Update)-1]
 	require.Equal(t, 0, latest.Index)
 
-	save := s.value
+	smallVal := s.value
 
 	// Try to send a value so big it will be refused.
 	s.value = make([]byte, defaultMaxBlockSize+1)
@@ -747,7 +775,7 @@ func TestService_BigTx(t *testing.T) {
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
-	s.value = save
+	s.value = smallVal
 	p, k, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, 3)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
@@ -1380,7 +1408,6 @@ func TestService_SetConfigInterval(t *testing.T) {
 		5 * time.Second,
 		10 * time.Second,
 		20 * time.Second,
-		30 * time.Second,
 	}
 	if testing.Short() {
 		intervals = intervals[0:3]
@@ -1398,11 +1425,17 @@ func TestService_SetConfigInterval(t *testing.T) {
 		// is bigger, due to dedis/cothority#1409
 		s.sendTxAndWait(t, ctx, 10)
 
+		// We send an extra transaction first because the new interval is only loaded after a delay
+		// caused by the pipeline feature, i.e., the new interval is only used after an existing wait-interval
+		// is finished and not immediately after receiving the new configuration.
 		dummyCtx, _ := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
 		counter++
+		s.sendTxAndWait(t, dummyCtx, 10)
 
 		start := time.Now()
 
+		dummyCtx, _ = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(counter))
+		counter++
 		s.sendTxAndWait(t, dummyCtx, 10)
 
 		dur := time.Now().Sub(start)
