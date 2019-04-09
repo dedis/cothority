@@ -9,6 +9,7 @@ import (
 
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
+// type :time.Time:uint64
 // package calypso;
 // import "byzcoin.proto";
 // import "onet.proto";

@@ -130,9 +130,8 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.Request other = (ch.epfl.dedis.lib.proto.StatusProto.Request) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -311,35 +310,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -529,7 +528,7 @@ public final class StatusProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 status_ = com.google.protobuf.MapField.newMapField(
                     StatusDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
@@ -543,7 +542,7 @@ public final class StatusProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = serveridentity_.toBuilder();
               }
               serveridentity_ = input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry);
@@ -681,7 +680,7 @@ public final class StatusProto {
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
     public boolean hasServeridentity() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .network.ServerIdentity serveridentity = 2;</code>
@@ -722,7 +721,7 @@ public final class StatusProto {
           internalGetStatus(),
           StatusDefaultEntryHolder.defaultEntry,
           1);
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getServeridentity());
       }
       unknownFields.writeTo(output);
@@ -744,7 +743,7 @@ public final class StatusProto {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(1, status__);
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getServeridentity());
       }
@@ -763,16 +762,15 @@ public final class StatusProto {
       }
       ch.epfl.dedis.lib.proto.StatusProto.Response other = (ch.epfl.dedis.lib.proto.StatusProto.Response) obj;
 
-      boolean result = true;
-      result = result && internalGetStatus().equals(
-          other.internalGetStatus());
-      result = result && (hasServeridentity() == other.hasServeridentity());
+      if (!internalGetStatus().equals(
+          other.internalGetStatus())) return false;
+      if (hasServeridentity() != other.hasServeridentity()) return false;
       if (hasServeridentity()) {
-        result = result && getServeridentity()
-            .equals(other.getServeridentity());
+        if (!getServeridentity()
+            .equals(other.getServeridentity())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -987,13 +985,13 @@ public final class StatusProto {
         int to_bitField0_ = 0;
         result.status_ = internalGetStatus();
         result.status_.makeImmutable();
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (serveridentityBuilder_ == null) {
+            result.serveridentity_ = serveridentity_;
+          } else {
+            result.serveridentity_ = serveridentityBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (serveridentityBuilder_ == null) {
-          result.serveridentity_ = serveridentity_;
-        } else {
-          result.serveridentity_ = serveridentityBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1002,35 +1000,35 @@ public final class StatusProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1207,14 +1205,14 @@ public final class StatusProto {
         return this;
       }
 
-      private ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity serveridentity_ = null;
+      private ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity serveridentity_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> serveridentityBuilder_;
       /**
        * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
       public boolean hasServeridentity() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>optional .network.ServerIdentity serveridentity = 2;</code>
@@ -1261,7 +1259,7 @@ public final class StatusProto {
        */
       public Builder mergeServeridentity(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
         if (serveridentityBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               serveridentity_ != null &&
               serveridentity_ != ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance()) {
             serveridentity_ =
