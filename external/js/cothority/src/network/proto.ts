@@ -187,6 +187,7 @@ export class ServerIdentity extends Message<ServerIdentity> {
      *      https://example.com:443/     => wss:example.com
      *      tcp://127.0.0.1              => Error
      * Note: It will NOT include the given port in the case its the default one (for example 80 or 443).
+     * Note: In the case there is many slashes at the end of the url, it will only remove one.
      * @param url   the given url field
      * @returns a websocket url
      */
@@ -206,10 +207,11 @@ export class ServerIdentity extends Message<ServerIdentity> {
                                 + urlParser.protocol);
             }
         }
-        if (urlParser.pathname.slice(-1) === "/") {
-            urlParser.pathname = urlParser.pathname.slice(0, -1);
+        let result = urlParser.toString();
+        if (result.slice(-1) === "/") {
+            result = result.slice(0, -1);
         }
-        return urlParser.toString();
+        return result;
     }
 
     readonly public: Buffer;
