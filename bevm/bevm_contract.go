@@ -22,14 +22,14 @@ var nilAddress = common.HexToAddress("0x0000000000000000000000000000000000000000
 
 type contractBEvm struct {
 	byzcoin.BasicContract
-	BEvmState
+	State
 }
 
 // Deserialize a BEVM contract state
 func contractBEvmFromBytes(in []byte) (byzcoin.Contract, error) {
 	contract := &contractBEvm{}
 
-	err := protobuf.Decode(in, &contract.BEvmState)
+	err := protobuf.Decode(in, &contract.State)
 	if err != nil {
 		return nil, err
 	}
@@ -38,13 +38,13 @@ func contractBEvmFromBytes(in []byte) (byzcoin.Contract, error) {
 }
 
 // Byzcoin EVM State
-type BEvmState struct {
+type State struct {
 	RootHash common.Hash // Hash of the last commit
 	KeyList  []string
 }
 
 // Create a new EVM state DB from the contract state
-func NewEvmDb(es *BEvmState, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID byzcoin.InstanceID) (*state.StateDB, error) {
+func NewEvmDb(es *State, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID byzcoin.InstanceID) (*state.StateDB, error) {
 	byzDb, err := NewServerByzDatabase(instanceID, es.KeyList, roStateTrie)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func NewEvmDb(es *BEvmState, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID b
 }
 
 // Create a new contract state from the EVM state DB
-func NewContractState(stateDb *state.StateDB) (*BEvmState, []byzcoin.StateChange, error) {
+func NewContractState(stateDb *state.StateDB) (*State, []byzcoin.StateChange, error) {
 	// Commit the underlying databases first
 	root, err := stateDb.Commit(true)
 	if err != nil {
@@ -79,7 +79,7 @@ func NewContractState(stateDb *state.StateDB) (*BEvmState, []byzcoin.StateChange
 	}
 
 	// Build the new EVM state
-	return &BEvmState{RootHash: root, KeyList: keyList}, stateChanges, nil
+	return &State{RootHash: root, KeyList: keyList}, stateChanges, nil
 }
 
 // Spawn a new BEVM contract
@@ -88,7 +88,7 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 
 	instanceID := inst.DeriveID("")
 
-	stateDb, err := NewEvmDb(&c.BEvmState, rst, instanceID)
+	stateDb, err := NewEvmDb(&c.State, rst, instanceID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -132,7 +132,7 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		return
 	}
 
-	stateDb, err := NewEvmDb(&c.BEvmState, rst, inst.InstanceID)
+	stateDb, err := NewEvmDb(&c.State, rst, inst.InstanceID)
 	if err != nil {
 		return nil, nil, err
 	}

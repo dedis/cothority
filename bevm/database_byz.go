@@ -163,7 +163,7 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	})
 
 	var keyList []string
-	for key, _ := range db.keys {
+	for key := range db.keys {
 		keyList = append(keyList, key)
 	}
 	// This also must be sorted as Go maps traversal order is inherently non-deterministic

@@ -132,8 +132,6 @@ func (db *MemDatabase) Delete(key []byte) error {
 	defer db.lock.Unlock()
 
 	return db.delete(key)
-
-	return nil
 }
 
 // Actual implementation, callable from Batch.Write()

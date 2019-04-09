@@ -314,7 +314,7 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (*state.State
 	}
 
 	// Decode the proof value into an EVM State
-	var bs BEvmState
+	var bs State
 	err = protobuf.Decode(value, &bs)
 	if err != nil {
 		return nil, err
