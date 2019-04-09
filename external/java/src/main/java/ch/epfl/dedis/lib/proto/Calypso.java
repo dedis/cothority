@@ -302,7 +302,7 @@ public final class Calypso {
      * <code>required bytes data = 1;</code>
      */
     public boolean hasData() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -326,7 +326,7 @@ public final class Calypso {
      * <code>required bytes u = 2;</code>
      */
     public boolean hasU() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -352,7 +352,7 @@ public final class Calypso {
      * <code>required bytes ubar = 3;</code>
      */
     public boolean hasUbar() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -378,7 +378,7 @@ public final class Calypso {
      * <code>required bytes e = 4;</code>
      */
     public boolean hasE() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
      * <pre>
@@ -402,7 +402,7 @@ public final class Calypso {
      * <code>required bytes f = 5;</code>
      */
     public boolean hasF() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
@@ -427,7 +427,7 @@ public final class Calypso {
      * <code>required bytes c = 6;</code>
      */
     public boolean hasC() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
     /**
      * <pre>
@@ -451,7 +451,7 @@ public final class Calypso {
      * <code>optional bytes extradata = 7;</code>
      */
     public boolean hasExtradata() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
     /**
      * <pre>
@@ -474,7 +474,7 @@ public final class Calypso {
      * <code>required bytes ltsid = 8;</code>
      */
     public boolean hasLtsid() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
     /**
      * <pre>
@@ -529,28 +529,28 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, u_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, ubar_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         output.writeBytes(4, e_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         output.writeBytes(5, f_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBytes(6, c_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBytes(7, extradata_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         output.writeBytes(8, ltsid_);
       }
       unknownFields.writeTo(output);
@@ -562,35 +562,35 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, data_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, u_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, ubar_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, e_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, f_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, c_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(7, extradata_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, ltsid_);
       }
@@ -609,49 +609,48 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Write other = (ch.epfl.dedis.lib.proto.Calypso.Write) obj;
 
-      boolean result = true;
-      result = result && (hasData() == other.hasData());
+      if (hasData() != other.hasData()) return false;
       if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
+        if (!getData()
+            .equals(other.getData())) return false;
       }
-      result = result && (hasU() == other.hasU());
+      if (hasU() != other.hasU()) return false;
       if (hasU()) {
-        result = result && getU()
-            .equals(other.getU());
+        if (!getU()
+            .equals(other.getU())) return false;
       }
-      result = result && (hasUbar() == other.hasUbar());
+      if (hasUbar() != other.hasUbar()) return false;
       if (hasUbar()) {
-        result = result && getUbar()
-            .equals(other.getUbar());
+        if (!getUbar()
+            .equals(other.getUbar())) return false;
       }
-      result = result && (hasE() == other.hasE());
+      if (hasE() != other.hasE()) return false;
       if (hasE()) {
-        result = result && getE()
-            .equals(other.getE());
+        if (!getE()
+            .equals(other.getE())) return false;
       }
-      result = result && (hasF() == other.hasF());
+      if (hasF() != other.hasF()) return false;
       if (hasF()) {
-        result = result && getF()
-            .equals(other.getF());
+        if (!getF()
+            .equals(other.getF())) return false;
       }
-      result = result && (hasC() == other.hasC());
+      if (hasC() != other.hasC()) return false;
       if (hasC()) {
-        result = result && getC()
-            .equals(other.getC());
+        if (!getC()
+            .equals(other.getC())) return false;
       }
-      result = result && (hasExtradata() == other.hasExtradata());
+      if (hasExtradata() != other.hasExtradata()) return false;
       if (hasExtradata()) {
-        result = result && getExtradata()
-            .equals(other.getExtradata());
+        if (!getExtradata()
+            .equals(other.getExtradata())) return false;
       }
-      result = result && (hasLtsid() == other.hasLtsid());
+      if (hasLtsid() != other.hasLtsid()) return false;
       if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
+        if (!getLtsid()
+            .equals(other.getLtsid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -875,35 +874,35 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Write result = new ch.epfl.dedis.lib.proto.Calypso.Write(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.data_ = data_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.u_ = u_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.ubar_ = ubar_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000008;
         }
         result.e_ = e_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
         result.f_ = f_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.c_ = c_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField0_ & 0x00000040) != 0)) {
           to_bitField0_ |= 0x00000040;
         }
         result.extradata_ = extradata_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField0_ & 0x00000080) != 0)) {
           to_bitField0_ |= 0x00000080;
         }
         result.ltsid_ = ltsid_;
@@ -914,35 +913,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1041,7 +1040,7 @@ public final class Calypso {
        * <code>required bytes data = 1;</code>
        */
       public boolean hasData() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -1095,7 +1094,7 @@ public final class Calypso {
        * <code>required bytes u = 2;</code>
        */
       public boolean hasU() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1149,7 +1148,7 @@ public final class Calypso {
        * <code>required bytes ubar = 3;</code>
        */
       public boolean hasUbar() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -1209,7 +1208,7 @@ public final class Calypso {
        * <code>required bytes e = 4;</code>
        */
       public boolean hasE() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <pre>
@@ -1261,7 +1260,7 @@ public final class Calypso {
        * <code>required bytes f = 5;</code>
        */
       public boolean hasF() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
@@ -1316,7 +1315,7 @@ public final class Calypso {
        * <code>required bytes c = 6;</code>
        */
       public boolean hasC() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000020) != 0);
       }
       /**
        * <pre>
@@ -1370,7 +1369,7 @@ public final class Calypso {
        * <code>optional bytes extradata = 7;</code>
        */
       public boolean hasExtradata() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000040) != 0);
       }
       /**
        * <pre>
@@ -1421,7 +1420,7 @@ public final class Calypso {
        * <code>required bytes ltsid = 8;</code>
        */
       public boolean hasLtsid() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000080) != 0);
       }
       /**
        * <pre>
@@ -1632,7 +1631,7 @@ public final class Calypso {
      * <code>required bytes write = 1;</code>
      */
     public boolean hasWrite() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes write = 1;</code>
@@ -1647,7 +1646,7 @@ public final class Calypso {
      * <code>required bytes xc = 2;</code>
      */
     public boolean hasXc() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes xc = 2;</code>
@@ -1678,10 +1677,10 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, write_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, xc_);
       }
       unknownFields.writeTo(output);
@@ -1693,11 +1692,11 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, write_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, xc_);
       }
@@ -1716,19 +1715,18 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Read other = (ch.epfl.dedis.lib.proto.Calypso.Read) obj;
 
-      boolean result = true;
-      result = result && (hasWrite() == other.hasWrite());
+      if (hasWrite() != other.hasWrite()) return false;
       if (hasWrite()) {
-        result = result && getWrite()
-            .equals(other.getWrite());
+        if (!getWrite()
+            .equals(other.getWrite())) return false;
       }
-      result = result && (hasXc() == other.hasXc());
+      if (hasXc() != other.hasXc()) return false;
       if (hasXc()) {
-        result = result && getXc()
-            .equals(other.getXc());
+        if (!getXc()
+            .equals(other.getXc())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1916,11 +1914,11 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Read result = new ch.epfl.dedis.lib.proto.Calypso.Read(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.write_ = write_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.xc_ = xc_;
@@ -1931,35 +1929,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2020,7 +2018,7 @@ public final class Calypso {
        * <code>required bytes write = 1;</code>
        */
       public boolean hasWrite() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes write = 1;</code>
@@ -2055,7 +2053,7 @@ public final class Calypso {
        * <code>required bytes xc = 2;</code>
        */
       public boolean hasXc() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes xc = 2;</code>
@@ -2239,7 +2237,7 @@ public final class Calypso {
      * <code>required bytes byzcoinid = 1;</code>
      */
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
@@ -2266,7 +2264,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
       unknownFields.writeTo(output);
@@ -2278,7 +2276,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
@@ -2297,14 +2295,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.Authorise other = (ch.epfl.dedis.lib.proto.Calypso.Authorise) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2486,7 +2483,7 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.Authorise result = new ch.epfl.dedis.lib.proto.Calypso.Authorise(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
@@ -2497,35 +2494,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2580,7 +2577,7 @@ public final class Calypso {
        * <code>required bytes byzcoinid = 1;</code>
        */
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
@@ -2778,9 +2775,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.AuthoriseReply other = (ch.epfl.dedis.lib.proto.Calypso.AuthoriseReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2959,35 +2955,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3146,7 +3142,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -3196,7 +3192,7 @@ public final class Calypso {
      * <code>required .byzcoin.Proof proof = 1;</code>
      */
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
@@ -3233,7 +3229,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
@@ -3245,7 +3241,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProof());
       }
@@ -3264,14 +3260,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.CreateLTS other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTS) obj;
 
-      boolean result = true;
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -3459,13 +3454,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTS result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTS(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -3474,35 +3469,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3555,14 +3550,14 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
@@ -3609,7 +3604,7 @@ public final class Calypso {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -3865,7 +3860,7 @@ public final class Calypso {
      * <code>required bytes byzcoinid = 1;</code>
      */
     public boolean hasByzcoinid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes byzcoinid = 1;</code>
@@ -3880,7 +3875,7 @@ public final class Calypso {
      * <code>required bytes instanceid = 2;</code>
      */
     public boolean hasInstanceid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes instanceid = 2;</code>
@@ -3899,7 +3894,7 @@ public final class Calypso {
      * <code>required bytes x = 3;</code>
      */
     public boolean hasX() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -3938,13 +3933,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
@@ -3956,15 +3951,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, byzcoinid_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, instanceid_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, x_);
       }
@@ -3983,24 +3978,23 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply) obj;
 
-      boolean result = true;
-      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
       if (hasByzcoinid()) {
-        result = result && getByzcoinid()
-            .equals(other.getByzcoinid());
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
       }
-      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid() != other.hasInstanceid()) return false;
       if (hasInstanceid()) {
-        result = result && getInstanceid()
-            .equals(other.getInstanceid());
+        if (!getInstanceid()
+            .equals(other.getInstanceid())) return false;
       }
-      result = result && (hasX() == other.hasX());
+      if (hasX() != other.hasX()) return false;
       if (hasX()) {
-        result = result && getX()
-            .equals(other.getX());
+        if (!getX()
+            .equals(other.getX())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4194,15 +4188,15 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.byzcoinid_ = byzcoinid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.instanceid_ = instanceid_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
@@ -4213,35 +4207,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4308,7 +4302,7 @@ public final class Calypso {
        * <code>required bytes byzcoinid = 1;</code>
        */
       public boolean hasByzcoinid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes byzcoinid = 1;</code>
@@ -4343,7 +4337,7 @@ public final class Calypso {
        * <code>required bytes instanceid = 2;</code>
        */
       public boolean hasInstanceid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes instanceid = 2;</code>
@@ -4382,7 +4376,7 @@ public final class Calypso {
        * <code>required bytes x = 3;</code>
        */
       public boolean hasX() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -4540,7 +4534,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = proof_.toBuilder();
               }
               proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -4590,7 +4584,7 @@ public final class Calypso {
      * <code>required .byzcoin.Proof proof = 1;</code>
      */
     public boolean hasProof() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .byzcoin.Proof proof = 1;</code>
@@ -4627,7 +4621,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getProof());
       }
       unknownFields.writeTo(output);
@@ -4639,7 +4633,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProof());
       }
@@ -4658,14 +4652,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.ReshareLTS other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTS) obj;
 
-      boolean result = true;
-      result = result && (hasProof() == other.hasProof());
+      if (hasProof() != other.hasProof()) return false;
       if (hasProof()) {
-        result = result && getProof()
-            .equals(other.getProof());
+        if (!getProof()
+            .equals(other.getProof())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -4853,13 +4846,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.ReshareLTS result = new ch.epfl.dedis.lib.proto.Calypso.ReshareLTS(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (proofBuilder_ == null) {
-          result.proof_ = proof_;
-        } else {
-          result.proof_ = proofBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -4868,35 +4861,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4949,14 +4942,14 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
        */
       public boolean hasProof() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .byzcoin.Proof proof = 1;</code>
@@ -5003,7 +4996,7 @@ public final class Calypso {
        */
       public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (proofBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               proof_ != null &&
               proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             proof_ =
@@ -5236,9 +5229,8 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.ReshareLTSReply) obj;
 
-      boolean result = true;
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -5418,35 +5410,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5641,7 +5633,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = read_.toBuilder();
               }
               read_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -5654,7 +5646,7 @@ public final class Calypso {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = write_.toBuilder();
               }
               write_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
@@ -5708,7 +5700,7 @@ public final class Calypso {
      * <code>required .byzcoin.Proof read = 1;</code>
      */
     public boolean hasRead() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -5741,7 +5733,7 @@ public final class Calypso {
      * <code>required .byzcoin.Proof write = 2;</code>
      */
     public boolean hasWrite() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -5794,10 +5786,10 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getRead());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getWrite());
       }
       unknownFields.writeTo(output);
@@ -5809,11 +5801,11 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getRead());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getWrite());
       }
@@ -5832,19 +5824,18 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.DecryptKey other = (ch.epfl.dedis.lib.proto.Calypso.DecryptKey) obj;
 
-      boolean result = true;
-      result = result && (hasRead() == other.hasRead());
+      if (hasRead() != other.hasRead()) return false;
       if (hasRead()) {
-        result = result && getRead()
-            .equals(other.getRead());
+        if (!getRead()
+            .equals(other.getRead())) return false;
       }
-      result = result && (hasWrite() == other.hasWrite());
+      if (hasWrite() != other.hasWrite()) return false;
       if (hasWrite()) {
-        result = result && getWrite()
-            .equals(other.getWrite());
+        if (!getWrite()
+            .equals(other.getWrite())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -6042,21 +6033,21 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKey result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKey(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (readBuilder_ == null) {
+            result.read_ = read_;
+          } else {
+            result.read_ = readBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (readBuilder_ == null) {
-          result.read_ = read_;
-        } else {
-          result.read_ = readBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (writeBuilder_ == null) {
+            result.write_ = write_;
+          } else {
+            result.write_ = writeBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
-        }
-        if (writeBuilder_ == null) {
-          result.write_ = write_;
-        } else {
-          result.write_ = writeBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -6065,35 +6056,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6155,7 +6146,7 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> readBuilder_;
       /**
@@ -6166,7 +6157,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof read = 1;</code>
        */
       public boolean hasRead() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -6229,7 +6220,7 @@ public final class Calypso {
        */
       public Builder mergeRead(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (readBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               read_ != null &&
               read_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             read_ =
@@ -6309,7 +6300,7 @@ public final class Calypso {
         return readBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_ = null;
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> writeBuilder_;
       /**
@@ -6320,7 +6311,7 @@ public final class Calypso {
        * <code>required .byzcoin.Proof write = 2;</code>
        */
       public boolean hasWrite() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -6383,7 +6374,7 @@ public final class Calypso {
        */
       public Builder mergeWrite(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
         if (writeBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               write_ != null &&
               write_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             write_ =
@@ -6675,7 +6666,7 @@ public final class Calypso {
      * <code>required bytes c = 1;</code>
      */
     public boolean hasC() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -6698,7 +6689,7 @@ public final class Calypso {
      * <code>required bytes xhatenc = 2;</code>
      */
     public boolean hasXhatenc() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -6721,7 +6712,7 @@ public final class Calypso {
      * <code>required bytes x = 3;</code>
      */
     public boolean hasX() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -6760,13 +6751,13 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, c_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, xhatenc_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, x_);
       }
       unknownFields.writeTo(output);
@@ -6778,15 +6769,15 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, c_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, xhatenc_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, x_);
       }
@@ -6805,24 +6796,23 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply other = (ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply) obj;
 
-      boolean result = true;
-      result = result && (hasC() == other.hasC());
+      if (hasC() != other.hasC()) return false;
       if (hasC()) {
-        result = result && getC()
-            .equals(other.getC());
+        if (!getC()
+            .equals(other.getC())) return false;
       }
-      result = result && (hasXhatenc() == other.hasXhatenc());
+      if (hasXhatenc() != other.hasXhatenc()) return false;
       if (hasXhatenc()) {
-        result = result && getXhatenc()
-            .equals(other.getXhatenc());
+        if (!getXhatenc()
+            .equals(other.getXhatenc())) return false;
       }
-      result = result && (hasX() == other.hasX());
+      if (hasX() != other.hasX()) return false;
       if (hasX()) {
-        result = result && getX()
-            .equals(other.getX());
+        if (!getX()
+            .equals(other.getX())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7016,15 +7006,15 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.c_ = c_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.xhatenc_ = xhatenc_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.x_ = x_;
@@ -7035,35 +7025,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7134,7 +7124,7 @@ public final class Calypso {
        * <code>required bytes c = 1;</code>
        */
       public boolean hasC() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -7185,7 +7175,7 @@ public final class Calypso {
        * <code>required bytes xhatenc = 2;</code>
        */
       public boolean hasXhatenc() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -7236,7 +7226,7 @@ public final class Calypso {
        * <code>required bytes x = 3;</code>
        */
       public boolean hasX() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -7443,7 +7433,7 @@ public final class Calypso {
      * <code>required bytes ltsid = 1;</code>
      */
     public boolean hasLtsid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -7474,7 +7464,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, ltsid_);
       }
       unknownFields.writeTo(output);
@@ -7486,7 +7476,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, ltsid_);
       }
@@ -7505,14 +7495,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.GetLTSReply other = (ch.epfl.dedis.lib.proto.Calypso.GetLTSReply) obj;
 
-      boolean result = true;
-      result = result && (hasLtsid() == other.hasLtsid());
+      if (hasLtsid() != other.hasLtsid()) return false;
       if (hasLtsid()) {
-        result = result && getLtsid()
-            .equals(other.getLtsid());
+        if (!getLtsid()
+            .equals(other.getLtsid())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -7693,7 +7682,7 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.GetLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.GetLTSReply(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.ltsid_ = ltsid_;
@@ -7704,35 +7693,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7791,7 +7780,7 @@ public final class Calypso {
        * <code>required bytes ltsid = 1;</code>
        */
       public boolean hasLtsid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -7947,7 +7936,7 @@ public final class Calypso {
               break;
             case 10: {
               ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = roster_.toBuilder();
               }
               roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
@@ -7997,7 +7986,7 @@ public final class Calypso {
      * <code>required .onet.Roster roster = 1;</code>
      */
     public boolean hasRoster() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .onet.Roster roster = 1;</code>
@@ -8034,7 +8023,7 @@ public final class Calypso {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getRoster());
       }
       unknownFields.writeTo(output);
@@ -8046,7 +8035,7 @@ public final class Calypso {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getRoster());
       }
@@ -8065,14 +8054,13 @@ public final class Calypso {
       }
       ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo other = (ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo) obj;
 
-      boolean result = true;
-      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster() != other.hasRoster()) return false;
       if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -8258,13 +8246,13 @@ public final class Calypso {
         ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo result = new ch.epfl.dedis.lib.proto.Calypso.LtsInstanceInfo(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
-        }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
-        } else {
-          result.roster_ = rosterBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -8273,35 +8261,35 @@ public final class Calypso {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8354,14 +8342,14 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_ = null;
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
        * <code>required .onet.Roster roster = 1;</code>
        */
       public boolean hasRoster() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required .onet.Roster roster = 1;</code>
@@ -8408,7 +8396,7 @@ public final class Calypso {
        */
       public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               roster_ != null &&
               roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
             roster_ =
@@ -8524,6 +8512,4721 @@ public final class Calypso {
 
   }
 
+  public interface AuthOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.Auth)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    boolean hasByzcoin();
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getByzcoin();
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder getByzcoinOrBuilder();
+
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    boolean hasAuthx509Cert();
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getAuthx509Cert();
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder getAuthx509CertOrBuilder();
+  }
+  /**
+   * <pre>
+   * Auth holds all possible authentication structures. When using it to call
+   * Authorise, only one of the fields must be non-nil.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.Auth}
+   */
+  public  static final class Auth extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.Auth)
+      AuthOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Auth.newBuilder() to construct.
+    private Auth(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Auth() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Auth(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = byzcoin_.toBuilder();
+              }
+              byzcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(byzcoin_);
+                byzcoin_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = authx509Cert_.toBuilder();
+              }
+              authx509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(authx509Cert_);
+                authx509Cert_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Auth_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Auth_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.Auth.class, ch.epfl.dedis.lib.proto.Calypso.Auth.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOIN_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin byzcoin_;
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    public boolean hasByzcoin() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getByzcoin() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance() : byzcoin_;
+    }
+    /**
+     * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder getByzcoinOrBuilder() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance() : byzcoin_;
+    }
+
+    public static final int AUTHX509CERT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert authx509Cert_;
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    public boolean hasAuthx509Cert() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getAuthx509Cert() {
+      return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance() : authx509Cert_;
+    }
+    /**
+     * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder getAuthx509CertOrBuilder() {
+      return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance() : authx509Cert_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (hasByzcoin()) {
+        if (!getByzcoin().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasAuthx509Cert()) {
+        if (!getAuthx509Cert().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getAuthx509Cert());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getAuthx509Cert());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.Auth)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.Auth other = (ch.epfl.dedis.lib.proto.Calypso.Auth) obj;
+
+      if (hasByzcoin() != other.hasByzcoin()) return false;
+      if (hasByzcoin()) {
+        if (!getByzcoin()
+            .equals(other.getByzcoin())) return false;
+      }
+      if (hasAuthx509Cert() != other.hasAuthx509Cert()) return false;
+      if (hasAuthx509Cert()) {
+        if (!getAuthx509Cert()
+            .equals(other.getAuthx509Cert())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoin()) {
+        hash = (37 * hash) + BYZCOIN_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoin().hashCode();
+      }
+      if (hasAuthx509Cert()) {
+        hash = (37 * hash) + AUTHX509CERT_FIELD_NUMBER;
+        hash = (53 * hash) + getAuthx509Cert().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.Auth prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Auth holds all possible authentication structures. When using it to call
+     * Authorise, only one of the fields must be non-nil.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.Auth}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.Auth)
+        ch.epfl.dedis.lib.proto.Calypso.AuthOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Auth_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Auth_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.Auth.class, ch.epfl.dedis.lib.proto.Calypso.Auth.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.Auth.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getByzcoinFieldBuilder();
+          getAuthx509CertFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (authx509CertBuilder_ == null) {
+          authx509Cert_ = null;
+        } else {
+          authx509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Auth_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Auth getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.Auth.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Auth build() {
+        ch.epfl.dedis.lib.proto.Calypso.Auth result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Auth buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.Auth result = new ch.epfl.dedis.lib.proto.Calypso.Auth(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (byzcoinBuilder_ == null) {
+            result.byzcoin_ = byzcoin_;
+          } else {
+            result.byzcoin_ = byzcoinBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (authx509CertBuilder_ == null) {
+            result.authx509Cert_ = authx509Cert_;
+          } else {
+            result.authx509Cert_ = authx509CertBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.Auth) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.Auth)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.Auth other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.Auth.getDefaultInstance()) return this;
+        if (other.hasByzcoin()) {
+          mergeByzcoin(other.getByzcoin());
+        }
+        if (other.hasAuthx509Cert()) {
+          mergeAuthx509Cert(other.getAuthx509Cert());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (hasByzcoin()) {
+          if (!getByzcoin().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasAuthx509Cert()) {
+          if (!getAuthx509Cert().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.Auth parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.Auth) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin byzcoin_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder> byzcoinBuilder_;
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public boolean hasByzcoin() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance() : byzcoin_;
+        } else {
+          return byzcoinBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          byzcoin_ = value;
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(
+          ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder builderForValue) {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = builderForValue.build();
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public Builder mergeByzcoin(ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              byzcoin_ != null &&
+              byzcoin_ != ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance()) {
+            byzcoin_ =
+              ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.newBuilder(byzcoin_).mergeFrom(value).buildPartial();
+          } else {
+            byzcoin_ = value;
+          }
+          onChanged();
+        } else {
+          byzcoinBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public Builder clearByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+          onChanged();
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder getByzcoinBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getByzcoinFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder getByzcoinOrBuilder() {
+        if (byzcoinBuilder_ != null) {
+          return byzcoinBuilder_.getMessageOrBuilder();
+        } else {
+          return byzcoin_ == null ?
+              ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance() : byzcoin_;
+        }
+      }
+      /**
+       * <code>optional .calypso.AuthByzCoin byzcoin = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder> 
+          getByzcoinFieldBuilder() {
+        if (byzcoinBuilder_ == null) {
+          byzcoinBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder>(
+                  getByzcoin(),
+                  getParentForChildren(),
+                  isClean());
+          byzcoin_ = null;
+        }
+        return byzcoinBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert authx509Cert_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert, ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder> authx509CertBuilder_;
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public boolean hasAuthx509Cert() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getAuthx509Cert() {
+        if (authx509CertBuilder_ == null) {
+          return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance() : authx509Cert_;
+        } else {
+          return authx509CertBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public Builder setAuthx509Cert(ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert value) {
+        if (authx509CertBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          authx509Cert_ = value;
+          onChanged();
+        } else {
+          authx509CertBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public Builder setAuthx509Cert(
+          ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder builderForValue) {
+        if (authx509CertBuilder_ == null) {
+          authx509Cert_ = builderForValue.build();
+          onChanged();
+        } else {
+          authx509CertBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public Builder mergeAuthx509Cert(ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert value) {
+        if (authx509CertBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              authx509Cert_ != null &&
+              authx509Cert_ != ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance()) {
+            authx509Cert_ =
+              ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.newBuilder(authx509Cert_).mergeFrom(value).buildPartial();
+          } else {
+            authx509Cert_ = value;
+          }
+          onChanged();
+        } else {
+          authx509CertBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public Builder clearAuthx509Cert() {
+        if (authx509CertBuilder_ == null) {
+          authx509Cert_ = null;
+          onChanged();
+        } else {
+          authx509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder getAuthx509CertBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getAuthx509CertFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder getAuthx509CertOrBuilder() {
+        if (authx509CertBuilder_ != null) {
+          return authx509CertBuilder_.getMessageOrBuilder();
+        } else {
+          return authx509Cert_ == null ?
+              ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance() : authx509Cert_;
+        }
+      }
+      /**
+       * <code>optional .calypso.AuthX509Cert authx509cert = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert, ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder> 
+          getAuthx509CertFieldBuilder() {
+        if (authx509CertBuilder_ == null) {
+          authx509CertBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert, ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder>(
+                  getAuthx509Cert(),
+                  getParentForChildren(),
+                  isClean());
+          authx509Cert_ = null;
+        }
+        return authx509CertBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.Auth)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.Auth)
+    private static final ch.epfl.dedis.lib.proto.Calypso.Auth DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.Auth();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Auth getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Auth>
+        PARSER = new com.google.protobuf.AbstractParser<Auth>() {
+      @java.lang.Override
+      public Auth parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Auth(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Auth> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Auth> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.Auth getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthByzCoinOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.AuthByzCoin)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>required uint64 ttl = 2;</code>
+     */
+    boolean hasTtl();
+    /**
+     * <code>required uint64 ttl = 2;</code>
+     */
+    long getTtl();
+  }
+  /**
+   * <pre>
+   * AuthByzCoin holds the information necessary to authenticate a byzcoin request.
+   * In the ByzCoin model, all requests are valid as long as they are stored in the
+   * blockchain with the given ID.
+   * The TTL is to avoid that too old requests are re-used. If it is 0, it is disabled.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.AuthByzCoin}
+   */
+  public  static final class AuthByzCoin extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.AuthByzCoin)
+      AuthByzCoinOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthByzCoin.newBuilder() to construct.
+    private AuthByzCoin(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthByzCoin() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthByzCoin(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              ttl_ = input.readUInt64();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthByzCoin_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthByzCoin_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.class, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int TTL_FIELD_NUMBER = 2;
+    private long ttl_;
+    /**
+     * <code>required uint64 ttl = 2;</code>
+     */
+    public boolean hasTtl() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required uint64 ttl = 2;</code>
+     */
+    public long getTtl() {
+      return ttl_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTtl()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeUInt64(2, ttl_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, ttl_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin other = (ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin) obj;
+
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
+      if (hasByzcoinid()) {
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
+      }
+      if (hasTtl() != other.hasTtl()) return false;
+      if (hasTtl()) {
+        if (getTtl()
+            != other.getTtl()) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasTtl()) {
+        hash = (37 * hash) + TTL_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTtl());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthByzCoin holds the information necessary to authenticate a byzcoin request.
+     * In the ByzCoin model, all requests are valid as long as they are stored in the
+     * blockchain with the given ID.
+     * The TTL is to avoid that too old requests are re-used. If it is 0, it is disabled.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.AuthByzCoin}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.AuthByzCoin)
+        ch.epfl.dedis.lib.proto.Calypso.AuthByzCoinOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthByzCoin_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthByzCoin_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.class, ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ttl_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthByzCoin_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin build() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin result = new ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.ttl_ = ttl_;
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasTtl()) {
+          setTtl(other.getTtl());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasTtl()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private long ttl_ ;
+      /**
+       * <code>required uint64 ttl = 2;</code>
+       */
+      public boolean hasTtl() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required uint64 ttl = 2;</code>
+       */
+      public long getTtl() {
+        return ttl_;
+      }
+      /**
+       * <code>required uint64 ttl = 2;</code>
+       */
+      public Builder setTtl(long value) {
+        bitField0_ |= 0x00000002;
+        ttl_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 ttl = 2;</code>
+       */
+      public Builder clearTtl() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        ttl_ = 0L;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.AuthByzCoin)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.AuthByzCoin)
+    private static final ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthByzCoin>
+        PARSER = new com.google.protobuf.AbstractParser<AuthByzCoin>() {
+      @java.lang.Override
+      public AuthByzCoin parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthByzCoin(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthByzCoin> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthByzCoin> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.AuthByzCoin getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthX509CertOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.AuthX509Cert)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getCaList();
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    int getCaCount();
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    com.google.protobuf.ByteString getCa(int index);
+
+    /**
+     * <code>required sint32 threshold = 2;</code>
+     */
+    boolean hasThreshold();
+    /**
+     * <code>required sint32 threshold = 2;</code>
+     */
+    int getThreshold();
+  }
+  /**
+   * <pre>
+   * AuthX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+   * request. In its simplest form, it is simply the CA that will have to sign the
+   * certificates of the requesters.
+   * The Threshold indicates how many clients must have signed the request before it
+   * is accepted.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.AuthX509Cert}
+   */
+  public  static final class AuthX509Cert extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.AuthX509Cert)
+      AuthX509CertOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthX509Cert.newBuilder() to construct.
+    private AuthX509Cert(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthX509Cert() {
+      ca_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthX509Cert(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                ca_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              ca_.add(input.readBytes());
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000001;
+              threshold_ = input.readSInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          ca_ = java.util.Collections.unmodifiableList(ca_); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthX509Cert_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthX509Cert_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.class, ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int CA_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> ca_;
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getCaList() {
+      return ca_;
+    }
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    public int getCaCount() {
+      return ca_.size();
+    }
+    /**
+     * <pre>
+     * Slice of ASN.1 encoded X509 certificates.
+     * </pre>
+     *
+     * <code>repeated bytes ca = 1;</code>
+     */
+    public com.google.protobuf.ByteString getCa(int index) {
+      return ca_.get(index);
+    }
+
+    public static final int THRESHOLD_FIELD_NUMBER = 2;
+    private int threshold_;
+    /**
+     * <code>required sint32 threshold = 2;</code>
+     */
+    public boolean hasThreshold() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required sint32 threshold = 2;</code>
+     */
+    public int getThreshold() {
+      return threshold_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasThreshold()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < ca_.size(); i++) {
+        output.writeBytes(1, ca_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeSInt32(2, threshold_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < ca_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(ca_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getCaList().size();
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(2, threshold_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert other = (ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert) obj;
+
+      if (!getCaList()
+          .equals(other.getCaList())) return false;
+      if (hasThreshold() != other.hasThreshold()) return false;
+      if (hasThreshold()) {
+        if (getThreshold()
+            != other.getThreshold()) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getCaCount() > 0) {
+        hash = (37 * hash) + CA_FIELD_NUMBER;
+        hash = (53 * hash) + getCaList().hashCode();
+      }
+      if (hasThreshold()) {
+        hash = (37 * hash) + THRESHOLD_FIELD_NUMBER;
+        hash = (53 * hash) + getThreshold();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+     * request. In its simplest form, it is simply the CA that will have to sign the
+     * certificates of the requesters.
+     * The Threshold indicates how many clients must have signed the request before it
+     * is accepted.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.AuthX509Cert}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.AuthX509Cert)
+        ch.epfl.dedis.lib.proto.Calypso.AuthX509CertOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthX509Cert_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.class, ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        ca_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        threshold_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert build() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert result = new ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          ca_ = java.util.Collections.unmodifiableList(ca_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.ca_ = ca_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.threshold_ = threshold_;
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert.getDefaultInstance()) return this;
+        if (!other.ca_.isEmpty()) {
+          if (ca_.isEmpty()) {
+            ca_ = other.ca_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureCaIsMutable();
+            ca_.addAll(other.ca_);
+          }
+          onChanged();
+        }
+        if (other.hasThreshold()) {
+          setThreshold(other.getThreshold());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasThreshold()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> ca_ = java.util.Collections.emptyList();
+      private void ensureCaIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          ca_ = new java.util.ArrayList<com.google.protobuf.ByteString>(ca_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getCaList() {
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(ca_) : ca_;
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public int getCaCount() {
+        return ca_.size();
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public com.google.protobuf.ByteString getCa(int index) {
+        return ca_.get(index);
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public Builder setCa(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCaIsMutable();
+        ca_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public Builder addCa(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCaIsMutable();
+        ca_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public Builder addAllCa(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureCaIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, ca_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Slice of ASN.1 encoded X509 certificates.
+       * </pre>
+       *
+       * <code>repeated bytes ca = 1;</code>
+       */
+      public Builder clearCa() {
+        ca_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      private int threshold_ ;
+      /**
+       * <code>required sint32 threshold = 2;</code>
+       */
+      public boolean hasThreshold() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required sint32 threshold = 2;</code>
+       */
+      public int getThreshold() {
+        return threshold_;
+      }
+      /**
+       * <code>required sint32 threshold = 2;</code>
+       */
+      public Builder setThreshold(int value) {
+        bitField0_ |= 0x00000002;
+        threshold_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 threshold = 2;</code>
+       */
+      public Builder clearThreshold() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        threshold_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.AuthX509Cert)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.AuthX509Cert)
+    private static final ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthX509Cert>
+        PARSER = new com.google.protobuf.AbstractParser<AuthX509Cert>() {
+      @java.lang.Override
+      public AuthX509Cert parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthX509Cert(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthX509Cert> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthX509Cert> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.AuthX509Cert getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GrantOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.Grant)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    boolean hasByzcoin();
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getByzcoin();
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder getByzcoinOrBuilder();
+
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    boolean hasX509Cert();
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getX509Cert();
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder getX509CertOrBuilder();
+  }
+  /**
+   * <pre>
+   * Grant holds one of the possible grant proofs for a reencryption request. Each
+   * grant proof must hold the secret to be reencrypted, the ephemeral key, as well
+   * as the proof itself that the request is valid. For each of the authentication
+   * schemes, this proof will be different.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.Grant}
+   */
+  public  static final class Grant extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.Grant)
+      GrantOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Grant.newBuilder() to construct.
+    private Grant(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Grant() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Grant(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = byzcoin_.toBuilder();
+              }
+              byzcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(byzcoin_);
+                byzcoin_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = x509Cert_.toBuilder();
+              }
+              x509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(x509Cert_);
+                x509Cert_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Grant_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Grant_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.Grant.class, ch.epfl.dedis.lib.proto.Calypso.Grant.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOIN_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin byzcoin_;
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    public boolean hasByzcoin() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getByzcoin() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance() : byzcoin_;
+    }
+    /**
+     * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder getByzcoinOrBuilder() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance() : byzcoin_;
+    }
+
+    public static final int X509CERT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert x509Cert_;
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    public boolean hasX509Cert() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getX509Cert() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance() : x509Cert_;
+    }
+    /**
+     * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder getX509CertOrBuilder() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance() : x509Cert_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (hasByzcoin()) {
+        if (!getByzcoin().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasX509Cert()) {
+        if (!getX509Cert().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getX509Cert());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getX509Cert());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.Grant)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.Grant other = (ch.epfl.dedis.lib.proto.Calypso.Grant) obj;
+
+      if (hasByzcoin() != other.hasByzcoin()) return false;
+      if (hasByzcoin()) {
+        if (!getByzcoin()
+            .equals(other.getByzcoin())) return false;
+      }
+      if (hasX509Cert() != other.hasX509Cert()) return false;
+      if (hasX509Cert()) {
+        if (!getX509Cert()
+            .equals(other.getX509Cert())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoin()) {
+        hash = (37 * hash) + BYZCOIN_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoin().hashCode();
+      }
+      if (hasX509Cert()) {
+        hash = (37 * hash) + X509CERT_FIELD_NUMBER;
+        hash = (53 * hash) + getX509Cert().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.Grant prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Grant holds one of the possible grant proofs for a reencryption request. Each
+     * grant proof must hold the secret to be reencrypted, the ephemeral key, as well
+     * as the proof itself that the request is valid. For each of the authentication
+     * schemes, this proof will be different.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.Grant}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.Grant)
+        ch.epfl.dedis.lib.proto.Calypso.GrantOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Grant_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Grant_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.Grant.class, ch.epfl.dedis.lib.proto.Calypso.Grant.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.Grant.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getByzcoinFieldBuilder();
+          getX509CertFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
+        } else {
+          x509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Grant_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Grant getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.Grant.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Grant build() {
+        ch.epfl.dedis.lib.proto.Calypso.Grant result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Grant buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.Grant result = new ch.epfl.dedis.lib.proto.Calypso.Grant(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (byzcoinBuilder_ == null) {
+            result.byzcoin_ = byzcoin_;
+          } else {
+            result.byzcoin_ = byzcoinBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (x509CertBuilder_ == null) {
+            result.x509Cert_ = x509Cert_;
+          } else {
+            result.x509Cert_ = x509CertBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.Grant) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.Grant)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.Grant other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.Grant.getDefaultInstance()) return this;
+        if (other.hasByzcoin()) {
+          mergeByzcoin(other.getByzcoin());
+        }
+        if (other.hasX509Cert()) {
+          mergeX509Cert(other.getX509Cert());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (hasByzcoin()) {
+          if (!getByzcoin().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasX509Cert()) {
+          if (!getX509Cert().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.Grant parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.Grant) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin byzcoin_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder> byzcoinBuilder_;
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public boolean hasByzcoin() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          return byzcoin_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance() : byzcoin_;
+        } else {
+          return byzcoinBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          byzcoin_ = value;
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(
+          ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder builderForValue) {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = builderForValue.build();
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public Builder mergeByzcoin(ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              byzcoin_ != null &&
+              byzcoin_ != ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance()) {
+            byzcoin_ =
+              ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.newBuilder(byzcoin_).mergeFrom(value).buildPartial();
+          } else {
+            byzcoin_ = value;
+          }
+          onChanged();
+        } else {
+          byzcoinBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public Builder clearByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+          onChanged();
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder getByzcoinBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getByzcoinFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder getByzcoinOrBuilder() {
+        if (byzcoinBuilder_ != null) {
+          return byzcoinBuilder_.getMessageOrBuilder();
+        } else {
+          return byzcoin_ == null ?
+              ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance() : byzcoin_;
+        }
+      }
+      /**
+       * <code>optional .calypso.GrantByzCoin byzcoin = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder> 
+          getByzcoinFieldBuilder() {
+        if (byzcoinBuilder_ == null) {
+          byzcoinBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder>(
+                  getByzcoin(),
+                  getParentForChildren(),
+                  isClean());
+          byzcoin_ = null;
+        }
+        return byzcoinBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert x509Cert_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert, ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder> x509CertBuilder_;
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public boolean hasX509Cert() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getX509Cert() {
+        if (x509CertBuilder_ == null) {
+          return x509Cert_ == null ? ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance() : x509Cert_;
+        } else {
+          return x509CertBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public Builder setX509Cert(ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert value) {
+        if (x509CertBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          x509Cert_ = value;
+          onChanged();
+        } else {
+          x509CertBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public Builder setX509Cert(
+          ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder builderForValue) {
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = builderForValue.build();
+          onChanged();
+        } else {
+          x509CertBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public Builder mergeX509Cert(ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert value) {
+        if (x509CertBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              x509Cert_ != null &&
+              x509Cert_ != ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance()) {
+            x509Cert_ =
+              ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.newBuilder(x509Cert_).mergeFrom(value).buildPartial();
+          } else {
+            x509Cert_ = value;
+          }
+          onChanged();
+        } else {
+          x509CertBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public Builder clearX509Cert() {
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
+          onChanged();
+        } else {
+          x509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder getX509CertBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getX509CertFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder getX509CertOrBuilder() {
+        if (x509CertBuilder_ != null) {
+          return x509CertBuilder_.getMessageOrBuilder();
+        } else {
+          return x509Cert_ == null ?
+              ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance() : x509Cert_;
+        }
+      }
+      /**
+       * <code>optional .calypso.GrantX509Cert x509cert = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert, ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder> 
+          getX509CertFieldBuilder() {
+        if (x509CertBuilder_ == null) {
+          x509CertBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert, ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder, ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder>(
+                  getX509Cert(),
+                  getParentForChildren(),
+                  isClean());
+          x509Cert_ = null;
+        }
+        return x509CertBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.Grant)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.Grant)
+    private static final ch.epfl.dedis.lib.proto.Calypso.Grant DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.Grant();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Grant getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Grant>
+        PARSER = new com.google.protobuf.AbstractParser<Grant>() {
+      @java.lang.Override
+      public Grant parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Grant(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Grant> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Grant> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.Grant getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GrantByzCoinOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.GrantByzCoin)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    boolean hasWrite();
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite();
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder();
+
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    boolean hasRead();
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead();
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder();
+  }
+  /**
+   * <pre>
+   * GrantByzCoin holds the proof of the write instance, holding the secret itself.
+   * The proof of the read instance holds the ephemeral key. Both proofs can be
+   * verified using one of the stored ByzCoinIDs.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.GrantByzCoin}
+   */
+  public  static final class GrantByzCoin extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.GrantByzCoin)
+      GrantByzCoinOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GrantByzCoin.newBuilder() to construct.
+    private GrantByzCoin(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GrantByzCoin() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GrantByzCoin(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = write_.toBuilder();
+              }
+              write_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(write_);
+                write_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = read_.toBuilder();
+              }
+              read_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(read_);
+                read_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantByzCoin_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantByzCoin_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.class, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int WRITE_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_;
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    public boolean hasWrite() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite() {
+      return write_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
+    }
+    /**
+     * <pre>
+     * Write is the proof containing the write request.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof write = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder() {
+      return write_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
+    }
+
+    public static final int READ_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_;
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    public boolean hasRead() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead() {
+      return read_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
+    }
+    /**
+     * <pre>
+     * Read is the proof that he has been accepted to read the secret.
+     * </pre>
+     *
+     * <code>required .byzcoin.Proof read = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder() {
+      return read_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasWrite()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRead()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getWrite().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRead().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getWrite());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getRead());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getWrite());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRead());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin other = (ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin) obj;
+
+      if (hasWrite() != other.hasWrite()) return false;
+      if (hasWrite()) {
+        if (!getWrite()
+            .equals(other.getWrite())) return false;
+      }
+      if (hasRead() != other.hasRead()) return false;
+      if (hasRead()) {
+        if (!getRead()
+            .equals(other.getRead())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasWrite()) {
+        hash = (37 * hash) + WRITE_FIELD_NUMBER;
+        hash = (53 * hash) + getWrite().hashCode();
+      }
+      if (hasRead()) {
+        hash = (37 * hash) + READ_FIELD_NUMBER;
+        hash = (53 * hash) + getRead().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GrantByzCoin holds the proof of the write instance, holding the secret itself.
+     * The proof of the read instance holds the ephemeral key. Both proofs can be
+     * verified using one of the stored ByzCoinIDs.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.GrantByzCoin}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.GrantByzCoin)
+        ch.epfl.dedis.lib.proto.Calypso.GrantByzCoinOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantByzCoin_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantByzCoin_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.class, ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getWriteFieldBuilder();
+          getReadFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (writeBuilder_ == null) {
+          write_ = null;
+        } else {
+          writeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (readBuilder_ == null) {
+          read_ = null;
+        } else {
+          readBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantByzCoin_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin build() {
+        ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin result = new ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (writeBuilder_ == null) {
+            result.write_ = write_;
+          } else {
+            result.write_ = writeBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (readBuilder_ == null) {
+            result.read_ = read_;
+          } else {
+            result.read_ = readBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin.getDefaultInstance()) return this;
+        if (other.hasWrite()) {
+          mergeWrite(other.getWrite());
+        }
+        if (other.hasRead()) {
+          mergeRead(other.getRead());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasWrite()) {
+          return false;
+        }
+        if (!hasRead()) {
+          return false;
+        }
+        if (!getWrite().isInitialized()) {
+          return false;
+        }
+        if (!getRead().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof write_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> writeBuilder_;
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public boolean hasWrite() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getWrite() {
+        if (writeBuilder_ == null) {
+          return write_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
+        } else {
+          return writeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public Builder setWrite(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (writeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          write_ = value;
+          onChanged();
+        } else {
+          writeBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public Builder setWrite(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
+        if (writeBuilder_ == null) {
+          write_ = builderForValue.build();
+          onChanged();
+        } else {
+          writeBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public Builder mergeWrite(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (writeBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              write_ != null &&
+              write_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
+            write_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.newBuilder(write_).mergeFrom(value).buildPartial();
+          } else {
+            write_ = value;
+          }
+          onChanged();
+        } else {
+          writeBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public Builder clearWrite() {
+        if (writeBuilder_ == null) {
+          write_ = null;
+          onChanged();
+        } else {
+          writeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getWriteBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getWriteFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder() {
+        if (writeBuilder_ != null) {
+          return writeBuilder_.getMessageOrBuilder();
+        } else {
+          return write_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
+        }
+      }
+      /**
+       * <pre>
+       * Write is the proof containing the write request.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof write = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
+          getWriteFieldBuilder() {
+        if (writeBuilder_ == null) {
+          writeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>(
+                  getWrite(),
+                  getParentForChildren(),
+                  isClean());
+          write_ = null;
+        }
+        return writeBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof read_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> readBuilder_;
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public boolean hasRead() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getRead() {
+        if (readBuilder_ == null) {
+          return read_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
+        } else {
+          return readBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public Builder setRead(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (readBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          read_ = value;
+          onChanged();
+        } else {
+          readBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public Builder setRead(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
+        if (readBuilder_ == null) {
+          read_ = builderForValue.build();
+          onChanged();
+        } else {
+          readBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public Builder mergeRead(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (readBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              read_ != null &&
+              read_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
+            read_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.newBuilder(read_).mergeFrom(value).buildPartial();
+          } else {
+            read_ = value;
+          }
+          onChanged();
+        } else {
+          readBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public Builder clearRead() {
+        if (readBuilder_ == null) {
+          read_ = null;
+          onChanged();
+        } else {
+          readBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getReadBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getReadFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder() {
+        if (readBuilder_ != null) {
+          return readBuilder_.getMessageOrBuilder();
+        } else {
+          return read_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
+        }
+      }
+      /**
+       * <pre>
+       * Read is the proof that he has been accepted to read the secret.
+       * </pre>
+       *
+       * <code>required .byzcoin.Proof read = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
+          getReadFieldBuilder() {
+        if (readBuilder_ == null) {
+          readBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>(
+                  getRead(),
+                  getParentForChildren(),
+                  isClean());
+          read_ = null;
+        }
+        return readBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.GrantByzCoin)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.GrantByzCoin)
+    private static final ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GrantByzCoin>
+        PARSER = new com.google.protobuf.AbstractParser<GrantByzCoin>() {
+      @java.lang.Override
+      public GrantByzCoin parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GrantByzCoin(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GrantByzCoin> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GrantByzCoin> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.GrantByzCoin getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GrantX509CertOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.GrantX509Cert)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes secret = 1;</code>
+     */
+    boolean hasSecret();
+    /**
+     * <code>required bytes secret = 1;</code>
+     */
+    com.google.protobuf.ByteString getSecret();
+
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getCertificatesList();
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    int getCertificatesCount();
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    com.google.protobuf.ByteString getCertificates(int index);
+  }
+  /**
+   * <pre>
+   * GrantX509Cert holds the proof that at least a threshold number of clients
+   * accepted the reencryption.
+   * For each client, there must exist a certificate that can be verified by the
+   * CA certificate from AuthX509Cert. Additionally, each client must sign the
+   * following message:
+   *   sha256( Secret | Ephemeral | Time )
+   * </pre>
+   *
+   * Protobuf type {@code calypso.GrantX509Cert}
+   */
+  public  static final class GrantX509Cert extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.GrantX509Cert)
+      GrantX509CertOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GrantX509Cert.newBuilder() to construct.
+    private GrantX509Cert(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GrantX509Cert() {
+      secret_ = com.google.protobuf.ByteString.EMPTY;
+      certificates_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GrantX509Cert(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              secret_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                certificates_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              certificates_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          certificates_ = java.util.Collections.unmodifiableList(certificates_); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantX509Cert_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantX509Cert_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.class, ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int SECRET_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString secret_;
+    /**
+     * <code>required bytes secret = 1;</code>
+     */
+    public boolean hasSecret() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes secret = 1;</code>
+     */
+    public com.google.protobuf.ByteString getSecret() {
+      return secret_;
+    }
+
+    public static final int CERTIFICATES_FIELD_NUMBER = 2;
+    private java.util.List<com.google.protobuf.ByteString> certificates_;
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getCertificatesList() {
+      return certificates_;
+    }
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    public int getCertificatesCount() {
+      return certificates_.size();
+    }
+    /**
+     * <code>repeated bytes certificates = 2;</code>
+     */
+    public com.google.protobuf.ByteString getCertificates(int index) {
+      return certificates_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSecret()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, secret_);
+      }
+      for (int i = 0; i < certificates_.size(); i++) {
+        output.writeBytes(2, certificates_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, secret_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < certificates_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(certificates_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getCertificatesList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert other = (ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert) obj;
+
+      if (hasSecret() != other.hasSecret()) return false;
+      if (hasSecret()) {
+        if (!getSecret()
+            .equals(other.getSecret())) return false;
+      }
+      if (!getCertificatesList()
+          .equals(other.getCertificatesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasSecret()) {
+        hash = (37 * hash) + SECRET_FIELD_NUMBER;
+        hash = (53 * hash) + getSecret().hashCode();
+      }
+      if (getCertificatesCount() > 0) {
+        hash = (37 * hash) + CERTIFICATES_FIELD_NUMBER;
+        hash = (53 * hash) + getCertificatesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GrantX509Cert holds the proof that at least a threshold number of clients
+     * accepted the reencryption.
+     * For each client, there must exist a certificate that can be verified by the
+     * CA certificate from AuthX509Cert. Additionally, each client must sign the
+     * following message:
+     *   sha256( Secret | Ephemeral | Time )
+     * </pre>
+     *
+     * Protobuf type {@code calypso.GrantX509Cert}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.GrantX509Cert)
+        ch.epfl.dedis.lib.proto.Calypso.GrantX509CertOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantX509Cert_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.class, ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        secret_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        certificates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_GrantX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert build() {
+        ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert result = new ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.secret_ = secret_;
+        if (((bitField0_ & 0x00000002) != 0)) {
+          certificates_ = java.util.Collections.unmodifiableList(certificates_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.certificates_ = certificates_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert.getDefaultInstance()) return this;
+        if (other.hasSecret()) {
+          setSecret(other.getSecret());
+        }
+        if (!other.certificates_.isEmpty()) {
+          if (certificates_.isEmpty()) {
+            certificates_ = other.certificates_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureCertificatesIsMutable();
+            certificates_.addAll(other.certificates_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasSecret()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes secret = 1;</code>
+       */
+      public boolean hasSecret() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes secret = 1;</code>
+       */
+      public com.google.protobuf.ByteString getSecret() {
+        return secret_;
+      }
+      /**
+       * <code>required bytes secret = 1;</code>
+       */
+      public Builder setSecret(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        secret_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes secret = 1;</code>
+       */
+      public Builder clearSecret() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        secret_ = getDefaultInstance().getSecret();
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> certificates_ = java.util.Collections.emptyList();
+      private void ensureCertificatesIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          certificates_ = new java.util.ArrayList<com.google.protobuf.ByteString>(certificates_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getCertificatesList() {
+        return ((bitField0_ & 0x00000002) != 0) ?
+                 java.util.Collections.unmodifiableList(certificates_) : certificates_;
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public int getCertificatesCount() {
+        return certificates_.size();
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public com.google.protobuf.ByteString getCertificates(int index) {
+        return certificates_.get(index);
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public Builder setCertificates(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificatesIsMutable();
+        certificates_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public Builder addCertificates(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificatesIsMutable();
+        certificates_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public Builder addAllCertificates(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureCertificatesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, certificates_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 2;</code>
+       */
+      public Builder clearCertificates() {
+        certificates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.GrantX509Cert)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.GrantX509Cert)
+    private static final ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GrantX509Cert>
+        PARSER = new com.google.protobuf.AbstractParser<GrantX509Cert>() {
+      @java.lang.Override
+      public GrantX509Cert parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GrantX509Cert(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GrantX509Cert> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GrantX509Cert> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.GrantX509Cert getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_Write_descriptor;
   private static final 
@@ -8584,6 +13287,36 @@ public final class Calypso {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_LtsInstanceInfo_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_Auth_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_Auth_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_AuthByzCoin_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_AuthByzCoin_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_AuthX509Cert_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_AuthX509Cert_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_Grant_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_Grant_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_GrantByzCoin_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_GrantByzCoin_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_GrantX509Cert_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_GrantX509Cert_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8608,8 +13341,19 @@ public final class Calypso {
       "\030\002 \002(\0132\016.byzcoin.Proof\"8\n\017DecryptKeyRepl" +
       "y\022\t\n\001c\030\001 \002(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014" +
       "\"\034\n\013GetLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsIns" +
-      "tanceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB" +
-      "\"\n\027ch.epfl.dedis.lib.protoB\007Calypso"
+      "tanceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.Roster\"" +
+      "Z\n\004Auth\022%\n\007byzcoin\030\001 \001(\0132\024.calypso.AuthB" +
+      "yzCoin\022+\n\014authx509cert\030\002 \001(\0132\025.calypso.A" +
+      "uthX509Cert\"-\n\013AuthByzCoin\022\021\n\tbyzcoinid\030" +
+      "\001 \002(\014\022\013\n\003ttl\030\002 \002(\004\"-\n\014AuthX509Cert\022\n\n\002ca" +
+      "\030\001 \003(\014\022\021\n\tthreshold\030\002 \002(\021\"Y\n\005Grant\022&\n\007by" +
+      "zcoin\030\001 \001(\0132\025.calypso.GrantByzCoin\022(\n\010x5" +
+      "09cert\030\002 \001(\0132\026.calypso.GrantX509Cert\"K\n\014" +
+      "GrantByzCoin\022\035\n\005write\030\001 \002(\0132\016.byzcoin.Pr" +
+      "oof\022\034\n\004read\030\002 \002(\0132\016.byzcoin.Proof\"5\n\rGra" +
+      "ntX509Cert\022\016\n\006secret\030\001 \002(\014\022\024\n\014certificat" +
+      "es\030\002 \003(\014B\"\n\027ch.epfl.dedis.lib.protoB\007Cal" +
+      "ypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8697,6 +13441,42 @@ public final class Calypso {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_LtsInstanceInfo_descriptor,
         new java.lang.String[] { "Roster", });
+    internal_static_calypso_Auth_descriptor =
+      getDescriptor().getMessageTypes().get(12);
+    internal_static_calypso_Auth_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_Auth_descriptor,
+        new java.lang.String[] { "Byzcoin", "Authx509Cert", });
+    internal_static_calypso_AuthByzCoin_descriptor =
+      getDescriptor().getMessageTypes().get(13);
+    internal_static_calypso_AuthByzCoin_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_AuthByzCoin_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Ttl", });
+    internal_static_calypso_AuthX509Cert_descriptor =
+      getDescriptor().getMessageTypes().get(14);
+    internal_static_calypso_AuthX509Cert_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_AuthX509Cert_descriptor,
+        new java.lang.String[] { "Ca", "Threshold", });
+    internal_static_calypso_Grant_descriptor =
+      getDescriptor().getMessageTypes().get(15);
+    internal_static_calypso_Grant_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_Grant_descriptor,
+        new java.lang.String[] { "Byzcoin", "X509Cert", });
+    internal_static_calypso_GrantByzCoin_descriptor =
+      getDescriptor().getMessageTypes().get(16);
+    internal_static_calypso_GrantByzCoin_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_GrantByzCoin_descriptor,
+        new java.lang.String[] { "Write", "Read", });
+    internal_static_calypso_GrantX509Cert_descriptor =
+      getDescriptor().getMessageTypes().get(17);
+    internal_static_calypso_GrantX509Cert_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_GrantX509Cert_descriptor,
+        new java.lang.String[] { "Secret", "Certificates", });
     ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor();
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
   }
