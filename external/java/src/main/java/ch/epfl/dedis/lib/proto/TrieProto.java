@@ -126,7 +126,7 @@ public final class TrieProto {
      * <code>required bytes left = 1;</code>
      */
     public boolean hasLeft() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes left = 1;</code>
@@ -141,7 +141,7 @@ public final class TrieProto {
      * <code>required bytes right = 2;</code>
      */
     public boolean hasRight() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes right = 2;</code>
@@ -172,10 +172,10 @@ public final class TrieProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(1, left_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, right_);
       }
       unknownFields.writeTo(output);
@@ -187,11 +187,11 @@ public final class TrieProto {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, left_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, right_);
       }
@@ -210,19 +210,18 @@ public final class TrieProto {
       }
       ch.epfl.dedis.lib.proto.TrieProto.InteriorNode other = (ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) obj;
 
-      boolean result = true;
-      result = result && (hasLeft() == other.hasLeft());
+      if (hasLeft() != other.hasLeft()) return false;
       if (hasLeft()) {
-        result = result && getLeft()
-            .equals(other.getLeft());
+        if (!getLeft()
+            .equals(other.getLeft())) return false;
       }
-      result = result && (hasRight() == other.hasRight());
+      if (hasRight() != other.hasRight()) return false;
       if (hasRight()) {
-        result = result && getRight()
-            .equals(other.getRight());
+        if (!getRight()
+            .equals(other.getRight())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -405,11 +404,11 @@ public final class TrieProto {
         ch.epfl.dedis.lib.proto.TrieProto.InteriorNode result = new ch.epfl.dedis.lib.proto.TrieProto.InteriorNode(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.left_ = left_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.right_ = right_;
@@ -420,35 +419,35 @@ public final class TrieProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -509,7 +508,7 @@ public final class TrieProto {
        * <code>required bytes left = 1;</code>
        */
       public boolean hasLeft() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>required bytes left = 1;</code>
@@ -544,7 +543,7 @@ public final class TrieProto {
        * <code>required bytes right = 2;</code>
        */
       public boolean hasRight() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes right = 2;</code>
@@ -656,7 +655,7 @@ public final class TrieProto {
       super(builder);
     }
     private EmptyNode() {
-      prefix_ = java.util.Collections.emptyList();
+      prefix_ = emptyBooleanList();
     }
 
     @java.lang.Override
@@ -684,22 +683,22 @@ public final class TrieProto {
               done = true;
               break;
             case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                prefix_ = newBooleanList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              prefix_.add(input.readBool());
+              prefix_.addBoolean(input.readBool());
               break;
             }
             case 10: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
+                prefix_ = newBooleanList();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                prefix_.add(input.readBool());
+                prefix_.addBoolean(input.readBool());
               }
               input.popLimit(limit);
               break;
@@ -719,8 +718,8 @@ public final class TrieProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          prefix_.makeImmutable(); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -740,7 +739,7 @@ public final class TrieProto {
     }
 
     public static final int PREFIX_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Boolean> prefix_;
+    private com.google.protobuf.Internal.BooleanList prefix_;
     /**
      * <code>repeated bool prefix = 1 [packed = true];</code>
      */
@@ -758,7 +757,7 @@ public final class TrieProto {
      * <code>repeated bool prefix = 1 [packed = true];</code>
      */
     public boolean getPrefix(int index) {
-      return prefix_.get(index);
+      return prefix_.getBoolean(index);
     }
     private int prefixMemoizedSerializedSize = -1;
 
@@ -782,7 +781,7 @@ public final class TrieProto {
         output.writeUInt32NoTag(prefixMemoizedSerializedSize);
       }
       for (int i = 0; i < prefix_.size(); i++) {
-        output.writeBoolNoTag(prefix_.get(i));
+        output.writeBoolNoTag(prefix_.getBoolean(i));
       }
       unknownFields.writeTo(output);
     }
@@ -819,11 +818,10 @@ public final class TrieProto {
       }
       ch.epfl.dedis.lib.proto.TrieProto.EmptyNode other = (ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) obj;
 
-      boolean result = true;
-      result = result && getPrefixList()
-          .equals(other.getPrefixList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!getPrefixList()
+          .equals(other.getPrefixList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -970,7 +968,7 @@ public final class TrieProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        prefix_ = java.util.Collections.emptyList();
+        prefix_ = emptyBooleanList();
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
@@ -999,8 +997,8 @@ public final class TrieProto {
       public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode buildPartial() {
         ch.epfl.dedis.lib.proto.TrieProto.EmptyNode result = new ch.epfl.dedis.lib.proto.TrieProto.EmptyNode(this);
         int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        if (((bitField0_ & 0x00000001) != 0)) {
+          prefix_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.prefix_ = prefix_;
@@ -1010,35 +1008,35 @@ public final class TrieProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1092,10 +1090,10 @@ public final class TrieProto {
       }
       private int bitField0_;
 
-      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.BooleanList prefix_ = emptyBooleanList();
       private void ensurePrefixIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          prefix_ = mutableCopy(prefix_);
           bitField0_ |= 0x00000001;
          }
       }
@@ -1104,7 +1102,8 @@ public final class TrieProto {
        */
       public java.util.List<java.lang.Boolean>
           getPrefixList() {
-        return java.util.Collections.unmodifiableList(prefix_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(prefix_) : prefix_;
       }
       /**
        * <code>repeated bool prefix = 1 [packed = true];</code>
@@ -1116,7 +1115,7 @@ public final class TrieProto {
        * <code>repeated bool prefix = 1 [packed = true];</code>
        */
       public boolean getPrefix(int index) {
-        return prefix_.get(index);
+        return prefix_.getBoolean(index);
       }
       /**
        * <code>repeated bool prefix = 1 [packed = true];</code>
@@ -1124,7 +1123,7 @@ public final class TrieProto {
       public Builder setPrefix(
           int index, boolean value) {
         ensurePrefixIsMutable();
-        prefix_.set(index, value);
+        prefix_.setBoolean(index, value);
         onChanged();
         return this;
       }
@@ -1133,7 +1132,7 @@ public final class TrieProto {
        */
       public Builder addPrefix(boolean value) {
         ensurePrefixIsMutable();
-        prefix_.add(value);
+        prefix_.addBoolean(value);
         onChanged();
         return this;
       }
@@ -1152,7 +1151,7 @@ public final class TrieProto {
        * <code>repeated bool prefix = 1 [packed = true];</code>
        */
       public Builder clearPrefix() {
-        prefix_ = java.util.Collections.emptyList();
+        prefix_ = emptyBooleanList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
         return this;
@@ -1258,7 +1257,7 @@ public final class TrieProto {
       super(builder);
     }
     private LeafNode() {
-      prefix_ = java.util.Collections.emptyList();
+      prefix_ = emptyBooleanList();
       key_ = com.google.protobuf.ByteString.EMPTY;
       value_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -1288,22 +1287,22 @@ public final class TrieProto {
               done = true;
               break;
             case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                prefix_ = newBooleanList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              prefix_.add(input.readBool());
+              prefix_.addBoolean(input.readBool());
               break;
             }
             case 10: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+              if (!((mutable_bitField0_ & 0x00000001) != 0) && input.getBytesUntilLimit() > 0) {
+                prefix_ = newBooleanList();
                 mutable_bitField0_ |= 0x00000001;
               }
               while (input.getBytesUntilLimit() > 0) {
-                prefix_.add(input.readBool());
+                prefix_.addBoolean(input.readBool());
               }
               input.popLimit(limit);
               break;
@@ -1333,8 +1332,8 @@ public final class TrieProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          prefix_.makeImmutable(); // C
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1355,7 +1354,7 @@ public final class TrieProto {
 
     private int bitField0_;
     public static final int PREFIX_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Boolean> prefix_;
+    private com.google.protobuf.Internal.BooleanList prefix_;
     /**
      * <code>repeated bool prefix = 1 [packed = true];</code>
      */
@@ -1373,7 +1372,7 @@ public final class TrieProto {
      * <code>repeated bool prefix = 1 [packed = true];</code>
      */
     public boolean getPrefix(int index) {
-      return prefix_.get(index);
+      return prefix_.getBoolean(index);
     }
     private int prefixMemoizedSerializedSize = -1;
 
@@ -1383,7 +1382,7 @@ public final class TrieProto {
      * <code>required bytes key = 2;</code>
      */
     public boolean hasKey() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required bytes key = 2;</code>
@@ -1398,7 +1397,7 @@ public final class TrieProto {
      * <code>required bytes value = 3;</code>
      */
     public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required bytes value = 3;</code>
@@ -1435,12 +1434,12 @@ public final class TrieProto {
         output.writeUInt32NoTag(prefixMemoizedSerializedSize);
       }
       for (int i = 0; i < prefix_.size(); i++) {
-        output.writeBoolNoTag(prefix_.get(i));
+        output.writeBoolNoTag(prefix_.getBoolean(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBytes(2, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(3, value_);
       }
       unknownFields.writeTo(output);
@@ -1463,11 +1462,11 @@ public final class TrieProto {
         }
         prefixMemoizedSerializedSize = dataSize;
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, key_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, value_);
       }
@@ -1486,21 +1485,20 @@ public final class TrieProto {
       }
       ch.epfl.dedis.lib.proto.TrieProto.LeafNode other = (ch.epfl.dedis.lib.proto.TrieProto.LeafNode) obj;
 
-      boolean result = true;
-      result = result && getPrefixList()
-          .equals(other.getPrefixList());
-      result = result && (hasKey() == other.hasKey());
+      if (!getPrefixList()
+          .equals(other.getPrefixList())) return false;
+      if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      result = result && (hasValue() == other.hasValue());
+      if (hasValue() != other.hasValue()) return false;
       if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
+        if (!getValue()
+            .equals(other.getValue())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1655,7 +1653,7 @@ public final class TrieProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        prefix_ = java.util.Collections.emptyList();
+        prefix_ = emptyBooleanList();
         bitField0_ = (bitField0_ & ~0x00000001);
         key_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1689,16 +1687,16 @@ public final class TrieProto {
         ch.epfl.dedis.lib.proto.TrieProto.LeafNode result = new ch.epfl.dedis.lib.proto.TrieProto.LeafNode(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        if (((bitField0_ & 0x00000001) != 0)) {
+          prefix_.makeImmutable();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.prefix_ = prefix_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.key_ = key_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.value_ = value_;
@@ -1709,35 +1707,35 @@ public final class TrieProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1803,10 +1801,10 @@ public final class TrieProto {
       }
       private int bitField0_;
 
-      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
+      private com.google.protobuf.Internal.BooleanList prefix_ = emptyBooleanList();
       private void ensurePrefixIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          prefix_ = mutableCopy(prefix_);
           bitField0_ |= 0x00000001;
          }
       }
@@ -1815,7 +1813,8 @@ public final class TrieProto {
        */
       public java.util.List<java.lang.Boolean>
           getPrefixList() {
-        return java.util.Collections.unmodifiableList(prefix_);
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(prefix_) : prefix_;
       }
       /**
        * <code>repeated bool prefix = 1 [packed = true];</code>
@@ -1827,7 +1826,7 @@ public final class TrieProto {
        * <code>repeated bool prefix = 1 [packed = true];</code>
        */
       public boolean getPrefix(int index) {
-        return prefix_.get(index);
+        return prefix_.getBoolean(index);
       }
       /**
        * <code>repeated bool prefix = 1 [packed = true];</code>
@@ -1835,7 +1834,7 @@ public final class TrieProto {
       public Builder setPrefix(
           int index, boolean value) {
         ensurePrefixIsMutable();
-        prefix_.set(index, value);
+        prefix_.setBoolean(index, value);
         onChanged();
         return this;
       }
@@ -1844,7 +1843,7 @@ public final class TrieProto {
        */
       public Builder addPrefix(boolean value) {
         ensurePrefixIsMutable();
-        prefix_.add(value);
+        prefix_.addBoolean(value);
         onChanged();
         return this;
       }
@@ -1863,7 +1862,7 @@ public final class TrieProto {
        * <code>repeated bool prefix = 1 [packed = true];</code>
        */
       public Builder clearPrefix() {
-        prefix_ = java.util.Collections.emptyList();
+        prefix_ = emptyBooleanList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
         return this;
@@ -1874,7 +1873,7 @@ public final class TrieProto {
        * <code>required bytes key = 2;</code>
        */
       public boolean hasKey() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required bytes key = 2;</code>
@@ -1909,7 +1908,7 @@ public final class TrieProto {
        * <code>required bytes value = 3;</code>
        */
       public boolean hasValue() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required bytes value = 3;</code>
@@ -2100,7 +2099,7 @@ public final class TrieProto {
               done = true;
               break;
             case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 interiors_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode>();
                 mutable_bitField0_ |= 0x00000001;
               }
@@ -2110,7 +2109,7 @@ public final class TrieProto {
             }
             case 18: {
               ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = leaf_.toBuilder();
               }
               leaf_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.LeafNode.parser(), extensionRegistry);
@@ -2123,7 +2122,7 @@ public final class TrieProto {
             }
             case 26: {
               ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+              if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = empty_.toBuilder();
               }
               empty_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.parser(), extensionRegistry);
@@ -2154,7 +2153,7 @@ public final class TrieProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
           interiors_ = java.util.Collections.unmodifiableList(interiors_);
         }
         this.unknownFields = unknownFields.build();
@@ -2216,7 +2215,7 @@ public final class TrieProto {
      * <code>required .trie.LeafNode leaf = 2;</code>
      */
     public boolean hasLeaf() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>required .trie.LeafNode leaf = 2;</code>
@@ -2237,7 +2236,7 @@ public final class TrieProto {
      * <code>required .trie.EmptyNode empty = 3;</code>
      */
     public boolean hasEmpty() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>required .trie.EmptyNode empty = 3;</code>
@@ -2258,7 +2257,7 @@ public final class TrieProto {
      * <code>required bytes nonce = 4;</code>
      */
     public boolean hasNonce() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <code>required bytes nonce = 4;</code>
@@ -2306,13 +2305,13 @@ public final class TrieProto {
       for (int i = 0; i < interiors_.size(); i++) {
         output.writeMessage(1, interiors_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getLeaf());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(3, getEmpty());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(4, nonce_);
       }
       unknownFields.writeTo(output);
@@ -2328,15 +2327,15 @@ public final class TrieProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, interiors_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getLeaf());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getEmpty());
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, nonce_);
       }
@@ -2355,26 +2354,25 @@ public final class TrieProto {
       }
       ch.epfl.dedis.lib.proto.TrieProto.Proof other = (ch.epfl.dedis.lib.proto.TrieProto.Proof) obj;
 
-      boolean result = true;
-      result = result && getInteriorsList()
-          .equals(other.getInteriorsList());
-      result = result && (hasLeaf() == other.hasLeaf());
+      if (!getInteriorsList()
+          .equals(other.getInteriorsList())) return false;
+      if (hasLeaf() != other.hasLeaf()) return false;
       if (hasLeaf()) {
-        result = result && getLeaf()
-            .equals(other.getLeaf());
+        if (!getLeaf()
+            .equals(other.getLeaf())) return false;
       }
-      result = result && (hasEmpty() == other.hasEmpty());
+      if (hasEmpty() != other.hasEmpty()) return false;
       if (hasEmpty()) {
-        result = result && getEmpty()
-            .equals(other.getEmpty());
+        if (!getEmpty()
+            .equals(other.getEmpty())) return false;
       }
-      result = result && (hasNonce() == other.hasNonce());
+      if (hasNonce() != other.hasNonce()) return false;
       if (hasNonce()) {
-        result = result && getNonce()
-            .equals(other.getNonce());
+        if (!getNonce()
+            .equals(other.getNonce())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -2589,7 +2587,7 @@ public final class TrieProto {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (interiorsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000001) != 0)) {
             interiors_ = java.util.Collections.unmodifiableList(interiors_);
             bitField0_ = (bitField0_ & ~0x00000001);
           }
@@ -2597,23 +2595,23 @@ public final class TrieProto {
         } else {
           result.interiors_ = interiorsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (leafBuilder_ == null) {
+            result.leaf_ = leaf_;
+          } else {
+            result.leaf_ = leafBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (leafBuilder_ == null) {
-          result.leaf_ = leaf_;
-        } else {
-          result.leaf_ = leafBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (emptyBuilder_ == null) {
+            result.empty_ = empty_;
+          } else {
+            result.empty_ = emptyBuilder_.build();
+          }
           to_bitField0_ |= 0x00000002;
         }
-        if (emptyBuilder_ == null) {
-          result.empty_ = empty_;
-        } else {
-          result.empty_ = emptyBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000008) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.nonce_ = nonce_;
@@ -2624,35 +2622,35 @@ public final class TrieProto {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2751,7 +2749,7 @@ public final class TrieProto {
       private java.util.List<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode> interiors_ =
         java.util.Collections.emptyList();
       private void ensureInteriorsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000001) != 0)) {
           interiors_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.TrieProto.InteriorNode>(interiors_);
           bitField0_ |= 0x00000001;
          }
@@ -2980,7 +2978,7 @@ public final class TrieProto {
           interiorsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.TrieProto.InteriorNode, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder>(
                   interiors_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
                   isClean());
           interiors_ = null;
@@ -2988,14 +2986,14 @@ public final class TrieProto {
         return interiorsBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.TrieProto.LeafNode leaf_ = null;
+      private ch.epfl.dedis.lib.proto.TrieProto.LeafNode leaf_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.TrieProto.LeafNode, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.LeafNodeOrBuilder> leafBuilder_;
       /**
        * <code>required .trie.LeafNode leaf = 2;</code>
        */
       public boolean hasLeaf() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <code>required .trie.LeafNode leaf = 2;</code>
@@ -3042,7 +3040,7 @@ public final class TrieProto {
        */
       public Builder mergeLeaf(ch.epfl.dedis.lib.proto.TrieProto.LeafNode value) {
         if (leafBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               leaf_ != null &&
               leaf_ != ch.epfl.dedis.lib.proto.TrieProto.LeafNode.getDefaultInstance()) {
             leaf_ =
@@ -3106,14 +3104,14 @@ public final class TrieProto {
         return leafBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.TrieProto.EmptyNode empty_ = null;
+      private ch.epfl.dedis.lib.proto.TrieProto.EmptyNode empty_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.TrieProto.EmptyNode, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder, ch.epfl.dedis.lib.proto.TrieProto.EmptyNodeOrBuilder> emptyBuilder_;
       /**
        * <code>required .trie.EmptyNode empty = 3;</code>
        */
       public boolean hasEmpty() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <code>required .trie.EmptyNode empty = 3;</code>
@@ -3160,7 +3158,7 @@ public final class TrieProto {
        */
       public Builder mergeEmpty(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode value) {
         if (emptyBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               empty_ != null &&
               empty_ != ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.getDefaultInstance()) {
             empty_ =
@@ -3229,7 +3227,7 @@ public final class TrieProto {
        * <code>required bytes nonce = 4;</code>
        */
       public boolean hasNonce() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        * <code>required bytes nonce = 4;</code>
