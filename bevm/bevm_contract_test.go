@@ -78,7 +78,7 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 	for i, account := range accounts {
 		amount := big.NewInt(int64((i + 1) * WeiPerEther))
 
-		err = bevmClient.CreditAccounts(amount, account.Address)
+		err = bevmClient.CreditAccount(amount, account.Address)
 		require.Nil(t, err)
 
 		balance, err := bevmClient.GetAccountBalance(account.Address)
@@ -111,7 +111,9 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Credit the accounts
-	err = bevmClient.CreditAccounts(big.NewInt(5*WeiPerEther), a.Address, b.Address)
+	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	require.Nil(t, err)
+	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), b.Address)
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
@@ -189,7 +191,9 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Credit the accounts
-	err = bevmClient.CreditAccounts(big.NewInt(5*WeiPerEther), a.Address, b.Address)
+	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
+	require.Nil(t, err)
+	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), b.Address)
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
@@ -214,9 +218,9 @@ func Test_InvokeLoanContract(t *testing.T) {
 	)
 	require.Nil(t, err)
 
-	getBalances := func(account *EvmAccount, address common.Address) (tokenBalance, balance *big.Int) {
+	getBalances := func(from *EvmAccount, address common.Address) (tokenBalance, balance *big.Int) {
 		tokenBalance = big.NewInt(0)
-		err = bevmClient.Call(account, &tokenBalance, erc20Contract, "balanceOf", address)
+		err = bevmClient.Call(from, &tokenBalance, erc20Contract, "balanceOf", address)
 		require.Nil(t, err)
 		balance, err = bevmClient.GetAccountBalance(address)
 		require.Nil(t, err)

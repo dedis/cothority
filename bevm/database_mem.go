@@ -31,26 +31,27 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Memory database, adapted from Ethereum code.
+// Ethereum state memory database, adapted from Ethereum code.
 // See https://github.com/ethereum/go-ethereum/blob/release/1.8/ethdb/memory_database.go
 
+// MemDatabase main abstraction
 type MemDatabase struct {
 	DB   map[string][]byte
 	lock sync.RWMutex
 }
 
-type KeyValues struct {
-	KVs []KeyValueEntry
+type keyValues struct {
+	KVs []keyValueEntry
 }
 
-type KeyValueEntry struct {
+type keyValueEntry struct {
 	Key   []byte
 	Value []byte
 }
 
-// Deserialize the memory database
+// NewMemDatabase deserializes the memory database
 func NewMemDatabase(data []byte) (*MemDatabase, error) {
-	kvs := &KeyValues{}
+	kvs := &keyValues{}
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
@@ -68,12 +69,12 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 	return DB, nil
 }
 
-// Serialize the memory database
+// Dump serializes the memory database
 func (db *MemDatabase) Dump() ([]byte, error) {
-	kvs := &KeyValues{}
+	kvs := &keyValues{}
 
 	for key, value := range db.DB {
-		kvs.KVs = append(kvs.KVs, KeyValueEntry{Key: []byte(key), Value: value})
+		kvs.KVs = append(kvs.KVs, keyValueEntry{Key: []byte(key), Value: value})
 	}
 	sort.Slice(kvs.KVs, func(i, j int) bool {
 		return bytes.Compare(kvs.KVs[i].Key, kvs.KVs[j].Key) < 0
@@ -82,10 +83,9 @@ func (db *MemDatabase) Dump() ([]byte, error) {
 	return protobuf.Encode(kvs)
 }
 
-// ---------------------------------------------------------------------------
 // ethdb.Database interface implementation
 
-// Putter
+// Put implements Putter.Put()
 func (db *MemDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
 	log.Lvlf3("MemDatabase.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
@@ -94,14 +94,14 @@ func (db *MemDatabase) Put(key []byte, value []byte) error {
 	return db.put(key, value)
 }
 
-// Actual implementation, callable from Batch.Write()
+// Implements lowLevelDb.put()
 func (db *MemDatabase) put(key []byte, value []byte) error {
 	db.DB[string(key)] = common.CopyBytes(value)
 
 	return nil
 }
 
-// Has()
+// Has implements Has()
 func (db *MemDatabase) Has(key []byte) (bool, error) {
 	db.lock.RLock()
 	log.Lvlf3("MemDatabase.Has(key=%v)", hex.EncodeToString(key))
@@ -112,7 +112,7 @@ func (db *MemDatabase) Has(key []byte) (bool, error) {
 	return ok, nil
 }
 
-// Get()
+// Get implements Get()
 func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	db.lock.RLock()
 	log.Lvlf3("MemDatabase.Get(key=%v)", hex.EncodeToString(key))
@@ -125,7 +125,7 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 	return nil, errors.New("not found")
 }
 
-// Deleter
+// Delete implements Deleter.Delete()
 func (db *MemDatabase) Delete(key []byte) error {
 	db.lock.Lock()
 	log.Lvlf3("MemDatabase.Delete(key=%v)", hex.EncodeToString(key))
@@ -134,25 +134,26 @@ func (db *MemDatabase) Delete(key []byte) error {
 	return db.delete(key)
 }
 
-// Actual implementation, callable from Batch.Write()
+// Implements lowLevelDb.delete()
 func (db *MemDatabase) delete(key []byte) error {
 	delete(db.DB, string(key))
 
 	return nil
 }
 
-// Close()
+// Close implements Close()
 func (db *MemDatabase) Close() {
 	log.Lvl3("MemDatabase.Close()")
 }
 
-// NewBatch()
+// NewBatch implements NewBatch()
 func (db *MemDatabase) NewBatch() ethdb.Batch {
 	log.Lvl3("MemDatabase.NewBatch()")
 
-	return &MemBatch{db: db}
+	return &memBatch{db: db}
 }
 
+// Implements lowLevelDb.getLock()
 func (db *MemDatabase) getLock() *sync.RWMutex {
 	return &db.lock
 }

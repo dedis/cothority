@@ -1,3 +1,19 @@
+// Copyright 2014 The go-ethereum Authors
+// This file is part of the go-ethereum library.
+//
+// The go-ethereum library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The go-ethereum library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+
 package bevm
 
 import (
@@ -9,31 +25,31 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type LowLevelDb interface {
-	put(key []byte, value []byte) error
-	delete(key []byte) error
-	getLock() *sync.RWMutex
-}
-
-// ---------------------------------------------------------------------------
-// Batch database wrapper for MemDatabase
+// Batch of database update operations, adapted from Ethereum code.
+// See https://github.com/ethereum/go-ethereum/blob/release/1.8/ethdb/memory_database.go
 type kv struct {
 	k, v []byte
 	del  bool
 }
 
-type MemBatch struct {
-	db     LowLevelDb
+// Interface allowing to plus different database implementations to a memBatch
+type lowLevelDb interface {
+	put(key []byte, value []byte) error
+	delete(key []byte) error
+	getLock() *sync.RWMutex
+}
+
+type memBatch struct {
+	db     lowLevelDb
 	writes []kv
 	size   int
 }
 
-// ---------------------------------------------------------------------------
 // ethdb.Batch interface implementation
 
 // Putter
-func (b *MemBatch) Put(key, value []byte) error {
-	log.Lvlf3("MemBatch.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
+func (b *memBatch) Put(key, value []byte) error {
+	log.Lvlf3("memBatch.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
 
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value), false})
 	b.size += len(value)
@@ -42,8 +58,8 @@ func (b *MemBatch) Put(key, value []byte) error {
 }
 
 // Deleter
-func (b *MemBatch) Delete(key []byte) error {
-	log.Lvlf3("MemBatch.Delete(key=%v)", hex.EncodeToString(key))
+func (b *memBatch) Delete(key []byte) error {
+	log.Lvlf3("memBatch.Delete(key=%v)", hex.EncodeToString(key))
 
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil, true})
 	b.size++
@@ -52,9 +68,9 @@ func (b *MemBatch) Delete(key []byte) error {
 }
 
 // Write()
-func (b *MemBatch) Write() error {
+func (b *memBatch) Write() error {
 	b.db.getLock().Lock()
-	log.Lvl3("MemBatch.Write()")
+	log.Lvl3("memBatch.Write()")
 	defer b.db.getLock().Unlock()
 
 	var err error
@@ -75,15 +91,15 @@ func (b *MemBatch) Write() error {
 }
 
 // ValueSize()
-func (b *MemBatch) ValueSize() int {
-	log.Lvl3("MemBatch.ValueSize()")
+func (b *memBatch) ValueSize() int {
+	log.Lvl3("memBatch.ValueSize()")
 
 	return b.size
 }
 
 // Reset()
-func (b *MemBatch) Reset() {
-	log.Lvl3("MemBatch.Reset()")
+func (b *memBatch) Reset() {
+	log.Lvl3("memBatch.Reset()")
 
 	b.writes = b.writes[:0]
 	b.size = 0
