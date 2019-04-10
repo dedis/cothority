@@ -4,7 +4,6 @@ import (
 	"errors"
 	"sync"
 
-	"go.dedis.ch/cothority/v3/byzcoin"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
 	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
 	"go.dedis.ch/onet/v3"
@@ -19,14 +18,16 @@ var storageKey = []byte("storage")
 
 // storage is used to save all elements of the DKG.
 type storage struct {
-	AuthorisedByzCoinIDs map[string]bool
-
-	Shared  map[byzcoin.InstanceID]*dkgprotocol.SharedSecret
-	Polys   map[byzcoin.InstanceID]*pubPoly
-	Rosters map[byzcoin.InstanceID]*onet.Roster
-	DKS     map[byzcoin.InstanceID]*dkg.DistKeyShare
+	Element map[string]*storageElement
 
 	sync.Mutex
+}
+
+type storageElement struct {
+	Shared dkgprotocol.SharedSecret
+	Polys  pubPoly
+	Roster onet.Roster
+	DKS    dkg.DistKeyShare
 }
 
 // saves all data.
@@ -52,20 +53,8 @@ func (s *Service) tryLoad() error {
 
 	// Make sure we don't have any unallocated maps.
 	defer func() {
-		if len(s.storage.Polys) == 0 {
-			s.storage.Polys = make(map[byzcoin.InstanceID]*pubPoly)
-		}
-		if len(s.storage.Shared) == 0 {
-			s.storage.Shared = make(map[byzcoin.InstanceID]*dkgprotocol.SharedSecret)
-		}
-		if len(s.storage.Rosters) == 0 {
-			s.storage.Rosters = make(map[byzcoin.InstanceID]*onet.Roster)
-		}
-		if len(s.storage.DKS) == 0 {
-			s.storage.DKS = make(map[byzcoin.InstanceID]*dkg.DistKeyShare)
-		}
-		if len(s.storage.AuthorisedByzCoinIDs) == 0 {
-			s.storage.AuthorisedByzCoinIDs = make(map[string]bool)
+		if len(s.storage.Element) == 0 {
+			s.storage.Element = make(map[string]*storageElement)
 		}
 	}()
 

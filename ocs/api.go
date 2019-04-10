@@ -21,7 +21,7 @@ func NewClientV4() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
-// CreateLTS starts a new Distributed Key Generation with the nodes in the roster and
+// CreateOCS starts a new Distributed Key Generation with the nodes in the roster and
 // returns the collective public key X. This X is also used later to identify the
 // LTS instance, as there can be more than one LTS group on a node.
 //
@@ -43,9 +43,13 @@ func NewClientV4() *Client {
 //   err = schnorr.Verify(cothority.Suite, roster.ServiceAggregate(calypso.ServiceName),
 //       msg.Sum(nil), sig)
 //   // If err == nil, the signature is correct
-func (c *Client) CreateLTS(roster onet.Roster, auth Policy) (X OCSID, sig []byte, err error) {
+func (c *Client) CreateOCS(roster onet.Roster, policyReencrypt, policyReshare Policy) (X OCSID, sig []byte, err error) {
 	var ret CreateOCSReply
-	err = c.SendProtobuf(roster.RandomServerIdentity(), &CreateOCS{Roster: roster, Policy: auth}, &ret)
+	err = c.SendProtobuf(roster.RandomServerIdentity(), &CreateOCS{
+		Roster:          roster,
+		PolicyReencrypt: policyReencrypt,
+		PolicyReshare:   policyReshare,
+	}, &ret)
 	if err != nil {
 		return
 	}
@@ -68,7 +72,7 @@ func (c *Client) Reencrypt(roster onet.Roster, X OCSID, auth AuthReencrypt) (XHa
 	if err != nil {
 		return
 	}
-	return ret.XHat, nil
+	return ret.X, nil
 }
 
 // Reshare requests the OCS X to share the private key to a new set of nodes given in newRoster.

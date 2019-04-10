@@ -13,11 +13,7 @@ import (
 	"time"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
-	"go.dedis.ch/cothority/v3/ocs/protocol"
-	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
 	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
@@ -37,7 +33,7 @@ const ServiceName = "OCS"
 // dkgTimeout is how long the system waits for the DKG to finish
 const propagationTimeout = 20 * time.Second
 
-const calypsoReshareProto = "calypso_reshare_proto"
+const calypsoReshareProto = "ocs_reshare_proto"
 
 var disableLoopbackCheck = false
 
@@ -47,7 +43,7 @@ func init() {
 	log.ErrFatal(err)
 	OCSServiceID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&storage{}, &vData{})
+	network.RegisterMessages(&storage{}, &storageElement{})
 
 	// The loopback check makes Java testing not work, because Java client commands
 	// come from outside of the docker container. The Java testing Docker
@@ -71,20 +67,11 @@ type pubPoly struct {
 	Commits []kyber.Point
 }
 
-// vData is sent to all nodes when re-encryption takes place. If Ephemeral
-// is non-nil, Signature needs to hold a valid signature from the reader
-// in the Proof.
-type vData struct {
-	Proof     byzcoin.Proof
-	Ephemeral kyber.Point
-	Signature *darc.Signature
-}
-
 // ProcessClientRequest implements onet.Service. We override the version
 // we normally get from embeddeding onet.ServiceProcessor in order to
 // hook it and get a look at the http.Request.
 func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
-	if !disableLoopbackCheck && path == "Authorise" {
+	if !disableLoopbackCheck && path == "CreateOCS" {
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {
 			return nil, nil, err
@@ -99,43 +86,17 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
 }
 
-// Authorise adds a ByzCoinID to the list of authorized IDs. It should
-// be called by the administrator at the beginning, before any other API calls
-// are made. A ByzCoinID that is not authorised will not be allowed to call the
-// other APIs.
-func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	if len(req.ByzCoinID) == 0 {
-		return nil, errors.New("empty ByzCoin ID")
-	}
-	key := string(req.ByzCoinID)
-	if _, ok := s.storage.AuthorisedByzCoinIDs[key]; ok {
-		return nil, errors.New("ByzCoinID already authorised")
-	}
-	s.storage.AuthorisedByzCoinIDs[key] = true
-	return &AuthoriseReply{}, nil
-}
-
-// CreateLTS takes as input a roster with a list of all nodes that should
+// CreateOCS takes as input a roster with a list of all nodes that should
 // participate in the DKG. Every node will store its private key and wait for
-// decryption requests. The OCSID should be the InstanceID.
-func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
-	if err := s.verifyProof(&req.Proof, nil); err != nil {
-		return nil, err
-	}
-
-	roster, instID, err := s.getLtsRoster(&req.Proof)
-	if err != nil {
-		return nil, err
+// decryption requests.
+func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
+	if err = req.verify(); err != nil {
+		return
 	}
 
 	// NOTE: the roster stored in ByzCoin must have myself.
-	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
-	cfg := newLtsConfig{
-		req.Proof,
-	}
-	cfgBuf, err := protobuf.Encode(&cfg)
+	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
+	cfgBuf, err := protobuf.Encode(&req)
 	if err != nil {
 		return nil, err
 	}
@@ -152,227 +113,77 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 		return nil, err
 	}
 
-	log.Lvl3("Started DKG-protocol - waiting for done", len(roster.List))
+	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
 	select {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
 			return nil, err
 		}
-		reply = &CreateLTSReply{
-			ByzCoinID:  req.Proof.Latest.SkipChainID(),
-			InstanceID: instID,
-			X:          shared.X,
+		reply = &CreateOCSReply{
+			X: shared.X,
+			// TODO: calculate signature
+			Sig: []byte{},
+		}
+		oid, err := shared.X.MarshalBinary()
+		if err != nil {
+			return nil, err
 		}
 		s.storage.Lock()
-		s.storage.Shared[instID] = shared
-		s.storage.Polys[instID] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
-		s.storage.Rosters[instID] = roster
-		s.storage.Replies[instID] = reply
-		s.storage.DKS[instID] = dks
+		s.storage.Element[string(oid)] = &storageElement{
+			Shared: *shared,
+			Polys:  pubPoly{s.Suite().Point().Base(), dks.Commits},
+			Roster: req.Roster,
+			DKS:    *dks,
+		}
 		s.storage.Unlock()
 		s.save()
-		log.Lvlf2("%v Created LTS with ID: %v, pk %v", s.ServerIdentity(), instID, reply.X)
+		log.Lvlf2("%v Created LTS with ID: %v, pk %v", s.ServerIdentity(), string(oid), reply.X)
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("new-dkg didn't finish in time")
 	}
 	return
 }
 
-// ReshareLTS starts a request to reshare the LTS. The new roster which holds
-// the new secret shares must exist in the proof specified by the request.
-// All hosts must be online in this step.
-func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
-	// Verify the request
-	roster, id, err := s.getLtsRoster(&req.Proof)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.verifyProof(&req.Proof, roster); err != nil {
-		return nil, err
-	}
-
-	// Initialise the protocol
-	setupDKG, err := func() (*dkgprotocol.Setup, error) {
-		s.storage.Lock()
-		defer s.storage.Unlock()
-
-		// Check that we know the shared secret, otherwise don't do re-sharing
-		if s.storage.Shared[id] == nil || s.storage.DKS[id] == nil {
-			return nil, errors.New("cannot start resharing without an LTS")
-		}
-
-		// NOTE: the roster stored in ByzCoin must have myself.
-		tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
-		cfg := reshareLtsConfig{
-			Proof: req.Proof,
-			// We pass the public coefficients out with the protocol,
-			// because new nodes will need it for their dkg.Config.PublicCoeffs.
-			Commits:  s.storage.DKS[id].Commits,
-			OldNodes: s.storage.Rosters[id].Publics(),
-		}
-		cfgBuf, err := protobuf.Encode(&cfg)
-		if err != nil {
-			return nil, err
-		}
-		pi, err := s.CreateProtocol(calypsoReshareProto, tree)
-		if err != nil {
-			return nil, err
-		}
-		setupDKG := pi.(*dkgprotocol.Setup)
-		setupDKG.Wait = true
-		setupDKG.KeyPair = s.getKeyPair()
-		setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
-
-		// Because we are the node starting the resharing protocol, by
-		// definition, we are inside the old group. (Checked first thing
-		// in this function.) So we have only Share, not PublicCoeffs.
-		n := len(roster.List)
-		c := &dkg.Config{
-			Suite:     cothority.Suite,
-			Longterm:  setupDKG.KeyPair.Private,
-			OldNodes:  s.storage.Rosters[id].Publics(),
-			NewNodes:  roster.Publics(),
-			Share:     s.storage.DKS[id],
-			Threshold: n - (n-1)/3,
-		}
-		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
-			d, err := dkg.NewDistKeyHandler(c)
-			return d, err
-		}
-		return setupDKG, nil
-	}()
-	if err != nil {
-		return nil, err
-	}
-	if err := setupDKG.Start(); err != nil {
-		return nil, err
-	}
-	log.Lvl3(s.ServerIdentity(), "Started resharing DKG-protocol - waiting for done")
-
-	var pk kyber.Point
-	select {
-	case <-setupDKG.Finished:
-		shared, dks, err := setupDKG.SharedSecret()
-		if err != nil {
-			return nil, err
-		}
-		pk = shared.X
-		s.storage.Lock()
-		// Check the secret shares are different
-		if shared.V.Equal(s.storage.Shared[id].V) {
-			s.storage.Unlock()
-			return nil, errors.New("the reshared secret is the same")
-		}
-		// Check the public key remains the same
-		if !shared.X.Equal(s.storage.Shared[id].X) {
-			s.storage.Unlock()
-			return nil, errors.New("the reshared public point is different")
-		}
-		s.storage.Shared[id] = shared
-		s.storage.Polys[id] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
-		s.storage.Rosters[id] = roster
-		s.storage.DKS[id] = dks
-		s.storage.Unlock()
-		s.save()
-		if s.afterReshare != nil {
-			s.afterReshare()
-		}
-	case <-time.After(propagationTimeout):
-		return nil, errors.New("resharing-dkg didn't finish in time")
-	}
-
-	log.Lvl2(s.ServerIdentity(), "resharing protocol finished")
-	log.Lvlf2("%v Reshared LTS with ID: %v, pk %v", s.ServerIdentity(), id, pk)
-	return &ReshareLTSReply{}, nil
-}
-
-func (s *Service) verifyProof(proof *byzcoin.Proof, roster *onet.Roster) error {
-	scID := proof.Latest.SkipChainID()
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	if _, ok := s.storage.AuthorisedByzCoinIDs[string(scID)]; !ok {
-		return errors.New("this ByzCoin ID is not authorised")
-	}
-
-	// We used to check that the roster ID did not change here, but with
-	// resharing, it is expected that the roster can change.
-	// TODO: Confirm with Kelong that this is correct to remove; that this
-	// does not open us up to abuse/attack.
-
-	return proof.Verify(scID)
-}
-
-func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.InstanceID, error) {
-	instanceID, buf, _, _, err := proof.KeyValue()
-	if err != nil {
-		return nil, byzcoin.InstanceID{}, err
-	}
-
-	var info LtsInstanceInfo
-	err = protobuf.DecodeWithConstructors(buf, &info, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return nil, byzcoin.InstanceID{}, err
-	}
-	return &info.Roster, byzcoin.NewInstanceID(instanceID), nil
-}
-
-// DecryptKey takes as an input a Read- and a Write-proof. Proofs contain
+// Reencrypt takes as an input a Read- and a Write-proof. Proofs contain
 // everything necessary to verify that a given instance is correct and
 // stored in ByzCoin.
 // Using the Read and the Write-instance, this method verifies that the
 // requests match and then re-encrypts the secret to the public key given
 // in the Read-instance.
-func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
-	reply = &DecryptKeyReply{}
+func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
+	reply = &ReencryptReply{}
 	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
 
-	var read Read
-	if err := dkr.Read.VerifyAndDecode(cothority.Suite, ContractReadID, &read); err != nil {
-		return nil, errors.New("didn't get a read instance: " + err.Error())
+	if err = dkr.Auth.verify(dkr.X); err != nil {
+		return
 	}
 
-	var write Write
-	if err := dkr.Write.VerifyAndDecode(cothority.Suite, ContractWriteID, &write); err != nil {
-		return nil, errors.New("didn't get a write instance: " + err.Error())
-	}
-	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key())) {
-		return nil, errors.New("read doesn't point to passed write")
-	}
 	s.storage.Lock()
-	id := write.LTSID
-	roster := s.storage.Rosters[id]
-	if roster == nil {
+	idBuf, err := dkr.X.MarshalBinary()
+	if err != nil {
+		return
+	}
+	id := string(idBuf)
+	se, found := s.storage.Element[id]
+	if !found {
 		s.storage.Unlock()
-		return nil, fmt.Errorf("don't know the OCSID '%v' stored in write", id)
-	}
-	scID := make([]byte, 32)
-	copy(scID, s.storage.Replies[id].ByzCoinID)
-	s.storage.Unlock()
-	if err = dkr.Read.Verify(scID); err != nil {
-		return nil, errors.New("read proof cannot be verified to come from scID: " + err.Error())
-	}
-	if err = dkr.Write.Verify(scID); err != nil {
-		return nil, errors.New("write proof cannot be verified to come from scID: " + err.Error())
+		return nil, fmt.Errorf("don't know the OCSID '%v'", id)
 	}
 
-	// Start ocs-protocol to re-encrypt the file's symmetric key under the
-	// reader's public key.
-	nodes := len(roster.List)
+	// Start the ocs-protocol to re-encrypt the data under the public key of the reader.
+	nodes := len(se.Roster.List)
 	threshold := nodes - (nodes-1)/3
-	tree := roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
-	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
+	tree := se.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
+	pi, err := s.CreateProtocol(NameOCS, tree)
 	if err != nil {
 		return nil, err
 	}
-	ocsProto := pi.(*protocol.OCS)
-	ocsProto.U = write.U
-	verificationData := &vData{
-		Proof: dkr.Read,
-	}
-	ocsProto.Xc = read.Xc
+	ocsProto := pi.(*OCS)
+	ocsProto.U = dkr.Auth.X509Cert.Secret
+	ocsProto.Xc = dkr.Auth.Xc()
 	log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsProto.Xc)
-	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
+	ocsProto.VerificationData, err = protobuf.Encode(dkr.Auth)
 	if err != nil {
 		return nil, errors.New("couldn't marshal verification data: " + err.Error())
 	}
@@ -380,9 +191,14 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	// Make sure everything used from the s.Storage structure is copied, so
 	// there will be no races.
 	s.storage.Lock()
-	ocsProto.Shared = s.storage.Shared[id]
-	pp := s.storage.Polys[id]
-	reply.X = s.storage.Shared[id].X.Clone()
+	es, found := s.storage.Element[id]
+	if !found {
+		s.storage.Unlock()
+		return nil, errors.New("didn't find shared structure")
+	}
+	ocsProto.Shared = &es.Shared
+	pp := es.Polys
+	reply.X = es.Shared.X.Clone()
 	var commits []kyber.Point
 	for _, c := range pp.Commits {
 		commits = append(commits, c.Clone())
@@ -391,7 +207,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	s.storage.Unlock()
 
 	log.Lvl3("Starting reencryption protocol")
-	ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
+	ocsProto.SetConfig(&onet.GenericConfig{Data: []byte(id)})
 	err = ocsProto.Start()
 	if err != nil {
 		return nil, err
@@ -405,25 +221,118 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if err != nil {
 		return nil, err
 	}
-	reply.C = write.C
+	reply.C = dkr.Auth.C()
 	log.Lvl3("Successfully reencrypted the key")
 	return
 }
 
-// GetLTSReply returns the CreateLTSReply message of a previous LTS.
-func (s *Service) GetLTSReply(req *GetLTSReply) (*CreateLTSReply, error) {
-	log.Lvlf2("Getting LTS Reply for ID: %v", req.LTSID)
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	reply, ok := s.storage.Replies[req.LTSID]
-	if !ok {
-		return nil, fmt.Errorf("didn't find this LTS: %v", req.LTSID)
-	}
-	return &CreateLTSReply{
-		ByzCoinID:  append([]byte{}, reply.ByzCoinID...),
-		InstanceID: reply.InstanceID,
-		X:          reply.X.Clone(),
-	}, nil
+// ReshareLTS starts a request to reshare the LTS. The new roster which holds
+// the new secret shares must exist in the proof specified by the request.
+// All hosts must be online in this step.
+func (s *Service) ReshareLTS(req *Reshare) (*ReshareReply, error) {
+	return nil, errors.New("not yet implemented")
+	//// Verify the request
+	//roster, id, err := s.getLtsRoster(&req.Proof)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if err := s.verifyProof(&req.Proof, roster); err != nil {
+	//	return nil, err
+	//}
+	//
+	//// Initialise the protocol
+	//setupDKG, err := func() (*dkgprotocol.Setup, error) {
+	//	s.storage.Lock()
+	//	defer s.storage.Unlock()
+	//
+	//	// Check that we know the shared secret, otherwise don't do re-sharing
+	//	if s.storage.Shared[id] == nil || s.storage.DKS[id] == nil {
+	//		return nil, errors.New("cannot start resharing without an LTS")
+	//	}
+	//
+	//	// NOTE: the roster stored in ByzCoin must have myself.
+	//	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
+	//	cfg := reshareLtsConfig{
+	//		Proof: req.Proof,
+	//		// We pass the public coefficients out with the protocol,
+	//		// because new nodes will need it for their dkg.Config.PublicCoeffs.
+	//		Commits:  s.storage.DKS[id].Commits,
+	//		OldNodes: s.storage.Rosters[id].Publics(),
+	//	}
+	//	cfgBuf, err := protobuf.Encode(&cfg)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	pi, err := s.CreateProtocol(calypsoReshareProto, tree)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	setupDKG := pi.(*dkgprotocol.Setup)
+	//	setupDKG.Wait = true
+	//	setupDKG.KeyPair = s.getKeyPair()
+	//	setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+	//
+	//	// Because we are the node starting the resharing protocol, by
+	//	// definition, we are inside the old group. (Checked first thing
+	//	// in this function.) So we have only Share, not PublicCoeffs.
+	//	n := len(roster.List)
+	//	c := &dkg.Config{
+	//		Suite:     cothority.Suite,
+	//		Longterm:  setupDKG.KeyPair.Private,
+	//		OldNodes:  s.storage.Rosters[id].Publics(),
+	//		NewNodes:  roster.Publics(),
+	//		Share:     s.storage.DKS[id],
+	//		Threshold: n - (n-1)/3,
+	//	}
+	//	setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
+	//		d, err := dkg.NewDistKeyHandler(c)
+	//		return d, err
+	//	}
+	//	return setupDKG, nil
+	//}()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if err := setupDKG.Start(); err != nil {
+	//	return nil, err
+	//}
+	//log.Lvl3(s.ServerIdentity(), "Started resharing DKG-protocol - waiting for done")
+	//
+	//var pk kyber.Point
+	//select {
+	//case <-setupDKG.Finished:
+	//	shared, dks, err := setupDKG.SharedSecret()
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	pk = shared.X
+	//	s.storage.Lock()
+	//	// Check the secret shares are different
+	//	if shared.V.Equal(s.storage.Shared[id].V) {
+	//		s.storage.Unlock()
+	//		return nil, errors.New("the reshared secret is the same")
+	//	}
+	//	// Check the public key remains the same
+	//	if !shared.X.Equal(s.storage.Shared[id].X) {
+	//		s.storage.Unlock()
+	//		return nil, errors.New("the reshared public point is different")
+	//	}
+	//	s.storage.Shared[id] = shared
+	//	s.storage.Polys[id] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
+	//	s.storage.Rosters[id] = roster
+	//	s.storage.DKS[id] = dks
+	//	s.storage.Unlock()
+	//	s.save()
+	//	if s.afterReshare != nil {
+	//		s.afterReshare()
+	//	}
+	//case <-time.After(propagationTimeout):
+	//	return nil, errors.New("resharing-dkg didn't finish in time")
+	//}
+	//
+	//log.Lvl2(s.ServerIdentity(), "resharing protocol finished")
+	//log.Lvlf2("%v Reshared LTS with ID: %v, pk %v", s.ServerIdentity(), id, pk)
+	//return &ReshareLTSReply{}, nil
 }
 
 func (s *Service) getKeyPair() *key.Pair {
@@ -440,18 +349,13 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
 	case dkgprotocol.Name:
-		var cfg newLtsConfig
+		var cfg CreateOCS
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := s.verifyProof(&cfg.Proof, tn.Roster()); err != nil {
+		if err := cfg.verify(); err != nil {
 			return nil, err
 		}
-		key, _, _, _, err := cfg.KeyValue()
-		if err != nil {
-			return nil, err
-		}
-		instID := byzcoin.NewInstanceID(key)
 
 		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
@@ -460,39 +364,39 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.KeyPair = s.getKeyPair()
 
-		go func(bcID skipchain.SkipBlockID, id byzcoin.InstanceID) {
+		go func() {
 			<-setupDKG.Finished
 			shared, dks, err := setupDKG.SharedSecret()
 			if err != nil {
 				log.Error(err)
 				return
 			}
-			reply := &CreateLTSReply{
-				ByzCoinID:  bcID,
-				InstanceID: instID,
-				X:          shared.X,
+			idBuf, err := shared.X.MarshalBinary()
+			if err != nil {
+				log.Error(err)
+				return
 			}
+			id := string(idBuf)
 			log.Lvlf3("%v got shared %v on inst %v", s.ServerIdentity(), shared, id)
 			s.storage.Lock()
-			s.storage.Shared[id] = shared
-			s.storage.DKS[id] = dks
-			s.storage.Replies[id] = reply
-			s.storage.Rosters[id] = tn.Roster()
+			s.storage.Element[string(id)] = &storageElement{
+				Shared: *shared,
+				Roster: *tn.Roster(),
+				DKS:    *dks,
+			}
 			s.storage.Unlock()
 			s.save()
-		}(cfg.Latest.SkipChainID(), instID)
+		}()
 		return pi, nil
 	case calypsoReshareProto:
 		// Decode and verify config
-		var cfg reshareLtsConfig
+		var cfg Reshare
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := s.verifyProof(&cfg.Proof, tn.Roster()); err != nil {
+		if err := cfg.verify(); err != nil {
 			return nil, err
 		}
-
-		_, id, err := s.getLtsRoster(&cfg.Proof)
 
 		// Set up the protocol
 		pi, err := dkgprotocol.NewSetup(tn)
@@ -503,23 +407,35 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG.KeyPair = s.getKeyPair()
 
 		s.storage.Lock()
+		idBuf, err := cfg.X.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		id := string(idBuf)
+		es, found := s.storage.Element[id]
+		if !found {
+			// TODO: we might not have this yet - so probably we need to put the old roster in cfg, too.
+			return nil, errors.New("this OCSID is not known here")
+		}
+		oldNodes := es.Roster.Publics()
 		n := len(tn.Roster().List)
 		c := &dkg.Config{
 			Suite:     cothority.Suite,
 			Longterm:  setupDKG.KeyPair.Private,
 			NewNodes:  tn.Roster().Publics(),
-			OldNodes:  cfg.OldNodes,
+			OldNodes:  oldNodes,
 			Threshold: n - (n-1)/3,
 		}
-		s.storage.Unlock()
 
 		// Set Share and PublicCoeffs according to if we are an old node or a new one.
-		inOld := pointInList(setupDKG.KeyPair.Public, cfg.OldNodes)
+		inOld := pointInList(setupDKG.KeyPair.Public, oldNodes)
 		if inOld {
-			c.Share = s.storage.DKS[id]
+			c.Share = &es.DKS
 		} else {
-			c.PublicCoeffs = cfg.Commits
+			// TODO: add commits here
+			//c.PublicCoeffs = cfg.Commits
 		}
+		s.storage.Unlock()
 
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
@@ -531,7 +447,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 
 		// Wait for DKG in reshare mode to end
-		go func(id byzcoin.InstanceID) {
+		go func() {
 			<-setupDKG.Finished
 			shared, dks, err := setupDKG.SharedSecret()
 			if err != nil {
@@ -540,46 +456,51 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			}
 
 			s.storage.Lock()
+			es, found := s.storage.Element[id]
 			// If we had an old share, check the new share before saving it.
-			if s.storage.Shared[id] != nil {
+			if found {
 				// Check the secret shares are different
-				if shared.V.Equal(s.storage.Shared[id].V) {
+				if shared.V.Equal(es.Shared.V) {
 					s.storage.Unlock()
 					log.Error("the reshared secret is the same")
 					return
 				}
 
 				// Check the public key remains the same
-				if !shared.X.Equal(s.storage.Shared[id].X) {
+				if !shared.X.Equal(es.Shared.X) {
 					s.storage.Unlock()
 					log.Error("the reshared public point is different")
 					return
 				}
+			} else {
+				es = &storageElement{}
 			}
-			s.storage.Shared[id] = shared
-			s.storage.DKS[id] = dks
+			// TODO: what happens with Polys here?
+			es.Roster = cfg.NewRoster
+			es.Shared = *shared
+			es.DKS = *dks
+
 			s.storage.Unlock()
 			s.save()
 			if s.afterReshare != nil {
 				s.afterReshare()
 			}
-		}(id)
+		}()
 		return setupDKG, nil
-	case protocol.NameOCS:
-		id := byzcoin.NewInstanceID(conf.Data)
+	case NameOCS:
+		id := string(conf.Data)
 		s.storage.Lock()
-		shared, ok := s.storage.Shared[id]
-		shared = shared.Clone()
+		es, ok := s.storage.Element[id]
 		s.storage.Unlock()
 		if !ok {
 			return nil, fmt.Errorf("didn't find OCSID %v", id)
 		}
-		pi, err := protocol.NewOCS(tn)
+		pi, err := NewOCS(tn)
 		if err != nil {
 			return nil, err
 		}
-		ocs := pi.(*protocol.OCS)
-		ocs.Shared = shared
+		ocs := pi.(*OCS)
+		ocs.Shared = es.Shared.Clone()
 		ocs.Verify = s.verifyReencryption
 		return ocs, nil
 	}
@@ -596,7 +517,8 @@ func pointInList(p1 kyber.Point, l []kyber.Point) bool {
 }
 
 // verifyReencryption checks that the read and the write instances match.
-func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
+func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
+	// TODO: check the correct authentication
 	return false
 }
 
@@ -607,8 +529,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
-		s.GetLTSReply, s.Authorise); err != nil {
+	if err := s.RegisterHandlers(s.CreateOCS, s.ReshareLTS, s.Reencrypt); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

@@ -12,7 +12,7 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
-// Tests the client function CreateLTS
+// Tests the client function CreateOCS
 func TestClient_CreateLTS(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
@@ -37,7 +37,7 @@ func TestClient_CreateLTS(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Invoke CreateLTS
+	// Invoke CreateOCS
 	ltsReply, err := calypsoClient.CreateLTS(roster, d.GetBaseID(), []darc.Signer{signer}, []uint64{1})
 	require.Nil(t, err)
 	require.NotNil(t, ltsReply.ByzCoinID)
@@ -47,7 +47,7 @@ func TestClient_CreateLTS(t *testing.T) {
 
 // TODO(jallen): Write TestClient_Reshare (and add api.go part too, I guess)
 
-// Tests the client api's AddRead, AddWrite, DecryptKey
+// Tests the client api's AddRead, AddWrite, Reencrypt
 func TestClient_Calypso(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)

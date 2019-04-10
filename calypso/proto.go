@@ -69,7 +69,7 @@ type Authorise struct {
 type AuthoriseReply struct {
 }
 
-// CreateLTS is used to start a DKG and store the private keys in each node.
+// CreateOCS is used to start a DKG and store the private keys in each node.
 // Prior to using this request, the Calypso roster must be recorded on the
 // ByzCoin blockchain in the instance specified by InstanceID.
 type CreateLTS struct {
@@ -97,7 +97,7 @@ type ReshareLTS struct {
 type ReshareLTSReply struct {
 }
 
-// DecryptKey is sent by a reader after he successfully stored a 'Read' request
+// Reencrypt is sent by a reader after he successfully stored a 'Read' request
 // in byzcoin Client.
 type DecryptKey struct {
 	// Read is the proof that he has been accepted to read the secret.

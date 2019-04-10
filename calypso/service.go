@@ -140,7 +140,7 @@ func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 	return &AuthoriseReply{}, nil
 }
 
-// CreateLTS takes as input a roster with a list of all nodes that should
+// CreateOCS takes as input a roster with a list of all nodes that should
 // participate in the DKG. Every node will store its private key and wait for
 // decryption requests. The LTSID should be the InstanceID.
 func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
@@ -340,7 +340,7 @@ func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.Inst
 	return &info.Roster, byzcoin.NewInstanceID(instanceID), nil
 }
 
-// DecryptKey takes as an input a Read- and a Write-proof. Proofs contain
+// Reencrypt takes as an input a Read- and a Write-proof. Proofs contain
 // everything necessary to verify that a given instance is correct and
 // stored in ByzCoin.
 // Using the Read and the Write-instance, this method verifies that the

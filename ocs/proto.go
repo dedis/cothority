@@ -3,6 +3,8 @@ package ocs
 import (
 	"time"
 
+	"go.dedis.ch/cothority/v3/darc"
+
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
@@ -25,9 +27,16 @@ import (
 // ***
 
 // CreateOCS is sent to the service to request a new OCS cothority.
+// It holds the two policies necessary to define an OCS: how to
+// authenticate a reencryption request, and how to authenticate a
+// resharing request.
+// In the current form, both policies point to the same structure. If at
+// a later moment a new access control backend is added, it might be that
+// the policies will differ for this new backend.
 type CreateOCS struct {
-	Roster onet.Roster
-	Policy Policy
+	Roster          onet.Roster
+	PolicyReencrypt Policy
+	PolicyReshare   Policy
 }
 
 // CreateOCSReply is the reply sent by the conode if the OCS has been
@@ -53,12 +62,16 @@ type Reencrypt struct {
 // it contains XHat, which is the secret re-encrypted to the ephemeral
 // key given in AuthReencrypt.
 type ReencryptReply struct {
-	XHat kyber.Point
+	X       kyber.Point
+	XhatEnc kyber.Point
+	C       kyber.Point
 }
 
 // Reshare is called to ask OCS to change the roster. It needs a valid
-// authentication before the private keys are re-generated over the new
+// authentication before the private keys are re-distributed over the new
 // roster.
+// TODO: should NewRoster be always present in AuthReshare? It will be present
+// TODO: at least in AuthReshareByzCoin, but might not in other AuthReshares
 type Reshare struct {
 	X         OCSID
 	NewRoster onet.Roster
@@ -75,17 +88,6 @@ type ReshareReply struct {
 // ***
 // Common structures
 // ***
-
-// PolicyOCS holds the two policies necessary to define an OCS: how to
-// authenticate a reencryption request, and how to authenticate a
-// resharing request.
-// In the current form, both policies point to the same structure. If at
-// a later moment a new access control backend is added, it might be that
-// the policies will differ for this new backend.
-type PolicyOCS struct {
-	PolicyReencrypt Policy
-	PolicyReshare   Policy
-}
 
 // Policy holds all possible authentication structures. When using it to call
 // Authorise, only one of the fields must be non-nil.
@@ -131,6 +133,12 @@ type AuthReencryptByzCoin struct {
 	Write byzcoin.Proof
 	// Read is the proof that he has been accepted to read the secret.
 	Read byzcoin.Proof
+	// Ephemeral can be non-nil to point to a key to which the data needs to be
+	// re-encrypted to, but then Signature also needs to be non-nil.
+	Ephemeral kyber.Point
+	// If Ephemeral si non-nil, it must be signed by the darc responsible for the
+	// Read instance to make sure it's a valid reencryption-request.
+	Signature *darc.Signature
 }
 
 // AuthReencryptX509Cert holds the proof that at least a threshold number of clients

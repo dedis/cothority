@@ -40,7 +40,7 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 		cothority.Suite, ServiceName)}
 }
 
-// CreateLTS creates a random LTSID that can be used to reference the LTS group
+// CreateOCS creates a random LTSID that can be used to reference the LTS group
 // created. It first sends a transaction to ByzCoin to spawn a LTS instance,
 // then it asks the Calypso cothority to start the DKG.
 func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []darc.Signer, counters []uint64) (reply *CreateLTSReply, err error) {
@@ -103,7 +103,7 @@ func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlock
 	return nil
 }
 
-// DecryptKey takes as input Read- and Write- Proofs. It verifies that
+// Reencrypt takes as input Read- and Write- Proofs. It verifies that
 // the read/write requests match and then re-encrypts the secret
 // given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
@@ -261,7 +261,7 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 }
 
 // RecoverKey is used to recover the secret key once it has been
-// re-encrypted to a given public key by the DecryptKey method
+// re-encrypted to a given public key by the Reencrypt method
 // in the Calypso service. The resulting secret key can be used
 // with a symmetric decryption algorithm to decrypt the data
 // stored in the Data field of the WriteInstance.

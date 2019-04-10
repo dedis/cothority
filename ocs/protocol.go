@@ -44,7 +44,7 @@ type OCS struct {
 	Reencrypted chan bool
 	Uis         []*share.PubShare // re-encrypted shares
 	// private fields
-	replies  []ReencryptReply
+	replies  []MessageReencryptReply
 	timeout  *time.Timer
 	doneOnce sync.Once
 }
@@ -75,7 +75,7 @@ func (o *OCS) Start() error {
 		o.finish(false)
 		return errors.New("please initialize U first")
 	}
-	rc := &Reencrypt{
+	rc := &MessageReencrypt{
 		U:  o.U,
 		Xc: o.Xc,
 	}
@@ -128,7 +128,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	hiHat.MarshalTo(hash)
 	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 
-	return o.SendToParent(&ReencryptReply{
+	return o.SendToParent(&MessageReencryptReply{
 		Ui: ui,
 		Ei: ei,
 		Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
