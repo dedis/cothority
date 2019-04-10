@@ -1,5 +1,6 @@
 [[servers]]
   Address = "tls://conode.dedis.ch:7000"
+  Url = "https://conode.dedis.ch:7001"
   Suite = "Ed25519"
   Public = "ec5c65a3c922d1df32075640e3de606197be24af76059a2ef145501122884bd3"
   Description = "EPFL Cothority-server"
@@ -19,6 +20,7 @@
 
 [[servers]]
   Address = "tls://dedis.nella.org:7770"
+  Url = "https://dedis.nella.org:7771"
   Suite = "Ed25519"
   Public = "ad91a87dd89d31e4fc77ee04f1fc684bb6697bcef96720b84422437ff00b79e3"
   Description = "dedis.nella.org"
@@ -37,26 +39,8 @@
       Suite = "bn256.adapter"
 
 [[servers]]
-  Address = "tls://accordion.employees.org:7770"
-  Suite = "Ed25519"
-  Public = "a86f3496bd78a741ebe27915b7d02c8a5a403d0baed32b1fec6da057aa56519d"
-  Description = "jra@employees.org"
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      Public = "891d8bea9a42060d886919e3c065c05d372c3c6d34e13395df0fe3ba6947fda30083b6be9f16b2920b4193f6186a400f4fcf9c396b4e9fbe3a76ce0c923a410e0302a0e4b2c00f700ce70f511c50a28128291508776c61f1c1c7b39eada39e94452cd53e903c27cfdb6e11569ac7f45bd7956e39ba7d6a278f6edf8ed41d470c"
-      Suite = "bn256.adapter"
-    [servers.Services.PoPServer]
-      Public = "785419ea74fe57d39eeed741042694e9e8ac1ac32977d26604083410fe7721346261a4e62674f96e71fc45151e6b0bf4c9d7de19b116e55578b9607abbb47f8f3d179abd69500c8dc47ef1ed03f47298c4f5740a05de623c4acc153ed45a68ba8a47c77c121cebc216de1e55721662afcf2cbe00f150e1c36da9d4af994b65ac"
-      Suite = "bn256.adapter"
-    [servers.Services.Skipchain]
-      Public = "4c685d4a4a086e1e85f3b79dd210b55fb9a88da7108b107e1e5a5ffee298e48b2e9929ecddd472319ed61fe8a9b5bbb8aedc85b2d02b60a97aa37cff8ade52891c3a4b63e773fefe6cd9ecb3e041b62d9386669cbc310914625fa2b358e79d8217187ace78c26c931ab94df7548e5dfd69c94c60ceab8d60aee7a755f1f4b8e3"
-      Suite = "bn256.adapter"
-    [servers.Services.blsCoSiService]
-      Public = "7db332aa55ea2756c1377e7cae6a40b5fb8364184fad975100fcd4a299488a5b59692da5eaf783da581c032d19f162be4f920dbb1839a40ada5280283aa49d6322d1a1fa6543b38a567f4ec90d314c5e65d5905cb857a525fdd8c4e04e021da75a34f9d68c3db2f7bc1571446167c7f0c15b71298d71a70b75899ce832d5b5fc"
-      Suite = "bn256.adapter"
-
-[[servers]]
   Address = "tls://fairywren.ch:7770"
+  Url = "https://fairywren.ch:7771"
   Suite = "Ed25519"
   Public = "0bcdaebde16f50fb65b717a0501e7ede020045286d6ece10fdea1bdd8f37af39"
   Description = "Gaylor's Conode"
@@ -76,6 +60,7 @@
 
 [[servers]]
   Address = "tls://conode.c4dt.org:7770"
+  Url = "https://conode.c4dt.org:7771"
   Suite = "Ed25519"
   Public = "67e30e168f83c4d4614e277cefba42dbc1fb5886b3945364ea5dae3f4e4fbc0d"
   Description = "C4DT Conode"
@@ -95,6 +80,7 @@
 
 [[servers]]
   Address = "tls://gasser.blue:7770"
+  Url = "https://gasser.blue:7771"
   Suite = "Ed25519"
   Public = "0e4c620122daca9518cace2a6b11c5c0892fbde7b130d04e8a194fd02906ffc6"
   Description = "Ineiti's conode"

@@ -588,7 +588,11 @@ func latest(c *cli.Context) error {
 func fmtRoster(r *onet.Roster) string {
 	var roster []string
 	for _, s := range r.List {
-		roster = append(roster, string(s.Address))
+		if s.URL != "" {
+			roster = append(roster, fmt.Sprintf("%v (url: %v)", string(s.Address), s.URL))
+		} else {
+			roster = append(roster, string(s.Address))
+		}
 	}
 	return strings.Join(roster, ", ")
 }

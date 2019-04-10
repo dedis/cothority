@@ -309,12 +309,16 @@ func scCreate(c *cli.Context) error {
 func scUpdates(c *cli.Context) error {
 	group := readGroupArgs(c, 0)
 
+	if c.String("from") == "" {
+		return errors.New("-from argument required")
+	}
+
 	from, err := hex.DecodeString(c.String("from"))
 	if err != nil {
-		return errors.New("Failed to decode " + c.String("from"))
+		return errors.New("Failed to decode -from " + c.String("from"))
 	}
 	if len(from) == 0 {
-		return errors.New("id is empty")
+		return errors.New("-from argument is empty")
 	}
 
 	r, err := skipchain.NewClient().GetUpdateChainLevel(group.Roster, from, c.Int("level"), c.Int("count"))
@@ -324,9 +328,26 @@ func scUpdates(c *cli.Context) error {
 
 	for _, x := range r {
 		fmt.Fprintf(c.App.Writer, "index %v, hash %x\n", x.Index, x.Hash)
+		for li, fl := range x.ForwardLink {
+			if fl.NewRoster != nil {
+				fmt.Fprintf(c.App.Writer, "  forward link %v, newRoster %v\n", li, fmtRoster(fl.NewRoster))
+			}
+		}
 	}
 
 	return nil
+}
+
+func fmtRoster(r *onet.Roster) string {
+	var roster []string
+	for _, s := range r.List {
+		if s.URL != "" {
+			roster = append(roster, fmt.Sprintf("%v (url: %v)", string(s.Address), s.URL))
+		} else {
+			roster = append(roster, string(s.Address))
+		}
+	}
+	return strings.Join(roster, ", ")
 }
 
 // Proposes a new block to the leader for appending to the skipchain.

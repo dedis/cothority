@@ -89,15 +89,15 @@ public final class NetworkProto {
         getDescriptionBytes();
 
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     boolean hasUrl();
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     java.lang.String getUrl();
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     com.google.protobuf.ByteString
         getUrlBytes();
@@ -178,7 +178,7 @@ public final class NetworkProto {
               description_ = bs;
               break;
             }
-            case 50: {
+            case 58: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000010;
               url_ = bs;
@@ -369,16 +369,16 @@ public final class NetworkProto {
       }
     }
 
-    public static final int URL_FIELD_NUMBER = 6;
+    public static final int URL_FIELD_NUMBER = 7;
     private volatile java.lang.Object url_;
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     public boolean hasUrl() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     public java.lang.String getUrl() {
       java.lang.Object ref = url_;
@@ -395,7 +395,7 @@ public final class NetworkProto {
       }
     }
     /**
-     * <code>optional string url = 6;</code>
+     * <code>optional string url = 7;</code>
      */
     public com.google.protobuf.ByteString
         getUrlBytes() {
@@ -463,7 +463,7 @@ public final class NetworkProto {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, description_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, url_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, url_);
       }
       unknownFields.writeTo(output);
     }
@@ -493,7 +493,7 @@ public final class NetworkProto {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, description_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, url_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, url_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1387,13 +1387,13 @@ public final class NetworkProto {
 
       private java.lang.Object url_ = "";
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public boolean hasUrl() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public java.lang.String getUrl() {
         java.lang.Object ref = url_;
@@ -1410,7 +1410,7 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public com.google.protobuf.ByteString
           getUrlBytes() {
@@ -1426,7 +1426,7 @@ public final class NetworkProto {
         }
       }
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public Builder setUrl(
           java.lang.String value) {
@@ -1439,7 +1439,7 @@ public final class NetworkProto {
         return this;
       }
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public Builder clearUrl() {
         bitField0_ = (bitField0_ & ~0x00000020);
@@ -1448,7 +1448,7 @@ public final class NetworkProto {
         return this;
       }
       /**
-       * <code>optional string url = 6;</code>
+       * <code>optional string url = 7;</code>
        */
       public Builder setUrlBytes(
           com.google.protobuf.ByteString value) {
@@ -2395,7 +2395,7 @@ public final class NetworkProto {
       "ity\022\016\n\006public\030\001 \002(\014\0223\n\021serviceIdentities" +
       "\030\002 \003(\0132\030.network.ServiceIdentity\022\n\n\002id\030\003" +
       " \002(\014\022\017\n\007address\030\004 \002(\t\022\023\n\013description\030\005 \002" +
-      "(\t\022\013\n\003url\030\006 \001(\t\">\n\017ServiceIdentity\022\014\n\004na" +
+      "(\t\022\013\n\003url\030\007 \001(\t\">\n\017ServiceIdentity\022\014\n\004na" +
       "me\030\001 \002(\t\022\r\n\005suite\030\002 \002(\t\022\016\n\006public\030\003 \002(\014B" +
       "\'\n\027ch.epfl.dedis.lib.protoB\014NetworkProto"
     };
