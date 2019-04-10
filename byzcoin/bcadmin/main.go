@@ -318,10 +318,12 @@ var cliApp = cli.NewApp()
 // getDataPath is a function pointer so that tests can hook and modify this.
 var getDataPath = cfgpath.GetDataPath
 
+var gitTag = "dev"
+
 func init() {
 	cliApp.Name = "bcadmin"
 	cliApp.Usage = "Create ByzCoin ledgers and grant access to them."
-	cliApp.Version = "0.1"
+	cliApp.Version = gitTag
 	cliApp.Commands = cmds
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{

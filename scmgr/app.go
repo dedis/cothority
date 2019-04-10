@@ -55,11 +55,13 @@ func init() {
 	network.RegisterMessages(&config{}, &values{})
 }
 
+var gitTag = "dev"
+
 func main() {
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"
-	cliApp.Version = "0.2"
+	cliApp.Version = gitTag
 	cliApp.Commands = getCommands()
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{

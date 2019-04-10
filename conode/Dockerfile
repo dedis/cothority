@@ -7,6 +7,7 @@ RUN cd /go/src/go.dedis.ch/cothority && git checkout $BUILD_TAG && GO111MODULE=o
 FROM debian:stretch-slim
 WORKDIR /root/
 COPY --from=builder /go/bin/conode .
+COPY --from=builder /go/bin/bcadmin /go/bin/el /go/bin/scmgr /usr/local/bin/
 RUN mkdir /conode_data
 RUN mkdir -p .local/share .config
 RUN ln -s /conode_data .local/share/conode
