@@ -87,10 +87,10 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
 	github.com/zmb3/gogetdoc v0.0.0-20190228002656-b37376c5da6a // indirect
-	go.dedis.ch/kyber/v3 v3.0.0
+	go.dedis.ch/kyber/v3 v3.0.2
 	go.dedis.ch/onet/v3 v3.0.2
 	go.dedis.ch/protobuf v1.0.6
-	go.etcd.io/bbolt v1.3.0
+	go.etcd.io/bbolt v1.3.2
 	golang.org/x/arch v0.0.0-20190312162104-788fe5ffcd8c // indirect
 	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c // indirect
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
