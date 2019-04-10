@@ -34,7 +34,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/oauth2"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 type config struct {
@@ -189,11 +189,12 @@ var cmds = cli.Commands{
 
 var cliApp = cli.NewApp()
 var dataDir = ""
+var gitTag = "dev"
 
 func init() {
 	cliApp.Name = "el"
 	cliApp.Usage = "Create and work with event logs."
-	cliApp.Version = "0.1"
+	cliApp.Version = gitTag
 	cliApp.Commands = cmds
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{

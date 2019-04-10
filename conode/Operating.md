@@ -11,19 +11,95 @@ line examples, please refer to:
 server
 - [Docker](Docker.md) how to run a conode with the pre-compiled Docker image
 
+# WebSocket TLS
+
+Conode-conode communication is automatically secured via TLS when you use
+the configuration from `conode setup` unchanged.
+
+However, conode-client communication happens on the next port up from the
+conode-conode port, and it defaults to WebSockets inside of HTTP. It is
+recommended to arrange for this port to be wrapped in TLS as well.
+
+When this port is using TLS, you must explicitly advertise this fact
+when you add your server to a cothority. You do this by setting the
+Url field in the toml file:
+
+```
+[[servers]]
+  Address = "tls://excellent.example.com:7770"
+  Url = "https://excellent.example.com:7771"
+  Suite = "Ed25519"
+  Public = "ad91a87dd89d31e4fc77ee04f1fc684bb6697bcef96720b84422437ff00b79e3"
+  Description = "My excellent example server."
+  [servers.Services]
+    [servers.Services.ByzCoin]
+      ...etc...
+```
+
 ## Reverse proxy
 
 Conode should only be run as a non-root user.
 
 The current recommended way to add HTTPS to the websocket port is to use a web
 server like Apache or nginx in reverse proxy mode to forward connections from
-port 443 to port 6880, the default websocket port.
+port 443 to the websocket port, which is the conode's port plus 1.
 
-If you want the websocket port to be on a port under 1024 (i.e. 443 for
-HTTPS), you can use setcap to give the conode binary the necessary privs: `sudo
-setcap CAP_NET_BIND_SERVICE=+eip $(go env GOPATH)/bin/conode`
+An example config, for Apache using a Let's Encrypt certificate:
 
-## Backups
+```
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+        ServerName excellent.example.com
+		
+		# If conode is running on port 7000, non-TLS websocket is on 7001,
+		# so the reverse proxy points there.
+        ProxyPass / ws://localhost:7001/
+		
+		SSLCertificateFile /etc/letsencrypt/live/excellent.example.com/fullchain.pem
+		SSLCertificateKeyFile /etc/letsencrypt/live/excellent.example.com/privkey.pem
+		Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+</IfModule>
+```
+
+In this case, the Url in the TOML file would be `https://excellent.example.com`
+(no port number because 443 is the default for HTTPS).
+
+## Built-in TLS: specifying certificate files
+
+If you would like the conode to run TLS on the WebSocket interface, you
+can tell it where to find the private key and a certificate for that
+key:
+
+```
+WebSocketTLSCertificate = "/etc/fullchain.pem"
+WebSocketTLSCertificateKey = "/etc/privkey.pem"
+```
+
+In this case, it is up to you to get get a certificate from a
+certificate authority, and to update `fullchain.pem` when
+needed in order to renew the certificate.
+
+## Built-in TLS: Using Let's Encrypt certificates
+
+Using the Let's Encrypt CA, and the `certbot` client program,
+you can get free certificates for domains which you control.
+`certbot` writes the files it creates into `/etc/letsencrypt`.
+
+If the user you use to run the conode has the rights to read from the
+directory where Let's Encrypt writes the private key and the current
+certificate, you can arrange for conode to share the TLS certificate
+used by the server as a whole:
+
+```
+WebSocketTLSCertificate = "/etc/letsencrypt/live/conode.example.com/fullchain.pem"
+WebSocketTLSCertificateKey = "/etc/letsencrypt/live/conode.example.com/privkey.pem"
+```
+
+Let's Encrypt certificates expire every 90 days, so you will need
+to restart your conode when the `fullchain.pem` file is refreshed.
+
+# Backups
 
 On Linux, the following files need to be backed up:
 1. `$HOME/.config/conode/private.toml`
@@ -39,7 +115,7 @@ If you have a backup of the private.toml file and a recent backup of the .db
 file, you can put them onto a new server, and start the conode. The IP address
 in the private.toml file must match the IP address on the server.
 
-## Roster IPs should be movable
+# Roster IPs should be movable
 
 In order to facilitate IP address switches, it is recommended that the public IP
 address for the leader of critical skipchains should be a virtual address. For
@@ -66,16 +142,3 @@ Thus it would be possible to set the roster of a skipchain to include a server
 identity like "tcp://conode-master.example.com:6979" and then change the
 definition of conode-master.example.com in DNS in order to change the IP address
 of the master.
-
-## Reverting the cothority
-
-If you control all of the nodes in a cothority, it is in theory possible to
-rewrite history by saving all the DB files at a certain point in time, and then
-later restoring them all at the same time. To be certain that all the DB files
-are consistent with themselves, and with each other, all of the conodes should
-be down at the time the backup is taken.
-
-If you do not control more than 2/3 of the conodes, it is not possible to rewind
-the state of the cothority. This is by design, and is the fundamental feature of
-a group of mutually untrusted servers who are working together to provide a
-cothority.

@@ -178,6 +178,42 @@ export class ServerIdentity extends Message<ServerIdentity> {
         return BASE_URL_WS + ip + URL_PORT_SPLITTER + port + path;
     }
 
+    /**
+     * Converts a HTTP-S URL to a Wesocket URL. It convert 'http' to 'ws' and 'https' to 'wss'.
+     * Any other protocols are forbidden and will raise an error. It also remove any trailing '/'.
+     * Here are some examples:
+     *      http://example.com:77        => ws://example.com:77
+     *      https://example.com/path/    => wss:example.com/path
+     *      https://example.com:443/     => wss:example.com
+     *      tcp://127.0.0.1              => Error
+     * Note: It will NOT include the given port in the case its the default one (for example 80 or 443).
+     * Note: In the case there is many slashes at the end of the url, it will only remove one.
+     * @param url   the given url field
+     * @returns a websocket url
+     */
+    static urlToWebsocket(url: string): string {
+        const urlParser = new URL(url);
+        switch (urlParser.protocol) {
+            case "http:": {
+                urlParser.protocol = "ws:";
+                break;
+            }
+            case "https:": {
+                urlParser.protocol = "wss:";
+                break;
+            }
+            default : {
+                throw new Error("The url field should use either 'http:' or 'https:', but we found "
+                                + urlParser.protocol);
+            }
+        }
+        let result = urlParser.toString();
+        if (result.slice(-1) === "/") {
+            result = result.slice(0, -1);
+        }
+        return result;
+    }
+
     readonly public: Buffer;
     readonly id: Buffer;
     readonly address: string;
@@ -214,13 +250,13 @@ export class ServerIdentity extends Message<ServerIdentity> {
     }
 
     /**
-     * Returns this.url if set, otherwise converts the server
-     * address to match the websocket format
+     * Returns websocket version of this.url if set, otherwise converts the server
+     * address to match the websocket format.
      * @returns the websocket address
      */
     getWebSocketAddress(): string {
         if (this.url) {
-            return this.url;
+            return ServerIdentity.urlToWebsocket(this.url);
         } else {
             return ServerIdentity.addressToWebsocket(this.address);
         }

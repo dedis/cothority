@@ -318,10 +318,12 @@ var cliApp = cli.NewApp()
 // getDataPath is a function pointer so that tests can hook and modify this.
 var getDataPath = cfgpath.GetDataPath
 
+var gitTag = "dev"
+
 func init() {
 	cliApp.Name = "bcadmin"
 	cliApp.Usage = "Create ByzCoin ledgers and grant access to them."
-	cliApp.Version = "0.1"
+	cliApp.Version = gitTag
 	cliApp.Commands = cmds
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -588,7 +590,11 @@ func latest(c *cli.Context) error {
 func fmtRoster(r *onet.Roster) string {
 	var roster []string
 	for _, s := range r.List {
-		roster = append(roster, string(s.Address))
+		if s.URL != "" {
+			roster = append(roster, fmt.Sprintf("%v (url: %v)", string(s.Address), s.URL))
+		} else {
+			roster = append(roster, string(s.Address))
+		}
 	}
 	return strings.Join(roster, ", ")
 }
