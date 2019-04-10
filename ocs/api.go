@@ -6,21 +6,19 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
-// TODO: add OCSID of type kyber.Point
 // TODO: think about authentication
-// TODO: add CreateAndAuthorise
 // TODO: add REST interface
 
 type OCSID kyber.Point
 
-// ClientV4 is a class to communicate to the calypso service.
-type ClientV4 struct {
+// Client is a class to communicate to the calypso service.
+type Client struct {
 	*onet.Client
 }
 
 // NewClientV4 creates a new client to interact with the Calypso Service.
-func NewClientV4() *ClientV4 {
-	return &ClientV4{Client: onet.NewClient(cothority.Suite, ServiceName)}
+func NewClientV4() *Client {
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
 // CreateLTS starts a new Distributed Key Generation with the nodes in the roster and
@@ -45,20 +43,38 @@ func NewClientV4() *ClientV4 {
 //   err = schnorr.Verify(cothority.Suite, roster.ServiceAggregate(calypso.ServiceName),
 //       msg.Sum(nil), sig)
 //   // If err == nil, the signature is correct
-func (c *ClientV4) CreateLTS(ltsRoster *onet.Roster, auth Auth) (X OCSID, sig []byte, err error) {
-	return
+func (c *Client) CreateLTS(roster onet.Roster, auth Policy) (X OCSID, sig []byte, err error) {
+	var ret CreateOCSReply
+	err = c.SendProtobuf(roster.RandomServerIdentity(), &CreateOCS{Roster: roster, Policy: auth}, &ret)
+	if err != nil {
+		return
+	}
+	return ret.X, ret.Sig, nil
 }
 
-// Reencrypt requests the re-encryption of the secret stored in the grant.
-// The grant must also contain the ephemeral key to which the secret will be
+// Reencrypt requests the re-encryption of the secret stored in the authentication.
+// The authentication must also contain the ephemeral key to which the secret will be
 // reencrypted to.
-// Finally the grant must contain information about how to verify that the
+// Finally the authentication must contain information about how to verify that the
 // reencryption request is valid.
 //
 // This can be called from anywhere.
 //
-// If the grant is valid, the reencrypted XHat is returned and err is nil. In case
+// If the authentication is valid, the reencrypted XHat is returned and err is nil. In case
 // of error, XHat is nil, and the error will be returned.
-func (c *ClientV4) Reencrypt(X kyber.Point, grant Grant) (XHat kyber.Point, err error) {
-	return
+func (c *Client) Reencrypt(roster onet.Roster, X OCSID, auth AuthReencrypt) (XHat kyber.Point, err error) {
+	var ret ReencryptReply
+	err = c.SendProtobuf(roster.RandomServerIdentity(), &Reencrypt{X: X, Auth: auth}, &ret)
+	if err != nil {
+		return
+	}
+	return ret.XHat, nil
+}
+
+// Reshare requests the OCS X to share the private key to a new set of nodes given in newRoster.
+// The auth argument must give proof that this request is valid.
+//
+// If the request was successful, nil is returned, an error otherwise.
+func (c *Client) Reshare(oldRoster onet.Roster, X OCSID, newRoster onet.Roster, auth AuthReshare) error {
+	return c.SendProtobuf(oldRoster.RandomServerIdentity(), &Reshare{X: X, NewRoster: newRoster, Auth: auth}, nil)
 }

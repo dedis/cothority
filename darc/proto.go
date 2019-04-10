@@ -77,7 +77,7 @@ type IdentityX509EC struct {
 }
 
 // IdentityProxy holds the info necessary to verify a claim
-// from an external authentication system via an Authentication Proxy.
+// from an external authentication system via an Policy Proxy.
 type IdentityProxy struct {
 	Data   string
 	Public kyber.Point
@@ -120,7 +120,7 @@ type SignerX509EC struct {
 }
 
 // SignerProxy holds the information necessary to verify claims
-// coming from external authentication systems via Authentication Proxies.
+// coming from external authentication systems via Policy Proxies.
 type SignerProxy struct {
 	Data         string
 	Public       kyber.Point

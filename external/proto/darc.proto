@@ -59,7 +59,7 @@ message IdentityX509EC {
 }
 
 // IdentityProxy holds the info necessary to verify a claim
-// from an external authentication system via an Authentication Proxy.
+// from an external authentication system via an Policy Proxy.
 message IdentityProxy {
   required string data = 1;
   required bytes public = 2;
@@ -101,7 +101,7 @@ message SignerX509EC {
 }
 
 // SignerProxy holds the information necessary to verify claims
-// coming from external authentication systems via Authentication Proxies.
+// coming from external authentication systems via Policy Proxies.
 message SignerProxy {
   required string data = 1;
   required bytes public = 2;

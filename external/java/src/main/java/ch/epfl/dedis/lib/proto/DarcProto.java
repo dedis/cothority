@@ -4927,7 +4927,7 @@ public final class DarcProto {
   /**
    * <pre>
    * IdentityProxy holds the info necessary to verify a claim
-   * from an external authentication system via an Authentication Proxy.
+   * from an external authentication system via an Policy Proxy.
    * </pre>
    *
    * Protobuf type {@code darc.IdentityProxy}
@@ -5257,7 +5257,7 @@ public final class DarcProto {
     /**
      * <pre>
      * IdentityProxy holds the info necessary to verify a claim
-     * from an external authentication system via an Authentication Proxy.
+     * from an external authentication system via an Policy Proxy.
      * </pre>
      *
      * Protobuf type {@code darc.IdentityProxy}
@@ -9206,7 +9206,7 @@ public final class DarcProto {
   /**
    * <pre>
    * SignerProxy holds the information necessary to verify claims
-   * coming from external authentication systems via Authentication Proxies.
+   * coming from external authentication systems via Policy Proxies.
    * </pre>
    *
    * Protobuf type {@code darc.SignerProxy}
@@ -9536,7 +9536,7 @@ public final class DarcProto {
     /**
      * <pre>
      * SignerProxy holds the information necessary to verify claims
-     * coming from external authentication systems via Authentication Proxies.
+     * coming from external authentication systems via Policy Proxies.
      * </pre>
      *
      * Protobuf type {@code darc.SignerProxy}

@@ -643,7 +643,7 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 	n := len(r.List)
 	T := threshold(n)
 
-	// The callback from darc.Sign where we need to go contact the Authentication Proxies.
+	// The callback from darc.Sign where we need to go contact the Policy Proxies.
 	cb := func(msg []byte) ([]byte, error) {
 		tok, err := ts.Token()
 		if err != nil {

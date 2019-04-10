@@ -112,7 +112,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	}
 
 	if o.Verify != nil {
-		if !o.Verify(&r.Reencrypt) {
+		if !o.Verify(&r.MessageReencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
 			return o.SendToParent(&ReencryptReply{})
 		}
@@ -138,7 +138,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 // reencryptReply is the root-node waiting for all replies and generating
 // the reencryption key.
 func (o *OCS) reencryptReply(rr structReencryptReply) error {
-	if rr.ReencryptReply.Ui == nil {
+	if rr.MessageReencryptReply.Ui == nil {
 		log.Lvl2("Node", rr.ServerIdentity, "refused to reply")
 		o.Failures++
 		if o.Failures > len(o.Roster().List)-o.Threshold {
@@ -147,7 +147,7 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 		}
 		return nil
 	}
-	o.replies = append(o.replies, rr.ReencryptReply)
+	o.replies = append(o.replies, rr.MessageReencryptReply)
 
 	// minus one to exclude the root
 	if len(o.replies) >= int(o.Threshold-1) {

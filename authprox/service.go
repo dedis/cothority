@@ -21,7 +21,7 @@ import (
 	bbolt "go.etcd.io/bbolt"
 )
 
-// ServiceName is the name of the Authentication Proxy service.
+// ServiceName is the name of the Policy Proxy service.
 const ServiceName = "AuthProx"
 
 var authProxID onet.ServiceID

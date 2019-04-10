@@ -15,17 +15,17 @@ import (
 const NameOCS = "OCS"
 
 func init() {
-	network.RegisterMessages(&Reencrypt{}, &ReencryptReply{})
+	network.RegisterMessages(&MessageReencrypt{}, &MessageReencryptReply{})
 }
 
 // VerifyRequest is a callback-function that can be set by a service.
 // Whenever a reencryption request is received, this function will be
 // called and its return-value used to determine whether or not to
 // allow reencryption.
-type VerifyRequest func(rc *Reencrypt) bool
+type VerifyRequest func(rc *MessageReencrypt) bool
 
 // Reencrypt asks for a re-encryption share from a node
-type Reencrypt struct {
+type MessageReencrypt struct {
 	// U is the point from the write-request
 	U kyber.Point
 	// Xc is the public key of the reader
@@ -37,11 +37,11 @@ type Reencrypt struct {
 
 type structReencrypt struct {
 	*onet.TreeNode
-	Reencrypt
+	MessageReencrypt
 }
 
-// ReencryptReply returns the share to re-encrypt from one node
-type ReencryptReply struct {
+// MessageReencryptReply returns the share to re-encrypt from one node
+type MessageReencryptReply struct {
 	Ui *share.PubShare
 	Ei kyber.Scalar
 	Fi kyber.Scalar
@@ -49,5 +49,5 @@ type ReencryptReply struct {
 
 type structReencryptReply struct {
 	*onet.TreeNode
-	ReencryptReply
+	MessageReencryptReply
 }

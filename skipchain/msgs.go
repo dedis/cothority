@@ -293,8 +293,8 @@ type EmptyReply struct{}
 
 // SettingAuthentication sets the authentication bit that enables restriction
 // of the skipchains that are accepted. It needs to be signed by one of the
-// clients. The signature is on []byte{0} if Authentication is false and on
-// []byte{1} if the Authentication is true.
+// clients. The signature is on []byte{0} if Policy is false and on
+// []byte{1} if the Policy is true.
 // TODO: perhaps we need to protect this against replay-attacks by adding a
 // monotonically increasing nonce that is also stored on the conode.
 type SettingAuthentication struct {

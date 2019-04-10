@@ -28,7 +28,7 @@ var cmds = cli.Commands{
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "roster, r",
-				Usage: "the roster of the cothority that hosts the distributed Authentication Proxy",
+				Usage: "the roster of the cothority that hosts the distributed Policy Proxy",
 			},
 			cli.StringFlag{
 				Name:  "type",
@@ -48,7 +48,7 @@ var cmds = cli.Commands{
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "roster, r",
-				Usage: "the roster of the cothority that hosts the distributed Authentication Proxy",
+				Usage: "the roster of the cothority that hosts the distributed Policy Proxy",
 			},
 		},
 		Action: show,

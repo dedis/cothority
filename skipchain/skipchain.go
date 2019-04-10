@@ -650,7 +650,7 @@ func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, error
 }
 
 // Unlink removes a public key from the list of linked nodes.
-// Authentication to unlink is done by a signature on the
+// Policy to unlink is done by a signature on the
 // following message:
 // "unlink:" + byte representation of the public key to be
 // removed

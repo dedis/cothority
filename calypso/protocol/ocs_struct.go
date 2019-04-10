@@ -40,7 +40,7 @@ type structReencrypt struct {
 	Reencrypt
 }
 
-// ReencryptReply returns the share to re-encrypt from one node
+// MessageReencryptReply returns the share to re-encrypt from one node
 type ReencryptReply struct {
 	Ui *share.PubShare
 	Ei kyber.Scalar

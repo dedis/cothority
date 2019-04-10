@@ -1799,7 +1799,7 @@ public final class AuthProxProto {
   /**
    * <pre>
    * SignatureRequest is the request sent to this service to request that
-   * the Authentication Proxy check the authentication information and
+   * the Policy Proxy check the authentication information and
    * generate a signature connecting some information identifying the
    * holder of the AuthInfo to the message.
    * </pre>
@@ -2346,7 +2346,7 @@ public final class AuthProxProto {
     /**
      * <pre>
      * SignatureRequest is the request sent to this service to request that
-     * the Authentication Proxy check the authentication information and
+     * the Policy Proxy check the authentication information and
      * generate a signature connecting some information identifying the
      * holder of the AuthInfo to the message.
      * </pre>
