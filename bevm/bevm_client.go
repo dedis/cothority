@@ -178,7 +178,7 @@ func NewClient(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.
 }
 
 // Deploy deploys a new Ethereum contract on the EVM
-func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, value uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) error {
+func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) error {
 	log.Lvlf2(">>> Deploy EVM contract '%s'", contract.name)
 	defer log.Lvlf2("<<< Deploy EVM contract '%s'", contract.name)
 
@@ -188,7 +188,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, value uint64, a
 	}
 
 	callData := append(contract.Bytecode, packedArgs...)
-	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(value)), gasLimit, gasPrice, callData)
+	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.SignAndMarshalTx(tx)
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, value uint64, a
 }
 
 // Transaction performs a new transaction (contract method call with state change) on the EVM
-func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, value uint64, account *EvmAccount, contract *EvmContract, method string, args ...interface{}) error {
+func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, amount uint64, account *EvmAccount, contract *EvmContract, method string, args ...interface{}) error {
 	log.Lvlf2(">>> EVM method '%s()' on %s", method, contract)
 	defer log.Lvlf2("<<< EVM method '%s()' on %s", method, contract)
 
@@ -217,7 +217,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, value uint
 		return err
 	}
 
-	tx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(value)), gasLimit, gasPrice, callData)
+	tx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.SignAndMarshalTx(tx)
 	if err != nil {
 		return err

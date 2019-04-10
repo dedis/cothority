@@ -1,103 +1,72 @@
-# Solidity smart contracts on Byzcoin
+# Ethereum Smart Contracts on ByzCoin
 
+The `bevm` ByzCoin contract allows to load and execute Ethereum contracts compiled to bytecode.
 
+## The ByzCoin Virtual Machine contract
 
-## The Byzcoin Virtual Machine contract
+We call BEVM the standard [EVM](https://en.wikipedia.org/wiki/Ethereum#Virtual_Machine) running within a ByzCoin contract.
 
-We call BVM the standard [EVM](https://en.wikipedia.org/wiki/Ethereum#Virtual_Machine)  with modified parameters running inside the bvmContract. 
+This contract is called the BEvmContract, and it allows the execution of arbitrary Solidity code on the ByzCoin ledger.
 
-The bvmContract is a Byzcoin contract that allows execution of arbitrary solidity code on the Byzcoin ledger. 
- 
- The contract supports the following instructions :  
+The contract implements the following operations:
 
-- `Spawn` Instantiate a new ledger with a bvm
-- `Invoke:display` display the balance of a given Ethereum address 
-- `Invoke:credit` credits an Ethereum address with 5 eth by default
-- `Invoke:transaction` sends a transaction to the ledger containing an Ethereum transaction that is then applied to the bvm 
+- `spawn:bevm` Instantiate a new BEvmContract.
+- `invoke:bevm.credit` Credit an Ethereum address with the given amount.
+- `invoke:bevm.transaction` Execute the given transaction on the EVM, saving its state within ByzCoin. The transaction can be an Ethereum contract deployment or a method call.
 
+Interaction with the BEVM is made through standard ByzCoin transactions. The Ethereum transactions are wrapped inside ByzCoin transactions and sent to the BEvmContract.
 
+To execute a transaction, such as deploying a contract or interacting with an existing contract, the transaction must be signed with a private key associated to an address containing enough ether to pay for the execution of the transaction; in case the address balance in not sufficient, an Out Of Gas error will result.
 
-Interacting with the bvm is made through standard Byzcoin transactions. The Ethereum transactions are wrapped inside a Byzcoin transaction, then sent to the BVM running in the bvmContract.
+"Gas Limit" and "Gas Price" parameters must also be provided when executing a transaction.
 
- 
-## Display and Credit
+## Client API
 
-Display and credit instructions will take as only parameter the Ethereum address in byte format. Display will show the remaining credit of that address, and credit will credit it 5 eth. This was chosen arbitrarily and should be enough for any practical purpose. 
+The following types are defined in `bevm_client.go`:
 
-## Transaction
+- `EvmContract` represents an Ethereum contract, and is initialized by `NewEvmContract()` providing the files containing the bytecode and the ABI.
+- `EvmAccount` represents an Ethereum user account, and is initialized by `NewEvmAccount()` provoding the address and private key.
+- `Client` represents the main object to interact with the BEVM.
 
-To execute a transaction such as deploying a contract or interacting with an existing contract you will need to sign the transaction with a private key containing enough ether to pay for the execution of the transaction. You will have to credit an address before the next steps to avoid an out of gas error.
+Note that the BEvmContract does not contain a Solidity compiler, and only handles pre-compiled Ethereum contracts.
 
-#### Gas parameters
+Before any BEVM operation can be run, a BEVM instance must be created. This is done using `NewBEvm()` and providing a ByzCoin client, a signer and a Darc. If all goes well, `NewBEvm()` returns the instance ID of the newly created BEvmContract instance.
 
-You can set custom gasLimit and gasPrice in each transaction or use the `transactionGasParameters` function.
+With this, a new client can be initialized using `NewClient()` and providing again a ByzCoin client, a signer and the BEvmContract instance ID received before.
 
-#### Abi & bytecode
+`Client` supports the following methods:
 
-You will need both the bytecode (to deploy the contract) and the abi (to interact with it) of your smart contract. Use the `getSC` function or hardcode them directly. 
+- `Deploy()` deploys a new Ethereum contract. Besides the contract, the following arguments must be provided:
+    - a gas limit
+    - a gas price
+    - an amount, credited to the contract address
+    - an account executing the contract deployment; this account's address must have enough balance to execute the transaction
+    - the contract constructor arguments
+- `Transaction()` executes an Ethereum contract method with side effects. Besides the contract, the following arguments must be provided:
+    - a gas limit
+    - a gas price
+    - an amount, credited to the contract address
+    - an account executing the contract deployment; this account's address must have enough balance to execute the transaction
+    - the method name
+    - the method arguments
+- `Call()` executes an Ethereum contract view method (without side effects). Besides the contract, the following arguments must be provided:
+    - an account executing the contract deployment; executing a view method does not consume any Ether
+    - the method name
+    - the method arguments
+    - a variable to receive the method return value
+- `CreditAccount()` credits the provided Ethereum address with the provided amount.
+- `GetAccountBalance()` returns the balance of the provided Ethereum address.
 
-### Deploy a new contract
+## Ethereum state database storage
 
-Create a contract creation Ethereum transaction using the `NewContractCreation` function carrying your contract bytecode. Then use the `signAndMarshalTx` function before adding the signed transaction to the arguments of a Byzcoin transaction and sending that transaction to the Byzcoin ledger.  
+The EVM state is maintained in several layered structures, the lower-level of which implementing a simple interface (Put(), Get(), Delete(), etc.). The EVM interacts with this interface using keys and values which are abstract to the user, and represented as sequences of bytes.
 
-### Interact with an existing contract
+The BEvmContract implements this interface in order to store the EVM state database within ByzCoin. Two implementations are provided:
 
-Create an Ethereum transaction using the `NewTransaction` function of the types packages, containing : 
+- `MemDatabase` keeps all the data in a map stored in memory; it is mostly used for testing purposes.
+- `ByzDatabase` stores the data within ByzCoin, splitting each key/value in a separate instance of a very basic ByzCoin "contract", called a BEvmValue. More precisely, the key is embodied by the instance ID of a BEvmValue, and the value by the BEvmValue's stored value.
 
-• The contract address, derived with the `CreateAddress` function of the crypto package if you don't have the address
+The `ByzDatabase` can be accessed either in a read-only mode (using `ClientByzDatabase`) when state modification is not needed, such as for the retrieval of an balance or the execution of a view method, or in a read/write mode (using `ServerByzDatabase`) for executing transactions with side effects.
 
-• Data containing the method selector (with the abi) and the arguments of said method using the `abiMethodPack` function  
-
-then `signAndMarshalTx` and send to Byzcoin as above.
-
-## Memory abstraction layers 
-
-![Memory Model](https://github.com/dedis/student_18_hugo_verex/public/images/bvmMemory.svg)
-
-## Ethereum State
-
-Defined as 
-```golang
-type ES struct {
-	DbBuf []byte
-	RootHash common.Hash
-}
-```
-
-defined by the general state and the last root commit hash.
-To save the root hash : 
-
-```golang
-es.RootHash := sdb.Commit
-```
-
-where sdb is the state.stateDb. To save the database 
-
-```golang
-es.DbBuf, err := memdb.Dump()
-```
-
-after having commited the memory database
-```golang
-err = db.Database().TrieDB().Commit(es.RootHash, true)
-		if err != nil {
-			return nil, nil, err
-		}
-```
-
-To get the different databases, simply use the `getDB` function in `params.go`
-
-
-## Files
-
-The following files are in this directory:
-
-- `bvmContract.go` defines the Byzcoin contract that interacts with the Ethereum Virtual Machine
-- `database.go` redefines the Ethereum database functions to be compatible with Byzcoin
-- `params.go` defines the parameter of the BVM
-- `keys.go` helper methods for Ethereum key management 
-- `service.go` only serves to register the contract with ByzCoin. If you
-want to give more power to your service, be sure to look at the
-[../service](service example).
-- `proto.go` has the definitions that will be translated into protobuf
-
+`ClientByzDatabase` retrieves ByzCoin proofs of the BEvmValue instances to obtain the values. It is used by `Client.Call()` and `Client.GetAccountBalance()`.
+`ServerByzDatabase` keeps track of the modifications, and returns a set of StateChanges for ByzCoin to apply. It is used by `Client.Deploy()`, `Client.Transaction()` and `Client.CreditAccount()`.
