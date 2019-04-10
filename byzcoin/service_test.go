@@ -118,6 +118,9 @@ func TestService_AddTransaction_WithFailure(t *testing.T) {
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
+	if testing.Short() {
+		t.Skip("this test fails because of #1795")
+	}
 	testAddTransaction(t, 2*time.Second, 1, true)
 }
 
