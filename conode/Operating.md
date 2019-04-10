@@ -42,7 +42,25 @@ Conode should only be run as a non-root user.
 
 The current recommended way to add HTTPS to the websocket port is to use a web
 server like Apache or nginx in reverse proxy mode to forward connections from
-port 443 the websocket port, which is the conode's port plus 1.
+port 443 to the websocket port, which is the conode's port plus 1.
+
+An example config, for Apache using a Let's Encrypt certificate:
+
+```
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+        ServerName excellent.example.com
+		
+		# If conode is running on port 7000, non-TLS websocket is on 7001,
+		# so the reverse proxy points there.
+        ProxyPass / ws://localhost:7001/
+		
+		SSLCertificateFile /etc/letsencrypt/live/excellent.example.com/fullchain.pem
+		SSLCertificateKeyFile /etc/letsencrypt/live/excellent.example.com/privkey.pem
+		Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+</IfModule>
+```
 
 In this case, the Url in the TOML file would be `https://excellent.example.com`
 (no port number because 443 is the default for HTTPS).

@@ -203,7 +203,7 @@ export class ServerIdentity extends Message<ServerIdentity> {
                 break;
             }
             default : {
-                throw new Error("The url field should use either 'http:' or 'https:', but We found "
+                throw new Error("The url field should use either 'http:' or 'https:', but we found "
                                 + urlParser.protocol);
             }
         }

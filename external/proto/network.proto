@@ -14,8 +14,8 @@ message ServerIdentity {
     required bytes id = 3;
     required string address = 4;
     required string description = 5;
-	// Tag number 6 is used by go.dedis.ch/protobuf for the private
-	// key field, which is not exported.
+    // Tag number 6 is used by go.dedis.ch/protobuf for the private
+    // key field, which is not exported.
     optional string url = 7;
 }
 
