@@ -1,6 +1,6 @@
 [[servers]]
   Address = "tls://conode.dedis.ch:7000"
-  Url = "https://conode.dedis.ch:7001"
+  Url = "https://conode.dedis.ch"
   Suite = "Ed25519"
   Public = "ec5c65a3c922d1df32075640e3de606197be24af76059a2ef145501122884bd3"
   Description = "EPFL Cothority-server"
