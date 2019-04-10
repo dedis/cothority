@@ -35,8 +35,8 @@ type BlsSignature []byte
 
 // GetMask creates and returns the mask associated with the signature. If
 // no mask has been appended, mask with every bit enabled is assumed
-func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*cosi.Mask, error) {
-	mask, err := cosi.NewMask(suite.(cosi.Suite), publics, nil)
+func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*bls.Mask, error) {
+	mask, err := bls.NewMask(suite, publics, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,10 @@ func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics [
 		return err
 	}
 
-	err = bls.Verify(ps, mask.AggregatePublic, msg, signature)
+	pubs := mask.Participants()
+	aggPub := bls.AggregatePublicKeys(ps, pubs...)
+
+	err = bls.Verify(ps, aggPub, msg, signature)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}
