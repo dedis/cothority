@@ -39,8 +39,9 @@ type Write struct {
 	// f is the proof - written in uppercase here so it is an exported
 	// field, but in the OCS-paper it's lowercase.
 	F kyber.Scalar
-	// C is the ElGamal parts for the symmetric key material (might also
-	// contain an IV)
+	// C is the ElGamal part for the symmetric key material, at maximum length
+	// of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+	// in ExtraData, as it is not necessary to be encrypted.
 	C kyber.Point
 	// ExtraData is clear text and application-specific
 	ExtraData []byte `protobuf:"opt"`

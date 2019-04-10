@@ -31,7 +31,7 @@ const testServiceName = "ServiceOCS"
 
 func init() {
 	var err error
-	testServiceID, err = onet.RegisterNewService(testServiceName, newService)
+	testServiceID, err = onet.RegisterNewService(testServiceName, newTestService)
 	log.ErrFatal(err)
 }
 
@@ -89,8 +89,9 @@ func TestOnchain(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	U, Cs := EncodeKey(suite, X, k[:])
-	// U and Cs is shared with everybody
+	U, C, err := EncodeKey(suite, X, k[:])
+	require.NoError(t, err)
+	// U and C is shared with everybody
 
 	// Reader's keypair
 	xc := key.NewKeyPair(cothority.Suite)
@@ -113,7 +114,7 @@ func TestOnchain(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Decrypt XhatEnc
-	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
+	keyHat, err := DecodeKey(suite, X, C, XhatEnc, xc.Private)
 	log.ErrFatal(err)
 
 	// Extract the message - keyHat is the recovered key
@@ -271,10 +272,11 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	require.Nil(t, err)
 	X := dks.Public()
 
-	// 2 - writer - Encrypt a symmetric key and publish U, Cs
+	// 2 - writer - Encrypt a symmetric key and publish U, C
 	k := make([]byte, keylen)
 	random.Bytes(k, random.New())
-	U, Cs := EncodeKey(tSuite, X, k)
+	U, C, err := EncodeKey(tSuite, X, k)
+	require.NoError(t, err)
 
 	// 3 - reader - Makes a request to U by giving his public key Xc
 	// xc is the client's private/publick key pair
@@ -321,7 +323,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	require.Nil(t, err, "Reencryption failed")
 
 	// 6 - reader - gets the resulting symmetric key, encrypted under Xc
-	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
+	keyHat, err := DecodeKey(suite, X, C, XhatEnc, xc.Private)
 	require.Nil(t, err)
 
 	require.Equal(t, k, keyHat)
@@ -357,7 +359,7 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 		}
 		ocs := pi.(*OCS)
 		ocs.Shared = s.Shared
-		ocs.Verify = func(rc *Reencrypt) bool {
+		ocs.Verify = func(rc *MessageReencrypt) bool {
 			return rc.VerificationData != nil
 		}
 		return ocs, nil
@@ -379,23 +381,21 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 //
 // Output:
 //   - U - the schnorr commit
-//   - Cs - encrypted key-slices
-func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
+//   - C - encrypted key
+func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, C kyber.Point, err error) {
+	if len(key) > suite.Point().EmbedLen() {
+		return nil, nil, errors.New("got more data than can fit into one point")
+	}
 	r := suite.Scalar().Pick(suite.RandomStream())
-	C := suite.Point().Mul(r, X)
+	C = suite.Point().Mul(r, X)
 	log.Lvl3("C:", C.String())
 	U = suite.Point().Mul(r, nil)
 	log.Lvl3("U is:", U.String())
 
-	for len(key) > 0 {
-		var kp kyber.Point
-		kp = suite.Point().Embed(key, suite.RandomStream())
-		log.Lvl3("Keypoint:", kp.String())
-		log.Lvl3("X:", X.String())
-		Cs = append(Cs, suite.Point().Add(C, kp))
-		log.Lvl3("Cs:", C.String())
-		key = key[min(len(key), kp.EmbedLen()):]
-	}
+	kp := suite.Point().Embed(key, suite.RandomStream())
+	log.Lvl3("Keypoint:", kp.String())
+	log.Lvl3("X:", X.String())
+	C.Add(C, kp)
 	return
 }
 
@@ -406,14 +406,14 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 // Input:
 //   - suite - the cryptographic suite to use
 //   - X - the aggregate public key of the DKG
-//   - Cs - the encrypted key-slices
+//   - C - the encrypted key
 //   - XhatEnc - the re-encrypted schnorr-commit
 //   - xc - the private key of the reader
 //
 // Output:
 //   - key - the re-assembled key
 //   - err - an eventual error when trying to recover the data from the points
-func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber.Point,
+func DecodeKey(suite kyber.Group, X kyber.Point, C kyber.Point, XhatEnc kyber.Point,
 	xc kyber.Scalar) (key []byte, err error) {
 	log.Lvl3("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
@@ -429,23 +429,20 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 	XhatInv := suite.Point().Neg(Xhat)
 	log.Lvl3("XhatInv:", XhatInv)
 
-	// Decrypt Cs to keyPointHat
-	for _, C := range Cs {
-		log.Lvl3("C:", C)
-		keyPointHat := suite.Point().Add(C, XhatInv)
-		log.Lvl3("keyPointHat:", keyPointHat)
-		keyPart, err := keyPointHat.Data()
-		log.Lvl3("keyPart:", keyPart)
-		if err != nil {
-			return nil, err
-		}
-		key = append(key, keyPart...)
+	// Decrypt C to keyPointHat
+	log.Lvl3("C:", C)
+	keyPointHat := suite.Point().Add(C, XhatInv)
+	log.Lvl3("keyPointHat:", keyPointHat)
+	key, err = keyPointHat.Data()
+	if err != nil {
+		return nil, erret(err)
 	}
+	log.Lvl3("key:", key)
 	return
 }
 
 // starts a new service. No function needed.
-func newService(c *onet.Context) (onet.Service, error) {
+func newTestService(c *onet.Context) (onet.Service, error) {
 	s := &testService{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}

@@ -62,3 +62,5 @@ func getExtension(certificate *x509.Certificate, id asn1.ObjectIdentifier) *pkix
 
 	return nil
 }
+
+// TODO: add CreateX509(rootCA, time, writeID, ephemeralKey)

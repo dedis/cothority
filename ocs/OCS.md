@@ -32,3 +32,20 @@ shared key from the DKG can be re-encrypted under another public key
 without the data being in the clear at any given moment. This is used
 in the onchain-secrets skipchain when a reader wants to recover the
 symmetric key.
+
+# Variables used
+
+When going through the code, the variables follow the CALYPSO paper
+in the Appendix B under **Secret reconstruction at the trusted server**
+as far as possible.
+
+Here is a short recap of the different variable-names used in the
+re-encryption:
+
+- X: the aggregate public key of the OCS (LTS), also used as the
+ID of the OCS
+- C: the ElGamal part of the data, with maximal key-length of 240 bits for
+Ed25519
+- U: the encrypted random value for the ElGamal encryption
+- Xc: the public key of the reader under which U will be re-encrypted
+- XHatEnc: the re-encrypted random value for the ElGamal encryption

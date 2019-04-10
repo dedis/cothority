@@ -92,8 +92,8 @@ type ReshareReply struct {
 // Policy holds all possible authentication structures. When using it to call
 // Authorise, only one of the fields must be non-nil.
 type Policy struct {
-	ByzCoin      *PolicyByzCoin
-	AuthX509Cert *PolicyX509Cert
+	ByzCoin  *PolicyByzCoin
+	X509Cert *PolicyX509Cert
 }
 
 // PolicyByzCoin holds the information necessary to authenticate a byzcoin request.
@@ -105,7 +105,7 @@ type PolicyByzCoin struct {
 	TTL       time.Time
 }
 
-// PolicyX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+// X509Cert holds the information necessary to authenticate a HyperLedger/Fabric
 // request. In its simplest form, it is simply the CA that will have to sign the
 // certificates of the requesters.
 // The Threshold indicates how many clients must have signed the request before it
@@ -121,8 +121,9 @@ type PolicyX509Cert struct {
 // as the proof itself that the request is valid. For each of the authentication
 // schemes, this proof will be different.
 type AuthReencrypt struct {
-	ByzCoin  *AuthReencryptByzCoin
-	X509Cert *AuthReencryptX509Cert
+	Ephemeral kyber.Point
+	ByzCoin   *AuthReencryptByzCoin
+	X509Cert  *AuthReencryptX509Cert
 }
 
 // AuthReencryptByzCoin holds the proof of the write instance, holding the secret itself.
@@ -144,7 +145,7 @@ type AuthReencryptByzCoin struct {
 // AuthReencryptX509Cert holds the proof that at least a threshold number of clients
 // accepted the reencryption.
 // For each client, there must exist a certificate that can be verified by the
-// CA certificate from PolicyX509Cert. Additionally, each client must sign the
+// CA certificate from X509Cert. Additionally, each client must sign the
 // following message:
 //   sha256( Secret | Ephemeral | Time )
 type AuthReencryptX509Cert struct {

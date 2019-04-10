@@ -67,6 +67,10 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 // Start asks all children to reply with a shared reencryption
 func (o *OCS) Start() error {
 	log.Lvl3("Starting Protocol")
+	o.timeout = time.AfterFunc(1*time.Minute, func() {
+		log.Lvl1("OCS protocol timeout")
+		o.finish(false)
+	})
 	if o.Shared == nil {
 		o.finish(false)
 		return errors.New("please initialize Shared first")
@@ -74,6 +78,10 @@ func (o *OCS) Start() error {
 	if o.U == nil {
 		o.finish(false)
 		return errors.New("please initialize U first")
+	}
+	if o.Xc == nil {
+		o.finish(false)
+		return errors.New("please initialize Xc first")
 	}
 	rc := &MessageReencrypt{
 		U:  o.U,
@@ -88,10 +96,6 @@ func (o *OCS) Start() error {
 			return errors.New("refused to reencrypt")
 		}
 	}
-	o.timeout = time.AfterFunc(1*time.Minute, func() {
-		log.Lvl1("OCS protocol timeout")
-		o.finish(false)
-	})
 	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
@@ -114,7 +118,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	if o.Verify != nil {
 		if !o.Verify(&r.MessageReencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
-			return o.SendToParent(&ReencryptReply{})
+			return o.SendToParent(&MessageReencryptReply{})
 		}
 	}
 
