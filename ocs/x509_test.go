@@ -51,7 +51,7 @@ func CreateCaCert() (caPrivKey *ecdsa.PrivateKey, cert *x509.Certificate, err er
 }
 
 func CreateReencryptCert(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
-	ocsID OCSID, elGamalCommit kyber.Point, ephemeralPublicKey kyber.Point) (*x509.Certificate, error) {
+	writeID []byte, ephemeralPublicKey kyber.Point) (*x509.Certificate, error) {
 
 	notBefore := time.Now()
 	notAfter := notBefore.Add(14 * 24 * time.Hour)
@@ -62,14 +62,10 @@ func CreateReencryptCert(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
 		return nil, erret(err)
 	}
 
-	ocsBuf, err := ocsID.MarshalBinary()
-	if err != nil {
-		return nil, erret(err)
-	}
 	writeIdExt := pkix.Extension{
 		Id:       WriteIdOID,
 		Critical: true,
-		Value:    ocsBuf,
+		Value:    writeID,
 	}
 
 	ephBuf, err := ephemeralPublicKey.MarshalBinary()
@@ -80,16 +76,6 @@ func CreateReencryptCert(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
 		Id:       EphemeralKeyOID,
 		Critical: true,
 		Value:    ephBuf,
-	}
-
-	elGaBuf, err := elGamalCommit.MarshalBinary()
-	if err != nil {
-		return nil, erret(err)
-	}
-	elGamalCommitExt := pkix.Extension{
-		Id:       ElGamalCommitOID,
-		Critical: true,
-		Value:    elGaBuf,
 	}
 
 	template := x509.Certificate{
@@ -105,7 +91,7 @@ func CreateReencryptCert(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
 		IsCA:                  false,
 	}
 
-	template.ExtraExtensions = append(template.ExtraExtensions, writeIdExt, ephemeralKeyExt, elGamalCommitExt)
+	template.ExtraExtensions = append(template.ExtraExtensions, writeIdExt, ephemeralKeyExt)
 
 	throwaway, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	if err != nil {

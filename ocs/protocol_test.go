@@ -448,10 +448,3 @@ func newTestService(c *onet.Context) (onet.Service, error) {
 	}
 	return s, nil
 }
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}

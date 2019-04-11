@@ -91,13 +91,16 @@ func TestService_Reencrypt(t *testing.T) {
 	require.NoError(t, err)
 
 	kp := key.NewKeyPair(cothority.Suite)
-	reencryptCert, err := CreateReencryptCert(caCertAttack, caPrivKeyAttack, cor.X, U, kp.Public)
+	wid, err := NewWriteID(cor.X, U)
+	require.NoError(t, err)
+	reencryptCert, err := CreateReencryptCert(caCertAttack, caPrivKeyAttack, wid, kp.Public)
 	require.NoError(t, err)
 	req := &Reencrypt{
 		X: cor.X,
 		Auth: AuthReencrypt{
 			Ephemeral: kp.Public,
 			X509Cert: &AuthReencryptX509Cert{
+				U:            U,
 				Certificates: [][]byte{reencryptCert.Raw},
 			},
 		},
@@ -105,7 +108,7 @@ func TestService_Reencrypt(t *testing.T) {
 	rr, err := s1.Reencrypt(req)
 	require.Error(t, err)
 
-	reencryptCert, err = CreateReencryptCert(caCert, caPrivKey, cor.X, U, kp.Public)
+	reencryptCert, err = CreateReencryptCert(caCert, caPrivKey, wid, kp.Public)
 	require.NoError(t, err)
 	req.Auth.X509Cert.Certificates = [][]byte{reencryptCert.Raw}
 	rr, err = s1.Reencrypt(req)

@@ -10,9 +10,8 @@ var (
 	// selection of OID numbers is not random See documents
 	// https://tools.ietf.org/html/rfc5280#page-49
 	// https://tools.ietf.org/html/rfc7229
-	WriteIdOID       = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 13, 1}
-	EphemeralKeyOID  = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 13, 2}
-	ElGamalCommitOID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 13, 3}
+	WriteIdOID      = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 13, 1}
+	EphemeralKeyOID = asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 13, 2}
 )
 
 func Verify(rootCert *x509.Certificate, toVerify *x509.Certificate) (err error) {
@@ -28,7 +27,6 @@ func Verify(rootCert *x509.Certificate, toVerify *x509.Certificate) (err error) 
 		Roots: roots,
 	}
 
-	unmarkUnhandledCriticalExtension(cert, ElGamalCommitOID)
 	unmarkUnhandledCriticalExtension(cert, WriteIdOID)
 	unmarkUnhandledCriticalExtension(cert, EphemeralKeyOID)
 

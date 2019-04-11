@@ -1,6 +1,7 @@
 package ocs
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/asn1"
@@ -8,8 +9,6 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
-
-	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -69,9 +68,8 @@ func (px PolicyByzCoin) verify(r onet.Roster) error {
 	return erret(errors.New("net yet implemented"))
 }
 
-func (ar AuthReencrypt) verify(p Policy) error {
+func (ar AuthReencrypt) verify(p Policy, X, U kyber.Point) error {
 	if ar.X509Cert == nil || p.X509Cert == nil {
-		log.Print(ar, p)
 		return errors.New("currently only checking X509 policies")
 	}
 	root, err := x509.ParseCertificate(p.X509Cert.CA[0])
@@ -82,6 +80,15 @@ func (ar AuthReencrypt) verify(p Policy) error {
 	if err != nil {
 		return erret(err)
 	}
+	wid, err := getExtensionFromCert(auth, WriteIdOID)
+	if err != nil {
+		return erret(err)
+	}
+	err = WriteID(wid).Verify(X, U)
+	if err != nil {
+		return erret(err)
+	}
+
 	return erret(Verify(root, auth))
 }
 
@@ -97,7 +104,7 @@ func (ar AuthReencrypt) Xc() (kyber.Point, error) {
 
 func (ar AuthReencrypt) U() (kyber.Point, error) {
 	if ar.X509Cert != nil {
-		return getPointFromCert(ar.X509Cert.Certificates[0], ElGamalCommitOID)
+		return ar.X509Cert.U, nil
 	}
 	if ar.ByzCoin != nil {
 		return nil, errors.New("can't get secret from ByzCoin yet")
@@ -105,24 +112,58 @@ func (ar AuthReencrypt) U() (kyber.Point, error) {
 	return nil, errors.New("need to have authentication for X509 or ByzCoin")
 }
 
+type WriteID []byte
+
+func NewWriteID(X, U kyber.Point) (WriteID, error) {
+	wid := sha256.New()
+	_, err := X.MarshalTo(wid)
+	if err != nil {
+		return nil, erret(err)
+	}
+	_, err = U.MarshalTo(wid)
+	if err != nil {
+		return nil, erret(err)
+	}
+	return wid.Sum(nil), nil
+}
+
+func (wid WriteID) Verify(X, U kyber.Point) error {
+	other, err := NewWriteID(X, U)
+	if err != nil {
+		return erret(err)
+	}
+	if bytes.Compare(wid, other) != 0 {
+		return errors.New("not the same writeID")
+	}
+	return nil
+}
+
 func getPointFromCert(certBuf []byte, extID asn1.ObjectIdentifier) (kyber.Point, error) {
 	cert, err := x509.ParseCertificate(certBuf)
 	if err != nil {
 		return nil, erret(err)
 	}
-	var secretBuf []byte
+	secret := cothority.Suite.Point()
+	secretBuf, err := getExtensionFromCert(cert, extID)
+	if err != nil {
+		return nil, erret(err)
+	}
+	err = secret.UnmarshalBinary(secretBuf)
+	return secret, erret(err)
+}
+
+func getExtensionFromCert(cert *x509.Certificate, extID asn1.ObjectIdentifier) ([]byte, error) {
+	var buf []byte
 	for _, ext := range cert.Extensions {
 		if ext.Id.Equal(extID) {
-			secretBuf = ext.Value
+			buf = ext.Value
 			break
 		}
 	}
-	if secretBuf == nil {
+	if buf == nil {
 		return nil, errors.New("didn't find extension in certificate")
 	}
-	secret := cothority.Suite.Point()
-	err = secret.UnmarshalBinary(secretBuf)
-	return secret, erret(err)
+	return buf, nil
 }
 
 func erret(err error) error {
@@ -132,7 +173,7 @@ func erret(err error) error {
 	pc, _, line, _ := runtime.Caller(1)
 	errStr := err.Error()
 	if strings.HasPrefix(errStr, "erret") {
-		errStr += "\n\t"
+		errStr = "\n\t" + errStr
 	}
 	return fmt.Errorf("erret at %s: %d -> %s", runtime.FuncForPC(pc).Name(), line, errStr)
 }

@@ -168,9 +168,6 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	if !found {
 		return nil, errors.New("didn't find this OCS")
 	}
-	if err = dkr.Auth.verify(es.PolicyReencrypt); err != nil {
-		return
-	}
 
 	var threshold int
 	var nodes int
@@ -184,9 +181,13 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		if err != nil {
 			return erret(err)
 		}
+		log.Print("Created OCS", pi.Token().ID())
 		ocsProto = pi.(*OCS)
 		ocsProto.U, err = dkr.Auth.U()
 		if err != nil {
+			return erret(err)
+		}
+		if err = dkr.Auth.verify(es.PolicyReencrypt, dkr.X, ocsProto.U); err != nil {
 			return erret(err)
 		}
 		ocsProto.Xc, err = dkr.Auth.Xc()
@@ -212,10 +213,13 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		return nil
 	}()
 	if err != nil {
+		if ocsProto != nil {
+			ocsProto.Done()
+		}
 		return nil, err
 	}
 
-	log.LLvl3("Starting reencryption protocol")
+	log.LLvl3("Starting reencryption protocol", ocsProto.TreeNodeInstance.TokenID())
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: []byte(id)})
 	if err != nil {
 		return nil, erret(err)
@@ -236,7 +240,7 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	if err != nil {
 		return nil, erret(err)
 	}
-	log.Lvl3("Successfully reencrypted the key")
+	log.LLvl3("Successfully reencrypted the key")
 	return
 }
 

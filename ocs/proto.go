@@ -149,6 +149,7 @@ type AuthReencryptByzCoin struct {
 // following message:
 //   sha256( Secret | Ephemeral | Time )
 type AuthReencryptX509Cert struct {
+	U            kyber.Point
 	Certificates [][]byte
 }
 
