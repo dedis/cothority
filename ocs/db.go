@@ -24,10 +24,12 @@ type storage struct {
 }
 
 type storageElement struct {
-	Shared dkgprotocol.SharedSecret
-	Polys  pubPoly
-	Roster onet.Roster
-	DKS    dkg.DistKeyShare
+	PolicyReencrypt Policy
+	PolicyReshare   Policy
+	Shared          dkgprotocol.SharedSecret
+	Polys           pubPoly
+	Roster          onet.Roster
+	DKS             dkg.DistKeyShare
 }
 
 // saves all data.

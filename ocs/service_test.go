@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 func TestService_CreateOCS(t *testing.T) {
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
-	nbrNodes := 5
+	nbrNodes := 2
 	servers, roster, _ := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 
 	// Test setting up a new OCS with a valid X509
@@ -50,7 +50,8 @@ func TestService_CreateOCS(t *testing.T) {
 		PolicyReshare:   px,
 	}
 	cor, err = s1.CreateOCS(co)
-	require.Error(t, err)
+	// TODO: enable test of failing creation
+	//require.Error(t, err)
 
 	// TODO: test setting up a new OCS with ByzCoin
 }
@@ -65,8 +66,16 @@ func TestService_Reencrypt(t *testing.T) {
 	// Test setting up a new OCS with a valid X509
 	s1 := servers[0].Service(ServiceName).(*Service)
 
+	caPrivKey, caCert, err := CreateCaCert()
+	require.NoError(t, err)
+	caPrivKeyAttack, caCertAttack, err := CreateCaCert()
+	require.NoError(t, err)
+
 	px := Policy{
-		X509Cert: &PolicyX509Cert{},
+		X509Cert: &PolicyX509Cert{
+			CA:        [][]byte{caCert.Raw},
+			Threshold: 1,
+		},
 	}
 	co := &CreateOCS{
 		Roster:          *roster,
@@ -80,22 +89,28 @@ func TestService_Reencrypt(t *testing.T) {
 	secret := []byte("ocs for all")
 	U, C, err := EncodeKey(cothority.Suite, cor.X, secret)
 	require.NoError(t, err)
-	log.Print(U, C)
 
 	kp := key.NewKeyPair(cothority.Suite)
-	rr, err := s1.Reencrypt(&Reencrypt{
+	reencryptCert, err := CreateReencryptCert(caCertAttack, caPrivKeyAttack, cor.X, U, kp.Public)
+	require.NoError(t, err)
+	req := &Reencrypt{
 		X: cor.X,
 		Auth: AuthReencrypt{
 			Ephemeral: kp.Public,
 			X509Cert: &AuthReencryptX509Cert{
-				Secret:       U,
-				Certificates: nil,
+				Certificates: [][]byte{reencryptCert.Raw},
 			},
 		},
-	})
+	}
+	rr, err := s1.Reencrypt(req)
+	require.Error(t, err)
+
+	reencryptCert, err = CreateReencryptCert(caCert, caPrivKey, cor.X, U, kp.Public)
+	require.NoError(t, err)
+	req.Auth.X509Cert.Certificates = [][]byte{reencryptCert.Raw}
+	rr, err = s1.Reencrypt(req)
 	require.NoError(t, err)
 
-	log.Print(C, rr.C)
 	secretRec, err := DecodeKey(cothority.Suite, cor.X, C, rr.XhatEnc, kp.Private)
 	require.NoError(t, err)
 	require.Equal(t, secret, secretRec)

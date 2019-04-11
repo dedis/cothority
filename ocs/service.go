@@ -131,10 +131,12 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 		}
 		s.storage.Lock()
 		s.storage.Element[string(oid)] = &storageElement{
-			Shared: *shared,
-			Polys:  pubPoly{s.Suite().Point().Base(), dks.Commits},
-			Roster: req.Roster,
-			DKS:    *dks,
+			PolicyReencrypt: req.PolicyReencrypt,
+			PolicyReshare:   req.PolicyReshare,
+			Shared:          *shared,
+			Polys:           pubPoly{s.Suite().Point().Base(), dks.Commits},
+			Roster:          req.Roster,
+			DKS:             *dks,
 		}
 		s.storage.Unlock()
 		s.save()
@@ -155,37 +157,38 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	reply = &ReencryptReply{}
 	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
 
-	if err = dkr.Auth.verify(dkr.X); err != nil {
+	s.storage.Lock()
+	id, err := dkr.X.MarshalBinary()
+	if err != nil {
+		s.storage.Unlock()
+		return nil, erret(err)
+	}
+	es, found := s.storage.Element[string(id)]
+	s.storage.Unlock()
+	if !found {
+		return nil, errors.New("didn't find this OCS")
+	}
+	if err = dkr.Auth.verify(es.PolicyReencrypt); err != nil {
 		return
 	}
 
 	var threshold int
 	var nodes int
-	var id string
 	var ocsProto *OCS
 	err = func() error {
-		s.storage.Lock()
-		defer s.storage.Unlock()
-		idBuf, err := dkr.X.MarshalBinary()
-		if err != nil {
-			return erret(err)
-		}
-		id = string(idBuf)
-		se, found := s.storage.Element[id]
-		if !found {
-			return fmt.Errorf("don't know the OCSID '%v'", id)
-		}
-
 		// Start the ocs-protocol to re-encrypt the data under the public key of the reader.
-		nodes = len(se.Roster.List)
+		nodes = len(es.Roster.List)
 		threshold = nodes - (nodes-1)/3
-		tree := se.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
+		tree := es.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 		pi, err := s.CreateProtocol(NameOCS, tree)
 		if err != nil {
 			return erret(err)
 		}
 		ocsProto = pi.(*OCS)
-		ocsProto.U = dkr.Auth.X509Cert.Secret
+		ocsProto.U, err = dkr.Auth.U()
+		if err != nil {
+			return erret(err)
+		}
 		ocsProto.Xc, err = dkr.Auth.Xc()
 		if err != nil {
 			return erret(err)
@@ -198,10 +201,6 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 
 		// Make sure everything used from the s.Storage structure is copied, so
 		// there will be no races.
-		es, found := s.storage.Element[id]
-		if !found {
-			return errors.New("didn't find shared structure")
-		}
 		ocsProto.Shared = &es.Shared
 		pp := es.Polys
 		reply.X = es.Shared.X.Clone()
@@ -234,7 +233,6 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	if err != nil {
 		return nil, erret(err)
 	}
-	reply.C, err = dkr.Auth.C()
 	if err != nil {
 		return nil, erret(err)
 	}
@@ -352,17 +350,15 @@ func (s *Service) ReshareLTS(req *Reshare) (*ReshareReply, error) {
 }
 
 func (s *Service) getKeyPair() *key.Pair {
-	tree := onet.NewRoster([]*network.ServerIdentity{s.ServerIdentity()}).GenerateBinaryTree()
-	tni := s.NewTreeNodeInstance(tree, tree.Root, "dummy")
 	return &key.Pair{
-		Public:  tni.Public(),
-		Private: tni.Private(),
+		Public:  s.ServerIdentity().Public,
+		Private: s.ServerIdentity().GetPrivate(),
 	}
 }
 
 // NewProtocol intercepts the DKG and OCS protocols to retrieve the values
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	log.LLvl3(s.ServerIdentity(), tn.ProtocolName(), len(conf.Data))
+	log.LLvl3(s.ServerIdentity(), tn.ProtocolName(), len(conf.Data), tn.TokenID())
 	switch tn.ProtocolName() {
 	case dkgprotocol.Name:
 		var cfg CreateOCS
@@ -396,14 +392,17 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			log.Lvlf3("%v got shared %v on inst %v", s.ServerIdentity(), shared, id)
 			s.storage.Lock()
 			s.storage.Element[string(id)] = &storageElement{
-				Shared: *shared,
-				Roster: *tn.Roster(),
-				DKS:    *dks,
+				PolicyReencrypt: cfg.PolicyReencrypt,
+				PolicyReshare:   cfg.PolicyReshare,
+				Shared:          *shared,
+				Roster:          *tn.Roster(),
+				DKS:             *dks,
 			}
 			s.storage.Unlock()
 			s.save()
 		}()
 		return pi, nil
+
 	case calypsoReshareProto:
 		// Decode and verify config
 		var cfg Reshare
@@ -503,6 +502,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			}
 		}()
 		return setupDKG, nil
+
 	case NameOCS:
 		id := string(conf.Data)
 		s.storage.Lock()

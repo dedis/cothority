@@ -2,10 +2,14 @@ package ocs
 
 import (
 	"crypto/sha256"
+	"crypto/x509"
+	"encoding/asn1"
 	"errors"
 	"fmt"
 	"runtime"
 	"strings"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -65,24 +69,61 @@ func (px PolicyByzCoin) verify(r onet.Roster) error {
 	return erret(errors.New("net yet implemented"))
 }
 
-func (ar AuthReencrypt) verify(X OCSID) error {
-	return nil
-	return erret(errors.New("not yet implemented"))
+func (ar AuthReencrypt) verify(p Policy) error {
+	if ar.X509Cert == nil || p.X509Cert == nil {
+		log.Print(ar, p)
+		return errors.New("currently only checking X509 policies")
+	}
+	root, err := x509.ParseCertificate(p.X509Cert.CA[0])
+	if err != nil {
+		return erret(err)
+	}
+	auth, err := x509.ParseCertificate(ar.X509Cert.Certificates[0])
+	if err != nil {
+		return erret(err)
+	}
+	_, _, err = Verify(root, auth)
+	return erret(err)
 }
 
 func (ar AuthReencrypt) Xc() (kyber.Point, error) {
-	// TODO: takes this from the AuthReencr(X509|ByzCoin)
-	return ar.Ephemeral, nil
+	if ar.X509Cert != nil {
+		return getPointFromCert(ar.X509Cert.Certificates[0], EphemeralKeyOID)
+	}
+	if ar.ByzCoin != nil {
+		return nil, errors.New("can't get ephemeral key from ByzCoin yet")
+	}
+	return nil, errors.New("need to have authentication for X509 or ByzCoin")
 }
 
-func (ar AuthReencrypt) C() (kyber.Point, error) {
+func (ar AuthReencrypt) U() (kyber.Point, error) {
 	if ar.X509Cert != nil {
-		return ar.X509Cert.Secret, nil
+		return getPointFromCert(ar.X509Cert.Certificates[0], ElGamalCommitOID)
 	}
 	if ar.ByzCoin != nil {
 		return nil, errors.New("can't get secret from ByzCoin yet")
 	}
 	return nil, errors.New("need to have authentication for X509 or ByzCoin")
+}
+
+func getPointFromCert(certBuf []byte, extID asn1.ObjectIdentifier) (kyber.Point, error) {
+	cert, err := x509.ParseCertificate(certBuf)
+	if err != nil {
+		return nil, erret(err)
+	}
+	var secretBuf []byte
+	for _, ext := range cert.Extensions {
+		if ext.Id.Equal(extID) {
+			secretBuf = ext.Value
+			break
+		}
+	}
+	if secretBuf == nil {
+		return nil, errors.New("didn't find extension in certificate")
+	}
+	secret := cothority.Suite.Point()
+	err = secret.UnmarshalBinary(secretBuf)
+	return secret, erret(err)
 }
 
 func erret(err error) error {
