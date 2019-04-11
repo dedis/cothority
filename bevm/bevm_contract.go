@@ -240,7 +240,7 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 		Number:     big.NewInt(0),
 		Difficulty: big.NewInt(0),
 		ParentHash: common.Hash{0},
-		Time:       big.NewInt(0),
+		Time:       0,
 	}
 
 	// Apply transaction to the general EVM state
