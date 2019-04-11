@@ -22,12 +22,6 @@ var txParams = struct {
 	GasPrice *big.Int
 }{uint64(1e7), big.NewInt(1)}
 
-var testAddresses = []string{
-	"0x627306090abab3a6e1400e9345bc60c78a8bef57",
-	"0xf17f52151ebef6c7334fad080c5704d77216b732",
-	"0xB8C7e1fAA6Cb23690fc068D6Be3d7Ad4dC16Ba78",
-	"0xf3250dbB0640b292e33d44De3D7E6C94E4D034C9",
-}
 var testPrivateKeys = []string{
 	"c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
 	"ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
@@ -68,8 +62,8 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 
 	// Initialize some accounts
 	accounts := []*EvmAccount{}
-	for i := range testAddresses {
-		account, err := NewEvmAccount(testAddresses[i], testPrivateKeys[i])
+	for _, privKey := range testPrivateKeys {
+		account, err := NewEvmAccount(privKey)
 		require.Nil(t, err)
 		accounts = append(accounts, account)
 	}
@@ -105,9 +99,9 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Initialize two accounts
-	a, err := NewEvmAccount(testAddresses[0], testPrivateKeys[0])
+	a, err := NewEvmAccount(testPrivateKeys[0])
 	require.Nil(t, err)
-	b, err := NewEvmAccount(testAddresses[1], testPrivateKeys[1])
+	b, err := NewEvmAccount(testPrivateKeys[1])
 	require.Nil(t, err)
 
 	// Credit the accounts
@@ -185,9 +179,9 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Initialize two accounts
-	a, err := NewEvmAccount(testAddresses[0], testPrivateKeys[0])
+	a, err := NewEvmAccount(testPrivateKeys[0])
 	require.Nil(t, err)
-	b, err := NewEvmAccount(testAddresses[1], testPrivateKeys[1])
+	b, err := NewEvmAccount(testPrivateKeys[1])
 	require.Nil(t, err)
 
 	// Credit the accounts

@@ -88,15 +88,17 @@ type EvmAccount struct {
 }
 
 // NewEvmAccount creates a new EvmAccount
-func NewEvmAccount(address string, privateKey string) (*EvmAccount, error) {
-	key, err := crypto.HexToECDSA(privateKey)
+func NewEvmAccount(privateKey string) (*EvmAccount, error) {
+	privKey, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
 		return nil, err
 	}
 
+	address := crypto.PubkeyToAddress(privKey.PublicKey)
+
 	return &EvmAccount{
-		Address:    common.HexToAddress(address),
-		PrivateKey: key,
+		Address:    address,
+		PrivateKey: privKey,
 	}, nil
 }
 

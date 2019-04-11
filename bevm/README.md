@@ -25,7 +25,7 @@ To execute a transaction, such as deploying a contract or interacting with an ex
 The following types are defined in `bevm_client.go`:
 
 - `EvmContract` represents an Ethereum contract, and is initialized by `NewEvmContract()` providing the files containing the bytecode and the ABI.
-- `EvmAccount` represents an Ethereum user account, and is initialized by `NewEvmAccount()` provoding the address and private key.
+- `EvmAccount` represents an Ethereum user account, and is initialized by `NewEvmAccount()` provoding the private key.
 - `Client` represents the main object to interact with the BEVM.
 
 Note that the BEvmContract does not contain a Solidity compiler, and only handles pre-compiled Ethereum contracts.
