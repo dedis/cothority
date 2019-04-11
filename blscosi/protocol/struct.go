@@ -28,7 +28,7 @@ func init() {
 }
 
 // ResponseMap is the container used to store responses coming from the children
-type ResponseMap map[string]*Response
+type ResponseMap map[int]*Response
 
 // BlsSignature contains the message and its aggregated signature
 type BlsSignature []byte

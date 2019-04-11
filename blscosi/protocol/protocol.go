@@ -32,7 +32,7 @@ type SignFn func(suite pairing.Suite, secret kyber.Scalar, msg []byte) ([]byte, 
 
 // AggregateFn is called to aggregate multiple signatures and to produce a
 // mask of the peer's participation
-type AggregateFn func(suite pairing.Suite, pubs []kyber.Point, sigs [][]byte) ([]byte, error)
+type AggregateFn func(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error)
 
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
@@ -50,6 +50,7 @@ type BlsCosi struct {
 	CreateProtocol CreateProtocolFunction
 	Verify         VerifyFn
 	Sign           SignFn
+	Aggregate      AggregateFn
 	// Timeout is not a global timeout for the protocol, but a timeout used
 	// for waiting for responses for sub protocols.
 	Timeout           time.Duration
@@ -103,10 +104,13 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 		Threshold:         DefaultThreshold(nNodes),
 		Sign:              bls.Sign,
 		Verify:            bls.Verify,
-		startChan:         make(chan bool, 1),
-		verificationFn:    vf,
-		subProtocolName:   subProtocolName,
-		suite:             suite,
+		Aggregate: func(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error) {
+			return bls.AggregateSignatures(suite, sigs...)
+		},
+		startChan:       make(chan bool, 1),
+		verificationFn:  vf,
+		subProtocolName: subProtocolName,
+		suite:           suite,
 	}
 
 	// the default number of subtree is the square root to
@@ -197,18 +201,12 @@ func (p *BlsCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "collected all signature responses")
 
 	// generate root signature
-	signaturePoint, finalMask, err := p.generateSignature(responses)
+	sig, err := p.generateSignature(responses)
 	if err != nil {
 		return err
 	}
 
-	signature, err := signaturePoint.MarshalBinary()
-	if err != nil {
-		return err
-	}
-
-	p.FinalSignature <- append(signature, finalMask.Mask()...)
-	log.Lvlf3("%v created final signature %x with mask %b", p.ServerIdentity(), signature, finalMask.Mask())
+	p.FinalSignature <- sig
 	return nil
 }
 
@@ -263,7 +261,6 @@ func (p *BlsCosi) checkFailureThreshold(numFailure int) bool {
 // startSubProtocol creates, parametrize and starts a subprotocol on a given tree
 // and returns the started protocol.
 func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
-
 	pi, err := p.CreateProtocol(p.subProtocolName, tree)
 	if err != nil {
 		return nil, err
@@ -271,6 +268,9 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	cosiSubProtocol := pi.(*SubBlsCosi)
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
+	cosiSubProtocol.Sign = p.Sign
+	cosiSubProtocol.Verify = p.Verify
+	cosiSubProtocol.Aggregate = p.Aggregate
 	// Fail fast enough if the subleader is failing to try
 	// at least three leaves as new subleader
 	cosiSubProtocol.Timeout = p.Timeout / time.Duration(p.SubleaderFailures+1)
@@ -368,14 +368,14 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 				return nil, err
 			}
 
-			public := searchPublicKey(p.TreeNodeInstance, res.ServerIdentity)
+			public, index := searchPublicKey(p.TreeNodeInstance, res.ServerIdentity)
 			if public != nil {
-				if _, ok := responseMap[public.String()]; !ok {
+				if _, ok := responseMap[index]; !ok {
 					count := mask.CountEnabled()
 					numSignature += count
 					numFailure += res.SubtreeCount() + 1 - count
 
-					responseMap[public.String()] = &res.Response
+					responseMap[index] = &res.Response
 				}
 			}
 		case err := <-errChan:
@@ -400,68 +400,60 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 
 // Sign the message with this node and aggregates with all child signatures (in structResponses)
 // Also aggregates the child bitmasks
-func (p *BlsCosi) generateSignature(responses ResponseMap) (kyber.Point, *bls.Mask, error) {
+func (p *BlsCosi) generateSignature(responses ResponseMap) (BlsSignature, error) {
 	publics := p.Publics()
 
 	//generate personal mask
 	personalMask, err := bls.NewMask(p.suite, publics, p.Public())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// generate personal signature and append to other sigs
 	personalSig, err := p.Sign(p.suite, p.Private(), p.Msg)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
+	// even if there is only one, it is aggregated to include potential processing
+	// done during the aggregation
+	agg, err := p.Aggregate(p.suite, personalMask, [][]byte{personalSig})
+	if err != nil {
+		return nil, err
+	}
+
+	_, index := searchPublicKey(p.TreeNodeInstance, p.ServerIdentity())
 	// fill the map with the Root signature
-	responses[p.Public().String()] = &Response{
+	responses[index] = &Response{
 		Mask:      personalMask.Mask(),
-		Signature: personalSig,
+		Signature: agg,
 	}
 
 	// Aggregate all signatures
-	response, err := p.makeAggregateResponse(p.suite, publics, responses)
+	sig, err := p.makeAggregateResponse(p.suite, publics, responses)
 	if err != nil {
 		log.Lvlf3("%v failed to create aggregate signature", p.ServerIdentity())
-		return nil, nil, err
+		return nil, err
 	}
 
-	//create final aggregated mask
-	finalMask, err := bls.NewMask(p.suite, publics, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-	err = finalMask.SetMask(response.Mask)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	finalSignature, err := response.Signature.Point(p.suite)
-	if err != nil {
-		return nil, nil, err
-	}
-	log.Lvlf3("%v is done aggregating signatures with total of %d signatures", p.ServerIdentity(), finalMask.CountEnabled())
-
-	return finalSignature, finalMask, err
+	return sig, err
 }
 
 // searchPublicKey looks for the corresponding server identity in the roster
 // to prevent forged identity to be used
-func searchPublicKey(p *onet.TreeNodeInstance, servID *network.ServerIdentity) kyber.Point {
-	for _, si := range p.Roster().List {
+func searchPublicKey(p *onet.TreeNodeInstance, servID *network.ServerIdentity) (kyber.Point, int) {
+	for idx, si := range p.Roster().List {
 		if si.Equal(servID) {
-			return p.NodePublic(si)
+			return p.NodePublic(si), idx
 		}
 	}
 
-	return nil
+	return nil, -1
 }
 
 // makeAggregateResponse takes all the responses from the children and the subleader to
 // aggregate the signature and the mask
-func (p *BlsCosi) makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (*Response, error) {
+func (p *BlsCosi) makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (BlsSignature, error) {
 	finalMask, err := bls.NewMask(suite, publics, nil)
 	if err != nil {
 		return nil, err
@@ -490,5 +482,7 @@ func (p *BlsCosi) makeAggregateResponse(suite pairing.Suite, publics []kyber.Poi
 		return nil, err
 	}
 
-	return &Response{Signature: sig, Mask: finalMask.Mask()}, nil
+	log.Lvlf3("%v is done aggregating signatures with total of %d signatures", p.ServerIdentity(), finalMask.CountEnabled())
+
+	return append(sig, finalMask.Mask()...), nil
 }
