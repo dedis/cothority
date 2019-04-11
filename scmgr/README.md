@@ -21,7 +21,8 @@ running is:
 
 ```bash
 cd cothority/conode
-./run_conode.sh local 3
+go build
+./run_nodes.sh -n 3
 ```
 
 This will start three conodes locally and create a new `public.toml` that
@@ -33,9 +34,9 @@ directory and that you installed `scmgr` using
 go get github.com/dedis/cothority/scmgr
 ```
 
-## Securing node by creating a link
+## Securing the conode by creating a link
 
-Per default, everybody is allowed to use your conode to create new skipchains.
+By default, everybody is allowed to use your conode to create new skipchains.
 This is good for testing setups where your conode is in your private network
 and cannot be accessed from the outside. However, if you put your conode on the
 internet (and you should), you need to create a link with it first, which will
@@ -50,9 +51,9 @@ To link your conode and your client, you need to have access to the
 
 The `private.toml`-file is usually in `~/.config/conode` for Linux-systems and
 in `~/Library/Application\ Support/conode` for MacOSX-systems. However, if you
-started a local cothority for testing using `run_conode.sh`, you should have
+started a local cothority for testing using `run_nodes.sh`, you should have
 three directories, `co1`, `co2` and `co3` and the `private.toml`-file will be
-in those directories.
+in each of those directories.
 
 So for the testing system, the command is:
 
@@ -79,8 +80,7 @@ the _baseheight_, the longer the links between the blocks get. The bigger the
 _maximumheight_, the longer the longest link gets.
 
 Once the skipchain is created, `scmgr` will print out the ID of the new
-skipchain. For the _following_ examples, you can also create a skipchain using
-`cisc` and enter its ID.
+skipchain.
 
 ## Following a skipchain
 
@@ -89,9 +89,9 @@ that this skipchain is trustworthy and that all nodes participating in it are
 also trustworthy. There are three different levels of trust that you can chose:
 
 * ID - only this very skipchain is allowed to use your node to store new blocks
-* Restricted - your block will also accept new skipchains, as long as no other
+* Restricted - your conode will also accept new skipchains, as long as no other
 than a subset of nodes of the given skipchain participate in it
-* Any - your block will also accept new skipchains, as long as _any_ node of the
+* Any - your conode will also accept new skipchains, as long as _any_ node of the
 given skipchain participates
 
 For our example, we will tell _co2_ and _co3_ to follow the skipchain created
@@ -109,15 +109,15 @@ the `scmgr skipchain create` command above.
 `127.0.0.1:7004` and `127.0.0.1:7006` are the IP addresses and port numbers of _co2_
 and _co3_ respectively.
 
-Now you can ask your first node to extend the nodes that participate in the
-skipchain to all nodes:
+Now you can ask your first conode to extend the conodes that participate in the
+skipchain to all conodes:
 
 ```bash
 scmgr skipchain block add -roster public.toml SKIPCHAIN_ID
 ```
 
-Now you have a skipchain that includes all testing-nodes. To see the block that
-you just created, you can use
+Now you have a skipchain that includes all of your testing conodes. To see the block that
+you just created, you can use:
 
 ```bash
 scmgr skipchain block print SKIPBLOCK_ID

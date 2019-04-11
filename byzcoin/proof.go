@@ -92,6 +92,9 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 		if i == 0 {
 			// The first forward link is a pointer from []byte{} to the genesis
 			// block and holds the roster of the genesis block.
+			if !l.To.Equal(scID) {
+				return errors.New("first link does not point to the expected chain")
+			}
 			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 			continue
 		}
