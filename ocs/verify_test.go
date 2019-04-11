@@ -2,10 +2,11 @@ package ocs
 
 import (
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -42,9 +43,7 @@ func Test_VerifyCertificateHappyDayScenario(t *testing.T) {
 	caCert, _ := certFromPem([]byte(rootCert1))
 	cert, _ := certFromPem([]byte(validPem))
 
-	writeId, key, _ := Verify(caCert, cert)
-	t.Log("writeId", hex.EncodeToString(writeId))
-	t.Log("key", hex.EncodeToString(key))
+	require.NoError(t, Verify(caCert, cert))
 }
 
 func certFromPem(pemCerts []byte) (cert *x509.Certificate, err error) {

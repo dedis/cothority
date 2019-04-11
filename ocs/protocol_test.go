@@ -41,26 +41,26 @@ func TestOCS(t *testing.T) {
 	// nodes := []int{3, 5, 10}
 	for _, nbrNodes := range nodes {
 		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
-		ocs(t, nbrNodes, nbrNodes-1, 32, 0, false)
+		ocs(t, nbrNodes, nbrNodes-1, 29, 0, false)
 	}
 }
 
 // Tests a system with failing nodes
 func TestFail(t *testing.T) {
-	ocs(t, 4, 2, 32, 2, false)
+	ocs(t, 4, 2, 29, 2, false)
 }
 
 // Tests what happens if the nodes refuse to send their share
 func TestRefuse(t *testing.T) {
 	log.Lvl1("Starting setupDKG with 3 nodes and refusing to sign")
-	ocs(t, 3, 2, 32, 0, true)
+	ocs(t, 3, 2, 29, 0, true)
 }
 
 func TestOCSKeyLengths(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Testing all keylengths takes some time...")
 	}
-	for keylen := 1; keylen < 64; keylen++ {
+	for keylen := 1; keylen <= 29; keylen += 2 {
 		log.Lvl1("Testing keylen of", keylen)
 		ocs(t, 3, 2, keylen, 0, false)
 	}

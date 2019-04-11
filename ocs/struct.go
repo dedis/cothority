@@ -82,8 +82,7 @@ func (ar AuthReencrypt) verify(p Policy) error {
 	if err != nil {
 		return erret(err)
 	}
-	_, _, err = Verify(root, auth)
-	return erret(err)
+	return erret(Verify(root, auth))
 }
 
 func (ar AuthReencrypt) Xc() (kyber.Point, error) {
