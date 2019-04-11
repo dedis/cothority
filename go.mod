@@ -23,4 +23,3 @@ require (
 	gopkg.in/urfave/cli.v1 v1.20.0
 )
 
-replace go.dedis.ch/onet/v3 => ../onet

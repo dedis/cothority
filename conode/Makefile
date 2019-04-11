@@ -1,5 +1,5 @@
-CONTAINER = conode
-IMAGE_NAME = dedis/$(CONTAINER)
+CONTAINER = ocs
+IMAGE_NAME = c4dt/$(CONTAINER)
 DATA_DIR = $(shell pwd)/conode_data
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
 TAG = dev-$(shell date +%y%m%d)
