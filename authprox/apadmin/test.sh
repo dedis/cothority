@@ -34,7 +34,7 @@ BCSetup(){
 	eval $SED
 	[ -z "$BC" ] && exit 1
 
-	testOK ./bcadmin add spawn:authproxAdd -identity $ID
+	testOK ./bcadmin darc rule --rule spawn:authproxAdd --identity $ID
 }
 
 testAdd(){
