@@ -118,9 +118,6 @@ func TestService_AddTransaction_WithFailure(t *testing.T) {
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
-	if testing.Short() {
-		t.Skip("this test fails because of #1795")
-	}
 	testAddTransaction(t, 2*time.Second, 1, true)
 }
 
@@ -624,7 +621,7 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
-	s := newSer(t, 2, testInterval)
+	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
 	// Get counter
@@ -811,13 +808,18 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		Transaction:   tx,
 		InclusionWait: wait,
 	})
-
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
 		Key:     tx.Instructions[0].Hash(),
 	})
-	return rep.Proof, tx.Instructions[0].Hash(), err, err2
+
+	var proof Proof
+	if rep != nil {
+		proof = rep.Proof
+	}
+
+	return proof, tx.Instructions[0].Hash(), err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
@@ -2143,19 +2145,19 @@ func TestService_TestCatchUpHistory(t *testing.T) {
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
 
 	// unknown skipchain, we shouldn't try to catch up
-	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{})
+	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
 	require.Error(t, err)
 
 	// catch up
-	err = s.service().catchupFromID(s.roster, s.genesis.Hash)
+	err = s.service().catchupFromID(s.roster, s.genesis.Hash, s.genesis.Hash)
 	require.Equal(t, 1, len(s.service().catchingUpHistory))
 	require.NoError(t, err)
 
 	ts := s.service().catchingUpHistory[string(s.genesis.Hash)]
 
 	// ... but not twice
-	err = s.service().catchupFromID(s.roster, s.genesis.Hash)
+	err = s.service().catchupFromID(s.roster, s.genesis.Hash, s.genesis.Hash)
 	require.True(t, s.service().catchingUpHistory[string(s.genesis.Hash)].Equal(ts))
 	require.Error(t, err)
 }

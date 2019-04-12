@@ -356,20 +356,26 @@ func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSk
 // or an error if that block is not found.
 func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, error) {
 	var reply = &SkipBlock{}
-	err := c.SendProtobuf(roster.RandomServerIdentity(), &GetSingleBlock{id}, reply)
-	if err != nil {
-		return nil, err
+	perms := rand.Perm(len(roster.List))
+	var errs []string
+	for _, ind := range perms {
+		err := c.SendProtobuf(roster.List[ind], &GetSingleBlock{id}, reply)
+		if err == nil {
+			if err := reply.VerifyForwardSignatures(); err != nil {
+				return nil, err
+			}
+
+			if !reply.Hash.Equal(id) {
+				return nil, errors.New("Got the wrong block in return")
+			}
+
+			return reply, nil
+		}
+
+		errs = append(errs, err.Error())
 	}
 
-	if err = reply.VerifyForwardSignatures(); err != nil {
-		return nil, err
-	}
-
-	if !reply.Hash.Equal(id) {
-		return nil, errors.New("Got the wrong block in return")
-	}
-
-	return reply, nil
+	return nil, errors.New("all nodes failed to return block: " + strings.Join(errs, " :: "))
 }
 
 // GetSingleBlockByIndex searches for a block with the given index following the genesis-block.
