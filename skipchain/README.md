@@ -30,7 +30,7 @@ lists are stored on the skipchain.
 
 The skipchain itself is held by one or more conodes. Clients can connect to the
 leader and propose new blocks. Every time a new block is received, the leader
-runs a BFT-protocol with the other nodes. All nodes keep a copy of the
+runs a BFT-protocol with the other conodes. All conodes keep a copy of the
 skipchain-blocks.
 
 ## Usage
@@ -43,7 +43,7 @@ Another usage example is in [CISC](../cisc/README.md).
 # Catch-up Behavior
 
 If the conode is a follower for a given skipchain, then when it is asked to add
-a block onto that skipchain by the leader, it will contact other nodes in the
+a block onto that skipchain by the leader, it will contact other conodes in the
 last known roster for that skipchain in order to get copies of blocks that it is
 missing. Once it has followed the skipchain to the latest block mentioned in the
 proposed update, it will add the proposed block.
