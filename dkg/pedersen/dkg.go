@@ -91,6 +91,9 @@ func NewSharedSecret(gen *dkgpedersen.DistKeyGenerator) (*SharedSecret, *dkgpede
 
 // Start sends the Announce-message to all children
 func (o *Setup) Start() error {
+	if !o.ServerIdentity().ID.Equal(o.Roster().List[0].ID) {
+		return errors.New("cannot do a DKG where the root is not the first node in the roster")
+	}
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
 	errs := o.Broadcast(&Init{Wait: o.Wait})

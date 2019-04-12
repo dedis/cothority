@@ -45,8 +45,19 @@ type CreateOCS struct {
 // is the collective signature of all nodes on the aggregate public key
 // and the authentication.
 type CreateOCSReply struct {
-	X   OCSID
-	Sig []byte
+	OcsID OCSID
+}
+
+// GetProof is sent to a node to have him sign his definition of the
+// given OCS.
+type GetProof struct {
+	OcsID OCSID
+}
+
+// GetProofReply contains the additional info that node has on the given
+// OCS, as well as a signature using the services private key.
+type GetProofReply struct {
+	Proof OCSProof
 }
 
 // Reencrypt is sent to the service to request a re-encryption of the
@@ -54,8 +65,8 @@ type CreateOCSReply struct {
 // request is valid, as well as the ephemeral key, to which the secret
 // will be re-encrypted.
 type Reencrypt struct {
-	X    OCSID
-	Auth AuthReencrypt
+	OcsID OCSID
+	Auth  AuthReencrypt
 }
 
 // MessageReencryptReply is the reply if the re-encryption is successful, and
@@ -73,7 +84,7 @@ type ReencryptReply struct {
 // TODO: should NewRoster be always present in AuthReshare? It will be present
 // TODO: at least in AuthReshareByzCoin, but might not in other AuthReshares
 type Reshare struct {
-	X         OCSID
+	OcsID     OCSID
 	NewRoster onet.Roster
 	Auth      AuthReshare
 }
@@ -171,4 +182,13 @@ type AuthReshareByzCoin struct {
 // AuthReshareX509Cert holds the X509 proof that the new roster is valid.
 type AuthReshareX509Cert struct {
 	Certificates [][]byte
+}
+
+// OCSProof can be used to proof
+type OCSProof struct {
+	OcsID           OCSID
+	Roster          onet.Roster
+	PolicyReencrypt Policy
+	PolicyReshare   Policy
+	Signatures      [][]byte
 }

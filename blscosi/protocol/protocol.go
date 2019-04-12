@@ -28,7 +28,10 @@ type VerificationFn func(msg, data []byte) bool
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
 func init() {
-	GlobalRegisterDefaultProtocols()
+	_, err := onet.GlobalProtocolRegister(DefaultProtocolName, NewDefaultProtocol)
+	log.ErrFatal(err)
+	_, err = onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
+	log.ErrFatal(err)
 }
 
 // BlsCosi holds the parameters of the protocol.
@@ -67,13 +70,6 @@ func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error)
 	return NewBlsCosi(n, vf, DefaultSubProtocolName, pairing.NewSuiteBn256())
 }
 
-// GlobalRegisterDefaultProtocols is used to register the protocols before use,
-// most likely in an init function.
-func GlobalRegisterDefaultProtocols() {
-	onet.GlobalProtocolRegister(DefaultProtocolName, NewDefaultProtocol)
-	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
-}
-
 // DefaultThreshold computes the minimal threshold authorized using
 // the formula 3f+1
 func DefaultThreshold(n int) int {
@@ -98,16 +94,15 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 
 	// the default number of subtree is the square root to
 	// distribute the nodes evenly
-	c.SetNbrSubTree(int(math.Sqrt(float64(nNodes - 1))))
-
-	return c, nil
+	err := c.SetNbrSubTree(int(math.Sqrt(float64(nNodes - 1))))
+	return c, err
 }
 
 // SetNbrSubTree generates N new subtrees that will be used
 // for the protocol
 func (p *BlsCosi) SetNbrSubTree(nbr int) error {
 	if nbr > len(p.Roster().List)-1 {
-		return errors.New("Cannot have more subtrees than nodes")
+		return errors.New("cannot have more subtrees than nodes")
 	}
 	if p.Threshold == 1 || nbr <= 0 {
 		p.subTrees = []*onet.Tree{}
@@ -129,7 +124,10 @@ func (p *BlsCosi) Shutdown() error {
 		for _, subCosi := range p.subProtocols {
 			// we're stopping the root thus it will stop the children
 			// by itself using a broadcasted message
-			subCosi.Shutdown()
+			err := subCosi.Shutdown()
+			if err != nil {
+				log.Error("Error while shutting down", subCosi, err)
+			}
 		}
 		close(p.startChan)
 		close(p.FinalSignature)
@@ -321,7 +319,10 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 
 					// restart subprotocol
 					// send stop signal to old protocol
-					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
+					err = subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
+					if err != nil {
+						log.Error("Error while stopping sub-protocol", subProtocol, err)
+					}
 					subProtocol, err = p.startSubProtocol(p.subTrees[i])
 					if err != nil {
 						errChan <- fmt.Errorf("(subprotocol %v) error in restarting of subprotocol: %s", i, err)

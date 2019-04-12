@@ -157,10 +157,11 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 	if len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
 		var err error
-		o.Uis[0], err = o.getUI(o.U, o.Xc)
+		ui, err := o.getUI(o.U, o.Xc)
 		if err != nil {
 			return err
 		}
+		o.Uis[ui.I] = ui
 
 		for _, r := range o.replies {
 			// Verify proofs

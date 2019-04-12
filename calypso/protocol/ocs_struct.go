@@ -12,7 +12,7 @@ import (
 )
 
 // NameOCS can be used from other packages to refer to this protocol.
-const NameOCS = "OCS"
+const NameOCS = "OCSOld"
 
 func init() {
 	network.RegisterMessages(&Reencrypt{}, &ReencryptReply{})

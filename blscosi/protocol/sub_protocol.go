@@ -15,10 +15,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 )
 
-func init() {
-	GlobalRegisterDefaultProtocols()
-}
-
 // sub_protocol is run by each sub-leader and each node once, and n times by
 // the root leader, where n is the number of sub-leader.
 

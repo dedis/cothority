@@ -1,14 +1,9 @@
 package ocs
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/asn1"
 	"errors"
-	"fmt"
-	"runtime"
-	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -29,20 +24,37 @@ func (ocs CreateOCS) verify() error {
 	return nil
 }
 
-func (ocs CreateOCS) CheckOCSSignature(sig []byte, X OCSID) error {
-	// TODO: test signature
-	return nil
-	if sig == nil {
-		return errors.New("no signature given")
+func (op OCSProof) Verify() error {
+	if len(op.Signatures) != len(op.Roster.List) {
+		return errors.New("length of signatures is not equal to roster list length")
 	}
-	hash := sha256.New()
-	X.MarshalTo(hash)
-	buf, err := protobuf.Encode(ocs)
+	msg, err := op.Message()
 	if err != nil {
-		return erret(err)
+		return Erret(err)
+	}
+	for i, si := range op.Roster.List {
+		err := schnorr.Verify(cothority.Suite, si.ServicePublic(ServiceName), msg, op.Signatures[i])
+		if err != nil {
+			return Erret(err)
+		}
+	}
+	return nil
+}
+
+func (op OCSProof) Message() ([]byte, error) {
+	hash := sha256.New()
+	hash.Write(op.OcsID)
+	coc := CreateOCS{
+		Roster:          op.Roster,
+		PolicyReencrypt: op.PolicyReencrypt,
+		PolicyReshare:   op.PolicyReshare,
+	}
+	buf, err := protobuf.Encode(&coc)
+	if err != nil {
+		return nil, Erret(err)
 	}
 	hash.Write(buf)
-	return erret(schnorr.Verify(cothority.Suite, ocs.Roster.Aggregate, hash.Sum(nil), sig))
+	return hash.Sum(nil), nil
 }
 
 func (re Reshare) verify() error {
@@ -65,7 +77,7 @@ func (px PolicyX509Cert) verify(r onet.Roster) error {
 }
 
 func (px PolicyByzCoin) verify(r onet.Roster) error {
-	return erret(errors.New("net yet implemented"))
+	return Erret(errors.New("not yet implemented"))
 }
 
 func (ar AuthReencrypt) verify(p Policy, X, U kyber.Point) error {
@@ -74,22 +86,18 @@ func (ar AuthReencrypt) verify(p Policy, X, U kyber.Point) error {
 	}
 	root, err := x509.ParseCertificate(p.X509Cert.CA[0])
 	if err != nil {
-		return erret(err)
+		return Erret(err)
 	}
 	auth, err := x509.ParseCertificate(ar.X509Cert.Certificates[0])
 	if err != nil {
-		return erret(err)
-	}
-	wid, err := getExtensionFromCert(auth, WriteIdOID)
-	if err != nil {
-		return erret(err)
-	}
-	err = WriteID(wid).Verify(X, U)
-	if err != nil {
-		return erret(err)
+		return Erret(err)
 	}
 
-	return erret(Verify(root, auth))
+	ocsID, err := NewOCSID(X)
+	if err != nil {
+		return Erret(err)
+	}
+	return Erret(Verify(root, auth, ocsID, U))
 }
 
 func (ar AuthReencrypt) Xc() (kyber.Point, error) {
@@ -110,70 +118,4 @@ func (ar AuthReencrypt) U() (kyber.Point, error) {
 		return nil, errors.New("can't get secret from ByzCoin yet")
 	}
 	return nil, errors.New("need to have authentication for X509 or ByzCoin")
-}
-
-type WriteID []byte
-
-func NewWriteID(X, U kyber.Point) (WriteID, error) {
-	wid := sha256.New()
-	_, err := X.MarshalTo(wid)
-	if err != nil {
-		return nil, erret(err)
-	}
-	_, err = U.MarshalTo(wid)
-	if err != nil {
-		return nil, erret(err)
-	}
-	return wid.Sum(nil), nil
-}
-
-func (wid WriteID) Verify(X, U kyber.Point) error {
-	other, err := NewWriteID(X, U)
-	if err != nil {
-		return erret(err)
-	}
-	if bytes.Compare(wid, other) != 0 {
-		return errors.New("not the same writeID")
-	}
-	return nil
-}
-
-func getPointFromCert(certBuf []byte, extID asn1.ObjectIdentifier) (kyber.Point, error) {
-	cert, err := x509.ParseCertificate(certBuf)
-	if err != nil {
-		return nil, erret(err)
-	}
-	secret := cothority.Suite.Point()
-	secretBuf, err := getExtensionFromCert(cert, extID)
-	if err != nil {
-		return nil, erret(err)
-	}
-	err = secret.UnmarshalBinary(secretBuf)
-	return secret, erret(err)
-}
-
-func getExtensionFromCert(cert *x509.Certificate, extID asn1.ObjectIdentifier) ([]byte, error) {
-	var buf []byte
-	for _, ext := range cert.Extensions {
-		if ext.Id.Equal(extID) {
-			buf = ext.Value
-			break
-		}
-	}
-	if buf == nil {
-		return nil, errors.New("didn't find extension in certificate")
-	}
-	return buf, nil
-}
-
-func erret(err error) error {
-	if err == nil {
-		return nil
-	}
-	pc, _, line, _ := runtime.Caller(1)
-	errStr := err.Error()
-	if strings.HasPrefix(errStr, "erret") {
-		errStr = "\n\t" + errStr
-	}
-	return fmt.Errorf("erret at %s: %d -> %s", runtime.FuncForPC(pc).Name(), line, errStr)
 }

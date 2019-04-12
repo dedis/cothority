@@ -12,6 +12,10 @@ import (
 	"os"
 	"time"
 
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+
+	"go.dedis.ch/kyber/v3/suites"
+
 	"go.dedis.ch/cothority/v3"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
 	"go.dedis.ch/kyber/v3"
@@ -41,7 +45,7 @@ func init() {
 	var err error
 	_, err = onet.GlobalProtocolRegister(calypsoReshareProto, dkgprotocol.NewSetup)
 	log.ErrFatal(err)
-	OCSServiceID, err = onet.RegisterNewService(ServiceName, newService)
+	OCSServiceID, err = onet.RegisterNewServiceWithSuite(ServiceName, suites.MustFind("ed25519"), newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &storageElement{})
 
@@ -91,18 +95,17 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 // decryption requests.
 func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	if err = req.verify(); err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 
-	// NOTE: the roster stored in ByzCoin must have myself.
 	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
 	cfgBuf, err := protobuf.Encode(req)
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
@@ -110,24 +113,27 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 
 	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
+	var oid []byte
 	select {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, erret(err)
+			return nil, Erret(err)
+		}
+		ocsID, err := NewOCSID(shared.X)
+		if err != nil {
+			return nil, Erret(err)
 		}
 		reply = &CreateOCSReply{
-			X: shared.X,
-			// TODO: calculate signature
-			Sig: []byte{},
+			OcsID: ocsID,
 		}
-		oid, err := shared.X.MarshalBinary()
+		oid, err = shared.X.MarshalBinary()
 		if err != nil {
-			return nil, erret(err)
+			return nil, Erret(err)
 		}
 		s.storage.Lock()
 		s.storage.Element[string(oid)] = &storageElement{
@@ -147,6 +153,34 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	return
 }
 
+// GetProof returns a signed proof of the requested OcsID.
+func (s *Service) GetProof(req *GetProof) (reply *GetProofReply, err error) {
+	s.storage.Lock()
+	es, found := s.storage.Element[string(req.OcsID)]
+	if !found {
+		return nil, errors.New("didn't find the given OCS")
+	}
+	s.storage.Unlock()
+	reply = &GetProofReply{
+		Proof: OCSProof{
+			OcsID:           req.OcsID,
+			Roster:          es.Roster,
+			PolicyReencrypt: es.PolicyReencrypt,
+			PolicyReshare:   es.PolicyReshare,
+		},
+	}
+	msg, err := reply.Proof.Message()
+	if err != nil {
+		return nil, Erret(err)
+	}
+	sig, err := schnorr.Sign(cothority.Suite, s.ServerIdentity().ServicePrivate(ServiceName), msg)
+	if err != nil {
+		return nil, Erret(err)
+	}
+	reply.Proof.Signatures = [][]byte{sig}
+	return
+}
+
 // Reencrypt takes as an input a Read- and a Write-proof. Proofs contain
 // everything necessary to verify that a given instance is correct and
 // stored in ByzCoin.
@@ -158,12 +192,7 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
 
 	s.storage.Lock()
-	id, err := dkr.X.MarshalBinary()
-	if err != nil {
-		s.storage.Unlock()
-		return nil, erret(err)
-	}
-	es, found := s.storage.Element[string(id)]
+	es, found := s.storage.Element[string(dkr.OcsID)]
 	s.storage.Unlock()
 	if !found {
 		return nil, errors.New("didn't find this OCS")
@@ -179,20 +208,23 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		tree := es.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 		pi, err := s.CreateProtocol(NameOCS, tree)
 		if err != nil {
-			return erret(err)
+			return Erret(err)
 		}
-		log.Print("Created OCS", pi.Token().ID())
 		ocsProto = pi.(*OCS)
 		ocsProto.U, err = dkr.Auth.U()
 		if err != nil {
-			return erret(err)
+			return Erret(err)
 		}
-		if err = dkr.Auth.verify(es.PolicyReencrypt, dkr.X, ocsProto.U); err != nil {
-			return erret(err)
+		X, err := dkr.OcsID.X()
+		if err != nil {
+			return Erret(err)
+		}
+		if err = dkr.Auth.verify(es.PolicyReencrypt, X, ocsProto.U); err != nil {
+			return Erret(err)
 		}
 		ocsProto.Xc, err = dkr.Auth.Xc()
 		if err != nil {
-			return erret(err)
+			return Erret(err)
 		}
 		log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsProto.Xc)
 		ocsProto.VerificationData, err = protobuf.Encode(&dkr.Auth)
@@ -219,28 +251,28 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		return nil, err
 	}
 
-	log.LLvl3("Starting reencryption protocol", ocsProto.TreeNodeInstance.TokenID())
-	err = ocsProto.SetConfig(&onet.GenericConfig{Data: []byte(id)})
+	log.Lvl3("Starting reencryption protocol", ocsProto.TreeNodeInstance.TokenID())
+	err = ocsProto.SetConfig(&onet.GenericConfig{Data: dkr.OcsID})
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 	if !<-ocsProto.Reencrypted {
 		return nil, errors.New("reencryption got refused")
 	}
-	log.LLvl3("Reencryption protocol is done.")
+	log.Lvl3("Reencryption protocol is done.")
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
 	if err != nil {
-		return nil, erret(err)
+		return nil, Erret(err)
 	}
-	log.LLvl3("Successfully reencrypted the key")
+	log.Lvl3("Successfully reencrypted the key")
 	return
 }
 
@@ -362,7 +394,7 @@ func (s *Service) getKeyPair() *key.Pair {
 
 // NewProtocol intercepts the DKG and OCS protocols to retrieve the values
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	log.LLvl3(s.ServerIdentity(), tn.ProtocolName(), len(conf.Data), tn.TokenID())
+	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), len(conf.Data), tn.TokenID())
 	switch tn.ProtocolName() {
 	case dkgprotocol.Name:
 		var cfg CreateOCS
@@ -399,6 +431,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				PolicyReencrypt: cfg.PolicyReencrypt,
 				PolicyReshare:   cfg.PolicyReshare,
 				Shared:          *shared,
+				Polys:           pubPoly{s.Suite().Point().Base(), dks.Commits},
 				Roster:          *tn.Roster(),
 				DKS:             *dks,
 			}
@@ -426,11 +459,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG.KeyPair = s.getKeyPair()
 
 		s.storage.Lock()
-		idBuf, err := cfg.X.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		id := string(idBuf)
+		id := string(cfg.OcsID)
 		es, found := s.storage.Element[id]
 		if !found {
 			// TODO: we might not have this yet - so probably we need to put the old roster in cfg, too.
@@ -500,7 +529,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			es.DKS = *dks
 
 			s.storage.Unlock()
-			s.save()
+			err = s.save()
+			if err != nil {
+				log.Error("Couldn't save storage")
+			}
 			if s.afterReshare != nil {
 				s.afterReshare()
 			}
@@ -546,11 +578,11 @@ func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
 		var arc AuthReencrypt
 		err := protobuf.DecodeWithConstructors(*rc.VerificationData, &arc, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return erret(err)
+			return Erret(err)
 		}
 		Xc, err := arc.Xc()
 		if err != nil {
-			return erret(err)
+			return Erret(err)
 		}
 		if !Xc.Equal(rc.Xc) {
 			return errors.New("Xcs don't match up")
@@ -571,7 +603,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateOCS, s.ReshareLTS, s.Reencrypt); err != nil {
+	if err := s.RegisterHandlers(s.CreateOCS, s.ReshareLTS, s.Reencrypt,
+		s.GetProof); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

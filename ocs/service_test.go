@@ -39,8 +39,7 @@ func TestService_CreateOCS(t *testing.T) {
 	cor, err := s1.CreateOCS(co)
 	require.NoError(t, err)
 	require.NotNil(t, cor)
-	require.NotNil(t, cor.X)
-	require.NoError(t, co.CheckOCSSignature(cor.Sig, cor.X))
+	require.NotNil(t, cor.OcsID)
 
 	// Do the same with an invalid X509
 	px.X509Cert.CA = nil
@@ -84,19 +83,20 @@ func TestService_Reencrypt(t *testing.T) {
 	}
 	cor, err := s1.CreateOCS(co)
 	require.NoError(t, err)
-	require.NoError(t, co.CheckOCSSignature(cor.Sig, cor.X))
 
 	secret := []byte("ocs for all")
-	U, C, err := EncodeKey(cothority.Suite, cor.X, secret)
+	X, err := cor.OcsID.X()
+	require.NoError(t, err)
+	U, C, err := EncodeKey(cothority.Suite, X, secret)
 	require.NoError(t, err)
 
 	kp := key.NewKeyPair(cothority.Suite)
-	wid, err := NewWriteID(cor.X, U)
+	wid, err := NewWriteID(X, U)
 	require.NoError(t, err)
 	reencryptCert, err := CreateReencryptCert(caCertAttack, caPrivKeyAttack, wid, kp.Public)
 	require.NoError(t, err)
 	req := &Reencrypt{
-		X: cor.X,
+		OcsID: cor.OcsID,
 		Auth: AuthReencrypt{
 			Ephemeral: kp.Public,
 			X509Cert: &AuthReencryptX509Cert{
@@ -114,7 +114,8 @@ func TestService_Reencrypt(t *testing.T) {
 	rr, err = s1.Reencrypt(req)
 	require.NoError(t, err)
 
-	secretRec, err := DecodeKey(cothority.Suite, cor.X, C, rr.XhatEnc, kp.Private)
+	require.NoError(t, err)
+	secretRec, err := DecodeKey(cothority.Suite, X, C, rr.XhatEnc, kp.Private)
 	require.NoError(t, err)
 	require.Equal(t, secret, secretRec)
 }
