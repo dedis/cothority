@@ -130,9 +130,9 @@ that controls access to it.
 To verify the proof, all the verifier needs is the skipchain-ID of where the
 key is supposed to be stored. The proof has three parts:
 
-1. _InclusionProof_ proofs the presence or absence of the key. In case of
+1. _InclusionProof_ proves the presence or absence of the key. In case of
 the key being present, the value is included in the proof.
-2. _Latest_ is used to verify the merkle tree root used in the proof is stored
+2. _Latest_ is used to verify the Merkle tree root used in the proof is stored
    in the latest skipblock.
 3. _Links_ proves that the latest skipblock is part of the skipchain.
 
@@ -176,9 +176,9 @@ message skipchain.ForwardLink{
 During verification, the verifier then can do the following to make sure that the
 key/value pair returned is valid:
 
-1. Verify the inclusion proof of the key in the merkle tree root of the trie
+1. Verify the inclusion proof of the key in the Merkle tree root of the trie
 This is described in the [trie](trie/README.md) package.
-2. Verify the merkle tree root in the InclusionProof is the same as the one
+2. Verify the Merkle tree root in the InclusionProof is the same as the one
 given in the latest skipblock
 3. Verify the Links are a valid chain from the genesis block to the latest block.
 The first forward link points to the genesis block to give the roster to the

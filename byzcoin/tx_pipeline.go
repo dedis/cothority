@@ -371,7 +371,7 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 						// but there's nothing we can do about it at the moment
 						// other than waiting for the timeout.
 						if err := p.processor.ProposeBlock(state); err != nil {
-							log.Error("failed to propose block: ", err)
+							log.Error("failed to propose block:", err)
 							proposalResult <- err
 						} else {
 							proposalResult <- nil
