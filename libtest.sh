@@ -353,6 +353,7 @@ setupConode(){
   DBG_TEST=$DBG_OLD
 }
 
+# A few words about what this function does wouldn't hurt
 runCoBG(){
   for nb in "$@"; do
     dbgOut "starting conode-server #$nb"

@@ -156,12 +156,31 @@ type Storage struct {
 //
 // It takes TargetSkipChainID, which is the chain that the client wants to
 // append to, and a new SkipBlock.  The new SkipBlock will be verified. If it
-// passes, then the block is appended to the chain otherwise an error is
+// passes, then the block is appended to the chain, otherwise an error is
 // returned.
 //
 // If TargetSkipChainID is an empty slice, the service will create a new
 // skipchain and store the given block as genesis-block.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
+	if len(s.Storage.Clients) > 0 {
+		if psbd.Signature == nil {
+			return nil, errors.New(
+				"cannot create new skipblock without authentication")
+		}
+		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
+			return nil, errors.New(
+				"wrong signature for this skipchain")
+		}
+	}
+	return s.StoreSkipBlockInternal(psbd)
+}
+
+// StoreSkipBlockInternal bypasses the authentification performed in StoreSkipBlock.
+// This method must be used in the case the service (like byzcoin) is running on the
+// same host as the Skipchain one. If the Skipchain service is linked to a client,
+// its behavior is to reject any new foreign resquests, even it it comes from a local
+// service, like Byzcoin.
+func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
 	err := s.incrementWorking()
 	if err != nil {
 		return nil, err
@@ -177,16 +196,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
 		return nil, errors.New(
 			"only leader is allowed to add blocks")
-	}
-	if len(s.Storage.Clients) > 0 {
-		if psbd.Signature == nil {
-			return nil, errors.New(
-				"cannot create new skipblock without authentication")
-		}
-		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
-			return nil, errors.New(
-				"wrong signature for this skipchain")
-		}
 	}
 	var prev *SkipBlock
 

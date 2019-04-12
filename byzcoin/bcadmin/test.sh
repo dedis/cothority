@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
+# Usage: 
+#   ./test [options]
+# Options:
+#   -b   re-builds bcadmin package
+
 DBG_TEST=1
 DBG_SRV=1
 DBG_BCADMIN=1
 
 NBR_SERVERS=4
 NBR_SERVERS_GROUP=3
+
+# Clears some env. variables
+export -n BC_CONFIG
+export -n BC
 
 . "../../libtest.sh"
 
@@ -22,6 +31,7 @@ main(){
     run testAddDarcFromOtherOne
     run testAddDarcWithOwner
     run testExpression
+    run testLinkPermission
     run testQR
     stopTest
 }
@@ -58,6 +68,7 @@ testRoster(){
   bc=config/bc*cfg
   key=config/key*cfg
   testOK runBA latest $bc
+  # Adding an already added roster should raise an error
   testFail runBA roster add $bc $key co1/public.toml
   testOK runBA roster add $bc $key co4/public.toml
 
@@ -66,22 +77,55 @@ testRoster(){
   testGrep 2008 runBA latest $bc
 
   testFail runBA roster add $bc $key co4/public.toml
+  # Deleting the leader raises an error...
   testFail runBA roster del $bc $key co1/public.toml
+  # ... but deleting someone else works
   testOK runBA roster del $bc $key co2/public.toml
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
   sleep 10
   testNGrep "Roster:.*tls://localhost:2004" runBA latest $bc
-
+  # Need at least 3 nodes to have a majority
   testFail runBA roster del $bc $key co3/public.toml
-
+  # Adding a leader not in the roster raises an error
   testFail runBA roster leader $bc $key co2/public.toml
+  # Setting a conode that is a leader as a leader raises an error
   testFail runBA roster leader $bc $key co1/public.toml
-  testOK runBA roster leader $bc $key co3/public.toml
+  # This one fails, because only a leader is allowed to add new blocks
+  testFail runBA roster leader $bc $key co3/public.toml
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
-  testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
+  testGrep "Roster: tls://localhost:2002, tls://localhost:2006, tls://localhost:2008" runBA latest -server 2 $bc
 }
+
+# When a conode is linked to a client (`scmgr link add ...`), it removes the possibility
+# for 3rd parties to create a new skipchain on that conode. In the case a Bizcoin service
+# hosted on a linked conode wants to adds a new skipchain, we have to bypass this 
+# authorization process and allow a local service be able to send requests on the same
+# local linked conode. This process is handled with the `StoreSkipBlockInternal` method,
+# and this is what this method checks.
+# Note: this methods relies on the `scmgr` and the ability to create/update Byzcoin.
+testLinkPermission() {
+  rm -f config/*
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+  bc=config/bc*cfg
+  key=config/key*cfg
+  testOK runBA latest $bc
+  if [ ! -x ../../../scmgr/scmgr ]; then
+    echo "Didn't find \"cothority/scmgr/smgr\" executable"
+    echo "You may want to run \"go build\" in that directory"
+    exit 1
+  fi
+  scmgr link add co1/private.toml
+  scmgr link add co2/private.toml
+  scmgr link add co3/private.toml
+  testOK runBA create --roster public.toml --interval .5s
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo 
+}
+
 
 # create a ledger, and read the genesis darc.
 testCreateStoreRead(){

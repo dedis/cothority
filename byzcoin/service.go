@@ -879,27 +879,15 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
+
 	log.Lvlf3("Storing skipblock with %d transactions.", len(txRes))
 	var ssbReply *skipchain.StoreSkipBlockReply
-	if sb.Roster.List[0].Equal(s.ServerIdentity()) {
-		ssbReply, err = s.skService().StoreSkipBlock(&ssb)
-	} else {
-		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
-		ssbReply = &skipchain.StoreSkipBlockReply{}
-		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
-		if err != nil {
-			return nil, err
-		}
 
-		if ssbReply.Latest == nil {
-			return nil, errors.New("got an empty reply")
-		}
+	// Since only a leader can add new blocks, we safely assume that
+	// we are in a "local" context, ie. the bzcoin service is hosted
+	// with the skipchain one (on the same host). See PR of #1756
+	ssbReply, err = s.skService().StoreSkipBlockInternal(&ssb)
 
-		// we're not doing more verification because the block should not be used
-		// as is. It's up to the client to fetch the forward link of the previous
-		// block to insure the new one has been validated but at this moment we
-		// can't do it because it might not be propagated to this node yet
-	}
 	if err != nil {
 		return nil, err
 	}

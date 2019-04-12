@@ -90,7 +90,7 @@ COMMANDS:
 
 GLOBAL OPTIONS:
    --debug value, -d value   debug-level: 1 for terse, 5 for maximal (default: 0)
-   --config value, -c value  Configuration file of the server (default: os-specific)
+   --config value, -c value  Configuration file (private.toml) of the server (default: os-specific)
    --help, -h                show help
    --version, -v             print the version
 ```
