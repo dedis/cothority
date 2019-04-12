@@ -621,7 +621,7 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
-	s := newSer(t, 2, testInterval)
+	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
 	// Get counter
@@ -808,13 +808,18 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		Transaction:   tx,
 		InclusionWait: wait,
 	})
-
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
 		Key:     tx.Instructions[0].Hash(),
 	})
-	return rep.Proof, tx.Instructions[0].Hash(), err, err2
+
+	var proof Proof
+	if rep != nil {
+		proof = rep.Proof
+	}
+
+	return proof, tx.Instructions[0].Hash(), err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
