@@ -91,11 +91,10 @@ testRoster(){
   testFail runBA roster leader $bc $key co2/public.toml
   # Setting a conode that is a leader as a leader raises an error
   testFail runBA roster leader $bc $key co1/public.toml
-  # This one fails, because only a leader is allowed to add new blocks
-  testFail runBA roster leader $bc $key co3/public.toml
+  testOK runBA roster leader $bc $key co3/public.toml
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
-  testGrep "Roster: tls://localhost:2002, tls://localhost:2006, tls://localhost:2008" runBA latest -server 2 $bc
+  testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
 }
 
 # When a conode is linked to a client (`scmgr link add ...`), it removes the possibility
