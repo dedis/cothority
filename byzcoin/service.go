@@ -1046,6 +1046,10 @@ func (s *Service) catchupAll() error {
 		if err != nil {
 			return err
 		}
+
+		s.updateTrieLock.Lock()
+		s.catchingUp = true
+		s.updateTrieLock.Unlock()
 		s.catchUp(sb)
 	}
 	return nil
@@ -1057,7 +1061,7 @@ func (s *Service) catchupAll() error {
 // To prevent distributed denial-of-service, we first check that the skipchain is
 // known and then we limit the number of catch up requests per skipchain by waiting
 // for a minimal amount of time
-func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) error {
+func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID skipchain.SkipBlockID) error {
 	// Catch up only friendly skipchains to avoid unnecessary requests
 	if s.db().GetByID(scID) == nil {
 		return fmt.Errorf("%s: Got asked for an unknown skipchain: %x", s.ServerIdentity(), scID)
@@ -1085,15 +1089,13 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID) erro
 	s.updateTrieLock.Unlock()
 
 	cl := skipchain.NewClient()
-	search, err := cl.GetUpdateChain(r, scID)
+	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
 		return err
 	}
-	if len(search.Update) == 0 {
-		log.Lvlf1("%s: Got empty skipblock", s.ServerIdentity())
-		return errors.New("got empty skipblock")
-	}
-	s.catchUp(search.Update[len(search.Update)-1])
+
+	// catch up the intermediate missing blocks
+	s.catchUp(sb)
 	return nil
 }
 
@@ -1134,16 +1136,23 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		return
 	}
 
+	// Get the latest block known and processed by the conode
 	trieIndex := st.GetIndex()
-	cl := skipchain.NewClient()
-
-	// Fetch all missing blocks to fill the hole
-	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
+	req, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
+		Genesis: sb.SkipChainID(),
+		Index:   trieIndex,
+	})
 	if err != nil {
-		log.Error(s.ServerIdentity(), "Couldn't update blocks: "+err.Error())
+		// because we rely on the trie index, this should never happen because we're only
+		// asking locally to get the block associated with the index (thus processed already)
+		log.Errorf("%v cannot find latest block to catch up", s.ServerIdentity())
 		return
 	}
-	latest := search.SkipBlock
+
+	latest := req.SkipBlock
+
+	// Fetch all missing blocks to fill the hole
+	cl := skipchain.NewClient()
 	for trieIndex < sb.Index {
 		log.Lvlf1("%s: our index: %d - latest known index: %d", s.ServerIdentity(), trieIndex, sb.Index)
 		updates, err := cl.GetUpdateChainLevel(sb.Roster, latest.Hash, 1, catchupFetchBlocks)
@@ -1997,7 +2006,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	latestSB := s.db().GetByID(latestID)
 	if latestSB == nil {
 		// The function will prevent multiple request to catch up so we can securely call it here
-		err := s.catchupFromID(roster, scID)
+		err := s.catchupFromID(roster, scID, latestID)
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 		}
