@@ -717,7 +717,7 @@ func waitInclusion(t *testing.T, client int) {
 // Sends too many transactions to the ledger and waits for all blocks to be
 // done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 2, testInterval)
+	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
 	// Fetch the latest block
