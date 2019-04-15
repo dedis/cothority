@@ -1175,6 +1175,15 @@ func (sbb *skipBlockBuffer) get(sid SkipBlockID, id SkipBlockID) *SkipBlock {
 	return block
 }
 
+// has returns true when the skipchain has a block in the buffer
+func (sbb *skipBlockBuffer) has(sid SkipBlockID) bool {
+	sbb.Lock()
+	defer sbb.Unlock()
+
+	_, ok := sbb.buffer[string(sid)]
+	return ok
+}
+
 // clear deletes the current block of the given skipchain
 func (sbb *skipBlockBuffer) clear(sid SkipBlockID) {
 	sbb.Lock()

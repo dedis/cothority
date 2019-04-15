@@ -19,14 +19,14 @@ import (
 // followers. Finally, we bring the failed nodes back up and they should
 // contain the transactions that they missed.
 func TestViewChange_Basic(t *testing.T) {
-	testViewChange(t, 4, 1, 4*time.Second)
+	testViewChange(t, 4, 1, testInterval)
 }
 
 func TestViewChange_Basic2(t *testing.T) {
 	if testing.Short() {
 		t.Skip("doesn't work on travis correctly due to byzcoinx timeout issue, see #1428")
 	}
-	testViewChange(t, 7, 2, 4*time.Second)
+	testViewChange(t, 7, 2, testInterval)
 }
 
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
@@ -39,7 +39,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(2 * interval)
+		service.SetPropagationTimeout(interval)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
@@ -60,9 +60,11 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
 	for i := 0; i < nFailures; i++ {
-		time.Sleep(time.Duration(math.Pow(2, float64(i))) * s.interval * rotationWindow)
+		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rotationWindow)
 	}
-	time.Sleep(2 * s.interval)
+	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[nFailures].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+		time.Sleep(interval)
+	}
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	log.Lvl2("Verifying roster", config.Roster.List)
@@ -105,13 +107,16 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
 		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 	}
+	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[nFailures].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+		time.Sleep(s.interval)
+	}
 
 	log.Lvl1("Sending 1st tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sending 2nd tx")
-	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 3)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sent two tx")

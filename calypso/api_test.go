@@ -23,7 +23,7 @@ func TestClient_CreateLTS(t *testing.T) {
 	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:dummy", "spawn:" + ContractLongTermSecretID},
 		signer.Identity())
-	msg.BlockInterval = 100 * time.Millisecond
+	msg.BlockInterval = 500 * time.Millisecond
 	require.Nil(t, err)
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))

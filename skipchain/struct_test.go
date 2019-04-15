@@ -325,6 +325,8 @@ func TestBlockBuffer(t *testing.T) {
 
 	sb = bb.get(sid, bid)
 	require.NotNil(t, sb)
+	require.True(t, bb.has(sid))
+	require.False(t, bb.has(bid))
 
 	// wrong key
 	sb = bb.get(bid, bid)
