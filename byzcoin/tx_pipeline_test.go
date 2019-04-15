@@ -3,6 +3,7 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+	"sync"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
@@ -18,6 +19,7 @@ type mockTxProc interface {
 }
 
 type defaultMockTxProc struct {
+	sync.Mutex
 	batch        int
 	txCtr        int
 	proposed     TxResults
@@ -70,6 +72,9 @@ func (p *defaultMockTxProc) ProposeBlock(state *txProcessorState) error {
 	require.True(p.t, len(state.txs) > 0)
 	require.True(p.t, len(state.scs) > 0)
 
+	p.Lock()
+	defer p.Unlock()
+
 	// simulate failure
 	if len(p.proposed) <= p.failAt && p.failAt < len(p.proposed)+len(state.txs) {
 		// we only fail it once, so reset it here
@@ -120,6 +125,9 @@ func (p *defaultMockTxProc) Done() chan bool {
 }
 
 func (p *defaultMockTxProc) GetProposed() TxResults {
+	p.Lock()
+	defer p.Unlock()
+
 	return p.proposed
 }
 

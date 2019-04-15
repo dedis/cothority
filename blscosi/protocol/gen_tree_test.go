@@ -17,6 +17,11 @@ import (
 func TestGenTreesRoot(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2, 5}
+	}
+
 	for _, nbrNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -45,6 +50,11 @@ func TestGenTreesRoot(t *testing.T) {
 func TestGenTreesCount(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2, 5}
+	}
+
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -72,9 +82,13 @@ func TestGenTreesCount(t *testing.T) {
 
 // tests that the generated tree has the good number of subtrees
 func TestGenTreesSubtrees(t *testing.T) {
-
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2, 5}
+	}
+
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 
@@ -106,6 +120,11 @@ func TestGenTreesSubtrees(t *testing.T) {
 func TestGenTreesComplete(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2, 5}
+	}
+
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -154,9 +173,12 @@ func testNode(t *testing.T, node, parent *onet.TreeNode, tree *onet.Tree) {
 
 // tests that the GenTree function uses as many different servers from the roster as possible
 func TestGenTreesUsesWholeRoster(t *testing.T) {
-
 	servers := []int{5, 13, 20}
 	nNodes := 5
+	if testing.Short() {
+		servers = []int{5, 13}
+	}
+
 	for _, nServers := range servers {
 
 		local := onet.NewLocalTest(testSuite)
@@ -196,9 +218,13 @@ func TestGenTreesUsesWholeRoster(t *testing.T) {
 
 // tests that the subtree generator puts the correct subleader in place
 func TestGenSubtreePutsCorrectSubleader(t *testing.T) {
-
 	nodes := []int{2, 5, 20}
 	subleaderIDs := []int{1, 2, 3, 12}
+	if testing.Short() {
+		nodes = []int{2, 5}
+		subleaderIDs = []int{1, 3}
+	}
+
 	for _, nNodes := range nodes {
 		for _, subleaderID := range subleaderIDs {
 
@@ -243,9 +269,13 @@ func TestGenSubtreePutsCorrectSubleader(t *testing.T) {
 // Tests that the subtree generator returns the correct structure
 // that is a root, with one child and all other nodes as this child' children
 func TestGenSubtreeStructure(t *testing.T) {
-
 	nodes := []int{2, 5, 20}
 	subleaderID := 1
+	if testing.Short() {
+		nodes = []int{2, 5}
+		subleaderID = 1
+	}
+
 	for _, nNodes := range nodes {
 
 		local := onet.NewLocalTest(testSuite)
@@ -280,9 +310,12 @@ func TestGenSubtreeStructure(t *testing.T) {
 
 // Tests that the subtree generator throws errors with invalid parameters
 func TestGenSubtreeErrors(t *testing.T) {
-
 	nodes := []int{2, 5, 20}
 	correctSubleaderID := 1
+	if testing.Short() {
+		nodes = []int{2, 5}
+	}
+
 	for _, nNodes := range nodes {
 
 		local := onet.NewLocalTest(testSuite)

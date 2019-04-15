@@ -112,12 +112,15 @@ func TestService_AddTransaction_ToFollower(t *testing.T) {
 
 func TestService_AddTransaction_WithFailure(t *testing.T) {
 	if testing.Short() {
-		t.Skip("test takes too long for Travis")
+		t.Skip("Keep edge cases for Jenkins")
 	}
 	testAddTransaction(t, 2*time.Second, 0, true)
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Keep edge cases for Jenkins")
+	}
 	testAddTransaction(t, 2*time.Second, 1, true)
 }
 
@@ -714,7 +717,7 @@ func waitInclusion(t *testing.T, client int) {
 // Sends too many transactions to the ledger and waits for all blocks to be
 // done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 2, testInterval)
+	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
 	// Fetch the latest block
@@ -725,7 +728,7 @@ func TestService_FloodLedger(t *testing.T) {
 	log.Lvl1("Create 10 transactions and don't wait")
 	n := 10
 	for i := 0; i < n; i++ {
-		sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+1)
+		sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
 	}
 	// Send a last transaction and wait for it to be included
 	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
@@ -1415,7 +1418,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 		20 * time.Second,
 	}
 	if testing.Short() {
-		intervals = intervals[0:3]
+		intervals = intervals[0:2]
 	}
 
 	counter := 2
@@ -1449,12 +1452,17 @@ func TestService_SetConfigInterval(t *testing.T) {
 }
 
 func TestService_SetConfigRosterKeepLeader(t *testing.T) {
+	n := 6
+	if testing.Short() {
+		n = 2
+	}
+
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
 	log.Lvl1("Creating blocks to check rotation of the roster while keeping leader")
 	rosterR := s.roster
-	for i := 0; i < 6; i++ {
+	for i := 0; i < n; i++ {
 		rosterR = onet.NewRoster([]*network.ServerIdentity{
 			rosterR.List[0], rosterR.List[2], rosterR.List[3], rosterR.List[1]})
 		log.Lvl2("Creating block", i)
@@ -1491,7 +1499,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	defer s.local.CloseAll()
 	nbrNewNodes := 10
 	if testing.Short() {
-		nbrNewNodes = 5
+		nbrNewNodes = 2
 	}
 
 	servers, newRoster, _ := s.local.MakeSRS(cothority.Suite, nbrNewNodes, ByzCoinID)
@@ -1673,7 +1681,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {
-	s := newSer(t, 1, testInterval)
+	s := newSer(t, 1, 2*time.Second)
 	defer s.local.CloseAll()
 
 	ids := []darc.Identity{s.signer.Identity()}

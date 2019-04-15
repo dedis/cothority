@@ -14,6 +14,11 @@ import (
 var testSuite = cothority.Suite
 
 func TestCollectTx(t *testing.T) {
+	nNodes := []int{2, 3, 10}
+	if testing.Short() {
+		nNodes = []int{2, 3}
+	}
+
 	protoPrefix := "TestCollectTx"
 	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
 		tx := ClientTransaction{
@@ -21,7 +26,7 @@ func TestCollectTx(t *testing.T) {
 		}
 		return []ClientTransaction{tx}
 	}
-	for _, n := range []int{2, 3, 10} {
+	for _, n := range nNodes {
 		protoName := fmt.Sprintf("%s_%d", protoPrefix, n)
 		_, err := onet.GlobalProtocolRegister(protoName, NewCollectTxProtocol(getTx))
 		require.NoError(t, err)

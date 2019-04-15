@@ -70,6 +70,10 @@ func TestProtocol_5_1(t *testing.T) {
 }
 
 func TestProtocol_25_1(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	_, _, err := runProtocol(25, 1, 25)
 	require.Nil(t, err)
 }
@@ -80,6 +84,10 @@ func TestProtocol_7_5(t *testing.T) {
 }
 
 func TestProtocol_25_5(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	_, _, err := runProtocol(25, 5, 25)
 	require.Nil(t, err)
 }
@@ -136,6 +144,10 @@ func TestQuickAnswerProtocol_5_4(t *testing.T) {
 }
 
 func TestQuickAnswerProtocol_24_5(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	mask, err := runQuickAnswerProtocol(24, 5)
 	require.Nil(t, err)
 	require.InEpsilon(t, 14, mask.CountEnabled(), 2)
@@ -165,6 +177,10 @@ func TestProtocol_FailingLeaves_5_1(t *testing.T) {
 }
 
 func TestProtocol_FailingLeaves_25_9(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	err := runProtocolFailingNodes(25, 3, 2, 23)
 	require.Nil(t, err)
 }
@@ -219,6 +235,10 @@ func TestProtocol_FailingSubLeader_5_1(t *testing.T) {
 }
 
 func TestProtocol_FailingSubLeader_25_3(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	err := runProtocolFailingSubLeader(25, 3)
 	require.Nil(t, err)
 }
@@ -318,6 +338,10 @@ func TestProtocol_AllFailing_5_1(t *testing.T) {
 }
 
 func TestProtocol_AllFailing_25_3(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
 	_, err := runProtocolAllFailing(25, 3, 1)
 	require.Nil(t, err)
 
