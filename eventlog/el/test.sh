@@ -49,7 +49,9 @@ testCreate(){
 	[ -z "$ID" ] && exit 1
 
 	runCoBG 1 2 3
-	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 0.5s
+	# block interval of 2 seconds to this particular test to fail because of small intervals
+	# (Note: might go back to 0.5 after #1813)
+	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 2s
 	eval $SED
 	[ -z "$BC" ] && exit 1
 	
