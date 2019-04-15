@@ -353,7 +353,10 @@ setupConode(){
   DBG_TEST=$DBG_OLD
 }
 
-# A few words about what this function does wouldn't hurt
+# runCoBG: Run a conode in the background. It runs a conode under a subshell so
+# that when it exits, it can make the .dead file once the conode dies. It then
+# checks that they started listening on the expected port, and finally reports
+# if one did not start as expected.
 runCoBG(){
   for nb in "$@"; do
     dbgOut "starting conode-server #$nb"
