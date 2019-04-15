@@ -97,6 +97,7 @@ testRoster(){
   testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
 }
 
+
 # When a conode is linked to a client (`scmgr link add ...`), it removes the
 # possibility for 3rd parties to create a new skipchain on that conode. In the
 # case a Bizcoin service hosted on a linked conode wants to adds a new
@@ -104,8 +105,7 @@ testRoster(){
 # service be able to send requests on the same local linked conode. This process
 # is handled with the `StoreSkipBlockInternal` method, and this is what this
 # method checks. 
-# Note: this methods relies on the `scmgr` and the ability to create/update 
-#       Byzcoin.
+# Note: this test relies on the `scmgr` and the ability to create/update Byzcoin
 testLinkPermission() {
   rm -f config/*
   runCoBG 1 2 3
