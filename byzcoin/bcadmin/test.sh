@@ -97,13 +97,15 @@ testRoster(){
   testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
 }
 
-# When a conode is linked to a client (`scmgr link add ...`), it removes the possibility
-# for 3rd parties to create a new skipchain on that conode. In the case a Bizcoin service
-# hosted on a linked conode wants to adds a new skipchain, we have to bypass this 
-# authorization process and allow a local service be able to send requests on the same
-# local linked conode. This process is handled with the `StoreSkipBlockInternal` method,
-# and this is what this method checks.
-# Note: this methods relies on the `scmgr` and the ability to create/update Byzcoin.
+# When a conode is linked to a client (`scmgr link add ...`), it removes the
+# possibility for 3rd parties to create a new skipchain on that conode. In the
+# case a Bizcoin service hosted on a linked conode wants to adds a new
+# skipchain, we have to bypass this authorization process and allow a local
+# service be able to send requests on the same local linked conode. This process
+# is handled with the `StoreSkipBlockInternal` method, and this is what this
+# method checks. 
+# Note: this methods relies on the `scmgr` and the ability to create/update 
+#       Byzcoin.
 testLinkPermission() {
   rm -f config/*
   runCoBG 1 2 3
@@ -113,14 +115,15 @@ testLinkPermission() {
   bc=config/bc*cfg
   key=config/key*cfg
   testOK runBA latest $bc
-  if [ ! -x ../../../scmgr/scmgr ]; then
-    echo "Didn't find \"cothority/scmgr/smgr\" executable"
-    echo "You may want to run \"go build\" in that directory"
+  build $APPDIR/../../scmgr
+  SCMGR_APP="$APPDIR/../../scmgr/scmgr"
+  if [ ! -x $SCMGR_APP ]; then
+    echo "Didn't find the \"scmgr\" executable at $SCMGR_APP"
     exit 1
   fi
-  scmgr link add co1/private.toml
-  scmgr link add co2/private.toml
-  scmgr link add co3/private.toml
+  $SCMGR_APP link add co1/private.toml
+  $SCMGR_APP link add co2/private.toml
+  $SCMGR_APP link add co3/private.toml
   testOK runBA create --roster public.toml --interval .5s
   testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo 
 }
