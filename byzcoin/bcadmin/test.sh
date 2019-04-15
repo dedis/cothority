@@ -103,7 +103,7 @@ testRoster(){
 # authorization process and allow a local service be able to send requests on the same
 # local linked conode. This process is handled with the `StoreSkipBlockInternal` method,
 # and this is what this method checks.
-# Note: this methods relies on the `scmgr` and the ability to create/update Byzcoin.
+# Note: this test relies on the `scmgr` and the ability to create/update Byzcoin.
 testLinkPermission() {
   rm -f config/*
   runCoBG 1 2 3
