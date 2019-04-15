@@ -2,6 +2,7 @@ package ocs
 
 import (
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/ocs/certs"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -61,7 +62,7 @@ func (c *Client) GetProofs(roster onet.Roster, OcsID OCSID) (op OCSProof, err er
 		var reply GetProofReply
 		err = c.SendProtobuf(si, &GetProof{OcsID}, &reply)
 		if err != nil {
-			err = Erret(err)
+			err = certs.Erret(err)
 			return
 		}
 		if len(op.Signatures) == 0 {

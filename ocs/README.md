@@ -1,104 +1,122 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Applications](../doc/Applications.md) ::
-Calypso
+Onchain-Secrets
 
-# Calypso
+# Onchain-Secrets (OCS)
 
-Calypso is the implementation of the upcoming "Calypso - Auditable Sharing of
-Private Data over Blockchains". The paper can be found
+Calypso is a system to store secrets in plain sight, for example in a blockchain.
+It is composed in two parts, as described in the paper at
 [here](https://eprint.iacr.org/2018/209).
-
-In short, Calypso allows to store symmetric keys in ByzCoin, protected by a
-sharded key, and controls access to this symmetric keys using Darcs,
-Distributed Access Rights Control.
-
-It implements both the access-control cothority and the secret-management
-cothority:
-- The access-control cothority is implemented using ByzCoin with two
-  contracts, `calypsoWrite` and `calypsoRead`
-- The secret-management cothority uses an onet service with methods to set up a
-  Long Term Secret (LTS) distributed key and to request a re-encryption
-
-The workflow is the following:
-1. secret-management: Administrator sets up a new LTS for all his clients. It
-   does so by calling the `CreateLTS` service endpoint. The resulting `LTSID`
-   will be used by all clients.
-2. access-control: Administrator gives document creation rights to a writer
-3. access-control: Writer creates new Darcs for customers and for documents.
-4. access-control: Writer spawns a `Write` instance from a document Darc
-5. access-control: Reader requests that a `Read` instance is spawned from a
-   `Write` instance
-6. secret-management: Reader requests a re-encryption to the `DecryptKey`
-   service endpoint.
-
 ![Workflow Overview](CalypsoByzCoin.png?raw=true "Workflow Overview")
 
-## Darcs, Instances, Instructions and Contracts
+1. Access Control Cothority - implemented using Byzcoin in [Calypso](../calypso/README.md)
+2. Secret Management Cothority - implemented in this directory
 
-Here is a very short overview of the three most important elements of
-ByzCoin. For a more thorough documentation, refer to
-[ByzCoin](../byzcoin/README.md) documentation.
+There is a simple demo the functionality of the system:
+[OCS Demo](demo/README.md)
 
-The current ByzCoin service is a batching implementation of the previous
-skipchain service. It has a global state that holds _Instances_, where every
-instance is tied to a _Contract_ and holds a blob of data. The contract defines
-how the data is to be interpreted and allows different _Instructions_ sent from
-the user.
+# Protocols
 
-Access control is done using _Darcs_, which define what public keys can verify
-an action. Each instruction received by ByzCoin is mapped to an action and
-then verified if the given signature is correct. Also, every instance is linked
-to one darc that defines what actions are allowed to be done to that instance.
+The onet-framework uses protocols at its lowest level to define communication
+patterns betwen nodes. We use two protocols in the onchain-secrets service:
 
-All instructions sent to ByzCoin are batched in a new block that is created
-every `blockInterval` seconds.
+- [DKG](../dkg/DKG.md) - Distributed Key Generation, an implementation of
+  the following paper: "Secure Distributed Key Generation for Discrete-Log
+  Based Cryptosystems" by R. Gennaro, S. Jarecki, H. Krawczyk, and T. Rabin.
+- [ocs](Renecrypt.md) - the long-term secrets version of the on-chain secrets
+  protocol with server-side secret reconstruction described in
+  [CALYPSO](https://eprint.iacr.org/2018/209.pdf).
 
-## CreateLTS
+## Distributed Key Generation
 
-The CreateLTS endpoint is only usable when connecting to the conode
-via localhost. It is possible to relax this restriction, but it should
-only be done in testing environments; see `service.go`'s `init()` function
-for how.
+The DKG protocol creates random shares of a secret key that are only
+stored at each node. Together these nodes create a public shared key
+without creating the secret shared key. As a group they can encrypt
+and decrypt data without the need to create the secret shared key,
+but with each node participating in part of the encryption or
+decryption. For more information, please see [here](../dkg/DKG.md).
 
-The client that initiates `CreateLTS` should hold two rosters. One roster for
-storing the secret shares of LTS (long term secret), the other for a ByzCoin
-instance for storing the LTS roster (using the LTS contract).
+## Onchain-Secrets
 
-If the LTS roster does not exist on ByzCoin, the client is responsible for
-creating it. Which can be done by sending a ByzCoin transaction. The
-transaction should spawn a new LTS instance.
+Based on the DKG, data that is ElGamal encrypted using the public
+shared key from the DKG can be re-encrypted under another public key
+without the data being in the clear at any given moment. This is used
+in the onchain-secrets skipchain when a reader wants to recover the
+symmetric key.
 
-After the LTS roster is on ByzCoin but before the creation of LTS shares. The
-client should make a `CreateLTS` request to a node in the LTS roster. The
-request should contain the instance ID that contains the LTS roster. Then,
-every Calypso node should check that the instance ID that holds the LTS roster
-exists before starting the DKG. For this operation, all nodes must be online.
-By default, a threshold of 2/3 of the nodes must be present for the
-decryption.
+# Variables used
 
-The CreateLTS service endpoint returns a `LTSID` in the form of a 32 byte
+When going through the code, the variables follow the CALYPSO paper
+in the Appendix B under **Secret reconstruction at the trusted server**
+as far as possible.
+
+Here is a short recap of the different variable-names used in the
+re-encryption:
+
+- X: the aggregate public key of the OCS (LTS), also used as the
+ID of the OCS
+- C: the ElGamal part of the data, with maximal key-length of 240 bits for
+Ed25519
+- U: the encrypted random value for the ElGamal encryption
+- Xc: the public key of the reader under which U will be re-encrypted
+- XHatEnc: the re-encrypted random value for the ElGamal encryption
+
+# API
+
+This onet-service offers an API to interact with the OnChain-Secrets service
+and allows you to:
+
+- `AddPolicyCreateOCS` - define who is allowed to create new OCS-instances
+- `CreateOCS` - start a new OCS instance
+- `GetProofs` - returns a list of signatures from nodes on an OCS-instance
+- `Reencrypt` - request a reencryption on an encrypted secret
+- `Reshare` - not implemented - re-define the set of nodes holding an OCS-instance
+
+For all the policies and authentications, different Access Control Cothorities
+can be defined. Currently the two following ACCs are defined:
+
+- `ByzCoin` - using DARCs to define access control
+- `X509Cert` - using x509-certs to define who is allowed to access the system
+
+## AddPolicyCreateOCS
+
+This is the entry point to the OCS system. Every node needs to define under
+which policy he accepts new OCS instances. For the two ACCs, this is
+defined as follows:
+
+- `ByzCoin` - by giving a byzcoin-ID, CreateOCS will accept every proof of 
+an LTSInstance that can be verified using a stored byzcoin-ID
+- `X509Cert` - by giving a root-CA, CreateOCS will accept every request with
+policies signed by this root-CA 
+
+## CreateOCS
+
+Using the CreateOCS endpoint, a client can request the system to set up a
+new OCS instance. The request is only accepted if the policy of one of the
+ACCs is fulfilled:
+
+- `ByzCoin` - the proof given in the `Reencrypt` policy must be verifiable
+with one of the stored byzcoin-IDs
+- `X509Cert` - the certificate given in `Reencrypt` and `Reshare` must have
+been signed by one of the root-CAs 
+
+The CreateOCS service endpoint returns a `LTSID` in the form of a 32 byte
 slice. This ID represents the group that created the distributed key. Any node
 can participate in as many DKGs as you want and will get a random `LTSID`
 assigned.
 
-## Write Contract
+## GetProofs
 
-The write contract verifies that the request has been correctly created, so
-that no malicious writer can send an encrypted key without knowing the secret.
-It then creates a new write-instance that contains the write request.
+Once an OCS instance has been created, this API endpoint can be called. The
+contacted node will send a request to sign the OCS-identity to all other nodes 
+and then return a list of all signatures, one per node.
 
-A read request must also be sent to the write contract, which will forward it
-to the read contract. This is so that every instruction sent to ByzCoin has
-as a target an existing instance.
+These signatures can be verified to make sure that the OCS-instance has been
+correctly set up and that the node contacted in `CreateOCS` didn't change
+the roster. 
 
-## Read Contract
-
-The read contract verifies that the request is valid and points to the write
-instance. It stores the reader's public key in the instance, so that the
-secret-management cothority can re-encrypt to this reader's public key.
-
-## Resharing LTS
+## Reshare - not yet implemented
 
 It is possible that the roster might change and the LTS shares must be
 re-distributed but without changing the LTS itself. We accomplish this in two

@@ -12,6 +12,8 @@ import (
 	"os"
 	"time"
 
+	"go.dedis.ch/cothority/v3/ocs/certs"
+
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/kyber/v3/suites"
@@ -102,28 +104,28 @@ func (s *Service) AddPolicyCreateOCS(req *AddPolicyCreateOCS) (reply *AddPolicyC
 // decryption requests.
 func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	if err = req.verify(); err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 
 	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
 	cfgBuf, err := protobuf.Encode(req)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
 	err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 
 	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
@@ -132,18 +134,18 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, Erret(err)
+			return nil, certs.Erret(err)
 		}
 		ocsID, err := NewOCSID(shared.X)
 		if err != nil {
-			return nil, Erret(err)
+			return nil, certs.Erret(err)
 		}
 		reply = &CreateOCSReply{
 			OcsID: ocsID,
 		}
 		oid, err = shared.X.MarshalBinary()
 		if err != nil {
-			return nil, Erret(err)
+			return nil, certs.Erret(err)
 		}
 		s.storage.Lock()
 		s.storage.Element[string(oid)] = &storageElement{
@@ -184,11 +186,11 @@ func (s *Service) GetProof(req *GetProof) (reply *GetProofReply, err error) {
 	}
 	msg, err := reply.Proof.Message()
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	sig, err := schnorr.Sign(cothority.Suite, s.ServerIdentity().ServicePrivate(ServiceName), msg)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	reply.Proof.Signatures = [][]byte{sig}
 	return
@@ -221,23 +223,23 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		tree := es.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 		pi, err := s.CreateProtocol(NameOCS, tree)
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		ocsProto = pi.(*OCS)
 		ocsProto.U, err = dkr.Auth.U()
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		X, err := dkr.OcsID.X()
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		if err = dkr.Auth.verify(es.PolicyReencrypt, X, ocsProto.U); err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		ocsProto.Xc, err = dkr.Auth.Xc()
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsProto.Xc)
 		ocsProto.VerificationData, err = protobuf.Encode(&dkr.Auth)
@@ -267,11 +269,11 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	log.Lvl3("Starting reencryption protocol", ocsProto.TreeNodeInstance.TokenID())
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: dkr.OcsID})
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	if !<-ocsProto.Reencrypted {
 		return nil, errors.New("reencryption got refused")
@@ -280,10 +282,10 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	if err != nil {
-		return nil, Erret(err)
+		return nil, certs.Erret(err)
 	}
 	log.Lvl3("Successfully reencrypted the key")
 	return
@@ -594,11 +596,11 @@ func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
 		var arc AuthReencrypt
 		err := protobuf.DecodeWithConstructors(*rc.VerificationData, &arc, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		Xc, err := arc.Xc()
 		if err != nil {
-			return Erret(err)
+			return certs.Erret(err)
 		}
 		if !Xc.Equal(rc.Xc) {
 			return errors.New("xcs don't match up")

@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"os"
 
-	"go.dedis.ch/cothority/v3/ocs/libtest"
+	"go.dedis.ch/cothority/v3/ocs/certs"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -28,7 +28,7 @@ func main() {
 
 	log.Info("1. Creating createOCS cert and setting OCS-create policy")
 	cl := ocs.NewClient()
-	coPrivKey, coCert, err := libtest.CreateCertCa()
+	coPrivKey, coCert, err := certs.CreateCertCa()
 	log.ErrFatal(err)
 	for _, si := range roster.List {
 		err = cl.AddPolicyCreateOCS(si, ocs.Policy{X509Cert: &ocs.PolicyX509Cert{
@@ -38,7 +38,7 @@ func main() {
 	}
 
 	log.Info("2.a) Creating node cert")
-	nodePrivKey, nodeCert, err := libtest.CreateCertNode(coCert, coPrivKey)
+	nodePrivKey, nodeCert, err := certs.CreateCertNode(coCert, coPrivKey)
 	log.ErrFatal(err)
 
 	px := ocs.Policy{
@@ -53,18 +53,27 @@ func main() {
 	log.ErrFatal(err)
 	log.Infof("New OCS created with ID: %x", oid)
 
+	log.Info("2.c) Get proofs of all nodes")
+	proof, err := cl.GetProofs(*roster, oid)
+	log.ErrFatal(err)
+	log.ErrFatal(proof.Verify())
+	log.Info("Proof got verified successfully on nodes:")
+	for i, sig := range proof.Signatures {
+		log.Infof("Signature %d of %s: %x", i, proof.Roster.List[i].Address, sig)
+	}
+
 	log.Info("3.a) Creating secret key and encrypting it with the OCS-key")
 	secret := []byte("ocs for everybody")
 	X, err := oid.X()
 	log.ErrFatal(err)
-	U, C, err := libtest.EncodeKey(cothority.Suite, X, secret)
+	U, C, err := certs.EncodeKey(cothority.Suite, X, secret)
 	log.ErrFatal(err)
 
 	log.Info("3.b) Creating certificate for the re-encryption")
 	kp := key.NewKeyPair(cothority.Suite)
-	wid, err := ocs.NewWriteID(X, U)
+	wid, err := certs.NewWriteID(X, U)
 	log.ErrFatal(err)
-	reencryptCert, err := libtest.CreateCertReencrypt(nodeCert, nodePrivKey, wid, kp.Public)
+	reencryptCert, err := certs.CreateCertReencrypt(nodeCert, nodePrivKey, wid, kp.Public)
 	log.ErrFatal(err)
 	auth := ocs.AuthReencrypt{
 		Ephemeral: kp.Public,
@@ -79,7 +88,7 @@ func main() {
 	log.ErrFatal(err)
 
 	log.Info("5. Decrypt the symmetric key")
-	secretRec, err := libtest.DecodeKey(cothority.Suite, X, C, XhatEnc, kp.Private)
+	secretRec, err := certs.DecodeKey(cothority.Suite, X, C, XhatEnc, kp.Private)
 	log.ErrFatal(err)
 	if bytes.Compare(secret, secretRec) != 0 {
 		log.Fatal("Recovered secret is not the same")

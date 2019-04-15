@@ -1,4 +1,4 @@
-package libtest
+package certs
 
 import (
 	"crypto/ecdsa"
