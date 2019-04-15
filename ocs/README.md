@@ -8,7 +8,7 @@ Onchain-Secrets
 Calypso is a system to store secrets in plain sight, for example in a blockchain.
 It is composed in two parts, as described in the paper at
 [here](https://eprint.iacr.org/2018/209).
-![Workflow Overview](CalypsoByzCoin.png?raw=true "Workflow Overview")
+![Workflow Overview](Calypso-ocs-access.png?raw=true "Workflow Overview")
 
 1. Access Control Cothority - implemented using Byzcoin in [Calypso](../calypso/README.md)
 2. Secret Management Cothority - implemented in this directory
@@ -56,9 +56,9 @@ re-encryption:
 
 - X: the aggregate public key of the OCS (LTS), also used as the
 ID of the OCS
-- C: the ElGamal part of the data, with maximal key-length of 240 bits for
+- C: the ElGamal part of the data, with maximal key-length of 232 bits for
 Ed25519
-- U: the encrypted random value for the ElGamal encryption
+- U: the encrypted random value for the ElGamal encryption, the commit
 - Xc: the public key of the reader under which U will be re-encrypted
 - XHatEnc: the re-encrypted random value for the ElGamal encryption
 
