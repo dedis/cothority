@@ -879,10 +879,12 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
+
 	log.Lvlf3("Storing skipblock with %d transactions.", len(txRes))
 	var ssbReply *skipchain.StoreSkipBlockReply
+
 	if sb.Roster.List[0].Equal(s.ServerIdentity()) {
-		ssbReply, err = s.skService().StoreSkipBlock(&ssb)
+		ssbReply, err = s.skService().StoreSkipBlockInternal(&ssb)
 	} else {
 		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
 		ssbReply = &skipchain.StoreSkipBlockReply{}
@@ -900,6 +902,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// block to insure the new one has been validated but at this moment we
 		// can't do it because it might not be propagated to this node yet
 	}
+
 	if err != nil {
 		return nil, err
 	}
