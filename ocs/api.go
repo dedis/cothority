@@ -4,6 +4,7 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // TODO: think about authentication
@@ -19,6 +20,11 @@ type Client struct {
 // NewClient creates a new client to interact with the Calypso Service.
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+}
+
+// AddPolicyCreateOCS stores who is allowed to create new OCS instances.
+func (c *Client) AddPolicyCreateOCS(si *network.ServerIdentity, policy Policy) error {
+	return c.SendProtobuf(si, &AddPolicyCreateOCS{Create: policy}, nil)
 }
 
 // CreateOCS starts a new Distributed Key Generation with the nodes in the roster and

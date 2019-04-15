@@ -28,9 +28,6 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-// Used for tests
-var OCSServiceID onet.ServiceID
-
 // ServiceName of the secret-management part of Calypso.
 const ServiceName = "OCS"
 
@@ -45,7 +42,7 @@ func init() {
 	var err error
 	_, err = onet.GlobalProtocolRegister(calypsoReshareProto, dkgprotocol.NewSetup)
 	log.ErrFatal(err)
-	OCSServiceID, err = onet.RegisterNewServiceWithSuite(ServiceName, suites.MustFind("ed25519"), newService)
+	_, err = onet.RegisterNewServiceWithSuite(ServiceName, suites.MustFind("ed25519"), newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &storageElement{})
 
@@ -72,10 +69,10 @@ type pubPoly struct {
 }
 
 // ProcessClientRequest implements onet.Service. We override the version
-// we normally get from embeddeding onet.ServiceProcessor in order to
+// we normally get from embedding onet.ServiceProcessor in order to
 // hook it and get a look at the http.Request.
 func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
-	if !disableLoopbackCheck && path == "CreateOCS" {
+	if !disableLoopbackCheck && path == "AddPolicyCreateOCS" {
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {
 			return nil, nil, err
@@ -88,6 +85,16 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 	}
 
 	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
+}
+
+// AddPolicyCreateOCS defines who is allowed to create new OCS instances. Per default
+// it only accepts requests on the localhost interface. But this can be overridden
+// by the COTHORITY_ALLOW_INSECURE_ADMIN variable.
+func (s *Service) AddPolicyCreateOCS(req *AddPolicyCreateOCS) (reply *AddPolicyCreateOCSReply, err error) {
+	s.storage.Lock()
+	s.storage.PolicyCreateOCS = append(s.storage.PolicyCreateOCS, req.Create)
+	s.storage.Unlock()
+	return &AddPolicyCreateOCSReply{}, s.save()
 }
 
 // CreateOCS takes as input a roster with a list of all nodes that should
@@ -109,7 +116,10 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
-	setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+	err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+	if err != nil {
+		return nil, Erret(err)
+	}
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
@@ -145,7 +155,10 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 			DKS:             *dks,
 		}
 		s.storage.Unlock()
-		s.save()
+		err = s.save()
+		if err != nil {
+			return nil, err
+		}
 		log.Lvlf2("%v Created LTS with ID (=^pubKey): %x", s.ServerIdentity(), oid)
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("new-dkg didn't finish in time")
@@ -436,7 +449,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				DKS:             *dks,
 			}
 			s.storage.Unlock()
-			s.save()
+			err = s.save()
+			if err != nil {
+				log.Error(err)
+			}
 		}()
 		return pi, nil
 
@@ -585,7 +601,7 @@ func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
 			return Erret(err)
 		}
 		if !Xc.Equal(rc.Xc) {
-			return errors.New("Xcs don't match up")
+			return errors.New("xcs don't match up")
 		}
 		return nil
 	}()
@@ -604,7 +620,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	if err := s.RegisterHandlers(s.CreateOCS, s.ReshareLTS, s.Reencrypt,
-		s.GetProof); err != nil {
+		s.GetProof, s.AddPolicyCreateOCS); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

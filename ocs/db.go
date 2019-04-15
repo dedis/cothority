@@ -18,7 +18,8 @@ var storageKey = []byte("storage")
 
 // storage is used to save all elements of the DKG.
 type storage struct {
-	Element map[string]*storageElement
+	Element         map[string]*storageElement
+	PolicyCreateOCS []Policy
 
 	sync.Mutex
 }

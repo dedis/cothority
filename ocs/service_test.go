@@ -65,9 +65,9 @@ func TestService_Reencrypt(t *testing.T) {
 	// Test setting up a new OCS with a valid X509
 	s1 := servers[0].Service(ServiceName).(*Service)
 
-	caPrivKey, caCert, err := CreateCaCert()
+	caPrivKey, caCert, err := CreateCertCa()
 	require.NoError(t, err)
-	caPrivKeyAttack, caCertAttack, err := CreateCaCert()
+	caPrivKeyAttack, caCertAttack, err := CreateCertCa()
 	require.NoError(t, err)
 
 	px := Policy{
@@ -93,7 +93,7 @@ func TestService_Reencrypt(t *testing.T) {
 	kp := key.NewKeyPair(cothority.Suite)
 	wid, err := NewWriteID(X, U)
 	require.NoError(t, err)
-	reencryptCert, err := CreateReencryptCert(caCertAttack, caPrivKeyAttack, wid, kp.Public)
+	reencryptCert, err := CreateCertReencrypt(caCertAttack, caPrivKeyAttack, wid, kp.Public)
 	require.NoError(t, err)
 	req := &Reencrypt{
 		OcsID: cor.OcsID,
@@ -108,7 +108,7 @@ func TestService_Reencrypt(t *testing.T) {
 	rr, err := s1.Reencrypt(req)
 	require.Error(t, err)
 
-	reencryptCert, err = CreateReencryptCert(caCert, caPrivKey, wid, kp.Public)
+	reencryptCert, err = CreateCertReencrypt(caCert, caPrivKey, wid, kp.Public)
 	require.NoError(t, err)
 	req.Auth.X509Cert.Certificates = [][]byte{reencryptCert.Raw}
 	rr, err = s1.Reencrypt(req)

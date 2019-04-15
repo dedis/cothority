@@ -26,6 +26,17 @@ import (
 // API calls
 // ***
 
+// AddPolicyCreateOCS is sent by a local admin to add a rule to define who is
+// authorized to create a new OCS.
+type AddPolicyCreateOCS struct {
+	Create Policy
+}
+
+// AddPolicyCreateOCSReply is an empty reply if the policy has been successfully
+// created.
+type AddPolicyCreateOCSReply struct {
+}
+
 // CreateOCS is sent to the service to request a new OCS cothority.
 // It holds the two policies necessary to define an OCS: how to
 // authenticate a reencryption request, and how to authenticate a
@@ -125,6 +136,26 @@ type PolicyX509Cert struct {
 	// Slice of ASN.1 encoded X509 certificates.
 	CA        [][]byte
 	Threshold int
+}
+
+// AuthCreate prooves that the caller has the right to create a new OCS
+// instance.
+type AuthCreate struct {
+	ByzCoin  AuthCreateByzcoin
+	X509Cert AuthCreateX509Cert
+}
+
+// AuthCreateByzcoin must give the ByzcoinID and the proof to the LTSInstance
+// for the creation of a new OCS.
+type AuthCreateByzcoin struct {
+	ByzcoinID   skipchain.SkipBlockID
+	LTSInstance byzcoin.Proof
+}
+
+// AuthCreateX509Cert must give a threshold number of certificates to proof that
+// the caller has the right to create a new OCS.
+type AuthCreateX509Cert struct {
+	Certificates [][]byte
 }
 
 // AuthReencrypt holds one of the possible authentication proofs for a reencryption request. Each

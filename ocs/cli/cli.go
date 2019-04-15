@@ -1,8 +1,16 @@
+// Demo of how the new OCS service works from an outside, non-go-test caller. It does the following steps:
+//  1. set up a root CA that is stored in the service as being allowed to create new OCS-instances
+//  2. Create a new OCS-instance with a reencryption policy being set by a node-certificate
+//  3. Encrypt a symmetric key to the OCS-instance public key
+//  4. Ask the OCS-instance to re-encrypt the key to an ephemeral key
+//  5. Decrypt the symmetric key
 package main
 
 import (
 	"bytes"
 	"os"
+
+	"go.dedis.ch/cothority/v3/ocs/libtest"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -18,39 +26,45 @@ func main() {
 	roster, err := lib.ReadRoster(os.Args[1])
 	log.ErrFatal(err)
 
-	log.Info("Creating local certs")
-	caPrivKey, caCert, err := ocs.CreateCaCert()
+	log.Info("1. Creating createOCS cert and setting OCS-create policy")
+	cl := ocs.NewClient()
+	coPrivKey, coCert, err := libtest.CreateCertCa()
 	log.ErrFatal(err)
-	log.Lvl5(caPrivKey)
+	for _, si := range roster.List {
+		err = cl.AddPolicyCreateOCS(si, ocs.Policy{X509Cert: &ocs.PolicyX509Cert{
+			CA: [][]byte{coCert.Raw},
+		}})
+		log.ErrFatal(err)
+	}
+
+	log.Info("2.a) Creating node cert")
+	nodePrivKey, nodeCert, err := libtest.CreateCertNode(coCert, coPrivKey)
+	log.ErrFatal(err)
 
 	px := ocs.Policy{
 		X509Cert: &ocs.PolicyX509Cert{
-			CA:        [][]byte{caCert.Raw},
+			CA:        [][]byte{nodeCert.Raw},
 			Threshold: 1,
 		},
 	}
 
-	log.Info("Creating new OCS")
-	cl := ocs.NewClient()
-	var oid ocs.OCSID
-	for i := 0; i < 10; i++ {
-		oid, err = cl.CreateOCS(*roster, px, px)
-		log.ErrFatal(err)
-	}
+	log.Info("2.b) Creating new OCS")
+	oid, err := cl.CreateOCS(*roster, px, px)
+	log.ErrFatal(err)
 	log.Infof("New OCS created with ID: %x", oid)
 
-	log.Info("Creating secret key and encrypting it with the OCS-key")
+	log.Info("3.a) Creating secret key and encrypting it with the OCS-key")
 	secret := []byte("ocs for everybody")
 	X, err := oid.X()
 	log.ErrFatal(err)
-	U, C, err := ocs.EncodeKey(cothority.Suite, X, secret)
+	U, C, err := libtest.EncodeKey(cothority.Suite, X, secret)
 	log.ErrFatal(err)
 
-	log.Info("Creating certificate for the re-encryption")
+	log.Info("3.b) Creating certificate for the re-encryption")
 	kp := key.NewKeyPair(cothority.Suite)
 	wid, err := ocs.NewWriteID(X, U)
 	log.ErrFatal(err)
-	reencryptCert, err := ocs.CreateReencryptCert(caCert, caPrivKey, wid, kp.Public)
+	reencryptCert, err := libtest.CreateCertReencrypt(nodeCert, nodePrivKey, wid, kp.Public)
 	log.ErrFatal(err)
 	auth := ocs.AuthReencrypt{
 		Ephemeral: kp.Public,
@@ -60,10 +74,12 @@ func main() {
 		},
 	}
 
-	log.Info("Asking OCS to re-encrypt the secret to an ephemeral key")
+	log.Info("4. Asking OCS to re-encrypt the secret to an ephemeral key")
 	XhatEnc, err := cl.Reencrypt(*roster, oid, auth)
 	log.ErrFatal(err)
-	secretRec, err := ocs.DecodeKey(cothority.Suite, X, C, XhatEnc, kp.Private)
+
+	log.Info("5. Decrypt the symmetric key")
+	secretRec, err := libtest.DecodeKey(cothority.Suite, X, C, XhatEnc, kp.Private)
 	log.ErrFatal(err)
 	if bytes.Compare(secret, secretRec) != 0 {
 		log.Fatal("Recovered secret is not the same")

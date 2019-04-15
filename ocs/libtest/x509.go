@@ -1,4 +1,4 @@
-package ocs
+package libtest
 
 import (
 	"crypto/ecdsa"
@@ -12,8 +12,15 @@ import (
 	"go.dedis.ch/kyber/v3"
 )
 
-// CreateCaCert is used for tests and returns a new private key, as well as a CA certificate.
-func CreateCaCert() (caPrivKey *ecdsa.PrivateKey, cert *x509.Certificate, err error) {
+// Helper functions to create x509-certificates. They are supposed to be used in the following
+// way:
+//
+//   CertCa - is the basic certificate that can create CertNodes
+//   +-> CertNode - can be given as a CA for Reencryption and Resharing
+//       +-> CertReencrypt - indicates who is allowed to reencrypt and gives the ephemeral key
+
+// CreateCertCa is used for tests and returns a new private key, as well as a CA certificate.
+func CreateCertCa() (caPrivKey *ecdsa.PrivateKey, cert *x509.Certificate, err error) {
 	notBefore := time.Now()
 	notAfter := notBefore.Add(25 * 365 * 24 * time.Hour)
 	serialNumber := big.NewInt(1)
@@ -28,7 +35,7 @@ func CreateCaCert() (caPrivKey *ecdsa.PrivateKey, cert *x509.Certificate, err er
 
 		KeyUsage:              x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
-		MaxPathLen:            1,
+		MaxPathLen:            2,
 		IsCA:                  true,
 	}
 	caPrivKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
@@ -47,8 +54,53 @@ func CreateCaCert() (caPrivKey *ecdsa.PrivateKey, cert *x509.Certificate, err er
 	return
 }
 
-// CreateReencryptCert is used for tests and can create a certificate for one of the nodes.
-func CreateReencryptCert(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
+// CreateCertNode is used for tests and can create a certificate for one of the nodes.
+func CreateCertNode(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey) (
+	nodePrivKey *ecdsa.PrivateKey, nodeCert *x509.Certificate, err error) {
+
+	notBefore := time.Now()
+	// 10 years for a node certificate
+	notAfter := notBefore.Add(31e6 * 10 * time.Second)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, nil, Erret(err)
+	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			CommonName: "Node certificate",
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageCertSign,
+		MaxPathLen:            1,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+
+	nodePrivKey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		return nil, nil, Erret(err)
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, &nodePrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		return nil, nil, Erret(err)
+	}
+
+	nodeCert, err = x509.ParseCertificate(derBytes)
+	if err != nil {
+		return nil, nil, Erret(err)
+	}
+
+	return
+}
+
+// CreateCertReencrypt is used for tests and can create a certificate for a reencryption request.
+func CreateCertReencrypt(caCert *x509.Certificate, caPrivKey *ecdsa.PrivateKey,
 	writeID []byte, ephemeralPublicKey kyber.Point) (*x509.Certificate, error) {
 
 	notBefore := time.Now()

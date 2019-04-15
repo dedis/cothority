@@ -8,6 +8,8 @@ import (
 	"encoding/asn1"
 	"errors"
 
+	"go.dedis.ch/cothority/v3/ocs/libtest"
+
 	"go.dedis.ch/cothority/v3/calypso"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
@@ -35,7 +37,7 @@ func Verify(rootCert *x509.Certificate, authCert *x509.Certificate, ocsID OCSID,
 
 	cert, err := x509.ParseCertificate(authCert.Raw)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 
 	opts := x509.VerifyOptions{
@@ -44,22 +46,22 @@ func Verify(rootCert *x509.Certificate, authCert *x509.Certificate, ocsID OCSID,
 
 	wid, err := getExtensionFromCert(authCert, WriteIdOID)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 	X, err := ocsID.X()
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 	err = WriteID(wid).Verify(X, U)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 
 	unmarkUnhandledCriticalExtension(cert, WriteIdOID)
 	unmarkUnhandledCriticalExtension(cert, EphemeralKeyOID)
 
 	_, err = cert.Verify(opts)
-	return Erret(err)
+	return libtest.Erret(err)
 }
 
 // WriteID is the ID that will be revealed to the
@@ -69,11 +71,11 @@ func NewWriteID(X, U kyber.Point) (WriteID, error) {
 	wid := sha256.New()
 	_, err := X.MarshalTo(wid)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, libtest.Erret(err)
 	}
 	_, err = U.MarshalTo(wid)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, libtest.Erret(err)
 	}
 	return wid.Sum(nil), nil
 }
@@ -81,7 +83,7 @@ func NewWriteID(X, U kyber.Point) (WriteID, error) {
 func (wid WriteID) Verify(X, U kyber.Point) error {
 	other, err := NewWriteID(X, U)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 	if bytes.Compare(wid, other) != 0 {
 		return errors.New("not the same writeID")
@@ -95,43 +97,43 @@ func NewOCSID(X kyber.Point) (OCSID, error) {
 
 func (ocs OCSID) X() (kyber.Point, error) {
 	X := cothority.Suite.Point()
-	err := Erret(X.UnmarshalBinary(ocs))
+	err := libtest.Erret(X.UnmarshalBinary(ocs))
 	return X, err
 }
 
 func (ocs OCSID) Verify(roster onet.Roster, policyReencrypt, policyReshare Policy, sig []byte) error {
-	return Erret(errors.New("use CreateOCS.CheckOCSSignature"))
+	return libtest.Erret(errors.New("use CreateOCS.CheckOCSSignature"))
 	msg := sha256.New()
 	msg.Write(ocs)
 	policyBuf, err := protobuf.Encode(policyReencrypt)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 	msg.Write(policyBuf)
 	policyBuf, err = protobuf.Encode(policyReencrypt)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
 	msg.Write(policyBuf)
 	agg, err := roster.ServiceAggregate(calypso.ServiceName)
 	if err != nil {
-		return Erret(err)
+		return libtest.Erret(err)
 	}
-	return Erret(schnorr.Verify(cothority.Suite, agg, msg.Sum(nil), sig))
+	return libtest.Erret(schnorr.Verify(cothority.Suite, agg, msg.Sum(nil), sig))
 }
 
 func getPointFromCert(certBuf []byte, extID asn1.ObjectIdentifier) (kyber.Point, error) {
 	cert, err := x509.ParseCertificate(certBuf)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, libtest.Erret(err)
 	}
 	secret := cothority.Suite.Point()
 	secretBuf, err := getExtensionFromCert(cert, extID)
 	if err != nil {
-		return nil, Erret(err)
+		return nil, libtest.Erret(err)
 	}
 	err = secret.UnmarshalBinary(secretBuf)
-	return secret, Erret(err)
+	return secret, libtest.Erret(err)
 }
 
 func getExtensionFromCert(cert *x509.Certificate, extID asn1.ObjectIdentifier) ([]byte, error) {

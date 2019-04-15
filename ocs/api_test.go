@@ -19,7 +19,7 @@ func TestClient_GetProofs(t *testing.T) {
 	nbrNodes := 5
 	_, roster, _ := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 
-	_, caCert, err := CreateCaCert()
+	_, caCert, err := CreateCertCa()
 	require.NoError(t, err)
 
 	px := Policy{
@@ -45,7 +45,7 @@ func TestClient_Reencrypt(t *testing.T) {
 	nbrNodes := 5
 	_, roster, _ := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 
-	caPrivKey, caCert, err := CreateCaCert()
+	caPrivKey, caCert, err := CreateCertCa()
 	require.NoError(t, err)
 	log.Lvl5(caPrivKey)
 
@@ -72,7 +72,7 @@ func TestClient_Reencrypt(t *testing.T) {
 	kp := key.NewKeyPair(cothority.Suite)
 	wid, err := NewWriteID(X, U)
 	require.NoError(t, err)
-	reencryptCert, err := CreateReencryptCert(caCert, caPrivKey, wid, kp.Public)
+	reencryptCert, err := CreateCertReencrypt(caCert, caPrivKey, wid, kp.Public)
 	require.NoError(t, err)
 	auth := AuthReencrypt{
 		Ephemeral: kp.Public,

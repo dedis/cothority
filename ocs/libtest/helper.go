@@ -1,4 +1,4 @@
-package ocs
+package libtest
 
 import (
 	"errors"
