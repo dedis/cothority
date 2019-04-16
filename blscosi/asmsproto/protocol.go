@@ -1,4 +1,7 @@
-package protocol2
+// Package asmsproto implements the Accountable-Subgroup Multi-Signatures over BLS
+// to protect the aggregates against rogue public-key attacks. This is a modified
+// version of blscosi/protocol which is now deprecated.
+package asmsproto
 
 import (
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
@@ -34,7 +37,7 @@ func NewModifiedProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error
 type ModifiedBlsCosi struct {
 	*protocol.BlsCosi
 
-	FinalSignature chan ModifiedBlsSignature
+	FinalSignature chan ASMSignature
 }
 
 // NewModifiedBlsCosi makes a protocol instance for the modified BLS CoSi protocol
@@ -46,7 +49,7 @@ func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, su
 
 	mbc := &ModifiedBlsCosi{
 		BlsCosi:        c.(*protocol.BlsCosi),
-		FinalSignature: make(chan ModifiedBlsSignature),
+		FinalSignature: make(chan ASMSignature),
 	}
 	mbc.Sign = asmbls.Sign
 	mbc.Verify = asmbls.Verify
@@ -68,7 +71,7 @@ func (p *ModifiedBlsCosi) Dispatch() error {
 	sig := <-p.BlsCosi.FinalSignature
 	// Convert the BlsSignature into the modified version that will aggregate
 	// the public keys with the coefficient
-	p.FinalSignature <- ModifiedBlsSignature(sig)
+	p.FinalSignature <- ASMSignature(sig)
 
 	return nil
 }

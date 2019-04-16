@@ -1,4 +1,4 @@
-package protocol2
+package asmsproto
 
 import (
 	"testing"
@@ -33,7 +33,7 @@ func TestProtocol2_SimpleCase(t *testing.T) {
 	err = runProtocol(10, 5, 10)
 	require.NoError(t, err)
 
-	err = runProtocol(20, 5, 5)
+	err = runProtocol(20, 5, 15)
 	require.NoError(t, err)
 }
 

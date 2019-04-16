@@ -105,13 +105,11 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 		Threshold:         DefaultThreshold(nNodes),
 		Sign:              bls.Sign,
 		Verify:            bls.Verify,
-		Aggregate: func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
-			return bls.AggregateSignatures(suite, sigs...)
-		},
-		startChan:       make(chan bool, 1),
-		verificationFn:  vf,
-		subProtocolName: subProtocolName,
-		suite:           suite,
+		Aggregate:         aggregate,
+		startChan:         make(chan bool, 1),
+		verificationFn:    vf,
+		subProtocolName:   subProtocolName,
+		suite:             suite,
 	}
 
 	// the default number of subtree is the square root to
@@ -486,4 +484,8 @@ func (p *BlsCosi) makeAggregateResponse(suite pairing.Suite, publics []kyber.Poi
 	log.Lvlf3("%v is done aggregating signatures with total of %d signatures", p.ServerIdentity(), finalMask.CountEnabled())
 
 	return append(sig, finalMask.Mask()...), nil
+}
+
+func aggregate(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
+	return bls.AggregateSignatures(suite, sigs...)
 }
