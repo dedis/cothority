@@ -748,7 +748,7 @@ func TestService_BigTx(t *testing.T) {
 	// blocks gets to be too close to the edge with the normal short
 	// testing interval, and starts generating
 	// errors-that-might-not-be-errors.
-	s := newSer(t, 1, testInterval)
+	s := newSer(t, 1, 1*time.Second)
 	defer s.local.CloseAll()
 
 	// Check block number before.
@@ -812,7 +812,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		InclusionWait: wait,
 	})
 
-	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[client].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+	for doCatchUp := false; !doCatchUp && wait != 0; _, doCatchUp = s.services[client].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
 		time.Sleep(s.interval)
 	}
 
