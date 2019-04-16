@@ -624,7 +624,9 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
-	s := newSer(t, 2, testInterval)
+	// use a bigger block interval to allow txs to be included
+	// in the same block
+	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
 	// Get counter
@@ -663,7 +665,7 @@ func waitInclusion(t *testing.T, client int) {
 	// We expect to see both transactions in the block in pr.
 	txr, err := txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
-	require.Equal(t, len(txr), 2)
+	require.Equal(t, 2, len(txr))
 
 	log.Lvl1("Create wrong transaction and wait")
 	counter++
@@ -2020,7 +2022,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 		// Queue all transactions, except for the last one
 		wait := 0
 		if i == n-1 {
-			wait = n
+			wait = 10
 		}
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
