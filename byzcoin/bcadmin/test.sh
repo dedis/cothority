@@ -116,7 +116,7 @@ testLinkPermission() {
   key=config/key*cfg
   testOK runBA latest $bc
   build $APPDIR/../../scmgr
-  SCMGR_APP="$APPDIR/../../scmgr/scmgr"
+  SCMGR_APP="./scmgr"
   if [ ! -x $SCMGR_APP ]; then
     echo "Didn't find the \"scmgr\" executable at $SCMGR_APP"
     exit 1
