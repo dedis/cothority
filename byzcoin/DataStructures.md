@@ -6,28 +6,29 @@ Data Structures
 
 # Data Structures
 
-This document gives an overview of the basic data structures used in ByzCoin:
+This document gives an overview of the basic data structures used in ByzCoin.
+Here is a summary: 
 
-- [ClientTransaction](#clienttransaction) is sent by a client to one or more
-nodes and holds one or more Instructions:
-- [Instruction](#instruction) is a basic building block that will be executed
+- A [ClientTransaction](#clienttransaction) is sent by a client to one or more
+nodes and holds one or more Instructions.
+- An [Instruction](#instruction) is a basic building block that will be executed
 in ByzCoin. It has either a `Spawn`, `Invoke`, or a `Delete` command. Once
-accepted, every instruction creates zero or more `StateChanges`:
-- [StateChange](#statechange) are collected and define how the global state will
+accepted, every instruction creates zero or more `StateChanges`.
+- [StateChange](#statechange)s are collected and define how the global state will
 change.
-- [Darc](#darc) control access to executing Instructions. The signers of an
+- [Darc](#darc)s control access to executing Instructions. The signers of an
 Instruction must satisfy one of the rules in the associated Darc.
-- [Proof](#proof) shows to a client that his instruction has been accepted by
+- A [Proof](#proof) shows to a client that his instruction has been accepted by
 ByzCoin.
 
 ## ClientTransaction
 
 If a client needs a set of instructions to be applied atomically by ByzCoin,
-it can send more than one instruction in a ClientTransaction. This structure
+it can send more than one instruction in a `ClientTransaction`. This structure
 has the following format:
 
-```
-message ClientTransaction{
+```go
+message ClientTransaction {
 	repeated Instruction Instructions = 1;
 }
 ```
@@ -36,7 +37,7 @@ message ClientTransaction{
 
 An instruction is created by a client. It has the following format:
 
-```
+```go
 // Instruction holds only one of Spawn, Invoke, or Delete
 message Instruction {
   // InstanceID is either the instance that can spawn a new instance, or the instance
@@ -85,24 +86,24 @@ message Delete {
 }
 ```
 
-An InstanceID is a series of 32 bytes. The spawn implementation in the contract
+An `InstanceID` is a series of 32 bytes. The spawn implementation in the contract
 chooses the new instance ID, and after that it is the client's responsibility to
 track it in order to be able to send in Invoke instructions on it later.
 
 ## StateChange
 
-Once the leader receives the ClientTransactions, it will send the individual
+Once the leader receives a `ClientTransaction`, it will send the individual
 instructions to the corresponding contracts and/or objects. Each call to a
-contract/object will return 0 or more StateChanges that define how to update the
+contract/object will return 0 or more `StateChange` elements that define how to update the
 state of the trie.
 
-ByzCoin will take care that the following instruction/StateChanges are
-respected. *This might be too restrictive*:
+ByzCoin will take care that instructions respect the following rules. 
+*This might be too restrictive*:
 - Spawn: only Create-Actions
 - Invoke: only Update-Action on the invoked object
 - Delete: only Delete-Action on the invoked object
 
-```
+```go
 // StateChange is one new state that will be applied to the trie.
 message StateChange {
   // StateAction can be any of Create, Update, Remove
@@ -127,18 +128,18 @@ of the given ByzCoin. If the key is present, the proof also contains the value
 of the key, as well as the contract that wrote it, and the DarcID of the Darc
 that controls access to it.
 
-To verify the proof, all the verifier needs is the skipchain-ID of where the
+To verify the proof, all the verifiers need the skipchain-ID of where the
 key is supposed to be stored. The proof has three parts:
 
-1. _InclusionProof_ proves the presence or absence of the key. In case of
+1. *InclusionProof* proves the presence or absence of the key. In case of
 the key being present, the value is included in the proof.
-2. _Latest_ is used to verify the Merkle tree root used in the proof is stored
+2. *Latest* is used to verify the Merkle tree root used in the proof is stored
    in the latest skipblock.
-3. _Links_ proves that the latest skipblock is part of the skipchain.
+3. *Links* proves that the latest skipblock is part of the skipchain.
 
 So the protobuf-definition of a proof is the following:
 
-```
+```go
 message Proof {
 	// InclusionProof is the deserialized InclusionProof
 	trie.Proof InclusionProof = 1;
@@ -173,12 +174,12 @@ message skipchain.ForwardLink{
 
 ```
 
-During verification, the verifier then can do the following to make sure that the
+During verification, the verifier can then do the following to make sure the
 key/value pair returned is valid:
 
-1. Verify the inclusion proof of the key in the Merkle tree root of the trie
+1. Verify the inclusion proof of the key in the Merkle tree root of the trie.
 This is described in the [trie](trie/README.md) package.
-2. Verify the Merkle tree root in the InclusionProof is the same as the one
+2. Verify the Merkle tree root in the `InclusionProof` is the same as the one
 given in the latest skipblock
 3. Verify the Links are a valid chain from the genesis block to the latest block.
 The first forward link points to the genesis block to give the roster to the
@@ -189,7 +190,7 @@ the genesis block.
 
 A darc has the following format:
 
-```
+```go
 message Darc {
 	// Version should be monotonically increasing over the evolution of a Darc.
 	uint64 Version = 1;
@@ -219,9 +220,9 @@ message Rule {
 }
 ```
 
-The primary type is a darc, which contains a set of rules that what type of
-permission are granted for each identity. A darc can be updated by performing an
-evolution.  The identities that have the "evolve" permission in the
+The primary type is a darc, which contains a set of rules that tell what type of
+permissions are granted for each identity. A darc can be updated by performing an
+evolution. The identities that have the "evolve" permission in the
 old darc can creates a signature that approves the new darc. Evolutions can be
 performed any number of times, which creates a chain of darcs, also known as a
 path. A path can be verified by starting at the oldest darc (also known as the
@@ -230,12 +231,12 @@ base darc), walking down the path and verifying the signature at every step.
 As mentioned before, it is possible to perform delegation. For example, instead
 of giving the "evolve" permission to (public key) identities, we can give it to
 other darcs. For example, suppose the newest darc in some path, let's called it
-darc_A, has the "evolve" permission set to true for another darc---darc_B, then
-darc_B is allowed to evolve the path.
+`darc_A`, has the "evolve" permission set to true for another darc `darc_B`, then
+`darc_B` is allowed to evolve the path.
 
 Of course, we do not want to have static rules that allows only a single
 signer.  Our darc implementation supports an expression language where the user
 can use logical operators to specify the rule.  For example, the expression
-"darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
-"ed25519:b" and "ed25519:c" must sign. For more information please see the
+`darc:a & ed25519:b | ed25519:c` means that `darc:a` and at least one of
+`ed25519:b` and `ed25519:c` must sign. For more information please see the
 expression package.
