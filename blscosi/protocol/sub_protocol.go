@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bls"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -74,7 +75,7 @@ func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.S
 		TreeNodeInstance: n,
 		Sign:             bls.Sign,
 		Verify:           bls.Verify,
-		Aggregate: func(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error) {
+		Aggregate: func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
 			return bls.AggregateSignatures(suite, sigs...)
 		},
 		verificationFn: vf,
@@ -363,7 +364,7 @@ func (p *SubBlsCosi) dispatchLeaf() error {
 
 // Sign the message and pack it with the mask as a response
 func (p *SubBlsCosi) makeResponse() (*Response, error) {
-	mask, err := bls.NewMask(p.suite, p.Publics(), p.Public())
+	mask, err := sign.NewMask(p.suite, p.Publics(), p.Public())
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -398,7 +399,7 @@ func (p *SubBlsCosi) makeVerification(out chan bool) {
 // creates the final mask for this aggregation
 func (p *SubBlsCosi) makeSubLeaderResponse(responses ResponseMap) (*Response, error) {
 	pubs := p.Publics()
-	mask, err := bls.NewMask(p.suite, pubs, nil)
+	mask, err := sign.NewMask(p.suite, pubs, nil)
 	if err != nil {
 		return nil, err
 	}

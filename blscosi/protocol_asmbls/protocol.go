@@ -3,8 +3,8 @@ package protocol2
 import (
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/bls"
-	"go.dedis.ch/kyber/v3/sign/bls2"
+	"go.dedis.ch/kyber/v3/sign"
+	"go.dedis.ch/kyber/v3/sign/asmbls"
 	"go.dedis.ch/onet/v3"
 )
 
@@ -48,8 +48,8 @@ func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, su
 		BlsCosi:        c.(*protocol.BlsCosi),
 		FinalSignature: make(chan ModifiedBlsSignature),
 	}
-	mbc.Sign = bls2.Sign
-	mbc.Verify = bls2.Verify
+	mbc.Sign = asmbls.Sign
+	mbc.Verify = asmbls.Verify
 	mbc.Aggregate = aggregate
 
 	return mbc, nil
@@ -89,16 +89,16 @@ func NewModifiedSubBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn,
 	}
 
 	subCosi := pi.(*protocol.SubBlsCosi)
-	subCosi.Sign = bls2.Sign
-	subCosi.Verify = bls2.Verify
+	subCosi.Sign = asmbls.Sign
+	subCosi.Verify = asmbls.Verify
 	subCosi.Aggregate = aggregate
 
 	return subCosi, nil
 }
 
 // aggregate uses the robust aggregate algorithm to aggregate the signatures
-func aggregate(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error) {
-	sig, err := bls2.AggregateSignatures(suite, sigs, mask)
+func aggregate(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
+	sig, err := asmbls.AggregateSignatures(suite, sigs, mask)
 	if err != nil {
 		return nil, err
 	}

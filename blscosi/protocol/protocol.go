@@ -11,6 +11,7 @@ import (
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bls"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -32,7 +33,7 @@ type SignFn func(suite pairing.Suite, secret kyber.Scalar, msg []byte) ([]byte, 
 
 // AggregateFn is called to aggregate multiple signatures and to produce a
 // mask of the peer's participation
-type AggregateFn func(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error)
+type AggregateFn func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error)
 
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
@@ -104,7 +105,7 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 		Threshold:         DefaultThreshold(nNodes),
 		Sign:              bls.Sign,
 		Verify:            bls.Verify,
-		Aggregate: func(suite pairing.Suite, mask *bls.Mask, sigs [][]byte) ([]byte, error) {
+		Aggregate: func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
 			return bls.AggregateSignatures(suite, sigs...)
 		},
 		startChan:       make(chan bool, 1),
@@ -359,7 +360,7 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 		select {
 		case res := <-responsesChan:
 			publics := p.Publics()
-			mask, err := bls.NewMask(p.suite, publics, nil)
+			mask, err := sign.NewMask(p.suite, publics, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -404,7 +405,7 @@ func (p *BlsCosi) generateSignature(responses ResponseMap) (BlsSignature, error)
 	publics := p.Publics()
 
 	//generate personal mask
-	personalMask, err := bls.NewMask(p.suite, publics, p.Public())
+	personalMask, err := sign.NewMask(p.suite, publics, p.Public())
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +455,7 @@ func searchPublicKey(p *onet.TreeNodeInstance, servID *network.ServerIdentity) (
 // makeAggregateResponse takes all the responses from the children and the subleader to
 // aggregate the signature and the mask
 func (p *BlsCosi) makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (BlsSignature, error) {
-	finalMask, err := bls.NewMask(suite, publics, nil)
+	finalMask, err := sign.NewMask(suite, publics, nil)
 	if err != nil {
 		return nil, err
 	}

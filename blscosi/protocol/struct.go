@@ -7,6 +7,7 @@ import (
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bls"
 	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/onet/v3"
@@ -35,8 +36,8 @@ type BlsSignature []byte
 
 // GetMask creates and returns the mask associated with the signature. If
 // no mask has been appended, mask with every bit enabled is assumed
-func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*bls.Mask, error) {
-	mask, err := bls.NewMask(suite, publics, nil)
+func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*sign.Mask, error) {
+	mask, err := sign.NewMask(suite, publics, nil)
 	if err != nil {
 		return nil, err
 	}

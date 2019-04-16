@@ -6,8 +6,8 @@ import (
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/bls"
-	"go.dedis.ch/kyber/v3/sign/bls2"
+	"go.dedis.ch/kyber/v3/sign"
+	"go.dedis.ch/kyber/v3/sign/asmbls"
 )
 
 // ModifiedBlsSignature is a signature that must be verified using coefficients
@@ -15,7 +15,7 @@ import (
 type ModifiedBlsSignature []byte
 
 // GetMask returns the bytes representing the mask
-func (sig ModifiedBlsSignature) GetMask(suite pairing.Suite, pubkeys []kyber.Point) (*bls.Mask, error) {
+func (sig ModifiedBlsSignature) GetMask(suite pairing.Suite, pubkeys []kyber.Point) (*sign.Mask, error) {
 	return protocol.BlsSignature(sig).GetMask(suite, pubkeys)
 }
 
@@ -30,12 +30,12 @@ func (sig ModifiedBlsSignature) Verify(suite pairing.Suite, msg []byte, pubkeys 
 		return err
 	}
 
-	aggPub, err := bls2.AggregatePublicKeys(suite, mask)
+	aggPub, err := asmbls.AggregatePublicKeys(suite, mask)
 	if err != nil {
 		return err
 	}
 
-	err = bls2.Verify(suite, aggPub, msg, signature)
+	err = asmbls.Verify(suite, aggPub, msg, signature)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}
