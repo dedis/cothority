@@ -39,7 +39,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(interval)
+		service.SetPropagationTimeout(2 * interval)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
@@ -72,6 +72,10 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	// check that the leader is updated for all nodes
 	for _, service := range s.services[nFailures:] {
+		for doCatchUp := false; !doCatchUp; _, doCatchUp = service.skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+			time.Sleep(interval)
+		}
+
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)

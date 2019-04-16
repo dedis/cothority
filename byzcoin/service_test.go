@@ -729,10 +729,14 @@ func TestService_FloodLedger(t *testing.T) {
 	log.Lvl1("Create 10 transactions and don't wait")
 	n := 10
 	for i := 0; i < n; i++ {
-		sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
+		_, _, err, err2 := sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
+		require.NoError(t, err)
+		require.NoError(t, err2)
 	}
 	// Send a last transaction and wait for it to be included
-	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
+	_, _, err, err2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, uint64(n)+2)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
 	// for each execution)
