@@ -1,11 +1,13 @@
 package asmsproto
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -26,15 +28,17 @@ func init() {
 	testServiceID = id
 }
 
-func TestProtocol2_SimpleCase(t *testing.T) {
+func TestASMSProto_SimpleCase(t *testing.T) {
 	err := runProtocol(5, 1, 5)
 	require.NoError(t, err)
 
-	err = runProtocol(10, 5, 10)
-	require.NoError(t, err)
+	if !testing.Short() {
+		err = runProtocol(10, 5, 10)
+		require.NoError(t, err)
 
-	err = runProtocol(20, 5, 15)
-	require.NoError(t, err)
+		err = runProtocol(20, 5, 15)
+		require.NoError(t, err)
+	}
 }
 
 func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
@@ -50,7 +54,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 		return err
 	}
 
-	cosiProtocol := pi.(*ModifiedBlsCosi)
+	cosiProtocol := pi.(*protocol.BlsCosi)
 	cosiProtocol.CreateProtocol = rootService.CreateProtocol
 	cosiProtocol.Msg = []byte{0xFF}
 	cosiProtocol.Timeout = 10 * time.Second
@@ -70,11 +74,11 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 	select {
 	case sig := <-cosiProtocol.FinalSignature:
 		pubs := roster.ServicePublics(testServiceName)
-		return sig.Verify(testSuite, cosiProtocol.Msg, pubs)
+		return ASMSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
 	case <-time.After(2 * time.Second):
 	}
 
-	return nil
+	return errors.New("timeout")
 }
 
 // testService allows setting the pairing keys of the protocol.

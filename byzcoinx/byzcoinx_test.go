@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3/blscosi/asmsproto"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3"
@@ -117,7 +119,22 @@ func TestBftCoSi(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
-		runProtocol(t, n, 0, 0, protoName)
+		runProtocol(t, n, 0, 0, protoName, 0)
+	}
+}
+
+func TestASMSi(t *testing.T) {
+	const protoName = "TestASMS"
+	nNodes := []int{1, 2, 4, 9, 20}
+	if testing.Short() {
+		nNodes = []int{1, 4}
+	}
+
+	err := GlobalInitASMSCoSiProtocol(testSuite, verify, ack, protoName)
+	require.Nil(t, err)
+
+	for _, n := range nNodes {
+		runProtocol(t, n, 0, 0, protoName, 1)
 	}
 }
 
@@ -136,7 +153,7 @@ func TestBftCoSiRefuse(t *testing.T) {
 		{9, 0, 1},
 	}
 	for _, c := range configs {
-		runProtocol(t, c.n, c.f, c.r, protoName)
+		runProtocol(t, c.n, c.f, c.r, protoName, 0)
 	}
 }
 
@@ -152,11 +169,11 @@ func TestBftCoSiFault(t *testing.T) {
 		{10, 3, 0},
 	}
 	for _, c := range configs {
-		runProtocol(t, c.n, c.f, c.r, protoName)
+		runProtocol(t, c.n, c.f, c.r, protoName, 0)
 	}
 }
 
-func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string) {
+func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string, scheme int) {
 	log.Lvlf1("Starting with %d hosts with %d faulty ones and refusing at %d. Protocol name is %s",
 		nbrHosts, nbrFault, refuseIndex, protoName)
 	local := onet.NewLocalTest(testSuite)
@@ -195,7 +212,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.Nil(t, err)
 
 	// verify signature
-	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal)
+	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, scheme)
 	require.Nil(t, err)
 
 	// check the counters
@@ -208,7 +225,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.True(t, nbrHosts-nbrFault <= counter.veriCount)
 }
 
-func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte) error {
+func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte, scheme int) error {
 	var sig FinalSignature
 	timeout := defaultTimeout + time.Second
 	select {
@@ -224,7 +241,14 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if bytes.Compare(sig.Msg, proposal) != 0 {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
-	err := sig.Sig.Verify(testSuite, proposal, publics)
+	err := func() error {
+		switch scheme {
+		case 1:
+			return asmsproto.ASMSignature(sig.Sig).Verify(testSuite, proposal, publics)
+		default:
+			return protocol.BlsSignature(sig.Sig).Verify(testSuite, proposal, publics)
+		}
+	}()
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

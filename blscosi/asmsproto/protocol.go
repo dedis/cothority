@@ -33,13 +33,6 @@ func NewModifiedProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error
 	return NewModifiedBlsCosi(n, vf, ModifiedSubProtocolName, pairing.NewSuiteBn256())
 }
 
-// ModifiedBlsCosi is the extended version of BlsCosi that is using a robust aggregate scheme
-type ModifiedBlsCosi struct {
-	*protocol.BlsCosi
-
-	FinalSignature chan ASMSignature
-}
-
 // NewModifiedBlsCosi makes a protocol instance for the modified BLS CoSi protocol
 func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	c, err := protocol.NewBlsCosi(n, vf, subProtocolName, suite)
@@ -47,33 +40,12 @@ func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, su
 		return nil, err
 	}
 
-	mbc := &ModifiedBlsCosi{
-		BlsCosi:        c.(*protocol.BlsCosi),
-		FinalSignature: make(chan ASMSignature),
-	}
+	mbc := c.(*protocol.BlsCosi)
 	mbc.Sign = asmbls.Sign
 	mbc.Verify = asmbls.Verify
 	mbc.Aggregate = aggregate
 
 	return mbc, nil
-}
-
-// Dispatch reuses the default protocol behaviour but hooks the result and cast into
-// a signature that is verified using the robust aggregate scheme
-func (p *ModifiedBlsCosi) Dispatch() error {
-	err := p.BlsCosi.Dispatch()
-	if err != nil {
-		return err
-	}
-
-	// The previous dispatch ends correctly only after having written the final
-	// signature so either it will return an error or this won't hang
-	sig := <-p.BlsCosi.FinalSignature
-	// Convert the BlsSignature into the modified version that will aggregate
-	// the public keys with the coefficient
-	p.FinalSignature <- ASMSignature(sig)
-
-	return nil
 }
 
 // NewModifiedSubProtocol is the default sub-protocol function used for registration

@@ -57,7 +57,7 @@ type BlsCosi struct {
 	Timeout           time.Duration
 	SubleaderFailures int
 	Threshold         int
-	FinalSignature    chan BlsSignature // final signature that is sent back to client
+	FinalSignature    chan []byte // final signature that is sent back to client
 
 	stoppedOnce     sync.Once
 	subProtocols    []*SubBlsCosi
@@ -99,7 +99,7 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 	nNodes := len(n.Roster().List)
 	c := &BlsCosi{
 		TreeNodeInstance:  n,
-		FinalSignature:    make(chan BlsSignature, 1),
+		FinalSignature:    make(chan []byte, 1),
 		Timeout:           defaultTimeout,
 		SubleaderFailures: defaultSubleaderFailures,
 		Threshold:         DefaultThreshold(nNodes),
