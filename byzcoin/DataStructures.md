@@ -152,26 +152,30 @@ message Proof {
 }
 
 message skipchain.SkipBlock {
-  // Many omitted fields
-  bytes Data = 9;
-  // Other omitted fields
+	// Many omitted fields
+	bytes data = 8;
+	// Other omitted fields
 }
 
 message skipchain.ForwardLink {
-  // From - where this forward link comes from
-  bytes From = 1;
-  // To - where this forward link points to
-  bytes To = 2;
-  // NewRoster is only set to non-nil if the From block has a
-  // different roster from the To-block.
-  onet.Roster NewRoster = 3;
-  // Signature is calculated on the
-  // sha256(From.Hash()|To.Hash()|NewRoster)
-  // In the case that NewRoster is nil, the signature is
-  // calculated on the sha256(From.Hash()|To.Hash())
-  byzcoinx.FinalSignature Signature = 4;
+	// From - where this forward link comes from
+	bytes from = 1;
+	// To - where this forward link points to
+	bytes to = 2;
+	// NewRoster is only set to non-nil if the From block has a
+	// different roster from the To-block.
+	onet.Roster newRoster = 3;
+	// Signature is calculated on the
+	// sha256(From.Hash()|To.Hash()|NewRoster)
+	// In the case that NewRoster is nil, the signature is
+	// calculated on the sha256(From.Hash()|To.Hash())
+	ByzcoinSig signature = 4;
 }
 
+message ByzcoinSig {
+	required bytes msg = 1;
+	required bytes sig = 2;
+}
 ```
 
 During verification, the verifier can then do the following to make sure the
