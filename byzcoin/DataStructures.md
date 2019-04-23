@@ -151,13 +151,13 @@ message Proof {
 	repeated skipchain.ForwardLink Links = 3;
 }
 
-message skipchain.SkipBlock{
+message skipchain.SkipBlock {
   // Many omitted fields
   bytes Data = 9;
   // Other omitted fields
 }
 
-message skipchain.ForwardLink{
+message skipchain.ForwardLink {
   // From - where this forward link comes from
   bytes From = 1;
   // To - where this forward link points to
