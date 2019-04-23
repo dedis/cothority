@@ -1358,3 +1358,35 @@ func TestRosterAddCausesSync(t *testing.T) {
 		log.Lvl1("Got block with servers[4]")
 	}
 }
+
+func TestService_WaitBlock(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	_, ro, service := local.MakeSRS(cothority.Suite, 1, skipchainSID)
+
+	s := service.(*Service)
+
+	sb, doCatchUp := s.WaitBlock(SkipBlockID{}, nil)
+	require.Nil(t, sb)
+	require.True(t, doCatchUp)
+
+	sbRoot, err := makeGenesisRoster(s, ro)
+	require.NoError(t, err)
+
+	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, sbRoot.Hash)
+	require.NotNil(t, sb)
+	require.False(t, doCatchUp)
+
+	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, SkipBlockID{})
+	require.Nil(t, sb)
+	require.True(t, doCatchUp)
+
+	newSb := NewSkipBlock()
+	newSb.Index = 1
+	newSb.GenesisID = sbRoot.Hash
+	newSb.updateHash()
+	s.blockBuffer.add(newSb)
+	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, newSb.Hash)
+	require.Nil(t, sb)
+	require.False(t, doCatchUp)
+}

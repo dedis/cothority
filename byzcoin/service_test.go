@@ -103,25 +103,25 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 }
 
 func TestService_AddTransaction(t *testing.T) {
-	testAddTransaction(t, time.Second, 0, false)
+	testAddTransaction(t, testInterval, 0, false)
 }
 
 func TestService_AddTransaction_ToFollower(t *testing.T) {
-	testAddTransaction(t, time.Second, 1, false)
+	testAddTransaction(t, testInterval, 1, false)
 }
 
 func TestService_AddTransaction_WithFailure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Keep edge cases for Jenkins")
 	}
-	testAddTransaction(t, 2*time.Second, 0, true)
+	testAddTransaction(t, testInterval, 0, true)
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Keep edge cases for Jenkins")
 	}
-	testAddTransaction(t, 2*time.Second, 1, true)
+	testAddTransaction(t, testInterval, 1, true)
 }
 
 func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int, failure bool) {
@@ -129,7 +129,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	if failure {
 		s = newSerN(t, 1, blockInterval, 4, false)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(blockInterval / 2)
+			service.SetPropagationTimeout(blockInterval * 2)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)
@@ -253,7 +253,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 func TestService_AddTransaction_WrongNode(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	s := newSerN(t, 1, time.Second, 4, false)
+	s := newSerN(t, 1, testInterval, 4, false)
 	defer s.local.CloseAll()
 
 	outsideServer := s.local.GenServers(1)[0]
@@ -299,7 +299,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	s := newSerN(t, 1, time.Second, 4, false)
+	s := newSerN(t, 1, testInterval, 4, false)
 	defer s.local.CloseAll()
 
 	// add the first tx to create the instance
@@ -624,6 +624,8 @@ func TestService_WaitInclusion(t *testing.T) {
 }
 
 func waitInclusion(t *testing.T, client int) {
+	// use a bigger block interval to allow txs to be included
+	// in the same block
 	s := newSer(t, 2, 2*time.Second)
 	defer s.local.CloseAll()
 
@@ -663,7 +665,7 @@ func waitInclusion(t *testing.T, client int) {
 	// We expect to see both transactions in the block in pr.
 	txr, err := txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
-	require.Equal(t, len(txr), 2)
+	require.Equal(t, 2, len(txr))
 
 	log.Lvl1("Create wrong transaction and wait")
 	counter++
@@ -717,27 +719,29 @@ func waitInclusion(t *testing.T, client int) {
 // Sends too many transactions to the ledger and waits for all blocks to be
 // done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 2, 2*time.Second)
+	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	// Fetch the latest block
-	reply, err := skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
-	require.Nil(t, err)
-	before := reply.Update[len(reply.Update)-1]
+	// ask to the root service because of propagation delay
+	before, err := s.service().db().GetLatestByID(s.genesis.Hash)
+	require.NoError(t, err)
 
 	log.Lvl1("Create 10 transactions and don't wait")
 	n := 10
 	for i := 0; i < n; i++ {
-		sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
+		_, _, err, err2 := sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
+		require.NoError(t, err)
+		require.NoError(t, err2)
 	}
 	// Send a last transaction and wait for it to be included
-	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
+	_, _, err, err2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, uint64(n)+2)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
 	// for each execution)
-	reply, err = skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
-	require.Nil(t, err)
-	latest := reply.Update[len(reply.Update)-1]
+	latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
+	require.NoError(t, err)
 	if latest.Index-before.Index < 2 {
 		t.Fatalf("didn't get at least 2 blocks: index before %d, index after %v", before.Index, latest.Index)
 	}
@@ -811,6 +815,11 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		Transaction:   tx,
 		InclusionWait: wait,
 	})
+
+	for doCatchUp := false; !doCatchUp && wait != 0; _, doCatchUp = s.services[client].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
+		time.Sleep(s.interval)
+	}
+
 	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.genesis.SkipChainID(),
@@ -1681,7 +1690,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {
-	s := newSer(t, 1, 2*time.Second)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
 	ids := []darc.Identity{s.signer.Identity()}
@@ -2017,7 +2026,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 		// Queue all transactions, except for the last one
 		wait := 0
 		if i == n-1 {
-			wait = n
+			wait = 10
 		}
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,

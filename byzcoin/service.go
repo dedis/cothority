@@ -2006,13 +2006,16 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	defer s.working.Done()
 
 	// First we check if we are up-to-date with this chain (and that we know it)
-	latestSB := s.db().GetByID(latestID)
+	latestSB, doCatchUp := s.skService().WaitBlock(scID, latestID)
 	if latestSB == nil {
-		// The function will prevent multiple request to catch up so we can securely call it here
-		err := s.catchupFromID(roster, scID, latestID)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
+		if doCatchUp {
+			// The function will prevent multiple request to catch up so we can securely call it here
+			err := s.catchupFromID(roster, scID, latestID)
+			if err != nil {
+				log.Error(s.ServerIdentity(), err)
+			}
 		}
+
 		// Give up the current request and wait for the next one, and keep skipping requests
 		// until the catching up is done
 		return []ClientTransaction{}

@@ -95,6 +95,12 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 		return nil, err
 	}
 
+	sb, doCatchUp := s.skService().WaitBlock(s.scID, nil)
+	if sb == nil && !doCatchUp {
+		// block is still processing but the skipchain is known
+		return nil, nil
+	}
+
 	latest, err := s.db().GetLatestByID(s.scID)
 	if err != nil {
 		log.Errorf("Error while searching for %x", s.scID[:])

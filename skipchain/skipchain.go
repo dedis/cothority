@@ -841,6 +841,23 @@ func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, error) {
 	return reply, nil
 }
 
+// WaitBlock returns a block by its ID instantly if already stored in the DB
+// or check if the block is inside the buffer. If the block is known, false will
+// be returned because a catch up is not necessary, true otherwise.
+func (s *Service) WaitBlock(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bool) {
+	sb := s.db.GetByID(id)
+	if sb != nil {
+		return sb, false
+	}
+
+	ok := s.blockBuffer.has(sid)
+	if ok {
+		return nil, false
+	}
+
+	return nil, true
+}
+
 // GetDB returns a pointer to the internal database.
 func (s *Service) GetDB() *SkipBlockDB {
 	return s.db
