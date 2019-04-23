@@ -27,7 +27,7 @@ If a client needs a set of instructions to be applied atomically by ByzCoin,
 it can send more than one instruction in a `ClientTransaction`. This structure
 has the following format:
 
-```go
+```protobuf
 message ClientTransaction {
 	repeated Instruction Instructions = 1;
 }
@@ -37,7 +37,7 @@ message ClientTransaction {
 
 An instruction is created by a client. It has the following format:
 
-```go
+```protobuf
 // Instruction holds only one of Spawn, Invoke, or Delete
 message Instruction {
   // InstanceID is either the instance that can spawn a new instance, or the instance
@@ -103,7 +103,7 @@ ByzCoin will take care that instructions respect the following rules.
 - Invoke: only Update-Action on the invoked object
 - Delete: only Delete-Action on the invoked object
 
-```go
+```protobuf
 // StateChange is one new state that will be applied to the trie.
 message StateChange {
   // StateAction can be any of Create, Update, Remove
@@ -139,7 +139,7 @@ the key being present, the value is included in the proof.
 
 So the protobuf-definition of a proof is the following:
 
-```go
+```protobuf
 message Proof {
 	// InclusionProof is the deserialized InclusionProof
 	trie.Proof InclusionProof = 1;
@@ -190,7 +190,7 @@ the genesis block.
 
 A darc has the following format:
 
-```go
+```protobuf
 message Darc {
 	// Version should be monotonically increasing over the evolution of a Darc.
 	uint64 Version = 1;
