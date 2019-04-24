@@ -1,7 +1,7 @@
 // Package protocol implements the BLS protocol using a main protocol and multiple
 // subprotocols, one for each substree.
 //
-// Deprecated: use the asmsproto instead to be robust against the rogue public-key
+// Deprecated: use the bdnproto instead to be robust against the rogue public-key
 // attack described here: https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
 package protocol
 

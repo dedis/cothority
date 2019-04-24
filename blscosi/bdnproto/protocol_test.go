@@ -1,4 +1,4 @@
-package asmsproto
+package bdnproto
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ import (
 
 var testSuite = pairing.NewSuiteBn256()
 
-const testServiceName = "TestServiceBlsCosi"
+const testServiceName = "TestServiceBdnCosi"
 
 var testServiceID onet.ServiceID
 
@@ -28,7 +28,7 @@ func init() {
 	testServiceID = id
 }
 
-func TestASMSProto_SimpleCase(t *testing.T) {
+func TestBdnProto_SimpleCase(t *testing.T) {
 	err := runProtocol(5, 1, 5)
 	require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 	services := local.GetServices(servers, testServiceID)
 
 	rootService := services[0].(*testService)
-	pi, err := rootService.CreateProtocol(AsmsProtocolName, tree)
+	pi, err := rootService.CreateProtocol(BdnProtocolName, tree)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 	select {
 	case sig := <-cosiProtocol.FinalSignature:
 		pubs := roster.ServicePublics(testServiceName)
-		return AsmsSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
+		return BdnSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
 	case <-time.After(2 * time.Second):
 	}
 

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3/blscosi/asmsproto"
+	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
@@ -123,14 +123,14 @@ func TestBftCoSi(t *testing.T) {
 	}
 }
 
-func TestASMSi(t *testing.T) {
-	const protoName = "TestASMS"
+func TestBdnCoSi(t *testing.T) {
+	const protoName = "TestBDN"
 	nNodes := []int{1, 2, 4, 9, 20}
 	if testing.Short() {
 		nNodes = []int{1, 4}
 	}
 
-	err := GlobalInitAsmsCoSiProtocol(testSuite, verify, ack, protoName)
+	err := GlobalInitBdnCoSiProtocol(testSuite, verify, ack, protoName)
 	require.Nil(t, err)
 
 	for _, n := range nNodes {
@@ -244,7 +244,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	err := func() error {
 		switch scheme {
 		case 1:
-			return asmsproto.AsmsSignature(sig.Sig).Verify(testSuite, proposal, publics)
+			return bdnproto.BdnSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		default:
 			return protocol.BlsSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		}

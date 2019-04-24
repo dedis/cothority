@@ -11,7 +11,7 @@ import (
 	"math"
 	"time"
 
-	"go.dedis.ch/cothority/v3/blscosi/asmsproto"
+	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
@@ -248,7 +248,7 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pai
 	return protocolMap
 }
 
-func makeASMSProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pairing.SuiteBn256) map[string]onet.NewProtocol {
+func makeBdnProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pairing.SuiteBn256) map[string]onet.NewProtocol {
 	protocolMap := make(map[string]onet.NewProtocol)
 
 	prepCosiProtoName := protoName + "_cosi_prep"
@@ -257,23 +257,23 @@ func makeASMSProtocols(vf, ack protocol.VerificationFn, protoName string, suite 
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
 	verifier := func(suite pairing.Suite, msg, sig []byte, pubkeys []kyber.Point) error {
-		return asmsproto.AsmsSignature(sig).Verify(suite, msg, pubkeys)
+		return bdnproto.BdnSignature(sig).Verify(suite, msg, pubkeys)
 	}
 
 	protocolMap[protoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite, verifier)
 	}
 	protocolMap[prepCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewAsmsCosi(n, vf, prepCosiSubProtoName, suite)
+		return bdnproto.NewBdnCosi(n, vf, prepCosiSubProtoName, suite)
 	}
 	protocolMap[prepCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewSubAsmsCosi(n, vf, suite)
+		return bdnproto.NewSubBdnCosi(n, vf, suite)
 	}
 	protocolMap[commitCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewAsmsCosi(n, ack, commitCosiSubProtoName, suite)
+		return bdnproto.NewBdnCosi(n, ack, commitCosiSubProtoName, suite)
 	}
 	protocolMap[commitCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewSubAsmsCosi(n, ack, suite)
+		return bdnproto.NewSubBdnCosi(n, ack, suite)
 	}
 
 	return protocolMap
@@ -291,10 +291,10 @@ func GlobalInitBFTCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.Verif
 	return nil
 }
 
-// GlobalInitAsmsCoSiProtocol creates and registers the protocols required to run
+// GlobalInitBdnCoSiProtocol creates and registers the protocols required to run
 // the robust implementation of the BLS signature algorithm globally.
-func GlobalInitAsmsCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
-	protocolMap := makeASMSProtocols(vf, ack, protoName, suite)
+func GlobalInitBdnCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
+	protocolMap := makeBdnProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {
 			return err
