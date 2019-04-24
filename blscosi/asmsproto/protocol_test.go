@@ -49,7 +49,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 	services := local.GetServices(servers, testServiceID)
 
 	rootService := services[0].(*testService)
-	pi, err := rootService.CreateProtocol(ModifiedProtocolName, tree)
+	pi, err := rootService.CreateProtocol(AsmsProtocolName, tree)
 	if err != nil {
 		return err
 	}

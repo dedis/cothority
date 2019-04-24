@@ -264,16 +264,16 @@ func makeASMSProtocols(vf, ack protocol.VerificationFn, protoName string, suite 
 		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite, verifier)
 	}
 	protocolMap[prepCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewModifiedBlsCosi(n, vf, prepCosiSubProtoName, suite)
+		return asmsproto.NewAsmsCosi(n, vf, prepCosiSubProtoName, suite)
 	}
 	protocolMap[prepCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewModifiedSubBlsCosi(n, vf, suite)
+		return asmsproto.NewSubAsmsCosi(n, vf, suite)
 	}
 	protocolMap[commitCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewModifiedBlsCosi(n, ack, commitCosiSubProtoName, suite)
+		return asmsproto.NewAsmsCosi(n, ack, commitCosiSubProtoName, suite)
 	}
 	protocolMap[commitCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return asmsproto.NewModifiedSubBlsCosi(n, ack, suite)
+		return asmsproto.NewSubAsmsCosi(n, ack, suite)
 	}
 
 	return protocolMap

@@ -11,30 +11,30 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
-// ModifiedProtocolName is the name of the main protocol for the modified BLS signature scheme
-const ModifiedProtocolName = "blsCoSiProtoModified"
+// AsmsProtocolName is the name of the main protocol for the modified BLS signature scheme
+const AsmsProtocolName = "asmsCoSiProto"
 
-// ModifiedSubProtocolName is the name of the subprotocol for the modified BLS signature scheme
-const ModifiedSubProtocolName = "blsSubCosiProtoModified"
+// AsmsSubProtocolName is the name of the subprotocol for the modified BLS signature scheme
+const AsmsSubProtocolName = "asmsSubCosiProto"
 
 func init() {
-	GlobalRegisterModifiedProtocols()
+	GlobalRegisterAsmsProtocols()
 }
 
-// GlobalRegisterModifiedProtocols registers both protocol to the global register
-func GlobalRegisterModifiedProtocols() {
-	onet.GlobalProtocolRegister(ModifiedProtocolName, NewModifiedProtocol)
-	onet.GlobalProtocolRegister(ModifiedSubProtocolName, NewModifiedSubProtocol)
+// GlobalRegisterAsmsProtocols registers both protocol to the global register
+func GlobalRegisterAsmsProtocols() {
+	onet.GlobalProtocolRegister(AsmsProtocolName, NewAsmsProtocol)
+	onet.GlobalProtocolRegister(AsmsSubProtocolName, NewSubAsmsProtocol)
 }
 
-// NewModifiedProtocol is used to register the protocol with an always-true verification
-func NewModifiedProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+// NewAsmsProtocol is used to register the protocol with an always-true verification
+func NewAsmsProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewModifiedBlsCosi(n, vf, ModifiedSubProtocolName, pairing.NewSuiteBn256())
+	return NewAsmsCosi(n, vf, AsmsSubProtocolName, pairing.NewSuiteBn256())
 }
 
-// NewModifiedBlsCosi makes a protocol instance for the modified BLS CoSi protocol
-func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+// NewAsmsCosi makes a protocol instance for the modified BLS CoSi protocol
+func NewAsmsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	c, err := protocol.NewBlsCosi(n, vf, subProtocolName, suite)
 	if err != nil {
 		return nil, err
@@ -48,16 +48,16 @@ func NewModifiedBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, su
 	return mbc, nil
 }
 
-// NewModifiedSubProtocol is the default sub-protocol function used for registration
+// NewSubAsmsProtocol is the default sub-protocol function used for registration
 // with an always-true verification.
-func NewModifiedSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+func NewSubAsmsProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewModifiedSubBlsCosi(n, vf, pairing.NewSuiteBn256())
+	return NewSubAsmsCosi(n, vf, pairing.NewSuiteBn256())
 }
 
-// NewModifiedSubBlsCosi uses the default sub-protocol to make one compatible with
+// NewSubAsmsCosi uses the default sub-protocol to make one compatible with
 // the robust scheme
-func NewModifiedSubBlsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+func NewSubAsmsCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	pi, err := protocol.NewSubBlsCosi(n, vf, suite)
 	if err != nil {
 		return nil, err
