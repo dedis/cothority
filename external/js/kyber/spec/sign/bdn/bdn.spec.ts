@@ -1,8 +1,8 @@
 import { BN256G2Point } from "../../../src/pairing/point";
 import BN256Scalar from "../../../src/pairing/scalar";
-import { hashPointToR } from "../../../src/sign/asmbls";
+import { hashPointToR } from "../../../src/sign/bdn";
 
-describe('ASMBLS', () => {
+describe('BDN signatures Test', () => {
     it('should hash to R', () => {
         const p1 = new BN256G2Point().base();
         const p2 = new BN256G2Point().mul(new BN256Scalar(2), p1);

@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.crypto;
 import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,6 +54,15 @@ public class Mask {
      */
     public Point getAggregate() {
         return this.aggregate;
+    }
+
+    /**
+     * Get the list of public keys involved in the mask
+     *
+     * @return The list of public keys
+     */
+    public List<Point> getPublics() {
+        return new ArrayList<>(publics);
     }
 
     /**
