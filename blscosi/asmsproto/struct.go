@@ -12,22 +12,22 @@ import (
 	"go.dedis.ch/kyber/v3/sign/cosi"
 )
 
-// ASMSignature is a signature that must be verified using coefficients
+// AsmsSignature is a signature that must be verified using coefficients
 // derived from the public keys
-type ASMSignature []byte
+type AsmsSignature []byte
 
 // GetMask returns the bytes representing the mask
-func (sig ASMSignature) GetMask(suite pairing.Suite, pubkeys []kyber.Point) (*sign.Mask, error) {
+func (sig AsmsSignature) GetMask(suite pairing.Suite, pubkeys []kyber.Point) (*sign.Mask, error) {
 	return protocol.BlsSignature(sig).GetMask(suite, pubkeys)
 }
 
 // Point returns the point associated with the signature
-func (sig ASMSignature) Point(suite pairing.Suite) (kyber.Point, error) {
+func (sig AsmsSignature) Point(suite pairing.Suite) (kyber.Point, error) {
 	return protocol.BlsSignature(sig).Point(suite)
 }
 
 // Verify returns an error if the signature can't be verified or nil if it matches
-func (sig ASMSignature) Verify(suite pairing.Suite, msg []byte, pubkeys []kyber.Point) error {
+func (sig AsmsSignature) Verify(suite pairing.Suite, msg []byte, pubkeys []kyber.Point) error {
 	policy := cosi.NewThresholdPolicy(protocol.DefaultThreshold(len(pubkeys)))
 
 	return sig.VerifyWithPolicy(suite, msg, pubkeys, policy)
@@ -35,7 +35,7 @@ func (sig ASMSignature) Verify(suite pairing.Suite, msg []byte, pubkeys []kyber.
 
 // VerifyWithPolicy checks that the signature is correct and that the number of signers
 // matches the policy
-func (sig ASMSignature) VerifyWithPolicy(suite pairing.Suite, msg []byte, pubkeys []kyber.Point, policy cosi.Policy) error {
+func (sig AsmsSignature) VerifyWithPolicy(suite pairing.Suite, msg []byte, pubkeys []kyber.Point, policy cosi.Policy) error {
 	lenCom := suite.G1().PointLen()
 	if len(sig) < lenCom {
 		return errors.New("invalid signature length")

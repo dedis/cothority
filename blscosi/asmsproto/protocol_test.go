@@ -74,7 +74,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 	select {
 	case sig := <-cosiProtocol.FinalSignature:
 		pubs := roster.ServicePublics(testServiceName)
-		return ASMSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
+		return AsmsSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
 	case <-time.After(2 * time.Second):
 	}
 

@@ -257,7 +257,7 @@ func makeASMSProtocols(vf, ack protocol.VerificationFn, protoName string, suite 
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
 	verifier := func(suite pairing.Suite, msg, sig []byte, pubkeys []kyber.Point) error {
-		return asmsproto.ASMSignature(sig).Verify(suite, msg, pubkeys)
+		return asmsproto.AsmsSignature(sig).Verify(suite, msg, pubkeys)
 	}
 
 	protocolMap[protoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
@@ -291,9 +291,9 @@ func GlobalInitBFTCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.Verif
 	return nil
 }
 
-// GlobalInitASMSCoSiProtocol creates and registers the protocols required to run
+// GlobalInitAsmsCoSiProtocol creates and registers the protocols required to run
 // the robust implementation of the BLS signature algorithm globally.
-func GlobalInitASMSCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
+func GlobalInitAsmsCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeASMSProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {

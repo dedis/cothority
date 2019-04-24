@@ -270,9 +270,6 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 	cosiSubProtocol := pi.(*SubBlsCosi)
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
-	cosiSubProtocol.Sign = p.Sign
-	cosiSubProtocol.Verify = p.Verify
-	cosiSubProtocol.Aggregate = p.Aggregate
 	// Fail fast enough if the subleader is failing to try
 	// at least three leaves as new subleader
 	cosiSubProtocol.Timeout = p.Timeout / time.Duration(p.SubleaderFailures+1)

@@ -130,7 +130,7 @@ func TestASMSi(t *testing.T) {
 		nNodes = []int{1, 4}
 	}
 
-	err := GlobalInitASMSCoSiProtocol(testSuite, verify, ack, protoName)
+	err := GlobalInitAsmsCoSiProtocol(testSuite, verify, ack, protoName)
 	require.Nil(t, err)
 
 	for _, n := range nNodes {
@@ -244,7 +244,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	err := func() error {
 		switch scheme {
 		case 1:
-			return asmsproto.ASMSignature(sig.Sig).Verify(testSuite, proposal, publics)
+			return asmsproto.AsmsSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		default:
 			return protocol.BlsSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		}
