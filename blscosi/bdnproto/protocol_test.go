@@ -20,6 +20,8 @@ const testServiceName = "TestServiceBdnCosi"
 var testServiceID onet.ServiceID
 
 func init() {
+	GlobalRegisterBdnProtocols()
+
 	id, err := onet.RegisterNewServiceWithSuite(testServiceName, testSuite, newService)
 	if err != nil {
 		log.Fatal(err)

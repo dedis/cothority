@@ -249,15 +249,19 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 	responses := make(ResponseMap)
 	for _, c := range p.Children() {
 		_, index := searchPublicKey(p.TreeNodeInstance, c.ServerIdentity)
-		// Accept response for those identities only
-		responses[index] = nil
+		if index != -1 {
+			// Accept response for those identities only
+			responses[index] = nil
+		}
 	}
 
 	own, err := p.makeResponse()
 	if ok := p.verificationFn(p.Msg, p.Data); ok {
 		log.Lvlf3("Subleader %v signed", p.ServerIdentity())
 		_, index := searchPublicKey(p.TreeNodeInstance, p.ServerIdentity())
-		responses[index] = own
+		if index != -1 {
+			responses[index] = own
+		}
 	}
 
 	// we need to timeout the children faster than the root timeout to let it

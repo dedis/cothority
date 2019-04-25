@@ -9,7 +9,6 @@ import (
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bls"
-	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
@@ -28,14 +27,14 @@ func init() {
 	network.RegisterMessages(&Announcement{}, &Response{}, &Stop{})
 }
 
-// ResponseMap is the container used to store responses coming from the children
+// ResponseMap is the container used to store responses coming from the children.
 type ResponseMap map[int]*Response
 
-// BlsSignature contains the message and its aggregated signature
+// BlsSignature contains the message and its aggregated signature.
 type BlsSignature []byte
 
 // GetMask creates and returns the mask associated with the signature. If
-// no mask has been appended, mask with every bit enabled is assumed
+// no mask has been appended, a mask with every bit enabled is returned.
 func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*sign.Mask, error) {
 	mask, err := sign.NewMask(suite, publics, nil)
 	if err != nil {
@@ -59,7 +58,7 @@ func (sig BlsSignature) GetMask(suite pairing.Suite, publics []kyber.Point) (*si
 	return mask, nil
 }
 
-// Point creates the point associated with the signature in G1
+// Point creates the point associated with the signature in G1.
 func (sig BlsSignature) Point(suite pairing.Suite) (kyber.Point, error) {
 	pointSig := suite.G1().Point()
 
@@ -70,15 +69,15 @@ func (sig BlsSignature) Point(suite pairing.Suite) (kyber.Point, error) {
 	return pointSig, nil
 }
 
-// Verify checks the signature over the message using the public keys and a default policy
+// Verify checks the signature over the message using the public keys and a default policy.
 func (sig BlsSignature) Verify(ps pairing.Suite, msg []byte, publics []kyber.Point) error {
-	policy := cosi.NewThresholdPolicy(DefaultThreshold(len(publics)))
+	policy := sign.NewThresholdPolicy(DefaultThreshold(len(publics)))
 
 	return sig.VerifyWithPolicy(ps, msg, publics, policy)
 }
 
-// VerifyWithPolicy checks the signature over the message using the given public keys and policy
-func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics []kyber.Point, policy cosi.Policy) error {
+// VerifyWithPolicy checks the signature over the message using the given public keys and policy.
+func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics []kyber.Point, policy sign.Policy) error {
 	if publics == nil || len(publics) == 0 {
 		return errors.New("no public keys provided")
 	}
@@ -116,7 +115,7 @@ func (sig BlsSignature) VerifyWithPolicy(ps pairing.Suite, msg []byte, publics [
 	return nil
 }
 
-// Announcement is the blscosi annoucement message
+// Announcement is the blscosi annoucement message.
 type Announcement struct {
 	Msg       []byte // statement to be signed
 	Data      []byte
@@ -132,7 +131,7 @@ type StructAnnouncement struct {
 	Announcement
 }
 
-// Response is the blscosi response message
+// Response is the blscosi response message.
 type Response struct {
 	Signature BlsSignature
 	Mask      []byte
@@ -145,21 +144,21 @@ type StructResponse struct {
 	Response
 }
 
-// Refusal is the signed refusal response from a given node
+// Refusal is the signed refusal response from a given node.
 type Refusal struct {
 	Signature []byte
 }
 
-// StructRefusal contains the refusal and the treenode that sent it
+// StructRefusal contains the refusal and the treenode that sent it.
 type StructRefusal struct {
 	*onet.TreeNode
 	Refusal
 }
 
-// Stop is a message used to instruct a node to stop its protocol
+// Stop is a message used to instruct a node to stop its protocol.
 type Stop struct{}
 
-// StructStop is a wrapper around Stop for it to work with onet
+// StructStop is a wrapper around Stop for it to work with onet.
 type StructStop struct {
 	*onet.TreeNode
 	Stop

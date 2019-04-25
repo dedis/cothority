@@ -11,29 +11,25 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
-// BdnProtocolName is the name of the main protocol for the modified BLS signature scheme
+// BdnProtocolName is the name of the main protocol for the BDN signature scheme.
 const BdnProtocolName = "bdnCoSiProto"
 
-// BdnSubProtocolName is the name of the subprotocol for the modified BLS signature scheme
+// BdnSubProtocolName is the name of the subprotocol for the BDN signature scheme.
 const BdnSubProtocolName = "bdnSubCosiProto"
 
-func init() {
-	GlobalRegisterBdnProtocols()
-}
-
-// GlobalRegisterBdnProtocols registers both protocol to the global register
+// GlobalRegisterBdnProtocols registers both protocol to the global register.
 func GlobalRegisterBdnProtocols() {
 	onet.GlobalProtocolRegister(BdnProtocolName, NewBdnProtocol)
 	onet.GlobalProtocolRegister(BdnSubProtocolName, NewSubBdnProtocol)
 }
 
-// NewBdnProtocol is used to register the protocol with an always-true verification
+// NewBdnProtocol is used to register the protocol with an always-true verification.
 func NewBdnProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
 	return NewBdnCosi(n, vf, BdnSubProtocolName, pairing.NewSuiteBn256())
 }
 
-// NewBdnCosi makes a protocol instance for the modified BLS CoSi protocol
+// NewBdnCosi makes a protocol instance for the BDN CoSi protocol.
 func NewBdnCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, subProtocolName string, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	c, err := protocol.NewBlsCosi(n, vf, subProtocolName, suite)
 	if err != nil {
@@ -56,7 +52,7 @@ func NewSubBdnProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) 
 }
 
 // NewSubBdnCosi uses the default sub-protocol to make one compatible with
-// the robust scheme
+// the robust scheme.
 func NewSubBdnCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
 	pi, err := protocol.NewSubBlsCosi(n, vf, suite)
 	if err != nil {
@@ -71,7 +67,7 @@ func NewSubBdnCosi(n *onet.TreeNodeInstance, vf protocol.VerificationFn, suite *
 	return subCosi, nil
 }
 
-// aggregate uses the robust aggregate algorithm to aggregate the signatures
+// aggregate uses the robust aggregate algorithm to aggregate the signatures.
 func aggregate(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
 	sig, err := bdn.AggregateSignatures(suite, sigs, mask)
 	if err != nil {

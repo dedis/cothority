@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 )
@@ -66,5 +66,5 @@ func TestService_SignatureRequest(t *testing.T) {
 	res := buf.(*SignatureResponse)
 
 	// verify the response still
-	require.Nil(t, res.Signature.VerifyWithPolicy(testSuite, msg, publics, cosi.NewThresholdPolicy(1)))
+	require.Nil(t, res.Signature.VerifyWithPolicy(testSuite, msg, publics, sign.NewThresholdPolicy(1)))
 }

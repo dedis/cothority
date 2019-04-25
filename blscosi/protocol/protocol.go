@@ -38,12 +38,6 @@ type SignFn func(suite pairing.Suite, secret kyber.Scalar, msg []byte) ([]byte, 
 // mask of the peer's participation
 type AggregateFn func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error)
 
-// init is done at startup. It defines every messages that is handled by the network
-// and registers the protocols.
-func init() {
-	GlobalRegisterDefaultProtocols()
-}
-
 // BlsCosi holds the parameters of the protocol.
 // It also defines a channel that will receive the final signature.
 // This protocol should only exist on the root node.

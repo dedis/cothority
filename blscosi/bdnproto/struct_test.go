@@ -8,7 +8,6 @@ import (
 	"go.dedis.ch/kyber/v3/pairing/bn256"
 	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bdn"
-	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/kyber/v3/util/random"
 )
 
@@ -38,8 +37,13 @@ func TestBdnSignature_Verify(t *testing.T) {
 	sig := BdnSignature(append(buf, mask.Mask()...))
 	pubkeys := []kyber.Point{pk1, pk2, pk3}
 
+	// we expect an error as the default threshold with n = 3 assumes f = 0.
 	require.Error(t, sig.Verify(suite, msg, pubkeys))
-	policy := cosi.NewThresholdPolicy(2)
+
+	policy := sign.NewThresholdPolicy(2)
+	// now it passes with the new policy.
 	require.NoError(t, sig.VerifyWithPolicy(suite, msg, pubkeys, policy))
-	require.Error(t, sig.VerifyWithPolicy(suite, []byte{}, pubkeys, policy))
+	// the signature should still be verified even with a policy.
+	wrongMsg := []byte("cba")
+	require.Error(t, sig.VerifyWithPolicy(suite, wrongMsg, pubkeys, policy))
 }

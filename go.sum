@@ -50,6 +50,8 @@ go.dedis.ch/kyber/v3 v3.0.2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhs
 go.dedis.ch/kyber/v3 v3.0.3-pre1/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
 go.dedis.ch/kyber/v3 v3.0.3-pre2 h1:zHvp7WJ9b5U+SFqGGh9Fsn22Atoyi5kwtEXkjnHGqMo=
 go.dedis.ch/kyber/v3 v3.0.3-pre2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
+go.dedis.ch/kyber/v3 v3.0.3-pre3 h1:U5tTONbc75JWs4/Bklnm9r9f4NPJY5SoMiO+tmVG24c=
+go.dedis.ch/kyber/v3 v3.0.3-pre3/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
 go.dedis.ch/onet/v3 v3.0.5 h1:Ysm96KuRt1OavrRpa1Vi09DqljXBCDwaiur34DTvra8=
 go.dedis.ch/onet/v3 v3.0.5/go.mod h1:0wrof0zfyD+Qfw9Pfhu9jW+bTbwwWBzC1hMuV/c8v2w=
 go.dedis.ch/protobuf v1.0.5/go.mod h1:eIV4wicvi6JK0q/QnfIEGeSFNG0ZeB24kzut5+HaRLo=
