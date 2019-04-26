@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -28,18 +29,19 @@ class BdnSigTest {
         assertEquals("933f6013eb3f654f9489d6d45ad04eaf", Hex.printHexBinary(coefs.get(2).toBytes()).toLowerCase());
     }
 
-    @Test
-    void testAggregateVerification() throws Exception {
+    private void testAggregateVerification(byte[] msk) throws Exception {
         Bn256Pair kp1 = new Bn256Pair(rnd);
         Bn256Pair kp2 = new Bn256Pair(rnd);
         Bn256Pair kp3 = new Bn256Pair(rnd);
         byte[] msg = "two legs good four legs bad".getBytes();
-        List<Point> pubs = Arrays.asList(kp1.point, kp3.point, kp2.point);
+        List<Point> pubs = Arrays.asList(kp1.point, kp2.point, kp3.point);
 
-        Point sig1 = BdnSig.sign(msg, kp1.scalar);
-        Point sig2 = BdnSig.sign(msg, kp2.scalar);
-        Mask mask = new Mask(pubs, new byte[]{5});
-        Point sig = BdnSig.aggregatePoints(mask, Arrays.asList(sig1, null, sig2));
+        Mask mask = new Mask(pubs, msk);
+        Point sig = BdnSig.aggregatePoints(mask, Arrays.asList(
+                BdnSig.sign(msg, kp1.scalar),
+                BdnSig.sign(msg, kp2.scalar),
+                BdnSig.sign(msg, kp3.scalar)
+        ));
         BdnSig signature = new BdnSig(sig.toBytes());
 
         assertTrue(signature.verify(msg, mask));
@@ -47,7 +49,32 @@ class BdnSigTest {
         byte[] wrongMsg = "abc".getBytes();
         assertFalse(signature.verify(wrongMsg, mask));
 
-        Mask wrongMask = new Mask(pubs, new byte[]{7});
+        Mask wrongMask = new Mask(pubs, new byte[]{0b100});
         assertFalse(signature.verify(msg, wrongMask));
+    }
+
+    @Test
+    void testAggregateVerificationVectors() throws Exception {
+        byte[][] vectors = new byte[][]{
+                new byte[]{0b1},
+                new byte[]{0b10},
+                new byte[]{0b101},
+                new byte[]{0b11},
+                new byte[]{0b111}
+        };
+
+        for (byte[] mask : vectors) {
+            testAggregateVerification(mask);
+        }
+    }
+
+    @Test
+    void testMismatchingLength() throws Exception {
+        Bn256Pair kp1 = new Bn256Pair(rnd);
+        List<Point> pubs = Collections.singletonList(kp1.point);
+
+        Mask mask = new Mask(pubs, new byte[]{1});
+
+        assertThrows(IllegalArgumentException.class, () -> BdnSig.aggregatePoints(mask, Collections.emptyList()));
     }
 }
