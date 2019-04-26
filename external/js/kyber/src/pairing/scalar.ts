@@ -104,6 +104,11 @@ export default class BN256Scalar implements Scalar {
     }
 
     /** @inheritdoc */
+    marshalSize(): number{
+        return 32;
+    }
+
+    /** @inheritdoc */
     clone(): BN256Scalar {
         const s = new BN256Scalar(new BN(this.v));
         return s;
