@@ -165,6 +165,12 @@ export interface Scalar {
   unmarshalBinary(bytes: Buffer): void;
 
   /**
+   * Get the length of the buffer after marshaling the scalar
+   * @returns the length as a number
+   */
+  marshalSize(): number;
+
+  /**
    * Sets the receiver equal to another Scalar a
    * @param a the new scalar
    * @return the current scalar set to the new value
