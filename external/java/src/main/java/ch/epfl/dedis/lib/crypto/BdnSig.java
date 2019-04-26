@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.crypto;
 
+import ch.epfl.dedis.lib.crypto.blake2s.Blake2xsDigest;
 import ch.epfl.dedis.lib.crypto.bn256.BN;
-import org.bouncycastle.crypto.digests.Blake2xsDigest;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
