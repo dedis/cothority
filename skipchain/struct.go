@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
@@ -627,7 +628,7 @@ func (fl *ForwardLink) Verify(suite *pairing.SuiteBn256, pubs []kyber.Point) err
 	}
 
 	// This calculation must match the one in byzcoinx.
-	return fl.Signature.Sig.Verify(suite, fl.Signature.Msg, pubs)
+	return protocol.BlsSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
 }
 
 // IsEmpty indicates whether this forwardlink is merely a placeholder for

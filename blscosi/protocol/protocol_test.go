@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 )
@@ -85,7 +85,7 @@ func TestProtocol_7_5(t *testing.T) {
 
 func TestProtocol_25_5(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.Skip("skipped for Travis")
 	}
 
 	_, _, err := runProtocol(25, 5, 25)
@@ -123,7 +123,7 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Rost
 	}
 
 	// get and verify signature
-	sig, err := getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
+	sig, err := getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, sign.NewThresholdPolicy(threshold))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -145,7 +145,7 @@ func TestQuickAnswerProtocol_5_4(t *testing.T) {
 
 func TestQuickAnswerProtocol_24_5(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.Skip("skipped for Travis")
 	}
 
 	mask, err := runQuickAnswerProtocol(24, 5)
@@ -153,7 +153,7 @@ func TestQuickAnswerProtocol_24_5(t *testing.T) {
 	require.InEpsilon(t, 14, mask.CountEnabled(), 2)
 }
 
-func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
+func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*sign.Mask, error) {
 	sig, roster, err := runProtocol(nbrNodes, nbrTrees, nbrNodes/2)
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*cosi.Mask, error) {
 
 	publics := roster.ServicePublics(testServiceName)
 
-	mask, err := cosi.NewMask(testSuite, publics, nil)
+	mask, err := sign.NewMask(testSuite, publics, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func TestProtocol_FailingLeaves_5_1(t *testing.T) {
 
 func TestProtocol_FailingLeaves_25_9(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.Skip("skipped for Travis")
 	}
 
 	err := runProtocolFailingNodes(25, 3, 2, 23)
@@ -221,7 +221,7 @@ func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) erro
 	}
 
 	// get and verify signature
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, sign.NewThresholdPolicy(threshold))
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func TestProtocol_FailingSubLeader_5_1(t *testing.T) {
 
 func TestProtocol_FailingSubLeader_25_3(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.Skip("skipped for Travis")
 	}
 
 	err := runProtocolFailingSubLeader(25, 3)
@@ -277,7 +277,7 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 	}
 
 	// get and verify signature
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(cosiProtocol.Threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, sign.NewThresholdPolicy(cosiProtocol.Threshold))
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func TestProtocol_AllFailing_5_1(t *testing.T) {
 
 func TestProtocol_AllFailing_25_3(t *testing.T) {
 	if testing.Short() {
-		t.Skip()
+		t.Skip("skipped for Travis")
 	}
 
 	_, err := runProtocolAllFailing(25, 3, 1)
@@ -389,7 +389,7 @@ func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error)
 
 	// only the leader agrees, the verification should only pass with a threshold of 1
 	// the rest, including using the complete policy should fail
-	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, cosi.NewThresholdPolicy(threshold))
+	_, err = getAndVerifySignature(cosiProtocol, cosiProtocol.Msg, sign.NewThresholdPolicy(threshold))
 	if err != nil {
 		return time, err
 	}
@@ -404,7 +404,7 @@ type testService struct {
 	*onet.ServiceProcessor
 }
 
-func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy cosi.Policy) (BlsSignature, error) {
+func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy sign.Policy) (BlsSignature, error) {
 	var signature BlsSignature
 	log.Lvl3("Waiting for Instance")
 	select {

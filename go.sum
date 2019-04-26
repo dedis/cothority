@@ -45,10 +45,13 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 go.dedis.ch/fixbuf v1.0.3 h1:hGcV9Cd/znUxlusJ64eAlExS+5cJDIyTyEG+otu5wQs=
 go.dedis.ch/fixbuf v1.0.3/go.mod h1:yzJMt34Wa5xD37V5RTdmp38cz3QhMagdGoem9anUalw=
-go.dedis.ch/kyber/v3 v3.0.0-pre2 h1:ezviD36AEOytXJn91tsvQeR+rEzo3UOh75P/PzSisRo=
 go.dedis.ch/kyber/v3 v3.0.0-pre2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
-go.dedis.ch/kyber/v3 v3.0.2 h1:dhYLJksmOau7TYf1JS0iTpW6Bus+mtqxJBbM0Q/E9HU=
 go.dedis.ch/kyber/v3 v3.0.2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
+go.dedis.ch/kyber/v3 v3.0.3-pre1/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
+go.dedis.ch/kyber/v3 v3.0.3-pre2 h1:zHvp7WJ9b5U+SFqGGh9Fsn22Atoyi5kwtEXkjnHGqMo=
+go.dedis.ch/kyber/v3 v3.0.3-pre2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
+go.dedis.ch/kyber/v3 v3.0.3-pre3 h1:U5tTONbc75JWs4/Bklnm9r9f4NPJY5SoMiO+tmVG24c=
+go.dedis.ch/kyber/v3 v3.0.3-pre3/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
 go.dedis.ch/onet/v3 v3.0.5 h1:Ysm96KuRt1OavrRpa1Vi09DqljXBCDwaiur34DTvra8=
 go.dedis.ch/onet/v3 v3.0.5/go.mod h1:0wrof0zfyD+Qfw9Pfhu9jW+bTbwwWBzC1hMuV/c8v2w=
 go.dedis.ch/protobuf v1.0.5/go.mod h1:eIV4wicvi6JK0q/QnfIEGeSFNG0ZeB24kzut5+HaRLo=

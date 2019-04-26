@@ -7,10 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
 	"go.dedis.ch/kyber/v3/sign/bls"
-	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 )
@@ -44,6 +43,11 @@ type SubBlsCosi struct {
 	ChannelAnnouncement chan StructAnnouncement
 	ChannelResponse     chan StructResponse
 	ChannelRefusal      chan StructRefusal
+
+	// Crypto functions
+	Sign      SignFn
+	Verify    VerifyFn
+	Aggregate AggregateFn
 }
 
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
@@ -69,10 +73,15 @@ func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.S
 
 	c := &SubBlsCosi{
 		TreeNodeInstance: n,
-		verificationFn:   vf,
-		suite:            suite,
-		startChan:        make(chan bool, 1),
-		closeChan:        make(chan struct{}),
+		Sign:             bls.Sign,
+		Verify:           bls.Verify,
+		Aggregate: func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
+			return bls.AggregateSignatures(suite, sigs...)
+		},
+		verificationFn: vf,
+		suite:          suite,
+		startChan:      make(chan bool, 1),
+		closeChan:      make(chan struct{}),
 	}
 
 	if n.IsRoot() {
@@ -239,15 +248,20 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 
 	responses := make(ResponseMap)
 	for _, c := range p.Children() {
-		public := p.NodePublic(c.ServerIdentity)
-		// Accept response for those identities only
-		responses[public.String()] = nil
+		_, index := searchPublicKey(p.TreeNodeInstance, c.ServerIdentity)
+		if index != -1 {
+			// Accept response for those identities only
+			responses[index] = nil
+		}
 	}
 
 	own, err := p.makeResponse()
 	if ok := p.verificationFn(p.Msg, p.Data); ok {
 		log.Lvlf3("Subleader %v signed", p.ServerIdentity())
-		responses[p.Public().String()] = own
+		_, index := searchPublicKey(p.TreeNodeInstance, p.ServerIdentity())
+		if index != -1 {
+			responses[index] = own
+		}
 	}
 
 	// we need to timeout the children faster than the root timeout to let it
@@ -261,16 +275,16 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		case <-p.closeChan:
 			return nil
 		case reply := <-p.ChannelResponse:
-			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
+			public, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
 			if public != nil {
-				r, ok := responses[public.String()]
+				r, ok := responses[pubIndex]
 				if !ok {
 					log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 				} else if r == nil {
 					if public == nil {
 						log.Warnf("Tentative to forge a server identity or unknown node.")
-					} else if err := bls.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
-						responses[public.String()] = &reply.Response
+					} else if err := p.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
+						responses[pubIndex] = &reply.Response
 						done++
 					}
 				} else {
@@ -280,16 +294,15 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				log.Warnf("Received unknown server identity %v", reply.ServerIdentity)
 			}
 		case reply := <-p.ChannelRefusal:
-			public := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
-			r, ok := responses[public.String()]
-			serviceName := onet.ServiceFactory.Name(p.Token().ServiceID)
+			public, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
+			r, ok := responses[pubIndex]
 
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				if err := bls.Verify(p.suite, reply.ServerIdentity.ServicePublic(serviceName), a.Nonce, reply.Signature); err == nil {
+				if err := p.Verify(p.suite, public, a.Nonce, reply.Signature); err == nil {
 					// The child gives an empty signature as a mark of refusal
-					responses[public.String()] = &Response{}
+					responses[pubIndex] = &Response{}
 					done++
 				} else {
 					log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
@@ -305,7 +318,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		}
 	}
 
-	r, err := makeAggregateResponse(p.suite, p.Publics(), responses)
+	r, err := p.makeSubLeaderResponse(responses)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -355,13 +368,13 @@ func (p *SubBlsCosi) dispatchLeaf() error {
 
 // Sign the message and pack it with the mask as a response
 func (p *SubBlsCosi) makeResponse() (*Response, error) {
-	mask, err := cosi.NewMask(p.suite, p.Publics(), p.Public())
+	mask, err := sign.NewMask(p.suite, p.Publics(), p.Public())
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 
-	sig, err := bls.Sign(p.suite, p.Private(), p.Msg)
+	sig, err := p.Sign(p.suite, p.Private(), p.Msg)
 	if err != nil {
 		return nil, err
 	}
@@ -375,55 +388,44 @@ func (p *SubBlsCosi) makeResponse() (*Response, error) {
 // makeRefusal will sign a random nonce so that we can check
 // that the refusal is not forged
 func (p *SubBlsCosi) makeRefusal(nonce []byte) (*Refusal, error) {
-	sig, err := bls.Sign(p.suite, p.Private(), nonce)
+	sig, err := p.Sign(p.suite, p.Private(), nonce)
 
 	return &Refusal{Signature: sig}, err
-}
-
-// makeAggregateResponse takes all the responses from the children and the subleader to
-// aggregate the signature and the mask
-func makeAggregateResponse(suite pairing.Suite, publics []kyber.Point, responses ResponseMap) (*Response, error) {
-	finalMask, err := cosi.NewMask(suite.(cosi.Suite), publics, nil)
-	if err != nil {
-		return nil, err
-	}
-	finalSignature := suite.G1().Point()
-
-	aggMask := finalMask.Mask()
-	for _, res := range responses {
-		if res == nil || len(res.Signature) == 0 {
-			continue
-		}
-
-		sig, err := res.Signature.Point(suite)
-		if err != nil {
-			return nil, err
-		}
-		finalSignature = finalSignature.Add(finalSignature, sig)
-
-		aggMask, err = cosi.AggregateMasks(aggMask, res.Mask)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = finalMask.SetMask(aggMask)
-	if err != nil {
-		return nil, err
-	}
-
-	sig, err := finalSignature.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Response{Signature: sig, Mask: finalMask.Mask()}, nil
 }
 
 // makeVerification executes the verification function provided and
 // returns the result in the given channel
 func (p *SubBlsCosi) makeVerification(out chan bool) {
 	out <- p.verificationFn(p.Msg, p.Data)
+}
+
+// makeSubLeaderResponse aggregates its own signature with the children's and it also
+// creates the final mask for this aggregation
+func (p *SubBlsCosi) makeSubLeaderResponse(responses ResponseMap) (*Response, error) {
+	pubs := p.Publics()
+	mask, err := sign.NewMask(p.suite, pubs, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	sigs := [][]byte{}
+	for idx, res := range responses {
+		if res == nil || len(res.Signature) == 0 {
+			continue
+		}
+
+		err = mask.Merge(res.Mask)
+		if err != nil {
+			return nil, err
+		}
+
+		i := mask.NthEnabledAtIndex(idx)
+		sigs = append(sigs[:i], append([][]byte{res.Signature}, sigs[i:]...)...)
+	}
+
+	agg, err := p.Aggregate(p.suite, mask, sigs)
+
+	return &Response{Signature: agg, Mask: mask.Mask()}, err
 }
 
 // checkIntegrity checks that the subprotocol can start with the current
