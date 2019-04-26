@@ -115,8 +115,9 @@ public final class Calypso {
 
     /**
      * <pre>
-     * C is the ElGamal parts for the symmetric key material (might also
-     * contain an IV)
+     * C is the ElGamal part for the symmetric key material, at maximum length
+     * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+     * in ExtraData, as it is not necessary to be encrypted.
      * </pre>
      *
      * <code>required bytes c = 6;</code>
@@ -124,8 +125,9 @@ public final class Calypso {
     boolean hasC();
     /**
      * <pre>
-     * C is the ElGamal parts for the symmetric key material (might also
-     * contain an IV)
+     * C is the ElGamal part for the symmetric key material, at maximum length
+     * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+     * in ExtraData, as it is not necessary to be encrypted.
      * </pre>
      *
      * <code>required bytes c = 6;</code>
@@ -420,8 +422,9 @@ public final class Calypso {
     private com.google.protobuf.ByteString c_;
     /**
      * <pre>
-     * C is the ElGamal parts for the symmetric key material (might also
-     * contain an IV)
+     * C is the ElGamal part for the symmetric key material, at maximum length
+     * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+     * in ExtraData, as it is not necessary to be encrypted.
      * </pre>
      *
      * <code>required bytes c = 6;</code>
@@ -431,8 +434,9 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * C is the ElGamal parts for the symmetric key material (might also
-     * contain an IV)
+     * C is the ElGamal part for the symmetric key material, at maximum length
+     * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+     * in ExtraData, as it is not necessary to be encrypted.
      * </pre>
      *
      * <code>required bytes c = 6;</code>
@@ -1308,8 +1312,9 @@ public final class Calypso {
       private com.google.protobuf.ByteString c_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * C is the ElGamal parts for the symmetric key material (might also
-       * contain an IV)
+       * C is the ElGamal part for the symmetric key material, at maximum length
+       * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+       * in ExtraData, as it is not necessary to be encrypted.
        * </pre>
        *
        * <code>required bytes c = 6;</code>
@@ -1319,8 +1324,9 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * C is the ElGamal parts for the symmetric key material (might also
-       * contain an IV)
+       * C is the ElGamal part for the symmetric key material, at maximum length
+       * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+       * in ExtraData, as it is not necessary to be encrypted.
        * </pre>
        *
        * <code>required bytes c = 6;</code>
@@ -1330,8 +1336,9 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * C is the ElGamal parts for the symmetric key material (might also
-       * contain an IV)
+       * C is the ElGamal part for the symmetric key material, at maximum length
+       * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+       * in ExtraData, as it is not necessary to be encrypted.
        * </pre>
        *
        * <code>required bytes c = 6;</code>
@@ -1347,8 +1354,9 @@ public final class Calypso {
       }
       /**
        * <pre>
-       * C is the ElGamal parts for the symmetric key material (might also
-       * contain an IV)
+       * C is the ElGamal part for the symmetric key material, at maximum length
+       * of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+       * in ExtraData, as it is not necessary to be encrypted.
        * </pre>
        *
        * <code>required bytes c = 6;</code>
@@ -3097,7 +3105,7 @@ public final class Calypso {
   }
   /**
    * <pre>
-   * CreateLTS is used to start a DKG and store the private keys in each node.
+   * CreateOCS is used to start a DKG and store the private keys in each node.
    * Prior to using this request, the Calypso roster must be recorded on the
    * ByzCoin blockchain in the instance specified by InstanceID.
    * </pre>
@@ -3377,7 +3385,7 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * CreateLTS is used to start a DKG and store the private keys in each node.
+     * CreateOCS is used to start a DKG and store the private keys in each node.
      * Prior to using this request, the Calypso roster must be recorded on the
      * ByzCoin blockchain in the instance specified by InstanceID.
      * </pre>
@@ -5589,7 +5597,7 @@ public final class Calypso {
   }
   /**
    * <pre>
-   * DecryptKey is sent by a reader after he successfully stored a 'Read' request
+   * Reencrypt is sent by a reader after he successfully stored a 'Read' request
    * in byzcoin Client.
    * </pre>
    *
@@ -5950,7 +5958,7 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * DecryptKey is sent by a reader after he successfully stored a 'Read' request
+     * Reencrypt is sent by a reader after he successfully stored a 'Read' request
      * in byzcoin Client.
      * </pre>
      *

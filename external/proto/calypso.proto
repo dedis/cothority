@@ -28,8 +28,9 @@ message Write {
   // f is the proof - written in uppercase here so it is an exported
   // field, but in the OCS-paper it's lowercase.
   required bytes f = 5;
-  // C is the ElGamal parts for the symmetric key material (might also
-  // contain an IV)
+  // C is the ElGamal part for the symmetric key material, at maximum length
+  // of ed25519.Point.EmbedLen * 8 = 240 bits. An eventual IV must be published
+  // in ExtraData, as it is not necessary to be encrypted.
   required bytes c = 6;
   // ExtraData is clear text and application-specific
   optional bytes extradata = 7;
@@ -58,7 +59,7 @@ message Authorise {
 message AuthoriseReply {
 }
 
-// CreateLTS is used to start a DKG and store the private keys in each node.
+// CreateOCS is used to start a DKG and store the private keys in each node.
 // Prior to using this request, the Calypso roster must be recorded on the
 // ByzCoin blockchain in the instance specified by InstanceID.
 message CreateLTS {
@@ -86,7 +87,7 @@ message ReshareLTS {
 message ReshareLTSReply {
 }
 
-// DecryptKey is sent by a reader after he successfully stored a 'Read' request
+// Reencrypt is sent by a reader after he successfully stored a 'Read' request
 // in byzcoin Client.
 message DecryptKey {
   // Read is the proof that he has been accepted to read the secret.

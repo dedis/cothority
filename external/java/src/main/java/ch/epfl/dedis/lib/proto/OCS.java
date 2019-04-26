@@ -14,6 +14,1067 @@ public final class OCS {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface AddPolicyCreateOCSOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AddPolicyCreateOCS)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    boolean hasCreate();
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.Policy getCreate();
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getCreateOrBuilder();
+  }
+  /**
+   * <pre>
+   * AddPolicyCreateOCS is sent by a local admin to add a rule to define who is
+   * authorized to create a new OCS.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.AddPolicyCreateOCS}
+   */
+  public  static final class AddPolicyCreateOCS extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.AddPolicyCreateOCS)
+      AddPolicyCreateOCSOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AddPolicyCreateOCS.newBuilder() to construct.
+    private AddPolicyCreateOCS(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AddPolicyCreateOCS() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AddPolicyCreateOCS(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = create_.toBuilder();
+              }
+              create_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(create_);
+                create_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCS_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCS_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.class, ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int CREATE_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.OCS.Policy create_;
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    public boolean hasCreate() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.Policy getCreate() {
+      return create_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : create_;
+    }
+    /**
+     * <code>required .ocs.Policy create = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getCreateOrBuilder() {
+      return create_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : create_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasCreate()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getCreate().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getCreate());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getCreate());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS other = (ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS) obj;
+
+      if (hasCreate() != other.hasCreate()) return false;
+      if (hasCreate()) {
+        if (!getCreate()
+            .equals(other.getCreate())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasCreate()) {
+        hash = (37 * hash) + CREATE_FIELD_NUMBER;
+        hash = (53 * hash) + getCreate().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AddPolicyCreateOCS is sent by a local admin to add a rule to define who is
+     * authorized to create a new OCS.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.AddPolicyCreateOCS}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.AddPolicyCreateOCS)
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCS_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCS_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.class, ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getCreateFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (createBuilder_ == null) {
+          create_ = null;
+        } else {
+          createBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCS_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS build() {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS result = new ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (createBuilder_ == null) {
+            result.create_ = create_;
+          } else {
+            result.create_ = createBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS.getDefaultInstance()) return this;
+        if (other.hasCreate()) {
+          mergeCreate(other.getCreate());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasCreate()) {
+          return false;
+        }
+        if (!getCreate().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.OCS.Policy create_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> createBuilder_;
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public boolean hasCreate() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy getCreate() {
+        if (createBuilder_ == null) {
+          return create_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : create_;
+        } else {
+          return createBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public Builder setCreate(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (createBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          create_ = value;
+          onChanged();
+        } else {
+          createBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public Builder setCreate(
+          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
+        if (createBuilder_ == null) {
+          create_ = builderForValue.build();
+          onChanged();
+        } else {
+          createBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public Builder mergeCreate(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (createBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              create_ != null &&
+              create_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
+            create_ =
+              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(create_).mergeFrom(value).buildPartial();
+          } else {
+            create_ = value;
+          }
+          onChanged();
+        } else {
+          createBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public Builder clearCreate() {
+        if (createBuilder_ == null) {
+          create_ = null;
+          onChanged();
+        } else {
+          createBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getCreateBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getCreateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getCreateOrBuilder() {
+        if (createBuilder_ != null) {
+          return createBuilder_.getMessageOrBuilder();
+        } else {
+          return create_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : create_;
+        }
+      }
+      /**
+       * <code>required .ocs.Policy create = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
+          getCreateFieldBuilder() {
+        if (createBuilder_ == null) {
+          createBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
+                  getCreate(),
+                  getParentForChildren(),
+                  isClean());
+          create_ = null;
+        }
+        return createBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.AddPolicyCreateOCS)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.AddPolicyCreateOCS)
+    private static final ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AddPolicyCreateOCS>
+        PARSER = new com.google.protobuf.AbstractParser<AddPolicyCreateOCS>() {
+      @java.lang.Override
+      public AddPolicyCreateOCS parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AddPolicyCreateOCS(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AddPolicyCreateOCS> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AddPolicyCreateOCS> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCS getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AddPolicyCreateOCSReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AddPolicyCreateOCSReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * AddPolicyCreateOCSReply is an empty reply if the policy has been successfully
+   * created.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.AddPolicyCreateOCSReply}
+   */
+  public  static final class AddPolicyCreateOCSReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.AddPolicyCreateOCSReply)
+      AddPolicyCreateOCSReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AddPolicyCreateOCSReply.newBuilder() to construct.
+    private AddPolicyCreateOCSReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AddPolicyCreateOCSReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AddPolicyCreateOCSReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCSReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCSReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.class, ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply other = (ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply) obj;
+
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AddPolicyCreateOCSReply is an empty reply if the policy has been successfully
+     * created.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.AddPolicyCreateOCSReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.AddPolicyCreateOCSReply)
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCSReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCSReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.class, ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AddPolicyCreateOCSReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply build() {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply result = new ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.AddPolicyCreateOCSReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.AddPolicyCreateOCSReply)
+    private static final ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AddPolicyCreateOCSReply>
+        PARSER = new com.google.protobuf.AbstractParser<AddPolicyCreateOCSReply>() {
+      @java.lang.Override
+      public AddPolicyCreateOCSReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AddPolicyCreateOCSReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AddPolicyCreateOCSReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AddPolicyCreateOCSReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.AddPolicyCreateOCSReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface CreateOCSOrBuilder extends
       // @@protoc_insertion_point(interface_extends:ocs.CreateOCS)
       com.google.protobuf.MessageOrBuilder {
@@ -32,21 +1093,40 @@ public final class OCS {
     ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
 
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    boolean hasPolicy();
+    boolean hasPolicyreencrypt();
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.Policy getPolicy();
+    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt();
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyOrBuilder();
+    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder();
+
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    boolean hasPolicyreshare();
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare();
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder();
   }
   /**
    * <pre>
    * CreateOCS is sent to the service to request a new OCS cothority.
+   * It holds the two policies necessary to define an OCS: how to
+   * authenticate a reencryption request, and how to authenticate a
+   * resharing request.
+   * In the current form, both policies point to the same structure. If at
+   * a later moment a new access control backend is added, it might be that
+   * the policies will differ for this new backend.
    * </pre>
    *
    * Protobuf type {@code ocs.CreateOCS}
@@ -103,14 +1183,27 @@ public final class OCS {
             case 18: {
               ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) != 0)) {
-                subBuilder = policy_.toBuilder();
+                subBuilder = policyreencrypt_.toBuilder();
               }
-              policy_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
+              policyreencrypt_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(policy_);
-                policy_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(policyreencrypt_);
+                policyreencrypt_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) != 0)) {
+                subBuilder = policyreshare_.toBuilder();
+              }
+              policyreshare_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(policyreshare_);
+                policyreshare_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
             default: {
@@ -167,25 +1260,46 @@ public final class OCS {
       return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
 
-    public static final int POLICY_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.lib.proto.OCS.Policy policy_;
+    public static final int POLICYREENCRYPT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    public boolean hasPolicy() {
+    public boolean hasPolicyreencrypt() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicy() {
-      return policy_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policy_;
+    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
+      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
     }
     /**
-     * <code>required .ocs.Policy policy = 2;</code>
+     * <code>required .ocs.Policy policyreencrypt = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyOrBuilder() {
-      return policy_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policy_;
+    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
+      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
+    }
+
+    public static final int POLICYRESHARE_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    public boolean hasPolicyreshare() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
+      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+    }
+    /**
+     * <code>required .ocs.Policy policyreshare = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
+      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -199,7 +1313,11 @@ public final class OCS {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasPolicy()) {
+      if (!hasPolicyreencrypt()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPolicyreshare()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -207,7 +1325,11 @@ public final class OCS {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!getPolicy().isInitialized()) {
+      if (!getPolicyreencrypt().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getPolicyreshare().isInitialized()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -222,7 +1344,10 @@ public final class OCS {
         output.writeMessage(1, getRoster());
       }
       if (((bitField0_ & 0x00000002) != 0)) {
-        output.writeMessage(2, getPolicy());
+        output.writeMessage(2, getPolicyreencrypt());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(3, getPolicyreshare());
       }
       unknownFields.writeTo(output);
     }
@@ -239,7 +1364,11 @@ public final class OCS {
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getPolicy());
+          .computeMessageSize(2, getPolicyreencrypt());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getPolicyreshare());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -261,10 +1390,15 @@ public final class OCS {
         if (!getRoster()
             .equals(other.getRoster())) return false;
       }
-      if (hasPolicy() != other.hasPolicy()) return false;
-      if (hasPolicy()) {
-        if (!getPolicy()
-            .equals(other.getPolicy())) return false;
+      if (hasPolicyreencrypt() != other.hasPolicyreencrypt()) return false;
+      if (hasPolicyreencrypt()) {
+        if (!getPolicyreencrypt()
+            .equals(other.getPolicyreencrypt())) return false;
+      }
+      if (hasPolicyreshare() != other.hasPolicyreshare()) return false;
+      if (hasPolicyreshare()) {
+        if (!getPolicyreshare()
+            .equals(other.getPolicyreshare())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -281,9 +1415,13 @@ public final class OCS {
         hash = (37 * hash) + ROSTER_FIELD_NUMBER;
         hash = (53 * hash) + getRoster().hashCode();
       }
-      if (hasPolicy()) {
-        hash = (37 * hash) + POLICY_FIELD_NUMBER;
-        hash = (53 * hash) + getPolicy().hashCode();
+      if (hasPolicyreencrypt()) {
+        hash = (37 * hash) + POLICYREENCRYPT_FIELD_NUMBER;
+        hash = (53 * hash) + getPolicyreencrypt().hashCode();
+      }
+      if (hasPolicyreshare()) {
+        hash = (37 * hash) + POLICYRESHARE_FIELD_NUMBER;
+        hash = (53 * hash) + getPolicyreshare().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -383,6 +1521,12 @@ public final class OCS {
     /**
      * <pre>
      * CreateOCS is sent to the service to request a new OCS cothority.
+     * It holds the two policies necessary to define an OCS: how to
+     * authenticate a reencryption request, and how to authenticate a
+     * resharing request.
+     * In the current form, both policies point to the same structure. If at
+     * a later moment a new access control backend is added, it might be that
+     * the policies will differ for this new backend.
      * </pre>
      *
      * Protobuf type {@code ocs.CreateOCS}
@@ -418,7 +1562,8 @@ public final class OCS {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getRosterFieldBuilder();
-          getPolicyFieldBuilder();
+          getPolicyreencryptFieldBuilder();
+          getPolicyreshareFieldBuilder();
         }
       }
       @java.lang.Override
@@ -430,12 +1575,18 @@ public final class OCS {
           rosterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        if (policyBuilder_ == null) {
-          policy_ = null;
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = null;
         } else {
-          policyBuilder_.clear();
+          policyreencryptBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = null;
+        } else {
+          policyreshareBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -473,12 +1624,20 @@ public final class OCS {
           to_bitField0_ |= 0x00000001;
         }
         if (((from_bitField0_ & 0x00000002) != 0)) {
-          if (policyBuilder_ == null) {
-            result.policy_ = policy_;
+          if (policyreencryptBuilder_ == null) {
+            result.policyreencrypt_ = policyreencrypt_;
           } else {
-            result.policy_ = policyBuilder_.build();
+            result.policyreencrypt_ = policyreencryptBuilder_.build();
           }
           to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (policyreshareBuilder_ == null) {
+            result.policyreshare_ = policyreshare_;
+          } else {
+            result.policyreshare_ = policyreshareBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000004;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -532,8 +1691,11 @@ public final class OCS {
         if (other.hasRoster()) {
           mergeRoster(other.getRoster());
         }
-        if (other.hasPolicy()) {
-          mergePolicy(other.getPolicy());
+        if (other.hasPolicyreencrypt()) {
+          mergePolicyreencrypt(other.getPolicyreencrypt());
+        }
+        if (other.hasPolicyreshare()) {
+          mergePolicyreshare(other.getPolicyreshare());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -545,13 +1707,19 @@ public final class OCS {
         if (!hasRoster()) {
           return false;
         }
-        if (!hasPolicy()) {
+        if (!hasPolicyreencrypt()) {
+          return false;
+        }
+        if (!hasPolicyreshare()) {
           return false;
         }
         if (!getRoster().isInitialized()) {
           return false;
         }
-        if (!getPolicy().isInitialized()) {
+        if (!getPolicyreencrypt().isInitialized()) {
+          return false;
+        }
+        if (!getPolicyreshare().isInitialized()) {
           return false;
         }
         return true;
@@ -695,122 +1863,240 @@ public final class OCS {
         return rosterBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.OCS.Policy policy_;
+      private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyBuilder_;
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreencryptBuilder_;
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public boolean hasPolicy() {
+      public boolean hasPolicyreencrypt() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicy() {
-        if (policyBuilder_ == null) {
-          return policy_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policy_;
+      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
+        if (policyreencryptBuilder_ == null) {
+          return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
         } else {
-          return policyBuilder_.getMessage();
+          return policyreencryptBuilder_.getMessage();
         }
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public Builder setPolicy(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyBuilder_ == null) {
+      public Builder setPolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreencryptBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          policy_ = value;
+          policyreencrypt_ = value;
           onChanged();
         } else {
-          policyBuilder_.setMessage(value);
+          policyreencryptBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public Builder setPolicy(
+      public Builder setPolicyreencrypt(
           ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
-        if (policyBuilder_ == null) {
-          policy_ = builderForValue.build();
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = builderForValue.build();
           onChanged();
         } else {
-          policyBuilder_.setMessage(builderForValue.build());
+          policyreencryptBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public Builder mergePolicy(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyBuilder_ == null) {
+      public Builder mergePolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreencryptBuilder_ == null) {
           if (((bitField0_ & 0x00000002) != 0) &&
-              policy_ != null &&
-              policy_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
-            policy_ =
-              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policy_).mergeFrom(value).buildPartial();
+              policyreencrypt_ != null &&
+              policyreencrypt_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
+            policyreencrypt_ =
+              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreencrypt_).mergeFrom(value).buildPartial();
           } else {
-            policy_ = value;
+            policyreencrypt_ = value;
           }
           onChanged();
         } else {
-          policyBuilder_.mergeFrom(value);
+          policyreencryptBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public Builder clearPolicy() {
-        if (policyBuilder_ == null) {
-          policy_ = null;
+      public Builder clearPolicyreencrypt() {
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = null;
           onChanged();
         } else {
-          policyBuilder_.clear();
+          policyreencryptBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyBuilder() {
+      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreencryptBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getPolicyFieldBuilder().getBuilder();
+        return getPolicyreencryptFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyOrBuilder() {
-        if (policyBuilder_ != null) {
-          return policyBuilder_.getMessageOrBuilder();
+      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
+        if (policyreencryptBuilder_ != null) {
+          return policyreencryptBuilder_.getMessageOrBuilder();
         } else {
-          return policy_ == null ?
-              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policy_;
+          return policyreencrypt_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
         }
       }
       /**
-       * <code>required .ocs.Policy policy = 2;</code>
+       * <code>required .ocs.Policy policyreencrypt = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
-          getPolicyFieldBuilder() {
-        if (policyBuilder_ == null) {
-          policyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          getPolicyreencryptFieldBuilder() {
+        if (policyreencryptBuilder_ == null) {
+          policyreencryptBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
-                  getPolicy(),
+                  getPolicyreencrypt(),
                   getParentForChildren(),
                   isClean());
-          policy_ = null;
+          policyreencrypt_ = null;
         }
-        return policyBuilder_;
+        return policyreencryptBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreshareBuilder_;
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public boolean hasPolicyreshare() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
+        if (policyreshareBuilder_ == null) {
+          return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+        } else {
+          return policyreshareBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public Builder setPolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreshareBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          policyreshare_ = value;
+          onChanged();
+        } else {
+          policyreshareBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public Builder setPolicyreshare(
+          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = builderForValue.build();
+          onChanged();
+        } else {
+          policyreshareBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public Builder mergePolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreshareBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0) &&
+              policyreshare_ != null &&
+              policyreshare_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
+            policyreshare_ =
+              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreshare_).mergeFrom(value).buildPartial();
+          } else {
+            policyreshare_ = value;
+          }
+          onChanged();
+        } else {
+          policyreshareBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public Builder clearPolicyreshare() {
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = null;
+          onChanged();
+        } else {
+          policyreshareBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreshareBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getPolicyreshareFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
+        if (policyreshareBuilder_ != null) {
+          return policyreshareBuilder_.getMessageOrBuilder();
+        } else {
+          return policyreshare_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
+          getPolicyreshareFieldBuilder() {
+        if (policyreshareBuilder_ == null) {
+          policyreshareBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
+                  getPolicyreshare(),
+                  getParentForChildren(),
+                  isClean());
+          policyreshare_ = null;
+        }
+        return policyreshareBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -870,22 +2156,13 @@ public final class OCS {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    boolean hasX();
+    boolean hasOcsid();
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    com.google.protobuf.ByteString getX();
-
-    /**
-     * <code>required bytes sig = 2;</code>
-     */
-    boolean hasSig();
-    /**
-     * <code>required bytes sig = 2;</code>
-     */
-    com.google.protobuf.ByteString getSig();
+    com.google.protobuf.ByteString getOcsid();
   }
   /**
    * <pre>
@@ -908,8 +2185,7 @@ public final class OCS {
       super(builder);
     }
     private CreateOCSReply() {
-      x_ = com.google.protobuf.ByteString.EMPTY;
-      sig_ = com.google.protobuf.ByteString.EMPTY;
+      ocsid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -938,12 +2214,7 @@ public final class OCS {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              sig_ = input.readBytes();
+              ocsid_ = input.readBytes();
               break;
             }
             default: {
@@ -979,34 +2250,19 @@ public final class OCS {
     }
 
     private int bitField0_;
-    public static final int X_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString x_;
+    public static final int OCSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ocsid_;
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public boolean hasX() {
+    public boolean hasOcsid() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public com.google.protobuf.ByteString getX() {
-      return x_;
-    }
-
-    public static final int SIG_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString sig_;
-    /**
-     * <code>required bytes sig = 2;</code>
-     */
-    public boolean hasSig() {
-      return ((bitField0_ & 0x00000002) != 0);
-    }
-    /**
-     * <code>required bytes sig = 2;</code>
-     */
-    public com.google.protobuf.ByteString getSig() {
-      return sig_;
+    public com.google.protobuf.ByteString getOcsid() {
+      return ocsid_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1016,11 +2272,7 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasX()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasSig()) {
+      if (!hasOcsid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1032,10 +2284,7 @@ public final class OCS {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeBytes(1, x_);
-      }
-      if (((bitField0_ & 0x00000002) != 0)) {
-        output.writeBytes(2, sig_);
+        output.writeBytes(1, ocsid_);
       }
       unknownFields.writeTo(output);
     }
@@ -1048,11 +2297,7 @@ public final class OCS {
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, x_);
-      }
-      if (((bitField0_ & 0x00000002) != 0)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, sig_);
+          .computeBytesSize(1, ocsid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1069,15 +2314,10 @@ public final class OCS {
       }
       ch.epfl.dedis.lib.proto.OCS.CreateOCSReply other = (ch.epfl.dedis.lib.proto.OCS.CreateOCSReply) obj;
 
-      if (hasX() != other.hasX()) return false;
-      if (hasX()) {
-        if (!getX()
-            .equals(other.getX())) return false;
-      }
-      if (hasSig() != other.hasSig()) return false;
-      if (hasSig()) {
-        if (!getSig()
-            .equals(other.getSig())) return false;
+      if (hasOcsid() != other.hasOcsid()) return false;
+      if (hasOcsid()) {
+        if (!getOcsid()
+            .equals(other.getOcsid())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -1090,13 +2330,9 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasX()) {
-        hash = (37 * hash) + X_FIELD_NUMBER;
-        hash = (53 * hash) + getX().hashCode();
-      }
-      if (hasSig()) {
-        hash = (37 * hash) + SIG_FIELD_NUMBER;
-        hash = (53 * hash) + getSig().hashCode();
+      if (hasOcsid()) {
+        hash = (37 * hash) + OCSID_FIELD_NUMBER;
+        hash = (53 * hash) + getOcsid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1239,10 +2475,8 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        x_ = com.google.protobuf.ByteString.EMPTY;
+        ocsid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        sig_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1274,11 +2508,7 @@ public final class OCS {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.x_ = x_;
-        if (((from_bitField0_ & 0x00000002) != 0)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.sig_ = sig_;
+        result.ocsid_ = ocsid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1328,11 +2558,8 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.CreateOCSReply other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.CreateOCSReply.getDefaultInstance()) return this;
-        if (other.hasX()) {
-          setX(other.getX());
-        }
-        if (other.hasSig()) {
-          setSig(other.getSig());
+        if (other.hasOcsid()) {
+          setOcsid(other.getOcsid());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1341,10 +2568,7 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasX()) {
-          return false;
-        }
-        if (!hasSig()) {
+        if (!hasOcsid()) {
           return false;
         }
         return true;
@@ -1370,72 +2594,37 @@ public final class OCS {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString x_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString ocsid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public boolean hasX() {
+      public boolean hasOcsid() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public com.google.protobuf.ByteString getX() {
-        return x_;
+      public com.google.protobuf.ByteString getOcsid() {
+        return ocsid_;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder setX(com.google.protobuf.ByteString value) {
+      public Builder setOcsid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        x_ = value;
+        ocsid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder clearX() {
+      public Builder clearOcsid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        x_ = getDefaultInstance().getX();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString sig_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes sig = 2;</code>
-       */
-      public boolean hasSig() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       * <code>required bytes sig = 2;</code>
-       */
-      public com.google.protobuf.ByteString getSig() {
-        return sig_;
-      }
-      /**
-       * <code>required bytes sig = 2;</code>
-       */
-      public Builder setSig(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        sig_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes sig = 2;</code>
-       */
-      public Builder clearSig() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        sig_ = getDefaultInstance().getSig();
+        ocsid_ = getDefaultInstance().getOcsid();
         onChanged();
         return this;
       }
@@ -1492,18 +2681,1182 @@ public final class OCS {
 
   }
 
+  public interface GetProofOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.GetProof)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    boolean hasOcsid();
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    com.google.protobuf.ByteString getOcsid();
+  }
+  /**
+   * <pre>
+   * GetProof is sent to a node to have him sign his definition of the
+   * given OCS.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.GetProof}
+   */
+  public  static final class GetProof extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.GetProof)
+      GetProofOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetProof.newBuilder() to construct.
+    private GetProof(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetProof() {
+      ocsid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetProof(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ocsid_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProof_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProof_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.GetProof.class, ch.epfl.dedis.lib.proto.OCS.GetProof.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int OCSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ocsid_;
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    public boolean hasOcsid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getOcsid() {
+      return ocsid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasOcsid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, ocsid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, ocsid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.GetProof)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.GetProof other = (ch.epfl.dedis.lib.proto.OCS.GetProof) obj;
+
+      if (hasOcsid() != other.hasOcsid()) return false;
+      if (hasOcsid()) {
+        if (!getOcsid()
+            .equals(other.getOcsid())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasOcsid()) {
+        hash = (37 * hash) + OCSID_FIELD_NUMBER;
+        hash = (53 * hash) + getOcsid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.GetProof prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetProof is sent to a node to have him sign his definition of the
+     * given OCS.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.GetProof}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.GetProof)
+        ch.epfl.dedis.lib.proto.OCS.GetProofOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProof_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProof_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.GetProof.class, ch.epfl.dedis.lib.proto.OCS.GetProof.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.GetProof.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        ocsid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProof_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProof getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.GetProof.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProof build() {
+        ch.epfl.dedis.lib.proto.OCS.GetProof result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProof buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.GetProof result = new ch.epfl.dedis.lib.proto.OCS.GetProof(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ocsid_ = ocsid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.GetProof) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.GetProof)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.GetProof other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.GetProof.getDefaultInstance()) return this;
+        if (other.hasOcsid()) {
+          setOcsid(other.getOcsid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasOcsid()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.GetProof parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.GetProof) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString ocsid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public boolean hasOcsid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getOcsid() {
+        return ocsid_;
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public Builder setOcsid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ocsid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public Builder clearOcsid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ocsid_ = getDefaultInstance().getOcsid();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.GetProof)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.GetProof)
+    private static final ch.epfl.dedis.lib.proto.OCS.GetProof DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.GetProof();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.GetProof getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProof>
+        PARSER = new com.google.protobuf.AbstractParser<GetProof>() {
+      @java.lang.Override
+      public GetProof parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetProof(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetProof> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetProof> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.GetProof getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetProofReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.GetProofReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    boolean hasProof();
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.OCSProof getProof();
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder getProofOrBuilder();
+  }
+  /**
+   * <pre>
+   * GetProofReply contains the additional info that node has on the given
+   * OCS, as well as a signature using the services private key.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.GetProofReply}
+   */
+  public  static final class GetProofReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.GetProofReply)
+      GetProofReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetProofReply.newBuilder() to construct.
+    private GetProofReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetProofReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetProofReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = proof_.toBuilder();
+              }
+              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.OCSProof.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(proof_);
+                proof_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProofReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProofReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.GetProofReply.class, ch.epfl.dedis.lib.proto.OCS.GetProofReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PROOF_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.OCS.OCSProof proof_;
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    public boolean hasProof() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.OCSProof getProof() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance() : proof_;
+    }
+    /**
+     * <code>required .ocs.OCSProof proof = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder getProofOrBuilder() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance() : proof_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasProof()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getProof().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(1, getProof());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getProof());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.GetProofReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.GetProofReply other = (ch.epfl.dedis.lib.proto.OCS.GetProofReply) obj;
+
+      if (hasProof() != other.hasProof()) return false;
+      if (hasProof()) {
+        if (!getProof()
+            .equals(other.getProof())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasProof()) {
+        hash = (37 * hash) + PROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getProof().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.GetProofReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetProofReply contains the additional info that node has on the given
+     * OCS, as well as a signature using the services private key.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.GetProofReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.GetProofReply)
+        ch.epfl.dedis.lib.proto.OCS.GetProofReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProofReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProofReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.GetProofReply.class, ch.epfl.dedis.lib.proto.OCS.GetProofReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.GetProofReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getProofFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (proofBuilder_ == null) {
+          proof_ = null;
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_GetProofReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProofReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.GetProofReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProofReply build() {
+        ch.epfl.dedis.lib.proto.OCS.GetProofReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.GetProofReply buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.GetProofReply result = new ch.epfl.dedis.lib.proto.OCS.GetProofReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (proofBuilder_ == null) {
+            result.proof_ = proof_;
+          } else {
+            result.proof_ = proofBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.GetProofReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.GetProofReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.GetProofReply other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.GetProofReply.getDefaultInstance()) return this;
+        if (other.hasProof()) {
+          mergeProof(other.getProof());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasProof()) {
+          return false;
+        }
+        if (!getProof().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.GetProofReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.GetProofReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.OCS.OCSProof proof_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.OCSProof, ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder, ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder> proofBuilder_;
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public boolean hasProof() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.OCSProof getProof() {
+        if (proofBuilder_ == null) {
+          return proof_ == null ? ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance() : proof_;
+        } else {
+          return proofBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public Builder setProof(ch.epfl.dedis.lib.proto.OCS.OCSProof value) {
+        if (proofBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          proof_ = value;
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public Builder setProof(
+          ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder builderForValue) {
+        if (proofBuilder_ == null) {
+          proof_ = builderForValue.build();
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public Builder mergeProof(ch.epfl.dedis.lib.proto.OCS.OCSProof value) {
+        if (proofBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              proof_ != null &&
+              proof_ != ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance()) {
+            proof_ =
+              ch.epfl.dedis.lib.proto.OCS.OCSProof.newBuilder(proof_).mergeFrom(value).buildPartial();
+          } else {
+            proof_ = value;
+          }
+          onChanged();
+        } else {
+          proofBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public Builder clearProof() {
+        if (proofBuilder_ == null) {
+          proof_ = null;
+          onChanged();
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder getProofBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getProofFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder getProofOrBuilder() {
+        if (proofBuilder_ != null) {
+          return proofBuilder_.getMessageOrBuilder();
+        } else {
+          return proof_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance() : proof_;
+        }
+      }
+      /**
+       * <code>required .ocs.OCSProof proof = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.OCSProof, ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder, ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder> 
+          getProofFieldBuilder() {
+        if (proofBuilder_ == null) {
+          proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.OCSProof, ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder, ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder>(
+                  getProof(),
+                  getParentForChildren(),
+                  isClean());
+          proof_ = null;
+        }
+        return proofBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.GetProofReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.GetProofReply)
+    private static final ch.epfl.dedis.lib.proto.OCS.GetProofReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.GetProofReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.GetProofReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProofReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetProofReply>() {
+      @java.lang.Override
+      public GetProofReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetProofReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetProofReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetProofReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.GetProofReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface ReencryptOrBuilder extends
       // @@protoc_insertion_point(interface_extends:ocs.Reencrypt)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    boolean hasX();
+    boolean hasOcsid();
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    com.google.protobuf.ByteString getX();
+    com.google.protobuf.ByteString getOcsid();
 
     /**
      * <code>required .ocs.AuthReencrypt auth = 2;</code>
@@ -1538,7 +3891,7 @@ public final class OCS {
       super(builder);
     }
     private Reencrypt() {
-      x_ = com.google.protobuf.ByteString.EMPTY;
+      ocsid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -1567,7 +3920,7 @@ public final class OCS {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
+              ocsid_ = input.readBytes();
               break;
             }
             case 18: {
@@ -1616,19 +3969,19 @@ public final class OCS {
     }
 
     private int bitField0_;
-    public static final int X_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString x_;
+    public static final int OCSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ocsid_;
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public boolean hasX() {
+    public boolean hasOcsid() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public com.google.protobuf.ByteString getX() {
-      return x_;
+    public com.google.protobuf.ByteString getOcsid() {
+      return ocsid_;
     }
 
     public static final int AUTH_FIELD_NUMBER = 2;
@@ -1659,7 +4012,7 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasX()) {
+      if (!hasOcsid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1679,7 +4032,7 @@ public final class OCS {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeBytes(1, x_);
+        output.writeBytes(1, ocsid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getAuth());
@@ -1695,7 +4048,7 @@ public final class OCS {
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, x_);
+          .computeBytesSize(1, ocsid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1716,10 +4069,10 @@ public final class OCS {
       }
       ch.epfl.dedis.lib.proto.OCS.Reencrypt other = (ch.epfl.dedis.lib.proto.OCS.Reencrypt) obj;
 
-      if (hasX() != other.hasX()) return false;
-      if (hasX()) {
-        if (!getX()
-            .equals(other.getX())) return false;
+      if (hasOcsid() != other.hasOcsid()) return false;
+      if (hasOcsid()) {
+        if (!getOcsid()
+            .equals(other.getOcsid())) return false;
       }
       if (hasAuth() != other.hasAuth()) return false;
       if (hasAuth()) {
@@ -1737,9 +4090,9 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasX()) {
-        hash = (37 * hash) + X_FIELD_NUMBER;
-        hash = (53 * hash) + getX().hashCode();
+      if (hasOcsid()) {
+        hash = (37 * hash) + OCSID_FIELD_NUMBER;
+        hash = (53 * hash) + getOcsid().hashCode();
       }
       if (hasAuth()) {
         hash = (37 * hash) + AUTH_FIELD_NUMBER;
@@ -1886,7 +4239,7 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        x_ = com.google.protobuf.ByteString.EMPTY;
+        ocsid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         if (authBuilder_ == null) {
           auth_ = null;
@@ -1925,7 +4278,7 @@ public final class OCS {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.x_ = x_;
+        result.ocsid_ = ocsid_;
         if (((from_bitField0_ & 0x00000002) != 0)) {
           if (authBuilder_ == null) {
             result.auth_ = auth_;
@@ -1983,8 +4336,8 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.Reencrypt other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.Reencrypt.getDefaultInstance()) return this;
-        if (other.hasX()) {
-          setX(other.getX());
+        if (other.hasOcsid()) {
+          setOcsid(other.getOcsid());
         }
         if (other.hasAuth()) {
           mergeAuth(other.getAuth());
@@ -1996,7 +4349,7 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasX()) {
+        if (!hasOcsid()) {
           return false;
         }
         if (!hasAuth()) {
@@ -2028,37 +4381,37 @@ public final class OCS {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString x_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString ocsid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public boolean hasX() {
+      public boolean hasOcsid() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public com.google.protobuf.ByteString getX() {
-        return x_;
+      public com.google.protobuf.ByteString getOcsid() {
+        return ocsid_;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder setX(com.google.protobuf.ByteString value) {
+      public Builder setOcsid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        x_ = value;
+        ocsid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder clearX() {
+      public Builder clearOcsid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        x_ = getDefaultInstance().getX();
+        ocsid_ = getDefaultInstance().getOcsid();
         onChanged();
         return this;
       }
@@ -2238,13 +4591,31 @@ public final class OCS {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes xhat = 1;</code>
+     * <code>required bytes x = 1;</code>
      */
-    boolean hasXhat();
+    boolean hasX();
     /**
-     * <code>required bytes xhat = 1;</code>
+     * <code>required bytes x = 1;</code>
      */
-    com.google.protobuf.ByteString getXhat();
+    com.google.protobuf.ByteString getX();
+
+    /**
+     * <code>required bytes xhatenc = 2;</code>
+     */
+    boolean hasXhatenc();
+    /**
+     * <code>required bytes xhatenc = 2;</code>
+     */
+    com.google.protobuf.ByteString getXhatenc();
+
+    /**
+     * <code>required bytes c = 3;</code>
+     */
+    boolean hasC();
+    /**
+     * <code>required bytes c = 3;</code>
+     */
+    com.google.protobuf.ByteString getC();
   }
   /**
    * <pre>
@@ -2265,7 +4636,9 @@ public final class OCS {
       super(builder);
     }
     private ReencryptReply() {
-      xhat_ = com.google.protobuf.ByteString.EMPTY;
+      x_ = com.google.protobuf.ByteString.EMPTY;
+      xhatenc_ = com.google.protobuf.ByteString.EMPTY;
+      c_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -2294,7 +4667,17 @@ public final class OCS {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              xhat_ = input.readBytes();
+              x_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              xhatenc_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              c_ = input.readBytes();
               break;
             }
             default: {
@@ -2330,19 +4713,49 @@ public final class OCS {
     }
 
     private int bitField0_;
-    public static final int XHAT_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString xhat_;
+    public static final int X_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString x_;
     /**
-     * <code>required bytes xhat = 1;</code>
+     * <code>required bytes x = 1;</code>
      */
-    public boolean hasXhat() {
+    public boolean hasX() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required bytes xhat = 1;</code>
+     * <code>required bytes x = 1;</code>
      */
-    public com.google.protobuf.ByteString getXhat() {
-      return xhat_;
+    public com.google.protobuf.ByteString getX() {
+      return x_;
+    }
+
+    public static final int XHATENC_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString xhatenc_;
+    /**
+     * <code>required bytes xhatenc = 2;</code>
+     */
+    public boolean hasXhatenc() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required bytes xhatenc = 2;</code>
+     */
+    public com.google.protobuf.ByteString getXhatenc() {
+      return xhatenc_;
+    }
+
+    public static final int C_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString c_;
+    /**
+     * <code>required bytes c = 3;</code>
+     */
+    public boolean hasC() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required bytes c = 3;</code>
+     */
+    public com.google.protobuf.ByteString getC() {
+      return c_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2352,7 +4765,15 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasXhat()) {
+      if (!hasX()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasXhatenc()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasC()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -2364,7 +4785,13 @@ public final class OCS {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeBytes(1, xhat_);
+        output.writeBytes(1, x_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeBytes(2, xhatenc_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeBytes(3, c_);
       }
       unknownFields.writeTo(output);
     }
@@ -2377,7 +4804,15 @@ public final class OCS {
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, xhat_);
+          .computeBytesSize(1, x_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, xhatenc_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, c_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2394,10 +4829,20 @@ public final class OCS {
       }
       ch.epfl.dedis.lib.proto.OCS.ReencryptReply other = (ch.epfl.dedis.lib.proto.OCS.ReencryptReply) obj;
 
-      if (hasXhat() != other.hasXhat()) return false;
-      if (hasXhat()) {
-        if (!getXhat()
-            .equals(other.getXhat())) return false;
+      if (hasX() != other.hasX()) return false;
+      if (hasX()) {
+        if (!getX()
+            .equals(other.getX())) return false;
+      }
+      if (hasXhatenc() != other.hasXhatenc()) return false;
+      if (hasXhatenc()) {
+        if (!getXhatenc()
+            .equals(other.getXhatenc())) return false;
+      }
+      if (hasC() != other.hasC()) return false;
+      if (hasC()) {
+        if (!getC()
+            .equals(other.getC())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -2410,9 +4855,17 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasXhat()) {
-        hash = (37 * hash) + XHAT_FIELD_NUMBER;
-        hash = (53 * hash) + getXhat().hashCode();
+      if (hasX()) {
+        hash = (37 * hash) + X_FIELD_NUMBER;
+        hash = (53 * hash) + getX().hashCode();
+      }
+      if (hasXhatenc()) {
+        hash = (37 * hash) + XHATENC_FIELD_NUMBER;
+        hash = (53 * hash) + getXhatenc().hashCode();
+      }
+      if (hasC()) {
+        hash = (37 * hash) + C_FIELD_NUMBER;
+        hash = (53 * hash) + getC().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2553,8 +5006,12 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        xhat_ = com.google.protobuf.ByteString.EMPTY;
+        x_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        xhatenc_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        c_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -2586,7 +5043,15 @@ public final class OCS {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.xhat_ = xhat_;
+        result.x_ = x_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.xhatenc_ = xhatenc_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.c_ = c_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2636,8 +5101,14 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.ReencryptReply other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.ReencryptReply.getDefaultInstance()) return this;
-        if (other.hasXhat()) {
-          setXhat(other.getXhat());
+        if (other.hasX()) {
+          setX(other.getX());
+        }
+        if (other.hasXhatenc()) {
+          setXhatenc(other.getXhatenc());
+        }
+        if (other.hasC()) {
+          setC(other.getC());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2646,7 +5117,13 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasXhat()) {
+        if (!hasX()) {
+          return false;
+        }
+        if (!hasXhatenc()) {
+          return false;
+        }
+        if (!hasC()) {
           return false;
         }
         return true;
@@ -2672,37 +5149,107 @@ public final class OCS {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString xhat_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString x_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes xhat = 1;</code>
+       * <code>required bytes x = 1;</code>
        */
-      public boolean hasXhat() {
+      public boolean hasX() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required bytes xhat = 1;</code>
+       * <code>required bytes x = 1;</code>
        */
-      public com.google.protobuf.ByteString getXhat() {
-        return xhat_;
+      public com.google.protobuf.ByteString getX() {
+        return x_;
       }
       /**
-       * <code>required bytes xhat = 1;</code>
+       * <code>required bytes x = 1;</code>
        */
-      public Builder setXhat(com.google.protobuf.ByteString value) {
+      public Builder setX(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        xhat_ = value;
+        x_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes xhat = 1;</code>
+       * <code>required bytes x = 1;</code>
        */
-      public Builder clearXhat() {
+      public Builder clearX() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        xhat_ = getDefaultInstance().getXhat();
+        x_ = getDefaultInstance().getX();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString xhatenc_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes xhatenc = 2;</code>
+       */
+      public boolean hasXhatenc() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required bytes xhatenc = 2;</code>
+       */
+      public com.google.protobuf.ByteString getXhatenc() {
+        return xhatenc_;
+      }
+      /**
+       * <code>required bytes xhatenc = 2;</code>
+       */
+      public Builder setXhatenc(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        xhatenc_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes xhatenc = 2;</code>
+       */
+      public Builder clearXhatenc() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        xhatenc_ = getDefaultInstance().getXhatenc();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString c_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes c = 3;</code>
+       */
+      public boolean hasC() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required bytes c = 3;</code>
+       */
+      public com.google.protobuf.ByteString getC() {
+        return c_;
+      }
+      /**
+       * <code>required bytes c = 3;</code>
+       */
+      public Builder setC(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        c_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes c = 3;</code>
+       */
+      public Builder clearC() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        c_ = getDefaultInstance().getC();
         onChanged();
         return this;
       }
@@ -2764,13 +5311,13 @@ public final class OCS {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    boolean hasX();
+    boolean hasOcsid();
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    com.google.protobuf.ByteString getX();
+    com.google.protobuf.ByteString getOcsid();
 
     /**
      * <code>required .onet.Roster newroster = 2;</code>
@@ -2801,8 +5348,10 @@ public final class OCS {
   /**
    * <pre>
    * Reshare is called to ask OCS to change the roster. It needs a valid
-   * authentication before the private keys are re-generated over the new
+   * authentication before the private keys are re-distributed over the new
    * roster.
+   * TODO: should NewRoster be always present in AuthReshare? It will be present
+   * TODO: at least in AuthReshareByzCoin, but might not in other AuthReshares
    * </pre>
    *
    * Protobuf type {@code ocs.Reshare}
@@ -2817,7 +5366,7 @@ public final class OCS {
       super(builder);
     }
     private Reshare() {
-      x_ = com.google.protobuf.ByteString.EMPTY;
+      ocsid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -2846,7 +5395,7 @@ public final class OCS {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
+              ocsid_ = input.readBytes();
               break;
             }
             case 18: {
@@ -2908,19 +5457,19 @@ public final class OCS {
     }
 
     private int bitField0_;
-    public static final int X_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString x_;
+    public static final int OCSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ocsid_;
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public boolean hasX() {
+    public boolean hasOcsid() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required bytes x = 1;</code>
+     * <code>required bytes ocsid = 1;</code>
      */
-    public com.google.protobuf.ByteString getX() {
-      return x_;
+    public com.google.protobuf.ByteString getOcsid() {
+      return ocsid_;
     }
 
     public static final int NEWROSTER_FIELD_NUMBER = 2;
@@ -2972,7 +5521,7 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasX()) {
+      if (!hasOcsid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -3000,7 +5549,7 @@ public final class OCS {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeBytes(1, x_);
+        output.writeBytes(1, ocsid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(2, getNewroster());
@@ -3019,7 +5568,7 @@ public final class OCS {
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, x_);
+          .computeBytesSize(1, ocsid_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
@@ -3044,10 +5593,10 @@ public final class OCS {
       }
       ch.epfl.dedis.lib.proto.OCS.Reshare other = (ch.epfl.dedis.lib.proto.OCS.Reshare) obj;
 
-      if (hasX() != other.hasX()) return false;
-      if (hasX()) {
-        if (!getX()
-            .equals(other.getX())) return false;
+      if (hasOcsid() != other.hasOcsid()) return false;
+      if (hasOcsid()) {
+        if (!getOcsid()
+            .equals(other.getOcsid())) return false;
       }
       if (hasNewroster() != other.hasNewroster()) return false;
       if (hasNewroster()) {
@@ -3070,9 +5619,9 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasX()) {
-        hash = (37 * hash) + X_FIELD_NUMBER;
-        hash = (53 * hash) + getX().hashCode();
+      if (hasOcsid()) {
+        hash = (37 * hash) + OCSID_FIELD_NUMBER;
+        hash = (53 * hash) + getOcsid().hashCode();
       }
       if (hasNewroster()) {
         hash = (37 * hash) + NEWROSTER_FIELD_NUMBER;
@@ -3180,8 +5729,10 @@ public final class OCS {
     /**
      * <pre>
      * Reshare is called to ask OCS to change the roster. It needs a valid
-     * authentication before the private keys are re-generated over the new
+     * authentication before the private keys are re-distributed over the new
      * roster.
+     * TODO: should NewRoster be always present in AuthReshare? It will be present
+     * TODO: at least in AuthReshareByzCoin, but might not in other AuthReshares
      * </pre>
      *
      * Protobuf type {@code ocs.Reshare}
@@ -3223,7 +5774,7 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        x_ = com.google.protobuf.ByteString.EMPTY;
+        ocsid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         if (newrosterBuilder_ == null) {
           newroster_ = null;
@@ -3268,7 +5819,7 @@ public final class OCS {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.x_ = x_;
+        result.ocsid_ = ocsid_;
         if (((from_bitField0_ & 0x00000002) != 0)) {
           if (newrosterBuilder_ == null) {
             result.newroster_ = newroster_;
@@ -3334,8 +5885,8 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.Reshare other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.Reshare.getDefaultInstance()) return this;
-        if (other.hasX()) {
-          setX(other.getX());
+        if (other.hasOcsid()) {
+          setOcsid(other.getOcsid());
         }
         if (other.hasNewroster()) {
           mergeNewroster(other.getNewroster());
@@ -3350,7 +5901,7 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasX()) {
+        if (!hasOcsid()) {
           return false;
         }
         if (!hasNewroster()) {
@@ -3388,37 +5939,37 @@ public final class OCS {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString x_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString ocsid_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public boolean hasX() {
+      public boolean hasOcsid() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public com.google.protobuf.ByteString getX() {
-        return x_;
+      public com.google.protobuf.ByteString getOcsid() {
+        return ocsid_;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder setX(com.google.protobuf.ByteString value) {
+      public Builder setOcsid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        x_ = value;
+        ocsid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes x = 1;</code>
+       * <code>required bytes ocsid = 1;</code>
        */
-      public Builder clearX() {
+      public Builder clearOcsid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        x_ = getDefaultInstance().getX();
+        ocsid_ = getDefaultInstance().getOcsid();
         onChanged();
         return this;
       }
@@ -4237,867 +6788,6 @@ public final class OCS {
 
   }
 
-  public interface PolicyOCSOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:ocs.PolicyOCS)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    boolean hasPolicyreencrypt();
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt();
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder();
-
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    boolean hasPolicyreshare();
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare();
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder();
-  }
-  /**
-   * <pre>
-   * PolicyOCS holds the two policies necessary to define an OCS: how to
-   * authenticate a reencryption request, and how to authenticate a
-   * resharing request.
-   * In the current form, both policies point to the same structure. If at
-   * a later moment a new access control backend is added, it might be that
-   * the policies will differ for this new backend.
-   * </pre>
-   *
-   * Protobuf type {@code ocs.PolicyOCS}
-   */
-  public  static final class PolicyOCS extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:ocs.PolicyOCS)
-      PolicyOCSOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use PolicyOCS.newBuilder() to construct.
-    private PolicyOCS(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private PolicyOCS() {
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private PolicyOCS(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) != 0)) {
-                subBuilder = policyreencrypt_.toBuilder();
-              }
-              policyreencrypt_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(policyreencrypt_);
-                policyreencrypt_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
-              break;
-            }
-            case 18: {
-              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000002) != 0)) {
-                subBuilder = policyreshare_.toBuilder();
-              }
-              policyreshare_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(policyreshare_);
-                policyreshare_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000002;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_PolicyOCS_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_PolicyOCS_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.OCS.PolicyOCS.class, ch.epfl.dedis.lib.proto.OCS.PolicyOCS.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int POLICYREENCRYPT_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    public boolean hasPolicyreencrypt() {
-      return ((bitField0_ & 0x00000001) != 0);
-    }
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
-      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
-    }
-    /**
-     * <code>required .ocs.Policy policyreencrypt = 1;</code>
-     */
-    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
-      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
-    }
-
-    public static final int POLICYRESHARE_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    public boolean hasPolicyreshare() {
-      return ((bitField0_ & 0x00000002) != 0);
-    }
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
-      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
-    }
-    /**
-     * <code>required .ocs.Policy policyreshare = 2;</code>
-     */
-    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
-      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasPolicyreencrypt()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasPolicyreshare()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getPolicyreencrypt().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getPolicyreshare().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeMessage(1, getPolicyreencrypt());
-      }
-      if (((bitField0_ & 0x00000002) != 0)) {
-        output.writeMessage(2, getPolicyreshare());
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getPolicyreencrypt());
-      }
-      if (((bitField0_ & 0x00000002) != 0)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getPolicyreshare());
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.PolicyOCS)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.OCS.PolicyOCS other = (ch.epfl.dedis.lib.proto.OCS.PolicyOCS) obj;
-
-      if (hasPolicyreencrypt() != other.hasPolicyreencrypt()) return false;
-      if (hasPolicyreencrypt()) {
-        if (!getPolicyreencrypt()
-            .equals(other.getPolicyreencrypt())) return false;
-      }
-      if (hasPolicyreshare() != other.hasPolicyreshare()) return false;
-      if (hasPolicyreshare()) {
-        if (!getPolicyreshare()
-            .equals(other.getPolicyreshare())) return false;
-      }
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasPolicyreencrypt()) {
-        hash = (37 * hash) + POLICYREENCRYPT_FIELD_NUMBER;
-        hash = (53 * hash) + getPolicyreencrypt().hashCode();
-      }
-      if (hasPolicyreshare()) {
-        hash = (37 * hash) + POLICYRESHARE_FIELD_NUMBER;
-        hash = (53 * hash) + getPolicyreshare().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.PolicyOCS prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * PolicyOCS holds the two policies necessary to define an OCS: how to
-     * authenticate a reencryption request, and how to authenticate a
-     * resharing request.
-     * In the current form, both policies point to the same structure. If at
-     * a later moment a new access control backend is added, it might be that
-     * the policies will differ for this new backend.
-     * </pre>
-     *
-     * Protobuf type {@code ocs.PolicyOCS}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:ocs.PolicyOCS)
-        ch.epfl.dedis.lib.proto.OCS.PolicyOCSOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_PolicyOCS_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_PolicyOCS_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.OCS.PolicyOCS.class, ch.epfl.dedis.lib.proto.OCS.PolicyOCS.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.OCS.PolicyOCS.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-          getPolicyreencryptFieldBuilder();
-          getPolicyreshareFieldBuilder();
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        if (policyreencryptBuilder_ == null) {
-          policyreencrypt_ = null;
-        } else {
-          policyreencryptBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000001);
-        if (policyreshareBuilder_ == null) {
-          policyreshare_ = null;
-        } else {
-          policyreshareBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_PolicyOCS_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOCS getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.OCS.PolicyOCS.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOCS build() {
-        ch.epfl.dedis.lib.proto.OCS.PolicyOCS result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOCS buildPartial() {
-        ch.epfl.dedis.lib.proto.OCS.PolicyOCS result = new ch.epfl.dedis.lib.proto.OCS.PolicyOCS(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) != 0)) {
-          if (policyreencryptBuilder_ == null) {
-            result.policyreencrypt_ = policyreencrypt_;
-          } else {
-            result.policyreencrypt_ = policyreencryptBuilder_.build();
-          }
-          to_bitField0_ |= 0x00000001;
-        }
-        if (((from_bitField0_ & 0x00000002) != 0)) {
-          if (policyreshareBuilder_ == null) {
-            result.policyreshare_ = policyreshare_;
-          } else {
-            result.policyreshare_ = policyreshareBuilder_.build();
-          }
-          to_bitField0_ |= 0x00000002;
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.OCS.PolicyOCS) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.PolicyOCS)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.PolicyOCS other) {
-        if (other == ch.epfl.dedis.lib.proto.OCS.PolicyOCS.getDefaultInstance()) return this;
-        if (other.hasPolicyreencrypt()) {
-          mergePolicyreencrypt(other.getPolicyreencrypt());
-        }
-        if (other.hasPolicyreshare()) {
-          mergePolicyreshare(other.getPolicyreshare());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasPolicyreencrypt()) {
-          return false;
-        }
-        if (!hasPolicyreshare()) {
-          return false;
-        }
-        if (!getPolicyreencrypt().isInitialized()) {
-          return false;
-        }
-        if (!getPolicyreshare().isInitialized()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.OCS.PolicyOCS parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.PolicyOCS) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreencryptBuilder_;
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public boolean hasPolicyreencrypt() {
-        return ((bitField0_ & 0x00000001) != 0);
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
-        if (policyreencryptBuilder_ == null) {
-          return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
-        } else {
-          return policyreencryptBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public Builder setPolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyreencryptBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          policyreencrypt_ = value;
-          onChanged();
-        } else {
-          policyreencryptBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public Builder setPolicyreencrypt(
-          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
-        if (policyreencryptBuilder_ == null) {
-          policyreencrypt_ = builderForValue.build();
-          onChanged();
-        } else {
-          policyreencryptBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public Builder mergePolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyreencryptBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0) &&
-              policyreencrypt_ != null &&
-              policyreencrypt_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
-            policyreencrypt_ =
-              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreencrypt_).mergeFrom(value).buildPartial();
-          } else {
-            policyreencrypt_ = value;
-          }
-          onChanged();
-        } else {
-          policyreencryptBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public Builder clearPolicyreencrypt() {
-        if (policyreencryptBuilder_ == null) {
-          policyreencrypt_ = null;
-          onChanged();
-        } else {
-          policyreencryptBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreencryptBuilder() {
-        bitField0_ |= 0x00000001;
-        onChanged();
-        return getPolicyreencryptFieldBuilder().getBuilder();
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
-        if (policyreencryptBuilder_ != null) {
-          return policyreencryptBuilder_.getMessageOrBuilder();
-        } else {
-          return policyreencrypt_ == null ?
-              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
-        }
-      }
-      /**
-       * <code>required .ocs.Policy policyreencrypt = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
-          getPolicyreencryptFieldBuilder() {
-        if (policyreencryptBuilder_ == null) {
-          policyreencryptBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
-                  getPolicyreencrypt(),
-                  getParentForChildren(),
-                  isClean());
-          policyreencrypt_ = null;
-        }
-        return policyreencryptBuilder_;
-      }
-
-      private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreshareBuilder_;
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public boolean hasPolicyreshare() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
-        if (policyreshareBuilder_ == null) {
-          return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
-        } else {
-          return policyreshareBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public Builder setPolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyreshareBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          policyreshare_ = value;
-          onChanged();
-        } else {
-          policyreshareBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public Builder setPolicyreshare(
-          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
-        if (policyreshareBuilder_ == null) {
-          policyreshare_ = builderForValue.build();
-          onChanged();
-        } else {
-          policyreshareBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public Builder mergePolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
-        if (policyreshareBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0) &&
-              policyreshare_ != null &&
-              policyreshare_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
-            policyreshare_ =
-              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreshare_).mergeFrom(value).buildPartial();
-          } else {
-            policyreshare_ = value;
-          }
-          onChanged();
-        } else {
-          policyreshareBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public Builder clearPolicyreshare() {
-        if (policyreshareBuilder_ == null) {
-          policyreshare_ = null;
-          onChanged();
-        } else {
-          policyreshareBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreshareBuilder() {
-        bitField0_ |= 0x00000002;
-        onChanged();
-        return getPolicyreshareFieldBuilder().getBuilder();
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
-        if (policyreshareBuilder_ != null) {
-          return policyreshareBuilder_.getMessageOrBuilder();
-        } else {
-          return policyreshare_ == null ?
-              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
-        }
-      }
-      /**
-       * <code>required .ocs.Policy policyreshare = 2;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
-          getPolicyreshareFieldBuilder() {
-        if (policyreshareBuilder_ == null) {
-          policyreshareBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
-                  getPolicyreshare(),
-                  getParentForChildren(),
-                  isClean());
-          policyreshare_ = null;
-        }
-        return policyreshareBuilder_;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:ocs.PolicyOCS)
-    }
-
-    // @@protoc_insertion_point(class_scope:ocs.PolicyOCS)
-    private static final ch.epfl.dedis.lib.proto.OCS.PolicyOCS DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.PolicyOCS();
-    }
-
-    public static ch.epfl.dedis.lib.proto.OCS.PolicyOCS getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<PolicyOCS>
-        PARSER = new com.google.protobuf.AbstractParser<PolicyOCS>() {
-      @java.lang.Override
-      public PolicyOCS parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PolicyOCS(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<PolicyOCS> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<PolicyOCS> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.OCS.PolicyOCS getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
   public interface PolicyOrBuilder extends
       // @@protoc_insertion_point(interface_extends:ocs.Policy)
       com.google.protobuf.MessageOrBuilder {
@@ -5116,17 +6806,17 @@ public final class OCS {
     ch.epfl.dedis.lib.proto.OCS.PolicyByzCoinOrBuilder getByzcoinOrBuilder();
 
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    boolean hasAuthx509Cert();
+    boolean hasX509Cert();
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getAuthx509Cert();
+    ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getX509Cert();
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getAuthx509CertOrBuilder();
+    ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getX509CertOrBuilder();
   }
   /**
    * <pre>
@@ -5188,12 +6878,12 @@ public final class OCS {
             case 18: {
               ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) != 0)) {
-                subBuilder = authx509Cert_.toBuilder();
+                subBuilder = x509Cert_.toBuilder();
               }
-              authx509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.parser(), extensionRegistry);
+              x509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.parser(), extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(authx509Cert_);
-                authx509Cert_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(x509Cert_);
+                x509Cert_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
               break;
@@ -5252,25 +6942,25 @@ public final class OCS {
       return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyByzCoin.getDefaultInstance() : byzcoin_;
     }
 
-    public static final int AUTHX509CERT_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert authx509Cert_;
+    public static final int X509CERT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert x509Cert_;
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    public boolean hasAuthx509Cert() {
+    public boolean hasX509Cert() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getAuthx509Cert() {
-      return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : authx509Cert_;
+    public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getX509Cert() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : x509Cert_;
     }
     /**
-     * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+     * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getAuthx509CertOrBuilder() {
-      return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : authx509Cert_;
+    public ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getX509CertOrBuilder() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : x509Cert_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -5286,8 +6976,8 @@ public final class OCS {
           return false;
         }
       }
-      if (hasAuthx509Cert()) {
-        if (!getAuthx509Cert().isInitialized()) {
+      if (hasX509Cert()) {
+        if (!getX509Cert().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -5303,7 +6993,7 @@ public final class OCS {
         output.writeMessage(1, getByzcoin());
       }
       if (((bitField0_ & 0x00000002) != 0)) {
-        output.writeMessage(2, getAuthx509Cert());
+        output.writeMessage(2, getX509Cert());
       }
       unknownFields.writeTo(output);
     }
@@ -5320,7 +7010,7 @@ public final class OCS {
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getAuthx509Cert());
+          .computeMessageSize(2, getX509Cert());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5342,10 +7032,10 @@ public final class OCS {
         if (!getByzcoin()
             .equals(other.getByzcoin())) return false;
       }
-      if (hasAuthx509Cert() != other.hasAuthx509Cert()) return false;
-      if (hasAuthx509Cert()) {
-        if (!getAuthx509Cert()
-            .equals(other.getAuthx509Cert())) return false;
+      if (hasX509Cert() != other.hasX509Cert()) return false;
+      if (hasX509Cert()) {
+        if (!getX509Cert()
+            .equals(other.getX509Cert())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -5362,9 +7052,9 @@ public final class OCS {
         hash = (37 * hash) + BYZCOIN_FIELD_NUMBER;
         hash = (53 * hash) + getByzcoin().hashCode();
       }
-      if (hasAuthx509Cert()) {
-        hash = (37 * hash) + AUTHX509CERT_FIELD_NUMBER;
-        hash = (53 * hash) + getAuthx509Cert().hashCode();
+      if (hasX509Cert()) {
+        hash = (37 * hash) + X509CERT_FIELD_NUMBER;
+        hash = (53 * hash) + getX509Cert().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5500,7 +7190,7 @@ public final class OCS {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getByzcoinFieldBuilder();
-          getAuthx509CertFieldBuilder();
+          getX509CertFieldBuilder();
         }
       }
       @java.lang.Override
@@ -5512,10 +7202,10 @@ public final class OCS {
           byzcoinBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        if (authx509CertBuilder_ == null) {
-          authx509Cert_ = null;
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
         } else {
-          authx509CertBuilder_.clear();
+          x509CertBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
@@ -5555,10 +7245,10 @@ public final class OCS {
           to_bitField0_ |= 0x00000001;
         }
         if (((from_bitField0_ & 0x00000002) != 0)) {
-          if (authx509CertBuilder_ == null) {
-            result.authx509Cert_ = authx509Cert_;
+          if (x509CertBuilder_ == null) {
+            result.x509Cert_ = x509Cert_;
           } else {
-            result.authx509Cert_ = authx509CertBuilder_.build();
+            result.x509Cert_ = x509CertBuilder_.build();
           }
           to_bitField0_ |= 0x00000002;
         }
@@ -5614,8 +7304,8 @@ public final class OCS {
         if (other.hasByzcoin()) {
           mergeByzcoin(other.getByzcoin());
         }
-        if (other.hasAuthx509Cert()) {
-          mergeAuthx509Cert(other.getAuthx509Cert());
+        if (other.hasX509Cert()) {
+          mergeX509Cert(other.getX509Cert());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -5629,8 +7319,8 @@ public final class OCS {
             return false;
           }
         }
-        if (hasAuthx509Cert()) {
-          if (!getAuthx509Cert().isInitialized()) {
+        if (hasX509Cert()) {
+          if (!getX509Cert().isInitialized()) {
             return false;
           }
         }
@@ -5775,122 +7465,122 @@ public final class OCS {
         return byzcoinBuilder_;
       }
 
-      private ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert authx509Cert_;
+      private ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert x509Cert_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert, ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder> authx509CertBuilder_;
+          ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert, ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder> x509CertBuilder_;
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public boolean hasAuthx509Cert() {
+      public boolean hasX509Cert() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getAuthx509Cert() {
-        if (authx509CertBuilder_ == null) {
-          return authx509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : authx509Cert_;
+      public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert getX509Cert() {
+        if (x509CertBuilder_ == null) {
+          return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : x509Cert_;
         } else {
-          return authx509CertBuilder_.getMessage();
+          return x509CertBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public Builder setAuthx509Cert(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert value) {
-        if (authx509CertBuilder_ == null) {
+      public Builder setX509Cert(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert value) {
+        if (x509CertBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          authx509Cert_ = value;
+          x509Cert_ = value;
           onChanged();
         } else {
-          authx509CertBuilder_.setMessage(value);
+          x509CertBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public Builder setAuthx509Cert(
+      public Builder setX509Cert(
           ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder builderForValue) {
-        if (authx509CertBuilder_ == null) {
-          authx509Cert_ = builderForValue.build();
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = builderForValue.build();
           onChanged();
         } else {
-          authx509CertBuilder_.setMessage(builderForValue.build());
+          x509CertBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public Builder mergeAuthx509Cert(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert value) {
-        if (authx509CertBuilder_ == null) {
+      public Builder mergeX509Cert(ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert value) {
+        if (x509CertBuilder_ == null) {
           if (((bitField0_ & 0x00000002) != 0) &&
-              authx509Cert_ != null &&
-              authx509Cert_ != ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance()) {
-            authx509Cert_ =
-              ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.newBuilder(authx509Cert_).mergeFrom(value).buildPartial();
+              x509Cert_ != null &&
+              x509Cert_ != ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance()) {
+            x509Cert_ =
+              ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.newBuilder(x509Cert_).mergeFrom(value).buildPartial();
           } else {
-            authx509Cert_ = value;
+            x509Cert_ = value;
           }
           onChanged();
         } else {
-          authx509CertBuilder_.mergeFrom(value);
+          x509CertBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public Builder clearAuthx509Cert() {
-        if (authx509CertBuilder_ == null) {
-          authx509Cert_ = null;
+      public Builder clearX509Cert() {
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
           onChanged();
         } else {
-          authx509CertBuilder_.clear();
+          x509CertBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder getAuthx509CertBuilder() {
+      public ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder getX509CertBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getAuthx509CertFieldBuilder().getBuilder();
+        return getX509CertFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
-      public ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getAuthx509CertOrBuilder() {
-        if (authx509CertBuilder_ != null) {
-          return authx509CertBuilder_.getMessageOrBuilder();
+      public ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder getX509CertOrBuilder() {
+        if (x509CertBuilder_ != null) {
+          return x509CertBuilder_.getMessageOrBuilder();
         } else {
-          return authx509Cert_ == null ?
-              ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : authx509Cert_;
+          return x509Cert_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.getDefaultInstance() : x509Cert_;
         }
       }
       /**
-       * <code>optional .ocs.PolicyX509Cert authx509cert = 2;</code>
+       * <code>optional .ocs.PolicyX509Cert x509cert = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert, ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder> 
-          getAuthx509CertFieldBuilder() {
-        if (authx509CertBuilder_ == null) {
-          authx509CertBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          getX509CertFieldBuilder() {
+        if (x509CertBuilder_ == null) {
+          x509CertBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert, ch.epfl.dedis.lib.proto.OCS.PolicyX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyX509CertOrBuilder>(
-                  getAuthx509Cert(),
+                  getX509Cert(),
                   getParentForChildren(),
                   isClean());
-          authx509Cert_ = null;
+          x509Cert_ = null;
         }
-        return authx509CertBuilder_;
+        return x509CertBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -6607,7 +8297,7 @@ public final class OCS {
   }
   /**
    * <pre>
-   * PolicyX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+   * X509Cert holds the information necessary to authenticate a HyperLedger/Fabric
    * request. In its simplest form, it is simply the CA that will have to sign the
    * certificates of the requesters.
    * The Threshold indicates how many clients must have signed the request before it
@@ -6935,7 +8625,7 @@ public final class OCS {
     }
     /**
      * <pre>
-     * PolicyX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+     * X509Cert holds the information necessary to authenticate a HyperLedger/Fabric
      * request. In its simplest form, it is simply the CA that will have to sign the
      * certificates of the requesters.
      * The Threshold indicates how many clients must have signed the request before it
@@ -7300,56 +8990,54 @@ public final class OCS {
 
   }
 
-  public interface AuthReencryptOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:ocs.AuthReencrypt)
+  public interface AuthCreateOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AuthCreate)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
     boolean hasByzcoin();
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin getByzcoin();
+    ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getByzcoin();
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder getByzcoinOrBuilder();
+    ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder getByzcoinOrBuilder();
 
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
     boolean hasX509Cert();
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert getX509Cert();
+    ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getX509Cert();
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
-    ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder getX509CertOrBuilder();
+    ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder getX509CertOrBuilder();
   }
   /**
    * <pre>
-   * AuthReencrypt holds one of the possible authentication proofs for a reencryption request. Each
-   * authentication proof must hold the secret to be reencrypted, the ephemeral key, as well
-   * as the proof itself that the request is valid. For each of the authentication
-   * schemes, this proof will be different.
+   * AuthCreate prooves that the caller has the right to create a new OCS
+   * instance.
    * </pre>
    *
-   * Protobuf type {@code ocs.AuthReencrypt}
+   * Protobuf type {@code ocs.AuthCreate}
    */
-  public  static final class AuthReencrypt extends
+  public  static final class AuthCreate extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:ocs.AuthReencrypt)
-      AuthReencryptOrBuilder {
+      // @@protoc_insertion_point(message_implements:ocs.AuthCreate)
+      AuthCreateOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use AuthReencrypt.newBuilder() to construct.
-    private AuthReencrypt(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use AuthCreate.newBuilder() to construct.
+    private AuthCreate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private AuthReencrypt() {
+    private AuthCreate() {
     }
 
     @java.lang.Override
@@ -7357,7 +9045,7 @@ public final class OCS {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private AuthReencrypt(
+    private AuthCreate(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -7377,11 +9065,11 @@ public final class OCS {
               done = true;
               break;
             case 10: {
-              ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder subBuilder = null;
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = byzcoin_.toBuilder();
               }
-              byzcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.parser(), extensionRegistry);
+              byzcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(byzcoin_);
                 byzcoin_ = subBuilder.buildPartial();
@@ -7390,11 +9078,11 @@ public final class OCS {
               break;
             }
             case 18: {
-              ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder subBuilder = null;
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) != 0)) {
                 subBuilder = x509Cert_.toBuilder();
               }
-              x509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.parser(), extensionRegistry);
+              x509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(x509Cert_);
                 x509Cert_ = subBuilder.buildPartial();
@@ -7423,58 +9111,58 @@ public final class OCS {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthReencrypt_descriptor;
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreate_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthReencrypt_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreate_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.OCS.AuthReencrypt.class, ch.epfl.dedis.lib.proto.OCS.AuthReencrypt.Builder.class);
+              ch.epfl.dedis.lib.proto.OCS.AuthCreate.class, ch.epfl.dedis.lib.proto.OCS.AuthCreate.Builder.class);
     }
 
     private int bitField0_;
     public static final int BYZCOIN_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin byzcoin_;
+    private ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin byzcoin_;
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
     public boolean hasByzcoin() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin getByzcoin() {
-      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.getDefaultInstance() : byzcoin_;
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getByzcoin() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance() : byzcoin_;
     }
     /**
-     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+     * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder getByzcoinOrBuilder() {
-      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.getDefaultInstance() : byzcoin_;
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder getByzcoinOrBuilder() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance() : byzcoin_;
     }
 
     public static final int X509CERT_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert x509Cert_;
+    private ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert x509Cert_;
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
     public boolean hasX509Cert() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert getX509Cert() {
-      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance() : x509Cert_;
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getX509Cert() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance() : x509Cert_;
     }
     /**
-     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+     * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
      */
-    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder getX509CertOrBuilder() {
-      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance() : x509Cert_;
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder getX509CertOrBuilder() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance() : x509Cert_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -7484,17 +9172,17 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (hasByzcoin()) {
-        if (!getByzcoin().isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
+      if (!hasByzcoin()) {
+        memoizedIsInitialized = 0;
+        return false;
       }
-      if (hasX509Cert()) {
-        if (!getX509Cert().isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
+      if (!hasX509Cert()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getByzcoin().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
       }
       memoizedIsInitialized = 1;
       return true;
@@ -7536,10 +9224,10 @@ public final class OCS {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AuthReencrypt)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreate)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.OCS.AuthReencrypt other = (ch.epfl.dedis.lib.proto.OCS.AuthReencrypt) obj;
+      ch.epfl.dedis.lib.proto.OCS.AuthCreate other = (ch.epfl.dedis.lib.proto.OCS.AuthCreate) obj;
 
       if (hasByzcoin() != other.hasByzcoin()) return false;
       if (hasByzcoin()) {
@@ -7562,6 +9250,2104 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoin()) {
+        hash = (37 * hash) + BYZCOIN_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoin().hashCode();
+      }
+      if (hasX509Cert()) {
+        hash = (37 * hash) + X509CERT_FIELD_NUMBER;
+        hash = (53 * hash) + getX509Cert().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.AuthCreate prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthCreate prooves that the caller has the right to create a new OCS
+     * instance.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.AuthCreate}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.AuthCreate)
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.AuthCreate.class, ch.epfl.dedis.lib.proto.OCS.AuthCreate.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.AuthCreate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getByzcoinFieldBuilder();
+          getX509CertFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
+        } else {
+          x509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreate_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreate getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.AuthCreate.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreate build() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreate buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreate result = new ch.epfl.dedis.lib.proto.OCS.AuthCreate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (byzcoinBuilder_ == null) {
+            result.byzcoin_ = byzcoin_;
+          } else {
+            result.byzcoin_ = byzcoinBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (x509CertBuilder_ == null) {
+            result.x509Cert_ = x509Cert_;
+          } else {
+            result.x509Cert_ = x509CertBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreate) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.AuthCreate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AuthCreate other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.AuthCreate.getDefaultInstance()) return this;
+        if (other.hasByzcoin()) {
+          mergeByzcoin(other.getByzcoin());
+        }
+        if (other.hasX509Cert()) {
+          mergeX509Cert(other.getX509Cert());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoin()) {
+          return false;
+        }
+        if (!hasX509Cert()) {
+          return false;
+        }
+        if (!getByzcoin().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreate parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.AuthCreate) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin byzcoin_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder> byzcoinBuilder_;
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public boolean hasByzcoin() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance() : byzcoin_;
+        } else {
+          return byzcoinBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          byzcoin_ = value;
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public Builder setByzcoin(
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder builderForValue) {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = builderForValue.build();
+          onChanged();
+        } else {
+          byzcoinBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public Builder mergeByzcoin(ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin value) {
+        if (byzcoinBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              byzcoin_ != null &&
+              byzcoin_ != ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance()) {
+            byzcoin_ =
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.newBuilder(byzcoin_).mergeFrom(value).buildPartial();
+          } else {
+            byzcoin_ = value;
+          }
+          onChanged();
+        } else {
+          byzcoinBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public Builder clearByzcoin() {
+        if (byzcoinBuilder_ == null) {
+          byzcoin_ = null;
+          onChanged();
+        } else {
+          byzcoinBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder getByzcoinBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getByzcoinFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder getByzcoinOrBuilder() {
+        if (byzcoinBuilder_ != null) {
+          return byzcoinBuilder_.getMessageOrBuilder();
+        } else {
+          return byzcoin_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance() : byzcoin_;
+        }
+      }
+      /**
+       * <code>required .ocs.AuthCreateByzcoin byzcoin = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder> 
+          getByzcoinFieldBuilder() {
+        if (byzcoinBuilder_ == null) {
+          byzcoinBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder>(
+                  getByzcoin(),
+                  getParentForChildren(),
+                  isClean());
+          byzcoin_ = null;
+        }
+        return byzcoinBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert x509Cert_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder> x509CertBuilder_;
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public boolean hasX509Cert() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getX509Cert() {
+        if (x509CertBuilder_ == null) {
+          return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance() : x509Cert_;
+        } else {
+          return x509CertBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public Builder setX509Cert(ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert value) {
+        if (x509CertBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          x509Cert_ = value;
+          onChanged();
+        } else {
+          x509CertBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public Builder setX509Cert(
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder builderForValue) {
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = builderForValue.build();
+          onChanged();
+        } else {
+          x509CertBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public Builder mergeX509Cert(ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert value) {
+        if (x509CertBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              x509Cert_ != null &&
+              x509Cert_ != ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance()) {
+            x509Cert_ =
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.newBuilder(x509Cert_).mergeFrom(value).buildPartial();
+          } else {
+            x509Cert_ = value;
+          }
+          onChanged();
+        } else {
+          x509CertBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public Builder clearX509Cert() {
+        if (x509CertBuilder_ == null) {
+          x509Cert_ = null;
+          onChanged();
+        } else {
+          x509CertBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder getX509CertBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getX509CertFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder getX509CertOrBuilder() {
+        if (x509CertBuilder_ != null) {
+          return x509CertBuilder_.getMessageOrBuilder();
+        } else {
+          return x509Cert_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance() : x509Cert_;
+        }
+      }
+      /**
+       * <code>required .ocs.AuthCreateX509Cert x509cert = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder> 
+          getX509CertFieldBuilder() {
+        if (x509CertBuilder_ == null) {
+          x509CertBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder>(
+                  getX509Cert(),
+                  getParentForChildren(),
+                  isClean());
+          x509Cert_ = null;
+        }
+        return x509CertBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.AuthCreate)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.AuthCreate)
+    private static final ch.epfl.dedis.lib.proto.OCS.AuthCreate DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.AuthCreate();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreate getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthCreate>
+        PARSER = new com.google.protobuf.AbstractParser<AuthCreate>() {
+      @java.lang.Override
+      public AuthCreate parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthCreate(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthCreate> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthCreate> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreate getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthCreateByzcoinOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AuthCreateByzcoin)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>required bytes ltsinstance = 2;</code>
+     */
+    boolean hasLtsinstance();
+    /**
+     * <code>required bytes ltsinstance = 2;</code>
+     */
+    com.google.protobuf.ByteString getLtsinstance();
+  }
+  /**
+   * <pre>
+   * AuthCreateByzcoin must give the ByzcoinID and the proof to the LTSInstance
+   * for the creation of a new OCS.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.AuthCreateByzcoin}
+   */
+  public  static final class AuthCreateByzcoin extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.AuthCreateByzcoin)
+      AuthCreateByzcoinOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthCreateByzcoin.newBuilder() to construct.
+    private AuthCreateByzcoin(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthCreateByzcoin() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      ltsinstance_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthCreateByzcoin(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              ltsinstance_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateByzcoin_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateByzcoin_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.class, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int LTSINSTANCE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString ltsinstance_;
+    /**
+     * <code>required bytes ltsinstance = 2;</code>
+     */
+    public boolean hasLtsinstance() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required bytes ltsinstance = 2;</code>
+     */
+    public com.google.protobuf.ByteString getLtsinstance() {
+      return ltsinstance_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasLtsinstance()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeBytes(2, ltsinstance_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, ltsinstance_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin other = (ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin) obj;
+
+      if (hasByzcoinid() != other.hasByzcoinid()) return false;
+      if (hasByzcoinid()) {
+        if (!getByzcoinid()
+            .equals(other.getByzcoinid())) return false;
+      }
+      if (hasLtsinstance() != other.hasLtsinstance()) return false;
+      if (hasLtsinstance()) {
+        if (!getLtsinstance()
+            .equals(other.getLtsinstance())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasLtsinstance()) {
+        hash = (37 * hash) + LTSINSTANCE_FIELD_NUMBER;
+        hash = (53 * hash) + getLtsinstance().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthCreateByzcoin must give the ByzcoinID and the proof to the LTSInstance
+     * for the creation of a new OCS.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.AuthCreateByzcoin}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.AuthCreateByzcoin)
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoinOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateByzcoin_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateByzcoin_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.class, ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ltsinstance_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateByzcoin_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin build() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin result = new ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.ltsinstance_ = ltsinstance_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasLtsinstance()) {
+          setLtsinstance(other.getLtsinstance());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        if (!hasLtsinstance()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString ltsinstance_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes ltsinstance = 2;</code>
+       */
+      public boolean hasLtsinstance() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required bytes ltsinstance = 2;</code>
+       */
+      public com.google.protobuf.ByteString getLtsinstance() {
+        return ltsinstance_;
+      }
+      /**
+       * <code>required bytes ltsinstance = 2;</code>
+       */
+      public Builder setLtsinstance(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        ltsinstance_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes ltsinstance = 2;</code>
+       */
+      public Builder clearLtsinstance() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        ltsinstance_ = getDefaultInstance().getLtsinstance();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.AuthCreateByzcoin)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.AuthCreateByzcoin)
+    private static final ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthCreateByzcoin>
+        PARSER = new com.google.protobuf.AbstractParser<AuthCreateByzcoin>() {
+      @java.lang.Override
+      public AuthCreateByzcoin parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthCreateByzcoin(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthCreateByzcoin> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthCreateByzcoin> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateByzcoin getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthCreateX509CertOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AuthCreateX509Cert)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getCertificatesList();
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    int getCertificatesCount();
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    com.google.protobuf.ByteString getCertificates(int index);
+  }
+  /**
+   * <pre>
+   * AuthCreateX509Cert must give a threshold number of certificates to proof that
+   * the caller has the right to create a new OCS.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.AuthCreateX509Cert}
+   */
+  public  static final class AuthCreateX509Cert extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.AuthCreateX509Cert)
+      AuthCreateX509CertOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthCreateX509Cert.newBuilder() to construct.
+    private AuthCreateX509Cert(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthCreateX509Cert() {
+      certificates_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthCreateX509Cert(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                certificates_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              certificates_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          certificates_ = java.util.Collections.unmodifiableList(certificates_); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateX509Cert_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateX509Cert_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.class, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder.class);
+    }
+
+    public static final int CERTIFICATES_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> certificates_;
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getCertificatesList() {
+      return certificates_;
+    }
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    public int getCertificatesCount() {
+      return certificates_.size();
+    }
+    /**
+     * <code>repeated bytes certificates = 1;</code>
+     */
+    public com.google.protobuf.ByteString getCertificates(int index) {
+      return certificates_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < certificates_.size(); i++) {
+        output.writeBytes(1, certificates_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < certificates_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(certificates_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getCertificatesList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert other = (ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert) obj;
+
+      if (!getCertificatesList()
+          .equals(other.getCertificatesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getCertificatesCount() > 0) {
+        hash = (37 * hash) + CERTIFICATES_FIELD_NUMBER;
+        hash = (53 * hash) + getCertificatesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthCreateX509Cert must give a threshold number of certificates to proof that
+     * the caller has the right to create a new OCS.
+     * </pre>
+     *
+     * Protobuf type {@code ocs.AuthCreateX509Cert}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.AuthCreateX509Cert)
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateX509CertOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateX509Cert_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.class, ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        certificates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthCreateX509Cert_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert build() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert result = new ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          certificates_ = java.util.Collections.unmodifiableList(certificates_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.certificates_ = certificates_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert.getDefaultInstance()) return this;
+        if (!other.certificates_.isEmpty()) {
+          if (certificates_.isEmpty()) {
+            certificates_ = other.certificates_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureCertificatesIsMutable();
+            certificates_.addAll(other.certificates_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> certificates_ = java.util.Collections.emptyList();
+      private void ensureCertificatesIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          certificates_ = new java.util.ArrayList<com.google.protobuf.ByteString>(certificates_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getCertificatesList() {
+        return ((bitField0_ & 0x00000001) != 0) ?
+                 java.util.Collections.unmodifiableList(certificates_) : certificates_;
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public int getCertificatesCount() {
+        return certificates_.size();
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public com.google.protobuf.ByteString getCertificates(int index) {
+        return certificates_.get(index);
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public Builder setCertificates(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificatesIsMutable();
+        certificates_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public Builder addCertificates(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificatesIsMutable();
+        certificates_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public Builder addAllCertificates(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureCertificatesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, certificates_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificates = 1;</code>
+       */
+      public Builder clearCertificates() {
+        certificates_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.AuthCreateX509Cert)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.AuthCreateX509Cert)
+    private static final ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthCreateX509Cert>
+        PARSER = new com.google.protobuf.AbstractParser<AuthCreateX509Cert>() {
+      @java.lang.Override
+      public AuthCreateX509Cert parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthCreateX509Cert(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthCreateX509Cert> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthCreateX509Cert> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.AuthCreateX509Cert getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthReencryptOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.AuthReencrypt)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes ephemeral = 1;</code>
+     */
+    boolean hasEphemeral();
+    /**
+     * <code>required bytes ephemeral = 1;</code>
+     */
+    com.google.protobuf.ByteString getEphemeral();
+
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    boolean hasByzcoin();
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin getByzcoin();
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder getByzcoinOrBuilder();
+
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    boolean hasX509Cert();
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert getX509Cert();
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder getX509CertOrBuilder();
+  }
+  /**
+   * <pre>
+   * AuthReencrypt holds one of the possible authentication proofs for a reencryption request. Each
+   * authentication proof must hold the secret to be reencrypted, the ephemeral key, as well
+   * as the proof itself that the request is valid. For each of the authentication
+   * schemes, this proof will be different.
+   * </pre>
+   *
+   * Protobuf type {@code ocs.AuthReencrypt}
+   */
+  public  static final class AuthReencrypt extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.AuthReencrypt)
+      AuthReencryptOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthReencrypt.newBuilder() to construct.
+    private AuthReencrypt(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthReencrypt() {
+      ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthReencrypt(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ephemeral_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = byzcoin_.toBuilder();
+              }
+              byzcoin_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(byzcoin_);
+                byzcoin_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) != 0)) {
+                subBuilder = x509Cert_.toBuilder();
+              }
+              x509Cert_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(x509Cert_);
+                x509Cert_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthReencrypt_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_AuthReencrypt_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.AuthReencrypt.class, ch.epfl.dedis.lib.proto.OCS.AuthReencrypt.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int EPHEMERAL_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ephemeral_;
+    /**
+     * <code>required bytes ephemeral = 1;</code>
+     */
+    public boolean hasEphemeral() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes ephemeral = 1;</code>
+     */
+    public com.google.protobuf.ByteString getEphemeral() {
+      return ephemeral_;
+    }
+
+    public static final int BYZCOIN_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin byzcoin_;
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    public boolean hasByzcoin() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin getByzcoin() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.getDefaultInstance() : byzcoin_;
+    }
+    /**
+     * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder getByzcoinOrBuilder() {
+      return byzcoin_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.getDefaultInstance() : byzcoin_;
+    }
+
+    public static final int X509CERT_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert x509Cert_;
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    public boolean hasX509Cert() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert getX509Cert() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance() : x509Cert_;
+    }
+    /**
+     * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder getX509CertOrBuilder() {
+      return x509Cert_ == null ? ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance() : x509Cert_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasEphemeral()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasByzcoin()) {
+        if (!getByzcoin().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasX509Cert()) {
+        if (!getX509Cert().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(3, getX509Cert());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getByzcoin());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getX509Cert());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.AuthReencrypt)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.AuthReencrypt other = (ch.epfl.dedis.lib.proto.OCS.AuthReencrypt) obj;
+
+      if (hasEphemeral() != other.hasEphemeral()) return false;
+      if (hasEphemeral()) {
+        if (!getEphemeral()
+            .equals(other.getEphemeral())) return false;
+      }
+      if (hasByzcoin() != other.hasByzcoin()) return false;
+      if (hasByzcoin()) {
+        if (!getByzcoin()
+            .equals(other.getByzcoin())) return false;
+      }
+      if (hasX509Cert() != other.hasX509Cert()) return false;
+      if (hasX509Cert()) {
+        if (!getX509Cert()
+            .equals(other.getX509Cert())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasEphemeral()) {
+        hash = (37 * hash) + EPHEMERAL_FIELD_NUMBER;
+        hash = (53 * hash) + getEphemeral().hashCode();
+      }
       if (hasByzcoin()) {
         hash = (37 * hash) + BYZCOIN_FIELD_NUMBER;
         hash = (53 * hash) + getByzcoin().hashCode();
@@ -7712,18 +11498,20 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
         if (byzcoinBuilder_ == null) {
           byzcoin_ = null;
         } else {
           byzcoinBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         if (x509CertBuilder_ == null) {
           x509Cert_ = null;
         } else {
           x509CertBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -7753,20 +11541,24 @@ public final class OCS {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ephemeral_ = ephemeral_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           if (byzcoinBuilder_ == null) {
             result.byzcoin_ = byzcoin_;
           } else {
             result.byzcoin_ = byzcoinBuilder_.build();
           }
-          to_bitField0_ |= 0x00000001;
+          to_bitField0_ |= 0x00000002;
         }
-        if (((from_bitField0_ & 0x00000002) != 0)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           if (x509CertBuilder_ == null) {
             result.x509Cert_ = x509Cert_;
           } else {
             result.x509Cert_ = x509CertBuilder_.build();
           }
-          to_bitField0_ |= 0x00000002;
+          to_bitField0_ |= 0x00000004;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -7817,6 +11609,9 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AuthReencrypt other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.AuthReencrypt.getDefaultInstance()) return this;
+        if (other.hasEphemeral()) {
+          setEphemeral(other.getEphemeral());
+        }
         if (other.hasByzcoin()) {
           mergeByzcoin(other.getByzcoin());
         }
@@ -7830,6 +11625,9 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
+        if (!hasEphemeral()) {
+          return false;
+        }
         if (hasByzcoin()) {
           if (!getByzcoin().isInitialized()) {
             return false;
@@ -7863,17 +11661,52 @@ public final class OCS {
       }
       private int bitField0_;
 
+      private com.google.protobuf.ByteString ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes ephemeral = 1;</code>
+       */
+      public boolean hasEphemeral() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes ephemeral = 1;</code>
+       */
+      public com.google.protobuf.ByteString getEphemeral() {
+        return ephemeral_;
+      }
+      /**
+       * <code>required bytes ephemeral = 1;</code>
+       */
+      public Builder setEphemeral(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ephemeral_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes ephemeral = 1;</code>
+       */
+      public Builder clearEphemeral() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ephemeral_ = getDefaultInstance().getEphemeral();
+        onChanged();
+        return this;
+      }
+
       private ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin byzcoin_;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin, ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder, ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder> byzcoinBuilder_;
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public boolean hasByzcoin() {
-        return ((bitField0_ & 0x00000001) != 0);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin getByzcoin() {
         if (byzcoinBuilder_ == null) {
@@ -7883,7 +11716,7 @@ public final class OCS {
         }
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public Builder setByzcoin(ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin value) {
         if (byzcoinBuilder_ == null) {
@@ -7895,11 +11728,11 @@ public final class OCS {
         } else {
           byzcoinBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public Builder setByzcoin(
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder builderForValue) {
@@ -7909,15 +11742,15 @@ public final class OCS {
         } else {
           byzcoinBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public Builder mergeByzcoin(ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin value) {
         if (byzcoinBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0) &&
+          if (((bitField0_ & 0x00000002) != 0) &&
               byzcoin_ != null &&
               byzcoin_ != ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.getDefaultInstance()) {
             byzcoin_ =
@@ -7929,11 +11762,11 @@ public final class OCS {
         } else {
           byzcoinBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public Builder clearByzcoin() {
         if (byzcoinBuilder_ == null) {
@@ -7942,19 +11775,19 @@ public final class OCS {
         } else {
           byzcoinBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder getByzcoinBuilder() {
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         onChanged();
         return getByzcoinFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder getByzcoinOrBuilder() {
         if (byzcoinBuilder_ != null) {
@@ -7965,7 +11798,7 @@ public final class OCS {
         }
       }
       /**
-       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 1;</code>
+       * <code>optional .ocs.AuthReencryptByzCoin byzcoin = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin, ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoin.Builder, ch.epfl.dedis.lib.proto.OCS.AuthReencryptByzCoinOrBuilder> 
@@ -7985,13 +11818,13 @@ public final class OCS {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert, ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder> x509CertBuilder_;
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public boolean hasX509Cert() {
-        return ((bitField0_ & 0x00000002) != 0);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert getX509Cert() {
         if (x509CertBuilder_ == null) {
@@ -8001,7 +11834,7 @@ public final class OCS {
         }
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public Builder setX509Cert(ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert value) {
         if (x509CertBuilder_ == null) {
@@ -8013,11 +11846,11 @@ public final class OCS {
         } else {
           x509CertBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public Builder setX509Cert(
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder builderForValue) {
@@ -8027,15 +11860,15 @@ public final class OCS {
         } else {
           x509CertBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public Builder mergeX509Cert(ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert value) {
         if (x509CertBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0) &&
+          if (((bitField0_ & 0x00000004) != 0) &&
               x509Cert_ != null &&
               x509Cert_ != ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance()) {
             x509Cert_ =
@@ -8047,11 +11880,11 @@ public final class OCS {
         } else {
           x509CertBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public Builder clearX509Cert() {
         if (x509CertBuilder_ == null) {
@@ -8060,19 +11893,19 @@ public final class OCS {
         } else {
           x509CertBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder getX509CertBuilder() {
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         onChanged();
         return getX509CertFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       public ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder getX509CertOrBuilder() {
         if (x509CertBuilder_ != null) {
@@ -8083,7 +11916,7 @@ public final class OCS {
         }
       }
       /**
-       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 2;</code>
+       * <code>optional .ocs.AuthReencryptX509Cert x509cert = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert, ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.Builder, ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509CertOrBuilder> 
@@ -8188,6 +12021,53 @@ public final class OCS {
      * <code>required bytes read = 2;</code>
      */
     com.google.protobuf.ByteString getRead();
+
+    /**
+     * <pre>
+     * Ephemeral can be non-nil to point to a key to which the data needs to be
+     * re-encrypted to, but then Signature also needs to be non-nil.
+     * </pre>
+     *
+     * <code>required bytes ephemeral = 3;</code>
+     */
+    boolean hasEphemeral();
+    /**
+     * <pre>
+     * Ephemeral can be non-nil to point to a key to which the data needs to be
+     * re-encrypted to, but then Signature also needs to be non-nil.
+     * </pre>
+     *
+     * <code>required bytes ephemeral = 3;</code>
+     */
+    com.google.protobuf.ByteString getEphemeral();
+
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.Signature getSignature();
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder();
   }
   /**
    * <pre>
@@ -8210,6 +12090,7 @@ public final class OCS {
     private AuthReencryptByzCoin() {
       write_ = com.google.protobuf.ByteString.EMPTY;
       read_ = com.google.protobuf.ByteString.EMPTY;
+      ephemeral_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -8244,6 +12125,24 @@ public final class OCS {
             case 18: {
               bitField0_ |= 0x00000002;
               read_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              ephemeral_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) != 0)) {
+                subBuilder = signature_.toBuilder();
+              }
+              signature_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signature_);
+                signature_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
               break;
             }
             default: {
@@ -8325,6 +12224,67 @@ public final class OCS {
       return read_;
     }
 
+    public static final int EPHEMERAL_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString ephemeral_;
+    /**
+     * <pre>
+     * Ephemeral can be non-nil to point to a key to which the data needs to be
+     * re-encrypted to, but then Signature also needs to be non-nil.
+     * </pre>
+     *
+     * <code>required bytes ephemeral = 3;</code>
+     */
+    public boolean hasEphemeral() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <pre>
+     * Ephemeral can be non-nil to point to a key to which the data needs to be
+     * re-encrypted to, but then Signature also needs to be non-nil.
+     * </pre>
+     *
+     * <code>required bytes ephemeral = 3;</code>
+     */
+    public com.google.protobuf.ByteString getEphemeral() {
+      return ephemeral_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 4;
+    private ch.epfl.dedis.lib.proto.DarcProto.Signature signature_;
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.Signature getSignature() {
+      return signature_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+    }
+    /**
+     * <pre>
+     * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+     * Read instance to make sure it's a valid reencryption-request.
+     * </pre>
+     *
+     * <code>optional .darc.Signature signature = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
+      return signature_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -8340,6 +12300,16 @@ public final class OCS {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasEphemeral()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasSignature()) {
+        if (!getSignature().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -8352,6 +12322,12 @@ public final class OCS {
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, read_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeBytes(3, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        output.writeMessage(4, getSignature());
       }
       unknownFields.writeTo(output);
     }
@@ -8369,6 +12345,14 @@ public final class OCS {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, read_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getSignature());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8395,6 +12379,16 @@ public final class OCS {
         if (!getRead()
             .equals(other.getRead())) return false;
       }
+      if (hasEphemeral() != other.hasEphemeral()) return false;
+      if (hasEphemeral()) {
+        if (!getEphemeral()
+            .equals(other.getEphemeral())) return false;
+      }
+      if (hasSignature() != other.hasSignature()) return false;
+      if (hasSignature()) {
+        if (!getSignature()
+            .equals(other.getSignature())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -8413,6 +12407,14 @@ public final class OCS {
       if (hasRead()) {
         hash = (37 * hash) + READ_FIELD_NUMBER;
         hash = (53 * hash) + getRead().hashCode();
+      }
+      if (hasEphemeral()) {
+        hash = (37 * hash) + EPHEMERAL_FIELD_NUMBER;
+        hash = (53 * hash) + getEphemeral().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8548,6 +12550,7 @@ public final class OCS {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getSignatureFieldBuilder();
         }
       }
       @java.lang.Override
@@ -8557,6 +12560,14 @@ public final class OCS {
         bitField0_ = (bitField0_ & ~0x00000001);
         read_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+        } else {
+          signatureBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -8593,6 +12604,18 @@ public final class OCS {
           to_bitField0_ |= 0x00000002;
         }
         result.read_ = read_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.ephemeral_ = ephemeral_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (signatureBuilder_ == null) {
+            result.signature_ = signature_;
+          } else {
+            result.signature_ = signatureBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000008;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8648,6 +12671,12 @@ public final class OCS {
         if (other.hasRead()) {
           setRead(other.getRead());
         }
+        if (other.hasEphemeral()) {
+          setEphemeral(other.getEphemeral());
+        }
+        if (other.hasSignature()) {
+          mergeSignature(other.getSignature());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -8660,6 +12689,14 @@ public final class OCS {
         }
         if (!hasRead()) {
           return false;
+        }
+        if (!hasEphemeral()) {
+          return false;
+        }
+        if (hasSignature()) {
+          if (!getSignature().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -8785,6 +12822,224 @@ public final class OCS {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.ByteString ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Ephemeral can be non-nil to point to a key to which the data needs to be
+       * re-encrypted to, but then Signature also needs to be non-nil.
+       * </pre>
+       *
+       * <code>required bytes ephemeral = 3;</code>
+       */
+      public boolean hasEphemeral() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <pre>
+       * Ephemeral can be non-nil to point to a key to which the data needs to be
+       * re-encrypted to, but then Signature also needs to be non-nil.
+       * </pre>
+       *
+       * <code>required bytes ephemeral = 3;</code>
+       */
+      public com.google.protobuf.ByteString getEphemeral() {
+        return ephemeral_;
+      }
+      /**
+       * <pre>
+       * Ephemeral can be non-nil to point to a key to which the data needs to be
+       * re-encrypted to, but then Signature also needs to be non-nil.
+       * </pre>
+       *
+       * <code>required bytes ephemeral = 3;</code>
+       */
+      public Builder setEphemeral(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        ephemeral_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Ephemeral can be non-nil to point to a key to which the data needs to be
+       * re-encrypted to, but then Signature also needs to be non-nil.
+       * </pre>
+       *
+       * <code>required bytes ephemeral = 3;</code>
+       */
+      public Builder clearEphemeral() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        ephemeral_ = getDefaultInstance().getEphemeral();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.Signature signature_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> signatureBuilder_;
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Signature getSignature() {
+        if (signatureBuilder_ == null) {
+          return signature_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+        } else {
+          return signatureBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public Builder setSignature(ch.epfl.dedis.lib.proto.DarcProto.Signature value) {
+        if (signatureBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signature_ = value;
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public Builder setSignature(
+          ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder builderForValue) {
+        if (signatureBuilder_ == null) {
+          signature_ = builderForValue.build();
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public Builder mergeSignature(ch.epfl.dedis.lib.proto.DarcProto.Signature value) {
+        if (signatureBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0) &&
+              signature_ != null &&
+              signature_ != ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance()) {
+            signature_ =
+              ch.epfl.dedis.lib.proto.DarcProto.Signature.newBuilder(signature_).mergeFrom(value).buildPartial();
+          } else {
+            signature_ = value;
+          }
+          onChanged();
+        } else {
+          signatureBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public Builder clearSignature() {
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+          onChanged();
+        } else {
+          signatureBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder getSignatureBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getSignatureFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
+        if (signatureBuilder_ != null) {
+          return signatureBuilder_.getMessageOrBuilder();
+        } else {
+          return signature_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+        }
+      }
+      /**
+       * <pre>
+       * If Ephemeral si non-nil, it must be signed by the darc responsible for the
+       * Read instance to make sure it's a valid reencryption-request.
+       * </pre>
+       *
+       * <code>optional .darc.Signature signature = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder> 
+          getSignatureFieldBuilder() {
+        if (signatureBuilder_ == null) {
+          signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.Signature, ch.epfl.dedis.lib.proto.DarcProto.Signature.Builder, ch.epfl.dedis.lib.proto.DarcProto.SignatureOrBuilder>(
+                  getSignature(),
+                  getParentForChildren(),
+                  isClean());
+          signature_ = null;
+        }
+        return signatureBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -8843,13 +13098,13 @@ public final class OCS {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes secret = 1;</code>
+     * <code>required bytes u = 1;</code>
      */
-    boolean hasSecret();
+    boolean hasU();
     /**
-     * <code>required bytes secret = 1;</code>
+     * <code>required bytes u = 1;</code>
      */
-    com.google.protobuf.ByteString getSecret();
+    com.google.protobuf.ByteString getU();
 
     /**
      * <code>repeated bytes certificates = 2;</code>
@@ -8869,7 +13124,7 @@ public final class OCS {
    * AuthReencryptX509Cert holds the proof that at least a threshold number of clients
    * accepted the reencryption.
    * For each client, there must exist a certificate that can be verified by the
-   * CA certificate from PolicyX509Cert. Additionally, each client must sign the
+   * CA certificate from X509Cert. Additionally, each client must sign the
    * following message:
    *   sha256( Secret | Ephemeral | Time )
    * </pre>
@@ -8886,7 +13141,7 @@ public final class OCS {
       super(builder);
     }
     private AuthReencryptX509Cert() {
-      secret_ = com.google.protobuf.ByteString.EMPTY;
+      u_ = com.google.protobuf.ByteString.EMPTY;
       certificates_ = java.util.Collections.emptyList();
     }
 
@@ -8916,7 +13171,7 @@ public final class OCS {
               break;
             case 10: {
               bitField0_ |= 0x00000001;
-              secret_ = input.readBytes();
+              u_ = input.readBytes();
               break;
             }
             case 18: {
@@ -8963,19 +13218,19 @@ public final class OCS {
     }
 
     private int bitField0_;
-    public static final int SECRET_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString secret_;
+    public static final int U_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString u_;
     /**
-     * <code>required bytes secret = 1;</code>
+     * <code>required bytes u = 1;</code>
      */
-    public boolean hasSecret() {
+    public boolean hasU() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>required bytes secret = 1;</code>
+     * <code>required bytes u = 1;</code>
      */
-    public com.google.protobuf.ByteString getSecret() {
-      return secret_;
+    public com.google.protobuf.ByteString getU() {
+      return u_;
     }
 
     public static final int CERTIFICATES_FIELD_NUMBER = 2;
@@ -9007,7 +13262,7 @@ public final class OCS {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasSecret()) {
+      if (!hasU()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -9019,7 +13274,7 @@ public final class OCS {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeBytes(1, secret_);
+        output.writeBytes(1, u_);
       }
       for (int i = 0; i < certificates_.size(); i++) {
         output.writeBytes(2, certificates_.get(i));
@@ -9035,7 +13290,7 @@ public final class OCS {
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, secret_);
+          .computeBytesSize(1, u_);
       }
       {
         int dataSize = 0;
@@ -9061,10 +13316,10 @@ public final class OCS {
       }
       ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert other = (ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert) obj;
 
-      if (hasSecret() != other.hasSecret()) return false;
-      if (hasSecret()) {
-        if (!getSecret()
-            .equals(other.getSecret())) return false;
+      if (hasU() != other.hasU()) return false;
+      if (hasU()) {
+        if (!getU()
+            .equals(other.getU())) return false;
       }
       if (!getCertificatesList()
           .equals(other.getCertificatesList())) return false;
@@ -9079,9 +13334,9 @@ public final class OCS {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasSecret()) {
-        hash = (37 * hash) + SECRET_FIELD_NUMBER;
-        hash = (53 * hash) + getSecret().hashCode();
+      if (hasU()) {
+        hash = (37 * hash) + U_FIELD_NUMBER;
+        hash = (53 * hash) + getU().hashCode();
       }
       if (getCertificatesCount() > 0) {
         hash = (37 * hash) + CERTIFICATES_FIELD_NUMBER;
@@ -9187,7 +13442,7 @@ public final class OCS {
      * AuthReencryptX509Cert holds the proof that at least a threshold number of clients
      * accepted the reencryption.
      * For each client, there must exist a certificate that can be verified by the
-     * CA certificate from PolicyX509Cert. Additionally, each client must sign the
+     * CA certificate from X509Cert. Additionally, each client must sign the
      * following message:
      *   sha256( Secret | Ephemeral | Time )
      * </pre>
@@ -9229,7 +13484,7 @@ public final class OCS {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        secret_ = com.google.protobuf.ByteString.EMPTY;
+        u_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         certificates_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -9264,7 +13519,7 @@ public final class OCS {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.secret_ = secret_;
+        result.u_ = u_;
         if (((bitField0_ & 0x00000002) != 0)) {
           certificates_ = java.util.Collections.unmodifiableList(certificates_);
           bitField0_ = (bitField0_ & ~0x00000002);
@@ -9319,8 +13574,8 @@ public final class OCS {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert other) {
         if (other == ch.epfl.dedis.lib.proto.OCS.AuthReencryptX509Cert.getDefaultInstance()) return this;
-        if (other.hasSecret()) {
-          setSecret(other.getSecret());
+        if (other.hasU()) {
+          setU(other.getU());
         }
         if (!other.certificates_.isEmpty()) {
           if (certificates_.isEmpty()) {
@@ -9339,7 +13594,7 @@ public final class OCS {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasSecret()) {
+        if (!hasU()) {
           return false;
         }
         return true;
@@ -9365,37 +13620,37 @@ public final class OCS {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString u_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes secret = 1;</code>
+       * <code>required bytes u = 1;</code>
        */
-      public boolean hasSecret() {
+      public boolean hasU() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>required bytes secret = 1;</code>
+       * <code>required bytes u = 1;</code>
        */
-      public com.google.protobuf.ByteString getSecret() {
-        return secret_;
+      public com.google.protobuf.ByteString getU() {
+        return u_;
       }
       /**
-       * <code>required bytes secret = 1;</code>
+       * <code>required bytes u = 1;</code>
        */
-      public Builder setSecret(com.google.protobuf.ByteString value) {
+      public Builder setU(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        secret_ = value;
+        u_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes secret = 1;</code>
+       * <code>required bytes u = 1;</code>
        */
-      public Builder clearSecret() {
+      public Builder clearU() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        secret_ = getDefaultInstance().getSecret();
+        u_ = getDefaultInstance().getU();
         onChanged();
         return this;
       }
@@ -11466,6 +15721,1332 @@ public final class OCS {
 
   }
 
+  public interface OCSProofOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ocs.OCSProof)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    boolean hasOcsid();
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    com.google.protobuf.ByteString getOcsid();
+
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    boolean hasRoster();
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster();
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
+
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    boolean hasPolicyreencrypt();
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt();
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder();
+
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    boolean hasPolicyreshare();
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare();
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder();
+
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getSignaturesList();
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    int getSignaturesCount();
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    com.google.protobuf.ByteString getSignatures(int index);
+  }
+  /**
+   * <pre>
+   * OCSProof can be used to proof
+   * </pre>
+   *
+   * Protobuf type {@code ocs.OCSProof}
+   */
+  public  static final class OCSProof extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:ocs.OCSProof)
+      OCSProofOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use OCSProof.newBuilder() to construct.
+    private OCSProof(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private OCSProof() {
+      ocsid_ = com.google.protobuf.ByteString.EMPTY;
+      signatures_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private OCSProof(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ocsid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = roster_.toBuilder();
+              }
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(roster_);
+                roster_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) != 0)) {
+                subBuilder = policyreencrypt_.toBuilder();
+              }
+              policyreencrypt_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(policyreencrypt_);
+                policyreencrypt_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+            case 34: {
+              ch.epfl.dedis.lib.proto.OCS.Policy.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) != 0)) {
+                subBuilder = policyreshare_.toBuilder();
+              }
+              policyreshare_ = input.readMessage(ch.epfl.dedis.lib.proto.OCS.Policy.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(policyreshare_);
+                policyreshare_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              signatures_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          signatures_ = java.util.Collections.unmodifiableList(signatures_); // C
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_OCSProof_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_OCSProof_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.OCS.OCSProof.class, ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int OCSID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString ocsid_;
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    public boolean hasOcsid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>required bytes ocsid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getOcsid() {
+      return ocsid_;
+    }
+
+    public static final int ROSTER_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public boolean hasRoster() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+
+    public static final int POLICYREENCRYPT_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    public boolean hasPolicyreencrypt() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
+      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
+    }
+    /**
+     * <code>required .ocs.Policy policyreencrypt = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
+      return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
+    }
+
+    public static final int POLICYRESHARE_FIELD_NUMBER = 4;
+    private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    public boolean hasPolicyreshare() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
+      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+    }
+    /**
+     * <code>required .ocs.Policy policyreshare = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
+      return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+    }
+
+    public static final int SIGNATURES_FIELD_NUMBER = 5;
+    private java.util.List<com.google.protobuf.ByteString> signatures_;
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getSignaturesList() {
+      return signatures_;
+    }
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    public int getSignaturesCount() {
+      return signatures_.size();
+    }
+    /**
+     * <code>repeated bytes signatures = 5;</code>
+     */
+    public com.google.protobuf.ByteString getSignatures(int index) {
+      return signatures_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasOcsid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRoster()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPolicyreencrypt()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPolicyreshare()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRoster().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getPolicyreencrypt().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getPolicyreshare().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBytes(1, ocsid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(2, getRoster());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(3, getPolicyreencrypt());
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        output.writeMessage(4, getPolicyreshare());
+      }
+      for (int i = 0; i < signatures_.size(); i++) {
+        output.writeBytes(5, signatures_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, ocsid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRoster());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getPolicyreencrypt());
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getPolicyreshare());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < signatures_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(signatures_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getSignaturesList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.OCS.OCSProof)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.OCS.OCSProof other = (ch.epfl.dedis.lib.proto.OCS.OCSProof) obj;
+
+      if (hasOcsid() != other.hasOcsid()) return false;
+      if (hasOcsid()) {
+        if (!getOcsid()
+            .equals(other.getOcsid())) return false;
+      }
+      if (hasRoster() != other.hasRoster()) return false;
+      if (hasRoster()) {
+        if (!getRoster()
+            .equals(other.getRoster())) return false;
+      }
+      if (hasPolicyreencrypt() != other.hasPolicyreencrypt()) return false;
+      if (hasPolicyreencrypt()) {
+        if (!getPolicyreencrypt()
+            .equals(other.getPolicyreencrypt())) return false;
+      }
+      if (hasPolicyreshare() != other.hasPolicyreshare()) return false;
+      if (hasPolicyreshare()) {
+        if (!getPolicyreshare()
+            .equals(other.getPolicyreshare())) return false;
+      }
+      if (!getSignaturesList()
+          .equals(other.getSignaturesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasOcsid()) {
+        hash = (37 * hash) + OCSID_FIELD_NUMBER;
+        hash = (53 * hash) + getOcsid().hashCode();
+      }
+      if (hasRoster()) {
+        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
+        hash = (53 * hash) + getRoster().hashCode();
+      }
+      if (hasPolicyreencrypt()) {
+        hash = (37 * hash) + POLICYREENCRYPT_FIELD_NUMBER;
+        hash = (53 * hash) + getPolicyreencrypt().hashCode();
+      }
+      if (hasPolicyreshare()) {
+        hash = (37 * hash) + POLICYRESHARE_FIELD_NUMBER;
+        hash = (53 * hash) + getPolicyreshare().hashCode();
+      }
+      if (getSignaturesCount() > 0) {
+        hash = (37 * hash) + SIGNATURES_FIELD_NUMBER;
+        hash = (53 * hash) + getSignaturesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.OCS.OCSProof prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * OCSProof can be used to proof
+     * </pre>
+     *
+     * Protobuf type {@code ocs.OCSProof}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ocs.OCSProof)
+        ch.epfl.dedis.lib.proto.OCS.OCSProofOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_OCSProof_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_OCSProof_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.OCS.OCSProof.class, ch.epfl.dedis.lib.proto.OCS.OCSProof.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.OCS.OCSProof.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getRosterFieldBuilder();
+          getPolicyreencryptFieldBuilder();
+          getPolicyreshareFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        ocsid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = null;
+        } else {
+          policyreencryptBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = null;
+        } else {
+          policyreshareBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        signatures_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.OCS.internal_static_ocs_OCSProof_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.OCSProof getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.OCSProof build() {
+        ch.epfl.dedis.lib.proto.OCS.OCSProof result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.OCS.OCSProof buildPartial() {
+        ch.epfl.dedis.lib.proto.OCS.OCSProof result = new ch.epfl.dedis.lib.proto.OCS.OCSProof(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.ocsid_ = ocsid_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          if (rosterBuilder_ == null) {
+            result.roster_ = roster_;
+          } else {
+            result.roster_ = rosterBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          if (policyreencryptBuilder_ == null) {
+            result.policyreencrypt_ = policyreencrypt_;
+          } else {
+            result.policyreencrypt_ = policyreencryptBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000004;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (policyreshareBuilder_ == null) {
+            result.policyreshare_ = policyreshare_;
+          } else {
+            result.policyreshare_ = policyreshareBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000008;
+        }
+        if (((bitField0_ & 0x00000010) != 0)) {
+          signatures_ = java.util.Collections.unmodifiableList(signatures_);
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.signatures_ = signatures_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.OCS.OCSProof) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.OCS.OCSProof)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.OCS.OCSProof other) {
+        if (other == ch.epfl.dedis.lib.proto.OCS.OCSProof.getDefaultInstance()) return this;
+        if (other.hasOcsid()) {
+          setOcsid(other.getOcsid());
+        }
+        if (other.hasRoster()) {
+          mergeRoster(other.getRoster());
+        }
+        if (other.hasPolicyreencrypt()) {
+          mergePolicyreencrypt(other.getPolicyreencrypt());
+        }
+        if (other.hasPolicyreshare()) {
+          mergePolicyreshare(other.getPolicyreshare());
+        }
+        if (!other.signatures_.isEmpty()) {
+          if (signatures_.isEmpty()) {
+            signatures_ = other.signatures_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureSignaturesIsMutable();
+            signatures_.addAll(other.signatures_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasOcsid()) {
+          return false;
+        }
+        if (!hasRoster()) {
+          return false;
+        }
+        if (!hasPolicyreencrypt()) {
+          return false;
+        }
+        if (!hasPolicyreshare()) {
+          return false;
+        }
+        if (!getRoster().isInitialized()) {
+          return false;
+        }
+        if (!getPolicyreencrypt().isInitialized()) {
+          return false;
+        }
+        if (!getPolicyreshare().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.OCS.OCSProof parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.OCS.OCSProof) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString ocsid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public boolean hasOcsid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getOcsid() {
+        return ocsid_;
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public Builder setOcsid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        ocsid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes ocsid = 1;</code>
+       */
+      public Builder clearOcsid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        ocsid_ = getDefaultInstance().getOcsid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.OnetProto.Roster roster_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public boolean hasRoster() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster getRoster() {
+        if (rosterBuilder_ == null) {
+          return roster_ == null ? ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        } else {
+          return rosterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          roster_ = value;
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(
+          ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder builderForValue) {
+        if (rosterBuilder_ == null) {
+          roster_ = builderForValue.build();
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder mergeRoster(ch.epfl.dedis.lib.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0) &&
+              roster_ != null &&
+              roster_ != ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance()) {
+            roster_ =
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+          } else {
+            roster_ = value;
+          }
+          onChanged();
+        } else {
+          rosterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder clearRoster() {
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+          onChanged();
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder getRosterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getRosterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+        if (rosterBuilder_ != null) {
+          return rosterBuilder_.getMessageOrBuilder();
+        } else {
+          return roster_ == null ?
+              ch.epfl.dedis.lib.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder> 
+          getRosterFieldBuilder() {
+        if (rosterBuilder_ == null) {
+          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OnetProto.Roster, ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder, ch.epfl.dedis.lib.proto.OnetProto.RosterOrBuilder>(
+                  getRoster(),
+                  getParentForChildren(),
+                  isClean());
+          roster_ = null;
+        }
+        return rosterBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.OCS.Policy policyreencrypt_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreencryptBuilder_;
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public boolean hasPolicyreencrypt() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreencrypt() {
+        if (policyreencryptBuilder_ == null) {
+          return policyreencrypt_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
+        } else {
+          return policyreencryptBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public Builder setPolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreencryptBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          policyreencrypt_ = value;
+          onChanged();
+        } else {
+          policyreencryptBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public Builder setPolicyreencrypt(
+          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = builderForValue.build();
+          onChanged();
+        } else {
+          policyreencryptBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public Builder mergePolicyreencrypt(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreencryptBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0) &&
+              policyreencrypt_ != null &&
+              policyreencrypt_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
+            policyreencrypt_ =
+              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreencrypt_).mergeFrom(value).buildPartial();
+          } else {
+            policyreencrypt_ = value;
+          }
+          onChanged();
+        } else {
+          policyreencryptBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public Builder clearPolicyreencrypt() {
+        if (policyreencryptBuilder_ == null) {
+          policyreencrypt_ = null;
+          onChanged();
+        } else {
+          policyreencryptBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreencryptBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getPolicyreencryptFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreencryptOrBuilder() {
+        if (policyreencryptBuilder_ != null) {
+          return policyreencryptBuilder_.getMessageOrBuilder();
+        } else {
+          return policyreencrypt_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreencrypt_;
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreencrypt = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
+          getPolicyreencryptFieldBuilder() {
+        if (policyreencryptBuilder_ == null) {
+          policyreencryptBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
+                  getPolicyreencrypt(),
+                  getParentForChildren(),
+                  isClean());
+          policyreencrypt_ = null;
+        }
+        return policyreencryptBuilder_;
+      }
+
+      private ch.epfl.dedis.lib.proto.OCS.Policy policyreshare_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> policyreshareBuilder_;
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public boolean hasPolicyreshare() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy getPolicyreshare() {
+        if (policyreshareBuilder_ == null) {
+          return policyreshare_ == null ? ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+        } else {
+          return policyreshareBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public Builder setPolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreshareBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          policyreshare_ = value;
+          onChanged();
+        } else {
+          policyreshareBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public Builder setPolicyreshare(
+          ch.epfl.dedis.lib.proto.OCS.Policy.Builder builderForValue) {
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = builderForValue.build();
+          onChanged();
+        } else {
+          policyreshareBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public Builder mergePolicyreshare(ch.epfl.dedis.lib.proto.OCS.Policy value) {
+        if (policyreshareBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0) &&
+              policyreshare_ != null &&
+              policyreshare_ != ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance()) {
+            policyreshare_ =
+              ch.epfl.dedis.lib.proto.OCS.Policy.newBuilder(policyreshare_).mergeFrom(value).buildPartial();
+          } else {
+            policyreshare_ = value;
+          }
+          onChanged();
+        } else {
+          policyreshareBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public Builder clearPolicyreshare() {
+        if (policyreshareBuilder_ == null) {
+          policyreshare_ = null;
+          onChanged();
+        } else {
+          policyreshareBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.Policy.Builder getPolicyreshareBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getPolicyreshareFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder getPolicyreshareOrBuilder() {
+        if (policyreshareBuilder_ != null) {
+          return policyreshareBuilder_.getMessageOrBuilder();
+        } else {
+          return policyreshare_ == null ?
+              ch.epfl.dedis.lib.proto.OCS.Policy.getDefaultInstance() : policyreshare_;
+        }
+      }
+      /**
+       * <code>required .ocs.Policy policyreshare = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder> 
+          getPolicyreshareFieldBuilder() {
+        if (policyreshareBuilder_ == null) {
+          policyreshareBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.OCS.Policy, ch.epfl.dedis.lib.proto.OCS.Policy.Builder, ch.epfl.dedis.lib.proto.OCS.PolicyOrBuilder>(
+                  getPolicyreshare(),
+                  getParentForChildren(),
+                  isClean());
+          policyreshare_ = null;
+        }
+        return policyreshareBuilder_;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> signatures_ = java.util.Collections.emptyList();
+      private void ensureSignaturesIsMutable() {
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          signatures_ = new java.util.ArrayList<com.google.protobuf.ByteString>(signatures_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getSignaturesList() {
+        return ((bitField0_ & 0x00000010) != 0) ?
+                 java.util.Collections.unmodifiableList(signatures_) : signatures_;
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public int getSignaturesCount() {
+        return signatures_.size();
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public com.google.protobuf.ByteString getSignatures(int index) {
+        return signatures_.get(index);
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public Builder setSignatures(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSignaturesIsMutable();
+        signatures_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public Builder addSignatures(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSignaturesIsMutable();
+        signatures_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public Builder addAllSignatures(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureSignaturesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, signatures_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes signatures = 5;</code>
+       */
+      public Builder clearSignatures() {
+        signatures_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:ocs.OCSProof)
+    }
+
+    // @@protoc_insertion_point(class_scope:ocs.OCSProof)
+    private static final ch.epfl.dedis.lib.proto.OCS.OCSProof DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.OCS.OCSProof();
+    }
+
+    public static ch.epfl.dedis.lib.proto.OCS.OCSProof getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<OCSProof>
+        PARSER = new com.google.protobuf.AbstractParser<OCSProof>() {
+      @java.lang.Override
+      public OCSProof parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new OCSProof(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<OCSProof> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<OCSProof> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.OCS.OCSProof getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_AddPolicyCreateOCS_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_AddPolicyCreateOCS_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_AddPolicyCreateOCSReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_AddPolicyCreateOCSReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ocs_CreateOCS_descriptor;
   private static final 
@@ -11476,6 +17057,16 @@ public final class OCS {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_ocs_CreateOCSReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_GetProof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_GetProof_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_GetProofReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_GetProofReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ocs_Reencrypt_descriptor;
   private static final 
@@ -11497,11 +17088,6 @@ public final class OCS {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_ocs_ReshareReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_ocs_PolicyOCS_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_ocs_PolicyOCS_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ocs_Policy_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11516,6 +17102,21 @@ public final class OCS {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_ocs_PolicyX509Cert_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_AuthCreate_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_AuthCreate_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_AuthCreateByzcoin_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_AuthCreateByzcoin_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_AuthCreateX509Cert_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_AuthCreateX509Cert_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ocs_AuthReencrypt_descriptor;
   private static final 
@@ -11546,6 +17147,11 @@ public final class OCS {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_ocs_AuthReshareX509Cert_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_ocs_OCSProof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_ocs_OCSProof_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -11555,33 +17161,47 @@ public final class OCS {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tocs.proto\022\003ocs\032\nonet.proto\"F\n\tCreateOC" +
-      "S\022\034\n\006roster\030\001 \002(\0132\014.onet.Roster\022\033\n\006polic" +
-      "y\030\002 \002(\0132\013.ocs.Policy\"(\n\016CreateOCSReply\022\t" +
-      "\n\001x\030\001 \002(\014\022\013\n\003sig\030\002 \002(\014\"8\n\tReencrypt\022\t\n\001x" +
-      "\030\001 \002(\014\022 \n\004auth\030\002 \002(\0132\022.ocs.AuthReencrypt" +
-      "\"\036\n\016ReencryptReply\022\014\n\004xhat\030\001 \002(\014\"U\n\007Resh" +
-      "are\022\t\n\001x\030\001 \002(\014\022\037\n\tnewroster\030\002 \002(\0132\014.onet" +
-      ".Roster\022\036\n\004auth\030\003 \002(\0132\020.ocs.AuthReshare\"" +
-      "\033\n\014ReshareReply\022\013\n\003sig\030\001 \002(\014\"U\n\tPolicyOC" +
-      "S\022$\n\017policyreencrypt\030\001 \002(\0132\013.ocs.Policy\022" +
-      "\"\n\rpolicyreshare\030\002 \002(\0132\013.ocs.Policy\"X\n\006P" +
-      "olicy\022#\n\007byzcoin\030\001 \001(\0132\022.ocs.PolicyByzCo" +
-      "in\022)\n\014authx509cert\030\002 \001(\0132\023.ocs.PolicyX50" +
-      "9Cert\"/\n\rPolicyByzCoin\022\021\n\tbyzcoinid\030\001 \002(" +
-      "\014\022\013\n\003ttl\030\002 \002(\004\"/\n\016PolicyX509Cert\022\n\n\002ca\030\001" +
-      " \003(\014\022\021\n\tthreshold\030\002 \002(\021\"i\n\rAuthReencrypt" +
-      "\022*\n\007byzcoin\030\001 \001(\0132\031.ocs.AuthReencryptByz" +
-      "Coin\022,\n\010x509cert\030\002 \001(\0132\032.ocs.AuthReencry" +
-      "ptX509Cert\"3\n\024AuthReencryptByzCoin\022\r\n\005wr" +
-      "ite\030\001 \002(\014\022\014\n\004read\030\002 \002(\014\"=\n\025AuthReencrypt" +
-      "X509Cert\022\016\n\006secret\030\001 \002(\014\022\024\n\014certificates" +
-      "\030\002 \003(\014\"c\n\013AuthReshare\022(\n\007byzcoin\030\001 \001(\0132\027" +
-      ".ocs.AuthReshareByzCoin\022*\n\010x509cert\030\002 \001(" +
-      "\0132\030.ocs.AuthReshareX509Cert\"%\n\022AuthResha" +
-      "reByzCoin\022\017\n\007reshare\030\001 \002(\014\"+\n\023AuthReshar" +
-      "eX509Cert\022\024\n\014certificates\030\001 \003(\014B\036\n\027ch.ep" +
-      "fl.dedis.lib.protoB\003OCS"
+      "\n\tocs.proto\022\003ocs\032\nonet.proto\032\ndarc.proto" +
+      "\"1\n\022AddPolicyCreateOCS\022\033\n\006create\030\001 \002(\0132\013" +
+      ".ocs.Policy\"\031\n\027AddPolicyCreateOCSReply\"s" +
+      "\n\tCreateOCS\022\034\n\006roster\030\001 \002(\0132\014.onet.Roste" +
+      "r\022$\n\017policyreencrypt\030\002 \002(\0132\013.ocs.Policy\022" +
+      "\"\n\rpolicyreshare\030\003 \002(\0132\013.ocs.Policy\"\037\n\016C" +
+      "reateOCSReply\022\r\n\005ocsid\030\001 \002(\014\"\031\n\010GetProof" +
+      "\022\r\n\005ocsid\030\001 \002(\014\"-\n\rGetProofReply\022\034\n\005proo" +
+      "f\030\001 \002(\0132\r.ocs.OCSProof\"<\n\tReencrypt\022\r\n\005o" +
+      "csid\030\001 \002(\014\022 \n\004auth\030\002 \002(\0132\022.ocs.AuthReenc" +
+      "rypt\"7\n\016ReencryptReply\022\t\n\001x\030\001 \002(\014\022\017\n\007xha" +
+      "tenc\030\002 \002(\014\022\t\n\001c\030\003 \002(\014\"Y\n\007Reshare\022\r\n\005ocsi" +
+      "d\030\001 \002(\014\022\037\n\tnewroster\030\002 \002(\0132\014.onet.Roster" +
+      "\022\036\n\004auth\030\003 \002(\0132\020.ocs.AuthReshare\"\033\n\014Resh" +
+      "areReply\022\013\n\003sig\030\001 \002(\014\"T\n\006Policy\022#\n\007byzco" +
+      "in\030\001 \001(\0132\022.ocs.PolicyByzCoin\022%\n\010x509cert" +
+      "\030\002 \001(\0132\023.ocs.PolicyX509Cert\"/\n\rPolicyByz" +
+      "Coin\022\021\n\tbyzcoinid\030\001 \002(\014\022\013\n\003ttl\030\002 \002(\004\"/\n\016" +
+      "PolicyX509Cert\022\n\n\002ca\030\001 \003(\014\022\021\n\tthreshold\030" +
+      "\002 \002(\021\"`\n\nAuthCreate\022\'\n\007byzcoin\030\001 \002(\0132\026.o" +
+      "cs.AuthCreateByzcoin\022)\n\010x509cert\030\002 \002(\0132\027" +
+      ".ocs.AuthCreateX509Cert\";\n\021AuthCreateByz" +
+      "coin\022\021\n\tbyzcoinid\030\001 \002(\014\022\023\n\013ltsinstance\030\002" +
+      " \002(\014\"*\n\022AuthCreateX509Cert\022\024\n\014certificat" +
+      "es\030\001 \003(\014\"|\n\rAuthReencrypt\022\021\n\tephemeral\030\001" +
+      " \002(\014\022*\n\007byzcoin\030\002 \001(\0132\031.ocs.AuthReencryp" +
+      "tByzCoin\022,\n\010x509cert\030\003 \001(\0132\032.ocs.AuthRee" +
+      "ncryptX509Cert\"j\n\024AuthReencryptByzCoin\022\r" +
+      "\n\005write\030\001 \002(\014\022\014\n\004read\030\002 \002(\014\022\021\n\tephemeral" +
+      "\030\003 \002(\014\022\"\n\tsignature\030\004 \001(\0132\017.darc.Signatu" +
+      "re\"8\n\025AuthReencryptX509Cert\022\t\n\001u\030\001 \002(\014\022\024" +
+      "\n\014certificates\030\002 \003(\014\"c\n\013AuthReshare\022(\n\007b" +
+      "yzcoin\030\001 \001(\0132\027.ocs.AuthReshareByzCoin\022*\n" +
+      "\010x509cert\030\002 \001(\0132\030.ocs.AuthReshareX509Cer" +
+      "t\"%\n\022AuthReshareByzCoin\022\017\n\007reshare\030\001 \002(\014" +
+      "\"+\n\023AuthReshareX509Cert\022\024\n\014certificates\030" +
+      "\001 \003(\014\"\225\001\n\010OCSProof\022\r\n\005ocsid\030\001 \002(\014\022\034\n\006ros" +
+      "ter\030\002 \002(\0132\014.onet.Roster\022$\n\017policyreencry" +
+      "pt\030\003 \002(\0132\013.ocs.Policy\022\"\n\rpolicyreshare\030\004" +
+      " \002(\0132\013.ocs.Policy\022\022\n\nsignatures\030\005 \003(\014B\036\n" +
+      "\027ch.epfl.dedis.lib.protoB\003OCS"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11595,104 +17215,148 @@ public final class OCS {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
+          ch.epfl.dedis.lib.proto.DarcProto.getDescriptor(),
         }, assigner);
-    internal_static_ocs_CreateOCS_descriptor =
+    internal_static_ocs_AddPolicyCreateOCS_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_ocs_AddPolicyCreateOCS_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_AddPolicyCreateOCS_descriptor,
+        new java.lang.String[] { "Create", });
+    internal_static_ocs_AddPolicyCreateOCSReply_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_ocs_AddPolicyCreateOCSReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_AddPolicyCreateOCSReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_ocs_CreateOCS_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_ocs_CreateOCS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_CreateOCS_descriptor,
-        new java.lang.String[] { "Roster", "Policy", });
+        new java.lang.String[] { "Roster", "Policyreencrypt", "Policyreshare", });
     internal_static_ocs_CreateOCSReply_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_ocs_CreateOCSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_CreateOCSReply_descriptor,
-        new java.lang.String[] { "X", "Sig", });
+        new java.lang.String[] { "Ocsid", });
+    internal_static_ocs_GetProof_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_ocs_GetProof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_GetProof_descriptor,
+        new java.lang.String[] { "Ocsid", });
+    internal_static_ocs_GetProofReply_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_ocs_GetProofReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_GetProofReply_descriptor,
+        new java.lang.String[] { "Proof", });
     internal_static_ocs_Reencrypt_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_ocs_Reencrypt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_Reencrypt_descriptor,
-        new java.lang.String[] { "X", "Auth", });
+        new java.lang.String[] { "Ocsid", "Auth", });
     internal_static_ocs_ReencryptReply_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_ocs_ReencryptReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_ReencryptReply_descriptor,
-        new java.lang.String[] { "Xhat", });
+        new java.lang.String[] { "X", "Xhatenc", "C", });
     internal_static_ocs_Reshare_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_ocs_Reshare_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_Reshare_descriptor,
-        new java.lang.String[] { "X", "Newroster", "Auth", });
+        new java.lang.String[] { "Ocsid", "Newroster", "Auth", });
     internal_static_ocs_ReshareReply_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_ocs_ReshareReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_ReshareReply_descriptor,
         new java.lang.String[] { "Sig", });
-    internal_static_ocs_PolicyOCS_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_ocs_PolicyOCS_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_ocs_PolicyOCS_descriptor,
-        new java.lang.String[] { "Policyreencrypt", "Policyreshare", });
     internal_static_ocs_Policy_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_ocs_Policy_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_Policy_descriptor,
-        new java.lang.String[] { "Byzcoin", "Authx509Cert", });
+        new java.lang.String[] { "Byzcoin", "X509Cert", });
     internal_static_ocs_PolicyByzCoin_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_ocs_PolicyByzCoin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_PolicyByzCoin_descriptor,
         new java.lang.String[] { "Byzcoinid", "Ttl", });
     internal_static_ocs_PolicyX509Cert_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_ocs_PolicyX509Cert_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_PolicyX509Cert_descriptor,
         new java.lang.String[] { "Ca", "Threshold", });
+    internal_static_ocs_AuthCreate_descriptor =
+      getDescriptor().getMessageTypes().get(13);
+    internal_static_ocs_AuthCreate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_AuthCreate_descriptor,
+        new java.lang.String[] { "Byzcoin", "X509Cert", });
+    internal_static_ocs_AuthCreateByzcoin_descriptor =
+      getDescriptor().getMessageTypes().get(14);
+    internal_static_ocs_AuthCreateByzcoin_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_AuthCreateByzcoin_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Ltsinstance", });
+    internal_static_ocs_AuthCreateX509Cert_descriptor =
+      getDescriptor().getMessageTypes().get(15);
+    internal_static_ocs_AuthCreateX509Cert_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_AuthCreateX509Cert_descriptor,
+        new java.lang.String[] { "Certificates", });
     internal_static_ocs_AuthReencrypt_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_ocs_AuthReencrypt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReencrypt_descriptor,
-        new java.lang.String[] { "Byzcoin", "X509Cert", });
+        new java.lang.String[] { "Ephemeral", "Byzcoin", "X509Cert", });
     internal_static_ocs_AuthReencryptByzCoin_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_ocs_AuthReencryptByzCoin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReencryptByzCoin_descriptor,
-        new java.lang.String[] { "Write", "Read", });
+        new java.lang.String[] { "Write", "Read", "Ephemeral", "Signature", });
     internal_static_ocs_AuthReencryptX509Cert_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_ocs_AuthReencryptX509Cert_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReencryptX509Cert_descriptor,
-        new java.lang.String[] { "Secret", "Certificates", });
+        new java.lang.String[] { "U", "Certificates", });
     internal_static_ocs_AuthReshare_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_ocs_AuthReshare_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReshare_descriptor,
         new java.lang.String[] { "Byzcoin", "X509Cert", });
     internal_static_ocs_AuthReshareByzCoin_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_ocs_AuthReshareByzCoin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReshareByzCoin_descriptor,
         new java.lang.String[] { "Reshare", });
     internal_static_ocs_AuthReshareX509Cert_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(21);
     internal_static_ocs_AuthReshareX509Cert_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ocs_AuthReshareX509Cert_descriptor,
         new java.lang.String[] { "Certificates", });
+    internal_static_ocs_OCSProof_descriptor =
+      getDescriptor().getMessageTypes().get(22);
+    internal_static_ocs_OCSProof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_ocs_OCSProof_descriptor,
+        new java.lang.String[] { "Ocsid", "Roster", "Policyreencrypt", "Policyreshare", "Signatures", });
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
+    ch.epfl.dedis.lib.proto.DarcProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

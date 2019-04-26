@@ -18,6 +18,7 @@ import (
 // type :OCSID:bytes
 // package ocs;
 // import "onet.proto";
+// import "darc.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "OCS";

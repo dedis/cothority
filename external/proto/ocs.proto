@@ -1,6 +1,7 @@
 syntax = "proto2";
 package ocs;
 import "onet.proto";
+import "darc.proto";
 
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "OCS";
@@ -9,10 +10,28 @@ option java_outer_classname = "OCS";
 // API calls
 // ***
 
+// AddPolicyCreateOCS is sent by a local admin to add a rule to define who is
+// authorized to create a new OCS.
+message AddPolicyCreateOCS {
+  required Policy create = 1;
+}
+
+// AddPolicyCreateOCSReply is an empty reply if the policy has been successfully
+// created.
+message AddPolicyCreateOCSReply {
+}
+
 // CreateOCS is sent to the service to request a new OCS cothority.
+// It holds the two policies necessary to define an OCS: how to
+// authenticate a reencryption request, and how to authenticate a
+// resharing request.
+// In the current form, both policies point to the same structure. If at
+// a later moment a new access control backend is added, it might be that
+// the policies will differ for this new backend.
 message CreateOCS {
   required onet.Roster roster = 1;
-  required Policy policy = 2;
+  required Policy policyreencrypt = 2;
+  required Policy policyreshare = 3;
 }
 
 // CreateOCSReply is the reply sent by the conode if the OCS has been
@@ -21,8 +40,19 @@ message CreateOCS {
 // is the collective signature of all nodes on the aggregate public key
 // and the authentication.
 message CreateOCSReply {
-  required bytes x = 1;
-  required bytes sig = 2;
+  required bytes ocsid = 1;
+}
+
+// GetProof is sent to a node to have him sign his definition of the
+// given OCS.
+message GetProof {
+  required bytes ocsid = 1;
+}
+
+// GetProofReply contains the additional info that node has on the given
+// OCS, as well as a signature using the services private key.
+message GetProofReply {
+  required OCSProof proof = 1;
 }
 
 // Reencrypt is sent to the service to request a re-encryption of the
@@ -30,7 +60,7 @@ message CreateOCSReply {
 // request is valid, as well as the ephemeral key, to which the secret
 // will be re-encrypted.
 message Reencrypt {
-  required bytes x = 1;
+  required bytes ocsid = 1;
   required AuthReencrypt auth = 2;
 }
 
@@ -38,14 +68,18 @@ message Reencrypt {
 // it contains XHat, which is the secret re-encrypted to the ephemeral
 // key given in AuthReencrypt.
 message ReencryptReply {
-  required bytes xhat = 1;
+  required bytes x = 1;
+  required bytes xhatenc = 2;
+  required bytes c = 3;
 }
 
 // Reshare is called to ask OCS to change the roster. It needs a valid
-// authentication before the private keys are re-generated over the new
+// authentication before the private keys are re-distributed over the new
 // roster.
+// TODO: should NewRoster be always present in AuthReshare? It will be present
+// TODO: at least in AuthReshareByzCoin, but might not in other AuthReshares
 message Reshare {
-  required bytes x = 1;
+  required bytes ocsid = 1;
   required onet.Roster newroster = 2;
   required AuthReshare auth = 3;
 }
@@ -61,22 +95,11 @@ message ReshareReply {
 // Common structures
 // ***
 
-// PolicyOCS holds the two policies necessary to define an OCS: how to
-// authenticate a reencryption request, and how to authenticate a
-// resharing request.
-// In the current form, both policies point to the same structure. If at
-// a later moment a new access control backend is added, it might be that
-// the policies will differ for this new backend.
-message PolicyOCS {
-  required Policy policyreencrypt = 1;
-  required Policy policyreshare = 2;
-}
-
 // Policy holds all possible authentication structures. When using it to call
 // Authorise, only one of the fields must be non-nil.
 message Policy {
   optional PolicyByzCoin byzcoin = 1;
-  optional PolicyX509Cert authx509cert = 2;
+  optional PolicyX509Cert x509cert = 2;
 }
 
 // PolicyByzCoin holds the information necessary to authenticate a byzcoin request.
@@ -88,7 +111,7 @@ message PolicyByzCoin {
   required uint64 ttl = 2;
 }
 
-// PolicyX509Cert holds the information necessary to authenticate a HyperLedger/Fabric
+// X509Cert holds the information necessary to authenticate a HyperLedger/Fabric
 // request. In its simplest form, it is simply the CA that will have to sign the
 // certificates of the requesters.
 // The Threshold indicates how many clients must have signed the request before it
@@ -99,13 +122,34 @@ message PolicyX509Cert {
   required sint32 threshold = 2;
 }
 
+// AuthCreate prooves that the caller has the right to create a new OCS
+// instance.
+message AuthCreate {
+  required AuthCreateByzcoin byzcoin = 1;
+  required AuthCreateX509Cert x509cert = 2;
+}
+
+// AuthCreateByzcoin must give the ByzcoinID and the proof to the LTSInstance
+// for the creation of a new OCS.
+message AuthCreateByzcoin {
+  required bytes byzcoinid = 1;
+  required bytes ltsinstance = 2;
+}
+
+// AuthCreateX509Cert must give a threshold number of certificates to proof that
+// the caller has the right to create a new OCS.
+message AuthCreateX509Cert {
+  repeated bytes certificates = 1;
+}
+
 // AuthReencrypt holds one of the possible authentication proofs for a reencryption request. Each
 // authentication proof must hold the secret to be reencrypted, the ephemeral key, as well
 // as the proof itself that the request is valid. For each of the authentication
 // schemes, this proof will be different.
 message AuthReencrypt {
-  optional AuthReencryptByzCoin byzcoin = 1;
-  optional AuthReencryptX509Cert x509cert = 2;
+  required bytes ephemeral = 1;
+  optional AuthReencryptByzCoin byzcoin = 2;
+  optional AuthReencryptX509Cert x509cert = 3;
 }
 
 // AuthReencryptByzCoin holds the proof of the write instance, holding the secret itself.
@@ -116,16 +160,22 @@ message AuthReencryptByzCoin {
   required bytes write = 1;
   // Read is the proof that he has been accepted to read the secret.
   required bytes read = 2;
+  // Ephemeral can be non-nil to point to a key to which the data needs to be
+  // re-encrypted to, but then Signature also needs to be non-nil.
+  required bytes ephemeral = 3;
+  // If Ephemeral si non-nil, it must be signed by the darc responsible for the
+  // Read instance to make sure it's a valid reencryption-request.
+  optional darc.Signature signature = 4;
 }
 
 // AuthReencryptX509Cert holds the proof that at least a threshold number of clients
 // accepted the reencryption.
 // For each client, there must exist a certificate that can be verified by the
-// CA certificate from PolicyX509Cert. Additionally, each client must sign the
+// CA certificate from X509Cert. Additionally, each client must sign the
 // following message:
 //   sha256( Secret | Ephemeral | Time )
 message AuthReencryptX509Cert {
-  required bytes secret = 1;
+  required bytes u = 1;
   repeated bytes certificates = 2;
 }
 
@@ -147,4 +197,13 @@ message AuthReshareByzCoin {
 // AuthReshareX509Cert holds the X509 proof that the new roster is valid.
 message AuthReshareX509Cert {
   repeated bytes certificates = 1;
+}
+
+// OCSProof can be used to proof
+message OCSProof {
+  required bytes ocsid = 1;
+  required onet.Roster roster = 2;
+  required Policy policyreencrypt = 3;
+  required Policy policyreshare = 4;
+  repeated bytes signatures = 5;
 }
