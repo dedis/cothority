@@ -494,23 +494,12 @@ func link(c *cli.Context) error {
 		ad := &darc.Darc{}
 		adPub := cothority.Suite.Point()
 		// Accept both plain-darcs, as well as "darc:...." darcs
-		if adIDStr := c.String("admindarc"); len(adIDStr) == 64 || len(adIDStr) == 69 {
-			if len(adIDStr) == 69 {
-				adIDStr = adIDStr[5:]
-			}
-			adID, err := hex.DecodeString(adIDStr)
+		adID, err := stringToDarcID(c.String("admindarc"))
+		if err == nil {
+			adPubBuf, err := stringToEd25519Buf(c.String("adminpub"))
 			if err != nil {
-				return errors.New("couldn't parse given admin: " + err.Error())
+				return err
 			}
-			adPubStr := c.String("adminpub")
-			// Accept both plain-public keys and "ed25519:..." keys
-			if (len(adPubStr) != 64 && len(adPubStr) != 72) || err != nil {
-				return errors.New("please give valid admin public key in hex: " + err.Error())
-			}
-			if len(adPubStr) == 72 {
-				adPubStr = adPubStr[8:]
-			}
-			adPubBuf, err := hex.DecodeString(adPubStr)
 			adPub = cothority.Suite.Point()
 			if err = adPub.UnmarshalBinary(adPubBuf); err != nil {
 				return errors.New("got an invalid admin public key: " + err.Error())
@@ -1510,12 +1499,28 @@ type configPrivate struct {
 
 func init() { network.RegisterMessages(&configPrivate{}) }
 
-func getDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
-	var xrep []byte
+func stringToDarcID(id string) ([]byte, error) {
+	if id == "" {
+		return nil, errors.New("no string given")
+	}
 	if strings.HasPrefix(id, "darc:") {
 		id = id[5:]
 	}
-	_, err := fmt.Sscanf(id, "%x", &xrep)
+	return hex.DecodeString(id)
+}
+
+func stringToEd25519Buf(pub string) ([]byte, error) {
+	if pub == "" {
+		return nil, errors.New("no string given")
+	}
+	if strings.HasPrefix(pub, "ed25519:") {
+		pub = pub[8:]
+	}
+	return hex.DecodeString(pub)
+}
+
+func getDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
+	xrep, err := stringToDarcID(id)
 	if err != nil {
 		return nil, err
 	}
