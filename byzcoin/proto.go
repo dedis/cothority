@@ -57,7 +57,7 @@ type CreateGenesisBlock struct {
 	Version Version
 	// Roster defines which nodes participate in the skipchain.
 	Roster onet.Roster
-	// GenesisDarc defines who is allowed to write to this skipchain.
+	// AdminDarc defines who is allowed to write to this skipchain.
 	GenesisDarc darc.Darc
 	// BlockInterval in int64.
 	BlockInterval time.Duration
