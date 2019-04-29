@@ -68,13 +68,6 @@ func NewWrite(suite suites.Suite, ltsid byzcoin.InstanceID, writeDarc darc.ID, X
 	return wr
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // CheckProof verifies that the write-request has actually been created with
 // somebody having access to the secret key.
 func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
