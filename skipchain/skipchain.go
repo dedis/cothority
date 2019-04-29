@@ -27,7 +27,6 @@ import (
 	"go.dedis.ch/cothority/v3/messaging"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
@@ -39,6 +38,8 @@ import (
 const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
+const bdnNewBlock = "SkipchainBDNNew"
+const bdnFollowBlock = "SkipchainBDNFollow"
 
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
@@ -215,6 +216,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		random.Bytes(bl[:], random.New())
 		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl[:])}
 		prop.GenesisID = nil
+		prop.SignatureScheme = BdnSignatureSchemeIndex
 		prop.updateHash()
 		err := s.verifyBlock(prop)
 		if err != nil {
@@ -296,6 +298,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		prop.Index = prev.Index + 1
 		prop.GenesisID = scID
 		prop.ForwardLink = []*ForwardLink{}
+		prop.SignatureScheme = prev.SignatureScheme
 		// And calculate the height of that block.
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
@@ -1075,7 +1078,8 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
 	}
 	fwd := NewForwardLink(src, dst)
-	sig, err := s.startBFT(bftNewBlock, roster, dst.Roster, fwd.Hash(), data)
+	protoName, _ := src.SignatureProtocol()
+	sig, err := s.startBFT(protoName, roster, dst.Roster, fwd.Hash(), data)
 	if err != nil {
 		log.Error(s.ServerIdentity().Address, "startBFT failed with", err)
 		return err
@@ -1124,41 +1128,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	// current conode needs to be in the propagation roster
 	newRoster = append(newRoster, s.ServerIdentity())
 	return s.startPropagation(s.propagateProof, onet.NewRoster(newRoster), &PropagateProof{proof})
-}
-
-func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byte, error) {
-	// load the mask of the new roster
-	newMask, err := cosi.NewMask(suite, newRoster.ServicePublics(ServiceName), nil)
-	if err != nil {
-		return nil, err
-	}
-	lenRes := suite.G1().PointLen()
-	if len(sig) < lenRes {
-		return nil, fmt.Errorf("signature is too short, got %v but need %v", len(sig), lenRes)
-	}
-	err = newMask.SetMask(sig[lenRes:])
-	if err != nil {
-		return nil, err
-	}
-
-	// initialise a new mask for the original roster
-	origMask, err := cosi.NewMask(suite, origRoster.ServicePublics(ServiceName), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// map the mask of the new roster to the original roster
-	for i, pk := range origRoster.ServicePublics(ServiceName) {
-		ok, err := newMask.KeyEnabled(pk)
-		if err != nil {
-			return nil, err
-		}
-		err = origMask.SetBit(i, ok)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return append(sig[:lenRes], origMask.Mask()...), nil
 }
 
 // bftForwardLinkLevel0 makes sure that a signature-request for a forward-link
@@ -1335,7 +1304,8 @@ func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureRe
 			return nil, err
 		}
 		fl := NewForwardLink(from, fs.Newest)
-		sig, err := s.startBFT(bftFollowBlock, from.Roster, fs.Newest.Roster, fl.Hash(), data)
+		_, protoName := from.SignatureProtocol()
+		sig, err := s.startBFT(protoName, from.Roster, fs.Newest.Roster, fl.Hash(), data)
 		if err != nil {
 			return nil, errors.New("Couldn't get signature: " + err.Error())
 		}
@@ -1407,7 +1377,7 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		for i, fl := range fs.Links {
 			publics := newRoster.ServicePublics(ServiceName)
 
-			if err := fl.Verify(suite, publics); err != nil {
+			if err := fl.VerifyWithScheme(suite, publics, src.SignatureScheme); err != nil {
 				return errors.New("verification failed: " + err.Error())
 			}
 			if fl.NewRoster != nil {
@@ -1463,16 +1433,11 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 // order that is more likely to give us non-failing subleaders in the byzcoinx
 // protocol.
 func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
+	// Before BDN signatures, the new roster was used when it was a rotation so
+	// that subleaders were more likely to be alive. It doesn't work anymore with
+	// BDN signatures because the way coefficients are computed but the workaround
+	// is to generate the protocol tree differently (i.e. blscosi generation tree)
 	roster := origRoster
-	// If the aggregate public key of the two rosters are the same but
-	// their IDs are different, we use the new roster because the byzcoinx
-	// tree that we build from the nodes are more likely to have working
-	// subleaders.
-	var sameAggr bool
-	if newRoster != nil && !roster.ID.Equal(newRoster.ID) && roster.Aggregate.Equal(newRoster.Aggregate) {
-		roster = newRoster
-		sameAggr = true
-	}
 
 	if len(roster.List) == 0 {
 		return nil, errors.New("found empty Roster")
@@ -1516,15 +1481,6 @@ func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		log.Lvl3(s.ServerIdentity(), "bft-cosi done")
-
-		// If a different roster is used for startBFT than the source roster,
-		// then we need to change the mask to match it.
-		if sameAggr {
-			sig.Sig, err = mapMask(origRoster, roster, sig.Sig)
-			if err != nil {
-				return nil, err
-			}
-		}
 
 		return &sig, nil
 	case <-time.After(root.Timeout * 2):
@@ -1852,6 +1808,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Register ByzCoinX protocols for BLS
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bftNewBlock)
 	if err != nil {
@@ -1859,6 +1816,17 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
+	if err != nil {
+		return nil, err
+	}
+	// Register ByzCoinX protocols for BDN
+	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
+		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bdnNewBlock)
+	if err != nil {
+		return nil, err
+	}
+	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
+		s.bftForwardLink, s.bftForwardLinkAck, bdnFollowBlock)
 	if err != nil {
 		return nil, err
 	}

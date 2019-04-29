@@ -81,7 +81,12 @@ func genTrees(tree *onet.Tree, nSubtrees int) ([]*onet.Tree, error) {
 	nodesPerSubtree := (nNodes - 1) / nSubtrees
 	surplusNodes := (nNodes - 1) % nSubtrees
 
-	pointer := 0
+	// the sub-trees are generated starting after the root index as an
+	// optimization to the dead leader situation. In a normal situation,
+	// the root index is 0 and then this doesn't change anything but in
+	// the case of a leader change, the index 0 should be avoided because
+	// it is very likely that the node is not alive
+	pointer := (root + 1) % len(tree.Roster.List)
 	for i := 0; i < nSubtrees; i++ {
 		length := nodesPerSubtree + 1
 		if i < surplusNodes { // to handle surplus nodes
@@ -94,11 +99,8 @@ func genTrees(tree *onet.Tree, nSubtrees int) ([]*onet.Tree, error) {
 			if j == 0 {
 				nodes[j] = root
 			} else {
-				if pointer == root {
-					pointer++
-				}
 				nodes[j] = pointer
-				pointer++
+				pointer = (pointer + 1) % len(tree.Roster.List)
 			}
 		}
 

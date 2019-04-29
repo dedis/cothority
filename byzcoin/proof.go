@@ -101,7 +101,7 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
 			continue
 		}
-		if err = l.Verify(pairing.NewSuiteBn256(), publics); err != nil {
+		if err = l.VerifyWithScheme(pairing.NewSuiteBn256(), publics, p.Latest.SignatureScheme); err != nil {
 			return ErrorVerifySkipchain
 		}
 		if !l.From.Equal(sbID) {
