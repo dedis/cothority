@@ -24,6 +24,8 @@ import (
 type Contract interface {
 	// Verify returns nil if the instruction is valid with regard to the signature.
 	VerifyInstruction(ReadOnlyStateTrie, Instruction, []byte) error
+	// Verify returns nil if the instruction is valid with regard to the signature.
+	VerifyDeferedInstruction(ReadOnlyStateTrie, Instruction, []byte) error
 	// Spawn is used to spawn new instances
 	Spawn(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Invoke only modifies existing instances
@@ -60,6 +62,13 @@ func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction
 		return err
 	}
 	return nil
+}
+
+// VerifyDeferedInstruction is not implemented in a BasicContract. Types which
+// embed BasicContract must override this method if they want to support
+// deferred executions (using the Deferred contract).
+func (b BasicContract) VerifyDeferedInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	return notImpl("VerifyDeferedInstruction")
 }
 
 // Spawn is not implmented in a BasicContract. Types which embed BasicContract

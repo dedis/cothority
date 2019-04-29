@@ -260,14 +260,23 @@ func (instr Instruction) GetIdentityStrings() []string {
 // and then verify if the signature on the instruction can satisfy the rules of
 // the darc. An error is returned if any of the verification fails.
 func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
+	return instr.VerifyWithOption(st, msg, true)
+}
+
+// VerifyWithOption adds the ability to the Verify(...) method to specify if
+// the counters should be checked. This is used with the "defered" contract
+// where the clients sign the root instruction without the counters.
+func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, checkCounters bool) error {
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
 		return errors.New("lengh of identities does not match the length of signatures")
 	}
 
 	// check the signature counters
-	if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
-		return err
+	if checkCounters {
+		if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
+			return err
+		}
 	}
 
 	// get the valid DARC contract IDs from the configuration
@@ -291,9 +300,11 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 	}
 
 	// check the signature
+	// Save the identities that provide good signatures
+	goodIdentities := make([]string, 1)
 	for i := range instr.Signatures {
-		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err != nil {
-			return err
+		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
+			goodIdentities = append(goodIdentities, instr.SignerIdentities[i].String())
 		}
 	}
 
@@ -312,7 +323,7 @@ func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 		}
 		return d
 	}
-	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, instr.GetIdentityStrings()...)
+	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
 }
 
 // InstrType is the instruction type, which can be spawn, invoke or delete.
