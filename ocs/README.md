@@ -87,8 +87,8 @@ defined as follows:
 
 - `ByzCoin` - by giving a byzcoin-ID, CreateOCS will accept every proof of 
 an LTSInstance that can be verified using a stored byzcoin-ID
-- `X509Cert` - by giving a root-CA, CreateOCS will accept every request with
-policies signed by this root-CA 
+- `X509Cert` - the CAs defined in this policy will be used to verify the
+authentication 
 
 ## CreateOCS
 
@@ -98,8 +98,9 @@ ACCs is fulfilled:
 
 - `ByzCoin` - the proof given in the `Reencrypt` policy must be verifiable
 with one of the stored byzcoin-IDs
-- `X509Cert` - the certificate given in `Reencrypt` and `Reshare` must have
-been signed by one of the root-CAs 
+- `X509Cert` - a valid certificate signed by a threshold of CAs defined in
+`AddPolicyCreateOCS` must be present. Each certificate must include the
+`PolicyReencrypt`, `PolicyReshare`, and `Roster`
 
 The CreateOCS service endpoint returns a `LTSID` in the form of a 32 byte
 slice. This ID represents the group that created the distributed key. Any node
@@ -131,3 +132,4 @@ steps.
 
 For this operation, all nodes must be online. By default, a threshold of 2/3 of
 the nodes must be present for the decryption.
+

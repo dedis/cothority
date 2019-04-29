@@ -2,29 +2,14 @@ package ocs
 
 import (
 	"crypto/sha256"
-	"crypto/x509"
 	"errors"
-
-	"go.dedis.ch/cothority/v3/ocs/certs"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/kyber/v3"
-
-	"go.dedis.ch/onet/v3"
 )
-
-func (ocs CreateOCS) verify() error {
-	if err := ocs.PolicyReencrypt.verify(ocs.Roster); err != nil {
-		return err
-	}
-	if err := ocs.PolicyReshare.verify(ocs.Roster); err != nil {
-		return err
-	}
-	return nil
-}
 
 func (op OCSProof) Verify() error {
 	if len(op.Signatures) != len(op.Roster.List) {
@@ -32,12 +17,12 @@ func (op OCSProof) Verify() error {
 	}
 	msg, err := op.Message()
 	if err != nil {
-		return certs.Erret(err)
+		return Erret(err)
 	}
 	for i, si := range op.Roster.List {
 		err := schnorr.Verify(cothority.Suite, si.ServicePublic(ServiceName), msg, op.Signatures[i])
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 	}
 	return nil
@@ -53,54 +38,15 @@ func (op OCSProof) Message() ([]byte, error) {
 	}
 	buf, err := protobuf.Encode(&coc)
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	hash.Write(buf)
 	return hash.Sum(nil), nil
 }
 
-func (re Reshare) verify() error {
-	return errors.New("not yet implemented")
-}
-
-func (p Policy) verify(r onet.Roster) error {
-	if p.X509Cert != nil {
-		return p.X509Cert.verify(r)
-	}
-	if p.ByzCoin != nil {
-		return p.ByzCoin.verify(r)
-	}
-	return errors.New("need to have a policy for X509 or ByzCoin")
-}
-
-func (px PolicyX509Cert) verify(r onet.Roster) error {
-	// TODO: decide how to make sure the policy fits the reencryption / resharing
-	return nil
-}
-
-func (px PolicyByzCoin) verify(r onet.Roster) error {
-	return certs.Erret(errors.New("not yet implemented"))
-}
-
-func (ar AuthReencrypt) verify(p Policy, X, U kyber.Point) error {
-	if ar.X509Cert == nil || p.X509Cert == nil {
-		return errors.New("currently only checking X509 policies")
-	}
-	root, err := x509.ParseCertificate(p.X509Cert.CA[0])
-	if err != nil {
-		return certs.Erret(err)
-	}
-	auth, err := x509.ParseCertificate(ar.X509Cert.Certificates[0])
-	if err != nil {
-		return certs.Erret(err)
-	}
-
-	return certs.Erret(certs.Verify(root, auth, X, U))
-}
-
 func (ar AuthReencrypt) Xc() (kyber.Point, error) {
 	if ar.X509Cert != nil {
-		return certs.GetPointFromCert(ar.X509Cert.Certificates[0], certs.EphemeralKeyOID)
+		return GetPointFromCert(ar.X509Cert.Certificates[0], OIDEphemeralKey)
 	}
 	if ar.ByzCoin != nil {
 		return nil, errors.New("can't get ephemeral key from ByzCoin yet")
@@ -124,6 +70,6 @@ func NewOCSID(X kyber.Point) (OCSID, error) {
 
 func (ocs OCSID) X() (kyber.Point, error) {
 	X := cothority.Suite.Point()
-	err := certs.Erret(X.UnmarshalBinary(ocs))
+	err := Erret(X.UnmarshalBinary(ocs))
 	return X, err
 }

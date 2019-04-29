@@ -1,0 +1,7 @@
+- multi_sig - work on ocs-module (2019-04-30):
+    - removed 'C' from ocs.ReencryptReply
+    - enable threshold > 1 for policies
+    - change CA dependencies to have independent CAs for CreateOCS and Reencrypt policies
+    - add AuthCreateOCS to ocs.CreateOCS call, which needs an ExtraExtension for the Policies
+    - changed Policy to PolicyCreate, PolicyReencrypt, and PolicyReshare
+    - correct use of PolicyReencrypt and PolicyReshare

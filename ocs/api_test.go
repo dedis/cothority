@@ -6,8 +6,6 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/util/key"
 
-	"go.dedis.ch/onet/v3/log"
-
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/onet/v3"
 )
@@ -19,18 +17,16 @@ func TestClient_GetProofs(t *testing.T) {
 	nbrNodes := 5
 	_, roster, _ := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 
-	_, caCert, err := CreateCertCa()
-	require.NoError(t, err)
-
-	px := Policy{
-		X509Cert: &PolicyX509Cert{
-			CA:        [][]byte{caCert.Raw},
-			Threshold: 1,
-		},
-	}
+	cc := newCaCerts(2, 1, 1)
 
 	cl := NewClient()
-	oid, err := cl.CreateOCS(*roster, px, px)
+	for _, si := range roster.List {
+		err := cl.AddPolicyCreateOCS(si, cc.policyCreate)
+		require.NoError(t, err)
+	}
+	oid, err := cl.CreateOCS(*roster, cc.authCreate(1, *roster), cc.policyReencrypt, cc.policyReshare)
+	require.Error(t, err)
+	oid, err = cl.CreateOCS(*roster, cc.authCreate(2, *roster), cc.policyReencrypt, cc.policyReshare)
 	require.NoError(t, err)
 
 	op, err := cl.GetProofs(*roster, oid)
@@ -45,21 +41,17 @@ func TestClient_Reencrypt(t *testing.T) {
 	nbrNodes := 5
 	_, roster, _ := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 
-	caPrivKey, caCert, err := CreateCertCa()
-	require.NoError(t, err)
-	log.Lvl5(caPrivKey)
-
-	px := Policy{
-		X509Cert: &PolicyX509Cert{
-			CA:        [][]byte{caCert.Raw},
-			Threshold: 1,
-		},
-	}
+	cc := newCaCerts(1, 2, 2)
 
 	cl := NewClient()
+	for _, si := range roster.List {
+		err := cl.AddPolicyCreateOCS(si, cc.policyCreate)
+		require.NoError(t, err)
+	}
 	var oid OCSID
+	var err error
 	for i := 0; i < 10; i++ {
-		oid, err = cl.CreateOCS(*roster, px, px)
+		oid, err = cl.CreateOCS(*roster, cc.authCreate(1, *roster), cc.policyReencrypt, cc.policyReshare)
 		require.NoError(t, err)
 	}
 
@@ -72,15 +64,16 @@ func TestClient_Reencrypt(t *testing.T) {
 	kp := key.NewKeyPair(cothority.Suite)
 	wid, err := NewWriteID(X, U)
 	require.NoError(t, err)
-	reencryptCert, err := CreateCertReencrypt(caCert, caPrivKey, wid, kp.Public)
-	require.NoError(t, err)
 	auth := AuthReencrypt{
 		Ephemeral: kp.Public,
 		X509Cert: &AuthReencryptX509Cert{
 			U:            U,
-			Certificates: [][]byte{reencryptCert.Raw},
+			Certificates: cc.authReencrypt(1, wid, kp.Public),
 		},
 	}
+	_, err = cl.Reencrypt(*roster, oid, auth)
+	require.Error(t, err)
+	auth.X509Cert.Certificates = cc.authReencrypt(2, wid, kp.Public)
 	for i := 0; i < 10; i++ {
 		XhatEnc, err := cl.Reencrypt(*roster, oid, auth)
 		require.NoError(t, err)

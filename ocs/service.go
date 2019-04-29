@@ -12,8 +12,6 @@ import (
 	"os"
 	"time"
 
-	"go.dedis.ch/cothority/v3/ocs/certs"
-
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/kyber/v3/suites"
@@ -103,29 +101,35 @@ func (s *Service) AddPolicyCreateOCS(req *AddPolicyCreateOCS) (reply *AddPolicyC
 // participate in the DKG. Every node will store its private key and wait for
 // decryption requests.
 func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
-	if err = req.verify(); err != nil {
-		return nil, certs.Erret(err)
+	s.storage.Lock()
+	policies := s.storage.PolicyCreateOCS
+	s.storage.Unlock()
+	if err = req.verifyAuth(policies); err != nil {
+		return nil, Erret(err)
+	}
+	if len(req.Roster.List) <= 1 {
+		return nil, errors.New("need at least 2 nodes for DKG")
 	}
 
 	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
 	cfgBuf, err := protobuf.Encode(req)
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
 	err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 
 	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
@@ -134,18 +138,18 @@ func (s *Service) CreateOCS(req *CreateOCS) (reply *CreateOCSReply, err error) {
 	case <-setupDKG.Finished:
 		shared, dks, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, certs.Erret(err)
+			return nil, Erret(err)
 		}
 		ocsID, err := NewOCSID(shared.X)
 		if err != nil {
-			return nil, certs.Erret(err)
+			return nil, Erret(err)
 		}
 		reply = &CreateOCSReply{
 			OcsID: ocsID,
 		}
 		oid, err = shared.X.MarshalBinary()
 		if err != nil {
-			return nil, certs.Erret(err)
+			return nil, Erret(err)
 		}
 		s.storage.Lock()
 		s.storage.Element[string(oid)] = &storageElement{
@@ -186,11 +190,11 @@ func (s *Service) GetProof(req *GetProof) (reply *GetProofReply, err error) {
 	}
 	msg, err := reply.Proof.Message()
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	sig, err := schnorr.Sign(cothority.Suite, s.ServerIdentity().ServicePrivate(ServiceName), msg)
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	reply.Proof.Signatures = [][]byte{sig}
 	return
@@ -223,23 +227,23 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 		tree := es.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 		pi, err := s.CreateProtocol(NameOCS, tree)
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 		ocsProto = pi.(*OCS)
 		ocsProto.U, err = dkr.Auth.U()
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 		X, err := dkr.OcsID.X()
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
-		if err = dkr.Auth.verify(es.PolicyReencrypt, X, ocsProto.U); err != nil {
-			return certs.Erret(err)
+		if err = es.PolicyReencrypt.verify(dkr.Auth, X, ocsProto.U); err != nil {
+			return Erret(err)
 		}
 		ocsProto.Xc, err = dkr.Auth.Xc()
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 		log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsProto.Xc)
 		ocsProto.VerificationData, err = protobuf.Encode(&dkr.Auth)
@@ -269,11 +273,11 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	log.Lvl3("Starting reencryption protocol", ocsProto.TreeNodeInstance.TokenID())
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: dkr.OcsID})
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	if !<-ocsProto.Reencrypted {
 		return nil, errors.New("reencryption got refused")
@@ -282,10 +286,10 @@ func (s *Service) Reencrypt(dkr *Reencrypt) (reply *ReencryptReply, err error) {
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	if err != nil {
-		return nil, certs.Erret(err)
+		return nil, Erret(err)
 	}
 	log.Lvl3("Successfully reencrypted the key")
 	return
@@ -416,7 +420,9 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := cfg.verify(); err != nil {
+		s.storage.Lock()
+		defer s.storage.Unlock()
+		if err := cfg.verifyAuth(s.storage.PolicyCreateOCS); err != nil {
 			return nil, err
 		}
 
@@ -464,7 +470,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := cfg.verify(); err != nil {
+		s.storage.Lock()
+		id := string(cfg.OcsID)
+		es, found := s.storage.Element[id]
+		s.storage.Unlock()
+		if !found {
+			// TODO: we might not have this yet - so probably we need to put the old roster in cfg, too.
+			return nil, errors.New("this OCSID is not known here")
+		}
+		if err := es.PolicyReshare.verify(cfg.Auth, cfg.NewRoster); err != nil {
 			return nil, err
 		}
 
@@ -476,13 +490,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.KeyPair = s.getKeyPair()
 
-		s.storage.Lock()
-		id := string(cfg.OcsID)
-		es, found := s.storage.Element[id]
-		if !found {
-			// TODO: we might not have this yet - so probably we need to put the old roster in cfg, too.
-			return nil, errors.New("this OCSID is not known here")
-		}
 		oldNodes := es.Roster.Publics()
 		n := len(tn.Roster().List)
 		c := &dkg.Config{
@@ -501,7 +508,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			// TODO: add commits here
 			//c.PublicCoeffs = cfg.Commits
 		}
-		s.storage.Unlock()
 
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
@@ -588,7 +594,6 @@ func pointInList(p1 kyber.Point, l []kyber.Point) bool {
 
 // verifyReencryption checks that the read and the write instances match.
 func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
-	// TODO: check the correct authentication
 	err := func() error {
 		if rc.VerificationData == nil {
 			return errors.New("need verification data")
@@ -596,11 +601,11 @@ func (s *Service) verifyReencryption(rc *MessageReencrypt) bool {
 		var arc AuthReencrypt
 		err := protobuf.DecodeWithConstructors(*rc.VerificationData, &arc, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 		Xc, err := arc.Xc()
 		if err != nil {
-			return certs.Erret(err)
+			return Erret(err)
 		}
 		if !Xc.Equal(rc.Xc) {
 			return errors.New("xcs don't match up")

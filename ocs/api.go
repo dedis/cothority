@@ -2,7 +2,6 @@ package ocs
 
 import (
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/ocs/certs"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -24,8 +23,11 @@ func NewClient() *Client {
 }
 
 // AddPolicyCreateOCS stores who is allowed to create new OCS instances.
-func (c *Client) AddPolicyCreateOCS(si *network.ServerIdentity, policy Policy) error {
-	return c.SendProtobuf(si, &AddPolicyCreateOCS{Create: policy}, nil)
+//
+// This can only be called from localhost, except if the environment variable
+// COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
+func (c *Client) AddPolicyCreateOCS(si *network.ServerIdentity, policyCreate PolicyCreate) error {
+	return c.SendProtobuf(si, &AddPolicyCreateOCS{Create: policyCreate}, nil)
 }
 
 // CreateOCS starts a new Distributed Key Generation with the nodes in the roster and
@@ -34,16 +36,15 @@ func (c *Client) AddPolicyCreateOCS(si *network.ServerIdentity, policy Policy) e
 //
 // It also sets up an authorisation option for the nodes.
 //
-// This can only be called from localhost, except if the environment variable
-// COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
-//
 // In case of error, X is nil, and the error indicates what is wrong.
 // The `sig` returned is a collective signature on the following hash:
 //   sha256( X | protobuf.Encode(auth) )
-func (c *Client) CreateOCS(roster onet.Roster, policyReencrypt, policyReshare Policy) (OcsID OCSID, err error) {
+func (c *Client) CreateOCS(roster onet.Roster, auth AuthCreate, policyReencrypt PolicyReencrypt,
+	policyReshare PolicyReshare) (OcsID OCSID, err error) {
 	var ret CreateOCSReply
 	err = c.SendProtobuf(roster.List[0], &CreateOCS{
 		Roster:          roster,
+		Auth:            auth,
 		PolicyReencrypt: policyReencrypt,
 		PolicyReshare:   policyReshare,
 	}, &ret)
@@ -62,7 +63,7 @@ func (c *Client) GetProofs(roster onet.Roster, OcsID OCSID) (op OCSProof, err er
 		var reply GetProofReply
 		err = c.SendProtobuf(si, &GetProof{OcsID}, &reply)
 		if err != nil {
-			err = certs.Erret(err)
+			err = Erret(err)
 			return
 		}
 		if len(op.Signatures) == 0 {
