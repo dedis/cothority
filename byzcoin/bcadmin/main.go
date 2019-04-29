@@ -36,7 +36,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func init() {
@@ -70,12 +70,12 @@ var cmds = cli.Commands{
 		ArgsUsage: "roster.toml [bcid]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "darc, ad",
-				Usage: "a darc that has 'evolve_unrestricted'",
+				Name:  "admindarc, ad",
+				Usage: "the admin darc that has 'evolve_unrestricted'",
 			},
 			cli.StringFlag{
-				Name:  "pub, ap",
-				Usage: "the public key with rights to sign on the darc",
+				Name:  "adminpub, ap",
+				Usage: "the public key of the admin to use",
 			},
 		},
 		Action: link,
@@ -117,8 +117,14 @@ var cmds = cli.Commands{
 				ArgsUsage: "ip:port",
 			},
 			{
-				Name:      "dump",
-				Usage:     "dumps a given byzcoin instance",
+				Name:  "dump",
+				Usage: "dumps a given byzcoin instance",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "verbose, v",
+						Usage: "print more information of the instances",
+					},
+				},
 				Action:    debugDump,
 				ArgsUsage: "ip:port byzcoin-id",
 			},
@@ -190,6 +196,10 @@ var cmds = cli.Commands{
 				Name:  "save",
 				Usage: "file in which the user wants to save the public key instead of printing it",
 			},
+			cli.StringFlag{
+				Name:  "print",
+				Usage: "print the private and public key",
+			},
 		},
 		Action: key,
 	},
@@ -211,7 +221,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the darc to show (the admin darc from the BC config)",
+						Usage: "the darc to show (no default)",
 					},
 				},
 			},
@@ -371,7 +381,7 @@ func create(c *cli.Context) error {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 
-	req, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, r, []string{}, owner.Identity())
+	req, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, r, []string{"spawn:longTermSecret"}, owner.Identity())
 	if err != nil {
 		log.Error(err)
 		return err
@@ -399,8 +409,14 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintf(c.App.Writer, "Created ByzCoin with ID %x.\n", cfg.ByzCoinID)
-	fmt.Fprintf(c.App.Writer, "export BC=\"%v\"\n", fn)
+	_, err = fmt.Fprintf(c.App.Writer, "Created ByzCoin with ID %x.\n", cfg.ByzCoinID)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(c.App.Writer, "export BC=\"%v\"\n", fn)
+	if err != nil {
+		return err
+	}
 
 	// For the tests to use.
 	c.App.Metadata["BC"] = fn
@@ -477,19 +493,12 @@ func link(c *cli.Context) error {
 		}
 		ad := &darc.Darc{}
 		adPub := cothority.Suite.Point()
-		if adIDStr := c.String("darc"); len(adIDStr) == 69 {
-			adID, err := hex.DecodeString(adIDStr[5:])
+		// Accept both plain-darcs, as well as "darc:...." darcs
+		adID, err := stringToDarcID(c.String("admindarc"))
+		if err == nil {
+			adPubBuf, err := stringToEd25519Buf(c.String("adminpub"))
 			if err != nil {
-				return errors.New("couldn't parse given admin: " + err.Error())
-			}
-			var adPubBuf []byte
-			if pubStr := c.String("pub"); len(pubStr) == 72 {
-				adPubBuf, err = hex.DecodeString(pubStr[8:])
-				if len(adPubBuf) != 32 || err != nil {
-					return errors.New("please give valid admin public key in hex: " + err.Error())
-				}
-			} else {
-				return errors.New("please give a key in the following format: ed25519:public_key_in_hex")
+				return err
 			}
 			adPub = cothority.Suite.Point()
 			if err = adPub.UnmarshalBinary(adPubBuf); err != nil {
@@ -554,13 +563,24 @@ func latest(c *cli.Context) error {
 		return errors.New("server index out of range")
 	}
 
-	fmt.Fprintln(c.App.Writer, "ByzCoinID:", fmt.Sprintf("%x", cfg.ByzCoinID))
-	fmt.Fprintf(c.App.Writer, "Admin DARC: %x\n", cfg.AdminDarc.GetBaseID())
-	fmt.Fprintln(c.App.Writer, "local roster:", fmtRoster(&cfg.Roster))
-	fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
+	_, err = fmt.Fprintf(c.App.Writer, "ByzCoinID: %x\n", cfg.ByzCoinID)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(c.App.Writer, "Admin DARC: %x\n", cfg.AdminDarc.GetBaseID())
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(c.App.Writer, "local roster:", fmtRoster(&cfg.Roster))
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
+	if err != nil {
+		return err
+	}
 
-	// Find the latest block by way of asking for the Proof of the
-	// config instance.
+	// Find the latest block by asking for the Proof of the config instance.
 	p, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return err
@@ -572,15 +592,21 @@ func latest(c *cli.Context) error {
 	}
 
 	sb := p.Proof.Latest
-	fmt.Fprintf(c.App.Writer, "Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n\tBackLinks: %d\n\tRoster: %s\n\n",
+	_, err = fmt.Fprintf(c.App.Writer, "Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n\tBackLinks: %d\n\tRoster: %s\n\n",
 		sb.Index, sb.Height, len(sb.BackLinkIDs), fmtRoster(sb.Roster))
+	if err != nil {
+		return err
+	}
 
 	if c.Bool("update") {
 		cfg.Roster = *sb.Roster
 		var fn string
 		fn, err = lib.SaveConfig(cfg)
 		if err == nil {
-			fmt.Fprintln(c.App.Writer, "updated config file:", fn)
+			_, err = fmt.Fprintln(c.App.Writer, "updated config file:", fn)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -654,7 +680,12 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *da
 		err = fmt.Errorf("couldn't open %v: %v", fn, err.Error())
 		return
 	}
-	defer grf.Close()
+	defer func() {
+		err := grf.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 	gr, err := app.ReadGroupDescToml(grf)
 	if err != nil {
 		err = fmt.Errorf("couldn't load %v: %v", fn, err.Error())
@@ -779,9 +810,18 @@ func mint(c *cli.Context) error {
 		}
 		pubI := darc.NewIdentityEd25519(pub)
 		rules := darc.NewRules()
-		rules.AddRule(darc.Action("spawn:coin"), expression.Expr(signer.Identity().String()))
-		rules.AddRule(darc.Action("invoke:coin.transfer"), expression.Expr(pubI.String()))
-		rules.AddRule(darc.Action("invoke:coin.mint"), expression.Expr(signer.Identity().String()))
+		err = rules.AddRule(darc.Action("spawn:coin"), expression.Expr(signer.Identity().String()))
+		if err != nil {
+			return err
+		}
+		err = rules.AddRule(darc.Action("invoke:coin.transfer"), expression.Expr(pubI.String()))
+		if err != nil {
+			return err
+		}
+		err = rules.AddRule(darc.Action("invoke:coin.mint"), expression.Expr(signer.Identity().String()))
+		if err != nil {
+			return err
+		}
 		d := darc.NewDarc(rules, []byte("new coin for mba"))
 		dBuf, err := d.ToProto()
 		if err != nil {
@@ -803,7 +843,7 @@ func mint(c *cli.Context) error {
 				SignerCounter: counters,
 			}},
 		}
-		ctx.FillSignersAndSignWith(*signer)
+		err = ctx.FillSignersAndSignWith(*signer)
 		if err != nil {
 			return err
 		}
@@ -812,7 +852,7 @@ func mint(c *cli.Context) error {
 			return err
 		}
 
-		log.Info("Spawning coin")
+		log.Info("Creating coin")
 		counters[0]++
 		ctx = byzcoin.ClientTransaction{
 			Instructions: byzcoin.Instructions{{
@@ -825,7 +865,7 @@ func mint(c *cli.Context) error {
 							Value: contracts.CoinName.Slice(),
 						},
 						{
-							Name:  "public",
+							Name:  "coinID",
 							Value: pubBuf,
 						},
 					},
@@ -833,7 +873,7 @@ func mint(c *cli.Context) error {
 				SignerCounter: counters,
 			}},
 		}
-		ctx.FillSignersAndSignWith(*signer)
+		err = ctx.FillSignersAndSignWith(*signer)
 		if err != nil {
 			return err
 		}
@@ -964,6 +1004,15 @@ func rosterLeader(c *cli.Context) error {
 }
 
 func key(c *cli.Context) error {
+	if f := c.String("print"); f != "" {
+		sig, err := lib.LoadSigner(f)
+		if err != nil {
+			return errors.New("couldn't load signer: " + err.Error())
+		}
+		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
+		//log.Infof("Private: 65642e706f696e74%s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
+		return nil
+	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
 	err := lib.SaveKey(newSigner)
 	if err != nil {
@@ -981,10 +1030,15 @@ func key(c *cli.Context) error {
 			return err
 		}
 		fo = file
-		defer file.Close()
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Error(err)
+			}
+		}()
 	}
-	fmt.Fprintln(fo, newSigner.Identity().String())
-	return nil
+	_, err = fmt.Fprintln(fo, newSigner.Identity().String())
+	return err
 }
 
 func darcShow(c *cli.Context) error {
@@ -1007,8 +1061,8 @@ func darcShow(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(c.App.Writer, d.String())
-	return nil
+	_, err = fmt.Fprintln(c.App.Writer, d.String())
+	return err
 }
 
 func debugList(c *cli.Context) error {
@@ -1074,6 +1128,19 @@ func debugDump(c *cli.Context) error {
 	})
 	for _, inst := range resp.Dump {
 		log.Infof("%x / %d: %s", inst.Key, inst.State.Version, string(inst.State.ContractID))
+		if c.Bool("verbose") {
+			switch inst.State.ContractID {
+			case byzcoin.ContractDarcID:
+				d, err := darc.NewFromProtobuf(inst.State.Value)
+				if err != nil {
+					log.Warn("Didn't recognize as a darc instance")
+				}
+				log.Infof("\tDesc: %s, Rules:", string(d.Description))
+				for _, r := range d.Rules.List {
+					log.Infof("\tAction: %s - Expression: %s", r.Action, r.Expr)
+				}
+			}
+		}
 	}
 
 	return nil
@@ -1168,7 +1235,10 @@ func darcAdd(c *cli.Context) error {
 		}
 	} else {
 		s := darc.NewSignerEd25519(nil, nil)
-		lib.SaveKey(s)
+		err = lib.SaveKey(s)
+		if err != nil {
+			return err
+		}
 		identity = s.Identity()
 		newSigner = &s
 	}
@@ -1204,7 +1274,7 @@ func darcAdd(c *cli.Context) error {
 	spawn := byzcoin.Spawn{
 		ContractID: byzcoin.ContractDarcID,
 		Args: []byzcoin.Argument{
-			byzcoin.Argument{
+			{
 				Name:  "darc",
 				Value: dBuf,
 			},
@@ -1230,7 +1300,10 @@ func darcAdd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintln(c.App.Writer, d.String())
+	_, err = fmt.Fprintln(c.App.Writer, d.String())
+	if err != nil {
+		return err
+	}
 
 	// Saving ID in special file
 	output := c.String("out_id")
@@ -1298,7 +1371,10 @@ func darcRule(c *cli.Context) error {
 	}
 
 	d2 := d.Copy()
-	d2.EvolveFrom(d)
+	err = d2.EvolveFrom(d)
+	if err != nil {
+		return err
+	}
 
 	switch {
 	case c.Bool("delete"):
@@ -1324,7 +1400,7 @@ func darcRule(c *cli.Context) error {
 		ContractID: byzcoin.ContractDarcID,
 		Command:    "evolve_unrestricted",
 		Args: []byzcoin.Argument{
-			byzcoin.Argument{
+			{
 				Name:  "darc",
 				Value: d2Buf,
 			},
@@ -1423,32 +1499,28 @@ type configPrivate struct {
 
 func init() { network.RegisterMessages(&configPrivate{}) }
 
-func readRoster(r io.Reader) (*onet.Roster, error) {
-	group, err := app.ReadGroupDescToml(r)
-	if err != nil {
-		return nil, err
+func stringToDarcID(id string) ([]byte, error) {
+	if id == "" {
+		return nil, errors.New("no string given")
 	}
-
-	if len(group.Roster.List) == 0 {
-		return nil, errors.New("empty roster")
-	}
-	return group.Roster, nil
-}
-
-func rosterToServers(r *onet.Roster) []network.Address {
-	out := make([]network.Address, len(r.List))
-	for i := range r.List {
-		out[i] = r.List[i].Address
-	}
-	return out
-}
-
-func getDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
-	var xrep []byte
 	if strings.HasPrefix(id, "darc:") {
 		id = id[5:]
 	}
-	_, err := fmt.Sscanf(id, "%x", &xrep)
+	return hex.DecodeString(id)
+}
+
+func stringToEd25519Buf(pub string) ([]byte, error) {
+	if pub == "" {
+		return nil, errors.New("no string given")
+	}
+	if strings.HasPrefix(pub, "ed25519:") {
+		pub = pub[8:]
+	}
+	return hex.DecodeString(pub)
+}
+
+func getDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
+	xrep, err := stringToDarcID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -1481,17 +1553,4 @@ func getDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 	}
 
 	return d, nil
-}
-
-func combineInstrsAndSign(signer darc.Signer, instrs ...byzcoin.Instruction) (byzcoin.ClientTransaction, error) {
-	t := byzcoin.ClientTransaction{
-		Instructions: instrs,
-	}
-	h := t.Instructions.Hash()
-	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(h, signer); err != nil {
-			return t, err
-		}
-	}
-	return t, nil
 }

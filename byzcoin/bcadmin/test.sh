@@ -42,13 +42,16 @@ testLink(){
   testOK runBA create public.toml --interval .5s
   bc=config/bc*cfg
   key=config/key*cfg
+  runBA key --save newkey.id
+  testOK runBA darc add --bc $bc --owner $( cat newkey.id ) --out_id darc.id
+
   rm -rf linkDir
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  testGrep $bcID runBA -c linkDri link public.toml
+  testGrep $bcID runBA -c linkDir link public.toml
   bcIDWrong=$( printf "%032d" 1234 )
-  testNGrep $bcIDWrong runBA -c linkDri link public.toml
+  testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
-  testOK runBA -c linkDir link public.toml $bcID
+  testOK runBA -c linkDir link --admindarc $( cat darc.id ) --adminpub $( cat newkey.id ) public.toml $bcID
   testFile linkDir/bc*
 }
 
@@ -58,7 +61,8 @@ testCoin(){
   testOK runBA create public.toml --interval .5s
   bc=config/bc*cfg
   key=config/key*cfg
-  testOK runBA mint $bc $key 0000000000000000000000000000000000000000000000000000000000000000 10000
+  keyPub=$( echo $key | sed -e "s/.*key-ed25519:\(.*\).cfg/\1/" )
+  testOK runBA mint $bc $key $keyPub 10000
 }
 
 testRoster(){
@@ -84,6 +88,7 @@ testRoster(){
   # Change the block size to create a new block before verifying the roster
   testOK runBA config --blockSize 1000000 $bc $key
   sleep 10
+
   testNGrep "Roster:.*tls://localhost:2004" runBA latest $bc
   # Need at least 3 nodes to have a majority
   testFail runBA roster del $bc $key co3/public.toml
