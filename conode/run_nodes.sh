@@ -60,7 +60,8 @@ shift $((OPTIND-1))
 
 [ "${1:-}" = "--" ] && shift
 
-if [ ! -x ./conode ]; then
+CONODE_BIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/conode
+if [ ! -x $CONODE_BIN ]; then
 	echo "No conode executable found. Use \"go build\" to make it."
 	exit 1
 fi
@@ -80,7 +81,7 @@ for n in $( seq $nbr_nodes -1 1 ); do
   co=co$n
   PORT=$(($base_port + 2 * n - 2))
   if [ ! -d $co ]; then
-    echo -e "$base_ip:$PORT\nConode_$n\n$co" | ./conode setup
+    echo -e "$base_ip:$PORT\nConode_$n\n$co" | $CONODE_BIN setup
   fi
   (
     LOG=log/conode_${co}_$PORT
@@ -89,9 +90,9 @@ for n in $( seq $nbr_nodes -1 1 ); do
     while [[ -f running ]]; do
       echo "Starting conode $LOG"
       if [[ "$SHOW" ]]; then
-        ./conode -d $verbose -c $co/private.toml server 2>&1 | tee $LOG-$(date +%y%m%d-%H%M).log
+        $CONODE_BIN -d $verbose -c $co/private.toml server 2>&1 | tee $LOG-$(date +%y%m%d-%H%M).log
       else
-        ./conode -d $verbose -c $co/private.toml server > $LOG-$(date +%y%m%d-%H%M).log 2>&1
+        $CONODE_BIN -d $verbose -c $co/private.toml server > $LOG-$(date +%y%m%d-%H%M).log 2>&1
       fi
       if [[ "$single" ]]; then
         echo "Will not restart conode in single mode."

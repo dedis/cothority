@@ -58,7 +58,14 @@ func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 
 	// Spawn creates a new coin account as a separate instance.
 	ca := inst.DeriveID("")
-	if coinID := inst.Spawn.Args.Search("coinID"); coinID != nil {
+	// Previous versions had the 'public' argument to define which coinID to create. Later versions
+	// use a more meaningful name of "coinID". For backwards-compatibility, we need both here, letting
+	// the previous "public" have precedence over an eventual later "coinID".
+	coinID := inst.Spawn.Args.Search("public")
+	if coinID == nil {
+		coinID = inst.Spawn.Args.Search("coinID")
+	}
+	if coinID != nil {
 		h := sha256.New()
 		h.Write([]byte(ContractCoinID))
 		h.Write(coinID)
