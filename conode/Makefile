@@ -76,4 +76,16 @@ bindist: clean verify exe/conode.Linux.x86_64
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
-	#rm -rf $(OUTPUT_DIR)
+	rm -rf $(OUTPUT_DIR)
+	ls -l $(OUTPUT_DIR).tar.gz
+
+tooldist: clean verify
+	rm -rf conode-tools-$(TAG)
+	mkdir conode-tools-$(TAG)
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/bcadmin ../byzcoin/bcadmin
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/status ../status
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/scmgr ../scmgr
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/evoting-admin ../evoting/evoting-admin
+	LANG=C tar zcf conode-tools-$(TAG).tar.gz conode-tools-$(TAG)
+	rm -rf conode-tools-$(TAG)
+	ls -l conode-tools-$(TAG).tar.gz
