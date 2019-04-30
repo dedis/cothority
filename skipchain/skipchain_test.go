@@ -60,6 +60,8 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
+	// make sure the correct default signature scheme is set to BDN
+	assert.Equal(t, BdnSignatureSchemeIndex, sbRoot.SignatureScheme)
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -76,6 +78,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
+	assert.Equal(t, BdnSignatureSchemeIndex, latest.SignatureScheme)
 	assert.Equal(t, blockCount-1, latest.Index)
 	// the genesis block has a random back-link:
 	assert.Equal(t, 1, len(latest.BackLinkIDs))

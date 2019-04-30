@@ -150,6 +150,9 @@ public class SkipBlock {
         return skipBlock.getBaseHeight();
     }
 
+    /**
+     * @return the signature scheme index for the block
+     */
     public int getSignatureScheme() {
         return skipBlock.getSignatureScheme();
     }

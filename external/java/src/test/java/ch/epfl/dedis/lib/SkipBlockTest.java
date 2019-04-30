@@ -3,8 +3,7 @@ package ch.epfl.dedis.lib;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SkipBlockTest {
     @Test
@@ -18,5 +17,9 @@ public class SkipBlockTest {
         assertEquals(sb.getRoster().getNodes().size(), 1);
         byte[] expectedHash = Hex.parseHexBinary("1304bd5ecad8d54a2fd7b81a8864f698966308104b20780b634c4b237b843823");
         assertArrayEquals(expectedHash, sb.getHash());
+
+        SkipBlock sb2 = new SkipBlock(sb.getProto().toBuilder().setSignatureScheme(1).build());
+        // expect a different hash because of the signature scheme
+        assertNotEquals(expectedHash, sb2.getHash());
     }
 }

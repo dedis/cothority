@@ -322,7 +322,7 @@ type SkipBlock struct {
 	// SkipBlockFix.Data to the sha256 of this payload. Then the proofs
 	// using the skipblocks can return simply the SkipBlockFix, as long as they
 	// don't need the payload.
-	Payload []byte
+	Payload []byte `protobuf:"opt"`
 
 	// SignatureScheme holds the index of the scheme to use to verify the signature.
 	SignatureScheme uint32
@@ -624,7 +624,7 @@ func (sbs Proof) verifyChain() error {
 // scheme at index i
 const (
 	// BlsSignatureSchemeIndex is the index for BLS signatures
-	BlsSignatureSchemeIndex = iota
+	BlsSignatureSchemeIndex = uint32(iota)
 	// BdnSignatureSchemeIndex is the index for BDN signatures
 	BdnSignatureSchemeIndex
 )
@@ -716,7 +716,7 @@ func (fl *ForwardLink) VerifyWithScheme(suite *pairing.SuiteBn256, pubs []kyber.
 	case BdnSignatureSchemeIndex:
 		return bdnproto.BdnSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
 	default:
-		return errors.New("Unknown signature scheme")
+		return errors.New("unknown signature scheme")
 	}
 }
 
