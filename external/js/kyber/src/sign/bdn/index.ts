@@ -55,6 +55,8 @@ function aggregatePoints(mask: Mask, points: Point[]) {
             const p = points[i].clone();
 
             p.mul(c, p);
+            // R is in the range [1; 2^128] inclusive thus (c + 1) * p
+            p.add(p, points[i]);
             if (agg == null) {
                 agg = p;
             } else {

@@ -3,7 +3,7 @@ import jsc from 'jsverify';
 import { BN256G2Point } from "../../../src/pairing/point";
 import BN256Scalar from "../../../src/pairing/scalar";
 import { Mask } from '../../../src/sign';
-import { aggregateSignatures, hashPointToR, sign, verify } from "../../../src/sign/bdn";
+import { aggregateSignatures, hashPointToR, sign, verify, aggregatePublicKeys } from "../../../src/sign/bdn";
 
 describe('BDN signatures Test', () => {
     it('should hash to R', () => {
@@ -17,6 +17,11 @@ describe('BDN signatures Test', () => {
         expect(coefs[0].toString('hex')).toBe('35b5b395f58aba3b192fb7e1e5f2abd3');
         expect(coefs[1].toString('hex')).toBe('14dcc79d46b09b93075266e47cd4b19e');
         expect(coefs[2].toString('hex')).toBe('933f6013eb3f654f9489d6d45ad04eaf');
+
+        const mask = new Mask([p1, p2, p3], Buffer.from([7]));
+        const agg = aggregatePublicKeys(mask);
+        const ref = '1432ef60379c6549f7e0dbaf289cb45487c9d7da91fc20648f319a9fbebb23164abea76cdf7b1a3d20d539d9fe096b1d6fb3ee31bf1d426cd4a0d09d603b09f55f473fde972aa27aa991c249e890c1e4a678d470592dd09782d0fb3774834f0b2e20074a49870f039848a6b1aff95e1a1f8170163c77098e1f3530744d1826ce';
+        expect(agg.marshalBinary().toString('hex')).toBe(ref);
     });
 
     it('should refuse to aggregate mismatching arrays', () => {
