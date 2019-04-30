@@ -6497,6 +6497,15 @@ public final class SkipchainProto {
      * <code>optional bytes payload = 12;</code>
      */
     com.google.protobuf.ByteString getPayload();
+
+    /**
+     * <code>optional uint32 signature_scheme = 13;</code>
+     */
+    boolean hasSignatureScheme();
+    /**
+     * <code>optional uint32 signature_scheme = 13;</code>
+     */
+    int getSignatureScheme();
   }
   /**
    * Protobuf type {@code skipchain.SkipBlock}
@@ -6522,6 +6531,7 @@ public final class SkipchainProto {
       hash_ = com.google.protobuf.ByteString.EMPTY;
       forward_ = java.util.Collections.emptyList();
       payload_ = com.google.protobuf.ByteString.EMPTY;
+      signatureScheme_ = 0;
     }
 
     @java.lang.Override
@@ -6624,6 +6634,11 @@ public final class SkipchainProto {
             case 98: {
               bitField0_ |= 0x00000100;
               payload_ = input.readBytes();
+              break;
+            }
+            case 104: {
+              bitField0_ |= 0x00000200;
+              signatureScheme_ = input.readUInt32();
               break;
             }
             default: {
@@ -6888,6 +6903,21 @@ public final class SkipchainProto {
       return payload_;
     }
 
+    public static final int SIGNATURE_SCHEME_FIELD_NUMBER = 13;
+    private int signatureScheme_;
+    /**
+     * <code>optional uint32 signature_scheme = 13;</code>
+     */
+    public boolean hasSignatureScheme() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional uint32 signature_scheme = 13;</code>
+     */
+    public int getSignatureScheme() {
+      return signatureScheme_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -6980,6 +7010,9 @@ public final class SkipchainProto {
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeBytes(12, payload_);
       }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeUInt32(13, signatureScheme_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -7046,6 +7079,10 @@ public final class SkipchainProto {
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(12, payload_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(13, signatureScheme_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -7114,6 +7151,11 @@ public final class SkipchainProto {
         result = result && getPayload()
             .equals(other.getPayload());
       }
+      result = result && (hasSignatureScheme() == other.hasSignatureScheme());
+      if (hasSignatureScheme()) {
+        result = result && (getSignatureScheme()
+            == other.getSignatureScheme());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -7172,6 +7214,10 @@ public final class SkipchainProto {
       if (hasPayload()) {
         hash = (37 * hash) + PAYLOAD_FIELD_NUMBER;
         hash = (53 * hash) + getPayload().hashCode();
+      }
+      if (hasSignatureScheme()) {
+        hash = (37 * hash) + SIGNATURE_SCHEME_FIELD_NUMBER;
+        hash = (53 * hash) + getSignatureScheme();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -7340,6 +7386,8 @@ public final class SkipchainProto {
         }
         payload_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000800);
+        signatureScheme_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
         return this;
       }
 
@@ -7427,6 +7475,10 @@ public final class SkipchainProto {
           to_bitField0_ |= 0x00000100;
         }
         result.payload_ = payload_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.signatureScheme_ = signatureScheme_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7548,6 +7600,9 @@ public final class SkipchainProto {
         }
         if (other.hasPayload()) {
           setPayload(other.getPayload());
+        }
+        if (other.hasSignatureScheme()) {
+          setSignatureScheme(other.getSignatureScheme());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -8377,6 +8432,38 @@ public final class SkipchainProto {
       public Builder clearPayload() {
         bitField0_ = (bitField0_ & ~0x00000800);
         payload_ = getDefaultInstance().getPayload();
+        onChanged();
+        return this;
+      }
+
+      private int signatureScheme_ ;
+      /**
+       * <code>optional uint32 signature_scheme = 13;</code>
+       */
+      public boolean hasSignatureScheme() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional uint32 signature_scheme = 13;</code>
+       */
+      public int getSignatureScheme() {
+        return signatureScheme_;
+      }
+      /**
+       * <code>optional uint32 signature_scheme = 13;</code>
+       */
+      public Builder setSignatureScheme(int value) {
+        bitField0_ |= 0x00001000;
+        signatureScheme_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 signature_scheme = 13;</code>
+       */
+      public Builder clearSignatureScheme() {
+        bitField0_ = (bitField0_ & ~0x00001000);
+        signatureScheme_ = 0;
         onChanged();
         return this;
       }
@@ -11395,21 +11482,21 @@ public final class SkipchainProto {
       "nks\030\002 \003(\0132\026.skipchain.ForwardLink\"\"\n\016Get" +
       "UpdateChain\022\020\n\010latestID\030\001 \002(\014\";\n\023GetUpda" +
       "teChainReply\022$\n\006update\030\001 \003(\0132\024.skipchain" +
-      ".SkipBlock\"\376\001\n\tSkipBlock\022\r\n\005index\030\001 \002(\021\022" +
+      ".SkipBlock\"\230\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\021\022" +
       "\016\n\006height\030\002 \002(\021\022\022\n\nmax_height\030\003 \002(\021\022\023\n\013b" +
       "ase_height\030\004 \002(\021\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tv" +
       "erifiers\030\006 \003(\014\022\017\n\007genesis\030\007 \002(\014\022\014\n\004data\030" +
       "\010 \002(\014\022\034\n\006roster\030\t \002(\0132\014.onet.Roster\022\014\n\004h" +
       "ash\030\n \002(\014\022\'\n\007forward\030\013 \003(\0132\026.skipchain.F" +
-      "orwardLink\022\017\n\007payload\030\014 \001(\014\"r\n\013ForwardLi" +
-      "nk\022\014\n\004from\030\001 \002(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoste" +
-      "r\030\003 \001(\0132\014.onet.Roster\022(\n\tsignature\030\004 \002(\013" +
-      "2\025.skipchain.ByzcoinSig\"&\n\nByzcoinSig\022\013\n" +
-      "\003msg\030\001 \002(\014\022\013\n\003sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n" +
-      "\tchallenge\030\001 \002(\014\022\020\n\010response\030\002 \002(\014\".\n\tEx" +
-      "ception\022\r\n\005index\030\001 \002(\021\022\022\n\ncommitment\030\002 \002" +
-      "(\014B)\n\027ch.epfl.dedis.lib.protoB\016Skipchain" +
-      "Proto"
+      "orwardLink\022\017\n\007payload\030\014 \001(\014\022\030\n\020signature" +
+      "_scheme\030\r \001(\r\"r\n\013ForwardLink\022\014\n\004from\030\001 \002" +
+      "(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014.onet" +
+      ".Roster\022(\n\tsignature\030\004 \002(\0132\025.skipchain.B" +
+      "yzcoinSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003" +
+      "sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002" +
+      "(\014\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005ind" +
+      "ex\030\001 \002(\021\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch.epfl." +
+      "dedis.lib.protoB\016SkipchainProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11483,7 +11570,7 @@ public final class SkipchainProto {
     internal_static_skipchain_SkipBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_SkipBlock_descriptor,
-        new java.lang.String[] { "Index", "Height", "MaxHeight", "BaseHeight", "Backlinks", "Verifiers", "Genesis", "Data", "Roster", "Hash", "Forward", "Payload", });
+        new java.lang.String[] { "Index", "Height", "MaxHeight", "BaseHeight", "Backlinks", "Verifiers", "Genesis", "Data", "Roster", "Hash", "Forward", "Payload", "SignatureScheme", });
     internal_static_skipchain_ForwardLink_descriptor =
       getDescriptor().getMessageTypes().get(10);
     internal_static_skipchain_ForwardLink_fieldAccessorTable = new

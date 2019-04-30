@@ -69,23 +69,23 @@ public class SkipBlock {
         bb.clear();
         bb.putInt(getBaseHeight());
         digest.update(bb.array());
+        bb.clear();
 
-        getBackLinks().forEach(bl -> {
-            digest.update(bl.getId());
-        });
-        getVerifiers().forEach(v -> {
-            digest.update(v);
-        });
+        getBackLinks().forEach(bl -> digest.update(bl.getId()));
+        getVerifiers().forEach(digest::update);
         try {
             digest.update(skipBlock.getGenesis().toByteArray());
             digest.update(getData());
             if (getRoster() != null) {
-                getRoster().getNodes().forEach(si -> {
-                    digest.update(si.getPublic().toBytes());
-                });
+                getRoster().getNodes().forEach(si -> digest.update(si.getPublic().toBytes()));
             }
         } catch (CothorityCryptoException e) {
             return null;
+        }
+
+        if (getSignatureScheme() > 0) {
+            bb.putInt(getSignatureScheme());
+            digest.update(bb.array());
         }
 
         return digest.digest();
@@ -150,6 +150,10 @@ public class SkipBlock {
         return skipBlock.getBaseHeight();
     }
 
+    public int getSignatureScheme() {
+        return skipBlock.getSignatureScheme();
+    }
+
     /**
      * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
      * if this is the tip of the chain.
@@ -182,7 +186,7 @@ public class SkipBlock {
                 // forward-link in place.
                 continue;
             }
-            if (!fl.verify(publics)) {
+            if (!fl.verifyWithScheme(publics, getSignatureScheme())) {
                 return false;
             }
         }

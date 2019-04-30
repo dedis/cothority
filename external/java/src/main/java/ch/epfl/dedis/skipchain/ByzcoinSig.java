@@ -1,9 +1,6 @@
 package ch.epfl.dedis.skipchain;
 
-import ch.epfl.dedis.lib.crypto.BlsSig;
-import ch.epfl.dedis.lib.crypto.Bn256G2Point;
-import ch.epfl.dedis.lib.crypto.Mask;
-import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.crypto.bn256.BN;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
@@ -17,6 +14,9 @@ import java.util.List;
  * ByzcoinSig represents a signature from the byzcoin-protocol. It holds both the message and the signature.
  */
 public class ByzcoinSig {
+    public static final int BLS_SIGNATURE_INDEX = 0;
+    public static final int BDN_SIGNATURE_INDEX = 1;
+
     private SkipchainProto.ByzcoinSig byzcoinSig;
 
     public ByzcoinSig(SkipchainProto.ByzcoinSig bs){
@@ -36,7 +36,19 @@ public class ByzcoinSig {
      * @param publics a list of signers
      * @return true if the signature is correct, false otherwise
      */
-    public boolean verify(List<Point> publics){
+    public boolean verify(List<Point> publics) {
+        return verifyWithScheme(publics, ByzcoinSig.BLS_SIGNATURE_INDEX);
+    }
+
+    /**
+     * Verifies the signature given a roster of potential signers
+     * and a signature scheme
+     *
+     * @param publics   a list of signers
+     * @param scheme    the signature scheme index
+     * @return true if the signature is correct, false otherwise
+     */
+    public boolean verifyWithScheme(List<Point> publics, int scheme) {
         if (publics == null || publics.size() == 0) {
             // no public keys provided
             return false;
@@ -66,15 +78,21 @@ public class ByzcoinSig {
             return false;
         }
 
-        BlsSig blsSig = new BlsSig(signature);
-        if (!blsSig.verify(this.getMsg(), (Bn256G2Point) mask.getAggregate())) {
-            return false;
-        }
-
         // policy default to at >= 3t+1 valid signatures, so make sure we have enough in the mask.
         int n = publics.size();
         int threshold = n - ((n - 1) / 3);
-        return mask.countEnabled() >= threshold;
+        if (mask.countEnabled() < threshold) {
+            return false;
+        }
+
+        switch (scheme) {
+            case BLS_SIGNATURE_INDEX:
+                return verifyBLS(mask, signature);
+            case BDN_SIGNATURE_INDEX:
+                return verifyBDN(mask, signature);
+            default:
+                return false;
+        }
     }
 
     /**
@@ -89,5 +107,15 @@ public class ByzcoinSig {
      */
     public byte[] getSignature(){
         return byzcoinSig.getSig().toByteArray();
+    }
+
+    private boolean verifyBLS(Mask mask, byte[] signature) {
+        BlsSig sig = new BlsSig(signature);
+        return sig.verify(this.getMsg(), (Bn256G2Point) mask.getAggregate());
+    }
+
+    private boolean verifyBDN(Mask mask, byte[] signature) {
+        BdnSig sig = new BdnSig(signature);
+        return sig.verify(this.getMsg(), mask);
     }
 }
