@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/qantik/qrgo"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -27,8 +26,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
@@ -111,10 +108,16 @@ var cmds = cli.Commands{
 		Aliases: []string{"d"},
 		Subcommands: cli.Commands{
 			{
-				Name:      "list",
-				Usage:     "Lists all byzcoin instances",
-				Action:    debugList,
-				ArgsUsage: "ip:port",
+				Name:   "list",
+				Usage:  "Lists all byzcoin instances",
+				Action: debugList,
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "verbose, v",
+						Usage: "print more information of the instances",
+					},
+				},
+				ArgsUsage: "(ip:port | group.toml)",
 			},
 			{
 				Name:  "dump",
@@ -675,27 +678,21 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *da
 		err = errors.New("no TOML file provided")
 		return
 	}
-	grf, err := os.Open(fn)
+	f, err := os.Open(fn)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	group, err := app.ReadGroupDescToml(f)
 	if err != nil {
 		err = fmt.Errorf("couldn't open %v: %v", fn, err.Error())
 		return
 	}
-	defer func() {
-		err := grf.Close()
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-	gr, err := app.ReadGroupDescToml(grf)
-	if err != nil {
-		err = fmt.Errorf("couldn't load %v: %v", fn, err.Error())
-		return
-	}
-	if len(gr.Roster.List) != 1 {
+	if len(group.Roster.List) != 1 {
 		err = errors.New("the TOML file should have exactly one entry")
 		return
 	}
-	pub = gr.Roster.List[0]
+	pub = group.Roster.List[0]
 
 	return
 }
@@ -1067,42 +1064,77 @@ func darcShow(c *cli.Context) error {
 
 func debugList(c *cli.Context) error {
 	if c.NArg() < 1 {
-		return errors.New("please give ip:port as argument")
+		return errors.New("please give (ip:port | group.toml) as argument")
 	}
 
-	resp, err := byzcoin.Debug(network.NewAddress(network.TLS, c.Args().First()), nil)
-	if err != nil {
-		return err
+	var urls []string
+	if f, err := os.Open(c.Args().First()); err == nil {
+		defer f.Close()
+		group, err := app.ReadGroupDescToml(f)
+		if err != nil {
+			return err
+		}
+		for _, si := range group.Roster.List {
+			if si.URL != "" {
+				urls = append(urls, si.URL)
+			} else {
+				p, err := strconv.Atoi(si.Address.Port())
+				if err != nil {
+					return err
+				}
+				urls = append(urls, fmt.Sprintf("http://%s:%d", si.Address.Host(), p+1))
+			}
+		}
+	} else {
+		urls = []string{c.Args().First()}
 	}
-	sort.SliceStable(resp.Byzcoins, func(i, j int) bool {
-		var iData byzcoin.DataHeader
-		var jData byzcoin.DataHeader
-		err := protobuf.Decode(resp.Byzcoins[i].Genesis.Data, &iData)
+
+	for _, url := range urls {
+		log.Info("Contacting ", url)
+		resp, err := byzcoin.Debug(url, nil)
 		if err != nil {
-			return false
+			log.Error(err)
+			continue
 		}
-		err = protobuf.Decode(resp.Byzcoins[j].Genesis.Data, &jData)
-		if err != nil {
-			return false
+		sort.SliceStable(resp.Byzcoins, func(i, j int) bool {
+			var iData byzcoin.DataHeader
+			var jData byzcoin.DataHeader
+			err := protobuf.Decode(resp.Byzcoins[i].Genesis.Data, &iData)
+			if err != nil {
+				return false
+			}
+			err = protobuf.Decode(resp.Byzcoins[j].Genesis.Data, &jData)
+			if err != nil {
+				return false
+			}
+			return iData.Timestamp > jData.Timestamp
+		})
+		for _, rb := range resp.Byzcoins {
+			log.Infof("ByzCoinID %x has", rb.ByzCoinID)
+			headerGenesis := byzcoin.DataHeader{}
+			headerLatest := byzcoin.DataHeader{}
+			err := protobuf.Decode(rb.Genesis.Data, &headerGenesis)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			err = protobuf.Decode(rb.Latest.Data, &headerLatest)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			log.Infof("\tBlocks: %d\n\tFrom %s to %s\tBlock hash: %x",
+				rb.Latest.Index,
+				time.Unix(headerGenesis.Timestamp/1e9, 0),
+				time.Unix(headerLatest.Timestamp/1e9, 0),
+				rb.Latest.Hash[:])
+			if c.Bool("verbose") {
+				log.Infof("\tGenesis block header: %+v\n\tLatest block header: %+v",
+					rb.Genesis.SkipBlockFix,
+					rb.Latest.SkipBlockFix)
+			}
+			log.Info()
 		}
-		return iData.Timestamp > jData.Timestamp
-	})
-	for _, rb := range resp.Byzcoins {
-		log.Infof("ByzCoinID %x has", rb.ByzCoinID)
-		headerGenesis := byzcoin.DataHeader{}
-		headerLatest := byzcoin.DataHeader{}
-		err := protobuf.Decode(rb.Genesis.Data, &headerGenesis)
-		if err != nil {
-			return err
-		}
-		err = protobuf.Decode(rb.Latest.Data, &headerLatest)
-		if err != nil {
-			return err
-		}
-		log.Infof("\tBlocks: %d\n\tFrom %s to %s\n",
-			rb.Latest.Index,
-			time.Unix(headerGenesis.Timestamp/1e9, 0),
-			time.Unix(headerLatest.Timestamp/1e9, 0))
 	}
 	return nil
 }
@@ -1118,7 +1150,7 @@ func debugDump(c *cli.Context) error {
 		return err
 	}
 	bcid := skipchain.SkipBlockID(bcidBuf)
-	resp, err := byzcoin.Debug(network.NewAddress(network.TLS, c.Args().First()), &bcid)
+	resp, err := byzcoin.Debug(c.Args().First(), &bcid)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -1151,40 +1183,21 @@ func debugRemove(c *cli.Context) error {
 		return errors.New("please give the following arguments: private.toml byzcoin-id")
 	}
 
-	hc := &app.CothorityConfig{}
-	_, err := toml.DecodeFile(c.Args().First(), hc)
+	ccfg, err := app.LoadCothority(c.Args().First())
 	if err != nil {
 		return err
 	}
-
-	// Backwards compatibility with configs before we included the suite name
-	if hc.Suite == "" {
-		hc.Suite = "Ed25519"
-	}
-	suite, err := suites.Find(hc.Suite)
+	si, err := ccfg.GetServerIdentity()
 	if err != nil {
 		return err
 	}
-
-	// Try to decode the Hex values
-	private, err := encoding.StringHexToScalar(suite, hc.Private)
-	if err != nil {
-		return fmt.Errorf("parsing private key: %v", err)
-	}
-	point, err := encoding.StringHexToPoint(suite, hc.Public)
-	if err != nil {
-		return fmt.Errorf("parsing public key: %v", err)
-	}
-	si := network.NewServerIdentity(point, hc.Address)
-	si.SetPrivate(private)
-	si.Description = hc.Description
 	bcidBuf, err := hex.DecodeString(c.Args().Get(1))
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	bcid := skipchain.SkipBlockID(bcidBuf)
-	err = byzcoin.DebugRemove(si.Address, si.GetPrivate(), bcid)
+	err = byzcoin.DebugRemove(si, bcid)
 	if err != nil {
 		return err
 	}

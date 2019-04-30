@@ -12,7 +12,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -364,26 +363,25 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 		log.Error("Couldn't download from", c.Roster.List[index], ":", err)
 		index++
 	}
-	return nil, errors.New("Error while downloading state from nodes")
+	return nil, errors.New("error while downloading state from nodes")
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
-func Debug(addr network.Address, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
-	si := &network.ServerIdentity{Address: addr}
+func Debug(url string, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
 	reply = &DebugResponse{}
 	request := &DebugRequest{}
 	if byzcoinID != nil {
 		request.ByzCoinID = *byzcoinID
 	}
+	si := &network.ServerIdentity{URL: url}
 	err = onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, reply)
 	return
 }
 
 // DebugRemove deletes an existing byzcoin-instance from the conode.
-func DebugRemove(addr network.Address, priv kyber.Scalar, byzcoinID skipchain.SkipBlockID) error {
-	si := &network.ServerIdentity{Address: addr}
-	sig, err := schnorr.Sign(cothority.Suite, priv, byzcoinID)
+func DebugRemove(si *network.ServerIdentity, byzcoinID skipchain.SkipBlockID) error {
+	sig, err := schnorr.Sign(cothority.Suite, si.GetPrivate(), byzcoinID)
 	if err != nil {
 		return err
 	}
