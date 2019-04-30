@@ -1,6 +1,11 @@
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { Roster, ServerIdentity } from "../../src/network/proto";
-import { ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
+import {
+    BDN_INDEX,
+    ByzcoinSignature,
+    ForwardLink,
+    SkipBlock,
+} from "../../src/skipchain/skipblock";
 
 describe("SkipBlock Tests", () => {
     it("should hash the block", () => {
@@ -85,6 +90,7 @@ describe("SkipBlock Tests", () => {
 
         fl.signature.msg.fill(fl.hash(), 0);
         fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([1])]));
-        expect(fl.verify(publics).message).toBe("signature not verified");
+        expect(fl.verify(publics).message).toBe("BLS signature not verified");
+        expect(fl.verifyWithScheme(publics, BDN_INDEX).message).toBe("BDN signature not verified");
     });
 });

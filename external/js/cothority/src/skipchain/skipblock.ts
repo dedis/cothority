@@ -7,7 +7,10 @@ import { registerMessage } from "../protobuf";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
-const {bls, Mask} = sign;
+export const BLS_INDEX = 0;
+export const BDN_INDEX = 1;
+
+const { bls, bdn, Mask } = sign;
 
 /**
  * Convert an integer into a little-endian buffer
@@ -51,6 +54,7 @@ export class SkipBlock extends Message<SkipBlock> {
     readonly roster: Roster;
     readonly forward: ForwardLink[];
     readonly payload: Buffer;
+    readonly signatureScheme: number;
 
     constructor(props?: Properties<SkipBlock>) {
         super(props);
@@ -91,6 +95,10 @@ export class SkipBlock extends Message<SkipBlock> {
             for (const pub of this.roster.list.map((srvid) => srvid.getPublic())) {
                 h.update(pub.marshalBinary());
             }
+        }
+
+        if (this.signatureScheme > 0) {
+            h.update(int2buf(this.signatureScheme));
         }
 
         return h.digest();
@@ -141,14 +149,47 @@ export class ForwardLink extends Message<ForwardLink> {
      * @returns an error if something is wrong, null otherwise
      */
     verify(publics: Point[]): Error {
+        return this.verifyWithScheme(publics, BLS_INDEX);
+    }
+
+    /**
+     * Verify the signature against the list of public keys
+     * using the specified signature scheme
+     *
+     * @param publics   The list of public keys
+     * @param scheme    The index of the signature scheme
+     * @returns an error if something is wrong, null otherwise
+     */
+    verifyWithScheme(publics: Point[], scheme: number): Error {
         if (!this.hash().equals(this.signature.msg)) {
             return new Error("recreated message does not match");
         }
 
+        switch (scheme) {
+            case BLS_INDEX:
+                return this.verifyBLS(publics);
+            case BDN_INDEX:
+                return this.verifyBDN(publics);
+            default:
+                return new Error("unknown signature scheme");
+        }
+    }
+
+    private verifyBLS(publics: Point[]): Error {
         const agg = this.signature.getAggregate(publics) as BN256G2Point;
 
         if (!bls.verify(this.signature.msg, agg, this.signature.getSignature())) {
-            return new Error("signature not verified");
+            return new Error("BLS signature not verified");
+        }
+
+        return null;
+    }
+
+    private verifyBDN(publics: Point[]): Error {
+        const mask = new Mask(publics, this.signature.getMask());
+
+        if (!bdn.verify(this.signature.msg, mask, this.signature.getSignature())) {
+            return new Error("BDN signature not verified");
         }
 
         return null;
@@ -190,8 +231,17 @@ export class ByzcoinSignature extends Message<ByzcoinSignature> {
      * @returns the aggregated public key for this signature
      */
     getAggregate(publics: Point[]): Point {
-        const mask = new Mask(publics, this.sig.slice(new BN256G1Point().marshalSize()));
+        const mask = new Mask(publics, this.getMask());
         return mask.aggregate;
+    }
+
+    /**
+     * Get the buffer slice that represents the mask
+     *
+     * @returns the mask as a buffer
+     */
+    getMask(): Buffer {
+        return this.sig.slice(new BN256G1Point().marshalSize());
     }
 }
 
