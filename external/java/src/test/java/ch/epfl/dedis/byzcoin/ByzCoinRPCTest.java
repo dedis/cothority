@@ -451,17 +451,16 @@ public class ByzCoinRPCTest {
             bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 20);
             counters.increment();
 
-            // This should work - why does it fail?
             logger.info("shutting down two nodes and it should still run");
             try {
-                testInstanceController.killConode(3);
+                // here we kill only the 4th conode to avoid killing a subleader because we use a
+                // small interval in the tests
                 testInstanceController.killConode(4);
                 bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 12);
                 counters.increment();
             } finally {
-                // Start nodes 3 and 4 again
+                // Start node again
                 logger.info("Starting conodes to make sure everything's OK for next tests");
-                testInstanceController.startConode(3);
                 testInstanceController.startConode(4);
             }
 
