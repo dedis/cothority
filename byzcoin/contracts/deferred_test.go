@@ -1923,7 +1923,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 				ContractID: ContractDeferredID,
 				Command:    "execProposedTx",
 			},
-			SignerCounter: []uint64{5},
+			SignerCounter: []uint64{6},
 		}},
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))

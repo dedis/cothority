@@ -234,12 +234,16 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 		}
 
 		c.DeferredData.ExecResult = instructionIDs
+		// At this stage all verification passed. We can then decrease the
+		// NumExecution counter.
+		c.DeferredData.NumExecution = c.DeferredData.NumExecution - 1
 		resultBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
 			return nil, nil, errors.New("Couldn't encode the result")
 		}
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 			ContractDeferredID, resultBuf, darcID))
+
 		return
 	default:
 		return nil, nil, errors.New("Deferred contract can only addProof and execProposedTx")
@@ -330,12 +334,6 @@ func (c *contractDeferred) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 		}
 
 		return nil
-	}
-
-	// In the case all the verifications passed for an "ExecProposedTx", we need
-	// to decrease the NumExecution counter
-	if instr.GetType() == byzcoin.InvokeType && instr.Invoke.Command == "execProposedTx" {
-		c.DeferredData.NumExecution = c.DeferredData.NumExecution - 1
 	}
 
 	return nil
