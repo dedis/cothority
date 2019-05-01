@@ -43,7 +43,7 @@ import (
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/share"
-	"go.dedis.ch/kyber/v3/share/dkg/pedersen"
+	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -259,14 +259,16 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		// Because we are the node starting the resharing protocol, by
 		// definition, we are inside the old group. (Checked first thing
 		// in this function.) So we have only Share, not PublicCoeffs.
+		oldn := len(s.storage.Rosters[id].List)
 		n := len(roster.List)
 		c := &dkg.Config{
-			Suite:     cothority.Suite,
-			Longterm:  setupDKG.KeyPair.Private,
-			OldNodes:  s.storage.Rosters[id].Publics(),
-			NewNodes:  roster.Publics(),
-			Share:     s.storage.DKS[id],
-			Threshold: n - (n-1)/3,
+			Suite:        cothority.Suite,
+			Longterm:     setupDKG.KeyPair.Private,
+			OldNodes:     s.storage.Rosters[id].Publics(),
+			NewNodes:     roster.Publics(),
+			Share:        s.storage.DKS[id],
+			Threshold:    n - (n-1)/3,
+			OldThreshold: oldn - (oldn-1)/3,
 		}
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
@@ -544,13 +546,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG.KeyPair = s.getKeyPair()
 
 		s.storage.Lock()
+		oldn := len(cfg.OldNodes)
 		n := len(tn.Roster().List)
 		c := &dkg.Config{
-			Suite:     cothority.Suite,
-			Longterm:  setupDKG.KeyPair.Private,
-			NewNodes:  tn.Roster().Publics(),
-			OldNodes:  cfg.OldNodes,
-			Threshold: n - (n-1)/3,
+			Suite:        cothority.Suite,
+			Longterm:     setupDKG.KeyPair.Private,
+			NewNodes:     tn.Roster().Publics(),
+			OldNodes:     cfg.OldNodes,
+			Threshold:    n - (n-1)/3,
+			OldThreshold: oldn - (oldn-1)/3,
 		}
 		s.storage.Unlock()
 
