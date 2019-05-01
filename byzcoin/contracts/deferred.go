@@ -26,13 +26,15 @@ type DeferredData struct {
 	// The transaction that signers must sign and can be executed with an
 	// "executeProposedTx".
 	ProposedTransaction byzcoin.ClientTransaction
-	// The maximum current block index before any new Invoke command is rejected.
+	// If the current block index is greater than this value, any Invoke on the
+	// deferred contract is rejected. This provides an expiration mechanism.
 	ExpireBlockIndex uint64
 	// Hashes of each instruction of the proposed transaction. Those hashes are
 	// computed using the special "hashDeferred" method.
 	InstructionHashes [][]byte
 	// The number of time the proposed transaction can be executed. This number
-	// decreases for each successful invocation of "executeProposedTx"
+	// decreases for each successful invocation of "executeProposedTx" and its
+	// default value is set to 1.
 	NumExecution uint64
 	// This array is filled with the instruction IDs of each executed
 	// instruction when a successful "executeProposedTx" happens.
