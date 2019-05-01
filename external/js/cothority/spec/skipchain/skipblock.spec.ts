@@ -1,11 +1,6 @@
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { Roster, ServerIdentity } from "../../src/network/proto";
-import {
-    BDN_INDEX,
-    ByzcoinSignature,
-    ForwardLink,
-    SkipBlock,
-} from "../../src/skipchain/skipblock";
+import { BDN_INDEX, ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
 
 describe("SkipBlock Tests", () => {
     it("should hash the block", () => {
@@ -97,9 +92,12 @@ describe("SkipBlock Tests", () => {
         expect(fl.verify(publics).message).toBe("recreated message does not match");
 
         fl.signature.msg.fill(fl.hash(), 0);
-        fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([1])]));
+        fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([3])]));
         expect(fl.verify(publics).message).toBe("BLS signature not verified");
         expect(fl.verifyWithScheme(publics, BDN_INDEX).message).toBe("BDN signature not verified");
         expect(fl.verifyWithScheme(publics, 123456789).message).toBe("unknown signature scheme");
+
+        fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([1])]));
+        expect(fl.verify(publics).message).toBe("not enough signers");
     });
 });

@@ -105,6 +105,18 @@ export class SkipBlock extends Message<SkipBlock> {
     }
 }
 
+/**
+ * Compute the minimum number of signatures an aggregate must have
+ * according to the total number of nodes
+ *
+ * @param n The total numner of conodes
+ * @returns the minimum number of signatures required
+ */
+function defaultThreshold(n: number): number {
+    // n = 3f + 1 with f the number of faulty nodes
+    return n - ((n - 1) / 3);
+}
+
 export class ForwardLink extends Message<ForwardLink> {
     /**
      * @see README#Message classes
@@ -165,18 +177,26 @@ export class ForwardLink extends Message<ForwardLink> {
             return new Error("recreated message does not match");
         }
 
+        const mask = new Mask(publics, this.signature.getMask());
+        // Note: we only check that there are enough signatures because if the mask
+        // is forged to have only one key for instance, the creation of the mask
+        // will fail with a mismatch length
+        if (mask.getCountEnabled() < defaultThreshold(mask.getCountTotal())) {
+            return new Error("not enough signers");
+        }
+
         switch (scheme) {
             case BLS_INDEX:
-                return this.verifyBLS(publics);
+                return this.verifyBLS(mask);
             case BDN_INDEX:
-                return this.verifyBDN(publics);
+                return this.verifyBDN(mask);
             default:
                 return new Error("unknown signature scheme");
         }
     }
 
-    private verifyBLS(publics: Point[]): Error {
-        const agg = this.signature.getAggregate(publics) as BN256G2Point;
+    private verifyBLS(mask: sign.Mask): Error {
+        const agg = mask.aggregate as BN256G2Point;
 
         if (!bls.verify(this.signature.msg, agg, this.signature.getSignature())) {
             return new Error("BLS signature not verified");
@@ -185,9 +205,7 @@ export class ForwardLink extends Message<ForwardLink> {
         return null;
     }
 
-    private verifyBDN(publics: Point[]): Error {
-        const mask = new Mask(publics, this.signature.getMask());
-
+    private verifyBDN(mask: sign.Mask): Error {
         if (!bdn.verify(this.signature.msg, mask, this.signature.getSignature())) {
             return new Error("BDN signature not verified");
         }
