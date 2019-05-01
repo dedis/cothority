@@ -618,7 +618,7 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 	if depth > maxEvalDepth {
 		return fmt.Errorf("depth exceeded %d", maxEvalDepth)
 	}
-	var issue string
+	var issue error
 	Y := expression.InitParser(func(s string) bool {
 		found := false
 		for _, id := range ids {
@@ -633,7 +633,7 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
 			if d == nil {
-				issue = fmt.Sprintf("unable to get the darc %s", s)
+				issue = fmt.Errorf("unable to get the darc %s", s)
 				return false
 			}
 			// Evaluate the "sign" action only in the latest darc
@@ -641,24 +641,24 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 			// darcs. We do this recursively because there may be
 			// further delegations.
 			if !d.Rules.Contains(sign) {
-				issue = sign + " rule does not exist"
+				issue = errors.New(sign + " rule does not exist")
 				return false
 			}
 			signExpr := d.Rules.GetSignExpr()
 			if bytes.Compare(expr, signExpr) == 0 {
-				issue = "recursive expression"
+				issue = errors.New("recursive expression")
 				return false
 			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
 			if err := evalExprDarc(depth+1, signExpr, getDarc, acceptDarc, ids...); err != nil {
-				issue = err.Error()
+				issue = err
 				return false
 			}
 			return true
 		}
 		if !found {
-			issue = "expression evaluated to false"
+			issue = errors.New("expression evaluated to false")
 		}
 		return found
 	})
@@ -667,10 +667,10 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 		return err
 	}
 	if res != true {
-		if len(issue) == 0 {
-			return errors.New("issue string is empty - file a bug if you see this error")
+		if issue == nil {
+			return errors.New("issue is nil - file a bug if you see this error")
 		}
-		return errors.New(issue)
+		return issue
 	}
 	return nil
 }
