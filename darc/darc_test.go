@@ -384,6 +384,65 @@ func TestDarc_DelegationChain(t *testing.T) {
 	require.Nil(t, td.darc.VerifyWithCB(getDarc, true))
 }
 
+// TestDarc_DelegationCycle creates n darcs and a circular delegation
+func TestDarc_DelegationCycle(t *testing.T) {
+	n := 5
+	darcs := make([]*Darc, n)
+	evolvedDarcs := make([]*Darc, n)
+	owners := make([]Signer, n)
+	identityStrs := make([]string, n)
+	for i := 0; i < n; i++ {
+		td := createDarc(1, "test cycle")
+		darcs[i] = td.darc
+		owners[i] = td.owners[0]
+		identityStrs[i] = td.ids[0].String()
+		evolvedDarcs[i] = darcs[i].Copy()
+	}
+	for i := 0; i < n; i++ {
+		if i == n-1 {
+			require.NoError(t, evolvedDarcs[i].Rules.UpdateSign([]byte(darcs[0].GetIdentityString())))
+		} else {
+			require.NoError(t, evolvedDarcs[i].Rules.UpdateSign([]byte(darcs[i+1].GetIdentityString())))
+		}
+		require.NoError(t, localEvolution(evolvedDarcs[i], darcs[i], owners[i]))
+	}
+
+	getDarc := DarcsToGetDarcs(evolvedDarcs)
+	err := EvalExpr([]byte(darcs[0].GetIdentityString()), getDarc, identityStrs...)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "cycle detected")
+}
+
+// TestDarc_DelegationDiamond tests the situation when there are two darcs with
+// the sign rule pointing to a third darc. Evaluating darc:1 && darc:2 on the
+// signer of darc:3 should succeed.
+func TestDarc_DelegationDiamond(t *testing.T) {
+	n := 3
+	darcs := make([]*Darc, n)
+	evolvedDarcs := make([]*Darc, n)
+	owners := make([]Signer, n)
+	identityStrs := make([]string, n)
+	for i := 0; i < n; i++ {
+		td := createDarc(1, "test diamond")
+		darcs[i] = td.darc
+		owners[i] = td.owners[0]
+		identityStrs[i] = td.ids[0].String()
+		evolvedDarcs[i] = darcs[i].Copy()
+	}
+	require.NoError(t, evolvedDarcs[0].Rules.UpdateSign([]byte(darcs[2].GetIdentityString())))
+	require.NoError(t, evolvedDarcs[1].Rules.UpdateSign([]byte(darcs[2].GetIdentityString())))
+	require.NoError(t, evolvedDarcs[2].Rules.UpdateSign([]byte(identityStrs[2])))
+	for i := 0; i < n; i++ {
+		require.NoError(t, localEvolution(evolvedDarcs[i], darcs[i], owners[i]))
+	}
+
+	getDarc := DarcsToGetDarcs(evolvedDarcs)
+	expr := evolvedDarcs[0].GetIdentityString() + " & " + evolvedDarcs[1].GetIdentityString()
+	// use the owner of the third darc to evaluate
+	err := EvalExpr([]byte(expr), getDarc, identityStrs[2])
+	require.NoError(t, err)
+}
+
 func TestDarc_X509(t *testing.T) {
 	// TODO
 }
@@ -447,6 +506,8 @@ func createSignerIdentity() (Signer, Identity) {
 	return signer, signer.Identity()
 }
 
+// localEvolution sets the fields of newDarc such that it's a valid evolution
+// and then signs the evolution.
 func localEvolution(newDarc *Darc, oldDarc *Darc, signers ...Signer) error {
 	if err := newDarc.EvolveFrom(oldDarc); err != nil {
 		return err

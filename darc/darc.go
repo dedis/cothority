@@ -53,7 +53,6 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -613,10 +612,10 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	return EvalExprDarc(expr, getDarc, false, ids...)
 }
 
-// EvalExprDarc checks whether the expression evaluates to true given a list of
-// identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
-// darcs that fit one of the ids.
-func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+// evalExprDarc takes an extra visited parameter to track the visited nodes and
+// avoid infinite recursion.
+func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+	var issue error
 	Y := expression.InitParser(func(s string) bool {
 		found := false
 		for _, id := range ids {
@@ -628,9 +627,22 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 			if acceptDarc && found {
 				return true
 			}
+			// prevent cycles by checking the visited map
+			if _, ok := visited[s]; ok {
+				issue = errors.New("cycle detected")
+				return false
+			}
+			// we make a copy so that diamond delegation will work,
+			// seeTestDarc_DelegationDiamond
+			newVisited := make(map[string]bool)
+			for k, v := range visited {
+				newVisited[k] = v
+			}
+			newVisited[s] = true
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
 			if d == nil {
+				issue = fmt.Errorf("unable to get the darc %s", s)
 				return false
 			}
 			// Evaluate the "sign" action only in the latest darc
@@ -638,30 +650,41 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 			// darcs. We do this recursively because there may be
 			// further delegations.
 			if !d.Rules.Contains(sign) {
+				issue = errors.New(sign + " rule does not exist")
 				return false
 			}
 			signExpr := d.Rules.GetSignExpr()
-			if bytes.Compare(expr, signExpr) == 0 {
-				log.Warn("Recursive expression!")
-				return false
-			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
-			if err := EvalExprDarc(signExpr, getDarc, acceptDarc, ids...); err != nil {
+			if err := evalExprDarc(newVisited, signExpr, getDarc, acceptDarc, ids...); err != nil {
+				issue = err
 				return false
 			}
 			return true
+		}
+		if !found {
+			issue = errors.New("expression evaluated to false")
 		}
 		return found
 	})
 	res, err := expression.Evaluate(Y, expr)
 	if err != nil {
-		return fmt.Errorf("evaluation failed on '%s' with error: %v", expr, err)
+		return err
 	}
 	if res != true {
-		return fmt.Errorf("expression '%s' evaluated to false with ids %s", expr, ids)
+		if issue == nil {
+			return errors.New("issue is nil - file a bug if you see this error")
+		}
+		return issue
 	}
 	return nil
+}
+
+// EvalExprDarc checks whether the expression evaluates to true given a list of
+// identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
+// darcs that fit one of the ids.
+func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+	return evalExprDarc(make(map[string]bool), expr, getDarc, acceptDarc, ids...)
 }
 
 // Type returns an integer representing the type of key held in the signer. It
