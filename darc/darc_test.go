@@ -384,10 +384,9 @@ func TestDarc_DelegationChain(t *testing.T) {
 	require.Nil(t, td.darc.VerifyWithCB(getDarc, true))
 }
 
-// TestDarc_DelegationCycle creates two darcs, each will have delegate the
-// "cycle" action to the other darc.
+// TestDarc_DelegationCycle creates n darcs and create a circular delegation
 func TestDarc_DelegationCycle(t *testing.T) {
-	n := 2
+	n := 5
 	darcs := make([]*Darc, n)
 	evolvedDarcs := make([]*Darc, n)
 	owners := make([]Signer, n)
@@ -413,7 +412,7 @@ func TestDarc_DelegationCycle(t *testing.T) {
 	getDarc := DarcsToGetDarcs(evolvedDarcs)
 	err := EvalExpr(evolvedDarcs[0].Rules.Get("cycle"), getDarc, identityStrs...)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "depth exceeded")
+	require.Contains(t, err.Error(), "cycle detected")
 }
 
 func TestDarc_X509(t *testing.T) {

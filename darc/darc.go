@@ -58,7 +58,6 @@ import (
 
 const evolve = "_evolve"
 const sign = "_sign"
-const maxEvalDepth = 10000
 
 // GetDarc is a callback function that we expect the user of this library to
 // supply in some of our methods. The user is free to choose how he/she wants
@@ -613,11 +612,9 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	return EvalExprDarc(expr, getDarc, false, ids...)
 }
 
-// evalExprDarc takes an extra depth parameter to avoid infinite recursion.
-func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
-	if depth > maxEvalDepth {
-		return fmt.Errorf("depth exceeded %d", maxEvalDepth)
-	}
+// evalExprDarc takes an extra visited parameter to track the visited nodes and
+// avoid infinite recursion.
+func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
 	var issue error
 	Y := expression.InitParser(func(s string) bool {
 		found := false
@@ -630,6 +627,16 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 			if acceptDarc && found {
 				return true
 			}
+			// prevent cycles by checking the visited map
+			if _, ok := visited[s]; ok {
+				issue = errors.New("cycle detected")
+				return false
+			}
+			newVisited := make(map[string]bool)
+			for k, v := range visited {
+				newVisited[k] = v
+			}
+			newVisited[s] = true
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
 			if d == nil {
@@ -645,13 +652,9 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 				return false
 			}
 			signExpr := d.Rules.GetSignExpr()
-			if bytes.Compare(expr, signExpr) == 0 {
-				issue = errors.New("recursive expression")
-				return false
-			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
-			if err := evalExprDarc(depth+1, signExpr, getDarc, acceptDarc, ids...); err != nil {
+			if err := evalExprDarc(newVisited, signExpr, getDarc, acceptDarc, ids...); err != nil {
 				issue = err
 				return false
 			}
@@ -679,7 +682,7 @@ func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc b
 // identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
 // darcs that fit one of the ids.
 func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
-	return evalExprDarc(0, expr, getDarc, acceptDarc, ids...)
+	return evalExprDarc(make(map[string]bool), expr, getDarc, acceptDarc, ids...)
 }
 
 // Type returns an integer representing the type of key held in the signer. It
