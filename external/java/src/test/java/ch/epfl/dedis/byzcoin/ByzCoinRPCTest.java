@@ -324,7 +324,10 @@ public class ByzCoinRPCTest {
         Instant now = Instant.now();
         counters.increment();
         bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head(), 10);
-        assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000-100);
+        // check if the interval has changed (but doesn't check the interval is exactly the one requested)
+        // because it's too sensible for a precise test. There is an undetermined time after the block is
+        // created and the wait returns that cannot be quantity.
+        assertTrue(Duration.between(now, Instant.now()).toMillis() > BLOCK_INTERVAL.toMillis() + 500);
 
 
         // Need to set the blockInterval back manually, else it will complain.
