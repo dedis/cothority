@@ -56,6 +56,11 @@ func (t *StagingTrie) Clone() *StagingTrie {
 	return &out
 }
 
+// GetMetadata ..
+func (t *StagingTrie) GetMetadata(key []byte) []byte {
+	return t.source.GetMetadata(key)
+}
+
 // Get gets the value for the given key.
 func (t *StagingTrie) Get(k []byte) ([]byte, error) {
 	t.Lock()
