@@ -632,6 +632,8 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 				issue = errors.New("cycle detected")
 				return false
 			}
+			// we make a copy so that diamond delegation will work,
+			// seeTestDarc_DelegationDiamond
 			newVisited := make(map[string]bool)
 			for k, v := range visited {
 				newVisited[k] = v
