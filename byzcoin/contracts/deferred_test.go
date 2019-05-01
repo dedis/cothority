@@ -17,6 +17,8 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
+// Note: Those tests relie on the Value contract.
+
 func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	// Since every method relies on the execution of a previous ones, I am not
 	// unit test but rather creating a scenario:
@@ -103,7 +105,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -175,7 +177,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -261,7 +263,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -311,7 +313,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 
@@ -461,7 +463,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -533,7 +535,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -606,7 +608,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -656,7 +658,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	protobuf.Decode(dataBuf, &result)
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -780,7 +782,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -852,7 +854,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -932,7 +934,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1067,7 +1069,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1216,7 +1218,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1399,7 +1401,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1545,7 +1547,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1724,7 +1726,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := DeferredData{}
+	result := deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1796,7 +1798,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1848,7 +1850,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 	require.Equal(t, uint64(1), result.NumExecution)
@@ -1893,7 +1895,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = DeferredData{}
+	result = deferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 	require.Equal(t, uint64(0), result.NumExecution)

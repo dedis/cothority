@@ -56,7 +56,9 @@ func (t *StagingTrie) Clone() *StagingTrie {
 	return &out
 }
 
-// GetMetadata ..
+// GetMetadata gets the source's metadata, which gets a value associated with
+// the key in the metadata namespace. The key must be no more than 31 bytes. If
+// the key does not exist, nil is returned.
 func (t *StagingTrie) GetMetadata(key []byte) []byte {
 	return t.source.GetMetadata(key)
 }

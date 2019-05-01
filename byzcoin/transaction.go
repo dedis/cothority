@@ -301,7 +301,7 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, chec
 
 	// check the signature
 	// Save the identities that provide good signatures
-	goodIdentities := make([]string, 1)
+	goodIdentities := make([]string, 0)
 	for i := range instr.Signatures {
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
 			goodIdentities = append(goodIdentities, instr.SignerIdentities[i].String())

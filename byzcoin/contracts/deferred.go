@@ -21,8 +21,8 @@ var ContractDeferredID = "deferred"
 
 const defaultNumExecution uint64 = 1
 
-// DeferredData contains the specific data of a deferred contract
-type DeferredData struct {
+// deferredData contains the specific data of a deferred contract
+type deferredData struct {
 	// The transaction that signers must sign and can be executed with an
 	// "executeProposedTx".
 	ProposedTransaction byzcoin.ClientTransaction
@@ -43,14 +43,14 @@ type DeferredData struct {
 
 type contractDeferred struct {
 	byzcoin.BasicContract
-	DeferredData
+	deferredData
 	s *byzcoin.Service
 }
 
 func (s *Service) contractDeferredFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contractDeferred{s: s.byzService()}
 
-	err := protobuf.Decode(in, &c.DeferredData)
+	err := protobuf.Decode(in, &c.deferredData)
 	if err != nil {
 		return nil, errors.New("couldn't unmarshal instance data: " + err.Error())
 	}
@@ -79,14 +79,17 @@ func (c *contractDeferred) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	// 1. Reads and parses the input
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(inst.Spawn.Args.Search("proposedTransaction"), &proposedTransaction)
+	if err != nil {
+		return nil, nil, errors.New("couldn't decode proposedTransaction: " + err.Error())
+	}
 	expireBlockIndex, err := strconv.ParseUint(string(inst.Spawn.Args.Search("expireBlockIndex")), 10, 64)
 	if err != nil {
 		return nil, nil, errors.New("couldn't convert expireBlockIndex: " + err.Error())
 	}
-	NumExecutionBuff := inst.Spawn.Args.Search("NumExecution")
+	numExecutionBuff := inst.Spawn.Args.Search("NumExecution")
 	NumExecution := defaultNumExecution
-	if len(NumExecutionBuff) > 0 {
-		NumExecution, err = strconv.ParseUint(string(NumExecutionBuff), 10, 64)
+	if len(numExecutionBuff) > 0 {
+		NumExecution, err = strconv.ParseUint(string(numExecutionBuff), 10, 64)
 		if err != nil {
 			return nil, nil, errors.New("couldn't parse NumExecution: " + err.Error())
 		}
@@ -99,7 +102,7 @@ func (c *contractDeferred) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	}
 
 	// 3. Saves the data
-	data := DeferredData{
+	data := deferredData{
 		ProposedTransaction: proposedTransaction,
 		ExpireBlockIndex:    expireBlockIndex,
 		InstructionHashes:   hash,
@@ -108,7 +111,7 @@ func (c *contractDeferred) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	var dataBuf []byte
 	dataBuf, err = protobuf.Encode(&data)
 	if err != nil {
-		return nil, nil, errors.New("couldn't encode DeferredData: " + err.Error())
+		return nil, nil, errors.New("couldn't encode deferredData: " + err.Error())
 	}
 
 	sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
@@ -147,6 +150,12 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
+		// Check if the index is in range
+		numInstruction := len(c.deferredData.ProposedTransaction.Instructions)
+		if index >= uint32(numInstruction) {
+			return nil, nil, fmt.Errorf("Index is out of range (%d >= %d)", index, numInstruction)
+		}
+
 		// Get the given Identity
 		identityBuf := inst.Invoke.Args.Search("identity")
 		if identityBuf == nil {
@@ -164,12 +173,12 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 			return nil, nil, errors.New("Signature args is nil")
 		}
 		// Update the contract's data with the given signature and identity
-		c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities = append(c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities, identity)
-		c.DeferredData.ProposedTransaction.Instructions[index].Signatures = append(c.DeferredData.ProposedTransaction.Instructions[index].Signatures, signature)
+		c.deferredData.ProposedTransaction.Instructions[index].SignerIdentities = append(c.deferredData.ProposedTransaction.Instructions[index].SignerIdentities, identity)
+		c.deferredData.ProposedTransaction.Instructions[index].Signatures = append(c.deferredData.ProposedTransaction.Instructions[index].Signatures, signature)
 		// Save and send the modifications
-		cosiDataBuf, err2 := protobuf.Encode(&c.DeferredData)
+		cosiDataBuf, err2 := protobuf.Encode(&c.deferredData)
 		if err2 != nil {
-			return nil, nil, errors.New("Couldn't encode DeferredData")
+			return nil, nil, errors.New("Couldn't encode deferredData")
 		}
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 			ContractDeferredID, cosiDataBuf, darcID))
@@ -177,11 +186,11 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 	case "execProposedTx":
 		// This invocation tries to execute the transaction stored with the
 		// "Spawn" invocation. If it is successful, this invocation fills the
-		// "ExecResult" field of the "DeferredData" struct.
+		// "ExecResult" field of the "deferredData" struct.
 
-		instructionIDs := make([][]byte, len(c.DeferredData.ProposedTransaction.Instructions))
+		instructionIDs := make([][]byte, len(c.deferredData.ProposedTransaction.Instructions))
 
-		for i, proposedInstr := range c.DeferredData.ProposedTransaction.Instructions {
+		for i, proposedInstr := range c.deferredData.ProposedTransaction.Instructions {
 
 			// In case it goes well, we want to return the proposed Tx InstanceID
 			instructionIDs[i] = proposedInstr.DeriveID("").Slice()
@@ -210,7 +219,7 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 			if err != nil {
 				return nil, nil, errors.New("Couldn't get the root contract")
 			}
-			err = contract.VerifyDeferedInstruction(rst, proposedInstr, c.DeferredData.InstructionHashes[i])
+			err = contract.VerifyDeferredInstruction(rst, proposedInstr, c.deferredData.InstructionHashes[i])
 			if err != nil {
 				return nil, nil, fmt.Errorf("Verifying the instruction failed: %s", err)
 			}
@@ -233,11 +242,11 @@ func (c *contractDeferred) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 
 		}
 
-		c.DeferredData.ExecResult = instructionIDs
+		c.deferredData.ExecResult = instructionIDs
 		// At this stage all verification passed. We can then decrease the
 		// NumExecution counter.
-		c.DeferredData.NumExecution = c.DeferredData.NumExecution - 1
-		resultBuf, err2 := protobuf.Encode(&c.DeferredData)
+		c.deferredData.NumExecution = c.deferredData.NumExecution - 1
+		resultBuf, err2 := protobuf.Encode(&c.deferredData)
 		if err2 != nil {
 			return nil, nil, errors.New("Couldn't encode the result")
 		}
@@ -282,12 +291,12 @@ func (c *contractDeferred) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 		//      "expireBlockIndex" argument.
 
 		// 1.
-		if c.DeferredData.NumExecution < uint64(1) {
+		if c.deferredData.NumExecution < uint64(1) {
 			return errors.New("Maximum number of executions reached")
 		}
 
 		// 2.
-		expireBlockIndex := c.DeferredData.ExpireBlockIndex
+		expireBlockIndex := c.deferredData.ExpireBlockIndex
 		currentIndex := uint64(rst.GetIndex())
 		if currentIndex > expireBlockIndex {
 			return fmt.Errorf("Current block index is too high (%d > %d)", currentIndex, expireBlockIndex)
@@ -317,7 +326,7 @@ func (c *contractDeferred) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
-		for _, storedIdentity := range c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities {
+		for _, storedIdentity := range c.deferredData.ProposedTransaction.Instructions[index].SignerIdentities {
 			if identity.Equal(&storedIdentity) {
 				return errors.New("Identity already stored")
 			}
