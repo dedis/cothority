@@ -53,12 +53,12 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
 const evolve = "_evolve"
 const sign = "_sign"
+const maxEvalDepth = 10000
 
 // GetDarc is a callback function that we expect the user of this library to
 // supply in some of our methods. The user is free to choose how he/she wants
@@ -613,10 +613,12 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	return EvalExprDarc(expr, getDarc, false, ids...)
 }
 
-// EvalExprDarc checks whether the expression evaluates to true given a list of
-// identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
-// darcs that fit one of the ids.
-func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+// evalExprDarc takes an extra depth parameter to avoid infinite recursion.
+func evalExprDarc(depth int, expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+	if depth > maxEvalDepth {
+		return fmt.Errorf("depth exceeded %d", maxEvalDepth)
+	}
+	var issue string
 	Y := expression.InitParser(func(s string) bool {
 		found := false
 		for _, id := range ids {
@@ -631,6 +633,7 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
 			if d == nil {
+				issue = fmt.Sprintf("unable to get the darc %s", s)
 				return false
 			}
 			// Evaluate the "sign" action only in the latest darc
@@ -638,30 +641,45 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 			// darcs. We do this recursively because there may be
 			// further delegations.
 			if !d.Rules.Contains(sign) {
+				issue = sign + " rule does not exist"
 				return false
 			}
 			signExpr := d.Rules.GetSignExpr()
 			if bytes.Compare(expr, signExpr) == 0 {
-				log.Warn("Recursive expression!")
+				issue = "recursive expression"
 				return false
 			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
-			if err := EvalExprDarc(signExpr, getDarc, acceptDarc, ids...); err != nil {
+			if err := evalExprDarc(depth+1, signExpr, getDarc, acceptDarc, ids...); err != nil {
+				issue = err.Error()
 				return false
 			}
 			return true
+		}
+		if !found {
+			issue = "expression evaluated to false"
 		}
 		return found
 	})
 	res, err := expression.Evaluate(Y, expr)
 	if err != nil {
-		return fmt.Errorf("evaluation failed on '%s' with error: %v", expr, err)
+		return err
 	}
 	if res != true {
-		return fmt.Errorf("expression '%s' evaluated to false with ids %s", expr, ids)
+		if len(issue) == 0 {
+			return errors.New("issue string is empty - file a bug if you see this error")
+		}
+		return errors.New(issue)
 	}
 	return nil
+}
+
+// EvalExprDarc checks whether the expression evaluates to true given a list of
+// identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
+// darcs that fit one of the ids.
+func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
+	return evalExprDarc(0, expr, getDarc, acceptDarc, ids...)
 }
 
 // Type returns an integer representing the type of key held in the signer. It

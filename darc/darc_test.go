@@ -384,6 +384,38 @@ func TestDarc_DelegationChain(t *testing.T) {
 	require.Nil(t, td.darc.VerifyWithCB(getDarc, true))
 }
 
+// TestDarc_DelegationCycle creates two darcs, each will have delegate the
+// "cycle" action to the other darc.
+func TestDarc_DelegationCycle(t *testing.T) {
+	n := 2
+	darcs := make([]*Darc, n)
+	evolvedDarcs := make([]*Darc, n)
+	owners := make([]Signer, n)
+	identityStrs := make([]string, n)
+	for i := 0; i < n; i++ {
+		td := createDarc(1, "genesis darcs")
+		darcs[i] = td.darc
+		owners[i] = td.owners[0]
+		identityStrs[i] = td.ids[0].String()
+		evolvedDarcs[i] = darcs[i].Copy()
+	}
+	for i := 0; i < n; i++ {
+		if i == n-1 {
+			evolvedDarcs[i].Rules.AddRule("cycle", []byte(darcs[0].GetIdentityString()))
+			evolvedDarcs[i].Rules.UpdateSign([]byte(darcs[0].GetIdentityString()))
+		} else {
+			evolvedDarcs[i].Rules.AddRule("cycle", []byte(darcs[i+1].GetIdentityString()))
+			evolvedDarcs[i].Rules.UpdateSign([]byte(darcs[i+1].GetIdentityString()))
+		}
+		require.NoError(t, localEvolution(evolvedDarcs[i], darcs[i], owners[i]))
+	}
+
+	getDarc := DarcsToGetDarcs(evolvedDarcs)
+	err := EvalExpr(evolvedDarcs[0].Rules.Get("cycle"), getDarc, identityStrs...)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "depth exceeded")
+}
+
 func TestDarc_X509(t *testing.T) {
 	// TODO
 }
@@ -447,6 +479,8 @@ func createSignerIdentity() (Signer, Identity) {
 	return signer, signer.Identity()
 }
 
+// localEvolution sets the fields of newDarc such that it's a valid evolution
+// and then signs the evolution.
 func localEvolution(newDarc *Darc, oldDarc *Darc, signers ...Signer) error {
 	if err := newDarc.EvolveFrom(oldDarc); err != nil {
 		return err
