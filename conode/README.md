@@ -25,7 +25,7 @@ Conode is the program that allows you to be part of a cothority. For the server 
 - 24/7 availability
 - 512MB of RAM and 1GB of disk-space
 - a public IP-address and two consecutive, open ports
-- Go 1.11 installed and set up according to https://golang.org/doc/install
+- Go 1.12.x installed and set up according to https://golang.org/doc/install
 
 You find further information about what is important when you operate a conode
 in the following document: [Operating a Conode](Operating.md).

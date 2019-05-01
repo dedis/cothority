@@ -9,7 +9,7 @@ This document describes how to run a conode from the command line. This is usefu
 if you have ssh access to a server or a virtual server. To use the code of this
 package you need to:
 
-- Install [Golang](https://golang.org/doc/install) - version 1.11 or later
+- Install [Golang](https://golang.org/doc/install) - version 1.12 or later
 - Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
 - Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
