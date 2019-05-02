@@ -2345,6 +2345,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, contractConfigFromBytes)
 	s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
+	s.registerContract(ContractDeferredID, s.contractDeferredFromBytes)
 
 	skipchain.RegisterVerification(c, Verify, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {

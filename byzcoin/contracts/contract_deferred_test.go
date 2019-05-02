@@ -17,7 +17,8 @@ import (
 	"go.dedis.ch/onet/v3"
 )
 
-// Note: Those tests relie on the Value contract.
+// Note: Those tests relie on the Value contract, hence it is not possible to
+//       include this file in the byzcoin package.
 
 func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	// Since every method relies on the execution of a previous ones, I am not
@@ -78,7 +79,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -105,7 +106,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -139,7 +140,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -177,7 +178,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -225,7 +226,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -263,7 +264,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -294,7 +295,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{4},
@@ -313,7 +314,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 
@@ -342,7 +343,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{5},
@@ -436,7 +437,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -463,7 +464,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -497,7 +498,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -535,7 +536,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -575,7 +576,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -608,7 +609,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -639,7 +640,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{4},
@@ -658,7 +659,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	protobuf.Decode(dataBuf, &result)
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -755,7 +756,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -782,7 +783,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -816,7 +817,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -854,7 +855,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -901,7 +902,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -934,7 +935,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -966,7 +967,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{4},
@@ -1042,7 +1043,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -1069,7 +1070,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1103,7 +1104,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -1191,7 +1192,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -1218,7 +1219,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1251,7 +1252,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -1288,7 +1289,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -1374,7 +1375,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -1401,7 +1402,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1434,7 +1435,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -1520,7 +1521,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -1547,7 +1548,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1567,7 +1568,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{2},
@@ -1695,7 +1696,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Args: []byzcoin.Argument{
 					{
 						Name:  "proposedTransaction",
@@ -1726,7 +1727,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 
 	dataBuf, _, _, err := pr.Get(myID.Slice())
 	require.Nil(t, err)
-	result := deferredData{}
+	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1760,7 +1761,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "addProof",
 				Args: []byzcoin.Argument{
 					{
@@ -1798,7 +1799,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
@@ -1831,7 +1832,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{4},
@@ -1850,7 +1851,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 	require.Equal(t, uint64(1), result.NumExecution)
@@ -1876,7 +1877,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{5},
@@ -1895,7 +1896,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
-	result = deferredData{}
+	result = byzcoin.DeferredData{}
 	protobuf.Decode(dataBuf, &result)
 	require.Equal(t, 1, len(result.ExecResult))
 	require.Equal(t, uint64(0), result.NumExecution)
@@ -1922,7 +1923,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: ContractDeferredID,
+				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{6},
