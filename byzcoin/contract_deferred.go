@@ -126,7 +126,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	// Invoke:addProof should have the following input argument:
 	//   - identity darc.Identity
 	//   - signature []byte
-	//	 - index uint32 (index of the instruction wrt the transaction)
+	//   - index uint32 (index of the instruction wrt the transaction)
 	err2 := c.checkInvoke(rst, inst.Invoke)
 	if err2 != nil {
 		return nil, nil, errors.New("checks of invoke failed: " + err2.Error())
