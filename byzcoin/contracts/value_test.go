@@ -56,7 +56,7 @@ func TestValue_Spawn(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 }
 
-// This test uses the same code as the Spawn one but then performs an upadte
+// This test uses the same code as the Spawn one but then performs an update
 // on the value contract.
 func TestValue_Invoke(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
