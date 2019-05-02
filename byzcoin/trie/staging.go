@@ -99,6 +99,7 @@ func (t *StagingTrie) Delete(k []byte) error {
 
 func (t *StagingTrie) del(k []byte) error {
 	t.deleteList[string(k)] = nil
+	delete(t.overlay, string(k))
 
 	t.instrList = append(t.instrList, instr{
 		ty: OpDel,
@@ -220,4 +221,37 @@ func (t *StagingTrie) isDeleted(k []byte) bool {
 		return true
 	}
 	return false
+}
+
+// ForEach runs the callback cb on every key/value pair of the trie. The
+// iteration stops and the function returns an error when the callback returns
+// an error.
+func (t *StagingTrie) ForEach(cb func(k, v []byte) error) error {
+	// iterate over the overlay
+	// iterate over the items that are not deleted in the trie
+	t.Lock()
+	defer t.Unlock()
+
+	for k, v := range t.overlay {
+		if err := cb([]byte(k), v); err != nil {
+			return err
+		}
+	}
+
+	return t.source.ForEach(func(k, v []byte) error {
+		if t.isDeleted(k) {
+			return nil
+		}
+		return cb(k, v)
+	})
+}
+
+// sanityCheck checks that the deleted values does not appear in the overlay.
+func (t *StagingTrie) sanityCheck() error {
+	for k := range t.deleteList {
+		if _, ok := t.overlay[k]; ok {
+			return errors.New("deleted key in overlay")
+		}
+	}
+	return nil
 }

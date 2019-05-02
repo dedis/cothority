@@ -67,3 +67,19 @@ func (p *countNodeProcessor) OnInterior(n interiorNode, k, v []byte) error {
 	p.total++
 	return nil
 }
+
+type leafCallbackProcessor struct {
+	cb func(k, v []byte) error
+}
+
+func (p *leafCallbackProcessor) OnEmpty(n emptyNode, k, v []byte) error {
+	return nil
+}
+
+func (p *leafCallbackProcessor) OnLeaf(n leafNode, k, v []byte) error {
+	return p.cb(n.Key, n.Value)
+}
+
+func (p *leafCallbackProcessor) OnInterior(n interiorNode, k, v []byte) error {
+	return nil
+}
