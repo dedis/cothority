@@ -340,6 +340,18 @@ func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) er
 	return nil
 }
 
+func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	// We make a special case for the delete instruction. Anyone should be able
+	// to delete a deferred contract that has expired.
+	if inst.GetType() == DeleteType && uint64(rst.GetIndex()) >= c.DeferredData.ExpireBlockIndex {
+		return nil
+	}
+	if err := inst.Verify(rst, ctxHash); err != nil {
+		return err
+	}
+	return nil
+}
+
 // This is a modified version of computing the hash of a transaction. In this
 // version, we do not take into account the signers nor the signers counters. We
 // also add to the hash the instanceID of the deferred contract.
