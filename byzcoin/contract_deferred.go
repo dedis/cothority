@@ -127,6 +127,11 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	//   - identity darc.Identity
 	//   - signature []byte
 	//	 - index uint32 (index of the instruction wrt the transaction)
+	err2 := c.checkInvoke(rst, inst.Invoke)
+	if err2 != nil {
+		return nil, nil, errors.New("checks of invoke failed: " + err2.Error())
+	}
+
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -145,31 +150,31 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// Get the given index
 		indexBuf := inst.Invoke.Args.Search("index")
 		if indexBuf == nil {
-			return nil, nil, errors.New("Index args is nil")
+			return nil, nil, errors.New("index args is nil")
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
 		// Check if the index is in range
 		numInstruction := len(c.DeferredData.ProposedTransaction.Instructions)
 		if index >= uint32(numInstruction) {
-			return nil, nil, fmt.Errorf("Index is out of range (%d >= %d)", index, numInstruction)
+			return nil, nil, fmt.Errorf("index is out of range (%d >= %d)", index, numInstruction)
 		}
 
 		// Get the given Identity
 		identityBuf := inst.Invoke.Args.Search("identity")
 		if identityBuf == nil {
-			return nil, nil, errors.New("Identity args is nil")
+			return nil, nil, errors.New("identity args is nil")
 		}
 		identity := darc.Identity{}
 		err = protobuf.Decode(identityBuf, &identity)
 		if err != nil {
-			return nil, nil, errors.New("Couldn't decode Identity")
+			return nil, nil, errors.New("couldn't decode Identity")
 		}
 
 		// Get the given signature
 		signature := inst.Invoke.Args.Search("signature")
 		if signature == nil {
-			return nil, nil, errors.New("Signature args is nil")
+			return nil, nil, errors.New("signature args is nil")
 		}
 		// Update the contract's data with the given signature and identity
 		c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities = append(c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities, identity)
@@ -177,7 +182,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// Save and send the modifications
 		cosiDataBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
-			return nil, nil, errors.New("Couldn't encode DeferredData")
+			return nil, nil, errors.New("couldn't encode DeferredData")
 		}
 		sc = append(sc, NewStateChange(Update, inst.InstanceID,
 			ContractDeferredID, cosiDataBuf, darcID))
@@ -208,19 +213,19 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 			fn, exists := c.s.GetContractConstructor(contractID)
 			if !exists {
-				return nil, nil, errors.New("Couldn't get the root function")
+				return nil, nil, errors.New("couldn't get the root function")
 			}
 			rootInstructionBuff, err := protobuf.Encode(&proposedInstr)
 			if err != nil {
-				return nil, nil, errors.New("Couldn't encode the root instruction buffer")
+				return nil, nil, errors.New("couldn't encode the root instruction buffer")
 			}
 			contract, err := fn(rootInstructionBuff)
 			if err != nil {
-				return nil, nil, errors.New("Couldn't get the root contract")
+				return nil, nil, errors.New("couldn't get the root contract")
 			}
 			err = contract.VerifyDeferredInstruction(rst, proposedInstr, c.DeferredData.InstructionHashes[i])
 			if err != nil {
-				return nil, nil, fmt.Errorf("Verifying the instruction failed: %s", err)
+				return nil, nil, fmt.Errorf("verifying the instruction failed: %s", err)
 			}
 
 			var stateChanges []StateChange
@@ -235,7 +240,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			}
 
 			if err != nil {
-				return nil, nil, fmt.Errorf("Error while executing an instruction: %s", err)
+				return nil, nil, fmt.Errorf("error while executing an instruction: %s", err)
 			}
 			sc = append(sc, stateChanges...)
 
@@ -247,14 +252,14 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		c.DeferredData.NumExecution = c.DeferredData.NumExecution - 1
 		resultBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
-			return nil, nil, errors.New("Couldn't encode the result")
+			return nil, nil, errors.New("couldn't encode the result")
 		}
 		sc = append(sc, NewStateChange(Update, inst.InstanceID,
 			ContractDeferredID, resultBuf, darcID))
 
 		return
 	default:
-		return nil, nil, errors.New("Deferred contract can only addProof and execProposedTx")
+		return nil, nil, errors.New("deferred contract can only addProof and execProposedTx")
 	}
 }
 
@@ -274,76 +279,64 @@ func (c *contractDeferred) Delete(rst ReadOnlyStateTrie, inst Instruction, coins
 	return
 }
 
-// VerifyInstruction overrides the basic VerifyInstruction
-func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, instr Instruction, ctxHash []byte) error {
+func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) error {
 
-	// Basic check: can the client actually invoke?
-	err := c.BasicContract.VerifyInstruction(rst, instr, ctxHash)
-	if err != nil {
-		return err
+	// Global check on the invoke method:
+	//   1. The NumExecution should be greater than 0
+	//   2. the current skipblock index should be lower than the provided
+	//      "expireBlockIndex" argument.
+
+	// 1.
+	if c.DeferredData.NumExecution < uint64(1) {
+		return errors.New("maximum number of executions reached")
 	}
 
-	if instr.GetType() == InvokeType {
-		// Global check on the invoke method:
-		//   1. The NumExecution should be greater than 0
-		//   2. the current skipblock index should be lower than the provided
-		//      "expireBlockIndex" argument.
-
-		// 1.
-		if c.DeferredData.NumExecution < uint64(1) {
-			return errors.New("Maximum number of executions reached")
-		}
-
-		// 2.
-		expireBlockIndex := c.DeferredData.ExpireBlockIndex
-		currentIndex := uint64(rst.GetIndex())
-		if currentIndex > expireBlockIndex {
-			return fmt.Errorf("Current block index is too high (%d > %d)", currentIndex, expireBlockIndex)
-		}
+	// 2.
+	expireBlockIndex := c.DeferredData.ExpireBlockIndex
+	currentIndex := uint64(rst.GetIndex())
+	if currentIndex > expireBlockIndex {
+		return fmt.Errorf("current block index is too high (%d > %d)", currentIndex, expireBlockIndex)
 	}
 
-	if instr.GetType() == InvokeType && instr.Invoke.Command == "addProof" {
+	if invoke.Command == "addProof" {
 		// We will go through 2 checks:
 		//   1. Check if the identity is already stored
 		//   2. Check if the signature is valid
 
 		// 1:
 		// Get the given Identity
-		identityBuf := instr.Invoke.Args.Search("identity")
+		identityBuf := invoke.Args.Search("identity")
 		if identityBuf == nil {
-			return errors.New("Identity args is nil")
+			return errors.New("identity args is nil")
 		}
 		identity := darc.Identity{}
-		err = protobuf.Decode(identityBuf, &identity)
+		err := protobuf.Decode(identityBuf, &identity)
 		if err != nil {
-			return errors.New("Couldn't decode Identity")
+			return errors.New("couldn't decode Identity")
 		}
 		// Get the instruction index
-		indexBuf := instr.Invoke.Args.Search("index")
+		indexBuf := invoke.Args.Search("index")
 		if indexBuf == nil {
-			return errors.New("Index args is nil")
+			return errors.New("index args is nil")
 		}
 		index := binary.LittleEndian.Uint32(indexBuf)
 
 		for _, storedIdentity := range c.DeferredData.ProposedTransaction.Instructions[index].SignerIdentities {
 			if identity.Equal(&storedIdentity) {
-				return errors.New("Identity already stored")
+				return errors.New("identity already stored")
 			}
 		}
 		// 2:
 		// Get the given signature
-		signature := instr.Invoke.Args.Search("signature")
+		signature := invoke.Args.Search("signature")
 		if signature == nil {
-			return errors.New("Signature args is nil")
+			return errors.New("signature args is nil")
 		}
 		err = identity.Verify(c.InstructionHashes[index], signature)
 		if err != nil {
-			return errors.New("Bad signature")
+			return errors.New("bad signature")
 		}
-
-		return nil
 	}
-
 	return nil
 }
 
