@@ -453,9 +453,13 @@ func (sb *SkipBlock) AddForward(fw *ForwardLink) {
 // AddForwardLink stores the forward-link at the indicated position. If the
 // forwardlink at pos already exists, it returns an error.
 func (sb *SkipBlock) AddForwardLink(fw *ForwardLink, pos int) error {
-	if len(sb.ForwardLink) > pos || pos < 0 {
-		return errors.New("this forward-link already exists or invalid position")
+	if pos < 0 || pos >= sb.Height {
+		return errors.New("invalid position")
 	}
+	if !fw.From.Equal(sb.Hash) {
+		return errors.New("forward link doesn't start from this block")
+	}
+
 	for len(sb.ForwardLink) <= pos {
 		sb.ForwardLink = append(sb.ForwardLink, &ForwardLink{})
 	}
@@ -710,8 +714,8 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 				// new children.
 				if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
 					for i, fl := range sb.ForwardLink {
-						if i < len(sbOld.ForwardLink) || fl.IsEmpty() {
-							// Don't overwrite existing forwardlinks and ignore empty links
+						if fl.IsEmpty() {
+							// ignore empty links
 							continue
 						}
 
