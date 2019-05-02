@@ -342,7 +342,7 @@ func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) er
 
 // This is a modified version of computing the hash of a transaction. In this
 // version, we do not take into account the signers nor the signers counters. We
-// also add to the hash the instanceID.
+// also add to the hash the instanceID of the deferred contract.
 func hashDeferred(instr Instruction, instanceID []byte) []byte {
 	h := sha256.New()
 	h.Write(instr.InstanceID[:])
