@@ -216,6 +216,9 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		random.Bytes(bl[:], random.New())
 		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl[:])}
 		prop.GenesisID = nil
+		// starting with release v3.1.0, new skipchains default to BDN
+		// because BLS is vulnerable a known attack (see ../README.md
+		// about the release).
 		prop.SignatureScheme = BdnSignatureSchemeIndex
 		prop.updateHash()
 		err := s.verifyBlock(prop)
@@ -1435,8 +1438,10 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
 	// Before BDN signatures, the new roster was used when it was a rotation so
 	// that subleaders were more likely to be alive. It doesn't work anymore with
-	// BDN signatures because the way coefficients are computed but the workaround
-	// is to generate the protocol tree differently (i.e. blscosi generation tree)
+	// BDN signatures because the way coefficients are computed.
+	// Instead the co-signing protocol has been modified to generate the tree by
+	// taking in account the position of the root in the roster to assign subleaders
+	// that are more likely alive.
 	roster := origRoster
 
 	if len(roster.List) == 0 {

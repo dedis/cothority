@@ -134,6 +134,8 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 	cosiProto.Timeout = bft.Timeout / 2
 
 	if bft.SubleaderFailures > 0 {
+		// Only update the parameter if it is defined, else keep the default
+		// value.
 		cosiProto.SubleaderFailures = bft.SubleaderFailures
 	}
 

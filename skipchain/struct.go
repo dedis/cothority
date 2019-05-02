@@ -521,6 +521,9 @@ func (sb *SkipBlock) CalculateHash() SkipBlockID {
 			}
 		}
 	}
+
+	// For backwards compatibility, the signature scheme is only added to
+	// the hash when different from the previous default (== 0)
 	if sb.SignatureScheme > 0 {
 		err := binary.Write(hash, binary.LittleEndian, sb.SignatureScheme)
 		if err != nil {

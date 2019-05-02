@@ -56,6 +56,21 @@ Other pieces we hope to achieve in 2018:
 And some projects are private for the moment, but we hope to make them public
 as soon as possible.
 
+### Release v3.1.0
+
+The release introduces the notion of signature scheme for a given skipchain so that
+one can define which co-signing algorithm will be used to sign the forward links. This
+was necessary in the context of weaknesses in the BLS signature algorithm (see the
+[paper](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html)). New
+skipchains will be created with [BDN](https://github.com/dedis/kyber/tree/master/sign/bdn)
+set as the signature scheme.
+
+Because of a new scheme is default, that means that skipchains created after v3.1.0
+won't work with older versions as they are not aware of the new scheme. However,
+existing skipchains will continue to operate normally. In summary, if you need to
+create skipchains after updating to v3.1.0, make sure every conode is at least using
+v3.0.1 aswell.
+
 # Documentation
 
 The goal of the cothority is to collect projects that
