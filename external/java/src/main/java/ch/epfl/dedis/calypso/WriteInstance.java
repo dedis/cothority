@@ -36,7 +36,7 @@ public class WriteInstance {
      *
      * @param calypso    The CalypsoRPC object which should be already running.
      * @param darcBaseID     The darc ID for which the signers belong.
-     * @param signers    The list of signers that are authorised to create the instance.
+     * @param signers    The list of signers that are authorized to create the instance.
      * @param signerCtrs a list of monotonically increasing counter for every signer
      * @param wr         The WriteData object, to be stored in the instance.
      * @throws CothorityException if something goes wrong

@@ -2422,8 +2422,8 @@ public final class Calypso {
   }
   /**
    * <pre>
-   * Authorise is used to add the given ByzCoinID into the list of
-   * authorised IDs.
+   * Authorise adds a ByzCoinID to the list of authorized IDs.
+   * Deprecated: please use Authorize.
    * </pre>
    *
    * Protobuf type {@code calypso.Authorise}
@@ -2685,8 +2685,8 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * Authorise is used to add the given ByzCoinID into the list of
-     * authorised IDs.
+     * Authorise adds a ByzCoinID to the list of authorized IDs.
+     * Deprecated: please use Authorize.
      * </pre>
      *
      * Protobuf type {@code calypso.Authorise}
@@ -2938,7 +2938,8 @@ public final class Calypso {
   }
   /**
    * <pre>
-   * AuthoriseReply is returned upon successful authorisation.
+   * AuthoriseReply is returned upon successful authorization
+   * Deprecated: please use AuthorizeReply
    * </pre>
    *
    * Protobuf type {@code calypso.AuthoriseReply}
@@ -3157,7 +3158,8 @@ public final class Calypso {
     }
     /**
      * <pre>
-     * AuthoriseReply is returned upon successful authorisation.
+     * AuthoriseReply is returned upon successful authorization
+     * Deprecated: please use AuthorizeReply
      * </pre>
      *
      * Protobuf type {@code calypso.AuthoriseReply}
@@ -3347,6 +3349,1131 @@ public final class Calypso {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.AuthoriseReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthorizeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.Authorize)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    boolean hasByzcoinid();
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    com.google.protobuf.ByteString getByzcoinid();
+
+    /**
+     * <code>optional sint64 timestamp = 2;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>optional sint64 timestamp = 2;</code>
+     */
+    long getTimestamp();
+
+    /**
+     * <code>optional bytes signature = 3;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>optional bytes signature = 3;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * Authorize is used to add the given ByzCoinID into the list of
+   * authorised IDs. To be accepted, the ByzCoinID must be signed
+   * using the private key of the conode.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.Authorize}
+   */
+  public  static final class Authorize extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.Authorize)
+      AuthorizeOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Authorize.newBuilder() to construct.
+    private Authorize(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Authorize() {
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      timestamp_ = 0L;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Authorize(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              byzcoinid_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              timestamp_ = input.readSInt64();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Authorize_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Authorize_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.Authorize.class, ch.epfl.dedis.lib.proto.Calypso.Authorize.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public boolean hasByzcoinid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes byzcoinid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
+    }
+
+    public static final int TIMESTAMP_FIELD_NUMBER = 2;
+    private long timestamp_;
+    /**
+     * <code>optional sint64 timestamp = 2;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional sint64 timestamp = 2;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>optional bytes signature = 3;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bytes signature = 3;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasByzcoinid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeSInt64(2, timestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, byzcoinid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(2, timestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.Authorize)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.Authorize other = (ch.epfl.dedis.lib.proto.Calypso.Authorize) obj;
+
+      boolean result = true;
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
+      }
+      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp()) {
+        result = result && (getTimestamp()
+            == other.getTimestamp());
+      }
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTimestamp());
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.Authorize prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Authorize is used to add the given ByzCoinID into the list of
+     * authorised IDs. To be accepted, the ByzCoinID must be signed
+     * using the private key of the conode.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.Authorize}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.Authorize)
+        ch.epfl.dedis.lib.proto.Calypso.AuthorizeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Authorize_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Authorize_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.Authorize.class, ch.epfl.dedis.lib.proto.Calypso.Authorize.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.Authorize.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Authorize_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Authorize getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.Authorize.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Authorize build() {
+        ch.epfl.dedis.lib.proto.Calypso.Authorize result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.Authorize buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.Authorize result = new ch.epfl.dedis.lib.proto.Calypso.Authorize(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.byzcoinid_ = byzcoinid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.Authorize) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.Authorize)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.Authorize other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.Authorize.getDefaultInstance()) return this;
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasByzcoinid()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.Authorize parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.Authorize) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public boolean hasByzcoinid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        byzcoinid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes byzcoinid = 1;</code>
+       */
+      public Builder clearByzcoinid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
+        onChanged();
+        return this;
+      }
+
+      private long timestamp_ ;
+      /**
+       * <code>optional sint64 timestamp = 2;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional sint64 timestamp = 2;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <code>optional sint64 timestamp = 2;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000002;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional sint64 timestamp = 2;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes signature = 3;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bytes signature = 3;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>optional bytes signature = 3;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes signature = 3;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.Authorize)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.Authorize)
+    private static final ch.epfl.dedis.lib.proto.Calypso.Authorize DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.Authorize();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.Authorize getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Authorize>
+        PARSER = new com.google.protobuf.AbstractParser<Authorize>() {
+      @java.lang.Override
+      public Authorize parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Authorize(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Authorize> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Authorize> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.Authorize getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface AuthorizeReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:calypso.AuthorizeReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * AuthorizeReply is returned upon successful authorisation.
+   * </pre>
+   *
+   * Protobuf type {@code calypso.AuthorizeReply}
+   */
+  public  static final class AuthorizeReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:calypso.AuthorizeReply)
+      AuthorizeReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AuthorizeReply.newBuilder() to construct.
+    private AuthorizeReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AuthorizeReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AuthorizeReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthorizeReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthorizeReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.class, ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply other = (ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * AuthorizeReply is returned upon successful authorisation.
+     * </pre>
+     *
+     * Protobuf type {@code calypso.AuthorizeReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:calypso.AuthorizeReply)
+        ch.epfl.dedis.lib.proto.Calypso.AuthorizeReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthorizeReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthorizeReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.class, ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_AuthorizeReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply build() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply result = new ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:calypso.AuthorizeReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:calypso.AuthorizeReply)
+    private static final ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AuthorizeReply>
+        PARSER = new com.google.protobuf.AbstractParser<AuthorizeReply>() {
+      @java.lang.Override
+      public AuthorizeReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AuthorizeReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AuthorizeReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AuthorizeReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Calypso.AuthorizeReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -8815,6 +9942,16 @@ public final class Calypso {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_calypso_AuthoriseReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_Authorize_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_Authorize_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_calypso_AuthorizeReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_calypso_AuthorizeReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_calypso_CreateLTS_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -8870,17 +10007,19 @@ public final class Calypso {
       "d\030\010 \002(\014\022\033\n\004cost\030\t \001(\0132\r.byzcoin.Coin\"!\n\004" +
       "Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(\014\"\036\n\tAutho" +
       "rise\022\021\n\tbyzcoinid\030\001 \002(\014\"\020\n\016AuthoriseRepl" +
-      "y\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin." +
-      "Proof\"B\n\016CreateLTSReply\022\021\n\tbyzcoinid\030\001 \002" +
-      "(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"+\n\nRes" +
-      "hareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin.Proof\"\021" +
-      "\n\017ReshareLTSReply\"I\n\nDecryptKey\022\034\n\004read\030" +
-      "\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002(\0132\016.b" +
-      "yzcoin.Proof\"8\n\017DecryptKeyReply\022\t\n\001c\030\001 \002" +
-      "(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013GetLTS" +
-      "Reply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsInstanceInfo\022" +
-      "\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n\027ch.epfl" +
-      ".dedis.lib.protoB\007Calypso"
+      "y\"D\n\tAuthorize\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\ttim" +
+      "estamp\030\002 \001(\022\022\021\n\tsignature\030\003 \001(\014\"\020\n\016Autho" +
+      "rizeReply\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\0132\016." +
+      "byzcoin.Proof\"B\n\016CreateLTSReply\022\021\n\tbyzco" +
+      "inid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003 \002(" +
+      "\014\"+\n\nReshareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin" +
+      ".Proof\"\021\n\017ReshareLTSReply\"I\n\nDecryptKey\022" +
+      "\034\n\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002" +
+      " \002(\0132\016.byzcoin.Proof\"8\n\017DecryptKeyReply\022" +
+      "\t\n\001c\030\001 \002(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034" +
+      "\n\013GetLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsInsta" +
+      "nceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n" +
+      "\027ch.epfl.dedis.lib.protoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8920,50 +10059,62 @@ public final class Calypso {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_AuthoriseReply_descriptor,
         new java.lang.String[] { });
-    internal_static_calypso_CreateLTS_descriptor =
+    internal_static_calypso_Authorize_descriptor =
       getDescriptor().getMessageTypes().get(4);
+    internal_static_calypso_Authorize_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_Authorize_descriptor,
+        new java.lang.String[] { "Byzcoinid", "Timestamp", "Signature", });
+    internal_static_calypso_AuthorizeReply_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_calypso_AuthorizeReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_calypso_AuthorizeReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_calypso_CreateLTS_descriptor =
+      getDescriptor().getMessageTypes().get(6);
     internal_static_calypso_CreateLTS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_CreateLTS_descriptor,
         new java.lang.String[] { "Proof", });
     internal_static_calypso_CreateLTSReply_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_calypso_CreateLTSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_CreateLTSReply_descriptor,
         new java.lang.String[] { "Byzcoinid", "Instanceid", "X", });
     internal_static_calypso_ReshareLTS_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_calypso_ReshareLTS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_ReshareLTS_descriptor,
         new java.lang.String[] { "Proof", });
     internal_static_calypso_ReshareLTSReply_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_calypso_ReshareLTSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_ReshareLTSReply_descriptor,
         new java.lang.String[] { });
     internal_static_calypso_DecryptKey_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_calypso_DecryptKey_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_DecryptKey_descriptor,
         new java.lang.String[] { "Read", "Write", });
     internal_static_calypso_DecryptKeyReply_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_calypso_DecryptKeyReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_DecryptKeyReply_descriptor,
         new java.lang.String[] { "C", "Xhatenc", "X", });
     internal_static_calypso_GetLTSReply_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_calypso_GetLTSReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_GetLTSReply_descriptor,
         new java.lang.String[] { "Ltsid", });
     internal_static_calypso_LtsInstanceInfo_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_calypso_LtsInstanceInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_LtsInstanceInfo_descriptor,

@@ -1,8 +1,11 @@
 package calypso
 
 import (
+	"encoding/binary"
 	"testing"
 	"time"
+
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -33,7 +36,7 @@ func TestClient_CreateLTS(t *testing.T) {
 	require.Nil(t, err)
 	calypsoClient := NewClient(c)
 	for _, who := range roster.List {
-		err := calypsoClient.Authorise(who, c.ID)
+		err := calypsoClient.Authorize(who, c.ID)
 		require.NoError(t, err)
 	}
 
@@ -43,6 +46,56 @@ func TestClient_CreateLTS(t *testing.T) {
 	require.NotNil(t, ltsReply.ByzCoinID)
 	require.NotNil(t, ltsReply.InstanceID)
 	require.NotNil(t, ltsReply.X)
+}
+
+func TestClient_Authorize(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	_, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+
+	// Initialise the genesis message and send it to the service.
+	signer := darc.NewSignerEd25519(nil, nil)
+	msg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:dummy", "spawn:" + ContractLongTermSecretID},
+		signer.Identity())
+	msg.BlockInterval = 500 * time.Millisecond
+	require.Nil(t, err)
+	d := msg.GenesisDarc
+	require.Nil(t, d.Verify(true))
+
+	// Create the clients
+	c, _, err := byzcoin.NewLedger(msg, false)
+	require.Nil(t, err)
+
+	reply := &AuthorizeReply{}
+	who := roster.List[0]
+	cl := NewClient(nil)
+	ts := time.Now().Unix() - 100
+	sigMsg := append(c.ID, make([]byte, 8)...)
+	binary.LittleEndian.PutUint64(sigMsg[32:], uint64(ts))
+	sig, err := schnorr.Sign(cothority.Suite, who.GetPrivate(), sigMsg)
+	require.NoError(t, err)
+	auth := &Authorize{
+		ByzCoinID: c.ID,
+		Timestamp: ts,
+		Signature: sig,
+	}
+	err = cl.c.SendProtobuf(who, auth, reply)
+	require.Error(t, err)
+
+	auth.Timestamp += 200
+	binary.LittleEndian.PutUint64(sigMsg[32:], uint64(auth.Timestamp))
+	auth.Signature, err = schnorr.Sign(cothority.Suite, who.GetPrivate(), sigMsg)
+	require.NoError(t, err)
+	err = cl.c.SendProtobuf(who, auth, reply)
+	require.Error(t, err)
+
+	auth.Timestamp -= 100
+	binary.LittleEndian.PutUint64(sigMsg[32:], uint64(auth.Timestamp))
+	auth.Signature, err = schnorr.Sign(cothority.Suite, who.GetPrivate(), sigMsg)
+	require.NoError(t, err)
+	err = cl.c.SendProtobuf(who, auth, reply)
+	require.NoError(t, err)
 }
 
 // TODO(jallen): Write TestClient_Reshare (and add api.go part too, I guess)
@@ -78,7 +131,7 @@ func TestClient_Calypso(t *testing.T) {
 
 	//Create the LTS
 	for _, who := range roster.List {
-		err := calypsoClient.Authorise(who, c.ID)
+		err := calypsoClient.Authorize(who, c.ID)
 		require.NoError(t, err)
 	}
 	ltsReply, err := calypsoClient.CreateLTS(roster, gDarc.GetBaseID(), []darc.Signer{admin}, []uint64{adminCt})

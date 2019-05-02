@@ -63,7 +63,7 @@ class CalypsoTest {
             logger.info("Admin darc: " + genesisDarc.getBaseId().toString());
             ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
             for (ServerIdentity si : bc.getRoster().getNodes()) {
-                CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+                CalypsoRPC.authorize(si, bc.getGenesisBlock().getId());
             }
             calypso = new CalypsoRPC(bc, genesisDarc.getId(), bc.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
             if (!calypso.checkLiveness()) {
@@ -281,7 +281,7 @@ class CalypsoTest {
 
         ByzCoinRPC bc2 = new ByzCoinRPC(calypso.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc2.getRoster().getNodes()) {
-            CalypsoRPC.authorise(si, bc2.getGenesisBlock().getId());
+            CalypsoRPC.authorize(si, bc2.getGenesisBlock().getId());
         }
         CalypsoRPC calypso2 = new CalypsoRPC(bc2, genesisDarc.getId(), bc2.getRoster(), Collections.singletonList(admin), Collections.singletonList(1L));
         try {
@@ -446,7 +446,7 @@ class CalypsoTest {
             // create a new transaction with one more node in the roster
             testInstanceController.startConode(5);
             ServerIdentity conode5 = testInstanceController.getIdentities().get(4);
-            CalypsoRPC.authorise(conode5, calypso.getGenesisBlock().getId());
+            CalypsoRPC.authorize(conode5, calypso.getGenesisBlock().getId());
 
             List<ServerIdentity> newList = calypso.getRoster().getNodes();
             assertTrue(newList.add(conode5));

@@ -134,7 +134,7 @@ public class Darc {
      * Add a rule to the Darc.
      *
      * @param action is the action in the rule.
-     * @param id     is the identity that is authorised for the action
+     * @param id     is the identity that is authorized for the action
      * @param link   is how the identity should be combined with the existing identities, if they exist
      * @throws CothorityCryptoException if something goes wrong
      */

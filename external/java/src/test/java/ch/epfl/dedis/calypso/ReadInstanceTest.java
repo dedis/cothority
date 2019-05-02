@@ -48,7 +48,7 @@ class ReadInstanceTest {
 
         ByzCoinRPC bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         for (ServerIdentity si : bc.getRoster().getNodes()) {
-            CalypsoRPC.authorise(si, bc.getGenesisBlock().getId());
+            CalypsoRPC.authorize(si, bc.getGenesisBlock().getId());
         }
 
         calypso = new CalypsoRPC(bc, genesisDarc.getId(), bc.getRoster(),

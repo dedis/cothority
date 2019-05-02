@@ -1,7 +1,10 @@
 package calypso
 
 import (
+	"encoding/binary"
 	"time"
+
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -87,16 +90,36 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 	return reply, nil
 }
 
-// Authorise adds a ByzCoinID to the list of authorized IDs for each
-// server in the roster. The AuthoriseByzcoinID service refuses requests
-// that do not come from localhost.
+// Authorise adds a ByzCoinID to the list of authorized IDs. It can only be called
+// from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
+// Deprecated: please use Authorize.
+func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
+	return c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil)
+}
+
+// Authorize adds a ByzCoinID to the list of authorized IDs in the server. To
+// be accepted, the request must be signed by the private key stored in
+// private.toml. For testing purposes, the environment variable can be set:
+//   COTHORITY_ALLOW_INSECURE_ADMIN=true
+// this disables the signature check.
 //
 // It should be called by the administrator at the beginning, before any other
 // API calls are made. A ByzCoinID that is not authorised will not be allowed to
 // call the other APIs.
-func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
-	reply := &AuthoriseReply{}
-	err := c.c.SendProtobuf(who, &Authorise{ByzCoinID: what}, reply)
+func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
+	reply := &AuthorizeReply{}
+	ts := time.Now().Unix()
+	msg := append(what, make([]byte, 8)...)
+	binary.LittleEndian.PutUint64(msg[32:], uint64(ts))
+	sig, err := schnorr.Sign(cothority.Suite, who.GetPrivate(), msg)
+	if err != nil {
+		return err
+	}
+	err = c.c.SendProtobuf(who, &Authorize{
+		ByzCoinID: what,
+		Timestamp: ts,
+		Signature: sig,
+	}, reply)
 	if err != nil {
 		return err
 	}

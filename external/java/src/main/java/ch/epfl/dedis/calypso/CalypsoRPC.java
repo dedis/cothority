@@ -201,23 +201,27 @@ public class CalypsoRPC extends ByzCoinRPC {
     }
 
     /**
-     * Connect to a server to an authorised ByzCoin ID. This API is only works if the server is on the local network,
+     * Connect to a server to an Authorized ByzCoin ID. This API is only works if the server is on the local network,
      * unless the environment variable COTHORITY_ALLOW_INSECURE_ADMIN is set.
+     *
+     * As of 3.0.5, the authorization requires a signature by the private key of the conode. This is not implemented
+     * in java.
+     *
      * @param si the server identity
      * @param byzcoinId the ByzCoin ID
      * @throws CothorityCommunicationException if something goes wrong.
      */
-    public static void authorise(ServerIdentity si, SkipblockId byzcoinId) throws CothorityCommunicationException {
-        Calypso.Authorise.Builder b = Calypso.Authorise.newBuilder();
+    public static void authorize(ServerIdentity si, SkipblockId byzcoinId) throws CothorityCommunicationException {
+        Calypso.Authorize.Builder b = Calypso.Authorize.newBuilder();
         b.setByzcoinid(byzcoinId.toProto());
 
         Roster r = new Roster(Collections.singletonList(si));
-        ByteString msg = r.sendMessage("Calypso/Authorise", b.build());
+        ByteString msg = r.sendMessage("Calypso/Authorize", b.build());
 
         try {
-            Calypso.AuthoriseReply.parseFrom(msg);
+            Calypso.AuthorizeReply.parseFrom(msg);
         } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException("failed to authorise" + e.getMessage());
+            throw new CothorityCommunicationException("failed to Authorize" + e.getMessage());
         }
     }
 }

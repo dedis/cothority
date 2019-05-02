@@ -50,14 +50,28 @@ message Read {
 // These are the messages used in the API-calls
 // ***
 
-// Authorise is used to add the given ByzCoinID into the list of
-// authorised IDs.
+// Authorise adds a ByzCoinID to the list of authorized IDs.
+// Deprecated: please use Authorize.
 message Authorise {
   required bytes byzcoinid = 1;
 }
 
-// AuthoriseReply is returned upon successful authorisation.
+// AuthoriseReply is returned upon successful authorization
+// Deprecated: please use AuthorizeReply
 message AuthoriseReply {
+}
+
+// Authorize is used to add the given ByzCoinID into the list of
+// authorised IDs. To be accepted, the ByzCoinID must be signed
+// using the private key of the conode.
+message Authorize {
+  required bytes byzcoinid = 1;
+  optional sint64 timestamp = 2;
+  optional bytes signature = 3;
+}
+
+// AuthorizeReply is returned upon successful authorisation.
+message AuthorizeReply {
 }
 
 // CreateLTS is used to start a DKG and store the private keys in each node.

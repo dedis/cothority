@@ -15,7 +15,7 @@ require (
 	go.dedis.ch/protobuf v1.0.6
 	go.etcd.io/bbolt v1.3.2
 	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c
-	golang.org/x/sys v0.0.0-20190124100055-b90733256f2e
+	golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.2.2 // indirect

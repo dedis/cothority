@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * <li>
  * Collective witness - a collection of nodes, or conodes, independently observe the logging of an event. The event
  * will only be accepted if a 2/3-majority think it is valid, e.g., the timestamp is reasonable, the client is
- * authorised and so on.
+ * authorized and so on.
  * </li>
  * <li>
  * Distributed access control - fine-grained client access control with delegation support is configured using
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * smart-contract returns a positive result.
  * </li>
  * <li>
- * Existence proof - once an event is logged, an authorised client can request a cryptographic proof (powered by
+ * Existence proof - once an event is logged, an authorized client can request a cryptographic proof (powered by
  * collection) that the event is indeed stored in the blockchain and has not been tampered.
  * </li>
  * </ul>

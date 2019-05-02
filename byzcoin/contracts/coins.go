@@ -74,7 +74,7 @@ func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	if did := inst.Spawn.Args.Search("darcID"); did != nil {
 		darcID = darc.ID(did)
 	}
-	log.Lvlf2("Spawning coin to %x", ca.Slice())
+	log.Lvlf2("Spawning coin to %x, with darc %x", ca.Slice(), darcID[:])
 	if t := inst.Spawn.Args.Search("type"); t != nil {
 		if len(t) != len(byzcoin.InstanceID{}) {
 			return nil, nil, errors.New("type needs to be an InstanceID")
