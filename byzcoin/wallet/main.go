@@ -229,7 +229,8 @@ func transfer(c *cli.Context) error {
 				{
 					InstanceID: iid,
 					Invoke: &byzcoin.Invoke{
-						Command: "transfer",
+						ContractID: contracts.ContractCoinID,
+						Command:    "transfer",
 						Args: byzcoin.Arguments{
 							{
 								Name:  "coins",
@@ -245,7 +246,7 @@ func transfer(c *cli.Context) error {
 				},
 			},
 		}
-		ctx.SignWith(signer)
+		ctx.FillSignersAndSignWith(signer)
 
 		log.Info("Sending transaction of", amount, "coins to address", c.Args().Get(1))
 		wait := 0
@@ -290,6 +291,7 @@ type siJSON struct {
 	ID          string
 	Address     string
 	Description string
+	URL         string
 }
 
 type rosterJSON struct {
@@ -359,6 +361,7 @@ func loadConfig() (cfg config, cl *byzcoin.Client, err error) {
 		}
 		si := network.NewServerIdentity(pub, network.Address(siJ.Address))
 		si.Description = siJ.Description
+		si.URL = siJ.URL
 		var id []byte
 		id, err = hex.DecodeString(siJ.ID)
 		if err != nil {
@@ -416,6 +419,7 @@ func (cfg config) save() error {
 			ID:          fmt.Sprintf("%x", si.ID[:]),
 			Address:     string(si.Address),
 			Description: si.Description,
+			URL:         si.URL,
 		})
 	}
 	d := cfg.BCConfig.AdminDarc
