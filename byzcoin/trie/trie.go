@@ -561,6 +561,20 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket)
 	return nil, errors.New("invalid node type")
 }
 
+// ForEach runs the callback cb on every key/value pair of the trie. The
+// iteration stops and the function returns an error when the callback returns
+// an error.
+func (t *Trie) ForEach(cb func(k, v []byte) error) error {
+	p := leafCallbackProcessor{cb}
+	return t.db.View(func(b Bucket) error {
+		rootKey := t.GetRootWithBucket(b)
+		if rootKey == nil {
+			return errors.New("no root key")
+		}
+		return t.dfs(&p, rootKey, b)
+	})
+}
+
 // IsValid checks whether the trie is valid.
 func (t *Trie) IsValid() error {
 	p := countNodeProcessor{}

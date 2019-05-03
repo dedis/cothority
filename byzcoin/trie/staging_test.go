@@ -1,6 +1,9 @@
 package trie
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,6 +47,7 @@ func testStaging(t *testing.T, db DB) {
 		require.NoError(t, err)
 		require.Equal(t, val, k)
 	}
+	require.NoError(t, sTrie.sanityCheck())
 
 	// Overwrite values, only go up to 95 (not overwriting everything)
 	// because we also want to see what happens when deleting
@@ -56,6 +60,7 @@ func testStaging(t *testing.T, db DB) {
 		require.NoError(t, err)
 		require.Equal(t, val, v)
 	}
+	require.NoError(t, sTrie.sanityCheck())
 
 	// Delete values from the staging trie
 	for i := 0; i < 10; i++ {
@@ -65,6 +70,7 @@ func testStaging(t *testing.T, db DB) {
 		require.NoError(t, err)
 		require.Nil(t, val)
 	}
+	require.NoError(t, sTrie.sanityCheck())
 
 	// Delete values from the source trie
 	for i := 90; i < 100; i++ {
@@ -74,10 +80,147 @@ func testStaging(t *testing.T, db DB) {
 		require.NoError(t, err)
 		require.Nil(t, val)
 	}
+	require.NoError(t, sTrie.sanityCheck())
 }
 
 func TestStagingCommit(t *testing.T) {
 	testMemAndDisk(t, testStagingCommit)
+}
+
+func testStagingForEach(t *testing.T, db DB) {
+	// testing strategy for executing all code paths
+	// 1. create a normal trie with some keys 0, 1, 2, 3
+	// 2. use foreach and check these exist
+	// 3. stage keys 4, 5
+	// 4. use foreach to check that 0-5 exists
+	// 5. delete keys 0, 1, 2
+	// 6. check that 3-5 exists
+	// 7. delete keys 4, 5
+	// 8. check that only 3 is left
+	// 9. set 0, 1, 2
+	// 10. we should see 0-3
+	// 11. set 4, 5
+	// 12. we should see 0-5
+
+	// setup the keys
+	keys := make([][]byte, 6)
+	for i := range keys {
+		keys[i] = []byte(fmt.Sprintf("dummy key %d", i))
+	}
+
+	testTrie, err := NewTrie(db, genNonce())
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	dummyVal := []byte("dummy")
+	// 1
+	require.NoError(t, testTrie.Set(keys[0], dummyVal))
+	require.NoError(t, testTrie.Set(keys[1], dummyVal))
+	require.NoError(t, testTrie.Set(keys[2], dummyVal))
+	require.NoError(t, testTrie.Set(keys[3], dummyVal))
+	// 2
+	m := make(map[string]struct{})
+	require.NoError(t, testTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	for i := 0; i < 4; i++ {
+		require.Contains(t, m, string(keys[i]))
+	}
+	require.Equal(t, 4, len(m))
+	// 3
+	sTrie := testTrie.MakeStagingTrie()
+	require.NoError(t, sTrie.Set(keys[4], dummyVal))
+	require.NoError(t, sTrie.Set(keys[5], dummyVal))
+	// 4
+	m = make(map[string]struct{})
+	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	for i := 0; i < 6; i++ {
+		require.Contains(t, m, string(keys[i]))
+	}
+	require.Equal(t, 6, len(m))
+	require.NoError(t, sTrie.sanityCheck())
+	// 5
+	require.NoError(t, sTrie.Delete(keys[0]))
+	require.NoError(t, sTrie.Delete(keys[1]))
+	require.NoError(t, sTrie.Delete(keys[2]))
+	// 6
+	m = make(map[string]struct{})
+	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	for i := 3; i < 6; i++ {
+		require.Contains(t, m, string(keys[i]))
+	}
+	require.Equal(t, 3, len(m))
+	require.NoError(t, sTrie.sanityCheck())
+	// 7
+	require.NoError(t, sTrie.Delete(keys[4]))
+	require.NoError(t, sTrie.Delete(keys[5]))
+	// 8
+	m = make(map[string]struct{})
+	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	require.Contains(t, m, string(keys[3]))
+	require.Equal(t, 1, len(m))
+	require.NoError(t, sTrie.sanityCheck())
+	// 9
+	require.NoError(t, sTrie.Set(keys[0], dummyVal))
+	require.NoError(t, sTrie.Set(keys[1], dummyVal))
+	require.NoError(t, sTrie.Set(keys[2], dummyVal))
+	// 10
+	m = make(map[string]struct{})
+	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	for i := 0; i < 4; i++ {
+		require.Contains(t, m, string(keys[i]))
+	}
+	require.Equal(t, 4, len(m))
+	require.NoError(t, sTrie.sanityCheck())
+	// 11
+	require.NoError(t, sTrie.Set(keys[4], dummyVal))
+	require.NoError(t, sTrie.Set(keys[5], dummyVal))
+	// 12
+	m = make(map[string]struct{})
+	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
+		m[string(k)] = struct{}{}
+		if !bytes.Equal(dummyVal, v) {
+			return errors.New("bad value")
+		}
+		return nil
+	}))
+	for i := 0; i < 6; i++ {
+		require.Contains(t, m, string(keys[i]))
+	}
+	require.Equal(t, 6, len(m))
+	require.NoError(t, sTrie.sanityCheck())
+}
+
+func TestStagingForEach(t *testing.T) {
+	testMemAndDisk(t, testStagingForEach)
 }
 
 func testStagingCommit(t *testing.T, db DB) {
@@ -130,6 +273,7 @@ func testStagingCommit(t *testing.T, db DB) {
 	}
 
 	require.NoError(t, sTrie.Commit())
+	require.NoError(t, sTrie.sanityCheck())
 
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
@@ -180,6 +324,7 @@ func TestStagingGetRoot(t *testing.T) {
 	require.NoError(t, sTrie.Commit())
 	require.Equal(t, eRoot, testTrie.GetRoot())
 	require.Equal(t, eRoot, sTrie.GetRoot())
+	require.NoError(t, sTrie.sanityCheck())
 }
 
 func TestStagingGetProof(t *testing.T) {
@@ -246,6 +391,7 @@ func TestStagingGetProof(t *testing.T) {
 		require.Equal(t, absenceProofs[i-10].GetRoot(), p.GetRoot())
 		require.Equal(t, absenceProofs[i-10].Empty.hash(sTrie.source.nonce), p.Empty.hash(testTrie.nonce))
 	}
+	require.NoError(t, sTrie.sanityCheck())
 }
 
 func TestStagingClone(t *testing.T) {

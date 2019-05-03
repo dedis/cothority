@@ -339,6 +339,11 @@ func TestQuickCheck(t *testing.T) {
 	require.NotNil(t, testTrie.nonce)
 
 	f := func(keys [][]byte) bool {
+		// Put keys in a map so it's easier to access
+		keysMap := make(map[string]struct{})
+		for _, k := range keys {
+			keysMap[string(k)] = struct{}{}
+		}
 		// Add a bunch of random keys
 		for _, k := range keys {
 			if testTrie.Set(k, k) != nil {
@@ -350,6 +355,21 @@ func TestQuickCheck(t *testing.T) {
 			if v, err := testTrie.Get(k); err != nil || v == nil {
 				return false
 			}
+		}
+		// Check that everything is in ForEach
+		var cnt int
+		err := testTrie.ForEach(func(k, v []byte) error {
+			cnt++
+			if _, ok := keysMap[string(k)]; !ok {
+				return errors.New("missing key/value pair in foreach")
+			}
+			return nil
+		})
+		if err != nil {
+			return false
+		}
+		if cnt != len(keysMap) {
+			return false
 		}
 		// Delete everything
 		for _, k := range keys {
