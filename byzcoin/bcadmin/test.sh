@@ -33,6 +33,7 @@ main(){
     run testExpression
     run testLinkPermission
     run testQR
+    run testUpdateDarcDesc
     stopTest
 }
 
@@ -234,6 +235,18 @@ testQR() {
   [ -z "$BC" ] && exit 1
 
   testOK ./"$APP" qr -admin
+}
+
+testUpdateDarcDesc() {
+  # We update the description of the latest darc, then we get the latest darc
+  # and check if the description changed.
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK runBA darc cdesc --desc "New description"
+  testGrep "New description" runBA darc show
 }
 
 main
