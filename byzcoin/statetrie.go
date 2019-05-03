@@ -18,6 +18,7 @@ type ReadOnlyStateTrie interface {
 	GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error)
 	GetProof(key []byte) (*trie.Proof, error)
 	GetIndex() int
+	GetNonce() ([]byte, error)
 	ForEach(func(k, v []byte) error) error
 }
 
