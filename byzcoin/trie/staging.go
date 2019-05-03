@@ -37,6 +37,8 @@ type StagingTrie struct {
 // Clone makes a clone of the uncommitted data of the staging trie. The source
 // trie used for creating the staging trie is not cloned.
 func (t *StagingTrie) Clone() *StagingTrie {
+	t.Lock()
+	defer t.Unlock()
 	out := StagingTrie{
 		source:     t.source,
 		overlay:    make(map[string][]byte),
@@ -106,6 +108,7 @@ func (t *StagingTrie) Delete(k []byte) error {
 
 func (t *StagingTrie) del(k []byte) error {
 	t.deleteList[string(k)] = nil
+	delete(t.overlay, string(k))
 
 	t.instrList = append(t.instrList, instr{
 		ty: OpDel,
@@ -139,6 +142,8 @@ func (t *StagingTrie) Batch(pairs []KVPair) error {
 // Commit commits all operations performed on the StagingTrie since creation
 // or the previous commit to the source Trie.
 func (t *StagingTrie) Commit() error {
+	t.Lock()
+	defer t.Unlock()
 	err := t.source.db.Update(func(b Bucket) error {
 		for _, instr := range t.instrList {
 			switch instr.ty {
@@ -167,6 +172,8 @@ func (t *StagingTrie) Commit() error {
 
 // GetRoot returns the root of the trie.
 func (t *StagingTrie) GetRoot() []byte {
+	t.Lock()
+	defer t.Unlock()
 	var root []byte
 	err := t.source.db.UpdateDryRun(func(b Bucket) error {
 		for _, instr := range t.instrList {
@@ -194,6 +201,8 @@ func (t *StagingTrie) GetRoot() []byte {
 
 // GetProof gets the inclusion/absence proof for the given key.
 func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
+	t.Lock()
+	defer t.Unlock()
 	p := &Proof{}
 	err := t.source.db.UpdateDryRun(func(b Bucket) error {
 		// run the pending instructions
@@ -227,4 +236,43 @@ func (t *StagingTrie) isDeleted(k []byte) bool {
 		return true
 	}
 	return false
+}
+
+// ForEach runs the callback cb on every key/value pair of the trie. The
+// iteration stops and the function returns an error when the callback returns
+// an error.
+func (t *StagingTrie) ForEach(cb func(k, v []byte) error) error {
+	// iterate over the overlay
+	// iterate over the items that are not deleted in the trie
+	t.Lock()
+	defer t.Unlock()
+
+	for k, v := range t.overlay {
+		if err := cb([]byte(k), v); err != nil {
+			return err
+		}
+	}
+
+	return t.source.ForEach(func(k, v []byte) error {
+		if t.isDeleted(k) {
+			return nil
+		}
+		if _, ok := t.overlay[string(k)]; ok {
+			return nil
+		}
+		return cb(k, v)
+	})
+}
+
+// sanityCheck checks the invariant: the deleted values does not appear in the
+// overlay.
+func (t *StagingTrie) sanityCheck() error {
+	t.Lock()
+	defer t.Unlock()
+	for k := range t.deleteList {
+		if _, ok := t.overlay[k]; ok {
+			return errors.New("deleted key in overlay")
+		}
+	}
+	return nil
 }

@@ -1875,6 +1875,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 				}
 				return nil, nil, fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
 			}
+			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction, sc.InstanceID, sc.ContractID)
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
 				return nil, nil, fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)

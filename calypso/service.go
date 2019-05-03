@@ -132,11 +132,11 @@ func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 	if len(req.ByzCoinID) == 0 {
 		return nil, errors.New("empty ByzCoin ID")
 	}
-	key := string(req.ByzCoinID)
-	if _, ok := s.storage.AuthorisedByzCoinIDs[key]; ok {
+	bcID := string(req.ByzCoinID)
+	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
 		return nil, errors.New("ByzCoinID already authorised")
 	}
-	s.storage.AuthorisedByzCoinIDs[key] = true
+	s.storage.AuthorisedByzCoinIDs[bcID] = true
 	return &AuthoriseReply{}, nil
 }
 
@@ -168,7 +168,10 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 	}
 	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
-	setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+	err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+	if err != nil {
+		return nil, err
+	}
 	setupDKG.KeyPair = s.getKeyPair()
 
 	if err := pi.Start(); err != nil {
@@ -194,7 +197,10 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 		s.storage.Replies[instID] = reply
 		s.storage.DKS[instID] = dks
 		s.storage.Unlock()
-		s.save()
+		err = s.save()
+		if err != nil {
+			return nil, err
+		}
 		log.Lvlf2("%v Created LTS with ID: %v, pk %v", s.ServerIdentity(), instID, reply.X)
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("new-dkg didn't finish in time")
@@ -245,19 +251,24 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		setupDKG := pi.(*dkgprotocol.Setup)
 		setupDKG.Wait = true
 		setupDKG.KeyPair = s.getKeyPair()
-		setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+		err = setupDKG.SetConfig(&onet.GenericConfig{Data: cfgBuf})
+		if err != nil {
+			return nil, err
+		}
 
 		// Because we are the node starting the resharing protocol, by
 		// definition, we are inside the old group. (Checked first thing
 		// in this function.) So we have only Share, not PublicCoeffs.
+		oldn := len(s.storage.Rosters[id].List)
 		n := len(roster.List)
 		c := &dkg.Config{
-			Suite:     cothority.Suite,
-			Longterm:  setupDKG.KeyPair.Private,
-			OldNodes:  s.storage.Rosters[id].Publics(),
-			NewNodes:  roster.Publics(),
-			Share:     s.storage.DKS[id],
-			Threshold: n - (n-1)/3,
+			Suite:        cothority.Suite,
+			Longterm:     setupDKG.KeyPair.Private,
+			OldNodes:     s.storage.Rosters[id].Publics(),
+			NewNodes:     roster.Publics(),
+			Share:        s.storage.DKS[id],
+			Threshold:    n - (n-1)/3,
+			OldThreshold: oldn - (oldn-1)/3,
 		}
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
@@ -297,7 +308,10 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		s.storage.Rosters[id] = roster
 		s.storage.DKS[id] = dks
 		s.storage.Unlock()
-		s.save()
+		err = s.save()
+		if err != nil {
+			return nil, err
+		}
 		if s.afterReshare != nil {
 			s.afterReshare()
 		}
@@ -414,7 +428,10 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	s.storage.Unlock()
 
 	log.Lvl3("Starting reencryption protocol")
-	ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
+	err = ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
+	if err != nil {
+		return nil, err
+	}
 	err = ocsProto.Start()
 	if err != nil {
 		return nil, err
@@ -470,11 +487,11 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		if err := s.verifyProof(&cfg.Proof, tn.Roster()); err != nil {
 			return nil, err
 		}
-		key, _, _, _, err := cfg.KeyValue()
+		inst, _, _, _, err := cfg.KeyValue()
 		if err != nil {
 			return nil, err
 		}
-		instID := byzcoin.NewInstanceID(key)
+		instID := byzcoin.NewInstanceID(inst)
 
 		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
@@ -502,7 +519,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			s.storage.Replies[id] = reply
 			s.storage.Rosters[id] = tn.Roster()
 			s.storage.Unlock()
-			s.save()
+			err = s.save()
+			if err != nil {
+				log.Error(err)
+			}
 		}(cfg.Latest.SkipChainID(), instID)
 		return pi, nil
 	case calypsoReshareProto:
@@ -526,13 +546,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		setupDKG.KeyPair = s.getKeyPair()
 
 		s.storage.Lock()
+		oldn := len(cfg.OldNodes)
 		n := len(tn.Roster().List)
 		c := &dkg.Config{
-			Suite:     cothority.Suite,
-			Longterm:  setupDKG.KeyPair.Private,
-			NewNodes:  tn.Roster().Publics(),
-			OldNodes:  cfg.OldNodes,
-			Threshold: n - (n-1)/3,
+			Suite:        cothority.Suite,
+			Longterm:     setupDKG.KeyPair.Private,
+			NewNodes:     tn.Roster().Publics(),
+			OldNodes:     cfg.OldNodes,
+			Threshold:    n - (n-1)/3,
+			OldThreshold: oldn - (oldn-1)/3,
 		}
 		s.storage.Unlock()
 
@@ -582,7 +604,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			s.storage.Shared[id] = shared
 			s.storage.DKS[id] = dks
 			s.storage.Unlock()
-			s.save()
+			err = s.save()
+			if err != nil {
+				log.Error(err)
+			}
 			if s.afterReshare != nil {
 				s.afterReshare()
 			}
@@ -664,9 +689,18 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetLTSReply, s.Authorise); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
-	byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
-	byzcoin.RegisterContract(c, ContractReadID, contractReadFromBytes)
-	byzcoin.RegisterContract(c, ContractLongTermSecretID, contractLTSFromBytes)
+	err := byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = byzcoin.RegisterContract(c, ContractReadID, contractReadFromBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = byzcoin.RegisterContract(c, ContractLongTermSecretID, contractLTSFromBytes)
+	if err != nil {
+		return nil, err
+	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, err
