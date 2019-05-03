@@ -41,7 +41,7 @@ describe("SkipchainRPC Tests", () => {
     it("should create a chain with different roster", async () => {
         const rpc = new SkipchainRPC(roster);
         const rpc2 = new SkipchainRPC(roster.slice(0, 2));
-        const { latest: genesis } = await rpc.createSkipchain();
+        const { latest: genesis } = await rpc.createSkipchain(1, 1);
 
         for (let i = 0; i < 3; i++) {
             await rpc.addBlock(genesis.hash, Buffer.from("abc"));
