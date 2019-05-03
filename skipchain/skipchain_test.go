@@ -1403,7 +1403,7 @@ func TestService_WaitBlock(t *testing.T) {
 }
 
 // The test scenario is the following:
-// - 5 blocks and 4 nodes
+// - 4 nodes
 // - level 1 link from index 0 to index 2
 // - level 1 link from index 2 to index 4
 //
@@ -1439,12 +1439,10 @@ func TestService_MissingForwardLinks(t *testing.T) {
 	require.NoError(t, err)
 
 	sb.Roster = onet.NewRoster(ro.List[:3])
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 5; i++ {
 		_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
 		require.NoError(t, err)
 	}
-
-	time.Sleep(5 * time.Second)
 
 	req := &GetSingleBlockByIndex{Genesis: sbRoot.Hash, Index: 2}
 	sbAtIndex2FromC1, err := s.GetSingleBlockByIndex(req)
@@ -1463,5 +1461,14 @@ func TestService_MissingForwardLinks(t *testing.T) {
 	// as it's not participating to the cothority anymore.
 	require.Equal(t, 1, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
 
-	// TODO: catch up of C4 after re-entering the cothority
+	// When propagating a new block, a proof is provided and it should then update
+	// previous forward links.
+	sb.Roster = ro
+	_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+	require.NoError(t, err)
+
+	sbAtIndex2FromC4, err = servers[3].Service(ServiceName).(*Service).GetSingleBlockByIndex(req)
+	require.NoError(t, err)
+	// C4 is re-inserted and should then update the missing forward link with the new block.
+	require.Equal(t, 2, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -90,6 +91,35 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	err := block1.VerifyForwardSignatures()
 	require.NotNil(t, err)
 	require.Equal(t, "Missing roster in the block", err.Error())
+}
+
+func TestSkipBlock_InvalidForwardLinks(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	_, ro, service := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+
+	s := service.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(s, ro, nil, VerificationStandard, 2, 2)
+	require.NoError(t, err)
+
+	sb := NewSkipBlock()
+	sb.Roster = ro
+	for i := 0; i < 2; i++ {
+		_, err := s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		require.NoError(t, err)
+	}
+
+	sb2 := s.db.GetByID(sbRoot.Hash)
+	sb2.ForwardLink = append(sb2.ForwardLink, sb2.ForwardLink[0])
+
+	log.OutputToBuf()
+	defer log.OutputToOs()
+
+	// Try to add a forward link at a wrong height.
+	s.db.Store(sb2)
+
+	require.Contains(t, log.GetStdErr(), "Received a forward link with an invalid height")
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {

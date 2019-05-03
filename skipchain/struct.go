@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -710,23 +711,41 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 				return errors.New("failed to get skipblock with error: " + err.Error())
 			}
 			if sbOld != nil {
+				numFL := len(sbOld.ForwardLink)
 				// If this skipblock already exists, only copy forward-links and
 				// new children.
-				if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-					for i, fl := range sb.ForwardLink {
+				if len(sb.ForwardLink) > numFL {
+					for i, fl := range sb.ForwardLink[numFL:] {
 						if fl.IsEmpty() {
-							// ignore empty links
+							// Ignore empty links.
 							continue
 						}
 
 						publics := sbOld.Roster.ServicePublics(ServiceName)
 
 						if err := fl.Verify(suite, publics); err != nil {
-							return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
+							// Only keep a log of the failing forward links but keep trying others.
+							log.Error("Got a known block with wrong signature in forward-link with error: " + err.Error())
+							continue
 						}
-						if err := sbOld.AddForwardLink(fl, i); err != nil {
+
+						target, err := db.getFromTx(tx, fl.To)
+						if err != nil {
+							return err
+						}
+						if target != nil {
+							diff := math.Log(float64(target.Index - sbOld.Index))
+							base := math.Log(float64(sbOld.BaseHeight))
+							// Only check the target height if it exists because the block might
+							// not yet be stored (e.g. catch up).
+							if int(diff/base) != i+numFL {
+								log.Errorf("Received a forward link with an invalid height: %x/%d", sb.Hash, i+numFL)
+								continue
+							}
+						}
+
+						if err := sbOld.AddForwardLink(fl, i+numFL); err != nil {
 							log.Error(err)
-							return nil
 						}
 					}
 				}

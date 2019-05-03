@@ -333,6 +333,8 @@ func scUpdates(c *cli.Context) error {
 		for li, fl := range x.ForwardLink {
 			if fl.NewRoster != nil {
 				fmt.Fprintf(c.App.Writer, "  forward link %v, newRoster %v\n", li, fmtRoster(fl.NewRoster))
+			} else {
+				fmt.Fprintf(c.App.Writer, "  forward link %v\n", li)
 			}
 		}
 	}
