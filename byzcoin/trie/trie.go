@@ -18,6 +18,11 @@ type Trie struct {
 	noHashKey bool
 }
 
+// GetNonce returns the stored nonce.
+func (t *Trie) GetNonce() ([]byte, error) {
+	return t.nonce, nil
+}
+
 // LoadTrie loads the trie from a BoltDB database, it must exist otherwise an
 // error is returned. It does not check the consistency after loading the
 // database. If that is required, call IsValid.

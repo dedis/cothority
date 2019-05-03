@@ -34,6 +34,11 @@ type StagingTrie struct {
 	sync.Mutex
 }
 
+// GetNonce returns the nonce from the source Trie.
+func (t *StagingTrie) GetNonce() ([]byte, error) {
+	return t.source.nonce, nil
+}
+
 // Clone makes a clone of the uncommitted data of the staging trie. The source
 // trie used for creating the staging trie is not cloned.
 func (t *StagingTrie) Clone() *StagingTrie {
