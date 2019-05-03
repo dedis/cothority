@@ -192,6 +192,18 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// "Spawn" invocation. If it is successful, this invocation fills the
 		// "ExecResult" field of the "deferredData" struct.
 
+		// In the following we are creating a new StagingStateTrie from the
+		// readonly state try by copying the data.
+		nonce, err2 := rst.GetNonce()
+		if err2 != nil {
+			return nil, nil, errors.New("couldn't get the nonce: " + err2.Error())
+		}
+		sst, err2 := newMemStagingStateTrie(nonce)
+		if err2 != nil {
+			return nil, nil, errors.New("Failed to created stagingStateTrie: " + err2.Error())
+		}
+		rst.ForEach(sst.Set)
+
 		instructionIDs := make([][]byte, len(c.DeferredData.ProposedTransaction.Instructions))
 
 		for i, proposedInstr := range c.DeferredData.ProposedTransaction.Instructions {
@@ -223,7 +235,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			if err != nil {
 				return nil, nil, errors.New("couldn't get the root contract")
 			}
-			err = contract.VerifyDeferredInstruction(rst, proposedInstr, c.DeferredData.InstructionHashes[i])
+			err = contract.VerifyDeferredInstruction(sst, proposedInstr, c.DeferredData.InstructionHashes[i])
 			if err != nil {
 				return nil, nil, fmt.Errorf("verifying the instruction failed: %s", err)
 			}
@@ -231,13 +243,15 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			var stateChanges []StateChange
 			switch instructionType {
 			case SpawnType:
-				stateChanges, _, err = contract.Spawn(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Spawn(sst, proposedInstr, coins)
 			case InvokeType:
-				stateChanges, _, err = contract.Invoke(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Invoke(sst, proposedInstr, coins)
 			case DeleteType:
-				stateChanges, _, err = contract.Delete(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Delete(sst, proposedInstr, coins)
 
 			}
+
+			sst.StoreAll(stateChanges)
 
 			if err != nil {
 				return nil, nil, fmt.Errorf("error while executing an instruction: %s", err)
