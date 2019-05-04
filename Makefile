@@ -29,3 +29,9 @@ docker:
 test_java: docker
 	cd external/java; mvn test
 
+test_proto:
+	@./proto.sh > /dev/null; \
+	if [ "$$( git diff )" ]; then \
+		echo "Please update proto-files with 'make proto'"; \
+		exit 1; \
+	fi

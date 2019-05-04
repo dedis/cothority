@@ -10552,11 +10552,11 @@ public final class ByzCoinProto {
    * <pre>
    * Proof represents everything necessary to verify a given
    * key/value pair is stored in a skipchain. The proof is in three parts:
-   *   1. InclusionProof proofs the presence or absence of the key. In case of
-   *   the key being present, the value is included in the proof
-   *   2. Latest is used to verify the merkle tree root used in the proof is
-   *   stored in the latest skipblock
-   *   3. Links proves that the latest skipblock is part of the skipchain
+   *   1. InclusionProof proves the presence or absence of the key. In case of
+   *   the key being present, the value is included in the proof.
+   *   2. Latest is used to verify the Merkle tree root used in the proof is
+   *   stored in the latest skipblock.
+   *   3. Links proves that the latest skipblock is part of the skipchain.
    * This Structure could later be moved to cothority/skipchain.
    * </pre>
    *
@@ -11017,11 +11017,11 @@ public final class ByzCoinProto {
      * <pre>
      * Proof represents everything necessary to verify a given
      * key/value pair is stored in a skipchain. The proof is in three parts:
-     *   1. InclusionProof proofs the presence or absence of the key. In case of
-     *   the key being present, the value is included in the proof
-     *   2. Latest is used to verify the merkle tree root used in the proof is
-     *   stored in the latest skipblock
-     *   3. Links proves that the latest skipblock is part of the skipchain
+     *   1. InclusionProof proves the presence or absence of the key. In case of
+     *   the key being present, the value is included in the proof.
+     *   2. Latest is used to verify the Merkle tree root used in the proof is
+     *   stored in the latest skipblock.
+     *   3. Links proves that the latest skipblock is part of the skipchain.
      * This Structure could later be moved to cothority/skipchain.
      * </pre>
      *

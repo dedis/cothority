@@ -165,6 +165,31 @@ public final class Calypso {
      * <code>required bytes ltsid = 8;</code>
      */
     com.google.protobuf.ByteString getLtsid();
+
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    boolean hasCost();
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost();
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostOrBuilder();
   }
   /**
    * <pre>
@@ -256,6 +281,19 @@ public final class Calypso {
             case 66: {
               bitField0_ |= 0x00000080;
               ltsid_ = input.readBytes();
+              break;
+            }
+            case 74: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                subBuilder = cost_.toBuilder();
+              }
+              cost_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(cost_);
+                cost_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000100;
               break;
             }
             default: {
@@ -487,6 +525,39 @@ public final class Calypso {
       return ltsid_;
     }
 
+    public static final int COST_FIELD_NUMBER = 9;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin cost_;
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    public boolean hasCost() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost() {
+      return cost_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
+    }
+    /**
+     * <pre>
+     * Cost reflects how many coins you'll have to pay for a read-request
+     * </pre>
+     *
+     * <code>optional .byzcoin.Coin cost = 9;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostOrBuilder() {
+      return cost_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -522,6 +593,12 @@ public final class Calypso {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (hasCost()) {
+        if (!getCost().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -552,6 +629,9 @@ public final class Calypso {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeBytes(8, ltsid_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(9, getCost());
       }
       unknownFields.writeTo(output);
     }
@@ -593,6 +673,10 @@ public final class Calypso {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(8, ltsid_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, getCost());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -650,6 +734,11 @@ public final class Calypso {
         result = result && getLtsid()
             .equals(other.getLtsid());
       }
+      result = result && (hasCost() == other.hasCost());
+      if (hasCost()) {
+        result = result && getCost()
+            .equals(other.getCost());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -692,6 +781,10 @@ public final class Calypso {
       if (hasLtsid()) {
         hash = (37 * hash) + LTSID_FIELD_NUMBER;
         hash = (53 * hash) + getLtsid().hashCode();
+      }
+      if (hasCost()) {
+        hash = (37 * hash) + COST_FIELD_NUMBER;
+        hash = (53 * hash) + getCost().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -826,6 +919,7 @@ public final class Calypso {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getCostFieldBuilder();
         }
       }
       @java.lang.Override
@@ -847,6 +941,12 @@ public final class Calypso {
         bitField0_ = (bitField0_ & ~0x00000040);
         ltsid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000080);
+        if (costBuilder_ == null) {
+          cost_ = null;
+        } else {
+          costBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -907,6 +1007,14 @@ public final class Calypso {
           to_bitField0_ |= 0x00000080;
         }
         result.ltsid_ = ltsid_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        if (costBuilder_ == null) {
+          result.cost_ = cost_;
+        } else {
+          result.cost_ = costBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -980,6 +1088,9 @@ public final class Calypso {
         if (other.hasLtsid()) {
           setLtsid(other.getLtsid());
         }
+        if (other.hasCost()) {
+          mergeCost(other.getCost());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -1007,6 +1118,11 @@ public final class Calypso {
         }
         if (!hasLtsid()) {
           return false;
+        }
+        if (hasCost()) {
+          if (!getCost().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -1461,6 +1577,160 @@ public final class Calypso {
         ltsid_ = getDefaultInstance().getLtsid();
         onChanged();
         return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Coin cost_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> costBuilder_;
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public boolean hasCost() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin getCost() {
+        if (costBuilder_ == null) {
+          return cost_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
+        } else {
+          return costBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public Builder setCost(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
+        if (costBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          cost_ = value;
+          onChanged();
+        } else {
+          costBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public Builder setCost(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder builderForValue) {
+        if (costBuilder_ == null) {
+          cost_ = builderForValue.build();
+          onChanged();
+        } else {
+          costBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public Builder mergeCost(ch.epfl.dedis.lib.proto.ByzCoinProto.Coin value) {
+        if (costBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+              cost_ != null &&
+              cost_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance()) {
+            cost_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.newBuilder(cost_).mergeFrom(value).buildPartial();
+          } else {
+            cost_ = value;
+          }
+          onChanged();
+        } else {
+          costBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public Builder clearCost() {
+        if (costBuilder_ == null) {
+          cost_ = null;
+          onChanged();
+        } else {
+          costBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder getCostBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getCostFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder getCostOrBuilder() {
+        if (costBuilder_ != null) {
+          return costBuilder_.getMessageOrBuilder();
+        } else {
+          return cost_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.getDefaultInstance() : cost_;
+        }
+      }
+      /**
+       * <pre>
+       * Cost reflects how many coins you'll have to pay for a read-request
+       * </pre>
+       *
+       * <code>optional .byzcoin.Coin cost = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder> 
+          getCostFieldBuilder() {
+        if (costBuilder_ == null) {
+          costBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Coin, ch.epfl.dedis.lib.proto.ByzCoinProto.Coin.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.CoinOrBuilder>(
+                  getCost(),
+                  getParentForChildren(),
+                  isClean());
+          cost_ = null;
+        }
+        return costBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -8594,22 +8864,23 @@ public final class Calypso {
   static {
     java.lang.String[] descriptorData = {
       "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\032" +
-      "\nonet.proto\"q\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
-      "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
-      "\014\022\t\n\001c\030\006 \002(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsid" +
-      "\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(" +
-      "\014\"\036\n\tAuthorise\022\021\n\tbyzcoinid\030\001 \002(\014\"\020\n\016Aut" +
-      "horiseReply\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\0132" +
-      "\016.byzcoin.Proof\"B\n\016CreateLTSReply\022\021\n\tbyz" +
-      "coinid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003 " +
-      "\002(\014\"+\n\nReshareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzco" +
-      "in.Proof\"\021\n\017ReshareLTSReply\"I\n\nDecryptKe" +
-      "y\022\034\n\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write" +
-      "\030\002 \002(\0132\016.byzcoin.Proof\"8\n\017DecryptKeyRepl" +
-      "y\022\t\n\001c\030\001 \002(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014" +
-      "\"\034\n\013GetLTSReply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsIns" +
-      "tanceInfo\022\034\n\006roster\030\001 \002(\0132\014.onet.RosterB" +
-      "\"\n\027ch.epfl.dedis.lib.protoB\007Calypso"
+      "\nonet.proto\"\216\001\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u" +
+      "\030\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002" +
+      "(\014\022\t\n\001c\030\006 \002(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsi" +
+      "d\030\010 \002(\014\022\033\n\004cost\030\t \001(\0132\r.byzcoin.Coin\"!\n\004" +
+      "Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002(\014\"\036\n\tAutho" +
+      "rise\022\021\n\tbyzcoinid\030\001 \002(\014\"\020\n\016AuthoriseRepl" +
+      "y\"*\n\tCreateLTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin." +
+      "Proof\"B\n\016CreateLTSReply\022\021\n\tbyzcoinid\030\001 \002" +
+      "(\014\022\022\n\ninstanceid\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"+\n\nRes" +
+      "hareLTS\022\035\n\005proof\030\001 \002(\0132\016.byzcoin.Proof\"\021" +
+      "\n\017ReshareLTSReply\"I\n\nDecryptKey\022\034\n\004read\030" +
+      "\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002(\0132\016.b" +
+      "yzcoin.Proof\"8\n\017DecryptKeyReply\022\t\n\001c\030\001 \002" +
+      "(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\034\n\013GetLTS" +
+      "Reply\022\r\n\005ltsid\030\001 \002(\014\"/\n\017LtsInstanceInfo\022" +
+      "\034\n\006roster\030\001 \002(\0132\014.onet.RosterB\"\n\027ch.epfl" +
+      ".dedis.lib.protoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8630,7 +8901,7 @@ public final class Calypso {
     internal_static_calypso_Write_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_Write_descriptor,
-        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "C", "Extradata", "Ltsid", });
+        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "C", "Extradata", "Ltsid", "Cost", });
     internal_static_calypso_Read_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_calypso_Read_fieldAccessorTable = new
