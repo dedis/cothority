@@ -2,7 +2,6 @@ package contracts
 
 import (
 	"encoding/binary"
-	"strconv"
 	"testing"
 	"time"
 
@@ -70,8 +69,9 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -87,7 +87,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -428,8 +428,9 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -445,7 +446,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -747,8 +748,9 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -764,7 +766,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1034,8 +1036,9 @@ func TestDeferred_WrongSignature(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -1051,7 +1054,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1183,8 +1186,9 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -1200,7 +1204,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1366,8 +1370,9 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("0")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -1383,7 +1388,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1512,8 +1517,9 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -1529,7 +1535,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1596,18 +1602,18 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 }
 
-func TestDeferred_SpawnWithMaxecution(t *testing.T) {
-	// Here we specify a "NumExecution" of 2 and exec 3 times the proposed
-	// transaciton. We expect the "MaxExectuion" to be updated and the third
-	// proposed transaction execution to fail.
-	// Since we can not spawn a contract two times with the same ID, we will
-	// frst spawn a contract, then propose to update it.
+func TestDeferred_InstructionsDependent(t *testing.T) {
+	// Here we run a deferred transaction and check if instructions can be
+	// sequentially dependent. We simply test this by invoking a first
+	// delete instruction on a value contract, then we try to read the deleted
+	// contract. If we can't, we know instructions are sequentially dependent.
 	//
 	// 0.1.  Setup
-	// 0.2.  Spawn a vlue contract
-	// 1.    Spawn the deferred contract that updates the value contract
-	// 2.    Invoke an "addProof" to sign the proposed transaction
-	// 3,4,5 Invoke an "execProposedTx"
+	// 0.2.  Spawn a value contract
+	// 1.    Spawn the deferred contract with two instructions
+	// 2.    Invoke a first "addProof" to sign the proposed transaction
+	// 3.    Invoke a second "addProof" to sign the proposed transaction
+	// 4.    Invoke an "execProposedTx"
 
 	// ------------------------------------------------------------------------
 	// 0.1. Set up
@@ -1619,7 +1625,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:value", "spawn:deferred", "invoke:deferred.addProof",
+		[]string{"spawn:value", "delete:value", "spawn:deferred", "invoke:deferred.addProof",
 			"invoke:deferred.execProposedTx", "invoke:value.update"}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
@@ -1672,6 +1678,12 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		Instructions: []byzcoin.Instruction{
 			byzcoin.Instruction{
 				InstanceID: valueID,
+				Delete: &byzcoin.Delete{
+					ContractID: "value",
+				},
+			},
+			byzcoin.Instruction{
+				InstanceID: valueID,
 				Invoke: &byzcoin.Invoke{
 					ContractID: "value",
 					Command:    "update",
@@ -1686,9 +1698,9 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 		},
 	}
 
-	expireBlockIndex := []byte("6000")
-	NumExecution := []byte("2")
-	expireBlockIndexInt, _ := strconv.ParseUint(string(expireBlockIndex), 10, 64)
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
@@ -1704,11 +1716,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 					},
 					{
 						Name:  "expireBlockIndex",
-						Value: expireBlockIndex,
-					},
-					{
-						Name:  "NumExecution",
-						Value: NumExecution,
+						Value: expireBlockIndexBuf,
 					},
 				},
 			},
@@ -1732,7 +1740,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
-	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
@@ -1742,7 +1750,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
-	// 2 Invoke a first "addProof"
+	// 2. Invoke a first "addProof"
 	// ------------------------------------------------------------------------
 
 	identity := signer.Identity()
@@ -1751,7 +1759,6 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 
 	signature, err := signer.Sign(rootHash[0]) // == index
 	require.Nil(t, err)
-	// signature[1] = 0xf
 
 	index := uint32(0)
 	indexBuf := make([]byte, 4)
@@ -1806,7 +1813,7 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	// We can not do this test because the identities have to be compared using
 	// the Equal() method.
 	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
-	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
@@ -1818,22 +1825,43 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
 	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(2))
+	require.Equal(t, result.NumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
 	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
-	// 3. Invoke an "execRoot" command
+	// 3. Invoke a second "addProof" (second instruction)
 	// ------------------------------------------------------------------------
+
+	signature, err = signer.Sign(rootHash[1]) // == index
+	require.Nil(t, err)
+
+	index = uint32(1)
+	indexBuf = make([]byte, 4)
+	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
 	ctx = byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
 				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
+				Command:    "addProof",
+				Args: []byzcoin.Argument{
+					{
+						Name:  "identity",
+						Value: identityBuf,
+					},
+					{
+						Name:  "signature",
+						Value: signature,
+					},
+					{
+						Name:  "index",
+						Value: indexBuf,
+					},
+				},
 			},
 			SignerCounter: []uint64{4},
 		}},
@@ -1843,34 +1871,46 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)
 
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
+	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
+	result.ProposedTransaction = proposedTransaction
+	resultBuf, err = protobuf.Encode(&result)
+	require.Nil(t, err)
+
+	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+
 	dataBuf, _, _, err = pr.Get(myID.Slice())
 	require.Nil(t, err)
 
 	result = byzcoin.DeferredData{}
-	protobuf.Decode(dataBuf, &result)
-	require.Equal(t, 1, len(result.ExecResult))
-	require.Equal(t, uint64(1), result.NumExecution)
-
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(valueID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(valueID.Slice()))
-
-	valueRes, _, _, err := pr.Get(valueID.Slice())
+	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// Such a miracle to retrieve this value that was set at the begining
-	require.Equal(t, valueRes, rootInstructionValue)
+	// We can not do this test because the identities have to be compared using
+	// the Equal() method.
+	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
+	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
+	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
+	require.Equal(t, len(result.ProposedTransaction.Instructions[1].SignerIdentities), 1)
+	// This test won't work. But by using Equal() will.
+	// require.Equal(t, result.ProposedTransaction.Instructions[0].SignerIdentities[0], identity)
+	require.True(t, identity.Equal(&result.ProposedTransaction.Instructions[1].SignerIdentities[0]))
+
+	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].Signatures)
+	require.Equal(t, len(result.ProposedTransaction.Instructions[1].Signatures), 1)
+	require.Equal(t, result.ProposedTransaction.Instructions[1].Signatures[0], signature)
+	// Default NumExecution should be 1
+	require.Equal(t, result.NumExecution, uint64(1))
+
+	require.NotEmpty(t, result.InstructionHashes)
 
 	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
-	// 4. Invoke an "execRoot" command a second time.
+	// 4. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
 	ctx = byzcoin.ClientTransaction{
@@ -1881,52 +1921,6 @@ func TestDeferred_SpawnWithMaxecution(t *testing.T) {
 				Command:    "execProposedTx",
 			},
 			SignerCounter: []uint64{5},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
-
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	protobuf.Decode(dataBuf, &result)
-	require.Equal(t, 1, len(result.ExecResult))
-	require.Equal(t, uint64(0), result.NumExecution)
-
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(valueID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(valueID.Slice()))
-
-	valueRes, _, _, err = pr.Get(valueID.Slice())
-	require.Nil(t, err)
-
-	// Such a miracle to retrieve this value that was set at the begining
-	require.Equal(t, valueRes, rootInstructionValue)
-
-	local.WaitDone(genesisMsg.BlockInterval)
-
-	// ------------------------------------------------------------------------
-	// 5. Invoke an "execRoot" command a third time. Since NumExecution should
-	//    be at 0, we expect it to fail.
-	// ------------------------------------------------------------------------
-
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{6},
 		}},
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))

@@ -86,8 +86,5 @@ func (c *contractValue) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 }
 
 func (c *contractValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
-		return err
-	}
-	return nil
+	return inst.VerifyWithOption(rst, ctxHash, false)
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
@@ -18,6 +17,10 @@ import (
 // "proposed" transaction
 var ContractDeferredID = "deferred"
 
+// We originally implemented the feature where a client could specify how many
+// times the proposed instruction could be executed. We removed this feature
+// but we keep the minimal logic implemented in case it is re-added later.
+// We removed it because it wasn't needed.
 const defaultNumExecution uint64 = 1
 
 // DeferredData contains the specific data of a deferred contract
@@ -65,7 +68,6 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	// Spawn should have those input arguments:
 	//   - proposedTransaction ClientTransaction
 	//   - expireBlockIndex uint64
-	//   - numExecution uint64 (default: 1)
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -81,18 +83,11 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	if err != nil {
 		return nil, nil, errors.New("couldn't decode proposedTransaction: " + err.Error())
 	}
-	expireBlockIndex, err := strconv.ParseUint(string(inst.Spawn.Args.Search("expireBlockIndex")), 10, 64)
+	expireBlockIndex := binary.LittleEndian.Uint64(inst.Spawn.Args.Search("expireBlockIndex"))
 	if err != nil {
 		return nil, nil, errors.New("couldn't convert expireBlockIndex: " + err.Error())
 	}
-	numExecutionBuff := inst.Spawn.Args.Search("NumExecution")
-	NumExecution := defaultNumExecution
-	if len(numExecutionBuff) > 0 {
-		NumExecution, err = strconv.ParseUint(string(numExecutionBuff), 10, 64)
-		if err != nil {
-			return nil, nil, errors.New("couldn't parse NumExecution: " + err.Error())
-		}
-	}
+	numExecution := defaultNumExecution
 
 	// 2. Computes the hashes of each instruction and store it
 	hash := make([][]byte, len(proposedTransaction.Instructions))
@@ -105,7 +100,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 		ProposedTransaction: proposedTransaction,
 		ExpireBlockIndex:    expireBlockIndex,
 		InstructionHashes:   hash,
-		NumExecution:        NumExecution,
+		NumExecution:        numExecution,
 	}
 	var dataBuf []byte
 	dataBuf, err = protobuf.Encode(&data)
@@ -127,9 +122,9 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	//   - identity darc.Identity
 	//   - signature []byte
 	//   - index uint32 (index of the instruction wrt the transaction)
-	err2 := c.checkInvoke(rst, inst.Invoke)
-	if err2 != nil {
-		return nil, nil, errors.New("checks of invoke failed: " + err2.Error())
+	err = c.checkInvoke(rst, inst.Invoke)
+	if err != nil {
+		return nil, nil, errors.New("checks of invoke failed: " + err.Error())
 	}
 
 	cout = coins
@@ -191,6 +186,9 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		// This invocation tries to execute the transaction stored with the
 		// "Spawn" invocation. If it is successful, this invocation fills the
 		// "ExecResult" field of the "deferredData" struct.
+		// We couldn't successfully re-use one of the already implemented
+		// method like the "processOneTx" one because it involved quite a lot
+		// of changes and would bring more complexity compared to the benefits.
 
 		// In the following we are creating a new StagingStateTrie from the
 		// readonly state try by copying the data.
@@ -199,10 +197,13 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			return nil, nil, errors.New("couldn't get the nonce: " + err2.Error())
 		}
 		sst, err2 := newMemStagingStateTrie(nonce)
-		if err2 != nil {
+		if err != nil {
 			return nil, nil, errors.New("Failed to created stagingStateTrie: " + err2.Error())
 		}
-		rst.ForEach(sst.Set)
+		err = rst.ForEach(sst.Set)
+		if err != nil {
+			return nil, nil, errors.New("couldn't make a copy of readOnlyStateTrie: " + err.Error())
+		}
 
 		instructionIDs := make([][]byte, len(c.DeferredData.ProposedTransaction.Instructions))
 
