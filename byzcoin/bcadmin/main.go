@@ -1094,6 +1094,9 @@ func darcCdesc(c *cli.Context) error {
 	if desc == "" {
 		return errors.New("--desc flag is required")
 	}
+	if len(desc) > 1024 {
+		return errors.New("descriptions longer than 1024 characters are not allowed")
+	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
