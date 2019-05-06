@@ -14,9 +14,11 @@ matrix:
         - go get github.com/dedis/Coding || true
 
       script:
+        - set -e
+        - make test_proto
         - make -C conode verify
-        - env GO111MODULE=on make test
         - make -C conode bindist
+        - env GO111MODULE=on make test
 
     - language: go
       name: "Go v1.10.x build"
