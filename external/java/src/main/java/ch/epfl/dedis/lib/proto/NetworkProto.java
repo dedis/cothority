@@ -89,14 +89,29 @@ public final class NetworkProto {
         getDescriptionBytes();
 
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     boolean hasUrl();
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     java.lang.String getUrl();
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     com.google.protobuf.ByteString
@@ -372,12 +387,22 @@ public final class NetworkProto {
     public static final int URL_FIELD_NUMBER = 7;
     private volatile java.lang.Object url_;
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     public boolean hasUrl() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     public java.lang.String getUrl() {
@@ -395,6 +420,11 @@ public final class NetworkProto {
       }
     }
     /**
+     * <pre>
+     * Tag number 6 is used by go.dedis.ch/protobuf for the private
+     * key field, which is not exported.
+     * </pre>
+     *
      * <code>optional string url = 7;</code>
      */
     public com.google.protobuf.ByteString
@@ -1387,12 +1417,22 @@ public final class NetworkProto {
 
       private java.lang.Object url_ = "";
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public boolean hasUrl() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public java.lang.String getUrl() {
@@ -1410,6 +1450,11 @@ public final class NetworkProto {
         }
       }
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public com.google.protobuf.ByteString
@@ -1426,6 +1471,11 @@ public final class NetworkProto {
         }
       }
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public Builder setUrl(
@@ -1439,6 +1489,11 @@ public final class NetworkProto {
         return this;
       }
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public Builder clearUrl() {
@@ -1448,6 +1503,11 @@ public final class NetworkProto {
         return this;
       }
       /**
+       * <pre>
+       * Tag number 6 is used by go.dedis.ch/protobuf for the private
+       * key field, which is not exported.
+       * </pre>
+       *
        * <code>optional string url = 7;</code>
        */
       public Builder setUrlBytes(

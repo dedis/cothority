@@ -1,6 +1,6 @@
 all: do-java do-js
 
-do-java:
+do-java: check_protoc
 	@for i in proto/*.proto ; \
 	do \
 		echo $$i ; \
@@ -9,8 +9,14 @@ do-java:
 
 	./clean_proto_deprecation.sh
 
-do-js:
+do-js: check_protoc
 	@test -d js/cothority/node_modules/protobufjs || (echo "Error: Must run \"npm install\" in external/js/cothority first."; exit 1)
 	cd js/cothority; npm run protobuf
 
 
+check_protoc:
+	@pv=`protoc --version`; \
+	if [ "$$pv" != "libprotoc 3.6.1" ]; then \
+		echo "Protoc version $$pv is not supported."; \
+		exit 1; \
+	fi

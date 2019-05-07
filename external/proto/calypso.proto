@@ -35,6 +35,8 @@ message Write {
   optional bytes extradata = 7;
   // LTSID points to the identity of the lts group
   required bytes ltsid = 8;
+  // Cost reflects how many coins you'll have to pay for a read-request
+  optional byzcoin.Coin cost = 9;
 }
 
 // Read is the data stored in a read instance. It has a pointer to the write
