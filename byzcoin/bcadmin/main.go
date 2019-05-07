@@ -229,6 +229,26 @@ var cmds = cli.Commands{
 				},
 			},
 			{
+				Name:   "cdesc",
+				Usage:  "Edit the description of a DARC",
+				Action: darcCdesc,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:   "bc",
+						EnvVar: "BC",
+						Usage:  "the ByzCoin config to use (required)",
+					},
+					cli.StringFlag{
+						Name:  "darc",
+						Usage: "the id of the darc to edit (config admin darc by default)",
+					},
+					cli.StringFlag{
+						Name:  "desc",
+						Usage: "the new description of the darc (required)",
+					},
+				},
+			},
+			{
 				Name:   "add",
 				Usage:  "Add a new DARC with default rules.",
 				Action: darcAdd,
@@ -1060,6 +1080,96 @@ func darcShow(c *cli.Context) error {
 	}
 	_, err = fmt.Fprintln(c.App.Writer, d.String())
 	return err
+}
+
+// "cDesc" stands for Change Description. This function allows one to edit the
+// description of a darc.
+func darcCdesc(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	desc := c.String("desc")
+	if desc == "" {
+		return errors.New("--desc flag is required")
+	}
+	if len(desc) > 1024 {
+		return errors.New("descriptions longer than 1024 characters are not allowed")
+	}
+
+	cfg, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	dstr := c.String("dstr")
+	if dstr == "" {
+		dstr = cfg.AdminDarc.GetIdentityString()
+	}
+
+	d, err := getDarcByString(cl, dstr)
+	if err != nil {
+		return err
+	}
+
+	d2 := d.Copy()
+	err = d2.EvolveFrom(d)
+	if err != nil {
+		return err
+	}
+
+	d2.Description = []byte(desc)
+	d2Buf, err := d2.ToProto()
+	if err != nil {
+		return err
+	}
+
+	var signer *darc.Signer
+
+	sstr := c.String("sign")
+	if sstr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(sstr)
+	}
+	if err != nil {
+		return err
+	}
+
+	counters, err := cl.GetSignerCounters(signer.Identity().String())
+
+	invoke := byzcoin.Invoke{
+		ContractID: byzcoin.ContractDarcID,
+		Command:    "evolve",
+		Args: []byzcoin.Argument{
+			{
+				Name:  "darc",
+				Value: d2Buf,
+			},
+		},
+	}
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+				Invoke:        &invoke,
+				SignerCounter: []uint64{counters.Counters[0] + 1},
+			},
+		},
+	}
+	err = ctx.FillSignersAndSignWith(*signer)
+	if err != nil {
+		return err
+	}
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func debugList(c *cli.Context) error {
