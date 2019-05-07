@@ -34,7 +34,7 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_CreateGenesisBlock(t *testing.T) {
@@ -2164,7 +2164,7 @@ func TestService_TestCatchUpHistory(t *testing.T) {
 	// unknown skipchain, we shouldn't try to catch up
 	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	// catch up
 	err = s.service().catchupFromID(s.roster, s.genesis.Hash, s.genesis.Hash)

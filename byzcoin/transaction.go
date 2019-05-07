@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
@@ -74,6 +75,15 @@ func (args Arguments) Search(name string) []byte {
 		}
 	}
 	return nil
+}
+
+// Names returns a slice of the names of the arguments.
+func (args Arguments) Names() []string {
+	var names []string
+	for _, arg := range args {
+		names = append(names, arg.Name)
+	}
+	return names
 }
 
 // FillSignersAndSignWith fills the SignerIdentities field with the identities of the signers and then signs all the
@@ -217,6 +227,16 @@ func (instr Instruction) String() string {
 	out += fmt.Sprintf("\tidentities: %v\n", instr.SignerIdentities)
 	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
 	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
+	switch instr.GetType() {
+	case SpawnType:
+		out += fmt.Sprintf("Spawn:\t%s\n\tArgs:%s\n", instr.Spawn.ContractID,
+			strings.Join(instr.Spawn.Args.Names(), " - "))
+	case InvokeType:
+		out += fmt.Sprintf("Invoke:\t%s\n\tArgs:%s\n", instr.Invoke.ContractID,
+			strings.Join(instr.Invoke.Args.Names(), " - "))
+	case DeleteType:
+		out += fmt.Sprintf("Delete:\t%s\n", instr.Delete.ContractID)
+	}
 	return out
 }
 

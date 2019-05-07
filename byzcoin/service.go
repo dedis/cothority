@@ -1067,7 +1067,8 @@ func (s *Service) catchupAll() error {
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID skipchain.SkipBlockID) error {
 	// Catch up only friendly skipchains to avoid unnecessary requests
 	if s.db().GetByID(scID) == nil {
-		return fmt.Errorf("%s: Got asked for an unknown skipchain: %x", s.ServerIdentity(), scID)
+		log.Lvlf3("got asked for unknown skipchain: %x", scID)
+		return nil
 	}
 
 	// The size of the map is limited here by the number of known skipchains
@@ -1081,7 +1082,7 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	s.catchingUpHistory[string(scID)] = time.Now().Add(catchupMinimumInterval)
 	s.catchingUpHistoryLock.Unlock()
 
-	log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
+	log.Lvlf1("catching up with chain %x", scID)
 
 	s.updateTrieLock.Lock()
 	if s.catchingUp {
@@ -2336,17 +2337,26 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.Debug,
 		s.DebugRemove)
 	if err != nil {
-		log.ErrFatal(err, "Couldn't register messages")
+		return nil, err
 	}
 
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
-		log.ErrFatal(err, "Couldn't register streaming messages")
+		return nil, err
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
-	s.registerContract(ContractConfigID, contractConfigFromBytes)
-	s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
-	s.registerContract(ContractDeferredID, s.contractDeferredFromBytes)
+	err = s.registerContract(ContractConfigID, contractConfigFromBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = s.registerContract(ContractDeferredID, s.contractDeferredFromBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	skipchain.RegisterVerification(c, Verify, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {

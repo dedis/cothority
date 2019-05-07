@@ -3,6 +3,11 @@ package personhood
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
+
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/onet/v3/network"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
@@ -71,7 +76,6 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	ca := inst.DeriveID("")
 	var instBuf []byte
 	cID := inst.Spawn.ContractID
-	log.Lvlf3("Spawning %s instance to %x", cID, ca.Slice())
 	switch cID {
 	case ContractSpawnerID:
 		c.parseArgs(inst.Spawn.Args)
@@ -89,6 +93,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return nil, nil, err
 		}
 		ca = byzcoin.NewInstanceID(d.GetBaseID())
+		darcID = d.GetBaseID()
 	case contracts.ContractCoinID:
 		if err = c.getCoins(cout, c.CostCoin); err != nil {
 			return
@@ -110,9 +115,13 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			}
 		}
 		darcID = inst.Spawn.Args.Search("darcID")
+		coinID := inst.Spawn.Args.Search("coinID")
+		if coinID == nil {
+			coinID = darcID
+		}
 		h := sha256.New()
-		h.Write([]byte("coin"))
-		h.Write(darcID)
+		h.Write([]byte(contracts.ContractCoinID))
+		h.Write(coinID)
 		ca = byzcoin.NewInstanceID(h.Sum(nil))
 		instBuf, err = protobuf.Encode(coin)
 		if err != nil {
@@ -129,10 +138,34 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return nil, nil, err
 		}
 		darcID = inst.Spawn.Args.Search("darcID")
+		var credID []byte
+		if credID = inst.Spawn.Args.Search("credID"); credID == nil {
+			credID = darcID
+		}
 		h := sha256.New()
 		h.Write([]byte("credential"))
-		h.Write(darcID)
+		h.Write(credID)
 		ca = byzcoin.NewInstanceID(h.Sum(nil))
+	case calypso.ContractWriteID:
+		w := inst.Spawn.Args.Search("write")
+		if w == nil || len(w) == 0 {
+			err = errors.New("need a write request in 'write' argument")
+			return
+		}
+		var write calypso.Write
+		err = protobuf.DecodeWithConstructors(w, &write, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			err = errors.New("couldn't unmarshal write: " + err.Error())
+			return
+		}
+		if write.Cost.Value != c.CostCRead.Value ||
+			write.Cost.Name != c.CostCRead.Name {
+			err = fmt.Errorf("spawned calypso write needs to have cost at %d", c.CostCRead.Value)
+		}
+		if err = c.getCoins(cout, *c.CostCWrite); err != nil {
+			return
+		}
+		return calypso.ContractWrite{}.Spawn(rst, inst, cout)
 	case ContractPopPartyID:
 		if err = c.getCoins(cout, c.CostParty); err != nil {
 			return
@@ -146,6 +179,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	default:
 		return nil, nil, errors.New("don't know how to spawn this type of contract")
 	}
+	log.Lvlf3("Spawning %s instance to %x", cID, ca.Slice())
 	sc = []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, ca, cID, instBuf, darcID),
 	}
@@ -163,7 +197,7 @@ func (c ContractSpawner) getCoins(coins []byzcoin.Coin, cost byzcoin.Coin) error
 			}
 		}
 	}
-	return errors.New("don't have enough coins for spawning")
+	return fmt.Errorf("don't have enough coins for spawning: needed %d", cost.Value)
 }
 
 // Invoke can be used to update the prices of the coins. The following command is supported:
@@ -223,6 +257,8 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 		{"costCredential", &ss.CostCredential},
 		{"costParty", &ss.CostParty},
 		{"costRoPaSci", &ss.CostRoPaSci},
+		{"costCWrite", ss.CostCWrite},
+		{"costCRead", ss.CostCRead},
 	} {
 		if arg := args.Search(cost.name); arg != nil {
 			err := protobuf.Decode(arg, cost.cost)

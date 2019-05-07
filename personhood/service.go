@@ -278,7 +278,7 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 	var parties []Party
 	for _, p := range s.storage.Parties {
 		party, err := getParty(p)
-		// Remove finalized parties
+		// Remove finalized parties from the returned result
 		if err == nil && party.State < 3 {
 			parties = append(parties, *p)
 		}
