@@ -49,7 +49,7 @@ public class CalypsoRPC extends ByzCoinRPC {
     }
 
     /**
-     * Private constructor to keep reconnections to static methods called fromCalypso.
+     * Construct a CalypsoRPC from existing bc and lts.
      * @param bc existing byzcoin service
      * @param ltsId id of the Long Term Secret
      * @throws CothorityCommunicationException
@@ -186,6 +186,18 @@ public class CalypsoRPC extends ByzCoinRPC {
      */
     public static CalypsoRPC fromCalypso(Roster roster, SkipblockId byzcoinId, LTSId ltsId) throws CothorityException {
         return new CalypsoRPC(ByzCoinRPC.fromByzCoin(roster, byzcoinId), ltsId);
+    }
+
+    /**
+     * Connects to an existing Long Term Secret using a ByzCoinRPC.
+     *
+     * @param bc        the ByzCoinRPC to use to talk to the ledger
+     * @param ltsId     the id of the Long Term Secret to use
+     * @return CalypsoRPC if everything was found
+     * @throws CothorityException if something goes wrong
+     */
+    public static CalypsoRPC fromCalypso(ByzCoinRPC bc, LTSId ltsId) throws CothorityException {
+        return new CalypsoRPC(bc, ltsId);
     }
 
     /**
