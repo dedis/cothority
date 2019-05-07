@@ -26,7 +26,7 @@ func TestTransaction_Signing(t *testing.T) {
 	mdb := trie.NewMemDB()
 	tr, err := trie.NewTrie(mdb, []byte("my nonce"))
 	require.NoError(t, err)
-	sst := &stagingStateTrie{*tr.MakeStagingTrie()}
+	sst := &StagingStateTrie{*tr.MakeStagingTrie()}
 
 	// verification should fail because trie is empty
 	ctxHash := ctx.Instructions.Hash()
@@ -75,7 +75,7 @@ func TestTransaction_Signing(t *testing.T) {
 	require.NoError(t, ctx.Instructions[0].Verify(sst, ctxHash))
 }
 
-func setSignerCounter(sst *stagingStateTrie, id string, v uint64) error {
+func setSignerCounter(sst *StagingStateTrie, id string, v uint64) error {
 	key := publicVersionKey(id)
 	verBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(verBuf, v)

@@ -430,7 +430,7 @@ func register(c *cli.Context) error {
 		Spawn: &byzcoin.Spawn{
 			ContractID: personhood.ContractCredentialID,
 			Args: byzcoin.Arguments{{
-				Name:  "darcIDBuf",
+				Name:  "darcID",
 				Value: d.GetBaseID(),
 			}, {
 				Name:  "instID",

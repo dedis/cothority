@@ -21,7 +21,8 @@ export -n BC
 main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
-	[ ! -x ./bcadmin ] && exit 1
+	[[ ! -x ./bcadmin ]] && exit 1
+	run testReplay
     run testLink
     run testCoin
     run testRoster
@@ -36,6 +37,19 @@ main(){
     run testContractValue
     run testUpdateDarcDesc
     stopTest
+}
+
+testReplay(){
+  rm -f config/*
+  runCoBG 1 2 3
+  runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+  for i in $( seq 10 ); do
+    runBA mint $bc $key $keyPub 1000
+  done
+  testOK runBA debug replay http://localhost:2003
 }
 
 testLink(){

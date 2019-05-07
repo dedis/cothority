@@ -2165,6 +2165,8 @@ func TestService_TestCatchUpHistory(t *testing.T) {
 	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
 	require.NoError(t, err)
+	_, cu := s.service().catchingUpHistory[string(skipchain.SkipBlockID{})]
+	require.False(t, cu)
 
 	// catch up
 	err = s.service().catchupFromID(s.roster, s.genesis.Hash, s.genesis.Hash)
