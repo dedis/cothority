@@ -407,15 +407,15 @@ class CalypsoTest {
             testInstanceController.startConode(i);
         }
 
+        // Reconnect to the ledger.
+        ByzCoinRPC bc = ByzCoinRPC.fromByzCoin(calypso.getRoster(), calypso.getGenesisBlock().getSkipchainId());
+
         // Dropping connection by re-creating an calypso. The following elements are needed:
-        // - roster
-        // - byzcoin-ic
         // - LTS-id
         // - WriteData-id
         // - reader-signer
         // - publisher-signer
-        CalypsoRPC calypso2 = CalypsoRPC.fromCalypso(calypso.getRoster(), calypso.getGenesisBlock().getSkipchainId(),
-                calypso.getLTSId());
+        CalypsoRPC calypso2 = CalypsoRPC.fromCalypso(bc, calypso.getLTSId());
         Signer reader2 = new SignerEd25519();
         SecureDarcInstance di = SecureDarcInstance.fromByzCoin(calypso2, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
