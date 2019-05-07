@@ -81,7 +81,8 @@ func (t *stagingStateTrie) Commit() error {
 
 // GetIndex returns the index of the current trie.
 func (t *stagingStateTrie) GetIndex() int {
-	panic("cannot get index in stagingStateTrie")
+	index := binary.LittleEndian.Uint32(t.StagingTrie.GetMetadata([]byte(trieIndexKey)))
+	return int(index)
 }
 
 const trieIndexKey = "trieIndexKey"
