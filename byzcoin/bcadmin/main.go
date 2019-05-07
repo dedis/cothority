@@ -1181,7 +1181,7 @@ func darcCdesc(c *cli.Context) error {
 		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 
-	d, err := getDarcByString(cl, dstr)
+	d, err := lib.GetDarcByString(cl, dstr)
 	if err != nil {
 		return err
 	}
