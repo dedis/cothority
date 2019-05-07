@@ -239,7 +239,7 @@ var cmds = cli.Commands{
 						Usage:  "the ByzCoin config to use (required)",
 					},
 					cli.StringFlag{
-						Name:  "did",
+						Name:  "darc",
 						Usage: "the id of the darc to edit (config admin darc by default)",
 					},
 					cli.StringFlag{
@@ -1103,12 +1103,12 @@ func darcCdesc(c *cli.Context) error {
 		return err
 	}
 
-	did := c.String("did")
-	if did == "" {
-		did = cfg.AdminDarc.GetIdentityString()
+	dstr := c.String("dstr")
+	if dstr == "" {
+		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 
-	d, err := getDarcByString(cl, did)
+	d, err := getDarcByString(cl, dstr)
 	if err != nil {
 		return err
 	}
@@ -1141,7 +1141,7 @@ func darcCdesc(c *cli.Context) error {
 
 	invoke := byzcoin.Invoke{
 		ContractID: byzcoin.ContractDarcID,
-		Command:    "evolve_unrestricted",
+		Command:    "evolve",
 		Args: []byzcoin.Argument{
 			{
 				Name:  "darc",
