@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
+
 	"github.com/qantik/qrgo"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -324,6 +326,77 @@ var cmds = cli.Commands{
 		},
 		Action: qrcode,
 	},
+
+	{
+		Name:  "contract",
+		Usage: "a tool to manipulate contracts",
+		Subcommands: cli.Commands{
+			{
+				Name:  "value",
+				Usage: "Manipulate a value contract",
+				Subcommands: cli.Commands{
+					{
+						Name:   "spawn",
+						Usage:  "spawn a value contract",
+						Action: clicontracts.ValueSpawn,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "value",
+								Usage: "the value to save",
+							},
+							cli.StringFlag{
+								Name:  "darc",
+								Usage: "DARC with the right to spawn a value contract (default is the admin DARC)",
+							},
+							cli.StringFlag{
+								Name:  "sign",
+								Usage: "public key of the signing entity (default is the admin public key)",
+							},
+						},
+					},
+					{
+						Name:  "invoke",
+						Usage: "invoke a value contract",
+						Subcommands: cli.Commands{
+							{
+								Name:   "update",
+								Usage:  "update the value of a value contract",
+								Action: clicontracts.ValueInvokeUpdate,
+								Flags: []cli.Flag{
+									cli.StringFlag{
+										Name:   "bc",
+										EnvVar: "BC",
+										Usage:  "the ByzCoin config to use (required)",
+									},
+									cli.StringFlag{
+										Name:  "value",
+										Usage: "the value to save",
+									},
+									cli.StringFlag{
+										Name:  "instID",
+										Usage: "the instance ID of the value contract",
+									},
+									cli.StringFlag{
+										Name:  "darc",
+										Usage: "DARC with the right to invoke.update a value contract (default is the admin DARC)",
+									},
+									cli.StringFlag{
+										Name:  "sign",
+										Usage: "public key of the signing entity (default is the admin public key)",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
 var cliApp = cli.NewApp()
@@ -497,9 +570,9 @@ func link(c *cli.Context) error {
 		ad := &darc.Darc{}
 		adPub := cothority.Suite.Point()
 		// Accept both plain-darcs, as well as "darc:...." darcs
-		adID, err := stringToDarcID(c.String("admindarc"))
+		adID, err := lib.StringToDarcID(c.String("admindarc"))
 		if err == nil {
-			adPubBuf, err := stringToEd25519Buf(c.String("adminpub"))
+			adPubBuf, err := lib.StringToEd25519Buf(c.String("adminpub"))
 			if err != nil {
 				return err
 			}
@@ -1054,7 +1127,7 @@ func darcShow(c *cli.Context) error {
 		dstr = cfg.AdminDarc.GetIdentityString()
 	}
 
-	d, err := getDarcByString(cl, dstr)
+	d, err := lib.GetDarcByString(cl, dstr)
 	if err != nil {
 		return err
 	}
@@ -1220,7 +1293,7 @@ func darcAdd(c *cli.Context) error {
 	if dstr == "" {
 		dstr = cfg.AdminDarc.GetIdentityString()
 	}
-	dSpawn, err := getDarcByString(cl, dstr)
+	dSpawn, err := lib.GetDarcByString(cl, dstr)
 	if err != nil {
 		return err
 	}
@@ -1354,7 +1427,7 @@ func darcRule(c *cli.Context) error {
 	if dstr == "" {
 		dstr = cfg.AdminDarc.GetIdentityString()
 	}
-	d, err := getDarcByString(cl, dstr)
+	d, err := lib.GetDarcByString(cl, dstr)
 	if err != nil {
 		return err
 	}
@@ -1511,59 +1584,3 @@ type configPrivate struct {
 }
 
 func init() { network.RegisterMessages(&configPrivate{}) }
-
-func stringToDarcID(id string) ([]byte, error) {
-	if id == "" {
-		return nil, errors.New("no string given")
-	}
-	if strings.HasPrefix(id, "darc:") {
-		id = id[5:]
-	}
-	return hex.DecodeString(id)
-}
-
-func stringToEd25519Buf(pub string) ([]byte, error) {
-	if pub == "" {
-		return nil, errors.New("no string given")
-	}
-	if strings.HasPrefix(pub, "ed25519:") {
-		pub = pub[8:]
-	}
-	return hex.DecodeString(pub)
-}
-
-func getDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
-	xrep, err := stringToDarcID(id)
-	if err != nil {
-		return nil, err
-	}
-	return getDarcByID(cl, xrep)
-}
-
-func getDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
-	pr, err := cl.GetProof(id)
-	if err != nil {
-		return nil, err
-	}
-
-	p := &pr.Proof
-	err = p.Verify(cl.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	vs, cid, _, err := p.Get(id)
-	if err != nil {
-		return nil, fmt.Errorf("could not find darc for %x", id)
-	}
-	if cid != byzcoin.ContractDarcID {
-		return nil, fmt.Errorf("unexpected contract %v, expected a darc", cid)
-	}
-
-	d, err := darc.NewFromProtobuf(vs)
-	if err != nil {
-		return nil, err
-	}
-
-	return d, nil
-}
