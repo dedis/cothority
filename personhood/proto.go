@@ -103,6 +103,8 @@ type SpawnerStruct struct {
 	CostParty      byzcoin.Coin
 	Beneficiary    byzcoin.InstanceID
 	CostRoPaSci    byzcoin.Coin `protobuf:"opt"`
+	CostCWrite     *byzcoin.Coin
+	CostCRead      *byzcoin.Coin
 }
 
 // PopPartyStruct is the data that is stored in a pop-party instance.

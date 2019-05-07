@@ -13,3 +13,5 @@ cosi/simulation/test_data/
 .tags*
 **/build/
 .vscode
+*.db
+*.cfg
