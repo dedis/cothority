@@ -1780,7 +1780,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
-			log.Error(err)
+			log.Error(s.ServerIdentity(), err)
 		} else {
 			// We would like to be able to check if this txn is so big it could never fit into a block,
 			// and if so, drop it. But we can't with the current API of createStateChanges.
@@ -1931,7 +1931,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 	// Now we call the contract function with the data of the key.
-	log.Lvlf3("calling contract '%s'", contractID)
+	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
 
 	c, err := contractFactory(contents)
 	if err != nil {

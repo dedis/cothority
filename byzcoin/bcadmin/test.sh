@@ -21,8 +21,8 @@ export -n BC
 main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
-	  [[ ! -x ./bcadmin ]] && exit 1
-	  run testReplay
+    [[ ! -x ./bcadmin ]] && exit 1
+    run testReplay
     run testLink
     run testCoin
     run testRoster
