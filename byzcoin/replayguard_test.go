@@ -9,7 +9,7 @@ import (
 
 func TestReplayGuard(t *testing.T) {
 	// increment
-	sst, err := NewMemStagingStateTrie([]byte("my nonce"))
+	sst, err := newMemStagingStateTrie([]byte("my nonce"))
 	require.NoError(t, err)
 	signers := []darc.Signer{darc.NewSignerEd25519(nil, nil), darc.NewSignerEd25519(nil, nil)}
 	var ids []darc.Identity

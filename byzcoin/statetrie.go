@@ -22,22 +22,22 @@ type ReadOnlyStateTrie interface {
 	ForEach(func(k, v []byte) error) error
 }
 
-// StagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
+// stagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
 // byzcoin.
-type StagingStateTrie struct {
+type stagingStateTrie struct {
 	trie.StagingTrie
 }
 
 // Clone makes a copy of the staged data of the structure, the source Trie is
 // not copied.
-func (t *StagingStateTrie) Clone() *StagingStateTrie {
-	return &StagingStateTrie{
+func (t *stagingStateTrie) Clone() *stagingStateTrie {
+	return &stagingStateTrie{
 		StagingTrie: *t.StagingTrie.Clone(),
 	}
 }
 
 // StoreAll puts all the state changes and the index in the staging area.
-func (t *StagingStateTrie) StoreAll(scs StateChanges) error {
+func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -50,7 +50,7 @@ func (t *StagingStateTrie) StoreAll(scs StateChanges) error {
 
 // GetValues returns the associated value, contract ID and darcID. An error is
 // returned if the key does not exist or another issue occurs.
-func (t *StagingStateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -75,12 +75,12 @@ func (t *StagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 }
 
 // Commit commits the staged data to the source trie.
-func (t *StagingStateTrie) Commit() error {
+func (t *stagingStateTrie) Commit() error {
 	return t.StagingTrie.Commit()
 }
 
 // GetIndex returns the index of the current trie.
-func (t *StagingStateTrie) GetIndex() int {
+func (t *stagingStateTrie) GetIndex() int {
 	index := binary.LittleEndian.Uint32(t.StagingTrie.GetMetadata([]byte(trieIndexKey)))
 	return int(index)
 }
@@ -193,19 +193,19 @@ func (t *stateTrie) GetIndex() int {
 }
 
 // MakeStagingStateTrie creates a StagingStateTrie from the StateTrie.
-func (t *stateTrie) MakeStagingStateTrie() *StagingStateTrie {
-	return &StagingStateTrie{
+func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
+	return &stagingStateTrie{
 		StagingTrie: *t.MakeStagingTrie(),
 	}
 }
 
-// NewMemStagingStateTrie creates an in-memory StagingStateTrie.
-func NewMemStagingStateTrie(nonce []byte) (*StagingStateTrie, error) {
+// newMemStagingStateTrie creates an in-memory StagingStateTrie.
+func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
 	if err != nil {
 		return nil, err
 	}
-	et := StagingStateTrie{
+	et := stagingStateTrie{
 		StagingTrie: *memTrie.MakeStagingTrie(),
 	}
 	return &et, nil

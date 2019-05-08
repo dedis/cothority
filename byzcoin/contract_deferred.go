@@ -196,7 +196,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 		if err2 != nil {
 			return nil, nil, errors.New("couldn't get the nonce: " + err2.Error())
 		}
-		sst, err2 := NewMemStagingStateTrie(nonce)
+		sst, err2 := newMemStagingStateTrie(nonce)
 		if err != nil {
 			return nil, nil, errors.New("Failed to created stagingStateTrie: " + err2.Error())
 		}

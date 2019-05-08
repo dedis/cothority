@@ -41,7 +41,7 @@ type txProcessor interface {
 }
 
 type txProcessorState struct {
-	sst *StagingStateTrie
+	sst *stagingStateTrie
 
 	// Below are changes that were made that led up to the state in sst
 	// from the starting point.
@@ -169,7 +169,7 @@ collectTxLoop:
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
-	scsOut, sstOut, err := s.ProcessOneTx(inState.sst, tx)
+	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 
 	// try to create a new state
 	newState := func() *txProcessorState {

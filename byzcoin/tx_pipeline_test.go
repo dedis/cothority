@@ -28,7 +28,7 @@ type defaultMockTxProc struct {
 	done         chan bool
 	proposeDelay time.Duration
 	collectDelay time.Duration
-	goodState    *StagingStateTrie
+	goodState    *stagingStateTrie
 	t            *testing.T
 }
 
@@ -107,7 +107,7 @@ func (p *defaultMockTxProc) Stop() {
 func (p *defaultMockTxProc) GetLatestGoodState() *txProcessorState {
 	goodState := p.goodState
 	if goodState == nil {
-		sst, err := NewMemStagingStateTrie([]byte(""))
+		sst, err := newMemStagingStateTrie([]byte(""))
 		require.NoError(p.t, err)
 		goodState = sst
 	}
@@ -195,7 +195,7 @@ func TestTxPipeline_Slow(t *testing.T) {
 }
 
 func replayMockTxs(txs []ClientTransaction) ([]byte, error) {
-	sst, err := NewMemStagingStateTrie([]byte(""))
+	sst, err := newMemStagingStateTrie([]byte(""))
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +234,7 @@ func testTxPipeline(t *testing.T, n, batch, failAt int, mock newMockTxProcFunc) 
 	pipeline := txPipeline{
 		processor: processor.(txProcessor),
 	}
-	sst, err := NewMemStagingStateTrie([]byte(""))
+	sst, err := newMemStagingStateTrie([]byte(""))
 	require.NoError(t, err)
 	stopChan := make(chan bool)
 	pipelineDone := make(chan bool)

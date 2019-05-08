@@ -799,7 +799,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var sst *StagingStateTrie
+	var sst *stagingStateTrie
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway staging trie.
@@ -814,11 +814,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, Verify}
 
-		nonce, err := s.LoadNonceFromTxs(tx)
+		nonce, err := s.loadNonceFromTxs(tx)
 		if err != nil {
 			return nil, err
 		}
-		et, err := NewMemStagingStateTrie(nonce)
+		et, err := newMemStagingStateTrie(nonce)
 		if err != nil {
 			return nil, err
 		}
@@ -1228,7 +1228,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
 			return errors.New("couldn't unmarshal body for genesis block")
 		}
-		nonce, err := s.LoadNonceFromTxs(body.TxResults)
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
 		if err != nil {
 			return err
 		}
@@ -1633,14 +1633,14 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Load/create a staging trie to add the state changes to it and
 	// compute the Merkle root.
-	var sst *StagingStateTrie
+	var sst *stagingStateTrie
 	if newSB.Index == 0 {
-		nonce, err := s.LoadNonceFromTxs(body.TxResults)
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 			return false
 		}
-		sst, err = NewMemStagingStateTrie(nonce)
+		sst, err = newMemStagingStateTrie(nonce)
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 			return false
@@ -1749,7 +1749,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *StagingStateTrie) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1774,9 +1774,9 @@ func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipB
 	for _, tx := range txIn {
 		txsz := txSize(tx)
 
-		var sstTempC *StagingStateTrie
+		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.ProcessOneTx(sstTemp, tx.ClientTransaction)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -1827,9 +1827,9 @@ func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipB
 	return
 }
 
-// ProcessOneTx takes one transaction and creates a set of StateChanges. It also returns the temporary StateTrie
+// processOneTx takes one transaction and creates a set of StateChanges. It also returns the temporary StateTrie
 // with the StateChanges applied.
-func (s *Service) ProcessOneTx(sst *StagingStateTrie, tx ClientTransaction) (StateChanges, *StagingStateTrie, error) {
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
 	// otherwise dump it.
@@ -2042,8 +2042,8 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	return s.txBuffer.take(string(scID))
 }
 
-// LoadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
-func (s *Service) LoadNonceFromTxs(txs TxResults) ([]byte, error) {
+// loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
+func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 	if len(txs) == 0 {
 		return nil, errors.New("no transactions")
 	}

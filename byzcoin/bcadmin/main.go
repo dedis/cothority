@@ -27,7 +27,6 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
-	_ "go.dedis.ch/cothority/v3/personhood"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
@@ -1167,7 +1166,13 @@ func debugReplay(c *cli.Context) error {
 		return errors.New("please give the following arguments: url [bcID]")
 	}
 	if c.NArg() == 1 {
-		return debugList(c)
+		err := debugList(c)
+		if err != nil {
+			return err
+		}
+
+		log.Info("Please provide one of the following byzcoin ID as the second argument")
+		return nil
 	}
 
 	r := &onet.Roster{List: []*network.ServerIdentity{{URL: c.Args().First()}}}
@@ -1185,70 +1190,12 @@ func debugReplay(c *cli.Context) error {
 	s := servers[0].Service(byzcoin.ServiceName).(*byzcoin.Service)
 
 	cl := skipchain.NewClient()
-	var sst *byzcoin.StagingStateTrie
-	sb, err := cl.GetSingleBlock(r, bcID)
-	if err != nil {
-		return err
+	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+		return cl.GetSingleBlock(r, sib)
 	}
-	for {
-		if sb.Payload != nil {
-			var dBody byzcoin.DataBody
-			err := protobuf.Decode(sb.Payload, &dBody)
-			if err != nil {
-				return err
-			}
-			var dHead byzcoin.DataHeader
-			err = protobuf.Decode(sb.Data, &dHead)
-			if err != nil {
-				return err
-			}
-			log.Infof("Block %d has %d transactions and was created at %s", sb.Index, len(dBody.TxResults),
-				time.Unix(dHead.Timestamp/1e9, 0))
 
-			if bytes.Compare(dHead.ClientTransactionHash, dBody.TxResults.Hash()) != 0 {
-				return errors.New("client transaction has does not match")
-			}
-
-			if sb.Index == 0 {
-				log.Lvl1("Creating stateTrie")
-				nonce, err := s.LoadNonceFromTxs(dBody.TxResults)
-				if err != nil {
-					return err
-				}
-				sst, err = byzcoin.NewMemStagingStateTrie(nonce)
-				if err != nil {
-					return err
-				}
-			}
-			for _, tx := range dBody.TxResults {
-				for i, inst := range tx.ClientTransaction.Instructions {
-					log.Lvlf1("Accepted: %t - Index: %d\n%s", tx.Accepted, i, inst)
-				}
-				if tx.Accepted {
-					var sc byzcoin.StateChanges
-					sc, sst, err = s.ProcessOneTx(sst, tx.ClientTransaction)
-					if err != nil {
-						return err
-					}
-					log.Lvlf3("Got %d statechanges.", len(sc))
-				}
-			}
-
-			if bytes.Compare(dHead.TrieRoot, sst.GetRoot()) != 0 {
-				return errors.New("merkle tree root doesn't match with trie root")
-			}
-		} else {
-			log.Infof("Block %d has no payload", sb.Index)
-		}
-		if len(sb.ForwardLink) == 0 {
-			break
-		}
-		sb, err = cl.GetSingleBlock(r, sb.ForwardLink[0].To)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	_, err = s.ReplayState(bcID, r, cb)
+	return err
 }
 
 // "cDesc" stands for Change Description. This function allows one to edit the
