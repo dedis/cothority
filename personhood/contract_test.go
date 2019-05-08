@@ -1,8 +1,12 @@
 package personhood
 
 import (
+	"errors"
 	"testing"
 	"time"
+
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
@@ -14,6 +18,35 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestContractSpawner(t *testing.T) {
+	iid := byzcoin.InstanceID{}
+	s := newRstSimul()
+	s.values[string(iid.Slice())] = byzcoin.StateChangeBody{}
+	cs := &ContractSpawner{}
+	cost := byzcoin.Coin{Name: iid, Value: 100}
+	costBuf, err := protobuf.Encode(&cost)
+	require.NoError(t, err)
+	inst := byzcoin.Instruction{
+		InstanceID: iid,
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractSpawnerID,
+			Args: byzcoin.Arguments{
+				{Name: "costDarc", Value: costBuf},
+				{Name: "costCRead", Value: costBuf},
+			},
+		},
+	}
+	scs, _, err := cs.Spawn(s, inst, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(scs))
+	spawner := &SpawnerStruct{}
+	err = protobuf.Decode(scs[0].Value, spawner)
+	require.NoError(t, err)
+	require.Equal(t, uint64(100), spawner.CostDarc.Value)
+	require.Equal(t, uint64(100), spawner.CostCRead.Value)
+	require.Equal(t, uint64(0), spawner.CostCWrite.Value)
+}
 
 // Creates a party, activates the barrier point, finalizes it, and mines the coins.
 func TestContractPopParty(t *testing.T) {
@@ -98,4 +131,39 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 		},
 	})
 	require.Nil(t, err)
+}
+
+type rstSimul struct {
+	values map[string]byzcoin.StateChangeBody
+}
+
+func newRstSimul() *rstSimul {
+	return &rstSimul{
+		values: make(map[string]byzcoin.StateChangeBody),
+	}
+}
+
+func (s *rstSimul) GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error) {
+	scb, ok := s.values[string(key)]
+	if !ok {
+		err = errors.New("this key doesn't exist")
+		return
+	}
+	value = scb.Value
+	version = scb.Version
+	contractID = scb.ContractID
+	darcID = scb.DarcID
+	return
+}
+func (s *rstSimul) GetProof(key []byte) (*trie.Proof, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) GetIndex() int {
+	return -1
+}
+func (s *rstSimul) GetNonce() ([]byte, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) ForEach(func(k, v []byte) error) error {
+	return errors.New("not implemented")
 }

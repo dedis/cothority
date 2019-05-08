@@ -78,7 +78,12 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	cID := inst.Spawn.ContractID
 	switch cID {
 	case ContractSpawnerID:
-		c.parseArgs(inst.Spawn.Args)
+		c.CostCWrite = &byzcoin.Coin{}
+		c.CostCRead = &byzcoin.Coin{}
+		err = c.parseArgs(inst.Spawn.Args)
+		if err != nil {
+			return nil, nil, err
+		}
 		instBuf, err = protobuf.Encode(&c.SpawnerStruct)
 		if err != nil {
 			return nil, nil, errors.New("couldn't encode SpawnerInstance: " + err.Error())
