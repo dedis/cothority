@@ -733,11 +733,11 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						if err != nil {
 							return err
 						}
+						// Only check the target height if it exists because the block might
+						// not yet be stored (e.g. catch up).
 						if target != nil {
 							diff := math.Log(float64(target.Index - sbOld.Index))
 							base := math.Log(float64(sbOld.BaseHeight))
-							// Only check the target height if it exists because the block might
-							// not yet be stored (e.g. catch up).
 							if int(diff/base) != i+numFL {
 								log.Errorf("Received a forward link with an invalid height: %x/%d", sb.Hash, i+numFL)
 								continue

@@ -1407,8 +1407,8 @@ func TestService_WaitBlock(t *testing.T) {
 // - level 1 link from index 0 to index 2
 // - level 1 link from index 2 to index 4
 //
-// The roster starts with 3 conodes and evolves to 4 to go back to 3 again. This
-// in order to test to whom the forward link is propagated when there is a
+// The roster starts with 3 conodes and evolves to 4 to go back to 3 again.
+// This is to test to whom the forward link is propagated when there is a
 // difference between the source and the distant roster.
 func TestService_MissingForwardLinks(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)

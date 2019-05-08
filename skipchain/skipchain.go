@@ -1200,7 +1200,7 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 				}
 
 				pointer = s.db.GetByID(pointer.Hash)
-				if len(pointer.ForwardLink) == 0 {
+				if pointer == nil || len(pointer.ForwardLink) == 0 {
 					return errors.New("Couldn't reach the proposed block from the backlink")
 				}
 			}

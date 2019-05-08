@@ -115,6 +115,10 @@ func TestFail(t *testing.T) {
 	}
 }
 
+// TestForwardLinks tests that forward links are correctly created for higher height
+// when the genesis roster is incomplete and evolves. It will create enough blocks
+// for the genesis block to be linked with the latest block and it should be propagated
+// to every conode.
 func TestForwardLinks(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	srvs, ro, service := l.MakeSRS(cothority.Suite, 5, skipchainSID)
