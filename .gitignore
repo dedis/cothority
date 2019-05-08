@@ -9,6 +9,8 @@ scmgr/scmgr
 cisc/cisc
 cosi/simulation/build/
 cosi/simulation/test_data/
+external/java/bin
+external/java/.project
 *~
 .tags*
 **/build/
