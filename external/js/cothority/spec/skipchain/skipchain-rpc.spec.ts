@@ -11,7 +11,7 @@ describe("SkipchainRPC Tests", () => {
     it("should create a skipchain and add blocks to it", async () => {
         const rpc = new SkipchainRPC(roster);
 
-        const { latest: genesis } = await rpc.createSkipchain();
+        const { latest: genesis } = await rpc.createSkipchain(2, 2);
 
         for (let i = 0; i < 10; i++) {
             await rpc.addBlock(genesis.hash, Buffer.from("abc"));
@@ -32,7 +32,7 @@ describe("SkipchainRPC Tests", () => {
         expect(update.hash).toEqual(latest.hash);
 
         const chain = await rpc.getUpdateChain(genesis.hash);
-        expect(chain.length).toBe(11);
+        expect(chain.length).toBe(6);
 
         const chainIDs = await rpc.getAllSkipChainIDs();
         expect(chainIDs).toContain(genesis.hash);
@@ -41,7 +41,7 @@ describe("SkipchainRPC Tests", () => {
     it("should create a chain with different roster", async () => {
         const rpc = new SkipchainRPC(roster);
         const rpc2 = new SkipchainRPC(roster.slice(0, 2));
-        const { latest: genesis } = await rpc.createSkipchain();
+        const { latest: genesis } = await rpc.createSkipchain(1, 1);
 
         for (let i = 0; i < 3; i++) {
             await rpc.addBlock(genesis.hash, Buffer.from("abc"));

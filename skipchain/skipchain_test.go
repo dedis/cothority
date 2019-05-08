@@ -265,11 +265,22 @@ func TestService_Verification(t *testing.T) {
 	log.Lvl1("Creating non-conforming skipBlock")
 	sb := NewSkipBlock()
 	sb.Roster = el
-	sb.MaximumHeight = 1
+	sb.MaximumHeight = 2
 	sb.BaseHeight = 1
 	sb.VerifierIDs = VerificationStandard
-	//_, err = service.ProposeSkipBlock(&ProposeSkipBlock{nil, sb})
-	//require.NotNil(t, err, "Shouldn't accept a non-conforming skipblock")
+	_, err = service.StoreSkipBlockInternal(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sb})
+	require.Error(t, err)
+	require.Equal(t, "Set maximumHeight to 1 when baseHeight is 1", err.Error())
+
+	sb.BaseHeight = 0
+	_, err = service.StoreSkipBlockInternal(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sb})
+	require.Error(t, err)
+	require.Equal(t, "Set a baseHeight > 0", err.Error())
+
+	sb.MaximumHeight = 0
+	_, err = service.StoreSkipBlockInternal(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sb})
+	require.Error(t, err)
+	require.Equal(t, "Set a maximumHeight > 0", err.Error())
 
 	log.Lvl1("Creating skipblock with same Roster as root")
 	sbInter, err := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, sb.VerifierIDs, 1, 1)
@@ -1389,4 +1400,75 @@ func TestService_WaitBlock(t *testing.T) {
 	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, newSb.Hash)
 	require.Nil(t, sb)
 	require.False(t, doCatchUp)
+}
+
+// The test scenario is the following:
+// - 4 nodes
+// - level 1 link from index 0 to index 2
+// - level 1 link from index 2 to index 4
+//
+// The roster starts with 3 conodes and evolves to 4 to go back to 3 again.
+// This is to test to whom the forward link is propagated when there is a
+// difference between the source and the distant roster.
+func TestService_MissingForwardLinks(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	servers, ro, service := local.MakeSRS(cothority.Suite, 4, skipchainSID)
+
+	s := service.(*Service)
+
+	roWithout4 := onet.NewRoster(ro.List[:3])
+
+	sbRoot, err := makeGenesisRosterArgs(s, roWithout4, nil, VerificationStandard, 2, 2)
+	require.NoError(t, err)
+
+	sb := NewSkipBlock()
+	sb.Roster = ro
+	_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+	require.NoError(t, err)
+
+	cc := make([]*network.ServerIdentity, 3)
+	cc[0] = ro.List[0]
+	cc[1] = ro.List[1]
+	cc[2] = ro.List[3]
+
+	roWithout3 := onet.NewRoster(cc)
+
+	sb.Roster = roWithout3
+	_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+	require.NoError(t, err)
+
+	sb.Roster = onet.NewRoster(ro.List[:3])
+	for i := 0; i < 5; i++ {
+		_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		require.NoError(t, err)
+	}
+
+	req := &GetSingleBlockByIndex{Genesis: sbRoot.Hash, Index: 2}
+	sbAtIndex2FromC1, err := s.GetSingleBlockByIndex(req)
+	require.NoError(t, err)
+	// C1 is always in the roster so always has the forward links.
+	require.Equal(t, 2, len(sbAtIndex2FromC1.SkipBlock.ForwardLink))
+
+	sbAtIndex2FromC3, err := servers[2].Service(ServiceName).(*Service).GetSingleBlockByIndex(req)
+	require.NoError(t, err)
+	// C3 is reinserted in the roster so it should get the level 1 forward link.
+	require.Equal(t, 2, len(sbAtIndex2FromC3.SkipBlock.ForwardLink))
+
+	sbAtIndex2FromC4, err := servers[3].Service(ServiceName).(*Service).GetSingleBlockByIndex(req)
+	require.NoError(t, err)
+	// C4 is removed from the roster so it should not get the level 1 forward link
+	// as it's not participating to the cothority anymore.
+	require.Equal(t, 1, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
+
+	// When propagating a new block, a proof is provided and it should then update
+	// previous forward links.
+	sb.Roster = ro
+	_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+	require.NoError(t, err)
+
+	sbAtIndex2FromC4, err = servers[3].Service(ServiceName).(*Service).GetSingleBlockByIndex(req)
+	require.NoError(t, err)
+	// C4 is re-inserted and should then update the missing forward link with the new block.
+	require.Equal(t, 2, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
 }

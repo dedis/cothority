@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -453,9 +454,13 @@ func (sb *SkipBlock) AddForward(fw *ForwardLink) {
 // AddForwardLink stores the forward-link at the indicated position. If the
 // forwardlink at pos already exists, it returns an error.
 func (sb *SkipBlock) AddForwardLink(fw *ForwardLink, pos int) error {
-	if len(sb.ForwardLink) > pos || pos < 0 {
-		return errors.New("this forward-link already exists or invalid position")
+	if pos < 0 || pos >= sb.Height {
+		return errors.New("invalid position")
 	}
+	if !fw.From.Equal(sb.Hash) {
+		return errors.New("forward link doesn't start from this block")
+	}
+
 	for len(sb.ForwardLink) <= pos {
 		sb.ForwardLink = append(sb.ForwardLink, &ForwardLink{})
 	}
@@ -706,23 +711,41 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 				return errors.New("failed to get skipblock with error: " + err.Error())
 			}
 			if sbOld != nil {
+				numFL := len(sbOld.ForwardLink)
 				// If this skipblock already exists, only copy forward-links and
 				// new children.
-				if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-					for i, fl := range sb.ForwardLink {
-						if i < len(sbOld.ForwardLink) || fl.IsEmpty() {
-							// Don't overwrite existing forwardlinks and ignore empty links
+				if len(sb.ForwardLink) > numFL {
+					for i, fl := range sb.ForwardLink[numFL:] {
+						if fl.IsEmpty() {
+							// Ignore empty links.
 							continue
 						}
 
 						publics := sbOld.Roster.ServicePublics(ServiceName)
 
 						if err := fl.Verify(suite, publics); err != nil {
-							return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
+							// Only keep a log of the failing forward links but keep trying others.
+							log.Error("Got a known block with wrong signature in forward-link with error: " + err.Error())
+							continue
 						}
-						if err := sbOld.AddForwardLink(fl, i); err != nil {
+
+						target, err := db.getFromTx(tx, fl.To)
+						if err != nil {
+							return err
+						}
+						// Only check the target height if it exists because the block might
+						// not yet be stored (e.g. catch up).
+						if target != nil {
+							diff := math.Log(float64(target.Index - sbOld.Index))
+							base := math.Log(float64(sbOld.BaseHeight))
+							if int(diff/base) != i+numFL {
+								log.Errorf("Received a forward link with an invalid height: %x/%d", sb.Hash, i+numFL)
+								continue
+							}
+						}
+
+						if err := sbOld.AddForwardLink(fl, i+numFL); err != nil {
 							log.Error(err)
-							return nil
 						}
 					}
 				}
