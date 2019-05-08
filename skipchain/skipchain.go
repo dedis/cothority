@@ -1200,7 +1200,7 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 				}
 
 				pointer = s.db.GetByID(pointer.Hash)
-				if len(pointer.ForwardLink) == 0 {
+				if pointer == nil || len(pointer.ForwardLink) == 0 {
 					return errors.New("Couldn't reach the proposed block from the backlink")
 				}
 			}
@@ -1235,10 +1235,11 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 			return err
 		}
 
-		// BackLinks are already stored in the new block so only
-		// the roster from the previous block needs to add the
-		// forward link
-		return s.startPropagation(s.propagateForwardLink, from.Roster, &PropagateForwardLink{fl, fs.TargetHeight})
+		// Forward-links are sent to the new roster so active conodes get the update. If a conode
+		// is exluded from the cothority, it will need to catch up the forward link later when
+		// re-entering the cothority.
+		ro := fs.Newest.Roster.Concat(s.ServerIdentity())
+		return s.startPropagation(s.propagateForwardLink, ro, &PropagateForwardLink{fl, fs.TargetHeight})
 	}()
 	if err != nil {
 		return fmt.Errorf("%v couldn't create forwardLink: %v requested by %v", s.ServerIdentity(), err, req.ServerIdentity)
@@ -1516,6 +1517,9 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 	}
 	if sb.BaseHeight <= 0 {
 		return errors.New("Set a baseHeight > 0")
+	}
+	if sb.BaseHeight == 1 && sb.MaximumHeight > 1 {
+		return errors.New("Set maximumHeight to 1 when baseHeight is 1")
 	}
 	if sb.Index < 0 {
 		return errors.New("Can't have an index < 0")

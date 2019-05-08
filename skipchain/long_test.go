@@ -8,6 +8,7 @@ package skipchain
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -111,5 +112,41 @@ func TestFail(t *testing.T) {
 		sigs := tss[0].(*testService).CallER(tree, sb)
 		require.Equal(t, 0, len(sigs))
 		local.CloseAll()
+	}
+}
+
+// TestForwardLinks tests that forward links are correctly created for higher height
+// when the genesis roster is incomplete and evolves. It will create enough blocks
+// for the genesis block to be linked with the latest block and it should be propagated
+// to every conode.
+func TestForwardLinks(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	srvs, ro, service := l.MakeSRS(cothority.Suite, 5, skipchainSID)
+	defer l.CloseAll()
+
+	s := service.(*Service)
+	roWithout5 := onet.NewRoster(ro.List[:4])
+
+	sbRoot, err := makeGenesisRosterArgs(s, roWithout5, nil, VerificationStandard, 4, 32)
+
+	sb := NewSkipBlock()
+	for i := 0; i < 1024; i++ {
+		if i < 20 {
+			sb.Roster = roWithout5
+		} else {
+			sb.Roster = ro
+		}
+
+		_, err = s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		require.NoError(t, err)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	for _, srv := range srvs {
+		sk := srv.Service(ServiceName).(*Service)
+		reply, err := sk.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
+		require.NoError(t, err)
+		require.Equal(t, 2, len(reply.Update))
 	}
 }
