@@ -1312,7 +1312,8 @@ func debugList(c *cli.Context) error {
 				time.Unix(headerLatest.Timestamp/1e9, 0),
 				rb.Latest.Hash[:])
 			if c.Bool("verbose") {
-				log.Infof("\tGenesis block header: %+v\n\tLatest block header: %+v",
+				log.Infof("\tRoster: %s\n\tGenesis block header: %+v\n\tLatest block header: %+v",
+					rb.Latest.Roster.List,
 					rb.Genesis.SkipBlockFix,
 					rb.Latest.SkipBlockFix)
 			}

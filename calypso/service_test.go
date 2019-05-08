@@ -381,6 +381,7 @@ func newTS(t *testing.T, nodes int) ts {
 // newTSWithExtras initially the byzRoster and ltsRoster are the same, the extras are
 // there so that we can change the ltsRoster later to be something different.
 func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
+	allowInsecureAdmin = true
 	s := ts{}
 	s.local = onet.NewLocalTestT(cothority.Suite, t)
 
@@ -456,8 +457,8 @@ func (s *ts) createGenesis(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, svc := range s.services {
-		req := &Authorise{ByzCoinID: s.cl.ID}
-		_, err = svc.Authorise(req)
+		req := &Authorize{ByzCoinID: s.cl.ID}
+		_, err = svc.Authorize(req)
 		require.NoError(t, err)
 	}
 }

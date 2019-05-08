@@ -60,14 +60,28 @@ type Read struct {
 // These are the messages used in the API-calls
 // ***
 
-// Authorise is used to add the given ByzCoinID into the list of
-// authorised IDs.
+// Authorise adds a ByzCoinID to the list of authorized IDs.
+// Deprecated: please use Authorize.
 type Authorise struct {
 	ByzCoinID skipchain.SkipBlockID
 }
 
-// AuthoriseReply is returned upon successful authorisation.
+// AuthoriseReply is returned upon successful authorization
+// Deprecated: please use AuthorizeReply
 type AuthoriseReply struct {
+}
+
+// Authorize is used to add the given ByzCoinID into the list of
+// authorised IDs. To be accepted, the ByzCoinID must be signed
+// using the private key of the conode.
+type Authorize struct {
+	ByzCoinID skipchain.SkipBlockID
+	Timestamp int64  `protobuf:"opt"`
+	Signature []byte `protobuf:"opt"`
+}
+
+// AuthorizeReply is returned upon successful authorisation.
+type AuthorizeReply struct {
 }
 
 // CreateLTS is used to start a DKG and store the private keys in each node.

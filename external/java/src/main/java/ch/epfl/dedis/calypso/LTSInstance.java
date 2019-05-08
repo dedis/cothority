@@ -74,7 +74,7 @@ public class LTSInstance {
      * Note that this is only the first step for re-sharing. After new roster is confirmed and stored in the block,
      * the client must instruct the CalypsoRPC to run the actual re-sharing protocol.
      * @param roster the new roster
-     * @param signers the list of signers that are authorised to run the reshare contract
+     * @param signers the list of signers that are authorized to run the reshare contract
      * @param signerCtrs the monotonically increasing counter for every signer
      * @throws CothorityException if something goes wrong
      */

@@ -28,12 +28,16 @@
 package calypso
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -62,7 +66,7 @@ const propagationTimeout = 20 * time.Second
 
 const calypsoReshareProto = "calypso_reshare_proto"
 
-var disableLoopbackCheck = false
+var allowInsecureAdmin = false
 
 func init() {
 	var err error
@@ -77,7 +81,7 @@ func init() {
 	// container runs with this variable set.
 	if os.Getenv("COTHORITY_ALLOW_INSECURE_ADMIN") != "" {
 		log.Warn("COTHORITY_ALLOW_INSECURE_ADMIN is set; Calypso admin actions allowed from the public network.")
-		disableLoopbackCheck = true
+		allowInsecureAdmin = true
 	}
 }
 
@@ -107,37 +111,89 @@ type vData struct {
 // we normally get from embeddeding onet.ServiceProcessor in order to
 // hook it and get a look at the http.Request.
 func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byte) ([]byte, *onet.StreamingTunnel, error) {
-	if !disableLoopbackCheck && path == "Authorise" {
+
+	if !allowInsecureAdmin && path == "Authorise" {
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
+
 		if err != nil {
 			return nil, nil, err
 		}
 		ip := net.ParseIP(h)
-
 		if !ip.IsLoopback() {
+
 			return nil, nil, errors.New("authorise is only allowed on loopback")
 		}
 	}
-
 	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
 }
 
-// Authorise adds a ByzCoinID to the list of authorized IDs. It should
-// be called by the administrator at the beginning, before any other API calls
-// are made. A ByzCoinID that is not authorised will not be allowed to call the
-// other APIs.
+// Authorise adds a ByzCoinID to the list of authorized IDs. It can only be called
+// from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
+// Deprecated: please use Authorize.
 func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
-	s.storage.Lock()
-	defer s.storage.Unlock()
 	if len(req.ByzCoinID) == 0 {
 		return nil, errors.New("empty ByzCoin ID")
 	}
+
+	s.storage.Lock()
 	bcID := string(req.ByzCoinID)
 	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
+		s.storage.Unlock()
 		return nil, errors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[bcID] = true
-	return &AuthoriseReply{}, nil
+	s.storage.Unlock()
+
+	err := s.save()
+	if err != nil {
+		return nil, err
+	}
+	log.Lvl1("Stored ByzCoinID")
+	return &AuthoriseReply{}, err
+}
+
+// Authorize adds a ByzCoinID to the list of authorized IDs. It should
+// be called by the administrator at the beginning, before any other API calls
+// are made. A ByzCoinID that is not authorised will not be allowed to call the
+// other APIs.
+//
+// If COTHORITY_ALLOW_INSECURE_ADMIN='true', the signature verification is
+// skipped.
+func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
+	if len(req.ByzCoinID) == 0 {
+		return nil, errors.New("empty ByzCoin ID")
+	}
+
+	if !allowInsecureAdmin {
+		if len(req.Signature) == 0 {
+			return nil, errors.New("no signature provided")
+		}
+		if math.Abs(time.Now().Sub(time.Unix(req.Timestamp, 0)).Seconds()) > 60 {
+			return nil, errors.New("signature is too old")
+		}
+		msg := append(req.ByzCoinID, make([]byte, 8)...)
+		binary.LittleEndian.PutUint64(msg[32:], uint64(req.Timestamp))
+		err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, req.Signature)
+		if err != nil {
+			return nil, errors.New("signature verification failed: " + err.Error())
+		}
+	}
+
+	s.storage.Lock()
+	bcID := string(req.ByzCoinID)
+	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
+		s.storage.Unlock()
+		return nil, errors.New("ByzCoinID already authorised")
+	}
+	s.storage.AuthorisedByzCoinIDs[bcID] = true
+	s.storage.Unlock()
+
+	err := s.save()
+	if err != nil {
+		return nil, err
+	}
+	log.Lvl1("Stored ByzCoinID")
+	return &AuthorizeReply{}, nil
 }
 
 // CreateLTS takes as input a roster with a list of all nodes that should
@@ -155,6 +211,10 @@ func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
 
 	// NOTE: the roster stored in ByzCoin must have myself.
 	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
+	if tree == nil {
+		log.Error("cannot create tree with roster", roster.List)
+		return nil, errors.New("error while generating tree")
+	}
 	cfg := newLtsConfig{
 		req.Proof,
 	}
@@ -467,11 +527,9 @@ func (s *Service) GetLTSReply(req *GetLTSReply) (*CreateLTSReply, error) {
 }
 
 func (s *Service) getKeyPair() *key.Pair {
-	tree := onet.NewRoster([]*network.ServerIdentity{s.ServerIdentity()}).GenerateBinaryTree()
-	tni := s.NewTreeNodeInstance(tree, tree.Root, "dummy")
 	return &key.Pair{
-		Public:  tni.Public(),
-		Private: tni.Private(),
+		Public:  s.ServerIdentity().ServicePublic(ServiceName),
+		Private: s.ServerIdentity().ServicePrivate(ServiceName),
 	}
 }
 
@@ -686,7 +744,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
-		s.GetLTSReply, s.Authorise); err != nil {
+		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	err := byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
