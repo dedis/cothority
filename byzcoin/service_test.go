@@ -27,6 +27,9 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 var testInterval = 500 * time.Millisecond
 
+// use this value as a rotation window to make it impossible to trigger a view change
+var disableViewChange = time.Duration(9999)
+
 const dummyContract = "dummy"
 const slowContract = "slow"
 const panicContract = "panic"
@@ -38,7 +41,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_CreateGenesisBlock(t *testing.T) {
-	s := newSerN(t, 0, testInterval, 4, false)
+	s := newSerN(t, 0, testInterval, 4, disableViewChange)
 	defer s.local.CloseAll()
 
 	service := s.services[1]
@@ -127,7 +130,7 @@ func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, blockInterval, 4, false)
+		s = newSerN(t, 1, blockInterval, 4, disableViewChange)
 		for _, service := range s.services {
 			service.SetPropagationTimeout(blockInterval * 2)
 		}
@@ -253,7 +256,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 func TestService_AddTransaction_WrongNode(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	s := newSerN(t, 1, testInterval, 4, false)
+	s := newSerN(t, 1, testInterval, 4, disableViewChange)
 	defer s.local.CloseAll()
 
 	outsideServer := s.local.GenServers(1)[0]
@@ -299,7 +302,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	defer log.SetShowTime(log.ShowTime())
 	log.SetShowTime(true)
-	s := newSerN(t, 1, testInterval, 4, false)
+	s := newSerN(t, 1, testInterval, 4, disableViewChange)
 	defer s.local.CloseAll()
 
 	// add the first tx to create the instance
@@ -2349,10 +2352,10 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
-	return newSerN(t, step, interval, 4, false)
+	return newSerN(t, step, interval, 4, disableViewChange)
 }
 
-func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange bool) *ser {
+func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Duration) *ser {
 	s := &ser{
 		local:  onet.NewLocalTestT(tSuite, t),
 		value:  []byte("anyvalue"),
@@ -2361,6 +2364,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	s.hosts, s.roster, _ = s.local.GenTree(n, true)
 	for _, sv := range s.local.GetServices(s.hosts, ByzCoinID) {
 		service := sv.(*Service)
+		service.rotationWindow = rw
 		s.services = append(s.services, service)
 	}
 	registerDummy(s.hosts)

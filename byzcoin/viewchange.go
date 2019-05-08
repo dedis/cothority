@@ -198,7 +198,7 @@ func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Durat
 	if err != nil {
 		return 0, err
 	}
-	return rotationWindow * interval, nil
+	return s.rotationWindow * interval, nil
 }
 
 func (s *Service) getFaultThreshold(sbID skipchain.SkipBlockID) int {
