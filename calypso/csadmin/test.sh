@@ -43,7 +43,6 @@ testAuth(){
 
     # Correct signature
     testOK runCA authorize co1/private.toml $bcID
-    echo $bcID
 
     # Test with signature check disabled
     pkill -9 conode 2> /dev/null
@@ -54,7 +53,6 @@ testAuth(){
     rm "bc-*.cfg"
     runBA create public.toml --interval .5s
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-    echo $bcID
     testOK runCA authorize private_wrong.toml $bcID
 }
 
