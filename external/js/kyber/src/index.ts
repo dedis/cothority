@@ -1,5 +1,6 @@
 import * as curve from "./curve";
 import * as sign from "./sign";
+import * as pairing from "./pairing";
 import PointFactory from './point-factory';
 
 export interface Group {
@@ -265,11 +266,13 @@ export interface Scalar {
 export {
   curve,
   sign,
+  pairing,
   PointFactory,
 }
 
 export default {
   curve,
   sign,
+  pairing,
   PointFactory,
 }
