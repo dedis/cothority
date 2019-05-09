@@ -1196,8 +1196,29 @@ func debugReplay(c *cli.Context) error {
 	s := servers[0].Service(byzcoin.ServiceName).(*byzcoin.Service)
 
 	cl := skipchain.NewClient()
+	stack := []*skipchain.SkipBlock{}
 	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		return cl.GetSingleBlock(ro, sib)
+		if len(stack) > 0 {
+			// Use the blocks stored locally if possible ..
+			sb := stack[0]
+			stack = stack[1:]
+
+			// .. but only if it matches.
+			if sb.Hash.Equal(sib) {
+				return sb, nil
+			}
+		}
+
+		// Try to get more than a block at once to speed up the process.
+		blocks, err := cl.GetUpdateChainLevel(ro, sib, 1, 50)
+		if err != nil {
+			log.Info("An error occurred when getting the chain. Trying a single block.")
+			// In the worst case, it fetches only the requested block.
+			return cl.GetSingleBlock(ro, sib)
+		}
+
+		stack = blocks[1:]
+		return blocks[0], nil
 	}
 
 	_, err = s.ReplayState(bcID, r, cb)

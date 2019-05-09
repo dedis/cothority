@@ -33,8 +33,9 @@ func TestService_StateReplay(t *testing.T) {
 		return s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
 	}
 
-	_, err := s.service().ReplayState(s.genesis.Hash, s.roster, cb)
+	st, err := s.service().ReplayState(s.genesis.Hash, s.roster, cb)
 	require.NoError(t, err)
+	require.Equal(t, 2, st.GetIndex())
 }
 
 func tryReplay(t *testing.T, s *ser, cb BlockFetcherFunc, msg string) {

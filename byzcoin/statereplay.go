@@ -35,13 +35,13 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 		return nil, fmt.Errorf("must start from genesis block but found index %d", sb.Index)
 	}
 
-	var sst *stagingStateTrie
+	var st *stateTrie
 	roster := onet.NewRoster(ro.List)
 	if roster == nil {
 		return nil, errors.New("not enough valid server identities to make a roster")
 	}
 
-	for sb != nil && len(sb.ForwardLink) > 0 {
+	for sb != nil {
 		log.Infof("Replaying block at index %d", sb.Index)
 
 		// As the roster evolves along the chain, it may happen that a roster
@@ -71,15 +71,23 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 				if err != nil {
 					return nil, replayError(sb, err.Error())
 				}
-				sst, err = newMemStagingStateTrie(nonce)
+				st, err = newMemStateTrie(nonce)
 				if err != nil {
 					return nil, replayError(sb, err.Error())
 				}
 			}
 
+			sst := st.MakeStagingStateTrie()
+
 			for _, tx := range dBody.TxResults {
 				if tx.Accepted {
-					_, sst, err = s.processOneTx(sst, tx.ClientTransaction)
+					var scs StateChanges
+					scs, sst, err = s.processOneTx(sst, tx.ClientTransaction)
+					if err != nil {
+						return nil, replayError(sb, err.Error())
+					}
+
+					err = st.StoreAll(scs, sb.Index)
 					if err != nil {
 						return nil, replayError(sb, err.Error())
 					}
@@ -91,13 +99,17 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			}
 		}
 
-		// The level 0 forward link must be used as we need to rebuild the global
-		// states for each block.
-		sb, err = cb(roster, sb.ForwardLink[0].To)
-		if err != nil {
-			return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
+		if len(sb.ForwardLink) > 0 {
+			// The level 0 forward link must be used as we need to rebuild the global
+			// states for each block.
+			sb, err = cb(roster, sb.ForwardLink[0].To)
+			if err != nil {
+				return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
+			}
+		} else {
+			sb = nil
 		}
 	}
 
-	return sst, nil
+	return st, nil
 }
