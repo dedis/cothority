@@ -8,7 +8,14 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"math/big"
 	"os"
+	"strings"
+
+	"go.dedis.ch/cothority/v3/ocs/edwards25519"
+
+	"go.dedis.ch/kyber/v3"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -17,9 +24,64 @@ import (
 	"go.dedis.ch/onet/v3/log"
 )
 
+func bigEndianToDecimal(buf []byte) *big.Int {
+	bi := &big.Int{}
+	bi.SetBytes(buf)
+	return bi
+}
+
+func LEBytesToDecimal(buf []byte) *big.Int {
+	if len(buf)%2 != 0 {
+		log.Fatal("can only convert even length slices")
+	}
+	for i := 0; i < len(buf)/2; i++ {
+		buf[i], buf[len(buf)-i-1] = buf[len(buf)-i-1], buf[i]
+	}
+	return bigEndianToDecimal(buf)
+}
+
+func printScalar(msg string, s kyber.Scalar) {
+	buf, err := s.MarshalBinary()
+	log.ErrFatal(err)
+	var str []string
+	str = append(str, fmt.Sprint("Representation of a scalar:"))
+	str = append(str, fmt.Sprintf("\tLittle-endian: %x", buf))
+	str = append(str, fmt.Sprintf("\tDecimal: %s", LEBytesToDecimal(buf).String()))
+	log.Info(msg, strings.Join(str, "\n"))
+}
+
+func printPoint(msg string, p kyber.Point) {
+	ped := p.(*edwards25519.Point)
+	var str []string
+	str = append(str, fmt.Sprint("Representations of a point:"))
+	str = append(str, fmt.Sprintf("\tCompressed: %s", ped.String()))
+	str = append(str, fmt.Sprintf("\tLittle-endian X / Y:\n\t\tX: %x\n\t\tY: %x", ped.X_LE(), ped.Y_LE()))
+	str = append(str, fmt.Sprintf("\tDecimal X / Y:\n\t\tX: %s\n\t\tY: %s",
+		LEBytesToDecimal(ped.X_LE()).String(),
+		LEBytesToDecimal(ped.Y_LE()).String()))
+	log.Info(msg, strings.Join(str, "\n"))
+}
+
 func main() {
+	// Use our own ed25519 suite to be able to print x coordinates:
+	cothority.Suite = edwards25519.NewBlakeSHA256Ed25519()
 	if len(os.Args) < 2 {
-		log.Fatal("Please give a roster.toml as first parameter")
+		log.Error("Please give a roster.toml as first parameter")
+		s := cothority.Suite.Scalar().SetInt64(1)
+		p := cothority.Suite.Point().Base()
+		printScalar("* A scalar of '1':", s)
+		printPoint("* The base point:", p)
+		printScalar("* A scalar of '2':", s.Add(s, s))
+		printPoint("* The base point added to himself:", p.Add(p, p))
+		printPoint("* 2 x base:", p.Mul(s, nil))
+		var allF0 [32]byte
+		for i := range allF0 {
+			allF0[i] = 0xf0
+		}
+		s.SetBytes(allF0[:])
+		printScalar("* A reduced all-F0 scalar:", s)
+		printScalar("* A reduced all-F0 scalar added to itself:", s.Add(s, s))
+		return
 	}
 	roster, err := lib.ReadRoster(os.Args[1])
 	log.ErrFatal(err)
