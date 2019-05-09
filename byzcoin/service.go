@@ -55,7 +55,7 @@ var catchupFetchBlocks = 10
 // How many DB-entries to download in one go.
 var catchupFetchDBEntries = 100
 
-var rotationWindow time.Duration = 10
+const defaultRotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
 
@@ -142,6 +142,8 @@ type Service struct {
 	catchingUpHistoryLock sync.Mutex
 
 	downloadState downloadState
+
+	rotationWindow time.Duration
 }
 
 type downloadState struct {
@@ -1358,11 +1360,11 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if nodeInNew {
 		// Update or start heartbeats
 		if s.heartbeats.exists(string(sb.SkipChainID())) {
-			log.Lvlf3("%s sending heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
-			s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
+			log.Lvlf3("%s sending heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
+			s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*s.rotationWindow)
 		} else {
-			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
-			err = s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
+			err = s.heartbeats.start(string(sb.SkipChainID()), interval*s.rotationWindow, s.heartbeatsTimeout)
 			if err != nil {
 				log.Errorf("%s heartbeat failed to start with error: %s", s.ServerIdentity(), err.Error())
 			}
@@ -1385,7 +1387,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		}
 	} else {
 		if s.heartbeats.exists(scIDstr) {
-			log.Lvlf2("%s stopping heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
+			log.Lvlf2("%s stopping heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
 			s.heartbeats.stop(scIDstr)
 		}
 	}
@@ -2232,7 +2234,7 @@ func (s *Service) startAllChains() error {
 			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
 		}
 		log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, gen)
-		s.heartbeats.start(string(gen), interval*rotationWindow, s.heartbeatsTimeout)
+		s.heartbeats.start(string(gen), interval*s.rotationWindow, s.heartbeatsTimeout)
 
 		// initiate the view-change manager
 		initialDur, err := s.computeInitialDuration(gen)
@@ -2322,6 +2324,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		streamingMan:           streamingManager{},
 		closed:                 true,
 		catchingUpHistory:      make(map[string]time.Time),
+		rotationWindow:         defaultRotationWindow,
 	}
 	err := s.RegisterHandlers(
 		s.CreateGenesisBlock,

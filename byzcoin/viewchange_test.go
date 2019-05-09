@@ -30,12 +30,8 @@ func TestViewChange_Basic2(t *testing.T) {
 }
 
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
-	rw := rotationWindow
-	defer func() {
-		rotationWindow = rw
-	}()
-	rotationWindow = 3
-	s := newSerN(t, 1, interval, nHosts, true)
+	rw := time.Duration(3)
+	s := newSerN(t, 1, interval, nHosts, rw)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
@@ -60,7 +56,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
 	for i := 0; i < nFailures; i++ {
-		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rotationWindow)
+		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
 	}
 	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[nFailures].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
 		time.Sleep(interval)
@@ -128,7 +124,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 // Tests that a view change can happen when the leader index is out of bound
 func TestViewChange_LeaderIndex(t *testing.T) {
-	s := newSerN(t, 1, time.Second, 5, true)
+	s := newSerN(t, 1, time.Second, 5, defaultRotationWindow)
 	defer s.local.CloseAll()
 
 	err := s.services[0].sendViewChangeReq(viewchange.View{LeaderIndex: -1})
@@ -158,7 +154,7 @@ func TestViewChange_LeaderIndex(t *testing.T) {
 // Test that old states of a view change that got stuck in the middle of the protocol
 // are correctly cleaned if a new block is discovered.
 func TestViewChange_LostSync(t *testing.T) {
-	s := newSerN(t, 1, time.Second, 5, true)
+	s := newSerN(t, 1, time.Second, 5, defaultRotationWindow)
 	defer s.local.CloseAll()
 
 	target := s.hosts[1].ServerIdentity
@@ -243,7 +239,7 @@ func TestViewChange_LostSync(t *testing.T) {
 }
 
 func TestViewChange_MonitorFailure(t *testing.T) {
-	s := newSerN(t, 1, time.Second, 3, true)
+	s := newSerN(t, 1, time.Second, 3, defaultRotationWindow)
 	defer s.local.CloseAll()
 
 	log.OutputToBuf()

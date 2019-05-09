@@ -49,6 +49,8 @@ testAuth(){
     export COTHORITY_ALLOW_INSECURE_ADMIN=true
     runCoBG 1 2 3
     # Because the old bcID is already stored, create a new one
+    # after cleaning the first one
+    rm "bc-*.cfg"
     runBA create public.toml --interval .5s
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
     testOK runCA authorize private_wrong.toml $bcID
