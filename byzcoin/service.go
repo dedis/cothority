@@ -1829,6 +1829,8 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
+// processOneTx takes one transaction and creates a set of StateChanges. It also returns the temporary StateTrie
+// with the StateChanges applied.
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
@@ -2042,6 +2044,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	return s.txBuffer.take(string(scID))
 }
 
+// loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
 func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 	if len(txs) == 0 {
 		return nil, errors.New("no transactions")
@@ -2326,6 +2329,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		catchingUpHistory:      make(map[string]time.Time),
 		rotationWindow:         defaultRotationWindow,
 	}
+
 	err := s.RegisterHandlers(
 		s.CreateGenesisBlock,
 		s.AddTransaction,
