@@ -69,6 +69,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Index = 1
+		sb.Roster = s.roster
 		return sb, nil
 	}
 	tryReplay(t, s, cb, "must start from genesis block")
@@ -86,6 +87,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	// 4. bad payload
 	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
+		sb.Roster = s.roster
 		sb.Payload = []byte{1, 1, 1, 1, 1}
 		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
 		return sb, nil
@@ -95,6 +97,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	// 5. bad data
 	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
+		sb.Roster = s.roster
 		sb.Payload = []byte{}
 		sb.Data = []byte{1, 1, 1, 1, 1}
 		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
@@ -105,6 +108,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	// 6. non matching hash
 	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
+		sb.Roster = ro
 		sb.Payload = []byte{}
 		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
 		return sb, nil

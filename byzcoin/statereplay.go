@@ -2,10 +2,12 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -34,8 +36,20 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 	}
 
 	var sst *stagingStateTrie
+	roster := onet.NewRoster(ro.List)
+	if roster == nil {
+		return nil, errors.New("not enough valid server identities to make a roster")
+	}
 
 	for sb != nil && len(sb.ForwardLink) > 0 {
+		log.Infof("Replaying block at index %d", sb.Index)
+
+		// As the roster evolves along the chain, it may happen that a roster
+		// is completly offline and then we keep learning which conode happened
+		// to participate so that we can try to ask for the block even if the
+		// most up-to-date roster is offline.
+		roster = roster.Concat(sb.Roster.List...)
+
 		if sb.Payload != nil {
 			var dBody DataBody
 			err := protobuf.Decode(sb.Payload, &dBody)
@@ -79,7 +93,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 
 		// The level 0 forward link must be used as we need to rebuild the global
 		// states for each block.
-		sb, err = cb(sb.Roster, sb.ForwardLink[0].To)
+		sb, err = cb(roster, sb.ForwardLink[0].To)
 		if err != nil {
 			return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
 		}

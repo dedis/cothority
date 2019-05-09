@@ -27,6 +27,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
+	_ "go.dedis.ch/cothority/v3/personhood"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
@@ -1175,7 +1176,12 @@ func debugReplay(c *cli.Context) error {
 		return nil
 	}
 
-	r := &onet.Roster{List: []*network.ServerIdentity{{URL: c.Args().First()}}}
+	r := &onet.Roster{List: []*network.ServerIdentity{{
+		URL: c.Args().First(),
+		// valid server identity must have a public so we create a fake one
+		// as we are only interested in the URL.
+		Public: cothority.Suite.Point().Base(),
+	}}}
 	if r == nil {
 		return errors.New("couldn't create roster")
 	}
