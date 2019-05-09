@@ -1,0 +1,14 @@
+[0;37;1mI 19/09/05 15:19:52.471916000: (                       main.init.0.func1:  42) - File descriptor limit is: 24576
+[0m[0;36m2 19/09/05 15:19:52.507238000: (       byzcoin.(*Service).startAllChains: 2215) - tls://localhost:7778: Starting as a leader for chain 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e
+[0m[0;36m2 19/09/05 15:19:52.507494000: (       byzcoin.(*Service).startAllChains: 2234) - tls://localhost:7778 started heartbeat monitor for block 26 of 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e
+[0m[0;33m1 19/09/05 15:19:52.511570000: (                             service.new:  814) - Pin: 9b3fa07969de26ae12900a034c078c46
+[0m[0;33m1 19/09/05 15:19:52.512218000: (                      v3.(*Server).Start:  206) - Starting server at 2019-05-09 15:19:52 on address tls://localhost:7778 with public key 1bd20f5014022626ec532030950def11d7c6daeff52a39172ed2aa115affeb1a
+[0m[0;33m1 19/09/05 15:19:52.512339000: (                 network.(*Router).Start:  103) - New router with address tls://[::]:7778 and public key 1bd20f5014022626ec532030950def11d7c6daeff52a39172ed2aa115affeb1a
+[0m[0;36m2 19/09/05 15:19:52.512509000: (                   v3.(*WebSocket).start:  104) - Starting to listen on 0.0.0.0:7779
+[0m[0;36m2 19/09/05 15:19:52.513270000: (              byzcoin.(*Service).catchUp: 1117) - tls://localhost:7778 Catching up 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e / 26
+[0m[0;36m2 19/09/05 15:19:52.514346000: (              byzcoin.(*Service).catchUp: 1177) - tls://localhost:7778 Done catch up 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e / 26
+[0m[0;36m2 19/09/05 15:19:55.010966000: (                      network.NewTLSConn:  407) - NewTLSConn to: tls://localhost:7774
+[0m[0;36m2 19/09/05 15:19:55.011332000: (                      network.NewTLSConn:  407) - NewTLSConn to: tls://localhost:7776
+[0m[0;36m2 19/09/05 15:19:55.011466000: (                      network.NewTLSConn:  407) - NewTLSConn to: tls://localhost:7770
+[0m[0;36m2 19/09/05 15:19:55.011820000: (                      network.NewTLSConn:  407) - NewTLSConn to: tls://localhost:7772
+[0m

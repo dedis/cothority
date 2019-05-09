@@ -1,0 +1,10 @@
+[0;37;1mI 19/09/05 15:20:25.298603000: (                       main.init.0.func1:  42) - File descriptor limit is: 24576
+[0m[0;36m2 19/09/05 15:20:25.346807000: (       byzcoin.(*Service).startAllChains: 2234) - tls://localhost:7776 started heartbeat monitor for block 26 of 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e
+[0m[0;36m2 19/09/05 15:20:25.354859000: (              byzcoin.(*Service).catchUp: 1117) - tls://localhost:7776 Catching up 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e / 26
+[0m[0;36m2 19/09/05 15:20:25.356157000: (              byzcoin.(*Service).catchUp: 1177) - tls://localhost:7776 Done catch up 24029cb9640fe9f78753f1f58d4019a56866175951fbd6832f42cfee9dcfa63e / 26
+[0m[0;33m1 19/09/05 15:20:25.361327000: (                             service.new:  814) - Pin: fe09d19f741e3d2859b87733405a2c4b
+[0m[0;33m1 19/09/05 15:20:25.363315000: (                      v3.(*Server).Start:  206) - Starting server at 2019-05-09 15:20:25 on address tls://localhost:7776 with public key 106dd9c9b1aa3856e9f465c5e67022c01d0cf02c26b55ac8237101d48e79e6c6
+[0m[0;33m1 19/09/05 15:20:25.363903000: (                 network.(*Router).Start:  103) - New router with address tls://[::]:7776 and public key 106dd9c9b1aa3856e9f465c5e67022c01d0cf02c26b55ac8237101d48e79e6c6
+[0m[0;36m2 19/09/05 15:20:25.364133000: (                   v3.(*WebSocket).start:  104) - Starting to listen on 0.0.0.0:7777
+[0m[0;36m2 19/09/05 15:20:27.875264000: (network.NewTLSListenerWithListenAddr.func1:  249) - Got new connection request from: [::1]:53592
+[0m
