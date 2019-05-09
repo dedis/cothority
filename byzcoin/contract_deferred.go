@@ -43,6 +43,29 @@ type DeferredData struct {
 	ExecResult [][]byte
 }
 
+// String returns a human readable string representation of the deferred data
+func (dd DeferredData) String() string {
+	var out string
+	out += fmt.Sprint("- Proposed Tx:\n")
+	for i, inst := range dd.ProposedTransaction.Instructions {
+		out += fmt.Sprintf("-- Tx %d:\n", i)
+		out += inst.String()
+	}
+	out += fmt.Sprintf("- Expire Block Index: %d\n", dd.ExpireBlockIndex)
+	out += fmt.Sprint("- Instruction hashes: \n")
+	for i, hash := range dd.InstructionHashes {
+		out += fmt.Sprintf("-- hash %d:\n", i)
+		out += fmt.Sprintf("--- %x\n", hash)
+	}
+	out += fmt.Sprintf("- Num execution: %d\n", dd.NumExecution)
+	out += fmt.Sprintf("- Exec results: \n")
+	for i, res := range dd.ExecResult {
+		out += fmt.Sprintf("-- res %d:\n", i)
+		out += fmt.Sprintf("--- %x\n", res)
+	}
+	return out
+}
+
 type contractDeferred struct {
 	BasicContract
 	DeferredData
