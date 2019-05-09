@@ -17,7 +17,10 @@ func replayError(sb *skipchain.SkipBlock, msg string) error {
 	return fmt.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
 }
 
-// ReplayState builds the state changes from id to the latest block
+// ReplayState builds the state changes from the genesis of the given skipchain ID until
+// the callback returns nil or a block without forward links.
+// If a client wants to replay the states until the block at index x, the callback function
+// must be implemented to return nil when the next block has the index x.
 func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
 	sb, err := cb(ro, id)
 	if err != nil {
@@ -46,7 +49,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			}
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
-				return nil, replayError(sb, "client transaction has does not match")
+				return nil, replayError(sb, "client transaction hash does not match")
 			}
 
 			if sb.Index == 0 {
@@ -69,14 +72,16 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 				}
 			}
 
-			if bytes.Compare(dHead.TrieRoot, sst.GetRoot()) != 0 {
+			if !bytes.Equal(dHead.TrieRoot, sst.GetRoot()) {
 				return nil, replayError(sb, "merkle tree root doesn't match with trie root")
 			}
 		}
 
+		// The level 0 forward link must be used as we need to rebuild the global
+		// states for each block.
 		sb, err = cb(sb.Roster, sb.ForwardLink[0].To)
 		if err != nil {
-			return nil, fmt.Errorf("replay failed to the next block: %s", err.Error())
+			return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
 		}
 	}
 

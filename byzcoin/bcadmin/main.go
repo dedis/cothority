@@ -1191,7 +1191,7 @@ func debugReplay(c *cli.Context) error {
 
 	cl := skipchain.NewClient()
 	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		return cl.GetSingleBlock(r, sib)
+		return cl.GetSingleBlock(ro, sib)
 	}
 
 	_, err = s.ReplayState(bcID, r, cb)
