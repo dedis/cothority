@@ -23,7 +23,8 @@ export -n BC
 main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
-	[ ! -x ./bcadmin ] && exit 1
+    [[ ! -x ./bcadmin ]] && exit 1
+    run testReplay
     run testLink
     run testCoin
     run testRoster
@@ -39,6 +40,26 @@ main(){
     run testContractValue
     run testContractDeferred
     stopTest
+}
+
+testReplay(){
+  rm -f config/*
+  runCoBG 1 2 3
+  runBA create public.toml --interval .5s
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  bc=config/bc*cfg
+  key=config/key*cfg
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+  testOK runBA debug replay http://localhost:2003
+
+  # replay with only the genesis block
+  testOK runBA debug replay http://localhost:2003 $bcID
+
+  for i in $( seq 10 ); do
+    runBA mint $bc $key $keyPub 1000
+  done
+  # replay with more than 1 block
+  testOK runBA debug replay http://localhost:2003 $bcID
 }
 
 testLink(){

@@ -210,3 +210,15 @@ func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 	}
 	return &et, nil
 }
+
+// newMemStateTrie creates an in-memory StateTrie.
+func newMemStateTrie(nonce []byte) (*stateTrie, error) {
+	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
+	if err != nil {
+		return nil, err
+	}
+	st := stateTrie{
+		Trie: *memTrie,
+	}
+	return &st, nil
+}
