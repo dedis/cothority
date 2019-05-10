@@ -1047,6 +1047,10 @@ func (s *Service) catchupAll() error {
 	}
 
 	for _, scID := range gasr.IDs {
+		if !s.hasByzCoinVerification(scID) {
+			continue
+		}
+
 		sb, err := s.db().GetLatestByID(scID)
 		if err != nil {
 			return err
