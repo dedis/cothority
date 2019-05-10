@@ -384,6 +384,10 @@ var cmds = cli.Commands{
 								Name:  "sign",
 								Usage: "public key of the signing entity (default is the admin public key)",
 							},
+							cli.BoolFlag{
+								Name:  "redirect",
+								Usage: "redirects the transaction to stdout",
+							},
 						},
 					},
 					{
