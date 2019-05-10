@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"go.dedis.ch/cothority/v3/ocs/edwards25519"
+	"go.dedis.ch/kyber/v3/group/edwards25519"
 
 	"go.dedis.ch/kyber/v3"
 
@@ -25,8 +25,6 @@ import (
 )
 
 func main() {
-	// Use our own ed25519 suite to be able to print x coordinates:
-	cothority.Suite = edwards25519.NewBlakeSHA256Ed25519()
 	if len(os.Args) < 2 {
 		log.Error("Please give a roster.toml as first parameter")
 		printSamples()
