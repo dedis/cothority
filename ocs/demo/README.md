@@ -8,19 +8,20 @@ Demo
 
 This demo does a simple run to show how to use the OCS with the X509
 certificates. To run it, you first need to run the docker image
-to start 3 nodes locally:
+to start 3 nodes locally. This command supposes you are in the 
+`ocs/demo` directory.
 
 ```bash
+docker pull c4dt/ocs:dev
 docker run -it -p 7770-7775:7770-7775 --rm -v$(pwd)/data:/conode_data -e COTHORITY_ALLOW_INSECURE_ADMIN=true c4dt/ocs:dev ./run_nodes.sh -n 3 -v 2 -c -d /conode_data
 ```
 
 This creates 3 nodes that are listening on the localhost using the ports 7770-7775.
 All data is stored in the `$(pwd)/data` directory. Once the nodes are up and running,
-the demo can be started:
+the demo can be started. This command supposes you are in the `ocs/demo` directory.
 
 ```bash
-cd cothority/ocs/demo
-go run main.go
+go run main.go data/public.toml
 ```
 
 The demo will do the following:
