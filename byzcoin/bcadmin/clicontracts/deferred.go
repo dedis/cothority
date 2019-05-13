@@ -28,13 +28,13 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	proposedTransactionBuf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return errors.New("Failed to read from stding: " + err.Error())
+		return errors.New("failed to read from stding: " + err.Error())
 	}
 
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(proposedTransactionBuf, &proposedTransaction)
 	if err != nil {
-		return errors.New("Failed to decode transaction: " + err.Error())
+		return errors.New("failed to decode transaction: " + err.Error())
 	}
 
 	// ---
@@ -184,7 +184,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	}
 	hash, err := hex.DecodeString(hashStr)
 	if err != nil {
-		return errors.New("Coulndn't decode the hash string: " + err.Error())
+		return errors.New("coulndn't decode the hash string: " + err.Error())
 	}
 
 	instID := c.String("instID")
@@ -207,12 +207,12 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	identity := signer.Identity()
 	identityBuf, err := protobuf.Encode(&identity)
 	if err != nil {
-		return errors.New("Coulndn't encode the identity: " + err.Error())
+		return errors.New("coulndn't encode the identity: " + err.Error())
 	}
 
 	signature, err := signer.Sign(hash)
 	if err != nil {
-		return errors.New("Couldn't sign the hash: " + err.Error())
+		return errors.New("couldn't sign the hash: " + err.Error())
 	}
 
 	// ---
