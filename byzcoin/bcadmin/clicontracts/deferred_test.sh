@@ -80,7 +80,7 @@ testContractDeferredInvoke() {
         }'`
     echo -e "Here is the hash:\t\t$HASH"
     
-    testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --iid 0 --sign "$KEY" --darc "$ID"
+    testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     testOK runBA contract deferred invoke execProposedTx --instID "$DEFERRED_INSTANCE_ID" --sign "$KEY"
 }

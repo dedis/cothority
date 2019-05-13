@@ -149,7 +149,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// Here is what this function does:
 	//   1. Parses the inoput arguments
 	//   2. Computes the signature based on the identity (--sign), the
-	//      instruction id (--iid), and the hash (--hash)
+	//      instruction id (--instrIdx), and the hash (--hash)
 	//   3. Sends the addProof transaction
 	//   4. Reads the transaction return value (deferred data)
 
@@ -196,8 +196,8 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return errors.New("failed to decode the instID string: " + err.Error())
 	}
 
-	iid := c.Uint("iid")
-	index := uint32(iid)
+	instrIdx := c.Uint("instrIdx")
+	index := uint32(instrIdx)
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 

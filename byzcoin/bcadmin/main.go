@@ -428,7 +428,7 @@ var cmds = cli.Commands{
 			},
 			{
 				Name:  "deferred",
-				Usage: "Manipulate a vadeferred contract",
+				Usage: "Manipulate a deferred contract",
 				Subcommands: cli.Commands{
 					{
 						Name:   "spawn",
@@ -452,7 +452,7 @@ var cmds = cli.Commands{
 					},
 					{
 						Name:  "invoke",
-						Usage: "invokw on a deferred contract ",
+						Usage: "invoke on a deferred contract ",
 						Subcommands: cli.Commands{
 							{
 								Name:   "addProof",
@@ -465,8 +465,8 @@ var cmds = cli.Commands{
 										Usage:  "the ByzCoin config to use (required)",
 									},
 									cli.UintFlag{
-										Name:  "iid",
-										Usage: "the instruction index of the transaction (starts from 0) (fefault is 0)",
+										Name:  "instrIdx",
+										Usage: "the instruction index of the transaction (starts from 0) (default is 0)",
 									},
 									cli.StringFlag{
 										Name:  "hash",
