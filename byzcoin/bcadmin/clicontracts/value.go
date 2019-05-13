@@ -203,3 +203,45 @@ func ValueInvokeUpdate(c *cli.Context) error {
 
 	return nil
 }
+
+// ValueGet checks the proof and retrieves the value of a value contract.
+func ValueGet(c *cli.Context) error {
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	_, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	instID := c.String("iid")
+	if instID == "" {
+		return errors.New("--iid flag is required")
+	}
+	instIDBuf, err := hex.DecodeString(instID)
+	if err != nil {
+		return errors.New("failed to decode the instID string")
+	}
+
+	pr, err := cl.GetProof(instIDBuf)
+	if err != nil {
+		return errors.New("couldn't get proof: " + err.Error())
+	}
+	proof := pr.Proof
+	match := proof.InclusionProof.Match(instIDBuf)
+	if !match {
+		return errors.New("proof does not match")
+	}
+
+	_, resultBuf, _, _, err := proof.KeyValue()
+	if err != nil {
+		return errors.New("couldn't get value out of proof: " + err.Error())
+	}
+
+	fmt.Fprintf(c.App.Writer, "%s\n", resultBuf)
+
+	return nil
+}
