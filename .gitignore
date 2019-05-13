@@ -4,6 +4,7 @@ profile.cov
 conode/conode
 conode/co[0-9]*/
 conode/public.toml
+conode/log
 status/status
 scmgr/scmgr
 cisc/cisc
