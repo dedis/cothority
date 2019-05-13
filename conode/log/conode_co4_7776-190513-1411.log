@@ -1,0 +1,14 @@
+[0;37;1mI 19/13/05 14:11:27.172516000: (                       main.init.0.func1:  42) - File descriptor limit is: 24576
+[0m[0;36m2 19/13/05 14:11:27.197981000: (       byzcoin.(*Service).startAllChains: 2239) - tls://localhost:7776 started heartbeat monitor for block 5 of b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32
+[0m[0;36m2 19/13/05 14:11:27.200529000: (       byzcoin.(*Service).startAllChains: 2239) - tls://localhost:7776 started heartbeat monitor for block 3 of 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b
+[0m[0;33m1 19/13/05 14:11:27.201846000: (                             service.new:  814) - Pin: 5a3f47173a81ae3c5683560db0d22ab1
+[0m[0;33m1 19/13/05 14:11:27.202487000: (                      v3.(*Server).Start:  206) - Starting server at 2019-05-13 14:11:27 on address tls://localhost:7776 with public key b4af82e5b4be677d42d7761c69037dcf0e2208236b148900cf5e13daa330c22e
+[0m[0;36m2 19/13/05 14:11:27.202590000: (                   v3.(*WebSocket).start:  104) - Starting to listen on 0.0.0.0:7777
+[0m[0;33m1 19/13/05 14:11:27.203659000: (                 network.(*Router).Start:  103) - New router with address tls://[::]:7776 and public key b4af82e5b4be677d42d7761c69037dcf0e2208236b148900cf5e13daa330c22e
+[0m[0;36m2 19/13/05 14:11:27.203828000: (              byzcoin.(*Service).catchUp: 1119) - tls://localhost:7776 Catching up b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32 / 5
+[0m[0;36m2 19/13/05 14:11:27.204500000: (              byzcoin.(*Service).catchUp: 1179) - tls://localhost:7776 Done catch up b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32 / 5
+[0m[0;36m2 19/13/05 14:11:27.205201000: (              byzcoin.(*Service).catchUp: 1119) - tls://localhost:7776 Catching up 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b / 3
+[0m[0;36m2 19/13/05 14:11:27.206011000: (              byzcoin.(*Service).catchUp: 1179) - tls://localhost:7776 Done catch up 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b / 3
+[0m[0;36m2 19/13/05 14:11:29.727081000: (network.NewTLSListenerWithListenAddr.func1:  249) - Got new connection request from: [::1]:59592
+[0m[0;36m2 19/13/05 14:11:29.728471000: (network.NewTLSListenerWithListenAddr.func1:  249) - Got new connection request from: [::1]:59588
+[0m

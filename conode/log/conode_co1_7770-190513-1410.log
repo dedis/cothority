@@ -1,0 +1,12 @@
+[0;37;1mI 19/13/05 14:10:58.042686000: (                       main.init.0.func1:  42) - File descriptor limit is: 24576
+[0m[0;36m2 19/13/05 14:10:58.085515000: (       byzcoin.(*Service).startAllChains: 2239) - tls://localhost:7770 started heartbeat monitor for block 5 of b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32
+[0m[0;36m2 19/13/05 14:10:58.094831000: (       byzcoin.(*Service).startAllChains: 2239) - tls://localhost:7770 started heartbeat monitor for block 3 of 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b
+[0m[0;36m2 19/13/05 14:10:58.099739000: (              byzcoin.(*Service).catchUp: 1119) - tls://localhost:7770 Catching up b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32 / 5
+[0m[0;36m2 19/13/05 14:10:58.100385000: (              byzcoin.(*Service).catchUp: 1179) - tls://localhost:7770 Done catch up b3d1eb4db98a68f9a8712c9d4f5d1e0f36fa2585154987243b1fa9196923fa32 / 5
+[0m[0;36m2 19/13/05 14:10:58.101003000: (              byzcoin.(*Service).catchUp: 1119) - tls://localhost:7770 Catching up 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b / 3
+[0m[0;36m2 19/13/05 14:10:58.101839000: (              byzcoin.(*Service).catchUp: 1179) - tls://localhost:7770 Done catch up 72a60058fd888e82f8815bf1d798f0dc7c195d54cdcbedfb81c08703f6d5967b / 3
+[0m[0;33m1 19/13/05 14:10:58.103537000: (                             service.new:  814) - Pin: e555de3cde0ecd6725769d803a6dd759
+[0m[0;33m1 19/13/05 14:10:58.107370000: (                      v3.(*Server).Start:  206) - Starting server at 2019-05-13 14:10:58 on address tls://localhost:7770 with public key 39a2a3f04ae309d9000dea1b953d389877c7840c646401c419f5f1c1127c3b99
+[0m[0;36m2 19/13/05 14:10:58.108052000: (                   v3.(*WebSocket).start:  104) - Starting to listen on 0.0.0.0:7771
+[0m[0;33m1 19/13/05 14:10:58.108359000: (                 network.(*Router).Start:  103) - New router with address tls://[::]:7770 and public key 39a2a3f04ae309d9000dea1b953d389877c7840c646401c419f5f1c1127c3b99
+[0m
