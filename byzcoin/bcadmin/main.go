@@ -424,6 +424,22 @@ var cmds = cli.Commands{
 							},
 						},
 					},
+					{
+						Name:  "get",
+						Usage: "if the proof matches, get the content of the given value instance ID",
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "iid",
+								Usage: "the instance id (required)",
+							},
+						},
+						Action: clicontracts.ValueGet,
+					},
 				},
 			},
 			{
