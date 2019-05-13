@@ -38,7 +38,7 @@ testContractDeferredSpawn() {
 }
 
 # This method relies on testContractDeferredSpawn() and performs an addProof
-# on the proposed transaction.
+# on the proposed transaction and an execProposedTx.
 testContractDeferredInvoke() {
     # In this test we do the same as testContractDeferredSpawn() but we then
     # perform an addProof followed by an execProposedTx.
