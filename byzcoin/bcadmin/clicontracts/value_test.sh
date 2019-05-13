@@ -98,4 +98,7 @@ testGet() {
     OUTFILE=""
 
     testGrep "newValue" cat res.txt
+
+    # Try to get a wrong instance ID
+    testFail runBA contract value get --iid deadbeef
 }
