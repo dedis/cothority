@@ -18,6 +18,7 @@ export -n BC
 
 . "../../libtest.sh"
 . "../clicontracts/value_test.sh"
+. "../clicontracts/deferred_test.sh"
 
 main(){
     startTest
@@ -37,6 +38,7 @@ main(){
     run testQR
     run testUpdateDarcDesc
     run testContractValue
+    run testContractDeferred
     stopTest
 }
 
@@ -280,3 +282,4 @@ testUpdateDarcDesc() {
 }
 
 main
+

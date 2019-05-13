@@ -442,6 +442,94 @@ var cmds = cli.Commands{
 					},
 				},
 			},
+			{
+				Name:  "deferred",
+				Usage: "Manipulate a deferred contract",
+				Subcommands: cli.Commands{
+					{
+						Name:   "spawn",
+						Usage:  "spawn a deferred contract with the proposed transaction in stdin",
+						Action: clicontracts.DeferredSpawn,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "darc",
+								Usage: "DARC with the right to spawn a deferred contract (default is the admin DARC)",
+							},
+							cli.StringFlag{
+								Name:  "sign",
+								Usage: "public key of the signing entity (default is the admin public key)",
+							},
+						},
+					},
+					{
+						Name:  "invoke",
+						Usage: "invoke on a deferred contract ",
+						Subcommands: cli.Commands{
+							{
+								Name:   "addProof",
+								Usage:  "adds a signature and an identity on an instruction of the proposed transaction",
+								Action: clicontracts.DeferredInvokeAddProof,
+								Flags: []cli.Flag{
+									cli.StringFlag{
+										Name:   "bc",
+										EnvVar: "BC",
+										Usage:  "the ByzCoin config to use (required)",
+									},
+									cli.UintFlag{
+										Name:  "instrIdx",
+										Usage: "the instruction index of the transaction (starts from 0) (default is 0)",
+									},
+									cli.StringFlag{
+										Name:  "hash",
+										Usage: "the instruction hash that will be signed",
+									},
+									cli.StringFlag{
+										Name:  "instID",
+										Usage: "the instance ID of the deferred contract",
+									},
+									cli.StringFlag{
+										Name:  "darc",
+										Usage: "DARC with the right to invoke.addProof a deferred contract (default is the admin DARC)",
+									},
+									cli.StringFlag{
+										Name:  "sign",
+										Usage: "public key of the signing entity (default is the admin public key)",
+									},
+								},
+							},
+							{
+								Name:   "execProposedTx",
+								Usage:  "executes the proposed transaction if the instructions are correctly signed",
+								Action: clicontracts.ExecProposedTx,
+								Flags: []cli.Flag{
+									cli.StringFlag{
+										Name:   "bc",
+										EnvVar: "BC",
+										Usage:  "the ByzCoin config to use (required)",
+									},
+									cli.StringFlag{
+										Name:  "instID",
+										Usage: "the instance ID of the deferred contract",
+									},
+									cli.StringFlag{
+										Name:  "darc",
+										Usage: "DARC with the right to invoke.execProposedTx a deferred contract (default is the admin DARC)",
+									},
+									cli.StringFlag{
+										Name:  "sign",
+										Usage: "public key of the signing entity (default is the admin public key)",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	},
 }
