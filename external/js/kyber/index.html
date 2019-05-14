@@ -3,15 +3,24 @@
     <meta charset="UTF-8">
     <script src="dist/bundle.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-      var nist = kyber.curve.nist;
-      var p256 = new nist.Curve(nist.Params.p256);
-      var secret = p256.scalar().pick();
-      var public = p256.point().mul(secret);
       window.onload = function() {
+        var nist = kyber.curve.nist;
+        var p256 = new nist.Curve(nist.Params.p256);
+        var secret = p256.scalar().pick();
+        var public = p256.point().mul(secret);
+
         var s = document.createTextNode("Scalar: " + secret.toString());
         var p = document.createTextNode("Point: " + public.toString());
         var pRef = document.getElementById("point").appendChild(p);
         var sRef = document.getElementById("scalar").appendChild(s);
+
+        var bn256secret = new kyber.pairing.BN256Scalar().pick()
+        var bn256public = new kyber.pairing.point.BN256G2Point(bn256secret.getValue());
+
+        var bn256s = document.createTextNode("Scalar: " + bn256secret.getValue().toString());
+        var bn256p = document.createTextNode("Point: " + bn256public.toString());
+        var bn256pRef = document.getElementById("bn256-point").appendChild(bn256p);
+        var bn256sRef = document.getElementById("bn256-scalar").appendChild(bn256s);
       }
     </script>
   </head>
@@ -19,6 +28,9 @@
     <div id="container">
       <p id="scalar"></p>
       <p id="point"></p>
+
+      <p id="bn256-scalar"></p>
+      <p id="bn256-point"></p>
     </div>
   </body>
 </html>
