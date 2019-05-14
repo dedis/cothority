@@ -3,6 +3,8 @@
 testContractDeferred() {
     run testContractDeferredSpawn
     run testContractDeferredInvoke
+    run testGet
+    run testDel
 }
 
 # We rely on the value contract to make our tests.
@@ -83,4 +85,120 @@ testContractDeferredInvoke() {
     testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     testOK runBA contract deferred invoke execProposedTx --instID "$DEFERRED_INSTANCE_ID" --sign "$KEY"
+}
+
+testGet() {
+    # In this test we spawn a deferred contract and then retrieve the value
+    # stored with the "get" function. We then perform an addProof and test if we
+    # can get the updated value, ie. the identity added. We partially use the
+    # same code as the spawn and update function.
+    runCoBG 1 2 3
+    runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+    eval $SED
+    [ -z "$BC" ] && exit 1
+
+    # Add the necessary rules
+    testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+    ID=`cat ./darc_id.txt`
+    KEY=`cat ./darc_key.txt`
+    testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
+    testOK runBA darc rule -rule "spawn:deferred" --identity "$KEY" --darc "$ID" --sign "$KEY"
+    testOK runBA darc rule -rule "invoke:deferred.addProof" --identity "$KEY" --darc "$ID" --sign "$KEY"
+
+    # Spawn a new value contract that is piped to the spawn of a deferred
+    # contract.
+    OUTRES=`runBA contract value spawn --value "myValue" --redirect --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+
+    # We know the instance ID is the next line after "Spawned new deferred contract..."
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+        /Spawned new deferred contract/ {
+            n
+            p
+        }'`
+    echo -e "Here is the instance ID:\t$DEFERRED_INSTANCE_ID"
+
+    # We know the array conaining the hash to sign is the second line after
+    # "- Instruction hashes:" and we remove the "--- " prefix.
+    HASH=`echo "$OUTRES" | sed -n ' 
+        /- Instruction hashes:/ {
+            n
+            n
+            s/--- //
+            p
+        }'`
+    echo -e "Here is the hash:\t\t$HASH"
+
+    # We know use the get function to check if have the right informations:
+    OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
+    testGrep "action: spawn:value" echo "$OUTRES"
+    testGrep "identities: \[\]" echo "$OUTRES"
+    testGrep "counters: \[\]" echo "$OUTRES"
+    testGrep "signatures: 0" echo "$OUTRES"
+    testGrep "Spawn:	value" echo "$OUTRES"
+    testGrep "Args:value" echo "$OUTRES"
+    
+    testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
+
+    # Since we prformed an addProof, the result should now contrain a new
+    # identity and the field signature set to 1.
+    OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
+    testGrep "action: spawn:value" echo "$OUTRES"
+    # Note on the regex used in grep. We want to be sure an identity of form
+    # [ed25519:aef123] is added.
+    #
+    # \[            An opening angle bracket
+    # [             A group a chars that appears 1..*
+    #   :a-f0-9     Any hexadecimal chars and ":"
+    # ]+
+    # \]            A closing angle bracket
+    #
+    testGrep "identities: \[[:a-f0-9]+\]" echo "$OUTRES"
+    testGrep "counters: \[\]" echo "$OUTRES"
+    testGrep "signatures: 1" echo "$OUTRES"
+    testGrep "Spawn:	value" echo "$OUTRES"
+    testGrep "Args:value" echo "$OUTRES"
+
+    # Try to get a wrong instance ID
+    testFail runBA contract deferred get --instID deadbeef
+}
+
+testDel() {
+    # In this test we spawn a deferred contract, delete it and check if we can
+    # get it. Uses partially the code of the spawn test.
+    runCoBG 1 2 3
+    runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+    eval $SED
+    [ -z "$BC" ] && exit 1
+
+    # Add the necessary rules
+    testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+    ID=`cat ./darc_id.txt`
+    KEY=`cat ./darc_key.txt`
+    testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
+    testOK runBA darc rule -rule "spawn:deferred" --identity "$KEY" --darc "$ID" --sign "$KEY"
+    testOK runBA darc rule -rule "delete:deferred" --identity "$KEY" --darc "$ID" --sign "$KEY"
+
+    # Spawn a new value contract that is piped to the spawn of a deferred
+    # contract.
+    OUTRES=`runBA contract value spawn --value "myValue" --redirect --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+
+    # We know the instance ID is the next line after "Spawned new deferred contract..."
+    DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
+        /Spawned new deferred contract/ {
+            n
+            p
+        }'`
+    echo -e "Here is the instance ID:\t$DEFERRED_INSTANCE_ID"
+
+    # We should be able to get the created deferred instance
+    testOK runBA contract deferred get --instID $DEFERRED_INSTANCE_ID
+    
+    # We delete the instance
+    testOK runBA contract deferred delete --instID $DEFERRED_INSTANCE_ID --darc "$ID" --sign "$KEY"
+    
+    # Now we shouldn't be able to get it back
+    testFail runBA contract deferred get --instID $DEFERRED_INSTANCE_ID
+
+    # Use the "delete" function, should fail since it does not exist anymore
+    testFail runBA contract deferred delete --instID "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
 }
