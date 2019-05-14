@@ -22,9 +22,9 @@ if [ "$1" = "--link" ] || [ "$1" = "-l" ]; then
 else
     # don't need the bundle when linking the package, neither the doc
     npm run bundle
-    rm -rf doc
+    rm -rf doc dist/doc
     npm run doc
     cp -r doc dist/doc
 
-    npm publish dist --access public
+    npm publish dist --access public $*
 fi
