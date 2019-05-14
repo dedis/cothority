@@ -1,12 +1,13 @@
 package byzcoin
 
 import (
-	"math"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/log"
 )
 
@@ -23,10 +24,22 @@ func TestViewChange_Basic(t *testing.T) {
 }
 
 func TestViewChange_Basic2(t *testing.T) {
-	if testing.Short() {
-		t.Skip("doesn't work on travis correctly due to byzcoinx timeout issue, see #1428")
-	}
 	testViewChange(t, 7, 2, testInterval)
+}
+
+func TestViewChange_Basic3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("not for Travis")
+	}
+
+	testViewChange(t, 10, 3, testInterval)
+}
+
+func testWaitPropagation(id skipchain.SkipBlockID, service *skipchain.Service, interval time.Duration) {
+	var sb *skipchain.SkipBlock
+	for doCatchUp := false; !doCatchUp && sb == nil; sb, doCatchUp = service.WaitBlock(id, nil) {
+		time.Sleep(interval)
+	}
 }
 
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
@@ -56,11 +69,9 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
 	for i := 0; i < nFailures; i++ {
-		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
+		time.Sleep(2 * s.interval * rw)
 	}
-	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[nFailures].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
-		time.Sleep(interval)
-	}
+	testWaitPropagation(s.genesis.Hash, s.services[nFailures].skService(), s.interval)
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	log.Lvl2("Verifying roster", config.Roster.List)
@@ -68,15 +79,13 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	// check that the leader is updated for all nodes
 	for _, service := range s.services[nFailures:] {
-		for doCatchUp := false; !doCatchUp; _, doCatchUp = service.skService().WaitBlock(s.genesis.SkipChainID(), nil) {
-			time.Sleep(interval)
-		}
+		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
 
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)
 		require.NotNil(t, leader)
-		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()))
+		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
 
 	// try to send a transaction to the node on index nFailures+1, which is
@@ -107,9 +116,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
 		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 	}
-	for doCatchUp := false; !doCatchUp; _, doCatchUp = s.services[nFailures].skService().WaitBlock(s.genesis.SkipChainID(), nil) {
-		time.Sleep(s.interval)
-	}
+	testWaitPropagation(s.genesis.Hash, s.services[nFailures].skService(), s.interval)
 
 	log.Lvl1("Sending 1st tx")
 	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)

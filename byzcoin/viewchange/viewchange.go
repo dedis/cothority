@@ -15,7 +15,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
@@ -159,11 +158,11 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 					ctr = c.processAnomaly(reqNew, &meta, ctr)
 				}
 			}
-			if meta.countOf(ctr) > 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
+			if meta.countOf(ctr) >= 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
-				// receiving 2*f+1 view-change messages.
-				timer.Reset(time.Duration(math.Pow(2, float64(ctr))) * initialDuration)
+				// receiving 2*f view-change messages.
+				timer.Reset(initialDuration * 2)
 				meta.nextStateFor(ctr)
 				select {
 				case c.startTimerChan <- ctr:
@@ -250,7 +249,7 @@ func (c *Controller) processAnomaly(req InitReq, meta *stateLogs, ctr int) int {
 		// controller has already moved on and it will
 		// only wait for relevant messages for its
 		// current or later view.
-		log.Warn("Controller is not accepting anomalies for earlier views")
+		log.Lvl4("Controller is not accepting anomalies for earlier views")
 	}
 	return ctr
 }

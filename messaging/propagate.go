@@ -105,7 +105,9 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		if rooted == nil {
 			return 0, errors.New("we're not in the roster")
 		}
-		tree := rooted.GenerateNaryTree(8)
+		// Using a N-ary tree here can prevent from propagating messages to online
+		// conodes if one of the upper level is offline
+		tree := rooted.GenerateStar()
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
 		}
