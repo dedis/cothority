@@ -217,9 +217,9 @@ func ValueGet(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("iid")
+	instID := c.String("instID")
 	if instID == "" {
-		return errors.New("--iid flag is required")
+		return errors.New("--instID flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
@@ -231,6 +231,15 @@ func ValueGet(c *cli.Context) error {
 		return errors.New("couldn't get proof: " + err.Error())
 	}
 	proof := pr.Proof
+
+	exist, err := proof.InclusionProof.Exists(instIDBuf)
+	if err != nil {
+		return errors.New("error while checking if proof exist: " + err.Error())
+	}
+	if !exist {
+		return errors.New("proof not found")
+	}
+
 	match := proof.InclusionProof.Match(instIDBuf)
 	if !match {
 		return errors.New("proof does not match")
@@ -242,6 +251,78 @@ func ValueGet(c *cli.Context) error {
 	}
 
 	fmt.Fprintf(c.App.Writer, "%s\n", resultBuf)
+
+	return nil
+}
+
+// ValueDelete delete the value instance
+func ValueDelete(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	instID := c.String("instID")
+	if instID == "" {
+		return errors.New("--instID flag is required")
+	}
+	instIDBuf, err := hex.DecodeString(instID)
+	if err != nil {
+		return errors.New("failed to decode the instID string")
+	}
+
+	cfg, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	dstr := c.String("darc")
+	if dstr == "" {
+		dstr = cfg.AdminDarc.GetIdentityString()
+	}
+
+	var signer *darc.Signer
+
+	sstr := c.String("sign")
+	if sstr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(sstr)
+	}
+	if err != nil {
+		return err
+	}
+
+	counters, err := cl.GetSignerCounters(signer.Identity().String())
+
+	delete := byzcoin.Delete{
+		ContractID: contracts.ContractValueID,
+	}
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
+				Delete:        &delete,
+				SignerCounter: []uint64{counters.Counters[0] + 1},
+			},
+		},
+	}
+	err = ctx.FillSignersAndSignWith(*signer)
+	if err != nil {
+		return err
+	}
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return err
+	}
+
+	newInstID := ctx.Instructions[0].DeriveID("").Slice()
+	_, err = fmt.Fprintf(c.App.Writer, "Value contract deleted! (instance ID is %x)\n", newInstID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
