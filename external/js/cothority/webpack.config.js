@@ -6,7 +6,8 @@ module.exports = {
       filename: "bundle.min.js",
       path: path.resolve(__dirname, "dist"),
       library: "cothority",
-      libraryTarget: "umd"
+      libraryTarget: "umd",
+      globalObject: 'this'
     },
     module: {
       rules: [
