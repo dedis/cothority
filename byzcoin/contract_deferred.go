@@ -23,6 +23,10 @@ var ContractDeferredID = "deferred"
 // We removed it because it wasn't needed.
 const defaultNumExecution uint64 = 1
 
+// If ExpireBlockIndex is not given, we use this value plus the current block
+// index to set the value of ExpireBlockIndex.
+const defaultExpireThreshold uint64 = 50
+
 // DeferredData contains the specific data of a deferred contract
 type DeferredData struct {
 	// The transaction that signers must sign and can be executed with an
@@ -30,6 +34,8 @@ type DeferredData struct {
 	ProposedTransaction ClientTransaction
 	// If the current block index is greater than this value, any Invoke on the
 	// deferred contract is rejected. This provides an expiration mechanism.
+	// This parameter is optional. If not given, it is set to
+	// `current_blockIdx + defaultExpireThreshold`
 	ExpireBlockIndex uint64
 	// Hashes of each instruction of the proposed transaction. Those hashes are
 	// computed using the special "hashDeferred" method.
@@ -90,7 +96,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	//
 	// Spawn should have those input arguments:
 	//   - proposedTransaction ClientTransaction
-	//   - expireBlockIndex uint64
+	//   - expireBlockIndex uint64 (optional)
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -106,10 +112,18 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	if err != nil {
 		return nil, nil, errors.New("couldn't decode proposedTransaction: " + err.Error())
 	}
-	expireBlockIndex := binary.LittleEndian.Uint64(inst.Spawn.Args.Search("expireBlockIndex"))
-	if err != nil {
-		return nil, nil, errors.New("couldn't convert expireBlockIndex: " + err.Error())
+
+	expireBlockIndexBuf := inst.Spawn.Args.Search("expireBlockIndex")
+	var expireBlockIndex uint64
+	if expireBlockIndexBuf == nil {
+		expireBlockIndex = uint64(rst.GetIndex()) + defaultExpireThreshold
+	} else {
+		expireBlockIndex = binary.LittleEndian.Uint64(expireBlockIndexBuf)
+		if err != nil {
+			return nil, nil, errors.New("couldn't convert expireBlockIndex: " + err.Error())
+		}
 	}
+
 	numExecution := defaultNumExecution
 
 	// 2. Computes the hashes of each instruction and store it

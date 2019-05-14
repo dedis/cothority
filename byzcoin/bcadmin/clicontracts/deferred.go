@@ -71,10 +71,6 @@ func DeferredSpawn(c *cli.Context) error {
 		return err
 	}
 
-	expireBlockIndexInt := uint64(6000)
-	expireBlockIndexBuf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
-
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
 	spawn := byzcoin.Spawn{
@@ -83,10 +79,6 @@ func DeferredSpawn(c *cli.Context) error {
 			{
 				Name:  "proposedTransaction",
 				Value: proposedTransactionBuf,
-			},
-			{
-				Name:  "expireBlockIndex",
-				Value: expireBlockIndexBuf,
 			},
 		},
 	}
