@@ -1,5 +1,5 @@
 import Long from "long";
-import protobuf, { Reader } from "protobufjs/light";
+import protobuf, { INamespace, Reader } from "protobufjs/light";
 import Log from "../log";
 import models from "./models.json";
 
@@ -43,6 +43,15 @@ interface IRegistrationMessage extends protobuf.Constructor<{}> {
     register(): void;
 }
 
+/**
+ * Register the message to be encoded/decoded by protobufjs. The name
+ * should match the one in the model and the dependencies of the
+ * message should be provided to insure their registration.
+ *
+ * @param name          The name of the message in the protobuf definition
+ * @param ctor          The message class
+ * @param dependencies  The message classes of the dependencies
+ */
 export function registerMessage(
     name: string,
     ctor: protobuf.Constructor<{}>,
@@ -62,4 +71,13 @@ export function registerMessage(
     m.ctor = ctor;
 
     Log.lvl3(`Message registered: ${ctor.name}`);
+}
+
+/**
+ * Add a JSON definition to the existing root
+ *
+ * @param json The definition imported from a json file
+ */
+export function addJSON(json: INamespace): void {
+    root.addJSON(json.nested);
 }
