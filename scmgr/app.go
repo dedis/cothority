@@ -16,20 +16,18 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	bbolt "go.etcd.io/bbolt"
-	cli "gopkg.in/urfave/cli.v1"
+	"go.etcd.io/bbolt"
+	"gopkg.in/urfave/cli.v1"
 )
 
 var bucketName = []byte("skipblocks")
@@ -93,38 +91,29 @@ func linkAdd(c *cli.Context) error {
 	if private == "" {
 		return errors.New("got empty private.toml file")
 	}
-	var remote struct {
-		Private string
-		Public  string
-		Address network.Address
-	}
-	_, err := toml.DecodeFile(private, &remote)
+	ccfg, err := app.LoadCothority(c.Args().First())
 	if err != nil {
-		return errors.New("error while reading private.toml: " + err.Error())
+		return err
 	}
-	conodePriv, err := encoding.StringHexToScalar(cothority.Suite, remote.Private)
+	si, err := ccfg.GetServerIdentity()
 	if err != nil {
-		return errors.New("couldn't decode private key: " + err.Error())
+		return err
 	}
-	conodePub, err := encoding.StringHexToPoint(cothority.Suite, remote.Public)
-	if err != nil {
-		return errors.New("couldn't decode public key: " + err.Error())
-	}
+
 	cfg := getConfigOrFail(c)
 	kp := key.NewKeyPair(cothority.Suite)
-	si := network.NewServerIdentity(conodePub, remote.Address)
 	cfg.Values.Link[si.Public.String()] = &link{
 		Private: kp.Private,
-		Address: remote.Address,
+		Address: si.Address,
 		Conode:  si,
 	}
-	log.Infof("Connecting to %s and creating link", remote.Address)
-	err = skipchain.NewClient().CreateLinkPrivate(si, conodePriv, kp.Public)
+	log.Infof("Connecting to %s and creating link", si.Address)
+	err = skipchain.NewClient().CreateLinkPrivate(si, si.GetPrivate(), kp.Public)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
-	log.Info("Correctly linked with", remote.Address)
+	log.Info("Correctly linked with", si.Address)
 	return cfg.save(c)
 }
 
