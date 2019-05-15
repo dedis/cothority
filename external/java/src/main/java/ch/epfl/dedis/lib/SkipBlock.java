@@ -6,6 +6,7 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.ForwardLink;
+import ch.epfl.dedis.skipchain.SignatureScheme;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -83,8 +84,8 @@ public class SkipBlock {
             return null;
         }
 
-        if (getSignatureScheme() > 0) {
-            bb.putInt(getSignatureScheme());
+        if (getSignatureScheme() != SignatureScheme.BLS) {
+            bb.putInt(getSignatureScheme().getValue());
             digest.update(bb.array());
         }
 
@@ -153,8 +154,8 @@ public class SkipBlock {
     /**
      * @return the signature scheme index for the block
      */
-    public int getSignatureScheme() {
-        return skipBlock.getSignatureScheme();
+    public SignatureScheme getSignatureScheme() {
+        return SignatureScheme.fromValue(skipBlock.getSignatureScheme());
     }
 
     /**

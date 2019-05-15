@@ -482,7 +482,9 @@ func (sb *SkipBlock) pathForIndex(targetIndex int) (int, int) {
 }
 
 // SignatureProtocol returns the name of the byzcoinx protocols that should
-// be used to sign forward links coming from this block
+// be used to sign forward links coming from this block. The first protocol
+// shall be used for forward link level 0 and the second shall be used to
+// create higher level forward links.
 func (sb *SkipBlock) SignatureProtocol() (string, string) {
 	switch sb.SignatureScheme {
 	case BlsSignatureSchemeIndex:

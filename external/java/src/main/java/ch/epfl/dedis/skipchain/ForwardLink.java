@@ -85,7 +85,7 @@ public class ForwardLink {
      * @param scheme    index of the signature scheme
      * @return true if the signature is ok.
      */
-    public boolean verifyWithScheme(List<Point> publics, int scheme) {
+    public boolean verifyWithScheme(List<Point> publics, SignatureScheme scheme) {
         return Arrays.equals(this.getByzcoinSig().getMsg(), this.hash())
                 && this.getByzcoinSig().verifyWithScheme(publics, scheme);
     }

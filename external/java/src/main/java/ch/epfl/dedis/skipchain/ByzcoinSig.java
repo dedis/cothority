@@ -2,6 +2,7 @@ package ch.epfl.dedis.skipchain;
 
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.crypto.bn256.BN;
+import ch.epfl.dedis.lib.darc.Signature;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
@@ -14,9 +15,6 @@ import java.util.List;
  * ByzcoinSig represents a signature from the byzcoin-protocol. It holds both the message and the signature.
  */
 public class ByzcoinSig {
-    public static final int BLS_SIGNATURE_INDEX = 0;
-    public static final int BDN_SIGNATURE_INDEX = 1;
-
     private SkipchainProto.ByzcoinSig byzcoinSig;
 
     public ByzcoinSig(SkipchainProto.ByzcoinSig bs){
@@ -37,7 +35,7 @@ public class ByzcoinSig {
      * @return true if the signature is correct, false otherwise
      */
     public boolean verify(List<Point> publics) {
-        return verifyWithScheme(publics, ByzcoinSig.BLS_SIGNATURE_INDEX);
+        return verifyWithScheme(publics, SignatureScheme.BLS);
     }
 
     /**
@@ -48,7 +46,7 @@ public class ByzcoinSig {
      * @param scheme    the signature scheme index
      * @return true if the signature is correct, false otherwise
      */
-    public boolean verifyWithScheme(List<Point> publics, int scheme) {
+    public boolean verifyWithScheme(List<Point> publics, SignatureScheme scheme) {
         if (publics == null || publics.size() == 0) {
             // no public keys provided
             return false;
@@ -86,9 +84,9 @@ public class ByzcoinSig {
         }
 
         switch (scheme) {
-            case BLS_SIGNATURE_INDEX:
+            case BLS:
                 return verifyBLS(mask, signature);
-            case BDN_SIGNATURE_INDEX:
+            case BDN:
                 return verifyBDN(mask, signature);
             default:
                 return false;
