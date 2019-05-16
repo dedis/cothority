@@ -40,6 +40,17 @@ func (s *Service) contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	return c, nil
 }
 
+// VerifyDeferredInstruction does the same as the standard VerifyInstruction
+// method in the diferrence that it does not take into account the counters. We
+// need the Darc contract to opt in for deferred transaction because it is used
+// by default when spawning new contracts.
+func (c *contractSecureDarc) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
