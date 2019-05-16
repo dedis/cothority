@@ -60,7 +60,7 @@ func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin
 	// into the trie.
 	c2, err := cfact(nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
+		return nil, nil, fmt.Errorf("could not spawn new zero instance: %v", err)
 	}
 	return c2.Spawn(rst, inst, coins)
 }

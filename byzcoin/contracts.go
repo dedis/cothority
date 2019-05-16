@@ -118,6 +118,7 @@ var _ Contract = (*contractConfig)(nil)
 func contractConfigFromBytes(in []byte) (Contract, error) {
 	c := &contractConfig{}
 	err := protobuf.DecodeWithConstructors(in, &c.ChainConfig, network.DefaultConstructors(cothority.Suite))
+
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +148,33 @@ func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	return inst.Verify(rst, msg)
 }
 
+// This is the same as the VerifyInstruction function, but it uses
+// VerifyWithOption() instead of Verify(). We need to implement it in order to
+// use deferred config contract.
+func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+	pr, err := rst.GetProof(ConfigInstanceID.Slice())
+	if err != nil {
+		return
+	}
+	ok, err := pr.Exists(ConfigInstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	// The config does not exist yet, so this is a genesis config creation. No need/possiblity of verifying it.
+	if !ok {
+		return nil
+	}
+
+	return inst.VerifyWithOption(rst, msg, false)
+}
+
+// Spawn expects those arguments:
+//   - darc           darc.Darc
+//   - block_interval int64
+//   - max_block_size int64
+//   - roster         onet.Roster
+//   - darc_contracts darcContractID
 func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
@@ -205,6 +233,16 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	return
 }
 
+// Invoke offers the following functions:
+//   - Invoke:update_config
+//   - Invoke:view_change
+//
+// Invoke:update_config should have the following input argument:
+//   - config ChainConfig
+//
+// Invoke:view_change sould have the following input arguments:
+//   - newview viewchange.NewViewReq
+//   - multisig []byte
 func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
@@ -215,12 +253,12 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		return
 	}
 
-	// There are two situations where we need to change the roster, first
-	// is when it is initiated by the client(s) that holds the genesis
-	// signing key, in this case we trust the client to do the right
-	// thing. The second is during a view-change, so we need to do
-	// additional validation to make sure a malicious node doesn't freely
-	// change the roster.
+	// There are two situations where we need to change the roster:
+	// 1. When it is initiated by the client(s) that holds the genesis
+	//    signing key. In this case, we trust the client to do the right thing.
+	// 2. During a view-change. In this case, we need to do additional
+	//    validation to make sure a malicious node doesn't freely change the
+	//    roster.
 
 	switch inst.Invoke.Command {
 	case "update_config":

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -666,4 +667,31 @@ func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 		return errors.New("can only change one node at a time - adding or removing")
 	}
 	return nil
+}
+
+// String implements a nicer text representation of a Chainconfig.
+//
+// Here is an example of what it outputs:
+//
+// ```
+// ChainConfig
+// - BlockInterval: 7s
+// - Roster: {1e89775c-636a-536a-bc39-1ec951c86dc9 [tls://localhost:2002 tls://localhost:2004 tls://localhost:2006] 467abd382f78222e898d323194c0fb30f7096bb6bb885ea31284979f794e558a}
+// - MaxBlockSize: 5000000
+// - DarcContractIDs:
+// -- darc contract ID 0: darc
+// -- darc contract ID 1: darc2
+// -- darc contract ID 2: darc3'
+// ```
+func (c ChainConfig) String() string {
+	var res strings.Builder
+	res.WriteString("ChainConfig\n")
+	fmt.Fprintf(&res, "- BlockInterval: %s\n", c.BlockInterval.String())
+	fmt.Fprintf(&res, "- Roster: %s\n", c.Roster)
+	fmt.Fprintf(&res, "- MaxBlockSize: %d\n", c.MaxBlockSize)
+	res.WriteString("- DarcContractIDs:\n")
+	for i, darcID := range c.DarcContractIDs {
+		fmt.Fprintf(&res, "-- darc contract ID %d: %s\n", i, darcID)
+	}
+	return res.String()
 }
