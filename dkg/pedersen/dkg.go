@@ -183,7 +183,6 @@ func (o *Setup) rootStartDeal(replies []structInitReply) error {
 func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	var err error
 	if o.NewDKG == nil {
-		// TODO: Should be newdistkeyhandler
 		o.DKG, err = dkgpedersen.NewDistKeyGenerator(o.suite, o.KeyPair.Private,
 			ssd.Publics, int(ssd.Threshold))
 	} else {
