@@ -278,5 +278,11 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 		}
 		log.Lvl2("Setting cost of", cost.name, "to", cost.cost.Value)
 	}
+	// This is a check to make sure that older spawn-instructions don't get
+	// a wrong data.
+	if args.Search("costRoPaSci") == nil {
+		ss.CostCWrite = nil
+		ss.CostCRead = nil
+	}
 	return nil
 }
