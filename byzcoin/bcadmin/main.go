@@ -355,8 +355,28 @@ var cmds = cli.Commands{
 	},
 
 	{
-		Name:  "contract",
-		Usage: "a tool to manipulate contracts",
+		Name: "contract",
+		// Use space instead of tabs for correct formatting
+		Usage: fmt.Sprint(`
+   bcadmin contract CONTRACT { spawn  --bc <byzcoin config> 
+                                      [--<arg name> <arg value>, ...]
+                                      [--darc <darc id>] 
+                                      [--sign <pub key>] 
+                                      [--redirect],
+                               invoke <command>
+                                      --bc <byzcoin config>
+                                      --instID <instance ID>
+                                      [--<arg name> <arg value>, ...]
+                                      [--darc <darc id>] 
+                                      [--sign <pub key>],
+                               get    --bc <byzcoin config>
+                                      --instID <instance ID>,
+                               delete --bc <byzcoin config>
+                                      --instID <instance ID>
+                                      [--darc <darc id>] 
+                                      [--sign <pub key>]     
+                             }
+   CONTRAT   {value,deferred}`),
 		Subcommands: cli.Commands{
 			{
 				Name:  "value",
@@ -523,6 +543,50 @@ var cmds = cli.Commands{
 									cli.StringFlag{
 										Name:  "sign",
 										Usage: "public key of the signing entity (default is the admin public key)",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Name:  "config",
+				Usage: "Manipulate a config contract",
+				Subcommands: cli.Commands{
+					{
+						Name:  "invoke",
+						Usage: "invoke on a config contract ",
+						Subcommands: cli.Commands{
+							{
+								Name:   "updateConfig",
+								Usage:  "changes the roster's leader",
+								Action: clicontracts.ConfigInvokeUpdateConfig,
+								Flags: []cli.Flag{
+									cli.StringFlag{
+										Name:   "bc",
+										EnvVar: "BC",
+										Usage:  "the ByzCoin config to use (required)",
+									},
+									cli.StringFlag{
+										Name:  "sign",
+										Usage: "public key of the signing entity (default is the admin public key)",
+									},
+									cli.StringFlag{
+										Name:  "blockInterval",
+										Usage: "blockInterval, for example 2s (optional)",
+									},
+									cli.IntFlag{
+										Name:  "maxBlockSize",
+										Usage: "maxBlockSize (optional)",
+									},
+									cli.StringFlag{
+										Name:  "darcContractIDs",
+										Usage: "darcContractIDs separated by comas (optional)",
+									},
+									cli.BoolFlag{
+										Name:  "redirect",
+										Usage: "redirects the transaction to stdout",
 									},
 								},
 							},
