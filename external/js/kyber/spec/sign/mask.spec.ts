@@ -15,8 +15,6 @@ describe('Mask Tests', () => {
 
             if (i % 2 === 0) {
                 agg = agg.add(agg, publics[i]);
-            } else {
-                agg = agg.add(agg, new BN256G2Point().neg(publics[i]));
             }
         }
 
