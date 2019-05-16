@@ -117,7 +117,7 @@ testGet() {
         }'`
     echo -e "Here is the instance ID:\t$DEFERRED_INSTANCE_ID"
 
-    # We know the array conaining the hash to sign is the second line after
+    # We know the array containing the hash to sign is the second line after
     # "- Instruction hashes:" and we remove the "--- " prefix.
     HASH=`echo "$OUTRES" | sed -n ' 
         /- Instruction hashes:/ {
@@ -128,7 +128,7 @@ testGet() {
         }'`
     echo -e "Here is the hash:\t\t$HASH"
 
-    # We know use the get function to check if have the right informations:
+    # We now use the get function to check if we have the right informations:
     OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
     testGrep "identities: \[\]" echo "$OUTRES"
@@ -139,7 +139,7 @@ testGet() {
     
     testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
-    # Since we prformed an addProof, the result should now contrain a new
+    # Since we performed an addProof, the result should now contrain a new
     # identity and the field signature set to 1.
     OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
@@ -152,7 +152,7 @@ testGet() {
     # ]+
     # \]            A closing angle bracket
     #
-    testGrep "identities: \[[:a-f0-9]+\]" echo "$OUTRES"
+    testGrep "identities: \[$KEY\]" echo "$OUTRES"
     testGrep "counters: \[\]" echo "$OUTRES"
     testGrep "signatures: 1" echo "$OUTRES"
     testGrep "Spawn:	value" echo "$OUTRES"
