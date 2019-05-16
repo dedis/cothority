@@ -6,6 +6,7 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
+	vss "go.dedis.ch/kyber/v3/share/vss/pedersen"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -41,15 +42,24 @@ type Setup struct {
 	structResponse  chan structResponse
 	structWaitSetup chan structWaitSetup
 	structWaitReply chan []structWaitReply
+
+	suite vss.Suite
 }
 
 // NewSetup initialises the structure for use in one round
 func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	return CustomSetup(n, cothority.Suite, nil)
+}
+
+// CustomSetup initialises the structure with a custom suite and a keypair.
+func CustomSetup(n *onet.TreeNodeInstance, suite vss.Suite, keypair *key.Pair) (onet.ProtocolInstance, error) {
 	o := &Setup{
 		TreeNodeInstance: n,
 		Finished:         make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
+		KeyPair:          keypair,
 		nodes:            n.List(),
+		suite:            suite,
 	}
 
 	err := o.RegisterHandlers(o.childInit, o.rootStartDeal)
@@ -143,12 +153,12 @@ func (o *Setup) Dispatch() error {
 func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	o.KeyPair = &key.Pair{
-		Public:  o.Public(),
-		Private: o.Private(),
-	}
 	if o.KeyPair == nil {
-		return errors.New("no keypair")
+		log.Lvl3(o.ServerIdentity(), "using the network keypair as DKG keypair")
+		o.KeyPair = &key.Pair{
+			Public:  o.Public(),
+			Private: o.Private(),
+		}
 	}
 	return o.SendToParent(&InitReply{Public: o.KeyPair.Public})
 }
@@ -173,8 +183,7 @@ func (o *Setup) rootStartDeal(replies []structInitReply) error {
 func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	var err error
 	if o.NewDKG == nil {
-		// TODO: Should be newdistkeyhandler
-		o.DKG, err = dkgpedersen.NewDistKeyGenerator(cothority.Suite, o.KeyPair.Private,
+		o.DKG, err = dkgpedersen.NewDistKeyGenerator(o.suite, o.KeyPair.Private,
 			ssd.Publics, int(ssd.Threshold))
 	} else {
 		o.DKG, err = o.NewDKG()
