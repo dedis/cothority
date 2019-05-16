@@ -34,8 +34,10 @@ func DeferredSpawn(c *cli.Context) error {
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(proposedTransactionBuf, &proposedTransaction)
 	if err != nil {
-		return errors.New("failed to decode transaction: " + err.Error())
+		return errors.New("failed to decode transaction, did you use --redirect ? " + err.Error())
 	}
+
+	fmt.Fprintf(c.App.Writer, "Here is the proposed Tx: \n%s\n", proposedTransaction)
 
 	// ---
 	// 2.
