@@ -25,9 +25,6 @@ export default class Mask {
 
             if ((mask[k] & msk) !== 0) {
                 this.aggregate.add(this.aggregate, publics[i]);
-            } else {
-                const neg = publics[i].clone().neg(publics[i]);
-                this.aggregate.add(this.aggregate, neg);
             }
         }
     }

@@ -34,6 +34,7 @@ func TestContractSpawner(t *testing.T) {
 			Args: byzcoin.Arguments{
 				{Name: "costDarc", Value: costBuf},
 				{Name: "costCRead", Value: costBuf},
+				{Name: "costRoPaSci", Value: costBuf},
 			},
 		},
 	}

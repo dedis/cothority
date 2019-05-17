@@ -251,28 +251,23 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 			instructionType := proposedInstr.GetType()
 
-			var contractID string
-			switch instructionType {
-			case SpawnType:
-				contractID = proposedInstr.Spawn.ContractID
-			case InvokeType:
-				contractID = proposedInstr.Invoke.ContractID
-			case DeleteType:
-				contractID = proposedInstr.Delete.ContractID
+			// Here we instantiate the contract from the state trie by getting
+			// its buferred data and then calling its constructor.
+			contractBuf, _, contractID, _, err := rst.GetValues(proposedInstr.InstanceID.Slice())
+			if err != nil {
+				return nil, nil, errors.New("couldn't get contract buf: " + err.Error())
 			}
-
-			fn, exists := c.s.GetContractConstructor(contractID)
+			// Get the contract's constructor (like "contractValueFromByte(...)")
+			fn, exists := c.s.contracts[contractID]
 			if !exists {
 				return nil, nil, errors.New("couldn't get the root function")
 			}
-			rootInstructionBuff, err := protobuf.Encode(&proposedInstr)
+			// Invoke the contructor and get the contract's instance
+			contract, err := fn(contractBuf)
 			if err != nil {
-				return nil, nil, errors.New("couldn't encode the root instruction buffer")
+				return nil, nil, errors.New("couldn't get the root contract: " + err.Error())
 			}
-			contract, err := fn(rootInstructionBuff)
-			if err != nil {
-				return nil, nil, errors.New("couldn't get the root contract")
-			}
+
 			err = contract.VerifyDeferredInstruction(sst, proposedInstr, c.DeferredData.InstructionHashes[i])
 			if err != nil {
 				return nil, nil, fmt.Errorf("verifying the instruction failed: %s", err)

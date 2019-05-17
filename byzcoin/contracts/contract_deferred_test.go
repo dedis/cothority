@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"go.dedis.ch/onet/v3/network"
+
 	"github.com/stretchr/testify/require"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -2025,6 +2027,252 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expectedBlockIdx)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
+
+	local.WaitDone(genesisMsg.BlockInterval)
+}
+
+func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
+	// In this test we use Invoke:config.update_config as the proposed
+	// transaction. We update the config and check if the changes are applied.
+	//
+	// 1. Spawn a new contract with config as the deferred transaction
+	// 2. Invoke an "addProff"
+	// 3. Invoke an "execRoot"
+
+	// ------------------------------------------------------------------------
+	// 0. Set up
+	// ------------------------------------------------------------------------
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:value", "spawn:deferred", "invoke:deferred.addProof",
+			"invoke:deferred.execProposedTx"}, signer.Identity())
+	require.Nil(t, err)
+	gDarc := &genesisMsg.GenesisDarc
+
+	genesisMsg.BlockInterval = time.Second
+
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.Nil(t, err)
+
+	// ------------------------------------------------------------------------
+	// 1. Spawn
+	// ------------------------------------------------------------------------
+
+	// Get the latest chain config
+	prr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	require.Nil(t, err)
+	proof := prr.Proof
+
+	_, value, _, _, err := proof.KeyValue()
+	require.Nil(t, err)
+	config := byzcoin.ChainConfig{}
+	err = protobuf.DecodeWithConstructors(value, &config, network.DefaultConstructors(cothority.Suite))
+	require.Nil(t, err)
+	config.BlockInterval, err = time.ParseDuration("7s")
+	require.Nil(t, err)
+	config.MaxBlockSize += 10
+
+	configBuf, err := protobuf.Encode(&config)
+	require.Nil(t, err)
+
+	invoke := byzcoin.Invoke{
+		ContractID: byzcoin.ContractConfigID,
+		Command:    "update_config",
+		Args: []byzcoin.Argument{
+			{
+				Name:  "config",
+				Value: configBuf,
+			},
+		},
+	}
+
+	proposedTransaction := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			byzcoin.Instruction{
+				InstanceID: byzcoin.ConfigInstanceID,
+				Invoke:     &invoke,
+			},
+		},
+	}
+
+	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
+	require.Nil(t, err)
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractDeferredID,
+				Args: []byzcoin.Argument{
+					{
+						Name:  "proposedTransaction",
+						Value: proposedTransactionBuf,
+					},
+				},
+			},
+			SignerCounter: []uint64{1},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	myID := ctx.Instructions[0].DeriveID("")
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+
+	dataBuf, _, _, err := pr.Get(myID.Slice())
+	require.Nil(t, err)
+	result := byzcoin.DeferredData{}
+	err = protobuf.Decode(dataBuf, &result)
+	require.Nil(t, err)
+
+	require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
+
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	rootHash := result.InstructionHashes
+
+	// ------------------------------------------------------------------------
+	// 2.1 Invoke a first "addProof"
+	// ------------------------------------------------------------------------
+
+	identity := signer.Identity()
+	identityBuf, err := protobuf.Encode(&identity)
+	require.Nil(t, err)
+
+	signature, err := signer.Sign(rootHash[0]) // == index
+	require.Nil(t, err)
+	// signature[1] = 0xf
+
+	index := uint32(0)
+	indexBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
+
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: byzcoin.ContractDeferredID,
+				Command:    "addProof",
+				Args: []byzcoin.Argument{
+					{
+						Name:  "identity",
+						Value: identityBuf,
+					},
+					{
+						Name:  "signature",
+						Value: signature,
+					},
+					{
+						Name:  "index",
+						Value: indexBuf,
+					},
+				},
+			},
+			SignerCounter: []uint64{2},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
+	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
+	result.ProposedTransaction = proposedTransaction
+	resultBuf, err := protobuf.Encode(&result)
+	require.Nil(t, err)
+
+	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+
+	dataBuf, _, _, err = pr.Get(myID.Slice())
+	require.Nil(t, err)
+
+	result = byzcoin.DeferredData{}
+	err = protobuf.Decode(dataBuf, &result)
+	require.Nil(t, err)
+
+	// We can not do this test because the identities have to be compared using
+	// the Equal() method.
+	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
+	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
+	// This test won't work. But by using Equal() will.
+	// require.Equal(t, result.ProposedTransaction.Instructions[0].SignerIdentities[0], identity)
+	require.True(t, identity.Equal(&result.ProposedTransaction.Instructions[0].SignerIdentities[0]))
+
+	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
+	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
+	// Default NumExecution should be 1
+	require.Equal(t, result.NumExecution, uint64(1))
+
+	require.NotEmpty(t, result.InstructionHashes)
+
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	// ------------------------------------------------------------------------
+	// 3. Invoke an "execRoot" command
+	// ------------------------------------------------------------------------
+
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: byzcoin.ContractDeferredID,
+				Command:    "execProposedTx",
+			},
+			SignerCounter: []uint64{3},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	// Need to sleep because we can't predict the output (hence the 'nil')
+	time.Sleep(2 * genesisMsg.BlockInterval)
+	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+	dataBuf, _, _, err = pr.Get(myID.Slice())
+	require.Nil(t, err)
+
+	result = byzcoin.DeferredData{}
+	protobuf.Decode(dataBuf, &result)
+	require.Equal(t, 1, len(result.ExecResult))
+
+	time.Sleep(2 * genesisMsg.BlockInterval)
+	pr, err = cl.WaitProof(byzcoin.NewInstanceID(byzcoin.ConfigInstanceID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(byzcoin.ConfigInstanceID.Slice()))
+
+	_, valueBuf, _, _, err := pr.KeyValue()
+	require.Nil(t, err)
+
+	configResult := byzcoin.ChainConfig{}
+	err = protobuf.Decode(valueBuf, &configResult)
+	require.Nil(t, err)
+
+	// We check if what we get has the updated values
+	require.Equal(t, config.BlockInterval, configResult.BlockInterval)
+	require.Equal(t, config.MaxBlockSize, configResult.MaxBlockSize)
+	require.Equal(t, config.Roster, configResult.Roster)
+	require.Equal(t, config.DarcContractIDs, configResult.DarcContractIDs)
 
 	local.WaitDone(genesisMsg.BlockInterval)
 }
