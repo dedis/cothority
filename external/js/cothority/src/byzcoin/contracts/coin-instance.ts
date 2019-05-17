@@ -1,17 +1,39 @@
+import { createHash } from "crypto";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import Signer from "../../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
 import ByzCoinRPC from "../byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../client-transaction";
-import { InstanceID } from "../instance";
-import { SPAWNER_COIN } from "./spawner-instance";
+import Instance, { InstanceID } from "../instance";
 
-export default class CoinInstance {
+export default class CoinInstance extends Instance {
     static readonly contractID = "coin";
+    static readonly commandMint = "mint";
+    static readonly commandFetch = "fetch";
+    static readonly commandTransfer = "transfer";
+    static readonly commandStore = "store";
+    static readonly argumentCoinID = "coinID";
+    static readonly argumentDarcID = "darcID";
+    static readonly argumentType = "type";
+    static readonly argumentCoins = "coins";
+    static readonly argumentDestination = "destination";
 
     /**
-     * Create a coin instance from a darc id
+     * Generate the coin instance ID for a given darc ID
+     *
+     * @param buf Any buffer that is known to the caller
+     * @returns the id as a buffer
+     */
+    static coinIID(buf: Buffer): InstanceID {
+        const h = createHash("sha256");
+        h.update(Buffer.from(CoinInstance.contractID));
+        h.update(buf);
+        return h.digest();
+    }
+
+    /**
+     * Spawn a coin instance from a darc id
      *
      * @param bc        The RPC to use
      * @param darcID    The darc instance ID
@@ -19,88 +41,91 @@ export default class CoinInstance {
      * @param type      The coin instance type
      * @returns a promise that resolves with the new instance
      */
-    static async create(
+    static async spawn(
         bc: ByzCoinRPC,
         darcID: InstanceID,
         signers: Signer[],
-        type: Buffer = SPAWNER_COIN,
+        type: Buffer,
     ): Promise<CoinInstance> {
         const inst = Instruction.createSpawn(
             darcID,
             CoinInstance.contractID,
-            [new Argument({ name: "type", value: type })],
+            [new Argument({name: CoinInstance.argumentType, value: type})],
         );
         await inst.updateCounters(bc, signers);
 
-        const ctx = new ClientTransaction({ instructions: [inst] });
-        ctx.signWith(signers);
+        const ctx = new ClientTransaction({instructions: [inst]});
+        ctx.signWith([signers]);
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        const coinIID = inst.deriveId();
-        const p = await bc.getProof(coinIID);
-        if (!p.exists(coinIID)) {
-            throw new Error("fail to get a matching proof");
-        }
+        return CoinInstance.fromByzcoin(bc, inst.deriveId());
+    }
 
-        return new CoinInstance(bc, coinIID, Coin.decode(p.value));
+    /**
+     * Create returns a CoinInstance from the given parameters.
+     * @param bc
+     * @param coinID
+     * @param darcID
+     * @param coin
+     */
+    static create(
+        bc: ByzCoinRPC,
+        coinID: InstanceID,
+        darcID: InstanceID,
+        coin: Coin,
+    ): CoinInstance {
+        return new CoinInstance(bc, new Instance({
+            contractID: CoinInstance.contractID,
+            darcID,
+            data: coin.toBytes(),
+            id: coinID,
+        }));
     }
 
     /**
      * Initializes using an existing coinInstance from ByzCoin
      * @param bc    The RPC to use
      * @param iid   The instance ID
+     * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
+     * @param interval how long to wait between two attempts in waitMatch.
      * @returns a promise that resolves with the coin instance
      */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CoinInstance> {
-        const proof = await bc.getProof(iid);
-        if (!proof.exists(iid)) {
-            throw new Error(`key not in proof: ${iid.toString("hex")}`);
-        }
-
-        return new CoinInstance(bc, iid, Coin.decode(proof.value));
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
+        Promise<CoinInstance> {
+        return new CoinInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
 
-    private rpc: ByzCoinRPC;
-    private iid: Buffer;
-    private coin: Coin;
-
-    constructor(bc: ByzCoinRPC, iid: Buffer, coin: Coin) {
-        this.rpc = bc;
-        this.iid = iid;
-        this.coin = coin;
-    }
+    _coin: Coin;
 
     /**
-     * Getter for the instance id
-     * @returns the id
-     */
-    get id() {
-        return this.iid;
-    }
-
-    /**
-     * Getter for the coin name
-     * @returns the name
-     */
-    get name(): Buffer {
-        return this.coin.name;
-    }
-
-    /**
-     * Getter for the coin value
-     * @returns the value
+     * @return value of the coin.
      */
     get value(): Long {
-        return this.coin.value;
+        return this._coin.value;
     }
 
     /**
-     * Get the coin object
-     * @returns the coin object
+     * @return the name of the coin, which is a 32-byte Buffer.
      */
-    getCoin(): Coin {
-        return this.coin;
+    get name(): Buffer {
+        return this._coin.name;
+    }
+
+    /**
+     * Constructs a new CoinInstance. If the instance is not of type CoinInstance,
+     * an error will be thrown.
+     *
+     * @param rpc a working RPC instance
+     * @param inst an instance representing a CoinInstance
+     */
+    constructor(private rpc: ByzCoinRPC, inst: Instance) {
+        super(inst);
+        if (inst.contractID.toString() !== CoinInstance.contractID) {
+            throw new Error(`mismatch contract name: ${inst.contractID} vs ${CoinInstance.contractID}`);
+        }
+
+        this._coin = Coin.decode(inst.data);
     }
 
     /**
@@ -112,15 +137,15 @@ export default class CoinInstance {
      */
     async transfer(coins: Long, to: Buffer, signers: Signer[]): Promise<void> {
         const args = [
-            new Argument({ name: "coins", value: Buffer.from(coins.toBytesLE()) }),
-            new Argument({ name: "destination", value: to }),
+            new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(coins.toBytesLE())}),
+            new Argument({name: CoinInstance.argumentDestination, value: to}),
         ];
 
-        const inst = Instruction.createInvoke(this.iid, CoinInstance.contractID, "transfer", args);
+        const inst = Instruction.createInvoke(this.id, CoinInstance.contractID, CoinInstance.commandTransfer, args);
         await inst.updateCounters(this.rpc, signers);
 
-        const ctx = new ClientTransaction({ instructions: [inst] });
-        ctx.signWith(signers);
+        const ctx = new ClientTransaction({instructions: [inst]});
+        ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, 10);
     }
@@ -134,15 +159,15 @@ export default class CoinInstance {
      */
     async mint(signers: Signer[], amount: Long, wait?: number): Promise<void> {
         const inst = Instruction.createInvoke(
-            this.iid,
+            this.id,
             CoinInstance.contractID,
-            "mint",
-            [new Argument({ name: "coins", value: Buffer.from(amount.toBytesLE()) })],
+            CoinInstance.commandMint,
+            [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(amount.toBytesLE())})],
         );
         await inst.updateCounters(this.rpc, signers);
 
-        const ctx = new ClientTransaction({ instructions: [inst] });
-        ctx.signWith(signers);
+        const ctx = new ClientTransaction({instructions: [inst]});
+        ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, wait);
     }
@@ -153,12 +178,12 @@ export default class CoinInstance {
      * @returns the updated instance
      */
     async update(): Promise<CoinInstance> {
-        const p = await this.rpc.getProof(this.iid);
-        if (!p.exists(this.iid)) {
+        const p = await this.rpc.getProof(this.id);
+        if (!p.exists(this.id)) {
             throw new Error("fail to get a matching proof");
         }
 
-        this.coin = Coin.decode(p.value);
+        this._coin = Coin.decode(p.value);
         return this;
     }
 }

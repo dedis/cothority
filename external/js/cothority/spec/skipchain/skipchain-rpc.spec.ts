@@ -55,24 +55,9 @@ describe("SkipchainRPC Tests", () => {
     it("should fail to get the block", async () => {
         const rpc = new SkipchainRPC(roster);
 
-        let err: Error;
-        try {
-            await rpc.getSkipBlock(Buffer.from([1, 2, 3]));
-        } catch (e) {
-            err = e;
-        }
+        await expectAsync(rpc.getSkipBlock(Buffer.from([1, 2, 3]))).toBeRejectedWith("No such block");
 
-        expect(err).toBeDefined();
-        expect(err.message).toContain("No such block");
-        err = null;
-
-        try {
-            await rpc.getLatestBlock(Buffer.from([1, 2, 3]));
-        } catch (e) {
-            err = e;
-        }
-
-        expect(err.message).toContain("Couldn't find latest skipblock");
+        await expectAsync(rpc.getLatestBlock(Buffer.from([1, 2, 3]))).toBeRejected("Couldn't find latest skipblock");
     });
 
     it("should verify the chain", async () => {

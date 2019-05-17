@@ -1,6 +1,6 @@
 import { Message, util } from "protobufjs/light";
 import shuffle from "shuffle-array";
-import Logger from "../log";
+import Log from "../log";
 import { Roster } from "./proto";
 import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
 
@@ -80,7 +80,7 @@ export class WebSocketConnection implements IConnection {
 
         return new Promise((resolve, reject) => {
             const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
-            Logger.lvl4(`Socket: new WebSocket(${path})`);
+            Log.lvl4(`Socket: new WebSocket(${path})`);
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
@@ -93,7 +93,7 @@ export class WebSocketConnection implements IConnection {
             ws.onMessage((data: Buffer) => {
                 clearTimeout(timer);
                 const buf = Buffer.from(data);
-                Logger.lvl4("Getting message with length:", buf.length);
+                Log.lvl4("Getting message with length:", buf.length);
 
                 try {
                     const ret = reply.decode(buf) as T;
@@ -114,7 +114,7 @@ export class WebSocketConnection implements IConnection {
 
             ws.onClose((code: number, reason: string) => {
                 if (code !== 1000) {
-                    Logger.error("Got close:", code, reason);
+                    Log.error("Got close:", code, reason);
                     reject(new Error(reason));
                 }
             });
@@ -148,7 +148,7 @@ export class RosterWSConnection extends WebSocketConnection {
         const addresses = this.addresses.slice();
         shuffle(addresses);
 
-        const errors = [];
+        const errors: string[] = [];
         for (const addr of addresses) {
             this.url = addr;
 
@@ -156,8 +156,10 @@ export class RosterWSConnection extends WebSocketConnection {
                 // we need to await here to catch and try another conode
                 return await super.send(message, reply);
             } catch (e) {
-                Logger.lvl3(`fail to send on ${addr} with error:`, e);
+                Log.lvl3(`fail to send on ${addr} with error:`, e);
                 errors.push(e.message);
+                // TODO: send again over all nodes
+                return Promise.reject(e.message);
             }
         }
 

@@ -1,7 +1,8 @@
 import { Point, PointFactory } from "@dedis/kyber";
+import Long from "long";
 import Moment from "moment";
 import { Message, Properties } from "protobufjs/light";
-import { EMPTY_BUFFER, registerMessage } from "../../../protobuf";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
 export class PopPartyStruct extends Message<PopPartyStruct> {
     /**
@@ -11,7 +12,7 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
         registerMessage("personhood.PopPartyStruct", PopPartyStruct, PopDesc, Attendees, LRSTag);
     }
 
-    readonly state: number;
+    state: number;
     readonly organizers: number;
     readonly finalizations: string[];
     readonly description: PopDesc;
@@ -42,12 +43,14 @@ export class PopPartyStruct extends Message<PopPartyStruct> {
     }
 
     /**
-     * Replace the current attendees by the new ones
+     * Replace the current attendees by the new ones and sort them, so that different
+     * organizers scanning in a different order get the same result.
      *
      * @param publics Public keys of the new attendees
      */
     updateAttendes(publics: Point[]): void {
         const keys = publics.map((p) => p.toProto());
+        keys.sort((a, b) => Buffer.compare(a, b));
         this.attendees.keys.splice(0, this.attendees.keys.length, ...keys);
     }
 }
@@ -65,17 +68,6 @@ export class FinalStatement extends Message<FinalStatement> {
 }
 
 export class PopDesc extends Message<PopDesc> {
-    /**
-     * @see README#Message classes
-     */
-    static register() {
-        registerMessage("personhood.PopDesc", PopDesc);
-    }
-
-    readonly name: string;
-    readonly purpose: string;
-    readonly datetime: Long; // in seconds
-    readonly location: string;
 
     /**
      * Getter for the timestamp
@@ -101,6 +93,21 @@ export class PopDesc extends Message<PopDesc> {
         const d = new Date(this.timestamp);
         return Moment(d).format("YY-MM-DD HH:mm");
     }
+    /**
+     * @see README#Message classes
+     */
+    static register() {
+        registerMessage("personhood.PopDesc", PopDesc);
+    }
+
+    readonly name: string;
+    readonly purpose: string;
+    readonly datetime: Long; // in seconds
+    readonly location: string;
+
+    constructor(props?: Properties<PopDesc>) {
+        super(props);
+    }
 
     /**
      * Helper to encode the statement using protobuf
@@ -112,6 +119,14 @@ export class PopDesc extends Message<PopDesc> {
 }
 
 export class Attendees extends Message<Attendees> {
+
+    /**
+     * Get the keys as kyber points
+     * @returns a list of points
+     */
+    get publics(): Point[] {
+        return this.keys.map((k) => PointFactory.fromProto(k));
+    }
     /**
      * @see README#Message classes
      */
@@ -125,14 +140,6 @@ export class Attendees extends Message<Attendees> {
         super(properties);
 
         this.keys = this.keys.slice() || [];
-    }
-
-    /**
-     * Get the keys as kyber points
-     * @returns a list of points
-     */
-    get publics(): Point[] {
-        return this.keys.map((k) => PointFactory.fromProto(k));
     }
 
     /**

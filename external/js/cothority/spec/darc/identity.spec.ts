@@ -8,7 +8,7 @@ describe("Identity Tests", () => {
         const id = new IdentityDarc({ id: Buffer.from("deadbeef", "hex") });
 
         expect(id.verify(Buffer.from([]), Buffer.from([]))).toBeFalsy();
-        expect(id.toWrapper().darc).toBeDefined();
+        expect(IdentityWrapper.fromIdentity(id).darc).toBeDefined();
         expect(id.toBytes()).toEqual(Buffer.from("deadbeef", "hex"));
         expect(id.toString()).toBe("darc:deadbeef");
     });
@@ -19,7 +19,7 @@ describe("Identity Tests", () => {
         const msg = Buffer.from("deadbeef", "hex");
         const sig = SIGNER.sign(msg);
         expect(id.verify(msg, sig)).toBeTruthy();
-        expect(id.toWrapper().ed25519).toBeDefined();
+        expect(IdentityWrapper.fromIdentity(id).ed25519).toBeDefined();
         expect(id.toBytes()).toEqual(SIGNER.point);
         expect(id.toString()).toBe(`ed25519:${SIGNER.public.toString()}`);
     });

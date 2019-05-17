@@ -7,7 +7,7 @@ import { registerMessage } from "../protobuf";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
-const { bls, Mask } = sign;
+const {bls, Mask} = sign;
 
 /**
  * Convert an integer into a little-endian buffer
@@ -23,6 +23,15 @@ function int2buf(v: number): Buffer {
 }
 
 export class SkipBlock extends Message<SkipBlock> {
+
+    /**
+     * Getter for the forward links
+     *
+     * @returns the list of forward links
+     */
+    get forwardLinks(): ForwardLink[] {
+        return this.forward;
+    }
     /**
      * @see README#Message classes
      */
@@ -53,15 +62,6 @@ export class SkipBlock extends Message<SkipBlock> {
         this.data = Buffer.from(this.data || EMPTY_BUFFER);
         this.genesis = Buffer.from(this.genesis || EMPTY_BUFFER);
         this.payload = Buffer.from(this.payload || EMPTY_BUFFER);
-    }
-
-    /**
-     * Getter for the forward links
-     *
-     * @returns the list of forward links
-     */
-    get forwardLinks(): ForwardLink[] {
-        return this.forward;
     }
 
     /**

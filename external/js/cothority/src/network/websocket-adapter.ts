@@ -1,5 +1,5 @@
 import WebSocket from "isomorphic-ws";
-import Logger from "../log";
+import Log from "../log";
 
 /**
  * An adapter to use any kind of websocket and interface it with
@@ -76,7 +76,7 @@ export class BrowserWebSocketAdapter extends WebSocketAdapter {
             } else {
                 // In theory, any type of data could be sent through but we only
                 // allow protobuf encoded messages
-                Logger.lvl2(`got an unknown websocket message type: ${typeof evt.data}`);
+                Log.lvl2(`got an unknown websocket message type: ${typeof evt.data}`);
             }
         };
     }

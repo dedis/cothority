@@ -1,37 +1,12 @@
 import { Message, Properties } from "protobufjs/light";
-import Signer from "../../darc/signer";
-import { EMPTY_BUFFER, registerMessage } from "../../protobuf";
-import ByzCoinRPC from "../byzcoin-rpc";
-import ClientTransaction, { Argument, Instruction } from "../client-transaction";
-import Instance, { InstanceID } from "../instance";
-import CoinInstance, { Coin } from "./coin-instance";
+import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
+import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
+import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
+import Instance, { InstanceID } from "../byzcoin/instance";
+import Signer from "../darc/signer";
+import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
-export default class RoPaSciInstance {
-    static readonly contractID = "ropasci";
-
-    /**
-     * Fetch the proof for the given instance and create a
-     * RoPaSciInstance from it
-     *
-     * @param bc    The ByzCoinRPC to use
-     * @param iid   The instance ID
-     * @returns the new instance
-     */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<RoPaSciInstance> {
-        return new RoPaSciInstance(bc, await Instance.fromByzCoin(bc, iid));
-    }
-
-    private rpc: ByzCoinRPC;
-    private instance: Instance;
-    private struct: RoPaSciStruct;
-    private fillUp: Buffer;
-    private firstMove: number;
-
-    constructor(bc: ByzCoinRPC, inst: Instance) {
-        this.rpc = bc;
-        this.instance = inst;
-        this.struct = RoPaSciStruct.decode(this.instance.data);
-    }
+export default class RoPaSciInstance extends Instance {
 
     get stake(): Coin {
         return this.struct.stake;
@@ -55,6 +30,35 @@ export default class RoPaSciInstance {
      */
     get adversaryChoice(): number {
         return this.struct.secondPlayer;
+    }
+    static readonly contractID = "ropasci";
+
+    /**
+     * Fetch the proof for the given instance and create a
+     * RoPaSciInstance from it
+     *
+     * @param bc    The ByzCoinRPC to use
+     * @param iid   The instance ID
+     * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
+     * @param interval how long to wait between two attempts in waitMatch.
+     * @returns the new instance
+     */
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
+        Promise<RoPaSciInstance> {
+        return new RoPaSciInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
+    }
+
+    struct: RoPaSciStruct;
+    private fillUp: Buffer;
+    private firstMove: number;
+
+    constructor(private rpc: ByzCoinRPC, inst: Instance) {
+        super(inst);
+        if (inst.contractID.toString() !== RoPaSciInstance.contractID) {
+            throw new Error(`mismatch contract name: ${inst.contractID} vs ${RoPaSciInstance.contractID}`);
+        }
+
+        this.struct = RoPaSciStruct.decode(this.data);
     }
 
     /**
@@ -98,25 +102,25 @@ export default class RoPaSciInstance {
                 Instruction.createInvoke(
                     coin.id,
                     CoinInstance.contractID,
-                    "fetch",
+                    CoinInstance.commandFetch,
                     [
-                        new Argument({ name: "coins", value: Buffer.from(this.struct.stake.value.toBytesLE()) }),
+                        new Argument({name: CoinInstance.argumentCoins,
+                            value: Buffer.from(this.struct.stake.value.toBytesLE())}),
                     ],
                 ),
                 Instruction.createInvoke(
-                    this.instance.id,
+                    this.id,
                     RoPaSciInstance.contractID,
                     "second",
                     [
-                        new Argument({ name: "account", value: coin.id }),
-                        new Argument({ name: "choice", value: Buffer.from([choice % 3]) }),
+                        new Argument({name: "account", value: coin.id}),
+                        new Argument({name: "choice", value: Buffer.from([choice % 3])}),
                     ],
                 ),
             ],
         });
 
-        await ctx.updateCounters(this.rpc, [signer]);
-        ctx.signWith([signer]);
+        await ctx.updateCountersAndSign(this.rpc, [[signer], []]);
 
         await this.rpc.sendTransactionAndWait(ctx);
     }
@@ -139,18 +143,19 @@ export default class RoPaSciInstance {
         const ctx = new ClientTransaction({
             instructions: [
                 Instruction.createInvoke(
-                    this.instance.id,
+                    this.id,
                     RoPaSciInstance.contractID,
                     "confirm",
                     [
-                        new Argument({ name: "prehash", value: preHash }),
-                        new Argument({ name: "account", value: coin.id }),
+                        new Argument({name: "prehash", value: preHash}),
+                        new Argument({name: "account", value: coin.id}),
                     ],
                 ),
             ],
         });
 
         await this.rpc.sendTransactionAndWait(ctx);
+        await this.update();
     }
 
     /**
@@ -160,13 +165,14 @@ export default class RoPaSciInstance {
      * or rejects with the error
      */
     async update(): Promise<RoPaSciInstance> {
-        const proof = await this.rpc.getProof(this.instance.id);
-        if (!proof.exists(this.instance.id)) {
+        const proof = await this.rpc.getProof(this.id);
+        if (!proof.exists(this.id)) {
             throw new Error("fail to get a matching proof");
         }
 
-        this.instance = Instance.fromProof(this.instance.id, proof);
-        this.struct = RoPaSciStruct.decode(this.instance.data);
+        const inst = Instance.fromProof(this.id, proof);
+        this.data = inst.data;
+        this.struct = RoPaSciStruct.decode(this.data);
         return this;
     }
 }
