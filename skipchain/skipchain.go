@@ -291,6 +291,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
 		prop.GenesisID = scID
+		prop.ForwardLink = []*ForwardLink{}
 		// And calculate the height of that block.
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
