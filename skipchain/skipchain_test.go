@@ -115,7 +115,14 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 		deadServer.Unpause()
 	}
 
+	// Get the forward link of the genesis to test that forward links are correctly
+	// ignored
+	genesis, err = service.GetSingleBlock(&GetSingleBlock{ID: genesis.Hash})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(genesis.ForwardLink))
+
 	next.Data = []byte("And the Spirit of God moved upon the face of the waters.")
+	next.ForwardLink = genesis.ForwardLink
 	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: psbr2.Latest.Hash, NewBlock: next})
 	assert.NotNil(t, psbr3)
 	assert.NotNil(t, psbr3.Latest)
