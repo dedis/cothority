@@ -29,6 +29,7 @@ contract's data given its instance id with `--instID`.
 * *instr* stands for *instruction*
 * *id* stands for *identifier*
 * *idx* stands for *index*
+* commands of the invoke are always in camelcase
 
 **Command examples**:
 
