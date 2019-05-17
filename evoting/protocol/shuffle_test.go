@@ -42,7 +42,6 @@ func (s *shuffleService) NewProtocol(n *onet.TreeNodeInstance, c *onet.GenericCo
 		instance, _ := NewShuffle(n)
 		shuffle := instance.(*Shuffle)
 		shuffle.User = s.user
-		shuffle.Signature = s.signature
 		shuffle.Election = s.election
 		shuffle.Skipchain = s.skipchain
 		return shuffle, nil
@@ -86,13 +85,13 @@ func TestShuffleNodeFailure(t *testing.T) {
 		services[i].(*shuffleService).signature = []byte{}
 	}
 
-	tx := lib.NewTransaction(election, election.Creator, []byte{})
+	tx := lib.NewTransaction(election, election.Creator)
 	lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx)
 
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballot := &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
-		tx = lib.NewTransaction(ballot, election.Creator, []byte{})
+		tx = lib.NewTransaction(ballot, election.Creator)
 		lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx)
 	}
 	nodes[3].Stop()
@@ -100,7 +99,6 @@ func TestShuffleNodeFailure(t *testing.T) {
 	instance, _ := services[0].(*shuffleService).CreateProtocol(NameShuffle, tree)
 	shuffle := instance.(*Shuffle)
 	shuffle.User = 0
-	shuffle.Signature = []byte{}
 	shuffle.Election = election
 	shuffle.Skipchain = services[0].(*shuffleService).skipchain
 	shuffle.LeaderParticipates = true
@@ -148,20 +146,19 @@ func runShuffle(t *testing.T, n int) {
 		services[i].(*shuffleService).signature = []byte{}
 	}
 
-	tx := lib.NewTransaction(election, election.Creator, []byte{})
+	tx := lib.NewTransaction(election, election.Creator)
 	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballot := &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
-		tx = lib.NewTransaction(ballot, election.Creator, []byte{})
+		tx = lib.NewTransaction(ballot, election.Creator)
 		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 	}
 
 	instance, _ := services[0].(*shuffleService).CreateProtocol(NameShuffle, tree)
 	shuffle := instance.(*Shuffle)
 	shuffle.User = 0
-	shuffle.Signature = []byte{}
 	shuffle.Election = election
 	shuffle.Skipchain = services[0].(*shuffleService).skipchain
 	shuffle.LeaderParticipates = true

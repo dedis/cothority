@@ -513,11 +513,11 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 
 	box, err := election.Box(s0.skipchain)
 	mix := genMix(box.Ballots, election, roster.Get(0), local.GetPrivate(nodes[0]))
-	tx := lib.NewTransaction(mix, idAdmin, adminSig)
+	tx := lib.NewTransaction(mix, idAdmin)
 	_, err = lib.Store(s0.skipchain, election.ID, tx)
 	require.Nil(t, err)
 	mix2 := genMix(mix.Ballots, election, roster.Get(1), local.GetPrivate(nodes[1]))
-	tx = lib.NewTransaction(mix2, idAdmin, adminSig)
+	tx = lib.NewTransaction(mix2, idAdmin)
 	_, err = lib.Store(s0.skipchain, election.ID, tx)
 	require.Nil(t, err)
 

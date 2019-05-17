@@ -53,7 +53,6 @@ func (s *decryptService) NewProtocol(node *onet.TreeNodeInstance, conf *onet.Gen
 		instance, _ := NewDecrypt(node)
 		decrypt := instance.(*Decrypt)
 		decrypt.User = s.user
-		decrypt.Signature = s.signature
 		decrypt.Secret = s.secret
 		decrypt.Election = s.election
 		decrypt.Skipchain = s.skipchain
@@ -95,14 +94,14 @@ func runDecrypt(t *testing.T, n int) {
 		services[i].(*decryptService).signature = []byte{}
 	}
 
-	tx := lib.NewTransaction(election, election.Creator, []byte{})
+	tx := lib.NewTransaction(election, election.Creator)
 	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 
 	ballots := make([]*lib.Ballot, 3)
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
-		tx = lib.NewTransaction(ballots[i], election.Creator, []byte{})
+		tx = lib.NewTransaction(ballots[i], election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.Nil(t, err)
 	}
@@ -121,7 +120,7 @@ func runDecrypt(t *testing.T, n int) {
 			NodeID:    roster.Get(i).ID,
 			Signature: sig,
 		}
-		tx = lib.NewTransaction(mix, election.Creator, []byte{})
+		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.Nil(t, err)
 		x, y = v, w
@@ -131,7 +130,6 @@ func runDecrypt(t *testing.T, n int) {
 	decrypt := instance.(*Decrypt)
 	decrypt.Secret, _ = lib.NewSharedSecret(dkgs[0])
 	decrypt.User = 0
-	decrypt.Signature = []byte{}
 	decrypt.Election = election
 	decrypt.Skipchain = services[0].(*decryptService).skipchain
 	decrypt.LeaderParticipates = true
@@ -182,14 +180,14 @@ func TestDecryptNodeFailure(t *testing.T) {
 		services[i].(*decryptService).signature = []byte{}
 	}
 
-	tx := lib.NewTransaction(election, election.Creator, []byte{})
+	tx := lib.NewTransaction(election, election.Creator)
 	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 
 	ballots := make([]*lib.Ballot, 3)
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
-		tx = lib.NewTransaction(ballots[i], election.Creator, []byte{})
+		tx = lib.NewTransaction(ballots[i], election.Creator)
 		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 	}
 
@@ -208,7 +206,7 @@ func TestDecryptNodeFailure(t *testing.T) {
 			Signature: sig,
 		}
 		mixes[i] = mix
-		tx = lib.NewTransaction(mix, election.Creator, []byte{})
+		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.Nil(t, err)
 		x, y = v, w
@@ -232,7 +230,7 @@ func TestDecryptNodeFailure(t *testing.T) {
 		data = append(data, byte(index))
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
 		partial.Signature = sig
-		transaction := lib.NewTransaction(partial, election.Creator, []byte{})
+		transaction := lib.NewTransaction(partial, election.Creator)
 		lib.StoreUsingWebsocket(election.ID, election.Roster, transaction)
 	}
 
@@ -242,7 +240,6 @@ func TestDecryptNodeFailure(t *testing.T) {
 	decrypt := instance.(*Decrypt)
 	decrypt.Secret, _ = lib.NewSharedSecret(dkgs[0])
 	decrypt.User = 0
-	decrypt.Signature = []byte{}
 	decrypt.Election = election
 	decrypt.Skipchain = services[0].(*decryptService).skipchain
 	decrypt.LeaderParticipates = false

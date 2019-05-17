@@ -3,7 +3,6 @@ package lib
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"go.dedis.ch/kyber/v3"
@@ -36,8 +35,7 @@ type Transaction struct {
 	Mix      *Mix
 	Partial  *Partial
 
-	User      uint32
-	Signature []byte
+	User uint32
 }
 
 // UnmarshalTransaction decodes a data blob to a transaction structure.
@@ -55,8 +53,8 @@ func UnmarshalTransaction(data []byte) *Transaction {
 }
 
 // NewTransaction constructs a new transaction for the given arguments.
-func NewTransaction(data interface{}, user uint32, signature []byte) *Transaction {
-	transaction := &Transaction{User: user, Signature: signature}
+func NewTransaction(data interface{}, user uint32) *Transaction {
+	transaction := &Transaction{User: user}
 	switch data.(type) {
 	case *Master:
 		transaction.Master = data.(*Master)
@@ -76,31 +74,8 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 	return transaction
 }
 
-// Digest appends the digits of sciper to master genesis skipblock ID
-func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID) []byte {
-	var message []byte
-	switch {
-	case t.Master != nil:
-		message = t.Master.ID
-	case t.Election != nil:
-		message = t.Election.Master
-	default:
-		election, _ := GetElection(s, genesis, false, t.User)
-		if election == nil {
-			return nil
-		}
-		message = election.Master
-	}
-	for _, c := range strconv.Itoa(int(t.User)) {
-		d, _ := strconv.Atoi(string(c))
-		message = append(message, byte(d))
-	}
-	return message
-}
-
 // Verify checks that the corresponding transaction is valid before storing it.
 func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service) error {
-	digest := t.Digest(s, genesis)
 	if t.Master != nil {
 		// Find the current master in order to compare against it.
 		m, err := GetMaster(s, genesis)
@@ -109,10 +84,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return nil
 		}
 
-		err = schnorr.Verify(cothority.Suite, m.Key, digest, t.Signature)
-		if err != nil {
-			return err
-		}
 		if !m.IsAdmin(t.User) {
 			return errors.New("current user was not in previous admin list")
 		}
@@ -152,10 +123,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Election != nil {
 		election := t.Election
-		err := schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
-		if err != nil {
-			return err
-		}
 		if election.End < time.Now().Unix() {
 			return errors.New("open error: invalid end date")
 		}
@@ -170,10 +137,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Ballot != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		if err != nil {
-			return err
-		}
-		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
 		}
@@ -197,11 +160,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Mix != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		if err != nil {
-			return err
-		}
-
-		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
 		}
@@ -265,10 +223,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Partial != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		if err != nil {
-			return err
-		}
-		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
 		}
