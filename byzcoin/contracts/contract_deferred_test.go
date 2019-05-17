@@ -2674,3 +2674,269 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	local.WaitDone(genesisMsg.BlockInterval)
 }
+
+func TestDeferred_SimpleDelete(t *testing.T) {
+	// We spawn a deferred instance, delete it and check if is has been
+	// correctly deleted.
+	//
+	// 1. Spawn a new contract
+	// 2. Delete the contract
+
+	// ------------------------------------------------------------------------
+	// 0. Set up
+	// ------------------------------------------------------------------------
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:deferred", "delete:deferred"}, signer.Identity())
+	require.Nil(t, err)
+	gDarc := &genesisMsg.GenesisDarc
+
+	genesisMsg.BlockInterval = time.Second
+
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.Nil(t, err)
+
+	// ------------------------------------------------------------------------
+	// 1. Spawn
+	// ------------------------------------------------------------------------
+	rootInstructionValue := []byte("aef123456789fab")
+
+	proposedTransaction := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			byzcoin.Instruction{
+				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+				Spawn: &byzcoin.Spawn{
+					ContractID: "value",
+					Args: byzcoin.Arguments{
+						byzcoin.Argument{
+							Name:  "value",
+							Value: rootInstructionValue,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	expireBlockIndexInt := uint64(6000)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
+	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
+	require.Nil(t, err)
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractDeferredID,
+				Args: []byzcoin.Argument{
+					{
+						Name:  "proposedTransaction",
+						Value: proposedTransactionBuf,
+					},
+					{
+						Name:  "expireBlockIndex",
+						Value: expireBlockIndexBuf,
+					},
+				},
+			},
+			SignerCounter: []uint64{1},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	myID := ctx.Instructions[0].DeriveID("")
+
+	time.Sleep(4 * genesisMsg.BlockInterval)
+	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
+	require.Nil(t, err)
+	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
+	require.Nil(t, err)
+	require.True(t, exist)
+
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+
+	dataBuf, _, _, err := pr.Get(myID.Slice())
+	require.Nil(t, err)
+	result := byzcoin.DeferredData{}
+	err = protobuf.Decode(dataBuf, &result)
+	require.Nil(t, err)
+
+	require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
+
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	// ------------------------------------------------------------------------
+	// 2. Invoke a delete
+	// ------------------------------------------------------------------------
+
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Delete: &byzcoin.Delete{
+				ContractID: byzcoin.ContractDeferredID,
+			},
+			SignerCounter: []uint64{2},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	time.Sleep(4 * genesisMsg.BlockInterval)
+	prr, err = cl.GetProof(myID.Slice())
+	require.Nil(t, err)
+	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
+	require.Nil(t, err)
+	require.False(t, exist)
+}
+
+func TestDeferred_PublicDelete(t *testing.T) {
+	// We spawn a deferred instance with an expire block index at 0, which
+	// allows anyone to delete it. We then use a new signer that has no rights
+	// to delete the deferred instance.
+	//
+	// 1. Spawn a new contract
+	// 2. Delete the contract with a new signer
+
+	// ------------------------------------------------------------------------
+	// 0. Set up
+	// ------------------------------------------------------------------------
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:deferred", "delete:deferred"}, signer.Identity())
+	require.Nil(t, err)
+	gDarc := &genesisMsg.GenesisDarc
+
+	genesisMsg.BlockInterval = time.Second
+
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.Nil(t, err)
+
+	// ------------------------------------------------------------------------
+	// 1. Spawn
+	// ------------------------------------------------------------------------
+	rootInstructionValue := []byte("aef123456789fab")
+
+	proposedTransaction := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			byzcoin.Instruction{
+				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+				Spawn: &byzcoin.Spawn{
+					ContractID: "value",
+					Args: byzcoin.Arguments{
+						byzcoin.Argument{
+							Name:  "value",
+							Value: rootInstructionValue,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	expireBlockIndexInt := uint64(0)
+	expireBlockIndexBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(expireBlockIndexBuf, expireBlockIndexInt)
+	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
+	require.Nil(t, err)
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractDeferredID,
+				Args: []byzcoin.Argument{
+					{
+						Name:  "proposedTransaction",
+						Value: proposedTransactionBuf,
+					},
+					{
+						Name:  "expireBlockIndex",
+						Value: expireBlockIndexBuf,
+					},
+				},
+			},
+			SignerCounter: []uint64{1},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	myID := ctx.Instructions[0].DeriveID("")
+
+	time.Sleep(4 * genesisMsg.BlockInterval)
+	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
+	require.Nil(t, err)
+	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
+	require.Nil(t, err)
+	require.True(t, exist)
+
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	require.Nil(t, err)
+	require.True(t, pr.InclusionProof.Match(myID.Slice()))
+
+	dataBuf, _, _, err := pr.Get(myID.Slice())
+	require.Nil(t, err)
+	result := byzcoin.DeferredData{}
+	err = protobuf.Decode(dataBuf, &result)
+	require.Nil(t, err)
+
+	require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
+	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
+	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
+
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	// ------------------------------------------------------------------------
+	// 2. Invoke a delete with a new signer that has no rights. It should
+	//    work since we allow anyone to delete an expired deferred instance.
+	// ------------------------------------------------------------------------
+
+	signer2 := darc.NewSignerEd25519(nil, nil)
+
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Delete: &byzcoin.Delete{
+				ContractID: byzcoin.ContractDeferredID,
+			},
+			SignerCounter: []uint64{1},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
+
+	_, err = cl.AddTransaction(ctx)
+	require.Nil(t, err)
+
+	time.Sleep(4 * genesisMsg.BlockInterval)
+	prr, err = cl.GetProof(myID.Slice())
+	require.Nil(t, err)
+	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
+	require.Nil(t, err)
+	require.False(t, exist)
+}
