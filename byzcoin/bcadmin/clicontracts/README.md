@@ -83,8 +83,8 @@ bcadmin darc rule --identity ed25519:... --rule invoke:deferred.execProposedTx
 bcadmin contract config invoke updateConfig
 
 # Perform an update that is redirected to the spawn of a deferred contract
-bcadmin contract config invoke updateConfig --blockInterval 7s\
-                                            --maxBlockSize 5000000\
+bcadmin contract config invoke updateConfig --blockInterval 7s \
+                                            --maxBlockSize 5000000 \
                                             --darcContractIDs darc,darc2 \
                                             --redirect | bcadmin contract deferred spawn
 
