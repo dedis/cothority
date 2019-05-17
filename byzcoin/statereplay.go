@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"go.dedis.ch/kyber/v3/pairing"
+
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -95,7 +97,35 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			}
 
 			if !bytes.Equal(dHead.TrieRoot, sst.GetRoot()) {
+				log.Lvl1("Failing block:", sb.Index)
+				var body DataBody
+				errDecode := protobuf.Decode(sb.Payload, &body)
+				if errDecode != nil {
+					log.Error("couldn't decode body:", errDecode)
+				} else {
+					for i, tx := range body.TxResults {
+						log.Lvlf1("Transaction %d: %t", i, tx.Accepted)
+						for j, ct := range tx.ClientTransaction.Instructions {
+							log.Lvlf1("Instruction %d: %s", j, ct)
+						}
+					}
+				}
 				return nil, replayError(sb, "merkle tree root doesn't match with trie root")
+			}
+
+			log.Lvl2("Checking links for block", sb.Index)
+			pubs := sb.Roster.ServicePublics(skipchain.ServiceName)
+			for j, fl := range sb.ForwardLink {
+				if fl.From == nil || fl.To == nil ||
+					len(fl.From) == 0 || len(fl.To) == 0 {
+					log.Warnf("Forward-link %d looks broken: %+v", j, fl)
+					continue
+				}
+				err = fl.Verify(pairing.NewSuiteBn256(), pubs)
+				if err != nil {
+					log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
+					return nil, err
+				}
 			}
 		}
 
