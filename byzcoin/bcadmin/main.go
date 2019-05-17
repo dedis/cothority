@@ -425,8 +425,9 @@ var cmds = cli.Commands{
 						},
 					},
 					{
-						Name:  "get",
-						Usage: "if the proof matches, get the content of the given value instance ID",
+						Name:   "get",
+						Usage:  "if the proof matches, get the content of the given value instance ID",
+						Action: clicontracts.ValueGet,
 						Flags: []cli.Flag{
 							cli.StringFlag{
 								Name:   "bc",
@@ -434,11 +435,35 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "iid",
+								Name:  "instID",
 								Usage: "the instance id (required)",
 							},
 						},
-						Action: clicontracts.ValueGet,
+					},
+
+					{
+						Name:   "delete",
+						Usage:  "delete a value contract",
+						Action: clicontracts.ValueDelete,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "instID",
+								Usage: "the instance ID of the value contract",
+							},
+							cli.StringFlag{
+								Name:  "darc",
+								Usage: "DARC with the right to invoke.update a value contract (default is the admin DARC)",
+							},
+							cli.StringFlag{
+								Name:  "sign",
+								Usage: "public key of the signing entity (default is the admin public key)",
+							},
+						},
 					},
 				},
 			},
@@ -525,6 +550,47 @@ var cmds = cli.Commands{
 										Usage: "public key of the signing entity (default is the admin public key)",
 									},
 								},
+							},
+						},
+					},
+					{
+						Name:   "get",
+						Usage:  "if the proof matches, get the content of the given deferred instance ID",
+						Action: clicontracts.DeferredGet,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "instID",
+								Usage: "the instance id (required)",
+							},
+						},
+					},
+
+					{
+						Name:   "delete",
+						Usage:  "delete a deferred contract",
+						Action: clicontracts.DeferredDelete,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "instID",
+								Usage: "the instance ID of the value contract",
+							},
+							cli.StringFlag{
+								Name:  "darc",
+								Usage: "DARC with the right to invoke.update a value contract (default is the admin DARC)",
+							},
+							cli.StringFlag{
+								Name:  "sign",
+								Usage: "public key of the signing entity (default is the admin public key)",
 							},
 						},
 					},
