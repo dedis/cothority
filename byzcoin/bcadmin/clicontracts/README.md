@@ -67,9 +67,11 @@ bcadmin contract deferred invoke addProof --hash ... --instID ... --iid 0
 
 ```bash
 # Run the nodes, create roster and set up the config
-./run_nodes.sh -n 5 -c -t -v 2
-export BC_CONFIG=~/GitHub/cothority/conode
+~/GitHub/cothority/conode/run_nodes.sh -n 5 -c -t -v 2
 bcadmin create -roster ~/GitHub/cothority/conode/public.toml 
+
+# Copy/Paste from the output of the previous command
+export BC="..."
 
 # Add the rules specific to the value and deferred contracts.
 # We use the admin identity.
