@@ -23,10 +23,7 @@ func init() {
 }
 
 // TransactionVerifierID identifes the core transaction verification function.
-var TransactionVerifierID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, ""))
-
-// TransactionVerifiers is a list of accepted skipchain verification functions.
-var TransactionVerifiers = []skipchain.VerifierID{TransactionVerifierID}
+var TransactionVerifierID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "evoting"))
 
 // Transaction is the sole data structure withing the blocks of an election
 // skipchain, it holds all the other containers.

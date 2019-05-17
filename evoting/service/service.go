@@ -107,7 +107,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		sig = *req.Signature
 	} else {
 		var err error
-		genesis, err = lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
+		genesis, err = lib.NewSkipchain(s.skipchain, req.Roster, false)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, lib.TransactionVerifiers)
+	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, false)
 	if err != nil {
 		return nil, err
 	}

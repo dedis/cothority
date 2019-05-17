@@ -11,12 +11,16 @@ import (
 )
 
 // NewSkipchain creates a new skipchain for a given roster and verification function.
-func NewSkipchain(s *skipchain.Service, roster *onet.Roster, verifier []skipchain.VerifierID) (
+func NewSkipchain(s *skipchain.Service, roster *onet.Roster, testMode bool) (
 	*skipchain.SkipBlock, error) {
 	block := skipchain.NewSkipBlock()
 	block.Roster = roster
 	block.BaseHeight = 8
 	block.MaximumHeight = 4
+	verifier := []skipchain.VerifierID{skipchain.VerifyBase, TransactionVerifierID}
+	if testMode {
+		verifier = skipchain.VerificationStandard
+	}
 	block.VerifierIDs = verifier
 	block.Data = []byte{}
 

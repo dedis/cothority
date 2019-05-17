@@ -72,7 +72,7 @@ func TestShuffleNodeFailure(t *testing.T) {
 	shared, _ := lib.NewSharedSecret(dkgs[0])
 	key := shared.X
 
-	chain, _ := lib.NewSkipchain(services[0].(*shuffleService).skipchain, roster, skipchain.VerificationStandard)
+	chain, _ := lib.NewSkipchain(services[0].(*shuffleService).skipchain, roster, true)
 	election := &lib.Election{
 		ID:      chain.Hash,
 		Roster:  roster,
@@ -134,7 +134,7 @@ func runShuffle(t *testing.T, n int) {
 	shared, _ := lib.NewSharedSecret(dkgs[0])
 	key := shared.X
 
-	chain, _ := lib.NewSkipchain(services[0].(*shuffleService).skipchain, roster, skipchain.VerificationStandard)
+	chain, _ := lib.NewSkipchain(services[0].(*shuffleService).skipchain, roster, true)
 	election := &lib.Election{
 		ID:      chain.Hash,
 		Roster:  roster,
