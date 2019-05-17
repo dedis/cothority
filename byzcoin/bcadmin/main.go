@@ -1329,7 +1329,13 @@ func debugReplay(c *cli.Context) error {
 		return blocks[0], nil
 	}
 
+	log.Info("Replaying blocks")
 	_, err = s.ReplayState(bcID, r, cb)
+	if err != nil {
+		return err
+	}
+	log.Info("Successfully checked and replayed all blocks.")
+
 	return err
 }
 
