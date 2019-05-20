@@ -37,7 +37,7 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestService_CreateGenesisBlock(t *testing.T) {

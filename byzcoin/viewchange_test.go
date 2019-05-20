@@ -77,7 +77,15 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	log.Lvl2("Verifying roster", config.Roster.List)
 	require.True(t, config.Roster.List[0].Equal(s.services[nFailures].ServerIdentity()))
 
+	// try to send a transaction to the node on index nFailures+1, which is
+	// a follower (not the new leader)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx1, nFailures+1)
+
 	// check that the leader is updated for all nodes
+	// Note: check is done after a tx has been sent so that nodes catch up if the
+	// propagation failed
 	for _, service := range s.services[nFailures:] {
 		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
 
@@ -87,12 +95,6 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		require.NotNil(t, leader)
 		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()), fmt.Sprintf("%v", leader))
 	}
-
-	// try to send a transaction to the node on index nFailures+1, which is
-	// a follower (not the new leader)
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-	require.NoError(t, err)
-	s.sendTxTo(t, tx1, nFailures+1)
 
 	// wait for the transaction to be stored on the new leader, because it
 	// polls for new transactions

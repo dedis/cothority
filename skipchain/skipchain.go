@@ -999,7 +999,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	// We send the new forward link to the previous roster only
 	err = s.startPropagation(s.propagateForwardLink, roster, &PropagateForwardLink{fwd, 0})
 	if err != nil {
-		return err
+		log.Error("Failed to propagate the forward link to the previous roster:", err)
 	}
 
 	// We send the shortest chain to the new conodes to let
