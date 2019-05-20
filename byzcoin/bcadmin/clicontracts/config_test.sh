@@ -2,7 +2,7 @@
 
 testContractConfig() {
     run testContractConfigInvoke
-    testContractConfigGet
+    run testContractConfigGet
 }
 
 # In this test we check the behavior of the invoke:update_config function. We
