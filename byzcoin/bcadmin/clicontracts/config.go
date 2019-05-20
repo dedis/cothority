@@ -190,3 +190,37 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 
 	return nil
 }
+
+// ConfigGet displays the latest chain config contract instance
+func ConfigGet(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	_, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	// Get the latest chain config
+	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	if err != nil {
+		return errors.New("couldn't get proof for chainConfig: " + err.Error())
+	}
+	proof := pr.Proof
+
+	_, value, _, _, err := proof.KeyValue()
+	if err != nil {
+		return errors.New("couldn't get value out of proof: " + err.Error())
+	}
+	config := byzcoin.ChainConfig{}
+	err = protobuf.DecodeWithConstructors(value, &config, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return errors.New("couldn't decode chainConfig: " + err.Error())
+	}
+
+	fmt.Fprintf(c.App.Writer, "Here is the config data: \n%s", config)
+
+	return nil
+}

@@ -658,6 +658,18 @@ var cmds = cli.Commands{
 							},
 						},
 					},
+					{
+						Name:   "get",
+						Usage:  "displays the latest chain config",
+						Action: clicontracts.ConfigGet,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+						},
+					},
 				},
 			},
 		},

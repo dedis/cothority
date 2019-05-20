@@ -2,6 +2,7 @@
 
 testContractConfig() {
     run testContractConfigInvoke
+    testContractConfigGet
 }
 
 # In this test we check the behavior of the invoke:update_config function. We
@@ -42,4 +43,24 @@ testContractConfigInvoke() {
     testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
     testGrep "\-\- darc contract ID 1: darc2" echo "$OUTRES"
     testGrep "\-\- darc contract ID 2: darc3" echo "$OUTRES"
+}
+
+# In this test we simply get the config contract and check the result.
+testContractConfigGet() {
+    runCoBG 1 2 3
+    runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+    eval $SED
+    [ -z "$BC" ] && exit 1
+
+    # Get the config instance
+    OUTRES=`runBA contract config get`
+
+    # Check the result
+    testGrep "Here is the config data:" echo "$OUTRES"
+    testGrep "ChainConfig" echo "$OUTRES"
+    testGrep "\- BlockInterval: [a-z0-9]+" echo "$OUTRES"
+    testGrep "\- Roster: \{.*\}" echo "$OUTRES"
+    testGrep "\- MaxBlockSize: [0-9]+" echo "$OUTRES"
+    testGrep "\- DarcContractIDs:" echo "$OUTRES"
+    testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
 }
