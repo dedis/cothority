@@ -3,8 +3,8 @@ import edwards25519 from "./edwards25519"
 import { Group } from "..";
 
 const mappings = {};
-mappings["edwards25519"] = edwards25519.Curve;
-mappings["p256"] = nist.Curve.bind(nist.Params.p256);
+mappings["edwards25519"] = () => new edwards25519.Curve();
+mappings["p256"] = () => new nist.Curve(nist.Params.p256);
 
 /**
  * availableCurves returns all the curves currently implemented as an array of string
@@ -19,7 +19,7 @@ export function availableCurves() {
  */
 export function newCurve(name: string): Group {
   if (!(name in mappings)) throw new Error("curve not known");
-  return new mappings[name]();
+  return mappings[name]();
 }
 
 export {
