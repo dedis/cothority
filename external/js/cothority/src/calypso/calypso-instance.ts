@@ -109,8 +109,9 @@ export class CalypsoWriteInstance extends Instance {
      * @param iid   The instance ID
      * @returns a promise that resolves with the coin instance
      */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CalypsoWriteInstance> {
-        return new CalypsoWriteInstance(bc, await Instance.fromByzcoin(bc, iid));
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
+        Promise<CalypsoWriteInstance> {
+        return new CalypsoWriteInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
     write: Write;
 

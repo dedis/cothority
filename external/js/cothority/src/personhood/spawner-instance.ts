@@ -207,7 +207,7 @@ export default class SpawnerInstance extends Instance {
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
-        return CoinInstance.fromByzcoin(this.rpc, CoinInstance.coinIID(coinID));
+        return CoinInstance.fromByzcoin(this.rpc, CoinInstance.coinIID(coinID), 2);
     }
 
     /**
@@ -257,7 +257,7 @@ export default class SpawnerInstance extends Instance {
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
-        return CredentialInstance.fromByzcoin(this.rpc, finalCredID);
+        return CredentialInstance.fromByzcoin(this.rpc, finalCredID, 2);
     }
 
     /**
@@ -311,7 +311,7 @@ export default class SpawnerInstance extends Instance {
 
         await this.rpc.sendTransactionAndWait(ctx);
 
-        return PopPartyInstance.fromByzcoin(this.rpc, ctx.instructions[2].deriveId());
+        return PopPartyInstance.fromByzcoin(this.rpc, ctx.instructions[2].deriveId(), 2);
     }
 
     /**
@@ -368,7 +368,7 @@ export default class SpawnerInstance extends Instance {
 
         await this.rpc.sendTransactionAndWait(ctx);
 
-        const rpsi = await RoPaSciInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId());
+        const rpsi = await RoPaSciInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId(), 2);
         rpsi.setChoice(choice, fillup);
 
         return rpsi;
@@ -427,7 +427,7 @@ export default class SpawnerInstance extends Instance {
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
-        return CalypsoWriteInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId());
+        return CalypsoWriteInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId(), 2);
     }
 }
 
