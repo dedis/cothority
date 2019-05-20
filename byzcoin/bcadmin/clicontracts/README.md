@@ -13,12 +13,7 @@ commands and functionalities among clicontracts.
 
 **Commands convention**:
 
-```bash
-$ bcadmin contract <contract name> {spawn,invoke <command>, delete, get}\
-                                   [--<param name> <param value>, ...]\
-                                   [--sign <signer id>] [--darc <darc id>]\
-                                   [--redirect]
-```
+Use `bcadmin contract -h` to get the usage.
 
 **Functionalities**:
 
@@ -34,6 +29,7 @@ contract's data given its instance id with `--instID`.
 * *instr* stands for *instruction*
 * *id* stands for *identifier*
 * *idx* stands for *index*
+* commands of the invoke are always in camelcase
 
 **Command examples**:
 
@@ -60,10 +56,10 @@ Invoke an addProof on a deferred contract:
 
 ```bash
 # The --hash and --instID values are given when we spawn the deferred contract
-bcadmin contract deferred invoke addProof --hash ... --instID ... --iid 0
+bcadmin contract deferred invoke addProof --hash ... --instID ... --instrIdx 0
 ```
 
-**Working scenario**:
+**Value spawn deferred scenario**:
 
 ```bash
 # Run the nodes, create roster and set up the config
@@ -91,4 +87,43 @@ bcadmin contract deferred invoke addProof --hash ... --instID ... --iid 0
 # This will call the Spawn:value(myValue) transaction.
 # If we hadn't called the addProof before, it wouldn't have worked.
 bcadmin contract deferred invoke execProposedTx --instID ...
+```
+
+**Config update deferred scenario**:
+
+```bash
+# Run the nodes, create roster and set up the config
+~/GitHub/cothority/conode/run_nodes.sh -n 5 -c -t -v 2
+bcadmin create -roster ~/GitHub/cothority/conode/public.toml 
+
+# Copy/Paste from the output of the previous command
+export BC="..."
+
+# Add the rules specific to the deferred contract.
+# We use the admin identity.
+bcadmin darc rule --identity ed25519:... --rule spawn:deferred
+bcadmin darc rule --identity ed25519:... --rule invoke:deferred.addProof
+bcadmin darc rule --identity ed25519:... --rule invoke:deferred.execProposedTx
+
+# This command will return the current state of the config by performing an
+# empty update
+bcadmin contract config invoke updateConfig
+
+# Perform an update that is redirected to the spawn of a deferred contract
+bcadmin contract config invoke updateConfig --blockInterval 7s \
+                                            --maxBlockSize 5000000 \
+                                            --darcContractIDs darc,darc2 \
+                                            --redirect | bcadmin contract deferred spawn
+
+# Add the proof on the single instruction of the deferred transaction 
+# (the --hash and --instID values are given when we spawn the deferred contract)
+bcadmin contract deferred invoke addProof --hash ... --instID ... --instrIdx 0
+
+# Finally execute the deferred transaction.
+# This will call the Spawn:value(myValue) transaction.
+# If we hadn't called the addProof before, it wouldn't have worked.
+bcadmin contract deferred invoke execProposedTx --instID ...
+
+# Now we can perform a zero update juste to get the result 
+bcadmin contract config invoke updateConfig
 ```

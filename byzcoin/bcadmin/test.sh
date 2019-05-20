@@ -17,8 +17,9 @@ export -n BC_CONFIG
 export -n BC
 
 . "../../libtest.sh"
-. "../clicontracts/value_test.sh"
+. "../clicontracts/config_test.sh"
 . "../clicontracts/deferred_test.sh"
+. "../clicontracts/value_test.sh"
 
 main(){
     startTest
@@ -39,6 +40,7 @@ main(){
     run testUpdateDarcDesc
     run testContractValue
     run testContractDeferred
+    run testContractConfig
     stopTest
 }
 
