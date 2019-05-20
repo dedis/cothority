@@ -1,11 +1,18 @@
 import { curve, Point, Scalar, sign } from "@dedis/kyber";
+import Ed25519Scalar from "@dedis/kyber/curve/edwards25519/scalar";
+import { randomBytes } from "crypto";
+import Log from "../log";
 import IdentityEd25519 from "./identity-ed25519";
 import ISigner from "./signer";
 
 const ed25519 = curve.newCurve("edwards25519");
-const { schnorr } = sign;
+const {schnorr} = sign;
 
 export default class SignerEd25519 extends IdentityEd25519 implements ISigner {
+
+    get secret(): Scalar {
+        return this.priv;
+    }
     /**
      * Create a Ed25519 signer from the private given as a buffer
      *
@@ -18,15 +25,17 @@ export default class SignerEd25519 extends IdentityEd25519 implements ISigner {
         return new SignerEd25519(ed25519.point().base().mul(priv), priv);
     }
 
+    static random(): SignerEd25519 {
+        const priv = ed25519.scalar().setBytes(randomBytes(32));
+        const pub = ed25519.point().mul(priv);
+        return new SignerEd25519(pub, priv);
+    }
+
     private priv: Scalar;
 
     constructor(pub: Point, priv: Scalar) {
-        super({ point: pub.toProto() });
+        super({point: pub.marshalBinary()});
         this.priv = priv;
-    }
-
-    get secret(): Scalar {
-        return this.priv;
     }
 
     /** @inheritdoc */

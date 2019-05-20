@@ -1,3 +1,4 @@
+import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import Darc from "../../darc/darc";
 import { Roster } from "../../network/proto";

@@ -15,11 +15,24 @@ const PORT_MAX = 65535;
  * List of server identities
  */
 export class Roster extends Message<Roster> {
+
+    /**
+     * Get the length of the roster
+     * @returns the length as a number
+     */
+    get length(): number {
+        return this.list.length;
+    }
+
     /**
      * @see README#Message classes
      */
     static register() {
         registerMessage("Roster", Roster, ServerIdentity);
+    }
+
+    static fromBytes(b: Buffer): Roster {
+        return Roster.decode(b);
     }
 
     /**
@@ -43,7 +56,7 @@ export class Roster extends Message<Roster> {
     static fromTOML(data: string): Roster {
         const roster = toml.parse(data);
         const list = roster.servers.map((server: any) => {
-            const { Public, Suite, Address, Description, Services, Url } = server;
+            const {Public, Suite, Address, Description, Services, Url} = server;
             const p = PointFactory.fromToml(Suite, Public);
 
             return new ServerIdentity({
@@ -51,22 +64,20 @@ export class Roster extends Message<Roster> {
                 description: Description,
                 public: p.toProto(),
                 serviceIdentities: Object.keys(Services || {}).map((key) => {
-                    const { Public: pub, Suite: suite } = Services[key];
+                    const {Public: pub, Suite: suite} = Services[key];
                     const point = PointFactory.fromToml(suite, pub);
 
-                    return new ServiceIdentity({ name: key, public: point.toProto(), suite });
+                    return new ServiceIdentity({name: key, public: point.toProto(), suite});
                 }),
                 url: Url,
             });
         });
 
-        return new Roster({ list });
+        return new Roster({list});
     }
-
     readonly id: Buffer;
     readonly list: ServerIdentity[];
     readonly aggregate: Buffer;
-
     private _agg: Point;
 
     constructor(properties?: Properties<Roster>) {
@@ -76,7 +87,7 @@ export class Roster extends Message<Roster> {
             return;
         }
 
-        const { id, list, aggregate } = properties;
+        const {id, list, aggregate} = properties;
 
         if (!id || !aggregate) {
             const h = createHash("sha256");
@@ -101,14 +112,6 @@ export class Roster extends Message<Roster> {
     }
 
     /**
-     * Get the length of the roster
-     * @returns the length as a number
-     */
-    get length(): number {
-        return this.list.length;
-    }
-
-    /**
      * Get the public keys for a given service
      *
      * @param name The name of the service
@@ -123,6 +126,13 @@ export class Roster extends Message<Roster> {
     }
 
     /**
+     * Returns the list of public keys of the conodes in the roster.
+     */
+    getPublics(): Point[] {
+        return this.list.map((si) => si.getPublic());
+    }
+
+    /**
      * Get a subset of the roster
      *
      * @param start Index of the first identity
@@ -130,7 +140,15 @@ export class Roster extends Message<Roster> {
      * @returns the new roster
      */
     slice(start: number, end?: number): Roster {
-        return new Roster({ list: this.list.slice(start, end) });
+        return new Roster({list: this.list.slice(start, end)});
+    }
+
+    /**
+     * Helper to encode the Roster using protobuf
+     * @returns the bytes
+     */
+    toBytes(): Buffer {
+        return Buffer.from(Roster.encode(this).finish());
     }
 }
 
@@ -138,6 +156,43 @@ export class Roster extends Message<Roster> {
  * Identity of a conode
  */
 export class ServerIdentity extends Message<ServerIdentity> {
+
+    /**
+     * Converts an HTTP-S URL to a Wesocket URL. It converts 'http' to 'ws' and 'https' to 'wss'.
+     * Any other protocols are forbidden and will raise an error. It also removes any trailing '/'.
+     * Here are some examples:
+     *      http://example.com:77        => ws://example.com:77
+     *      https://example.com/path/    => wss:example.com/path
+     *      https://example.com:443/     => wss:example.com
+     *      tcp://127.0.0.1              => Error
+     * Note: It will NOT include the given port in the case it's the default one (for example 80 or 443).
+     * Note: In the case there are many slashes at the end of the url, it will only remove one.
+     * @param url   the given url field
+     * @returns a websocket url
+     */
+    static urlToWebsocket(url: string): string {
+        const urlParser = new URL(url);
+        switch (urlParser.protocol) {
+            case "http:": {
+                urlParser.protocol = "ws:";
+                break;
+            }
+            case "https:": {
+                urlParser.protocol = "wss:";
+                break;
+            }
+            default : {
+                throw new Error("The url field should use either 'http:' or 'https:', but we found "
+                    + urlParser.protocol);
+            }
+        }
+        let result = urlParser.toString();
+        if (result.slice(-1) === "/") {
+            result = result.slice(0, -1);
+        }
+        return result;
+    }
+
     /**
      * @see README#Message classes
      */
@@ -177,50 +232,12 @@ export class ServerIdentity extends Message<ServerIdentity> {
 
         return BASE_URL_WS + ip + URL_PORT_SPLITTER + port + path;
     }
-
-    /**
-     * Converts a HTTP-S URL to a Wesocket URL. It convert 'http' to 'ws' and 'https' to 'wss'.
-     * Any other protocols are forbidden and will raise an error. It also remove any trailing '/'.
-     * Here are some examples:
-     *      http://example.com:77        => ws://example.com:77
-     *      https://example.com/path/    => wss:example.com/path
-     *      https://example.com:443/     => wss:example.com
-     *      tcp://127.0.0.1              => Error
-     * Note: It will NOT include the given port in the case its the default one (for example 80 or 443).
-     * Note: In the case there is many slashes at the end of the url, it will only remove one.
-     * @param url   the given url field
-     * @returns a websocket url
-     */
-    static urlToWebsocket(url: string): string {
-        const urlParser = new URL(url);
-        switch (urlParser.protocol) {
-            case "http:": {
-                urlParser.protocol = "ws:";
-                break;
-            }
-            case "https:": {
-                urlParser.protocol = "wss:";
-                break;
-            }
-            default : {
-                throw new Error("The url field should use either 'http:' or 'https:', but we found "
-                                + urlParser.protocol);
-            }
-        }
-        let result = urlParser.toString();
-        if (result.slice(-1) === "/") {
-            result = result.slice(0, -1);
-        }
-        return result;
-    }
-
     readonly public: Buffer;
     readonly id: Buffer;
     readonly address: string;
     readonly description: string;
     readonly serviceIdentities: ServiceIdentity[];
     readonly url: string;
-
     private _point: Point;
 
     constructor(properties?: Properties<ServerIdentity>) {
@@ -268,17 +285,16 @@ export class ServerIdentity extends Message<ServerIdentity> {
  * key pair and don't the default one.
  */
 export class ServiceIdentity extends Message<ServiceIdentity> {
+
     /**
      * @see README#Message classes
      */
     static register() {
         registerMessage("ServiceIdentity", ServiceIdentity);
     }
-
     readonly name: string;
     readonly suite: string;
     readonly public: Buffer;
-
     private _point: Point;
 
     constructor(properties: Properties<ServiceIdentity>) {

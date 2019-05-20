@@ -1,8 +1,10 @@
 import { createHash } from "crypto";
+import _ from "lodash";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
+import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { InstanceID } from "./instance";
 
@@ -33,10 +35,14 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * Sign the hash of the instructions using the list of signers
      * @param signers List of signers
      */
-    signWith(signers: Signer[]): void {
+    signWith(signers: Signer[][]): void {
         const ctxHash = this.hash();
 
-        this.instructions.forEach((instr) => instr.signWith(ctxHash, signers));
+        if (signers.length !== this.instructions.length) {
+            throw new Error("need same number of signers as instructions");
+        }
+
+        this.instructions.forEach((instr, i) => instr.signWith(ctxHash, signers[i]));
     }
 
     /**
@@ -44,18 +50,44 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * @param rpc       The RPC to use to fetch
      * @param signers   List of signers
      */
-    async updateCounters(rpc: ICounterUpdater, signers: IIdentity[]): Promise<void> {
+    async updateCounters(rpc: ICounterUpdater, signers: IIdentity[][]): Promise<void> {
         if (this.instructions.length === 0) {
             return;
         }
 
-        await this.instructions[0].updateCounters(rpc, signers);
-
-        for (let i = 1; i < this.instructions.length; i++) {
-            const counters = this.instructions[0].signerCounter.map((v) => v.add(i));
-            const identities = signers.map((s) => s.toWrapper());
-            this.instructions[i].setCounters(counters, identities);
+        if (signers.length !== this.instructions.length) {
+            return Promise.reject("length of signers and instructions do not match");
         }
+
+        // Get all counters from all signers of all instructions and map them into an object.
+        const uniqueSigners: IIdentity[] = _.uniq(_.flatten(signers));
+        const counters = await rpc.getSignerCounters(uniqueSigners, 1);
+
+        const signerCounters: {[key: string]: any} = {};
+        uniqueSigners.forEach((us, i) => {
+            signerCounters[us.toString()] = counters[i];
+        });
+
+        // Iterate over the instructions, and store the appropriate signers and counters, while
+        // increasing those that have been used.
+        for (let i = 0; i < this.instructions.length; i++) {
+            signers[i].forEach((signer) => {
+                this.instructions[i].signerIdentities.push(IdentityWrapper.fromIdentity(signer));
+                this.instructions[i].signerCounter.push(signerCounters[signer.toString()]);
+                signerCounters[signer.toString()] = signerCounters[signer.toString()].add(1);
+            });
+        }
+    }
+
+    async updateCountersAndSign(rpc: ICounterUpdater, signers: Signer[][]): Promise<void> {
+        // Extend the signers to the number of instructions if there is only one signer.
+        if (signers.length === 1) {
+            for (let i = 1; i < this.instructions.length; i++) {
+                signers.push(signers[0]);
+            }
+        }
+        await this.updateCounters(rpc, signers);
+        this.signWith(signers);
     }
 
     /**
@@ -73,6 +105,26 @@ export default class ClientTransaction extends Message<ClientTransaction> {
  * An instruction represents one action
  */
 export class Instruction extends Message<Instruction> {
+    static readonly typeSpawn = 0;
+    static readonly typeInvoke = 1;
+    static readonly typeDelete = 2;
+
+    /**
+     * Get the type of the instruction
+     * @returns the type as a number
+     */
+    get type(): number {
+        if (this.spawn) {
+            return Instruction.typeSpawn;
+        }
+        if (this.invoke) {
+            return Instruction.typeInvoke;
+        }
+        if (this.delete) {
+            return Instruction.typeDelete;
+        }
+        throw new Error("instruction without type");
+    }
     /**
      * @see README#Message classes
      */
@@ -91,7 +143,7 @@ export class Instruction extends Message<Instruction> {
         return new Instruction({
             instanceID: iid,
             signerCounter: [],
-            spawn: new Spawn({ contractID, args }),
+            spawn: new Spawn({contractID, args}),
         });
     }
 
@@ -106,7 +158,7 @@ export class Instruction extends Message<Instruction> {
     static createInvoke(iid: Buffer, contractID: string, command: string, args: Argument[]): Instruction {
         return new Instruction({
             instanceID: iid,
-            invoke: new Invoke({ command, contractID, args }),
+            invoke: new Invoke({command, contractID, args}),
             signerCounter: [],
         });
     }
@@ -119,7 +171,7 @@ export class Instruction extends Message<Instruction> {
      */
     static createDelete(iid: Buffer, contractID: string): Instruction {
         return new Instruction({
-            delete: new Delete({ contractID }),
+            delete: new Delete({contractID}),
             instanceID: iid,
             signerCounter: [],
         });
@@ -171,23 +223,6 @@ export class Instruction extends Message<Instruction> {
     }
 
     /**
-     * Get the type of the instruction
-     * @returns the type as a number
-     */
-    get type(): number {
-        if (this.spawn) {
-            return 0;
-        }
-        if (this.invoke) {
-            return 1;
-        }
-        if (this.delete) {
-            return 2;
-        }
-        throw new Error("instruction without type");
-    }
-
-    /**
      * Use the signers to make a signature of the hash
      * @param ctxHash The client transaction hash
      * @param signers The list of signers
@@ -218,7 +253,7 @@ export class Instruction extends Message<Instruction> {
     async updateCounters(rpc: ICounterUpdater, signers: IIdentity[]): Promise<void> {
         const counters = await rpc.getSignerCounters(signers, 1);
 
-        this.setCounters(counters, signers.map((s) => s.toWrapper()));
+        this.setCounters(counters, signers.map((s) => IdentityWrapper.fromIdentity(s)));
     }
 
     /**
@@ -231,15 +266,15 @@ export class Instruction extends Message<Instruction> {
         h.update(Buffer.from([this.type]));
         let args: Argument[] = [];
         switch (this.type) {
-            case 0:
+            case Instruction.typeSpawn:
                 h.update(this.spawn.contractID);
                 args = this.spawn.args;
                 break;
-            case 1:
+            case Instruction.typeInvoke:
                 h.update(this.invoke.contractID);
                 args = this.invoke.args;
                 break;
-            case 2:
+            case Instruction.typeDelete:
                 h.update(this.delete.contractID);
                 break;
         }

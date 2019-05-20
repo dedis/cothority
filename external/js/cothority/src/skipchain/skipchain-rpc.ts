@@ -1,3 +1,4 @@
+import Log from "../log";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import {
@@ -40,8 +41,8 @@ export default class SkipchainRPC {
      * @returns a promise that resolves with the genesis block
      */
     createSkipchain(baseHeight: number = 4, maxHeight: number = 32): Promise<StoreSkipBlockReply> {
-        const newBlock = new SkipBlock({ roster: this.roster, maxHeight, baseHeight });
-        const req = new StoreSkipBlock({ newBlock });
+        const newBlock = new SkipBlock({roster: this.roster, maxHeight, baseHeight});
+        const req = new StoreSkipBlock({newBlock});
 
         return this.conn[0].send(req, StoreSkipBlockReply);
     }
@@ -53,7 +54,7 @@ export default class SkipchainRPC {
      * @throws an error if the request is not successful
      */
     addBlock(gid: Buffer, msg: Buffer): Promise<StoreSkipBlockReply> {
-        const newBlock = new SkipBlock({ roster: this.roster, data: msg });
+        const newBlock = new SkipBlock({roster: this.roster, data: msg});
         const req = new StoreSkipBlock({
             newBlock,
             targetSkipChainID: gid,
@@ -69,7 +70,7 @@ export default class SkipchainRPC {
      * @returns a promise that resolves with the block
      */
     async getSkipBlock(bid: Buffer): Promise<SkipBlock> {
-        const req = new GetSingleBlock({ id: bid });
+        const req = new GetSingleBlock({id: bid});
 
         const block = await this.pool.send<SkipBlock>(req, SkipBlock);
         if (!block.computeHash().equals(block.hash)) {
@@ -87,7 +88,7 @@ export default class SkipchainRPC {
      * @returns a promise that resolves with the block, or reject with an error
      */
     async getSkipBlockByIndex(genesis: Buffer, index: number): Promise<GetSingleBlockByIndexReply> {
-        const req = new GetSingleBlockByIndex({ genesis, index });
+        const req = new GetSingleBlockByIndex({genesis, index});
 
         const reply = await this.pool.send<GetSingleBlockByIndexReply>(req, GetSingleBlockByIndexReply);
         if (!reply.skipblock.computeHash().equals(reply.skipblock.hash)) {
@@ -118,7 +119,7 @@ export default class SkipchainRPC {
      * @returns a promise that resolves with the list of blocks
      */
     async getUpdateChain(latestID: Buffer, verify = true): Promise<SkipBlock[]> {
-        const req = new GetUpdateChain({ latestID });
+        const req = new GetUpdateChain({latestID});
         const ret = await this.pool.send<GetUpdateChainReply>(req, GetUpdateChainReply);
         const blocks = ret.update;
 

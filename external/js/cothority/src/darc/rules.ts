@@ -6,6 +6,7 @@ import { IIdentity } from "./identity-wrapper";
  * A rule will give who is allowed to use a given action
  */
 export class Rule extends Message<Rule> {
+
     /**
      * @see README#Message classes
      */
@@ -47,6 +48,7 @@ export class Rule extends Message<Rule> {
  * the rules
  */
 export default class Rules extends Message<Rules> {
+
     static OR = "|";
     static AND = "&";
 
@@ -56,7 +58,6 @@ export default class Rules extends Message<Rules> {
     static register() {
         registerMessage("Rules", Rules, Rule);
     }
-
     readonly list: Rule[];
 
     constructor(properties?: Properties<Rules>) {
@@ -83,8 +84,56 @@ export default class Rules extends Message<Rules> {
                 expr: Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]),
             });
         } else {
-            this.list.push(new Rule({ action, expr: Buffer.from(identity.toString()) }));
+            this.list.push(new Rule({action, expr: Buffer.from(identity.toString())}));
         }
+    }
+
+    /**
+     * Sets a rule to correspond to the given identity. If the rule already exists, it will be
+     * replaced.
+     * @param action    the name of the rule
+     * @param identity  the identity to append
+     */
+    setRule(action: string, identity: IIdentity): void {
+        this.setRuleExp(action, Buffer.from(identity.toString()));
+    }
+
+    /**
+     * Sets the expression of a rule. If the rule already exists, it will be replaced. If the
+     * rule does not exist yet, it will be appended to the list of rules.
+     * @param action the name of the rule
+     * @param expression the expression to put in the rule
+     */
+    setRuleExp(action: string, expression: Buffer) {
+        const idx = this.list.findIndex((r) => r.action === action);
+
+        const nr = new Rule({action, expr: expression});
+        if (idx >= 0) {
+            this.list[idx] = nr;
+        } else {
+            this.list.push(nr);
+        }
+    }
+
+    /**
+     * Removes a given rule from the list.
+     *
+     * @param action the action that will be removed.
+     */
+    removeRule(action: string) {
+        const pos = this.list.findIndex((rule) => rule.action === action);
+        if (pos >= 0) {
+            this.list.splice(pos);
+        }
+    }
+
+    /**
+     * getRule returns the rule with the given action
+     *
+     * @param action to search in the rules for.
+     */
+    getRule(action: string): Rule {
+        return this.list.find((r) => r.action === action);
     }
 
     /**
@@ -92,7 +141,7 @@ export default class Rules extends Message<Rules> {
      * @returns the clone
      */
     clone(): Rules {
-        return new Rules({ list: this.list.map((r) => r.clone()) });
+        return new Rules({list: this.list.map((r) => r.clone())});
     }
 
     /**

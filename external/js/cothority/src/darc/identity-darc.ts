@@ -27,11 +27,6 @@ export default class IdentityDarc extends Message<IdentityDarc> implements IIden
     }
 
     /** @inheritdoc */
-    toWrapper(): IdentityWrapper {
-        return new IdentityWrapper({ darc: this });
-    }
-
-    /** @inheritdoc */
     toBytes(): Buffer {
         return this.id;
     }

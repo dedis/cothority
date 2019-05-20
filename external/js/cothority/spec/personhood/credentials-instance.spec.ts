@@ -1,26 +1,27 @@
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
-import CredentialsInstance, { CredentialStruct } from "../../src/byzcoin/contracts/credentials-instance";
 import Darc from "../../src/darc/darc";
 import Rules from "../../src/darc/rules";
 import Signer from "../../src/darc/signer";
+import CredentialsInstance, { CredentialStruct } from "../../src/personhood/credentials-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cred: CredentialStruct) {
+async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cred: CredentialStruct):
+    Promise<CredentialsInstance> {
     const ctx = new ClientTransaction({
         instructions: [
             Instruction.createSpawn(
-                darc.getGenesisDarcID(),
+                darc.getBaseID(),
                 CredentialsInstance.contractID,
                 [
-                    new Argument({ name: "darcID", value: darc.getGenesisDarcID() }),
-                    new Argument({ name: "credential", value: cred.toBytes() }),
+                    new Argument({ name: CredentialsInstance.argumentDarcID, value: darc.getBaseID() }),
+                    new Argument({ name: CredentialsInstance.argumentCredential, value: cred.toBytes() }),
                 ],
             ),
         ],
     });
-    await ctx.updateCounters(rpc, signers);
-    ctx.signWith(signers);
+    await ctx.updateCounters(rpc, [signers]);
+    ctx.signWith([signers]);
 
     await rpc.sendTransactionAndWait(ctx);
 
@@ -44,21 +45,24 @@ describe("CredentialsInstance Tests", () => {
         const cred = new CredentialStruct();
         const ci = await createInstance(rpc, [SIGNER], darc, cred);
         expect(ci).toBeDefined();
-        expect(ci.darcID).toEqual(darc.getGenesisDarcID());
+        expect(ci.darcID).toEqual(darc.getBaseID());
 
         // set non-existing credential
-        await ci.setAttribute(SIGNER, "personhood", "ed25519", SIGNER.toBytes());
+        await ci.setAttribute("personhood", "ed25519", SIGNER.toBytes());
+        await ci.sendUpdate([SIGNER]);
         await ci.update();
         expect(ci.getAttribute("personhood", "ed25519")).toEqual(SIGNER.toBytes());
 
         // set a different credential
-        await ci.setAttribute(SIGNER, "personhood", "abc", Buffer.from("abc"));
+        await ci.setAttribute("personhood", "abc", Buffer.from("abc"));
+        await ci.sendUpdate([SIGNER]);
         await ci.update();
         expect(ci.getAttribute("personhood", "ed25519")).toEqual(SIGNER.toBytes());
         expect(ci.getAttribute("personhood", "abc")).toEqual(Buffer.from("abc"));
 
         // update a credential
-        await ci.setAttribute(SIGNER, "personhood", "abc", Buffer.from("def"));
+        await ci.setAttribute("personhood", "abc", Buffer.from("def"));
+        await ci.sendUpdate([SIGNER]);
         await ci.update();
         expect(ci.getAttribute("personhood", "ed25519")).toEqual(SIGNER.toBytes());
         expect(ci.getAttribute("personhood", "abc")).toEqual(Buffer.from("def"));
