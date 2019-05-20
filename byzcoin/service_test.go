@@ -1908,7 +1908,8 @@ func TestService_DarcToSc(t *testing.T) {
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
 		service.TestClose()
-		require.NoError(t, service.startAllChains())
+		service.closed = false
+		require.NoError(t, service.startChain(scID))
 	}
 
 	// check that the mapping is still correct

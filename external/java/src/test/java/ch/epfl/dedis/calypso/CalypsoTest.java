@@ -46,7 +46,7 @@ class CalypsoTest {
     private static String docData;
     private static String extraData;
 
-    private final static Logger logger = LoggerFactory.getLogger(WriteInstanceTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(CalypsoTest.class);
     private TestServerController testInstanceController;
 
     @BeforeEach

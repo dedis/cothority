@@ -2201,78 +2201,95 @@ func (s *Service) startAllChains() error {
 	s.pollChan = make(map[string]chan bool)
 	s.pollChanMut.Unlock()
 
-	// Catch up is done before starting the chains to prevent undesired events
-	err = s.catchupAll()
-	if err != nil {
-		return fmt.Errorf("%v couldn't sync: %s", s.ServerIdentity(), err.Error())
+	// All the logic necessary to start the chains is delayed to a goroutine so that
+	// the other services can start immediately and are not blocked by Byzcoin.
+	go func() {
+		s.working.Add(1)
+		defer s.working.Done()
+
+		// Catch up is done before starting the chains to prevent undesired events
+		err = s.catchupAll()
+		if err != nil {
+			log.Errorf("%v couldn't sync: %s", s.ServerIdentity(), err.Error())
+			return
+		}
+
+		gas := &skipchain.GetAllSkipChainIDs{}
+		gasr, err := s.skService().GetAllSkipChainIDs(gas)
+		if err != nil {
+			log.Errorf("%v couldn't get the skipchains: %s", s.ServerIdentity(), err.Error())
+			return
+		}
+
+		for _, gen := range gasr.IDs {
+			err := s.startChain(gen)
+			if err != nil {
+				log.Error("catch up error: ", err)
+			}
+		}
+
+		s.monitorLeaderFailure()
+	}()
+
+	return nil
+}
+
+func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
+	if !s.hasByzCoinVerification(genesisID) {
+		return nil
 	}
 
-	gas := &skipchain.GetAllSkipChainIDs{}
-	gasr, err := s.skService().GetAllSkipChainIDs(gas)
+	interval, _, err := s.LoadBlockInfo(genesisID)
+	if err != nil {
+		return fmt.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s",
+			s.ServerIdentity(), genesisID, err)
+	}
+
+	if s.db().GetByID(genesisID) == nil {
+		return fmt.Errorf("%s ignoring chain with missing genesis-block %x",
+			s.ServerIdentity(), genesisID)
+	}
+	latest, err := s.db().GetLatestByID(genesisID)
+	if err != nil {
+		return fmt.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
+			s.ServerIdentity(), genesisID, err)
+	}
+
+	leader, err := s.getLeader(genesisID)
+	if err != nil {
+		return fmt.Errorf("getLeader should not return an error if roster is initialised: %s",
+			err.Error())
+	}
+	if leader.Equal(s.ServerIdentity()) {
+		log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
+		s.pollChanMut.Lock()
+		s.pollChan[string(genesisID)] = s.startPolling(genesisID)
+		s.pollChanMut.Unlock()
+	}
+
+	// populate the darcID to skipchainID mapping
+	d, err := s.LoadGenesisDarc(genesisID)
 	if err != nil {
 		return err
 	}
+	s.darcToScMut.Lock()
+	s.darcToSc[string(d.GetBaseID())] = genesisID
+	s.darcToScMut.Unlock()
 
-	for _, gen := range gasr.IDs {
-		if !s.hasByzCoinVerification(gen) {
-			continue
-		}
-
-		interval, _, err := s.LoadBlockInfo(gen)
-		if err != nil {
-			log.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s", s.ServerIdentity(), gen, err)
-			continue
-		}
-
-		if s.db().GetByID(gen) == nil {
-			log.Errorf("%s ignoring chain with missing genesis-block %x", s.ServerIdentity(), gen)
-			continue
-		}
-		latest, err := s.db().GetLatestByID(gen)
-		if err != nil {
-			log.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
-				s.ServerIdentity(), gen, err)
-		}
-
-		leader, err := s.getLeader(gen)
-		if err != nil {
-			log.Error("getLeader should not return an error if roster is initialised:", err)
-			continue
-		}
-		if leader.Equal(s.ServerIdentity()) {
-			log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
-			s.pollChanMut.Lock()
-			s.pollChan[string(gen)] = s.startPolling(gen)
-			s.pollChanMut.Unlock()
-		}
-
-		// populate the darcID to skipchainID mapping
-		d, err := s.LoadGenesisDarc(gen)
-		if err != nil {
-			return err
-		}
-		s.darcToScMut.Lock()
-		s.darcToSc[string(d.GetBaseID())] = gen
-		s.darcToScMut.Unlock()
-
-		// start the heartbeat
-		if s.heartbeats.exists(string(gen)) {
-			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
-		}
-		log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, gen)
-		s.heartbeats.start(string(gen), interval*s.rotationWindow, s.heartbeatsTimeout)
-
-		// initiate the view-change manager
-		initialDur, err := s.computeInitialDuration(gen)
-		if err != nil {
-			return err
-		}
-		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
-		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen))
-		// TODO fault threshold might change
+	// start the heartbeat
+	if s.heartbeats.exists(string(genesisID)) {
+		return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
 	}
+	log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, genesisID)
+	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
 
-	s.monitorLeaderFailure()
+	// initiate the view-change manager
+	initialDur, err := s.computeInitialDuration(genesisID)
+	if err != nil {
+		return err
+	}
+	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(genesisID))
+	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur, s.getFaultThreshold(genesisID))
 
 	return nil
 }
