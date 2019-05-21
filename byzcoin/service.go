@@ -1275,7 +1275,13 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return nil
 	} else if sb.Index > trieIndex+1 {
 		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
-		go s.catchUp(sb)
+		go func() {
+			// This new block will catch up at the end of the current catch up (if any)
+			// and be ignored if the block is already known.
+			s.catchingLock.Lock()
+			s.catchUp(sb)
+			s.catchingLock.Unlock()
+		}()
 
 		return nil
 	}

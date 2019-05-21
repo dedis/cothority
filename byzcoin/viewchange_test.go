@@ -32,7 +32,9 @@ func TestViewChange_Basic3(t *testing.T) {
 		t.Skip("not for Travis")
 	}
 
-	testViewChange(t, 10, 3, testInterval)
+	// Enough nodes and failing ones to test what happens when propagation
+	// fails due to offline nodes in the higher level of the tree.
+	testViewChange(t, 10, 3, 4*testInterval)
 }
 
 func testWaitPropagation(id skipchain.SkipBlockID, service *skipchain.Service, interval time.Duration) {
