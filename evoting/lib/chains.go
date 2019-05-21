@@ -24,7 +24,7 @@ func NewSkipchain(s *skipchain.Service, roster *onet.Roster, testMode bool) (
 	block.VerifierIDs = verifier
 	block.Data = []byte{}
 
-	reply, err := s.StoreSkipBlock(&skipchain.StoreSkipBlock{
+	reply, err := s.StoreSkipBlockInternal(&skipchain.StoreSkipBlock{
 		NewBlock: block,
 	})
 	if err != nil {
@@ -76,7 +76,7 @@ func Store(s *skipchain.Service, ID skipchain.SkipBlockID, transaction *Transact
 	block.Index++
 	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
 	// append.
-	storeSkipBlockReply, err := s.StoreSkipBlock(&skipchain.StoreSkipBlock{
+	storeSkipBlockReply, err := s.StoreSkipBlockInternal(&skipchain.StoreSkipBlock{
 		NewBlock:          block,
 		TargetSkipChainID: latest.SkipChainID(),
 	})

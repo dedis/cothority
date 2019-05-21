@@ -35,7 +35,8 @@ type Transaction struct {
 	Mix      *Mix
 	Partial  *Partial
 
-	User uint32
+	User      uint32
+	Signature []byte
 }
 
 // UnmarshalTransaction decodes a data blob to a transaction structure.
@@ -72,6 +73,22 @@ func NewTransaction(data interface{}, user uint32) *Transaction {
 		return nil
 	}
 	return transaction
+}
+
+// Sign generates a signature on the marshaled form of the txn,
+// without a Signature, then puts that signature into the txn.
+func (t *Transaction) Sign(priv kyber.Scalar) error {
+	t.Signature = nil
+	data, err := protobuf.Encode(t)
+	if err != nil {
+		return err
+	}
+	sig, err := schnorr.Sign(cothority.Suite, priv, data)
+	if err != nil {
+		return err
+	}
+	t.Signature = sig
+	return nil
 }
 
 // Verify checks that the corresponding transaction is valid before storing it.
