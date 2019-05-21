@@ -11,6 +11,9 @@ export default class DarcInstance extends Instance {
     static readonly commandEvolve = "evolve";
     static readonly commandEvolveUnrestricted = "evolve_unrestricted";
     static readonly argumentDarc = "darc";
+    static readonly ruleEvolve = "invoke:" + DarcInstance.argumentDarc + "." + DarcInstance.commandEvolve;
+    static readonly ruleEvolveUnrestricted = "invoke:" + DarcInstance.argumentDarc + "." +
+        DarcInstance.commandEvolveUnrestricted;
 
     /**
      * Initializes using an existing coinInstance from ByzCoin
