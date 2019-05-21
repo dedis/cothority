@@ -182,7 +182,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				continue
 			}
 			if view.Equal(meta.currOf(ctr)) {
-				log.Lvl3("view-change completed successfully for view: ", view)
+				log.Lvl1("view-change completed successfully for view: ", view)
 			} else {
 				// Usually this should not happen, if it does,
 				// that means the controller decided to move on
@@ -207,7 +207,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				Gen:         genesis,
 				LeaderIndex: ctr + 1,
 			}
-			log.Lvl4("view-change timer expired, creating new view:", view)
+			log.Lvl1("view-change timer expired, creating new view:", view)
 			req := InitReq{
 				View:     view,
 				SignerID: myID,
