@@ -952,7 +952,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 					return tx.DeleteBucket(stBucket)
 				})
 				if err != nil {
-					log.Error("Cannot delete existing trie while trying to download:", err)
+					return fmt.Errorf("Cannot delete existing trie while trying to download: %s", err.Error())
 				}
 				s.stateTriesLock.Lock()
 				delete(s.stateTries, idStr)
@@ -987,7 +987,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 					return nil
 				})
 				if err != nil {
-					log.Error("Couldn't store entries:", err)
+					return fmt.Errorf("Couldn't store entries: %s", err.Error())
 				}
 				if len(resp.KeyValues) < catchupFetchDBEntries {
 					break
@@ -1276,6 +1276,9 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	} else if sb.Index > trieIndex+1 {
 		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
 		go func() {
+			s.working.Add(1)
+			defer s.working.Done()
+
 			// This new block will catch up at the end of the current catch up (if any)
 			// and be ignored if the block is already known.
 			s.catchingLock.Lock()

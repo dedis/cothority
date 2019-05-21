@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -71,7 +72,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
 	for i := 0; i < nFailures; i++ {
-		time.Sleep(2 * s.interval * rw)
+		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
 	}
 	testWaitPropagation(s.genesis.Hash, s.services[nFailures].skService(), s.interval)
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())

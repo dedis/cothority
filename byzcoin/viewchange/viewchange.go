@@ -15,6 +15,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
@@ -25,6 +26,10 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 )
+
+// maxTimeout is an upper bound for the view change timeout as it is increasing
+// exponentially.
+const maxTimeout = 5 * time.Minute
 
 // View assume that the context are the same.
 type View struct {
@@ -158,11 +163,16 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 					ctr = c.processAnomaly(reqNew, &meta, ctr)
 				}
 			}
-			if meta.countOf(ctr) >= 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
+			if meta.countOf(ctr) > 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
-				// receiving 2*f view-change messages.
-				timer.Reset(initialDuration * 2)
+				// receiving 2*f+1 view-change messages.
+				timeout := time.Duration(math.Pow(2, float64(ctr))) * initialDuration
+				if timeout.Seconds() > maxTimeout.Seconds() {
+					timeout = maxTimeout
+				}
+
+				timer.Reset(timeout)
 				meta.nextStateFor(ctr)
 				select {
 				case c.startTimerChan <- ctr:
