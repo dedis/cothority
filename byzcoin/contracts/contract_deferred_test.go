@@ -185,9 +185,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -271,9 +269,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -544,9 +540,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -617,9 +611,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -864,9 +856,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -944,9 +934,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -1813,9 +1801,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -1891,9 +1877,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -2206,9 +2190,7 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
@@ -2478,9 +2460,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
@@ -2583,9 +2563,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	// We can not do this test because the identities have to be compared using
-	// the Equal() method.
-	//require.Equal(t, result.ProposedTransaction, proposedTransaction)
+	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 2)
