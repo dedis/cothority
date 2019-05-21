@@ -7,6 +7,9 @@ import { IIdentity } from "./identity-wrapper";
  */
 export class Rule extends Message<Rule> {
 
+    static OR = "|";
+    static AND = "&";
+
     /**
      * @see README#Message classes
      */
@@ -15,7 +18,7 @@ export class Rule extends Message<Rule> {
     }
 
     readonly action: string;
-    readonly expr: Buffer;
+    expr: Buffer;
 
     constructor(props?: Properties<Rule>) {
         super(props);
@@ -35,6 +38,45 @@ export class Rule extends Message<Rule> {
     }
 
     /**
+     * Appends an identity given as a string to the expression and returns a copy of the
+     * new expression.
+     *
+     * @param identity the identity to add, given as a string
+     * @param op the operator to apply to the expression
+     */
+    append(identity: string, op: string): Buffer {
+        if (this.expr.length > 0) {
+            this.expr = Buffer.from(`${this.expr.toString()} ${op} ${identity}`);
+        } else {
+            this.expr = Buffer.from(identity);
+        }
+        return Buffer.from(this.expr);
+    }
+
+    /**
+     * Searches for the given identity and removes it from the expression. Currently only
+     * expressions containing Rule.OR are supported. It returns a copy of the new expression.
+     *
+     * @param identity the string representation of the identity
+     */
+    remove(identity: string): Buffer {
+        let expr = this.expr.toString();
+        if (expr.match(/(\(|\)|\&)/)) {
+            throw new Error("don't know how to remove identity from expression with () or Rule.AND");
+        }
+        const matchReg = new RegExp(`\\b${identity}\\b`);
+        if (!expr.match(matchReg)) {
+            throw new Error("this identity is not part of the rule");
+        }
+        expr = expr.replace(matchReg, "");
+        expr = expr.replace(/\|\s*\|/, "|");
+        expr = expr.replace(/\s*\|\s*$/, "");
+        expr = expr.replace(/^\s*\|\s*/, "");
+        this.expr = Buffer.from(expr);
+        return Buffer.from(this.expr);
+    }
+
+    /**
      * Get a string representation of the rule
      * @returns the string representation
      */
@@ -48,9 +90,6 @@ export class Rule extends Message<Rule> {
  * the rules
  */
 export default class Rules extends Message<Rules> {
-
-    static OR = "|";
-    static AND = "&";
 
     /**
      * @see README#Message classes
@@ -78,11 +117,7 @@ export default class Rules extends Message<Rules> {
         const idx = this.list.findIndex((r) => r.action === action);
 
         if (idx >= 0) {
-            const rule = this.list[idx];
-            this.list[idx] = new Rule({
-                action: rule.action,
-                expr: Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]),
-            });
+            this.list[idx].append(identity.toString(), op);
         } else {
             this.list.push(new Rule({action, expr: Buffer.from(identity.toString())}));
         }

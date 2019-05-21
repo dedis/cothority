@@ -1,7 +1,7 @@
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
 import Darc from "../../src/darc/darc";
-import Rules from "../../src/darc/rules";
+import { Rule } from "../../src/darc/rules";
 import Signer from "../../src/darc/signer";
 import CredentialsInstance, { CredentialStruct } from "../../src/personhood/credentials-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
@@ -37,8 +37,8 @@ describe("CredentialsInstance Tests", () => {
 
     it("should create a credential instance", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-        darc.addIdentity("spawn:credential", SIGNER, Rules.OR);
-        darc.addIdentity("invoke:credential.update", SIGNER, Rules.OR);
+        darc.addIdentity("spawn:credential", SIGNER, Rule.OR);
+        darc.addIdentity("invoke:credential.update", SIGNER, Rule.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
@@ -69,5 +69,20 @@ describe("CredentialsInstance Tests", () => {
 
         expect(ci.getAttribute("personhood", "a")).toBeNull();
         expect(ci.getAttribute("a", "")).toBeNull();
+    });
+
+    it("allow to set the credential", async () => {
+        const cs = new CredentialStruct();
+        cs.setAttribute("one", "two", Buffer.from("three"));
+        cs.setAttribute("one", "four", null);
+        cs.setAttribute("one", "five", Buffer.from("six"));
+        const cred = cs.copy().getCredential("one");
+        expect(cred.attributes.length).toBe(3);
+        expect(cs.delAttribute("one", "seven")).toBeUndefined();
+        expect(cs.delAttribute("one", "four")).toEqual(Buffer.alloc(0));
+        expect(cs.delAttribute("one", "five")).toEqual(Buffer.from("six"));
+        expect(cs.getCredential("one").attributes.length).toBe(1);
+        cs.setCredential("one", cred);
+        expect(cs.getCredential("one").attributes.length).toBe(3);
     });
 });

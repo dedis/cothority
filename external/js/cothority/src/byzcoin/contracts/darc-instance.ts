@@ -204,7 +204,7 @@ export default class DarcInstance extends Instance {
     /**
      * Checks whether the given rule can be matched by a multi-signature created by all
      * signers. If the rule doesn't exist, this method silently returns 'false'.
-     * Currently only Rules.OR are supported. A Rules.AND or "(" will return an error.
+     * Currently only Rule.OR are supported. A Rule.AND or "(" will return an error.
      * Currently only 1 signer is supported.
      *
      * @param action the action to match
