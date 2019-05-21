@@ -99,7 +99,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -165,7 +165,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -249,7 +249,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -302,11 +302,9 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -350,14 +348,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	myID = ctx.Instructions[0].DeriveID("")
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -454,7 +445,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -520,7 +511,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -596,10 +587,9 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -644,11 +634,9 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -770,7 +758,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -836,7 +824,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -919,10 +907,9 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -970,12 +957,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	myID = ctx.Instructions[0].DeriveID("")
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1054,7 +1036,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -1120,12 +1102,7 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-	myID = ctx.Instructions[0].DeriveID("")
-
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1204,7 +1181,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -1269,10 +1246,9 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 
@@ -1306,11 +1282,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1388,7 +1360,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -1453,7 +1425,7 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
@@ -1535,7 +1507,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -1573,21 +1545,7 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
-
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(dataBuf), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1646,7 +1604,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	valueID := ctx.Instructions[0].DeriveID("")
@@ -1716,7 +1674,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -1781,7 +1739,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -1857,7 +1815,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
@@ -1912,12 +1870,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1993,7 +1946,7 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -2105,7 +2058,7 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -2170,7 +2123,7 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -2224,11 +2177,9 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -2319,7 +2270,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	valueID := ctx.Instructions[0].DeriveID("")
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(valueID.Slice()), 2*genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
@@ -2374,7 +2325,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
@@ -2439,7 +2390,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -2495,12 +2446,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -2543,7 +2489,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
@@ -2595,11 +2541,9 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -2640,14 +2584,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
-	require.Nil(t, err)
-
-	myID = ctx.Instructions[0].DeriveID("")
-
-	// Need to sleep because we can't predict the output (hence the 'nil')
-	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -2728,12 +2665,11 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
 
-	time.Sleep(4 * genesisMsg.BlockInterval)
 	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
@@ -2773,10 +2709,9 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	time.Sleep(4 * genesisMsg.BlockInterval)
 	prr, err = cl.GetProof(myID.Slice())
 	require.Nil(t, err)
 	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
@@ -2860,12 +2795,11 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
 
-	time.Sleep(4 * genesisMsg.BlockInterval)
 	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
@@ -2908,10 +2842,9 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	}
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
-	_, err = cl.AddTransaction(ctx)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	time.Sleep(4 * genesisMsg.BlockInterval)
 	prr, err = cl.GetProof(myID.Slice())
 	require.Nil(t, err)
 	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
