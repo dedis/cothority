@@ -2,6 +2,7 @@
 package service
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -125,11 +126,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		Key:    req.Key,
 	}
 	transaction := lib.NewTransaction(master, user)
-	err := transaction.Sign(s.ServerIdentity().GetPrivate())
-	if err != nil {
-		return nil, err
-	}
-	if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+	if _, err := lib.Store(s.skipchain, master.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 		return nil, err
 	}
 
@@ -193,21 +190,13 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Creator = req.User
 
 		transaction := lib.NewTransaction(req.Election, req.User)
-		err := transaction.Sign(s.ServerIdentity().GetPrivate())
-		if err != nil {
-			return nil, err
-		}
-		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction); err != nil {
+		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 			return nil, err
 		}
 
 		link := &lib.Link{ID: genesis.Hash}
 		transaction = lib.NewTransaction(link, req.User)
-		err = transaction.Sign(s.ServerIdentity().GetPrivate())
-		if err != nil {
-			return nil, err
-		}
-		if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+		if _, err := lib.Store(s.skipchain, master.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 			return nil, err
 		}
 
@@ -368,11 +357,7 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 	}
 
 	transaction := lib.NewTransaction(req.Ballot, req.User)
-	err = transaction.Sign(s.ServerIdentity().GetPrivate())
-	if err != nil {
-		return nil, err
-	}
-	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction)
+	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction, s.ServerIdentity().GetPrivate())
 	if err != nil {
 		return nil, err
 	}
@@ -754,8 +739,12 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 		}
 
 		sig := transaction.Signature
+
 		transaction.Signature = nil
 		data, _ := protobuf.Encode(transaction)
+		indexBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(indexBuf, uint64(skipblock.Index))
+		data = append(data, indexBuf...)
 
 		err = schnorr.Verify(cothority.Suite, leaderPub, data, sig)
 		if err != nil {

@@ -86,13 +86,13 @@ func TestShuffleNodeFailure(t *testing.T) {
 	}
 
 	tx := lib.NewTransaction(election, election.Creator)
-	lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx)
+	lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx, nil)
 
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballot := &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballot, election.Creator)
-		lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx)
+		lib.Store(services[0].(*shuffleService).skipchain, election.ID, tx, nil)
 	}
 	nodes[3].Stop()
 
