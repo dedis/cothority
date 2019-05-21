@@ -7,8 +7,8 @@ import { IIdentity } from "./identity-wrapper";
  */
 export class Rule extends Message<Rule> {
 
-    static OR = "|";
-    static AND = "&";
+    static readonly OR = "|";
+    static readonly AND = "&";
 
     /**
      * @see README#Message classes

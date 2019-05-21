@@ -305,7 +305,7 @@ export class CredentialStruct extends Message<CredentialStruct> {
      * @param credential the name of the credential
      * @param attribute the attribute to be deleted
      */
-    delAttribute(credential: string, attribute: string): Buffer {
+    deleteAttribute(credential: string, attribute: string): Buffer {
         const cred = this.getCredential(credential);
         if (!cred) {
             return undefined;

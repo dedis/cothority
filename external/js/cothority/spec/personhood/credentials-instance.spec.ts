@@ -78,9 +78,9 @@ describe("CredentialsInstance Tests", () => {
         cs.setAttribute("one", "five", Buffer.from("six"));
         const cred = cs.copy().getCredential("one");
         expect(cred.attributes.length).toBe(3);
-        expect(cs.delAttribute("one", "seven")).toBeUndefined();
-        expect(cs.delAttribute("one", "four")).toEqual(Buffer.alloc(0));
-        expect(cs.delAttribute("one", "five")).toEqual(Buffer.from("six"));
+        expect(cs.deleteAttribute("one", "seven")).toBeUndefined();
+        expect(cs.deleteAttribute("one", "four")).toEqual(Buffer.alloc(0));
+        expect(cs.deleteAttribute("one", "five")).toEqual(Buffer.from("six"));
         expect(cs.getCredential("one").attributes.length).toBe(1);
         cs.setCredential("one", cred);
         expect(cs.getCredential("one").attributes.length).toBe(3);
