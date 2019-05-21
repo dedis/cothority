@@ -5,7 +5,7 @@ import DarcInstance from "../byzcoin/contracts/darc-instance";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Darc from "../darc/darc";
 import IdentityDarc from "../darc/identity-darc";
-import Rules from "../darc/rules";
+import { Rule } from "../darc/rules";
 import Signer from "../darc/signer";
 import CredentialInstance from "./credentials-instance";
 import { FinalStatement, PopPartyStruct } from "./proto";
@@ -46,9 +46,9 @@ export class PopPartyInstance extends Instance {
         const ids = darcIDs.map((di) => new IdentityDarc({id: di}));
         const darc = Darc.createBasic(ids, ids, Buffer.from(desc));
         ids.forEach((id) => {
-            darc.addIdentity("invoke:popParty.barrier", id, Rules.OR);
-            darc.addIdentity("invoke:popParty.finalize", id, Rules.OR);
-            darc.addIdentity("invoke:popParty.addParty", id, Rules.OR);
+            darc.addIdentity("invoke:popParty.barrier", id, Rule.OR);
+            darc.addIdentity("invoke:popParty.finalize", id, Rule.OR);
+            darc.addIdentity("invoke:popParty.addParty", id, Rule.OR);
         });
 
         return darc;

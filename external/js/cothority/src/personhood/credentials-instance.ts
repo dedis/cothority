@@ -5,6 +5,7 @@ import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
+import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 
 export default class CredentialsInstance extends Instance {
@@ -254,6 +255,22 @@ export class CredentialStruct extends Message<CredentialStruct> {
     }
 
     /**
+     * Overwrites the credential with name 'name' with the given credential.
+     * If it doesn't exist, it will be appended to the list.
+     *
+     * @param name the name of the credential
+     * @param cred the credential to store
+     */
+    setCredential(name: string, cred: Credential) {
+        const index = this.credentials.findIndex((c) => c.name === name);
+        if (index < 0) {
+            this.credentials.push(cred);
+        } else {
+            this.credentials[index] = cred;
+        }
+    }
+
+    /**
      * Set or update a credential attribute locally. The update is not sent to the blockchain.
      * For this you need to call CredentialInstance.sendUpdate().
      *
@@ -278,6 +295,26 @@ export class CredentialStruct extends Message<CredentialStruct> {
                 cred.attributes[idx] = attr;
             }
         }
+    }
+
+    /**
+     * Removes the attribute from the given credential. If the credential or the
+     * attribute doesn't exist, it returns 'undefined', else it returns the
+     * content of the deleted attribute.
+     *
+     * @param credential the name of the credential
+     * @param attribute the attribute to be deleted
+     */
+    delAttribute(credential: string, attribute: string): Buffer {
+        const cred = this.getCredential(credential);
+        if (!cred) {
+            return undefined;
+        }
+        const index = cred.attributes.findIndex((att) => att.name === attribute);
+        if (index < 0) {
+            return undefined;
+        }
+        return cred.attributes.splice(index, 1)[0].value;
     }
 
     /**
