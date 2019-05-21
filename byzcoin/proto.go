@@ -105,6 +105,9 @@ type GetProof struct {
 	// ID is any block that is known to us in the skipchain, can be the genesis
 	// block or any later block. The proof returned will be starting at this block.
 	ID skipchain.SkipBlockID
+	// NoVerify can be set to true in order to skip the verification part. The
+	// proof should be verified at the client's end anyway.
+	NoVerify bool `protobuf:"opt"`
 }
 
 // GetProofResponse can be used together with the Genesis block to proof that

@@ -85,6 +85,9 @@ message GetProof {
   // ID is any block that is known to us in the skipchain, can be the genesis
   // block or any later block. The proof returned will be starting at this block.
   required bytes id = 3;
+  // NoVerify can be set to true in order to skip the verification part. The
+  // proof should be verified at the client's end anyway.
+  optional bool noverify = 4;
 }
 
 // GetProofResponse can be used together with the Genesis block to proof that

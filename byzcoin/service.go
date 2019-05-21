@@ -46,6 +46,10 @@ var minTimestampWindow = 10 * time.Second
 // some blocks are missing.
 var catchupDownloadAll = 100
 
+// For tests to influence the basic parameters of the skipchain
+var defaultBaseHeight = 4
+var defaultMaxHeight = 32
+
 // How much minimum time between two catch up requests
 var catchupMinimumInterval = 10 * time.Minute
 
@@ -401,12 +405,14 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		log.Error(s.ServerIdentity(), err)
 		return
 	}
-
-	// Sanity check
-	if err = proof.Verify(sb.SkipChainID()); err != nil {
-		return
+	if req.NoVerify {
+		log.Lvl2("Skipping verification")
+	} else {
+		// Sanity check
+		if err = proof.Verify(sb.SkipChainID()); err != nil {
+			return
+		}
 	}
-
 	_, v := proof.InclusionProof.KeyValue()
 	log.Lvlf3("value is %x", v)
 	resp = &GetProofResponse{
@@ -811,8 +817,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			return nil, errors.New("need roster for genesis block")
 		}
 		sb = skipchain.NewSkipBlock()
-		sb.MaximumHeight = 32
-		sb.BaseHeight = 4
+		sb.MaximumHeight = defaultMaxHeight
+		sb.BaseHeight = defaultBaseHeight
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, Verify}
 

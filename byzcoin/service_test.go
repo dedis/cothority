@@ -37,7 +37,7 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m, 2)
 }
 
 func TestService_CreateGenesisBlock(t *testing.T) {
@@ -411,6 +411,59 @@ func TestService_GetProof(t *testing.T) {
 	require.NoError(t, rep.Proof.Verify(s.genesis.SkipChainID()))
 	_, _, _, err = rep.Proof.Get(wrongKey)
 	require.Error(t, err)
+}
+
+func TestService_GetProof_Speed(t *testing.T) {
+	numBlocks := 5
+	// Setting default base height to 1024, so we only have level-1 forward links, and get
+	// in the worst case.
+	oldBH := defaultBaseHeight
+	defaultBaseHeight = 1024
+	defer func() {
+		defaultBaseHeight = oldBH
+	}()
+
+	s := newSer(t, 2, testInterval)
+	defer s.local.CloseAll()
+
+	for i := 0; i < numBlocks; i++ {
+		log.Lvl1("Creating block", i+1)
+		in1 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", []byte("whatever"))
+		in1.SignerCounter = []uint64{uint64(i + 2)}
+		tx, err := combineInstrsAndSign(s.signer, in1)
+		require.NoError(t, err)
+
+		_, err = s.services[0].AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: 2,
+		})
+		// Expect it to not be accepted, because only s.signer is in the Darc
+		require.NoError(t, err)
+	}
+
+	now := time.Now()
+	_, err := s.service().GetProof(&GetProof{
+		Version: CurrentVersion,
+		Key:     InstanceID{}.Slice(),
+		ID:      s.genesis.SkipChainID(),
+	})
+	require.NoError(t, err)
+	timeVerify := time.Now().Sub(now)
+
+	now = time.Now()
+	_, err = s.service().GetProof(&GetProof{
+		Version:  CurrentVersion,
+		Key:      InstanceID{}.Slice(),
+		ID:       s.genesis.SkipChainID(),
+		NoVerify: true,
+	})
+	require.NoError(t, err)
+	timeNoVerify := time.Now().Sub(now)
+
+	log.Lvlf1("Time with verification: %s - Time without verification: %s", timeVerify, timeNoVerify)
+	require.True(t, timeNoVerify < timeVerify*2, "the speed increase is not worth it")
 }
 
 func TestService_DarcProxy(t *testing.T) {
