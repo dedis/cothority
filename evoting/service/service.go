@@ -23,7 +23,6 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"go.dedis.ch/protobuf"
 
 	"go.dedis.ch/cothority/v3"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/rabin"
@@ -184,9 +183,6 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Roster = master.Roster
 		req.Election.Key = secret.X
 		req.Election.MasterKey = master.Key
-		// req.User is untrusted in this moment, but lib.Store below will refuse to write
-		// req.Election into the skipchain if req.User+req.Signature is not valid,
-		// so IF it is written, then it is trusted.
 		req.Election.Creator = req.User
 
 		transaction := lib.NewTransaction(req.Election, req.User)
@@ -738,15 +734,12 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 			leaderPub = latest.Roster.List[0].Public
 		}
 
-		sig := transaction.Signature
+		txhash := transaction.Hash()
+		msg := make([]byte, 8)
+		binary.LittleEndian.PutUint64(msg, uint64(skipblock.Index))
+		msg = append(msg, txhash...)
 
-		transaction.Signature = nil
-		data, _ := protobuf.Encode(transaction)
-		indexBuf := make([]byte, 8)
-		binary.LittleEndian.PutUint64(indexBuf, uint64(skipblock.Index))
-		data = append(data, indexBuf...)
-
-		err = schnorr.Verify(cothority.Suite, leaderPub, data, sig)
+		err = schnorr.Verify(cothority.Suite, leaderPub, msg, transaction.Signature)
 		if err != nil {
 			log.Lvl2(s.ServerIdentity(), "txn sig verify failed:", err)
 			return false

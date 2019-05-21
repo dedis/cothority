@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/binary"
 	"errors"
+	"sync"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -56,9 +57,22 @@ func StoreUsingWebsocket(id skipchain.SkipBlockID, roster *onet.Roster, transact
 	return nil
 }
 
+// This global is a hack; it makes sure that there can be no parallel invocation
+// of Store, so that Store can accurately predict what will be the next block's
+// index.  When StoreUsingWebsocket is being called, calls to Store are no
+// longer gauranteed to find the correct Index, but in practice that does not
+// happen, since StoreUsingWebsocket is only used to write Mix and Decrypt txns,
+// and ballots cannot be cast once Shuffles start getting executed.
+// In theory, interleaving election Opens with finalising another election
+// could fail, but we do not use the election system like that either.
+var storeMu sync.Mutex
+
 // Store appends a new block holding data to an existing skipchain using the
 // skipchain service. The transaction is signed if the private key is provided.
 func Store(s *skipchain.Service, ID skipchain.SkipBlockID, transaction *Transaction, priv kyber.Scalar) (skipchain.SkipBlockID, error) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+
 	db := s.GetDB()
 	latest, err := db.GetLatest(db.GetByID(ID))
 	if err != nil {
@@ -74,18 +88,12 @@ func Store(s *skipchain.Service, ID skipchain.SkipBlockID, transaction *Transact
 	block.Index++
 
 	if priv != nil {
-		// The message is the txn, without Signature,
-		// with the block number appended onto it.
-		transaction.Signature = nil
-		data, err := protobuf.Encode(transaction)
-		if err != nil {
-			return nil, err
-		}
-		indexBuf := make([]byte, 8)
-		binary.LittleEndian.PutUint64(indexBuf, uint64(block.Index))
-		data = append(data, indexBuf...)
+		txhash := transaction.Hash()
+		msg := make([]byte, 8)
+		binary.LittleEndian.PutUint64(msg, uint64(block.Index))
+		msg = append(msg, txhash...)
 
-		sig, err := schnorr.Sign(cothority.Suite, priv, data)
+		sig, err := schnorr.Sign(cothority.Suite, priv, msg)
 		if err != nil {
 			return nil, err
 		}

@@ -1,8 +1,12 @@
 package lib
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
+	"sort"
 	"time"
 
 	"go.dedis.ch/kyber/v3"
@@ -73,6 +77,50 @@ func NewTransaction(data interface{}, user uint32) *Transaction {
 		return nil
 	}
 	return transaction
+}
+
+// Hash returns a hash of the transaction. For fields where
+// protobuf is deterministic, hash those directly. For Election,
+// encode the maps in deterministic order.
+func (t *Transaction) Hash() []byte {
+	h := sha256.New()
+	if t.Election != nil {
+		// make a copy, remove maps
+		e := Election{}
+		e = *t.Election
+		e.Name = nil
+		e.Subtitle = nil
+
+		data, _ := protobuf.Encode(e)
+		h.Write(data)
+
+		// now hash maps in deterministic order
+		hashMap(h, t.Election.Name)
+		hashMap(h, t.Election.Subtitle)
+
+		// finally hash the user id in the tx
+		binary.Write(h, binary.LittleEndian, t.User)
+
+	} else {
+		sig := t.Signature
+		t.Signature = nil
+		data, _ := protobuf.Encode(t)
+		h.Write(data)
+		t.Signature = sig
+	}
+
+	return h.Sum(nil)
+}
+
+func hashMap(h io.Writer, m map[string]string) {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		h.Write([]byte(m[k]))
+	}
 }
 
 // Verify checks that the corresponding transaction is valid before storing it.

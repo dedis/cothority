@@ -96,6 +96,14 @@ func TestService(t *testing.T) {
 	replyOpen, err = s0.Open(&evoting.Open{
 		ID: replyLink.ID,
 		Election: &lib.Election{
+			Name: map[string]string{
+				"en": "name in english",
+				"fr": "name in french",
+			},
+			Subtitle: map[string]string{
+				"en": "name in english",
+				"fr": "name in french",
+			},
 			Creator: idAdmin,
 			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 			Roster:  roster,
