@@ -58,7 +58,6 @@ type BlsCosi struct {
 
 	stoppedOnce     sync.Once
 	subProtocols    []*SubBlsCosi
-	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
 	suite           *pairing.SuiteBn256
@@ -103,7 +102,6 @@ func NewBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName str
 		Sign:              bls.Sign,
 		Verify:            bls.Verify,
 		Aggregate:         aggregate,
-		startChan:         make(chan bool, 1),
 		verificationFn:    vf,
 		subProtocolName:   subProtocolName,
 		suite:             suite,
@@ -144,35 +142,48 @@ func (p *BlsCosi) Shutdown() error {
 			// by itself using a broadcasted message
 			subCosi.Shutdown()
 		}
-		close(p.startChan)
 		close(p.FinalSignature)
 	})
+
+	log.Lvl3("BLS CoSi ends")
 	return nil
 }
 
-// Dispatch is the main method of the protocol, defining the root node behaviour
-// and sequential handling of subprotocols.
+// Dispatch is not used for the main protocol
 func (p *BlsCosi) Dispatch() error {
-	defer p.Done()
+	// This protocol relies only on the start call to spin up sub-protocols
+	return nil
+}
+
+// Start is done only by root and starts the protocol.
+// It also verifies that the protocol has been correctly parameterized.
+func (p *BlsCosi) Start() error {
 	if !p.IsRoot() {
-		return nil
+		p.Done()
+		return errors.New("node must be the root")
 	}
 
-	select {
-	case _, ok := <-p.startChan:
-		if !ok {
-			return errors.New("protocol finished prematurely")
-		}
-	case <-time.After(time.Second):
-		return fmt.Errorf("timeout, did you forget to call Start?")
+	err := p.checkIntegrity()
+	if err != nil {
+		p.Done()
+		return err
 	}
 
-	log.Lvl3("root protocol started")
+	log.Lvlf3("Starting BLS CoSi on %v", p.ServerIdentity())
+
+	go p.runSubProtocols()
+
+	return nil
+}
+
+func (p *BlsCosi) runSubProtocols() {
+	defer p.Done()
 
 	// Verification of the data is done before contacting the children
 	if ok := p.verificationFn(p.Msg, p.Data); !ok {
 		// root should not fail the verification otherwise it would not have started the protocol
-		return fmt.Errorf("verification failed on root node")
+		log.Errorf("verification failed on root node")
+		return
 	}
 
 	// start all subprotocols
@@ -183,7 +194,7 @@ func (p *BlsCosi) Dispatch() error {
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
 			log.Error(err)
-			return err
+			return
 		}
 	}
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
@@ -191,7 +202,8 @@ func (p *BlsCosi) Dispatch() error {
 	// Wait and collect all the signature responses
 	responses, err := p.collectSignatures()
 	if err != nil {
-		return err
+		log.Error(err)
+		return
 	}
 
 	log.Lvl3(p.ServerIdentity().Address, "collected all signature responses")
@@ -199,25 +211,11 @@ func (p *BlsCosi) Dispatch() error {
 	// generate root signature
 	sig, err := p.generateSignature(responses)
 	if err != nil {
-		return err
+		log.Error(err)
+		return
 	}
 
 	p.FinalSignature <- sig
-	return nil
-}
-
-// Start is done only by root and starts the protocol.
-// It also verifies that the protocol has been correctly parameterized.
-func (p *BlsCosi) Start() error {
-	err := p.checkIntegrity()
-	if err != nil {
-		p.Done()
-		return err
-	}
-
-	log.Lvlf3("Starting BLS CoSi on %v", p.ServerIdentity())
-	p.startChan <- true
-	return nil
 }
 
 // checkIntegrity checks if the protocol has been instantiated with

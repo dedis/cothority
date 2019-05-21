@@ -83,13 +83,14 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	if s.NSubtrees > 0 {
 		err = p.SetNbrSubTree(s.NSubtrees)
 		if err != nil {
+			p.Done()
 			return nil, err
 		}
 	}
 
 	// start the protocol
 	log.Lvl3("Cosi Service starting up root protocol")
-	if err = pi.Start(); err != nil {
+	if err = p.Start(); err != nil {
 		return nil, err
 	}
 
