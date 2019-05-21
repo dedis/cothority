@@ -402,11 +402,6 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return
 	}
 
-	// Sanity check
-	if err = proof.Verify(sb.SkipChainID()); err != nil {
-		return
-	}
-
 	_, v := proof.InclusionProof.KeyValue()
 	log.Lvlf3("value is %x", v)
 	resp = &GetProofResponse{
