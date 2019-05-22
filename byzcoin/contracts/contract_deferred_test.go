@@ -185,7 +185,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -269,7 +269,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -354,7 +354,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 }
 
-func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
+func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	// Since every method relies on the execution of a previous ones, I am not
 	// unit test but rather creating a scenario:
 	//
@@ -531,7 +531,7 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -590,6 +590,10 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
+	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
+	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
+	result.ProposedTransaction = proposedTransaction
+
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -601,7 +605,8 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
+
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -844,7 +849,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -910,6 +915,10 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
+	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
+	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
+	result.ProposedTransaction = proposedTransaction
+
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -921,7 +930,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -1759,7 +1768,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
@@ -1835,7 +1844,7 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -2143,7 +2152,7 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
@@ -2411,7 +2420,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 1)
@@ -2509,7 +2518,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	err = protobuf.Decode(dataBuf, &result)
 	require.Nil(t, err)
 
-	require.Equal(t, result.ProposedTransaction.Instructions[0].Hash(), proposedTransaction.Instructions[0].Hash())
+	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].SignerIdentities), 2)
