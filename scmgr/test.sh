@@ -25,6 +25,7 @@ main(){
 	run testFollow
 	run testNewChain
 	run testFailure
+	run testOptimize
 	stopTest
 }
 
@@ -277,6 +278,19 @@ testConfig(){
 
 	# $CFG/data cannot be empty
 	testFail [ -d "$CFG/data" ]
+}
+
+testOptimize() {
+	startCl
+	setupGenesis
+	for n in $( seq 4 ); do
+		testOK runSc skipchain block add --roster public.toml $ID
+	done
+
+	testFail runSc skipchain optimize
+	testFail runSc skipchain optimize --roster public.toml
+	testFail runSc skipchain optimize --roster public.toml --id abcd
+	testGrep "Chain optimized with 3 blocks" runSc skipchain optimize --roster public.toml --id $ID
 }
 
 runSc(){

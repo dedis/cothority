@@ -211,6 +211,19 @@ func (c *Client) CreateGenesis(ro *onet.Roster, baseH, maxH int, ver []VerifierI
 	return c.CreateGenesisSignature(ro, baseH, maxH, ver, data, nil)
 }
 
+// OptimizeProof asks for the proof of the block ID to the roster and creates
+// missing forward-links if any.
+func (c *Client) OptimizeProof(ro *onet.Roster, id SkipBlockID) (*OptimizeProofReply, error) {
+	reply := &OptimizeProofReply{}
+
+	err := c.SendProtobuf(ro.List[0], &OptimizeProofRequest{
+		Roster: ro,
+		ID:     id,
+	}, reply)
+
+	return reply, err
+}
+
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.

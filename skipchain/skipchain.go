@@ -1832,7 +1832,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
-		s.GetAllSkipChainIDs,
+		s.GetAllSkipChainIDs, s.OptimizeProof,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow, s.Listlink, s.ForwardLinkHandler))
 	s.ServiceProcessor.RegisterStatusReporter("Skipblock", s.db)
