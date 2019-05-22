@@ -37,8 +37,7 @@ const NameDecrypt = "decrypt"
 type Decrypt struct {
 	*onet.TreeNodeInstance
 
-	User      uint32
-	Signature []byte
+	User uint32
 
 	Secret   *lib.SharedSecret // Secret is the private key share from the DKG.
 	Election *lib.Election     // Election to be decrypted.
@@ -133,7 +132,7 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 			return nil
 		}()
 		if err == nil {
-			transaction := lib.NewTransaction(partial, d.User, d.Signature)
+			transaction := lib.NewTransaction(partial, d.User)
 			if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
 				d.Done()
 				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})

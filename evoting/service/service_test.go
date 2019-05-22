@@ -96,6 +96,14 @@ func TestService(t *testing.T) {
 	replyOpen, err = s0.Open(&evoting.Open{
 		ID: replyLink.ID,
 		Election: &lib.Election{
+			Name: map[string]string{
+				"en": "name in english",
+				"fr": "name in french",
+			},
+			Subtitle: map[string]string{
+				"en": "name in english",
+				"fr": "name in french",
+			},
 			Creator: idAdmin,
 			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
 			Roster:  roster,
@@ -513,12 +521,12 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 
 	box, err := election.Box(s0.skipchain)
 	mix := genMix(box.Ballots, election, roster.Get(0), local.GetPrivate(nodes[0]))
-	tx := lib.NewTransaction(mix, idAdmin, adminSig)
-	_, err = lib.Store(s0.skipchain, election.ID, tx)
+	tx := lib.NewTransaction(mix, idAdmin)
+	_, err = lib.Store(s0.skipchain, election.ID, tx, nil)
 	require.Nil(t, err)
 	mix2 := genMix(mix.Ballots, election, roster.Get(1), local.GetPrivate(nodes[1]))
-	tx = lib.NewTransaction(mix2, idAdmin, adminSig)
-	_, err = lib.Store(s0.skipchain, election.ID, tx)
+	tx = lib.NewTransaction(mix2, idAdmin)
+	_, err = lib.Store(s0.skipchain, election.ID, tx, nil)
 	require.Nil(t, err)
 
 	// Fail 3 nodes. New blocks cannot be added now because consensus cannot be reached.

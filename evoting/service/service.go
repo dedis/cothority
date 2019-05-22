@@ -2,6 +2,7 @@
 package service
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -73,9 +74,8 @@ type storage struct {
 
 // synchronizer is broadcasted to all roster nodes before every protocol.
 type synchronizer struct {
-	ID        skipchain.SkipBlockID
-	User      uint32
-	Signature []byte
+	ID   skipchain.SkipBlockID
+	User uint32
 }
 
 // Ping message handler.
@@ -89,49 +89,53 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		return nil, errors.New("link error: invalid pin")
 	}
 
-	var genesis *skipchain.SkipBlock
+	var id skipchain.SkipBlockID
 	var user uint32
-	sig := []byte{}
 
 	if req.ID != nil {
 		// Update an existing master chain
-		id := *req.ID
-		genesis = s.db().GetByID(id)
-		if genesis == nil {
-			return nil, errors.New("cannot find master chain to update")
+		m, err := lib.GetMaster(s.skipchain, *req.ID)
+		if err != nil {
+			return nil, err
 		}
+
 		if req.User == nil || req.Signature == nil {
 			return nil, errors.New("missing user or sig")
 		}
 		user = *req.User
-		sig = *req.Signature
-	} else {
-		var err error
-		genesis, err = lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
+
+		err = auth(*req.User, *req.Signature, m.ID, m.Key)
 		if err != nil {
 			return nil, err
 		}
+		id = m.ID
+	} else {
+		var err error
+		genesis, err := lib.NewSkipchain(s.skipchain, req.Roster, false)
+		if err != nil {
+			return nil, err
+		}
+		id = genesis.Hash
 	}
 
 	master := &lib.Master{
-		ID:     genesis.Hash,
+		ID:     id,
 		Roster: req.Roster,
 		Admins: req.Admins,
 		Key:    req.Key,
 	}
-	transaction := lib.NewTransaction(master, user, sig)
-
-	if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+	transaction := lib.NewTransaction(master, user)
+	if _, err := lib.Store(s.skipchain, master.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 		return nil, err
 	}
 
 	s.mutex.Lock()
-	s.storage.Master = genesis.Hash
+	s.storage.Master = id
 	s.storage.Roster = req.Roster
 	s.mutex.Unlock()
 	s.save()
 
-	return &evoting.LinkReply{ID: genesis.Hash}, nil
+	return &evoting.LinkReply{ID: id}, nil
 }
 
 // Open message hander. Create a new election with accompanying skipchain.
@@ -140,12 +144,16 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if !s.ServerIdentity().Equal(master.Roster.List[0]) {
 		return nil, errOnlyLeader
 	}
 
-	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, lib.TransactionVerifiers)
+	err = auth(req.User, req.Signature, master.ID, master.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, false)
 	if err != nil {
 		return nil, err
 	}
@@ -159,9 +167,8 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	instance, _ := s.CreateProtocol(dkgprotocol.Name, tree)
 	proto := instance.(*dkgprotocol.Setup)
 	config, _ := network.Marshal(&synchronizer{
-		ID:        genesis.Hash,
-		User:      req.User,
-		Signature: req.Signature,
+		ID:   genesis.Hash,
+		User: req.User,
 	})
 	proto.SetConfig(&onet.GenericConfig{Data: config})
 
@@ -176,19 +183,16 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Roster = master.Roster
 		req.Election.Key = secret.X
 		req.Election.MasterKey = master.Key
-		// req.User is untrusted in this moment, but lib.Store below will refuse to write
-		// req.Election into the skipchain if req.User+req.Signature is not valid,
-		// so IF it is written, then it is trusted.
 		req.Election.Creator = req.User
 
-		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
-		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction); err != nil {
+		transaction := lib.NewTransaction(req.Election, req.User)
+		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 			return nil, err
 		}
 
 		link := &lib.Link{ID: genesis.Hash}
-		transaction = lib.NewTransaction(link, req.User, req.Signature)
-		if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+		transaction = lib.NewTransaction(link, req.User)
+		if _, err := lib.Store(s.skipchain, master.ID, transaction, s.ServerIdentity().GetPrivate()); err != nil {
 			return nil, err
 		}
 
@@ -321,13 +325,35 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	return reply, nil
 }
 
+func auth(u uint32, sig []byte, master skipchain.SkipBlockID, pub kyber.Point) error {
+	var message []byte
+	message = append(message, master...)
+
+	for _, c := range strconv.Itoa(int(u)) {
+		d, _ := strconv.Atoi(string(c))
+		message = append(message, byte(d))
+	}
+
+	return schnorr.Verify(cothority.Suite, pub, message, sig)
+}
+
 // Cast message handler. Cast a ballot in a given election.
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
-	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
-	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction)
+
+	election, err := lib.GetElection(s.skipchain, req.ID, false, req.User)
+	if err != nil {
+		return nil, err
+	}
+	err = auth(req.User, req.Signature, election.Master, election.MasterKey)
+	if err != nil {
+		return nil, err
+	}
+
+	transaction := lib.NewTransaction(req.Ballot, req.User)
+	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction, s.ServerIdentity().GetPrivate())
 	if err != nil {
 		return nil, err
 	}
@@ -347,21 +373,10 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 		return nil, err
 	}
 
-	// At this point, req.User is untrusted input from the bad
-	// guys. We need to validate req.User before using
-	// it. Usually, we count on lib.Store
-	// (->skipchain.StoreSkipblock->verifier) to check the userID
-	// signature for us, but since GetElections is a read-only method,
-	// there is no call to lib.Store to check req.User for us.
-	digest := master.ID
-	for _, c := range strconv.Itoa(int(req.User)) {
-		d, _ := strconv.Atoi(string(c))
-		digest = append(digest, byte(d))
-	}
-	userValid := true
-	err = schnorr.Verify(cothority.Suite, master.Key, digest, req.Signature)
-	if err != nil {
-		userValid = false
+	userValid := false
+	err = auth(req.User, req.Signature, master.ID, master.Key)
+	if err == nil {
+		userValid = true
 	}
 
 	elections := make([]*lib.Election, 0)
@@ -401,7 +416,8 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 	return &evoting.GetBoxReply{Box: box}, nil
 }
 
-// GetMixes message handler. Vet all created mixes.
+// GetMixes message handler. It is the caller's responsibility to check the proof
+// in any Mix before relying on it.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
@@ -415,7 +431,7 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 	return &evoting.GetMixesReply{Mixes: mixes}, nil
 }
 
-// GetPartials message handler. Vet all created partial decryptions.
+// GetPartials message handler.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
@@ -438,6 +454,11 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	}
 
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	err = auth(req.User, req.Signature, election.Master, election.MasterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -480,15 +501,13 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
 	protoShuffle := instance.(*protocol.Shuffle)
 	protoShuffle.User = req.User
-	protoShuffle.Signature = req.Signature
 	protoShuffle.Election = election
 	protoShuffle.Skipchain = s.skipchain
 	protoShuffle.LeaderParticipates = !hasParticipated
 
 	config, _ := network.Marshal(&synchronizer{
-		ID:        req.ID,
-		User:      req.User,
-		Signature: req.Signature,
+		ID:   req.ID,
+		User: req.User,
 	})
 	protoShuffle.SetConfig(&onet.GenericConfig{Data: config})
 	if err = protoShuffle.Start(); err != nil {
@@ -512,6 +531,11 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	}
 
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	err = auth(req.User, req.Signature, election.Master, election.MasterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -558,16 +582,14 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	instance, _ := s.CreateProtocol(protocol.NameDecrypt, tree)
 	protoDecrypt := instance.(*protocol.Decrypt)
 	protoDecrypt.User = req.User
-	protoDecrypt.Signature = req.Signature
 	protoDecrypt.Secret = s.secret(election.ID)
 	protoDecrypt.Election = election
 	protoDecrypt.Skipchain = s.skipchain
 	protoDecrypt.LeaderParticipates = !participated[s.ServerIdentity().ID.String()]
 
 	config, _ := network.Marshal(&synchronizer{
-		ID:        req.ID,
-		User:      req.User,
-		Signature: req.Signature,
+		ID:   req.ID,
+		User: req.User,
 	})
 	protoDecrypt.SetConfig(&onet.GenericConfig{Data: config})
 	if err = protoDecrypt.Start(); err != nil {
@@ -654,14 +676,12 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		instance, _ := protocol.NewShuffle(node)
 		protocol := instance.(*protocol.Shuffle)
 		protocol.User = sync.User
-		protocol.Signature = sync.Signature
 		protocol.Election = election
 		protocol.Skipchain = s.skipchain
 
 		config, _ := network.Marshal(&synchronizer{
-			ID:        sync.ID,
-			User:      sync.User,
-			Signature: sync.Signature,
+			ID:   sync.ID,
+			User: sync.User,
 		})
 		protocol.SetConfig(&onet.GenericConfig{Data: config})
 
@@ -676,14 +696,12 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		protocol := instance.(*protocol.Decrypt)
 		protocol.Secret = s.secret(sync.ID)
 		protocol.User = sync.User
-		protocol.Signature = sync.Signature
 		protocol.Election = election
 		protocol.Skipchain = s.skipchain
 
 		config, _ := network.Marshal(&synchronizer{
-			ID:        sync.ID,
-			User:      sync.User,
-			Signature: sync.Signature,
+			ID:   sync.ID,
+			User: sync.User,
 		})
 		protocol.SetConfig(&onet.GenericConfig{Data: config})
 		return protocol, nil
@@ -692,11 +710,40 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 	}
 }
 
-// verify is the skpchain verification handler.
+// verify is the skipchain verification handler.
 func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 	transaction := lib.UnmarshalTransaction(skipblock.Data)
 	if transaction == nil {
 		return false
+	}
+
+	// For txns generated by the leader, check his signature.
+	// For the others (mix and partial), check the originator's signature later
+	// in transaction.Verify().
+	if transaction.Mix == nil && transaction.Partial == nil {
+		var leaderPub kyber.Point
+		latest, err := s.db().GetLatestByID(skipblock.GenesisID)
+		if latest == nil {
+			if skipblock.Index == 0 {
+				leaderPub = skipblock.Roster.List[0].Public
+			} else {
+				log.Lvl3("could not find leader public key")
+				return false
+			}
+		} else {
+			leaderPub = latest.Roster.List[0].Public
+		}
+
+		txhash := transaction.Hash()
+		msg := make([]byte, 8)
+		binary.LittleEndian.PutUint64(msg, uint64(skipblock.Index))
+		msg = append(msg, txhash...)
+
+		err = schnorr.Verify(cothority.Suite, leaderPub, msg, transaction.Signature)
+		if err != nil {
+			log.Lvl2(s.ServerIdentity(), "txn sig verify failed:", err)
+			return false
+		}
 	}
 
 	err := transaction.Verify(skipblock.GenesisID, s.skipchain)

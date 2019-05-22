@@ -40,9 +40,8 @@ const NameShuffle = "shuffle"
 type Shuffle struct {
 	*onet.TreeNodeInstance
 
-	User      uint32
-	Signature []byte
-	Election  *lib.Election // Election to be shuffled.
+	User     uint32
+	Election *lib.Election // Election to be shuffled.
 
 	Finished chan error // Flag to signal protocol termination.
 
@@ -156,7 +155,7 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 
 	// And send the result to the skipchain in case of success.
 	if err == nil && added == 1 {
-		transaction := lib.NewTransaction(mix, s.User, s.Signature)
+		transaction := lib.NewTransaction(mix, s.User)
 		log.Lvl3(s.ServerIdentity(), "sending transaction to websocket")
 		err = lib.StoreUsingWebsocket(s.Election.ID, s.Election.Roster, transaction)
 		if err != nil {
