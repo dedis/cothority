@@ -27,6 +27,10 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+// maxTimeout is an upper bound for the view change timeout as it is increasing
+// exponentially.
+const maxTimeout = 5 * time.Minute
+
 // View assume that the context are the same.
 type View struct {
 	ID          skipchain.SkipBlockID
@@ -163,7 +167,12 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
 				// receiving 2*f+1 view-change messages.
-				timer.Reset(time.Duration(math.Pow(2, float64(ctr))) * initialDuration)
+				timeout := time.Duration(math.Pow(2, float64(ctr))) * initialDuration
+				if timeout.Seconds() > maxTimeout.Seconds() {
+					timeout = maxTimeout
+				}
+
+				timer.Reset(timeout)
 				meta.nextStateFor(ctr)
 				select {
 				case c.startTimerChan <- ctr:
@@ -183,7 +192,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				continue
 			}
 			if view.Equal(meta.currOf(ctr)) {
-				log.Lvl3("view-change completed successfully for view: ", view)
+				log.Lvl1("view-change completed successfully for view: ", view)
 			} else {
 				// Usually this should not happen, if it does,
 				// that means the controller decided to move on
@@ -208,7 +217,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				Gen:         genesis,
 				LeaderIndex: ctr + 1,
 			}
-			log.Lvl4("view-change timer expired, creating new view:", view)
+			log.Lvl1("view-change timer expired, creating new view:", view)
 			req := InitReq{
 				View:     view,
 				SignerID: myID,
@@ -250,7 +259,7 @@ func (c *Controller) processAnomaly(req InitReq, meta *stateLogs, ctr int) int {
 		// controller has already moved on and it will
 		// only wait for relevant messages for its
 		// current or later view.
-		log.Warn("Controller is not accepting anomalies for earlier views")
+		log.Lvl4("Controller is not accepting anomalies for earlier views")
 	}
 	return ctr
 }

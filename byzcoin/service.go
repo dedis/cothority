@@ -137,6 +137,7 @@ type Service struct {
 	streamingMan streamingManager
 
 	updateTrieLock        sync.Mutex
+	catchingLock          sync.Mutex
 	catchingUp            bool
 	catchingUpHistory     map[string]time.Time
 	catchingUpHistoryLock sync.Mutex
@@ -376,11 +377,14 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 // GetProof searches for a key and returns a proof of the
 // presence or the absence of this key.
 func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+	s.catchingLock.Lock()
 	s.updateTrieLock.Lock()
-	defer s.updateTrieLock.Unlock()
-	if s.catchingUp {
-		return nil, errors.New("currently catching up on our state")
-	}
+
+	defer func() {
+		s.updateTrieLock.Unlock()
+		s.catchingLock.Unlock()
+	}()
+
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
@@ -489,8 +493,8 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 // DownloadState creates a snapshot of the current state and then returns the
 // instances in small chunks.
 func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse, err error) {
-	s.updateTrieLock.Lock()
-	defer s.updateTrieLock.Unlock()
+	s.catchingLock.Lock()
+	defer s.catchingLock.Unlock()
 	if req.Length <= 0 {
 		return nil, errors.New("length must be bigger than 0")
 	}
@@ -934,7 +938,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		err := func() error {
 			// First delete an existing stateTrie. There
 			// cannot be another write-access to the
-			// database because s.catchingUp == true.
+			// database because of catchingLock.
 			_, err := s.getStateTrie(sb.SkipChainID())
 			if err == nil {
 				// Suppose we _do_ have a statetrie
@@ -943,7 +947,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 					return tx.DeleteBucket(stBucket)
 				})
 				if err != nil {
-					log.Fatal("Cannot delete existing trie while trying to download:", err)
+					return fmt.Errorf("Cannot delete existing trie while trying to download: %s", err.Error())
 				}
 				s.stateTriesLock.Lock()
 				delete(s.stateTries, idStr)
@@ -978,7 +982,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 					return nil
 				})
 				if err != nil {
-					log.Fatal("Couldn't store entries:", err)
+					return fmt.Errorf("Couldn't store entries: %s", err.Error())
 				}
 				if len(resp.KeyValues) < catchupFetchDBEntries {
 					break
@@ -1035,6 +1039,19 @@ func (s *Service) catchupAll() error {
 	s.working.Add(1)
 	defer s.working.Done()
 	s.closedMutex.Unlock()
+
+	s.catchingLock.Lock()
+	s.updateTrieLock.Lock()
+	s.catchingUp = true
+	s.updateTrieLock.Unlock()
+
+	defer func() {
+		s.updateTrieLock.Lock()
+		s.catchingUp = false
+		s.updateTrieLock.Unlock()
+		s.catchingLock.Unlock()
+	}()
+
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
 	if err != nil {
@@ -1051,10 +1068,18 @@ func (s *Service) catchupAll() error {
 			return err
 		}
 
-		s.updateTrieLock.Lock()
-		s.catchingUp = true
-		s.updateTrieLock.Unlock()
-		s.catchUp(sb)
+		cl := skipchain.NewClient()
+		// Get the latest block known by the Cothority.
+		reply, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
+		if err != nil {
+			return err
+		}
+
+		if len(reply.Update) == 0 {
+			return errors.New("no block found in chain update")
+		}
+
+		s.catchUp(reply.Update[len(reply.Update)-1])
 	}
 	return nil
 }
@@ -1064,8 +1089,20 @@ func (s *Service) catchupAll() error {
 // we get a roster, e.g., from getTxs.
 // To prevent distributed denial-of-service, we first check that the skipchain is
 // known and then we limit the number of catch up requests per skipchain by waiting
-// for a minimal amount of time
+// for a minimal amount of time.
 func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID skipchain.SkipBlockID) error {
+	s.catchingLock.Lock()
+	s.updateTrieLock.Lock()
+	s.catchingUp = true
+	s.updateTrieLock.Unlock()
+
+	defer func() {
+		s.updateTrieLock.Lock()
+		s.catchingUp = false
+		s.updateTrieLock.Unlock()
+		s.catchingLock.Unlock()
+	}()
+
 	// Catch up only friendly skipchains to avoid unnecessary requests
 	if s.db().GetByID(scID) == nil {
 		log.Lvlf3("got asked for unknown skipchain: %x", scID)
@@ -1085,14 +1122,6 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 
 	log.Lvlf1("catching up with chain %x", scID)
 
-	s.updateTrieLock.Lock()
-	if s.catchingUp {
-		s.updateTrieLock.Unlock()
-		return errors.New("already catching up")
-	}
-	s.catchingUp = true
-	s.updateTrieLock.Unlock()
-
 	cl := skipchain.NewClient()
 	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
@@ -1109,12 +1138,6 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 // `catchupDownloadAll` behind, or calls downloadDB to start the download of
 // the full DB over the network.
 func (s *Service) catchUp(sb *skipchain.SkipBlock) {
-	defer func() {
-		s.updateTrieLock.Lock()
-		s.catchingUp = false
-		s.updateTrieLock.Unlock()
-	}()
-
 	log.Lvlf2("%v Catching up %x / %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 
 	// Load the trie.
@@ -1207,16 +1230,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			"programmer error if you see this message.")
 	}
 
-	// Checks if the block has forward links, which means that it is not a
-	// new block but either a forward link update or a skipchain propagation
-	// meaning the last block will be called later.
-	// In the case of a genesis block, we need to let it pass so we
-	// learn about it because the callback won't be called after the
-	// catch up
-	if len(sb.ForwardLink) > 0 && !s.catchingUp && sb.Index != 0 {
-		return nil
-	}
-
 	// Create the trie for the genesis block if it has not been
 	// created yet.
 	// We don't need to wrap the check and use another
@@ -1256,13 +1269,18 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		log.Lvlf4("%v updating trie for block %d refused, current trie block is %d", s.ServerIdentity(), sb.Index, trieIndex)
 		return nil
 	} else if sb.Index > trieIndex+1 {
-		if s.catchingUp {
-			log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
-			return nil
-		}
+		log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
+		go func() {
+			s.working.Add(1)
+			defer s.working.Done()
 
-		s.catchingUp = true
-		go s.catchUp(sb)
+			// This new block will catch up at the end of the current catch up (if any)
+			// and be ignored if the block is already known.
+			s.catchingLock.Lock()
+			s.catchUp(sb)
+			s.catchingLock.Unlock()
+		}()
+
 		return nil
 	}
 
@@ -1335,7 +1353,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// Check if the polling needs to be updated.
 	s.pollChanMut.Lock()
 	scIDstr := string(sb.SkipChainID())
-	if nodeIsLeader {
+	if nodeIsLeader && !s.catchingUp {
 		if _, ok := s.pollChan[scIDstr]; !ok {
 			log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 			s.pollChan[scIDstr] = s.startPolling(sb.SkipChainID())
@@ -1356,7 +1374,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	if err != nil {
 		return err
 	}
-	if nodeInNew {
+	if nodeInNew && !s.catchingUp {
 		// Update or start heartbeats
 		if s.heartbeats.exists(string(sb.SkipChainID())) {
 			log.Lvlf3("%s sending heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
@@ -2156,11 +2174,13 @@ func (s *Service) registerContract(contractID string, c ContractFn) error {
 // other nodes.
 func (s *Service) startAllChains() error {
 	s.closedMutex.Lock()
-	defer s.closedMutex.Unlock()
 	if !s.closed {
+		s.closedMutex.Unlock()
 		return errors.New("can only call startAllChains if the service has been closed before")
 	}
-	s.SetPropagationTimeout(120 * time.Second)
+	s.closedMutex.Unlock()
+	// Why ??
+	// s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load(storageID)
 	if err != nil {
 		return err
@@ -2176,87 +2196,104 @@ func (s *Service) startAllChains() error {
 	s.notifications = bcNotifications{
 		waitChannels: make(map[string]chan bool),
 	}
+	s.closedMutex.Lock()
 	s.closed = false
+	s.closedMutex.Unlock()
 
 	// Recreate the polling channles.
 	s.pollChanMut.Lock()
 	s.pollChan = make(map[string]chan bool)
 	s.pollChanMut.Unlock()
 
-	gas := &skipchain.GetAllSkipChainIDs{}
-	gasr, err := s.skService().GetAllSkipChainIDs(gas)
+	// All the logic necessary to start the chains is delayed to a goroutine so that
+	// the other services can start immediately and are not blocked by Byzcoin.
+	go func() {
+		s.working.Add(1)
+		defer s.working.Done()
+
+		// Catch up is done before starting the chains to prevent undesired events
+		err = s.catchupAll()
+		if err != nil {
+			log.Errorf("%v couldn't sync: %s", s.ServerIdentity(), err.Error())
+			return
+		}
+
+		gas := &skipchain.GetAllSkipChainIDs{}
+		gasr, err := s.skService().GetAllSkipChainIDs(gas)
+		if err != nil {
+			log.Errorf("%v couldn't get the skipchains: %s", s.ServerIdentity(), err.Error())
+			return
+		}
+
+		for _, gen := range gasr.IDs {
+			err := s.startChain(gen)
+			if err != nil {
+				log.Error("catch up error: ", err)
+			}
+		}
+
+		s.monitorLeaderFailure()
+	}()
+
+	return nil
+}
+
+func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
+	if !s.hasByzCoinVerification(genesisID) {
+		return nil
+	}
+
+	interval, _, err := s.LoadBlockInfo(genesisID)
+	if err != nil {
+		return fmt.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s",
+			s.ServerIdentity(), genesisID, err)
+	}
+
+	if s.db().GetByID(genesisID) == nil {
+		return fmt.Errorf("%s ignoring chain with missing genesis-block %x",
+			s.ServerIdentity(), genesisID)
+	}
+	latest, err := s.db().GetLatestByID(genesisID)
+	if err != nil {
+		return fmt.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
+			s.ServerIdentity(), genesisID, err)
+	}
+
+	leader, err := s.getLeader(genesisID)
+	if err != nil {
+		return fmt.Errorf("getLeader should not return an error if roster is initialised: %s",
+			err.Error())
+	}
+	if leader.Equal(s.ServerIdentity()) {
+		log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
+		s.pollChanMut.Lock()
+		s.pollChan[string(genesisID)] = s.startPolling(genesisID)
+		s.pollChanMut.Unlock()
+	}
+
+	// populate the darcID to skipchainID mapping
+	d, err := s.LoadGenesisDarc(genesisID)
 	if err != nil {
 		return err
 	}
+	s.darcToScMut.Lock()
+	s.darcToSc[string(d.GetBaseID())] = genesisID
+	s.darcToScMut.Unlock()
 
-	for _, gen := range gasr.IDs {
-		if !s.hasByzCoinVerification(gen) {
-			continue
-		}
-
-		interval, _, err := s.LoadBlockInfo(gen)
-		if err != nil {
-			log.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s", s.ServerIdentity(), gen, err)
-			continue
-		}
-
-		if s.db().GetByID(gen) == nil {
-			log.Errorf("%s ignoring chain with missing genesis-block %x", s.ServerIdentity(), gen)
-			continue
-		}
-		latest, err := s.db().GetLatestByID(gen)
-		if err != nil {
-			log.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
-				s.ServerIdentity(), gen, err)
-		}
-
-		leader, err := s.getLeader(gen)
-		if err != nil {
-			log.Error("getLeader should not return an error if roster is initialised:", err)
-			continue
-		}
-		if leader.Equal(s.ServerIdentity()) {
-			log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
-			s.pollChanMut.Lock()
-			s.pollChan[string(gen)] = s.startPolling(gen)
-			s.pollChanMut.Unlock()
-		}
-
-		// populate the darcID to skipchainID mapping
-		d, err := s.LoadGenesisDarc(gen)
-		if err != nil {
-			return err
-		}
-		s.darcToScMut.Lock()
-		s.darcToSc[string(d.GetBaseID())] = gen
-		s.darcToScMut.Unlock()
-
-		// start the heartbeat
-		if s.heartbeats.exists(string(gen)) {
-			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
-		}
-		log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, gen)
-		s.heartbeats.start(string(gen), interval*s.rotationWindow, s.heartbeatsTimeout)
-
-		// initiate the view-change manager
-		initialDur, err := s.computeInitialDuration(gen)
-		if err != nil {
-			return err
-		}
-		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
-		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen))
-		// TODO fault threshold might change
+	// start the heartbeat
+	if s.heartbeats.exists(string(genesisID)) {
+		return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
 	}
+	log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, genesisID)
+	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
 
-	// Running catchupAll in background so it doesn't stop the other
-	// services from starting.
-	go func() {
-		s.monitorLeaderFailure()
-		err := s.catchupAll()
-		if err != nil {
-			log.Error(s.ServerIdentity(), "couldn't sync:", err)
-		}
-	}()
+	// initiate the view-change manager
+	initialDur, err := s.computeInitialDuration(genesisID)
+	if err != nil {
+		return err
+	}
+	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(genesisID))
+	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur, s.getFaultThreshold(genesisID))
 
 	return nil
 }
