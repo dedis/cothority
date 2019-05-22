@@ -111,7 +111,7 @@ func (e *Election) setVoted(s *skipchain.Service, user uint32) error {
 			block = db.GetByID(block.ForwardLink[0].To)
 			continue
 		}
-		if transaction.Ballot != nil && transaction.User == user {
+		if transaction.Ballot != nil && transaction.Ballot.User == user {
 			e.Voted = block.Hash
 		}
 		if transaction.Mix != nil || transaction.Partial != nil {

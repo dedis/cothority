@@ -73,15 +73,26 @@ shuffling and voting process which is described later in the text.
 ## Identification
 We rely on using EPFL’s authentication service, called Tequila to identify a user.
 The identification process requires a central server that interacts with tequila
-and generates a signature on successful authorization. This signature is then
-verified on every conode before performing any election operation.
+and generates a signature on successful authorization. The signature is held
+on the web client in a cookie, and provided to the server with each operation.
+The lead conode checks this signature. If it is valid, it proposes a new block
+to the followers of the skipchain, seeking their approval. It signs the block
+to certify that the user information in the transaction was seen and checked
+by the lead conode.
+
+This identification system is *not* decentralised. The lead conode is operated
+by the same organisation that operates the authentication system
+(VPSI, the central IT authority of the university). Once a transaction is proposed
+to the non-leader conodes, the system is decentralised; it is up to each
+conode to check (1) that the leader certified the user info, and (2) that the
+invariants of a fair election are respected.
 
 ## Vote encryption
 The evoting web application allows an administrator to set up a "choose M of N"
-type of election. A voter after logging in may select his/her choice(s).
+type of election. A voter may select his/her choice(s).
 
 Before submitting the ballot to a conode, the web application encrypts the ballot
-using the election's aggregate public key. The submission of encrypted ballot
+using the election's aggregate public key. The submission of an encrypted ballot
 results in the addition of a new block to the skipchain. The block contains the
 ID of the user who cast his/her vote and their vote in encrypted format. We
 therefore notice that at this point, the evoting system prevents an adversary
@@ -91,7 +102,6 @@ also be noted that the current implementation does not allow a voter to verify
 if their vote was cast as intended, i.e. if the encrypted ballot is not changed
 while being transfered to the conode by a malware on their device. The voter can
 however, verify if their vote is indeed stored or not in the skipchain.
-
 
 ## Shuffling and Decryption of Ballots
 In order to preserve anonymity of votes, we need to remove voter information from
@@ -113,60 +123,14 @@ can be used to aggregate the vote counts for each candidate.
 
 # Usage
 
-## Docker setup
+## Conodes
 
-Dockerhub contains an image of a conode with the evoting service. The following
-instructions assume you have docker installed and running.
-
-* Pull the image from Dockerhub
-
-```
-$ docker pull dedis/conode:evoting
-```
-
-* Prepare configurations files for the conode
-
-```
-$ docker run -it --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:evoting ./conode setup
-```
-
-The above command would write the conode configuration files (public/private keys
-and database) to `~/conode_data`
-
-* Start a container to run the evoting service
-
-```
-$ docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:evoting
-```
-
-* To ensure the container is up and running the output of `docker ps` should be
-something like
-
-```
-CONTAINER ID        IMAGE                  COMMAND                  CREATED                  STATUS              PORTS                                              NAMES
-7fd75268fdbd        dedis/conode:evoting   "./conode -debug 3 s…"   Less than a second ago   Up 2 seconds        0.0.0.0:32843->7770/tcp, 0.0.0.0:32842->7771/tcp   conode
-```
-
-Note that the host ports are assigned randomly by docker. Please use the `-p` flag
-to have more control over port mappings.
-
+Run the conodes according to the instructions in the [conode](../conode/README.md) directory.
 
 ## Managing the master skipchain
 
-`app/app.go` provides a way to manage the master skipchain for evoting. Assuming
-you have a go environment set up, the following instructions describe how to build
-the evoting app
-
-```bash
-$ go get github.com/dedis/cothority/evoting/evoting-admin/
-$ cd $GOPATH/src/github.com/dedis/cothority/evoting/app && go build -o $GOPATH/bin/evoting ./...
-```
-
-If `$GOPATH/bin` is in your `$PATH` then the evoting app should be accessible by
-
-```bash
-$ evoting-admin --help
-```
+The `evoting-admin` tool provides a way to manage the master skipchain for evoting.
+See the [README.md](evoting-admin/README.md) in that directory.
 
 # Links
 - Student Project: EPFL e-voting:
