@@ -495,6 +495,17 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 // using the shortest path
 type Proof []*SkipBlock
 
+// Search returns the block with the given index or nil
+func (sbs Proof) Search(index int) *SkipBlock {
+	for _, sb := range sbs {
+		if sb.Index == index {
+			return sb
+		}
+	}
+
+	return nil
+}
+
 // Verify checks that the proof is correct by checking individual
 // blocks and their back and forward links
 func (sbs Proof) Verify() error {
@@ -1062,9 +1073,7 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 
 // GetProofForID returns the shortest chain known from the genesis to the given
 // block using the heighest forward-links available in the local db.
-func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs []*SkipBlock, err error) {
-	sbs = make([]*SkipBlock, 0)
-
+func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 	err = db.View(func(tx *bbolt.Tx) error {
 		target, err := db.getFromTx(tx, bid)
 		if err != nil {

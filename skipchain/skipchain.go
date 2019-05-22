@@ -390,17 +390,6 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 	return reply, nil
 }
 
-// searchBlock returns the block with the given index or nil
-func searchBlock(blocks Proof, index int) *SkipBlock {
-	for _, sb := range blocks {
-		if sb.Index == index {
-			return sb
-		}
-	}
-
-	return nil
-}
-
 // sendForwardLinkRequest sends a request to the given until until either the forward-link is
 // created or there's not enough online nodes to get a valid signature.
 func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
@@ -449,7 +438,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			// precision but unlike the previous division, this will always
 			// produce the index minus ε < 10^-9.
 			index = sb.Index + int(math.Round(math.Exp(float64(h)*base)))
-			to := searchBlock(pr, index)
+			to := pr.Search(index)
 			if to == nil {
 				return nil, errors.New("chain is inconsistent")
 			}

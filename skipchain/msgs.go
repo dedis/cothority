@@ -94,7 +94,8 @@ type OptimizeProofRequest struct {
 	Roster *onet.Roster
 }
 
-// OptimizeProofReply returns the result of the request
+// OptimizeProofReply returns the proof with the newly created forward-links
+// if they have been created.
 type OptimizeProofReply struct {
 	Proof Proof
 }
