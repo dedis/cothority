@@ -285,7 +285,7 @@ public class EventLogInstance {
                 else if (current != null && Arrays.equals(p.block.getBackLinks().get(0).getId(), current.getHash())) {
                     super.receive(p.block);
                 } else {
-                    // do nothing because there might be a duplicate
+                    // do nothing because this is a duplicate block
                 }
             }
             flushed = true;

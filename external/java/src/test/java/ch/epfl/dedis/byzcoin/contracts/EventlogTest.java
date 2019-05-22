@@ -208,4 +208,14 @@ class EventLogTest {
 
         el.unsubscribeEvents(tag);
     }
+
+    @Test
+    void subscribeFailure() {
+        // subscribe from a block that doesn't exist
+        TestEventHandler handler = new TestEventHandler();
+        assertThrows(CothorityCommunicationException.class, () -> el.subscribeEvents(handler, Hex.parseHexBinary("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
+
+        // remove tag that doesn't exist should not throw an error
+        el.unsubscribeEvents(9999);
+    }
 }
