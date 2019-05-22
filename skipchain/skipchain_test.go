@@ -1035,8 +1035,6 @@ func TestService_LeaderChange(t *testing.T) {
 }
 
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {
-	s.SetPropTimeout(2 * time.Second)
-
 	reply, err := s.StoreSkipBlock(
 		&StoreSkipBlock{TargetSkipChainID: scid,
 			NewBlock: sb,

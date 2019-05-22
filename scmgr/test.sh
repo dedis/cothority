@@ -11,6 +11,7 @@ main(){
 	startTest
 	buildConode go.dedis.ch/cothority/v3/skipchain
 	CFG=$BUILDDIR/scmgr_config
+	run testOptimize
 	run testDNSUpdate
 	run testRestart
 	run testConfig
@@ -25,7 +26,6 @@ main(){
 	run testFollow
 	run testNewChain
 	run testFailure
-	run testOptimize
 	stopTest
 }
 
@@ -283,9 +283,10 @@ testConfig(){
 testOptimize() {
 	startCl
 	setupGenesis
-	for n in $( seq 4 ); do
-		testOK runSc skipchain block add --roster public.toml $ID
-	done
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
 
 	testFail runSc skipchain optimize
 	testFail runSc skipchain optimize --roster public.toml

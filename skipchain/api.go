@@ -216,7 +216,8 @@ func (c *Client) CreateGenesis(ro *onet.Roster, baseH, maxH int, ver []VerifierI
 func (c *Client) OptimizeProof(ro *onet.Roster, id SkipBlockID) (*OptimizeProofReply, error) {
 	reply := &OptimizeProofReply{}
 
-	err := c.SendProtobuf(ro.List[0], &OptimizeProofRequest{
+	si := ro.RandomServerIdentity()
+	err := c.SendProtobuf(si, &OptimizeProofRequest{
 		Roster: ro,
 		ID:     id,
 	}, reply)

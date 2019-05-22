@@ -1289,6 +1289,7 @@ func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureRe
 	}
 	defer s.decrementWorking()
 
+	// Copy to prevent data race when the message is sent to itself.
 	fs := &ForwardSignature{
 		TargetHeight: req.TargetHeight,
 		Previous:     req.Previous,
