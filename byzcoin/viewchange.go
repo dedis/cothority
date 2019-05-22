@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 
@@ -203,7 +202,7 @@ func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Durat
 
 func (s *Service) getFaultThreshold(sbID skipchain.SkipBlockID) int {
 	sb := s.db().GetByID(sbID)
-	return len(sb.Roster.List) / 3
+	return (len(sb.Roster.List) - 1) / 3
 }
 
 // handleViewChangeReq should be registered as a handler for viewchange.InitReq
@@ -271,18 +270,11 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 		return nil, err
 	}
 
-	n := len(sb.Roster.List)
 	cosiProto := proto.(*protocol.BlsCosi)
 	cosiProto.Msg = req.Hash()
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol
 	cosiProto.Timeout = interval * 2
-	cosiProto.Threshold = n - n/3
-
-	err = cosiProto.SetNbrSubTree(int(math.Pow(float64(n), 1.0/3.0)))
-	if err != nil {
-		return nil, err
-	}
 
 	if err := cosiProto.Start(); err != nil {
 		return nil, err
@@ -327,8 +319,8 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		}
 		return len(signers), len(views)
 	}()
-	f := len(sb.Roster.List) / 3
-	if uniqueSigners < 2*f+1 {
+	f := s.getFaultThreshold(sb.Hash)
+	if uniqueSigners <= 2*f {
 		log.Error(s.ServerIdentity(), "not enough proofs")
 		return false
 	}
