@@ -1282,12 +1282,19 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 
 // ForwardLinkHandler receives a forward-link signature request for a block already
 // appended to the chain (height >= 1).
-func (s *Service) ForwardLinkHandler(fs *ForwardSignature) (*ForwardSignatureReply, error) {
+func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureReply, error) {
 	err := s.incrementWorking()
 	if err != nil {
 		return nil, err
 	}
 	defer s.decrementWorking()
+
+	fs := &ForwardSignature{
+		TargetHeight: req.TargetHeight,
+		Previous:     req.Previous,
+		Newest:       req.Newest.Copy(),
+		Links:        make([]*ForwardLink, 0),
+	}
 
 	fl, err := func() (*ForwardLink, error) {
 		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
