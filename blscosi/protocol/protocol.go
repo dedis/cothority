@@ -83,11 +83,15 @@ func GlobalRegisterDefaultProtocols() {
 	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
 }
 
+// DefaultFaultyThreshold computes the maximum number of faulty nodes
+func DefaultFaultyThreshold(n int) int {
+	return (n - 1) / 3
+}
+
 // DefaultThreshold computes the minimal threshold authorized using
 // the formula 3f+1
 func DefaultThreshold(n int) int {
-	f := (n - 1) / 3
-	return n - f
+	return n - DefaultFaultyThreshold(n)
 }
 
 // NewBlsCosi method is used to define the blscosi protocol.

@@ -12,6 +12,8 @@ func init() {
 		// Store new skipblock
 		&StoreSkipBlock{},
 		&StoreSkipBlockReply{},
+		&OptimizeProofRequest{},
+		&OptimizeProofReply{},
 		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
@@ -49,6 +51,7 @@ func init() {
 		&PropagateProof{},
 		// Request forward-signature
 		&ForwardSignature{},
+		&ForwardSignatureReply{},
 		// - Data structures
 		&SkipBlockFix{},
 		&SkipBlock{},
@@ -83,6 +86,17 @@ type StoreSkipBlock struct {
 type StoreSkipBlockReply struct {
 	Previous *SkipBlock
 	Latest   *SkipBlock
+}
+
+// OptimizeProofRequest is request to create missing forward links
+type OptimizeProofRequest struct {
+	ID     SkipBlockID
+	Roster *onet.Roster
+}
+
+// OptimizeProofReply returns the result of the request
+type OptimizeProofReply struct {
+	Proof Proof
 }
 
 // GetUpdateChain - the client sends the hash of the last known
@@ -162,6 +176,11 @@ type ForwardSignature struct {
 	// Links holds the forwardlinks to prove that 'Newest' is valid. For
 	// the level-0 forwardlink, this is empty.
 	Links []*ForwardLink
+}
+
+// ForwardSignatureReply returns the new forward-link
+type ForwardSignatureReply struct {
+	Link *ForwardLink
 }
 
 // GetSingleBlock asks for a single block.

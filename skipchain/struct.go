@@ -1060,6 +1060,55 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 	return
 }
 
+// GetProofForID returns the shortest chain known from the genesis to the given
+// block using the heighest forward-links available in the local db.
+func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs []*SkipBlock, err error) {
+	sbs = make([]*SkipBlock, 0)
+
+	err = db.View(func(tx *bbolt.Tx) error {
+		target, err := db.getFromTx(tx, bid)
+		if err != nil {
+			return err
+		}
+		if target == nil {
+			return errors.New("couldn't find the block")
+		}
+
+		sb, err := db.getFromTx(tx, target.SkipChainID())
+		if err != nil {
+			return err
+		}
+		if sb == nil {
+			// It should never happen if the previous is found..
+			return errors.New("couldn't find the genesis block")
+		}
+
+		sbs = append(sbs, sb)
+
+		for !sb.Hash.Equal(bid) && len(sb.ForwardLink) > 0 {
+			diff := math.Log(float64(target.Index - sb.Index))
+			base := math.Log(float64(sb.BaseHeight))
+			maxHeight := int(math.Min(diff/base, float64(len(sb.ForwardLink)-1)))
+
+			id := sb.ForwardLink[maxHeight].To
+			sb, err = db.getFromTx(tx, id)
+			if err != nil {
+				return err
+			}
+
+			if sb == nil {
+				return errors.New("couldn't find one of the blocks")
+			}
+
+			sbs = append(sbs, sb)
+		}
+
+		return nil
+	})
+
+	return
+}
+
 // GetSkipchains returns all latest skipblocks from all skipchains.
 func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
 	return db.getAll()
