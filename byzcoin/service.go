@@ -2401,7 +2401,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	skipchain.RegisterVerification(c, Verify, s.verifySkipBlock)
+	if err := skipchain.RegisterVerification(c, Verify, s.verifySkipBlock); err != nil {
+		log.ErrFatal(err)
+	}
+
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err
 	}
