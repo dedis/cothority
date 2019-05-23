@@ -17,26 +17,31 @@ class OptAte {
         GFp2 a, b, c;
         TwistPoint rOut;
 
-        GFp2 B = new GFp2().mul(p.x, r.t);
+        GFp2 B = GFp2Pool.getInstance().get().mul(p.x, r.t);
 
-        GFp2 D = new GFp2().add(p.y, r.z);
+        GFp2 D = GFp2Pool.getInstance().get().add(p.y, r.z);
         D.square(D);
         D.sub(D, r2);
         D.sub(D, r.t);
         D.mul(D, r.t);
 
-        GFp2 H = new GFp2().sub(B, r.x);
-        GFp2 I = new GFp2().square(H);
+        GFp2 H = GFp2Pool.getInstance().get().sub(B, r.x);
+        GFp2Pool.getInstance().put(B);
 
-        GFp2 E = new GFp2().add(I, I);
+        GFp2 I = GFp2Pool.getInstance().get().square(H);
+
+        GFp2 E = GFp2Pool.getInstance().get().add(I, I);
         E.add(E, E);
 
-        GFp2 J = new GFp2().mul(H, E);
+        GFp2 J = GFp2Pool.getInstance().get().mul(H, E);
 
-        GFp2 L1 = new GFp2().sub(D, r.y);
+        GFp2 L1 = GFp2Pool.getInstance().get().sub(D, r.y);
+        GFp2Pool.getInstance().put(D);
+
         L1.sub(L1, r.y);
 
-        GFp2 V = new GFp2().mul(r.x, E);
+        GFp2 V = GFp2Pool.getInstance().get().mul(r.x, E);
+        GFp2Pool.getInstance().put(E);
 
         rOut = new TwistPoint();
         rOut.x.square(L1);
@@ -45,13 +50,20 @@ class OptAte {
         rOut.x.sub(rOut.x, V);
 
         rOut.z.add(r.z, H);
+        GFp2Pool.getInstance().put(H);
+
         rOut.z.square(rOut.z);
         rOut.z.sub(rOut.z, r.t);
         rOut.z.sub(rOut.z, I);
+        GFp2Pool.getInstance().put(I);
 
-        GFp2 t = new GFp2().sub(V, rOut.x);
+        GFp2 t = GFp2Pool.getInstance().get().sub(V, rOut.x);
+        GFp2Pool.getInstance().put(V);
+
         t.mul(t, L1);
-        GFp2 t2 = new GFp2().mul(r.y, J);
+        GFp2 t2 = GFp2Pool.getInstance().get().mul(r.y, J);
+        GFp2Pool.getInstance().put(J);
+
         t2.add(t2, t2);
         rOut.y.sub(t, t2);
 
@@ -67,6 +79,8 @@ class OptAte {
         a = new GFp2();
         a.sub(t2, t);
 
+        GFp2Pool.getInstance().put(t, t2);
+
         c = new GFp2();
         c.mulScalar(rOut.z, q.y);
         c.add(c, c);
@@ -74,6 +88,8 @@ class OptAte {
         b = new GFp2();
         b.setZero();
         b.sub(b, L1);
+        GFp2Pool.getInstance().put(L1);
+
         b.mulScalar(b, q.x);
         b.add(b, b);
 
@@ -84,20 +100,20 @@ class OptAte {
         GFp2 a, b, c;
         TwistPoint rOut;
 
-        GFp2 A = new GFp2().square(r.x);
-        GFp2 B = new GFp2().square(r.y);
-        GFp2 C = new GFp2().square(B);
+        GFp2 A = GFp2Pool.getInstance().get().square(r.x);
+        GFp2 B = GFp2Pool.getInstance().get().square(r.y);
+        GFp2 C = GFp2Pool.getInstance().get().square(B);
 
-        GFp2 D = new GFp2().add(r.x, B);
+        GFp2 D = GFp2Pool.getInstance().get().add(r.x, B);
         D.square(D);
         D.sub(D, A);
         D.sub(D, C);
         D.add(D, D);
 
-        GFp2 E = new GFp2().add(A, A);
+        GFp2 E = GFp2Pool.getInstance().get().add(A, A);
         E.add(E, A);
 
-        GFp2 G = new GFp2().square(E);
+        GFp2 G = GFp2Pool.getInstance().get().square(E);
 
         rOut = new TwistPoint();
         rOut.x.sub(G, D);
@@ -110,7 +126,7 @@ class OptAte {
 
         rOut.y.sub(D, rOut.x);
         rOut.y.mul(rOut.y, E);
-        GFp2 t = new GFp2().add(C, C);
+        GFp2 t = GFp2Pool.getInstance().get().add(C, C);
         t.add(t, t);
         t.add(t, t);
         rOut.y.sub(rOut.y, t);
@@ -133,6 +149,8 @@ class OptAte {
         t.add(t, t);
         a.sub(a, t);
 
+        GFp2Pool.getInstance().put(A, B, C, D, E, G, t);
+
         c = new GFp2();
         c.mul(rOut.z, r.t);
         c.add(c, c);
@@ -149,7 +167,7 @@ class OptAte {
         a2.mul(a2, ret.x);
         GFp6 t3 = new GFp6().mulScalar(ret.y, c);
 
-        GFp2 t = new GFp2();
+        GFp2 t = GFp2Pool.getInstance().get();
         t.add(b, c);
         GFp6 t2 = new GFp6();
         t2.x.setZero();
@@ -164,6 +182,8 @@ class OptAte {
         ret.x.sub(ret.x, ret.y);
         a2.mulTau(a2);
         ret.y.add(ret.y, a2);
+
+        GFp2Pool.getInstance().put(t);
     }
 
     private static byte[] sixuPlus2NAF = new byte[]{0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 1, 0, -1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 1};
@@ -186,7 +206,7 @@ class OptAte {
         TwistPoint r = new TwistPoint();
         r.set(aAffine);
 
-        GFp2 r2 = new GFp2();
+        GFp2 r2 = GFp2Pool.getInstance().get();
         r2.square(aAffine.y);
 
         for (int i = sixuPlus2NAF.length - 1; i > 0; i--) {
@@ -247,6 +267,8 @@ class OptAte {
 
         r2.square(minusQ2.y);
         result res2 = lineFunctionAdd(r, minusQ2, bAffine, r2);
+        GFp2Pool.getInstance().put(r2);
+
         a = res2.a;
         b = res2.b;
         c = res2.c;
