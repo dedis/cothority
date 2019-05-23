@@ -118,8 +118,19 @@ func TestSkipBlock_InvalidForwardLinks(t *testing.T) {
 
 	// Try to add a forward link at a wrong height.
 	s.db.Store(sb2)
-
 	require.Contains(t, log.GetStdErr(), "Received a forward link with an invalid height")
+
+	gb2 := s.db.GetByID(sbRoot.Hash)
+	gb2.BackLinkIDs = []SkipBlockID{[]byte{1, 2, 3}}
+	gb2.updateHash()
+	// Try to store a new block with old forward-links
+	s.db.Store(gb2)
+	require.Contains(t, log.GetStdErr(), "found inconsistent forward-link")
+
+	gb2.Height = 0
+	// Try to store a new block with too many forward-links
+	s.db.Store(gb2)
+	require.Contains(t, log.GetStdErr(), "found 1 forward-links for a height of 0")
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
