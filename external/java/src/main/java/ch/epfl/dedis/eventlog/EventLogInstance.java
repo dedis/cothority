@@ -280,7 +280,7 @@ public class EventLogInstance {
                     super.error(p.error);
                 }
                 else if (p.block.getBackLinks().size() == 0) {
-                    super.error("no black links");
+                    super.error("no back links");
                 }
                 else if (current != null && Arrays.equals(p.block.getBackLinks().get(0).getId(), current.getHash())) {
                     super.receive(p.block);

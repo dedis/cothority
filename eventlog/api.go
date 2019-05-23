@@ -213,17 +213,17 @@ type StreamHandler func(event Event, blockID []byte, err error)
 // Close closes all the websocket connections.
 func (c *Client) Close() error {
 	err := c.ByzCoin.Close()
-	if err2 := c.sc.Close(); err != nil {
+	if err2 := c.sc.Close(); err2 != nil {
 		err = err2
 	}
-	if err2 := c.c.Close(); err != nil {
+	if err2 := c.c.Close(); err2 != nil {
 		err = err2
 	}
 	return err
 }
 
-// StreamEvents is a blocking call where it calls the handler on even new event
-// until the connection is closed or the server stops.
+// StreamEvents is a blocking call where it calls the handler on every new
+// event until the connection is closed or the server stops.
 func (c *Client) StreamEvents(handler StreamHandler) error {
 	h := func(resp byzcoin.StreamingResponse, err error) {
 		if err != nil {
