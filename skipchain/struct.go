@@ -1097,7 +1097,10 @@ func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 		for !sb.Hash.Equal(bid) && len(sb.ForwardLink) > 0 {
 			diff := math.Log(float64(target.Index - sb.Index))
 			base := math.Log(float64(sb.BaseHeight))
-			maxHeight := int(math.Min(diff/base, float64(len(sb.ForwardLink)-1)))
+			maxHeight := 0
+			if base != 0 {
+				maxHeight = int(math.Min(diff/base, float64(len(sb.ForwardLink)-1)))
+			}
 
 			id := sb.ForwardLink[maxHeight].To
 			sb, err = db.getFromTx(tx, id)

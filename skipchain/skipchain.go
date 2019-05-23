@@ -422,7 +422,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 	index := 0
 	newProof := Proof{}
 
-	for _, sb := range pr {
+	for _, sb := range pr[:len(pr)-1] {
 		if sb.Index < index {
 			// Skip blocks thanks to the new forward-link.
 			continue
@@ -431,16 +431,16 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 		diff := math.Log(float64(target.Index - sb.Index))
 		base := math.Log(float64(target.BaseHeight))
 		// Target the maximum height authorized for this block.
-		h := int(math.Min(diff/base, float64(sb.Height)))
+		h := int(math.Min(diff/base, float64(sb.Height-1)))
 
-		if len(sb.ForwardLink) < h {
+		if h > 0 && len(sb.ForwardLink) <= h {
 			// We need to round the e^x operation because of the floating-point
 			// precision but unlike the previous division, this will always
 			// produce the index minus ε < 10^-9.
 			index = sb.Index + int(math.Round(math.Exp(float64(h)*base)))
 			to := pr.Search(index)
 			if to == nil {
-				return nil, errors.New("chain is inconsistent")
+				return nil, fmt.Errorf("chain is inconsistent: block at index %d not found", index)
 			}
 
 			req := &ForwardSignature{
@@ -450,7 +450,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			}
 			reply := &ForwardSignatureReply{}
 
-			log.Lvlf2("Request to create forward-link at index %d with height %d", sb.Index, h)
+			log.Lvlf2("Request to create forward-link at index %d with height %d / %d", sb.Index, h, index)
 			// The signature must be asked to the roster of the block
 			err := sendForwardLinkRequest(sb.Roster, req, reply)
 
@@ -470,6 +470,8 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 
 		newProof = append(newProof, sb)
 	}
+
+	newProof = append(newProof, target)
 
 	// Propagate the optimized proof to the given roster
 	err = s.startPropagation(s.propagateProof, req.Roster, &PropagateProof{newProof})
