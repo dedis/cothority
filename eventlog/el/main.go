@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -177,6 +178,22 @@ var cmds = cli.Commands{
 		},
 		Action: search,
 	},
+	{
+		Name:    "key",
+		Usage:   "generates a new keypair and prints the public key in the stdout",
+		Aliases: []string{"k"},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "save",
+				Usage: "file in which the user wants to save the public key instead of printing it",
+			},
+			cli.StringFlag{
+				Name:  "print",
+				Usage: "print the private and public key",
+			},
+		},
+		Action: key,
+	},
 }
 
 var cliApp = cli.NewApp()
@@ -199,17 +216,10 @@ func init() {
 			Value: cfgpath.GetDataPath(cliApp.Name),
 			Usage: "path to configuration-directory",
 		},
-		cli.StringFlag{
-			Name:   "bcconfig",
-			EnvVar: "BC_CONFIG",
-			Value:  cfgpath.GetDataPath("bcadmin"),
-			Usage:  "path to bcadmin configuration-directory",
-		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
-		dataDir = c.String("config")
-		bcadminlib.ConfigPath = c.String("bcconfig")
+		bcadminlib.ConfigPath = c.String("config")
 		return nil
 	}
 
@@ -579,8 +589,8 @@ func (o *openidCfg) save() (string, error) {
 		return "", nil
 	}
 
-	os.MkdirAll(dataDir, 0755)
-	fn := filepath.Join(dataDir, "openid.cfg")
+	os.MkdirAll(bcadminlib.ConfigPath, 0755)
+	fn := filepath.Join(bcadminlib.ConfigPath, "openid.cfg")
 
 	// perms = 0600 because there is key material inside this file.
 	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0600)
@@ -604,8 +614,8 @@ func (o *openidCfg) save() (string, error) {
 }
 
 func load() (*openidCfg, error) {
-	os.MkdirAll(dataDir, 0755)
-	fn := filepath.Join(dataDir, "openid.cfg")
+	os.MkdirAll(bcadminlib.ConfigPath, 0755)
+	fn := filepath.Join(bcadminlib.ConfigPath, "openid.cfg")
 
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
@@ -771,6 +781,43 @@ func getPublic(c *cli.Context, issuer string) (kyber.Point, error) {
 	}
 
 	return resp.Enrollments[0].Public, nil
+}
+
+func key(c *cli.Context) error {
+	if f := c.String("print"); f != "" {
+		sig, err := bcadminlib.LoadSigner(f)
+		if err != nil {
+			return errors.New("couldn't load signer: " + err.Error())
+		}
+		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
+		return nil
+	}
+	newSigner := darc.NewSignerEd25519(nil, nil)
+	err := bcadminlib.SaveKey(newSigner)
+	if err != nil {
+		return err
+	}
+
+	var fo io.Writer
+
+	save := c.String("save")
+	if save == "" {
+		fo = os.Stdout
+	} else {
+		file, err := os.Create(save)
+		if err != nil {
+			return err
+		}
+		fo = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Error(err)
+			}
+		}()
+	}
+	_, err = fmt.Fprintln(fo, newSigner.Identity().String())
+	return err
 }
 
 func faultThreshold(n int) int {

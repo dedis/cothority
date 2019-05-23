@@ -32,25 +32,20 @@ testEventLog(){
 	eval "$SED"
 	[ -z "$BC" ] && exit 1
 	
+	KEY=$(./el -c . key)
 
-	testOK ./bcadmin -c . darc add -out_key ./key.txt -out_id ./id.txt -unrestricted
-	KEY=$(cat ./key.txt)
-	ID=$(cat ./id.txt)
+	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$KEY"
+	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity "$KEY"
 
-	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$ID"
-	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$KEY" -darc "$ID" -sign "$KEY"
-	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity "$KEY" -darc "$ID" -sign "$KEY"
-
-	runGrepSed "export EL=" "" $el --bcconfig . create -sign "$KEY" --darc "$ID"
+	runGrepSed "export EL=" "" $el create -sign "$KEY"
 	eval "$SED"
 	[ -z "$EL" ] && exit 1
 	
 	##### testing phase
-	testOK ./bcadmin -c . darc show --darc "$ID"
-	testOK $el --bcconfig . log -t 'test' -c 'abc' -w 10 -sign "$KEY"
-	testOK $el --bcconfig . log -c 'def' -w 10 -sign "$KEY"
-	echo ghi | testOK $el --bcconfig . log -w 10 -sign "$KEY"
-	seq 10 | testOK $el --bcconfig . log -t seq100 -w 10 -sign "$KEY"
+	testOK $el log -t 'test' -c 'abc' -w 10 -sign "$KEY"
+	testOK $el log -c 'def' -w 10 -sign "$KEY"
+	echo ghi | testOK $el log -w 10 -sign "$KEY"
+	seq 10 | testOK $el log -t seq100 -w 10 -sign "$KEY"
 
 	testGrep "abc" $el search -t test
 	testCountLines 13 $el search

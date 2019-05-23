@@ -1357,7 +1357,6 @@ func key(c *cli.Context) error {
 			return errors.New("couldn't load signer: " + err.Error())
 		}
 		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
-		//log.Infof("Private: 65642e706f696e74%s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
 		return nil
 	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
