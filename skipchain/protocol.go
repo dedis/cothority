@@ -261,6 +261,11 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		if s == nil {
 			break
 		}
+		last := len(result) - 1
+		if last >= 0 && s.Index <= result[last].Index {
+			return ErrorInconsistentForwardLink
+		}
+
 		result = append(result, s)
 		n--
 

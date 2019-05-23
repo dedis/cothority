@@ -23,6 +23,10 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
+// ErrorInconsistentForwardLink is triggered when the target of a forward-link
+// doesn't respect the consistency of the chain.
+var ErrorInconsistentForwardLink = errors.New("found inconsistent forward-link")
+
 // How long to wait before a timeout is generated in the propagation. It is not
 // set to a constant because we'd like to change it in the test.
 var defaultPropagateTimeout = 15 * time.Second
@@ -1043,6 +1047,12 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 
 			if sb == nil {
 				return errors.New("couldn't find one of the blocks")
+			}
+
+			// One way to insure there is no corrupted forward-link is
+			// to insure the index is monotonically increasing.
+			if sb.Index <= sbs[len(sbs)-1].Index {
+				return ErrorInconsistentForwardLink
 			}
 
 			sbs = append(sbs, sb)

@@ -45,6 +45,9 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 			if sbTemp == nil {
 				return nil, errors.New("missing block in chain")
 			}
+			if sbTemp.Index <= sb.Index {
+				return nil, skipchain.ErrorInconsistentForwardLink
+			}
 			if sbTemp.Index <= c.GetIndex() {
 				sb = sbTemp
 				break
