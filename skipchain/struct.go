@@ -790,7 +790,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 				for _, fl := range sb.ForwardLink {
 					if !fl.IsEmpty() {
 						if !fl.From.Equal(sb.Hash) {
-							return fmt.Errorf("found inconsistent forward-link")
+							return ErrorInconsistentForwardLink
 						}
 
 						if err := fl.Verify(suite, publics); err != nil {
