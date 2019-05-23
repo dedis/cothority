@@ -312,12 +312,12 @@ var cmds = cli.Commands{
 						Usage: "the DARC to update (no default)",
 					},
 					cli.StringFlag{
-						Name:  "rule",
-						Usage: "the rule to be added, updated or deleted",
-					},
-					cli.StringFlag{
 						Name:  "sign",
 						Usage: "public key of the signing entity (default is the admin public key)",
+					},
+					cli.StringFlag{
+						Name:  "rule",
+						Usage: "the rule to be added, updated or deleted",
 					},
 					cli.StringFlag{
 						Name:  "identity",

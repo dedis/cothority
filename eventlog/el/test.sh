@@ -18,52 +18,47 @@ main(){
 	buildConode go.dedis.ch/cothority/v3/eventlog
 
 	# This must succeed before any others will work.
-	run testCreate
-	
-	run testLogging
+	run testEventLog
 	
 	stopTest
 }
 
-testLogging(){
+testEventLog(){
+	##### setup phase
 	runCoBG 1 2 3
-	testOK $el log -t test -c 'abc' -w 10
-	testOK $el log -c 'def' -w 10
-	echo ghi | testOK $el log -w 10
-	seq 100 | testOK $el log -t seq100 -w 10
+	# block interval of 2 seconds to this particular test to fail because of small intervals
+	# (Note: might go back to 0.5 after #1813)
+	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 1s
+	eval "$SED"
+	[ -z "$BC" ] && exit 1
+	
+
+	testOK ./bcadmin -c . darc add -out_key ./key.txt -out_id ./id.txt -unrestricted
+	KEY=$(cat ./key.txt)
+	ID=$(cat ./id.txt)
+
+	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$ID"
+	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$KEY" -darc "$ID" -sign "$KEY"
+	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity "$KEY" -darc "$ID" -sign "$KEY"
+
+	runGrepSed "export EL=" "" $el --bcconfig . create -sign "$KEY" --darc "$ID"
+	eval "$SED"
+	[ -z "$EL" ] && exit 1
+	
+	##### testing phase
+	testOK ./bcadmin -c . darc show --darc "$ID"
+	testOK $el --bcconfig . log -t 'test' -c 'abc' -w 10 -sign "$KEY"
+	testOK $el --bcconfig . log -c 'def' -w 10 -sign "$KEY"
+	echo ghi | testOK $el --bcconfig . log -w 10 -sign "$KEY"
+	seq 10 | testOK $el --bcconfig . log -t seq100 -w 10 -sign "$KEY"
 
 	testGrep "abc" $el search -t test
-	testCountLines 103 $el search
+	testCountLines 13 $el search
 
 	testCountLines 0 $el search -t test -from '0s ago'
 	# The first form of relative date is for MacOS, the second for Linux.
 	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d || date -d yesterday +%Y-%m-%d`
 	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d || date -d tomorrow +%Y-%m-%d`
-}
-
-testCreate(){
-	runGrepSed "export PRIVATE_KEY=" "" ./el key
-	eval $SED
-	[ -z "$PRIVATE_KEY" ] && exit 1
-	ID=`awk '/^Identity: / { print $2}' < $RUNOUT`
-	[ -z "$ID" ] && exit 1
-
-	runCoBG 1 2 3
-	# block interval of 2 seconds to this particular test to fail because of small intervals
-	# (Note: might go back to 0.5 after #1813)
-	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 2s
-	eval $SED
-	[ -z "$BC" ] && exit 1
-	
-	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity $ID
-	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity $ID
-
-	runGrepSed "export EL=" "" $el create
-	eval $SED
-	[ -z "$EL" ] && exit 1
-	
-	# We do not want cleanup to remove the db between each test.
-	export KEEP_DB=true
 }
 
 main

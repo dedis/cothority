@@ -20,6 +20,7 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/authprox"
 	"go.dedis.ch/cothority/v3/byzcoin"
+	bcadminlib "go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/eventlog"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -27,7 +28,6 @@ import (
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/sign/dss"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
@@ -64,9 +64,8 @@ var cmds = cli.Commands{
 		Aliases: []string{"c"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "priv",
-				EnvVar: "PRIVATE_KEY",
-				Usage:  "the ed25519 private key that will sign the create transaction",
+				Name:  "sign",
+				Usage: "the ed25519 private key that will sign the create transaction",
 			},
 			cli.StringFlag{
 				Name:   "bc",
@@ -75,7 +74,7 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the DarcID that has the spawn:evenlog right (default is the genesis DarcID)",
+				Usage: "the DarcID that has the spawn:evenlog rule (default is the genesis DarcID)",
 			},
 		},
 		Action: create,
@@ -111,9 +110,8 @@ var cmds = cli.Commands{
 		Aliases: []string{"l"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "priv",
-				EnvVar: "PRIVATE_KEY",
-				Usage:  "the ed25519 private key that will sign transactions",
+				Name:  "sign",
+				Usage: "the ed25519 private key that will sign transactions",
 			},
 			cli.StringFlag{
 				Name:   "bc",
@@ -179,12 +177,6 @@ var cmds = cli.Commands{
 		},
 		Action: search,
 	},
-	{
-		Name:    "key",
-		Usage:   "generates a new keypair and prints it on stdout",
-		Aliases: []string{"k"},
-		Action:  key,
-	},
 }
 
 var cliApp = cli.NewApp()
@@ -207,10 +199,17 @@ func init() {
 			Value: cfgpath.GetDataPath(cliApp.Name),
 			Usage: "path to configuration-directory",
 		},
+		cli.StringFlag{
+			Name:   "bcconfig",
+			EnvVar: "BC_CONFIG",
+			Value:  cfgpath.GetDataPath("bcadmin"),
+			Usage:  "path to bcadmin configuration-directory",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		dataDir = c.String("config")
+		bcadminlib.ConfigPath = c.String("bcconfig")
 		return nil
 	}
 
@@ -267,27 +266,18 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 			return nil, fmt.Errorf("could not make OpenID signer: %v", err)
 		}
 	} else {
-		// Otherwise, get the private key from the env/cmdline.
-		privStr := c.String("priv")
-		if privStr == "" {
-			return nil, errors.New("--priv is required")
+		// Otherwise, get the private key from the cmdline.
+		sstr := c.String("sign")
+		if sstr == "" {
+			return nil, errors.New("--sign is required")
 		}
-		priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
+		signer, err := bcadminlib.LoadKeyFromString(sstr)
 		if err != nil {
 			return nil, err
 		}
-		pub := cothority.Suite.Point().Mul(priv, nil)
-
-		cl.Signers = []darc.Signer{darc.NewSignerEd25519(pub, priv)}
+		cl.Signers = []darc.Signer{*signer}
 	}
 	return cl, nil
-}
-
-func key(c *cli.Context) error {
-	s := darc.NewSignerEd25519(nil, nil)
-	fmt.Println("Identity:", s.Identity())
-	fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
-	return nil
 }
 
 func create(c *cli.Context) error {
@@ -304,7 +294,7 @@ func create(c *cli.Context) error {
 		}
 		cl.DarcID = genDarc.GetBaseID()
 	} else {
-		eb, err := hex.DecodeString(e)
+		eb, err := bcadminlib.StringToDarcID(e)
 		if err != nil {
 			return err
 		}
