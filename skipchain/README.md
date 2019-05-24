@@ -5,26 +5,30 @@ Skipchain
 
 # Skipchain implementation
 
+> Skipchains are authenticated data structures that combine ideas from 
+> blockchains and skiplists. Skipchains enable clients
+> to securely traverse the timeline in both forward and backward directions 
+> and to efficiently traverse short or long distances by employing 
+> multi-hop links. Backward links are cryptographic hashes of past blocks, 
+> as in regular blockchains. Forward links are cryptographic signatures of 
+> future blocks, which are added retroactively when the target block appears 
+> [1](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-nikitin.pdf).
+
 This skipchain implementation is based upon the Chainiac-paper
-(https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-nikitin.pdf)
+[1](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-nikitin.pdf)
 and offers a very simple and extendable voting-based permissioned blockchain.
 Instead of having one global blockchain, the skipchain implementation allows
-users to use a personal blockchain where they can store data. In the cothority,
-the following data types are implemented:
+users to use a personal blockchain where they can store data. Skipchain is used
+by - but not limited to - the following elements of the cothority:
 
-- [CISC](../cisc/README.md) - offers a key/value storage where
-a threshold of devices need to sign off on changes. Currently supported
-key/values are:
-  - SSH-keys - storing public ssh-keys that will be followed by a ssh-server for
-  passwordless logins
-  - Web-pages - store your webpage on your personal blockchain and only allow
-  changes if a threshold of administrators sign off
-  - Free values - add any key/value pair to your personal skipchain
-- [RandHound](../randhound/README.md) - produce verifiable random numbers
-and store them on a blockchain for later proofs
-- [OCS](../ocs/README.md) - a distributed, secure document sharing service that
-features access-control and auditability. The documents and access-control
-lists are stored on the skipchain.
+- [byzcoin](../byzcoin) - a scalable Byzantine fault tolerant consensus
+algorithm for open decentralized blockchain systems. It uses the skipchain as its
+underlying data-structure for storing blocks.
+- [caypso](../calypso) - a fully decentralized framework for auditable access control
+on protected resources.
+- [eventlog](../eventlog) - an auditable and secure logging service for byzcoin
+- [RandHound](https://github.com/dedis/paper_17_randomness) - a service that produce 
+verifiable random numbers and store them on a blockchain for later proofs
 
 ## Overview of implementation
 
