@@ -71,6 +71,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
+	time.Sleep(s.interval * rw)
+
 	for i := 0; i < nFailures; i++ {
 		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
 	}
