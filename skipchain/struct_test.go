@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -289,6 +290,34 @@ func TestSkipBlock_Payload(t *testing.T) {
 	h := sb.CalculateHash()
 	sb.Payload = []byte{1, 2, 3}
 	require.Equal(t, h, sb.CalculateHash())
+}
+
+// Vector testing of the function to get the index of the next
+// block when following the chain.
+func TestSkipBlock_PathForIndex(t *testing.T) {
+	sb := NewSkipBlock()
+
+	vectors := []struct{ index, height, base, target, expected int }{
+		{0, 6, 2, 32, 32},
+		{0, 6, 4, 32, 16},
+		{0, 2, 4, 32, 4},
+		{1, 1, 2, 3, 2},
+		{0, 6, 2, 31, 16},
+		{0, 1, 2, 0, 0},
+		{1, 1, 2, 1, 1},
+		// backwards test
+		{32, 6, 2, 0, 0},
+		{32, 6, 2, 1, 16},
+	}
+
+	for _, v := range vectors {
+		sb.Index = v.index
+		sb.Height = v.height
+		sb.BaseHeight = v.base
+
+		_, idx := sb.pathForIndex(v.target)
+		require.Equal(t, v.expected, idx, fmt.Sprintf("%v", v))
+	}
 }
 
 // This checks if the it returns the shortest path or an error

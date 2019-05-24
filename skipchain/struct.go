@@ -486,6 +486,27 @@ func (sb *SkipBlock) GetForwardLen() int {
 	return len(sb.ForwardLink)
 }
 
+// pathForIndex computes the highest height that can be used to go
+// to the targeted index and also returns the index associated. It
+// works for forward abd backward links.
+func (sb *SkipBlock) pathForIndex(targetIndex int) (int, int) {
+	diff := math.Log(math.Abs(float64(targetIndex - sb.Index)))
+	base := math.Log(float64(sb.BaseHeight))
+	// Highest forward or backward link height that can be followed.
+	h := int(math.Min(diff/base, float64(sb.Height-1)))
+
+	// We need to round the e^x operation because of the floating-point
+	// precision but unlike the previous division, this will always
+	// produce the index minus ε < 10^-9.
+	offset := int(math.Round(math.Exp(float64(h) * base)))
+	if targetIndex < sb.Index {
+		// Going backwards in that case
+		offset *= -1
+	}
+
+	return h, sb.Index + offset
+}
+
 func (sb *SkipBlock) updateHash() SkipBlockID {
 	sb.Hash = sb.CalculateHash()
 	return sb.Hash

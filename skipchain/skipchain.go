@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -395,7 +394,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
 	cl := NewClient()
 
-	// Try as many time as it can until the faulty threshold is reached
+	// Try as many times as it can until the faulty threshold is reached
 	// meaning it's impossible to get a valid signature.
 	retries := protocol.DefaultFaultyThreshold(len(ro.List)) + 1
 
@@ -420,6 +419,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 
 	target := pr[len(pr)-1]
 	index := 0
+	h := 0
 	newProof := Proof{}
 
 	for _, sb := range pr[:len(pr)-1] {
@@ -428,16 +428,9 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			continue
 		}
 
-		diff := math.Log(float64(target.Index - sb.Index))
-		base := math.Log(float64(target.BaseHeight))
-		// Target the maximum height authorized for this block.
-		h := int(math.Min(diff/base, float64(sb.Height-1)))
+		h, index = sb.pathForIndex(target.Index)
 
 		if h > 0 && len(sb.ForwardLink) <= h {
-			// We need to round the e^x operation because of the floating-point
-			// precision but unlike the previous division, this will always
-			// produce the index minus ε < 10^-9.
-			index = sb.Index + int(math.Round(math.Exp(float64(h)*base)))
 			to := pr.Search(index)
 			if to == nil {
 				return nil, fmt.Errorf("chain is inconsistent: block at index %d not found", index)
@@ -451,7 +444,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			reply := &ForwardSignatureReply{}
 
 			log.Lvlf2("requesting missing forward-link at index %d with height %d / %d", sb.Index, h, index)
-			// The signature must be asked to the roster of the block
+			// The signature must be created by the roster of the block
 			err := sendForwardLinkRequest(sb.Roster, req, reply)
 
 			if err != nil {
