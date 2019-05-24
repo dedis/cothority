@@ -448,9 +448,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			err := sendForwardLinkRequest(sb.Roster, req, reply)
 
 			if err != nil {
-				log.Error("could not create a missing forward link:", err)
-				// reset the index to try to create lower levels
-				index = sb.Index
+				log.Warn("could not create missing forward link, trying next block:", err)
 			} else {
 				// save the new forward link
 				err = sb.AddForwardLink(reply.Link, h)
