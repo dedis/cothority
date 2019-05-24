@@ -26,13 +26,13 @@ algorithm for open decentralized blockchain systems. It uses the skipchain as it
 underlying data-structure for storing blocks.
 - [caypso](../calypso) - a fully decentralized framework for auditable access control
 on protected resources.
-- [eventlog](../eventlog) - an auditable and secure logging service for byzcoin
+- [eventlog](../eventlog) - an auditable and secure logging service for byzcoin.
 - [RandHound](https://github.com/dedis/paper_17_randomness) - a service that produce 
-verifiable random numbers and store them on a blockchain for later proofs
+verifiable random numbers and store them on a blockchain for later proofs.
 
 ## Overview of implementation
 
-### Networking transaction
+### Networking transactions
 
 The skipchain itself is held by one or more conodes. Clients can connect to the
 leader and propose new blocks. Every time a new block is received, the leader
