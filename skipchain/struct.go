@@ -773,11 +773,9 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 				}
 
 				// As we don't store the target height in the forward-link, there is no
-				// way to insure that it will be stored at the right height if the target
+				// way to ensure that it will be stored at the right height if the target
 				// block is not yet discovered like in a catch up scenario that will end
-				// up in this path. But we can at least check that the forward-link belongs
-				// to the block and is not a leftover when creating a new block and that
-				// we don't have more than expected.
+				// up in this path.
 				// Deprecated: This is a notice for v4 to add the target height in the
 				// forward-link so conodes can sign it.
 				if len(sb.ForwardLink) > sb.Height {
@@ -794,7 +792,6 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						}
 
 						if err := fl.Verify(suite, publics); err != nil {
-							// Only keep a log of the failing forward links but keep trying others.
 							return errors.New("invalid forward-link signature: " + err.Error())
 						}
 					}
