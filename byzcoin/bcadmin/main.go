@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"math/rand"
 	"os"
 	"path"
@@ -18,11 +19,10 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
-
 	"github.com/qantik/qrgo"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
@@ -1768,7 +1768,7 @@ func darcAdd(c *cli.Context) error {
 
 	var desc []byte
 	if c.String("desc") == "" {
-		desc = random.Bits(32, true, random.New())
+		desc = []byte(randString(10))
 	} else {
 		if len(c.String("desc")) > 1024 {
 			return errors.New("descriptions longer than 1024 characters are not allowed")
@@ -2018,6 +2018,18 @@ func qrcode(c *cli.Context) error {
 
 type configPrivate struct {
 	Owner darc.Signer
+}
+
+func randString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	bigN := big.NewInt(int64(len(letters)))
+	b := make([]byte, n)
+	r := random.New()
+	for i := range b {
+		x := int(random.Int(bigN, r).Int64())
+		b[i] = letters[x]
+	}
+	return string(b)
 }
 
 func init() { network.RegisterMessages(&configPrivate{}) }
