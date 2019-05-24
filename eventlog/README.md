@@ -36,7 +36,7 @@ below) *must* be authorised to use these rules.
 An example transcript of correctly setting up and using an Eventlog is:
 
 ```
-# make the ByzCoin instance
+# Make the ByzCoin instance
 
 $ bcadmin c -roster ../../conode/public.toml
 Created ByzCoin with ID 7ad741d44e216fc4475da60b8656b904937639415ec27f7003e13408d6e0510c.

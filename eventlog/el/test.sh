@@ -26,9 +26,7 @@ main(){
 testEventLog(){
 	##### setup phase
 	runCoBG 1 2 3
-	# block interval of 2 seconds to this particular test to fail because of small intervals
-	# (Note: might go back to 0.5 after #1813)
-	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 1s
+	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval .5s
 	eval "$SED"
 	[ -z "$BC" ] && exit 1
 	
