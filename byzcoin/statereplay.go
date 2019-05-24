@@ -121,7 +121,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 					log.Warnf("Forward-link %d looks broken: %+v", j, fl)
 					continue
 				}
-				err = fl.Verify(pairing.NewSuiteBn256(), pubs)
+				err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
 				if err != nil {
 					log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
 					return nil, err

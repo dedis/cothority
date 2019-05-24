@@ -876,7 +876,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							return ErrorInconsistentForwardLink
 						}
 
-						if err := fl.Verify(suite, publics); err != nil {
+						if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
 							return errors.New("invalid forward-link signature: " + err.Error())
 						}
 					}
@@ -1184,6 +1184,10 @@ func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 
 			if sb == nil {
 				return errors.New("couldn't find one of the blocks")
+			}
+
+			if sb.Index <= sbs[len(sbs)-1].Index {
+				return ErrorInconsistentForwardLink
 			}
 
 			sbs = append(sbs, sb)
