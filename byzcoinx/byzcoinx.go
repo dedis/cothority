@@ -317,10 +317,10 @@ func InitBFTCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack pro
 
 // FaultThreshold computes the number of faults that byzcoinx tolerates.
 func FaultThreshold(n int) int {
-	return (n - 1) / 3
+	return protocol.DefaultFaultyThreshold(n)
 }
 
 // Threshold computes the number of nodes needed for successful operation.
 func Threshold(n int) int {
-	return n - FaultThreshold(n)
+	return protocol.DefaultThreshold(n)
 }

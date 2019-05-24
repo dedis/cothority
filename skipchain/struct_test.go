@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -291,9 +292,37 @@ func TestSkipBlock_Payload(t *testing.T) {
 	require.Equal(t, h, sb.CalculateHash())
 }
 
+// Vector testing of the function to get the index of the next
+// block when following the chain.
+func TestSkipBlock_PathForIndex(t *testing.T) {
+	sb := NewSkipBlock()
+
+	vectors := []struct{ index, height, base, target, expected int }{
+		{0, 6, 2, 32, 32},
+		{0, 6, 4, 32, 16},
+		{0, 2, 4, 32, 4},
+		{1, 1, 2, 3, 2},
+		{0, 6, 2, 31, 16},
+		{0, 1, 2, 0, 0},
+		{1, 1, 2, 1, 1},
+		// backwards test
+		{32, 6, 2, 0, 0},
+		{32, 6, 2, 1, 16},
+	}
+
+	for _, v := range vectors {
+		sb.Index = v.index
+		sb.Height = v.height
+		sb.BaseHeight = v.base
+
+		_, idx := sb.pathForIndex(v.target)
+		require.Equal(t, v.expected, idx, fmt.Sprintf("%v", v))
+	}
+}
+
 // This checks if the it returns the shortest path or an error
 // when blocks are missing
-func TestGetProof(t *testing.T) {
+func TestSkipBlockDB_GetProof(t *testing.T) {
 	local := onet.NewLocalTest(suite)
 	_, ro, _ := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -305,16 +334,20 @@ func TestGetProof(t *testing.T) {
 	root.Roster = ro
 	root.Index = 0
 	root.Height = 2
+	root.BaseHeight = 2
 	root.updateHash()
 	sb1 := NewSkipBlock()
 	sb1.Roster = ro
 	sb1.Index = 1
 	sb1.Height = 1
+	sb1.BaseHeight = 2
 	sb1.BackLinkIDs = []SkipBlockID{root.Hash}
 	sb1.updateHash()
 	sb2 := NewSkipBlock()
 	sb2.Roster = ro
 	sb2.Index = 2
+	sb2.BaseHeight = 2
+	sb2.GenesisID = root.Hash
 	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.updateHash()
 	sb1.ForwardLink = []*ForwardLink{&ForwardLink{From: sb1.Hash, To: sb2.Hash}}
@@ -327,10 +360,15 @@ func TestGetProof(t *testing.T) {
 	require.NoError(t, root.ForwardLink[1].sign(ro))
 
 	_, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	blocks, err := db.GetProof(root.Hash)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(blocks))
+	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
+
+	blocks, err = db.GetProofForID(sb2.Hash)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(blocks))
 	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
 
@@ -340,7 +378,10 @@ func TestGetProof(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = db.GetProof(root.Hash)
-	require.NotNil(t, err)
+	require.Error(t, err)
+
+	_, err = db.GetProofForID(sb2.Hash)
+	require.Error(t, err)
 }
 
 // Test the edge cases of the verification function

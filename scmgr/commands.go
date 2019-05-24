@@ -172,6 +172,22 @@ func getCommands() cli.Commands {
 						},
 					},
 				},
+				{
+					Name:    "optimize",
+					Usage:   "create missing forward link to optimize the proof of a given block",
+					Aliases: []string{"o"},
+					Action:  scOptimize,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "roster",
+							Usage: "conodes where to propagate",
+						},
+						cli.StringFlag{
+							Name:  "id",
+							Usage: "target block or skipchain to optimize",
+						},
+					},
+				},
 			},
 		},
 

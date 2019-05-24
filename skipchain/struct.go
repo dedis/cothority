@@ -486,6 +486,27 @@ func (sb *SkipBlock) GetForwardLen() int {
 	return len(sb.ForwardLink)
 }
 
+// pathForIndex computes the highest height that can be used to go
+// to the targeted index and also returns the index associated. It
+// works for forward abd backward links.
+func (sb *SkipBlock) pathForIndex(targetIndex int) (int, int) {
+	diff := math.Log(math.Abs(float64(targetIndex - sb.Index)))
+	base := math.Log(float64(sb.BaseHeight))
+	// Highest forward or backward link height that can be followed.
+	h := int(math.Min(diff/base, float64(sb.Height-1)))
+
+	// We need to round the e^x operation because of the floating-point
+	// precision but unlike the previous division, this will always
+	// produce the index minus ε < 10^-9.
+	offset := int(math.Round(math.Exp(float64(h) * base)))
+	if targetIndex < sb.Index {
+		// Going backwards in that case
+		offset *= -1
+	}
+
+	return h, sb.Index + offset
+}
+
 func (sb *SkipBlock) updateHash() SkipBlockID {
 	sb.Hash = sb.CalculateHash()
 	return sb.Hash
@@ -494,6 +515,17 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 // Proof is a list of blocks from the genesis to the latest block
 // using the shortest path
 type Proof []*SkipBlock
+
+// Search returns the block with the given index or nil
+func (sbs Proof) Search(index int) *SkipBlock {
+	for _, sb := range sbs {
+		if sb.Index == index {
+			return sb
+		}
+	}
+
+	return nil
+}
 
 // Verify checks that the proof is correct by checking individual
 // blocks and their back and forward links
@@ -1057,6 +1089,56 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 
 		return err
 	})
+	return
+}
+
+// GetProofForID returns the shortest chain known from the genesis to the given
+// block using the heighest forward-links available in the local db.
+func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
+	err = db.View(func(tx *bbolt.Tx) error {
+		target, err := db.getFromTx(tx, bid)
+		if err != nil {
+			return err
+		}
+		if target == nil {
+			return errors.New("couldn't find the block")
+		}
+
+		sb, err := db.getFromTx(tx, target.SkipChainID())
+		if err != nil {
+			return err
+		}
+		if sb == nil {
+			// It should never happen if the previous is found.
+			return errors.New("couldn't find the genesis block")
+		}
+
+		sbs = append(sbs, sb)
+
+		for !sb.Hash.Equal(bid) && len(sb.ForwardLink) > 0 {
+			diff := math.Log(float64(target.Index - sb.Index))
+			base := math.Log(float64(sb.BaseHeight))
+			maxHeight := 0
+			if base != 0 {
+				maxHeight = int(math.Min(diff/base, float64(len(sb.ForwardLink)-1)))
+			}
+
+			id := sb.ForwardLink[maxHeight].To
+			sb, err = db.getFromTx(tx, id)
+			if err != nil {
+				return err
+			}
+
+			if sb == nil {
+				return errors.New("couldn't find one of the blocks")
+			}
+
+			sbs = append(sbs, sb)
+		}
+
+		return nil
+	})
+
 	return
 }
 

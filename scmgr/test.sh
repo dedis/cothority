@@ -11,6 +11,7 @@ main(){
 	startTest
 	buildConode go.dedis.ch/cothority/v3/skipchain
 	CFG=$BUILDDIR/scmgr_config
+	run testOptimize
 	run testDNSUpdate
 	run testRestart
 	run testConfig
@@ -277,6 +278,20 @@ testConfig(){
 
 	# $CFG/data cannot be empty
 	testFail [ -d "$CFG/data" ]
+}
+
+testOptimize() {
+	startCl
+	setupGenesis
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
+
+	testFail runSc skipchain optimize
+	testFail runSc skipchain optimize --roster public.toml
+	testFail runSc skipchain optimize --roster public.toml --id abcd
+	testGrep "Chain optimized with 3 blocks" runSc skipchain optimize --roster public.toml --id $ID
 }
 
 runSc(){
