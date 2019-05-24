@@ -390,7 +390,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 	return reply, nil
 }
 
-// sendForwardLinkRequest sends a request to the given until until either the forward-link is
+// sendForwardLinkRequest sends requests to conodes in the given roster until either the forward-link is
 // created or there's not enough online nodes to get a valid signature.
 func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
 	cl := NewClient()
@@ -450,19 +450,19 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 			}
 			reply := &ForwardSignatureReply{}
 
-			log.Lvlf2("Request to create forward-link at index %d with height %d / %d", sb.Index, h, index)
+			log.Lvlf2("requesting missing forward-link at index %d with height %d / %d", sb.Index, h, index)
 			// The signature must be asked to the roster of the block
 			err := sendForwardLinkRequest(sb.Roster, req, reply)
 
 			if err != nil {
-				log.Error("couldn't create a forward link:", err)
+				log.Error("could not create a missing forward link:", err)
 				// reset the index to try to create lower levels
 				index = sb.Index
 			} else {
 				// save the new forward link
 				err = sb.AddForwardLink(reply.Link, h)
 				if err != nil {
-					log.Error("couldn't store the forward-link:", err)
+					log.Error("could not store the missing forward-link:", err)
 					index = sb.Index
 				}
 			}

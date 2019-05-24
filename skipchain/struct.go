@@ -1088,7 +1088,7 @@ func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 			return err
 		}
 		if sb == nil {
-			// It should never happen if the previous is found..
+			// It should never happen if the previous is found.
 			return errors.New("couldn't find the genesis block")
 		}
 
