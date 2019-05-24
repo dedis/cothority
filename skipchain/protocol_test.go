@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -35,32 +34,42 @@ func TestGB(t *testing.T) {
 
 	sb0 := NewSkipBlock()
 	sb0.Roster = ro
+	sb0.Index = 0
+	sb0.Height = 1
 	sb0.Hash = sb0.CalculateHash()
 	sb1 := NewSkipBlock()
 	sb1.Roster = ro
+	sb1.Index = 1
+	sb1.Height = 2
 	sb1.BackLinkIDs = []SkipBlockID{sb0.Hash}
 	sb1.Hash = sb1.CalculateHash()
 	sig0 := NewForwardLink(sb0, sb1)
-	sig0.Signature = byzcoinx.FinalSignature{Msg: sig0.Hash(), Sig: []byte{}}
+	require.NoError(t, sig0.sign(ro))
 	sb0.ForwardLink = []*ForwardLink{sig0}
 
 	sb2 := NewSkipBlock()
+	sb2.Roster = ro
+	sb2.Index = 2
+	sb2.Height = 1
 	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.Hash = sb2.CalculateHash()
 
 	sb3 := NewSkipBlock()
+	sb3.Roster = ro
+	sb3.Index = 3
+	sb3.Height = 1
 	sb3.BackLinkIDs = []SkipBlockID{sb2.Hash}
 	sb3.Hash = sb3.CalculateHash()
 	sig2 := NewForwardLink(sb2, sb3)
-	sig2.Signature = byzcoinx.FinalSignature{Msg: sig2.Hash(), Sig: []byte{}}
+	require.NoError(t, sig2.sign(ro))
 	sb2.ForwardLink = []*ForwardLink{sig2}
 
 	// and make sb1 forward[1] point to sb3 as well.
 	sig12 := NewForwardLink(sb1, sb2)
-	sig12.Signature = byzcoinx.FinalSignature{Msg: sig12.Hash(), Sig: []byte{}}
+	require.NoError(t, sig12.sign(ro))
 
 	sig13 := NewForwardLink(sb1, sb3)
-	sig13.Signature = byzcoinx.FinalSignature{Msg: sig13.Hash(), Sig: []byte{}}
+	require.NoError(t, sig13.sign(ro))
 	sb1.ForwardLink = []*ForwardLink{sig12, sig13}
 
 	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))

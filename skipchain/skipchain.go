@@ -427,6 +427,11 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 				break
 			}
 		}
+
+		if next.Index <= block.Index {
+			return nil, ErrorInconsistentForwardLink
+		}
+
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
