@@ -8,7 +8,7 @@ el
 
 Here are some examples of how to use el.
 
-## Make a new key pair
+## Make a new key pair and creating an event log
 
 Using the `el` tool, you can create a key pair:
 
@@ -16,37 +16,38 @@ Using the `el` tool, you can create a key pair:
 $ el key
 ```
 
-The keys are printed on stdout. You will give the public key to the
-ByzCoin administrator who will use the "bcadmin add" command to give your
-private key the right to make new event logs (add "spawn:eventlog"
-and "invoke:eventlog" rules to a Darc).
-
-You can now make the event log like this:
-
-```
-$ PRIVATE_KEY=$priv el create -bc $file -darc $darcID
-```
+The public key is printed on stdout. The private one is stored in the `el`
+configuration directory. To use a custom configuration directory use the
+`-config $dir`. You will give the public key to the ByzCoin administrator who
+will use the "bcadmin darc rule" command to give your private key the right to
+make new event logs (add "spawn:eventlog" and "invoke:eventlog.log" rules to a
+Darc). We will not cover how to configure ByzCoin, more information can be 
+found in the [bcadmin documentation](../../byzcoin/bcadmin/README.md).
 
 The ByzCoin admin will give you a ByzCoin config file, which you will use with
 the -bc argument, or you can set the BC environment variable to the name of the
-ByzCoin config file. He/she will also give you a DarcID to use.  A new event log
-will be spawned, and the event log ID will be printed. Set the EL environment
-variable to communicate it to future calls to the `el` program.
+ByzCoin config file. He/she will also give you a DarcID to use. 
 
-You need to give the private key from above, using the PRIVATE_KEY environment
-variable or the `-priv` argument.
+Assuming ByzCoin is configured with the correct permissions, you can now make
+the event log like this:
+
+```
+$ el create -bc $file -darc $darcID -sign $key
+```
+
+A new event log will be spawned, and the event log ID will be printed. Set the
+EL environment variable to communicate it to future calls to the `el` program.
+The $key variable is the key which you created using `el key`.
 
 ## Logging
 
 ```
-$ el log -config 2 -topic Topic -content "The log message"
+$ el log -topic Topic -content "The log message" -sign $key
 ```
 
-Using config #2, log a string to the event log.
-
-If `-topic` is not set, it defaults to the empty string. If `-content`
-is not set, `el log` defaults to reading one line at a time from stdin
-and logging those with the given `-topic`.
+The above command creates a log entry. If `-topic` is not set, it defaults to
+the empty string. If `-content` is not set, `el log` defaults to reading one
+line at a time from stdin and logging those with the given `-topic`.
 
 An interesting test that logs 100 messages, one every .1 second, so
 that you can see the messages arriving over the course of several
@@ -59,16 +60,16 @@ $ seq 100 | (while read i; do echo $i; sleep .1; done) | ./el log
 ## Searching
 
 ```
-$ el search -config 2 -topic Topic -from 12:00 -to 13:00 -count 5
-$ el search -config 2 -topic Topic -from 12:00 -for 1h
+$ el search -topic Topic -from 12:00 -to 13:00 -count 5
+$ el search -topic Topic -from 12:00 -for 1h
 ```
 
 The exit code tells you if the search was truncated or not.
 
 If `-topic` is not set, it defaults to the empty string. If you give
-`-for`, then you must not give `-to`.
+`-from`, then you must not give `-to`.
 
-## OpenID authentication
+## OpenID authentication (needs to be updated)
 
 If the Darc that controls access to the eventlog has the form
 "proxy:$pubkey:$user", then `el` will need to use the

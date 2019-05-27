@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/authprox"
 	"go.dedis.ch/cothority/v3/byzcoin"
+	bcadminlib "go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/eventlog"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -27,7 +29,6 @@ import (
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/sign/dss"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
@@ -64,9 +65,8 @@ var cmds = cli.Commands{
 		Aliases: []string{"c"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "priv",
-				EnvVar: "PRIVATE_KEY",
-				Usage:  "the ed25519 private key that will sign the create transaction",
+				Name:  "sign",
+				Usage: "the ed25519 private key that will sign the create transaction",
 			},
 			cli.StringFlag{
 				Name:   "bc",
@@ -75,7 +75,7 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the DarcID that has the spawn:evenlog right (default is the genesis DarcID)",
+				Usage: "the DarcID that has the spawn:evenlog rule (default is the genesis DarcID)",
 			},
 		},
 		Action: create,
@@ -111,9 +111,8 @@ var cmds = cli.Commands{
 		Aliases: []string{"l"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "priv",
-				EnvVar: "PRIVATE_KEY",
-				Usage:  "the ed25519 private key that will sign transactions",
+				Name:  "sign",
+				Usage: "the ed25519 private key that will sign transactions",
 			},
 			cli.StringFlag{
 				Name:   "bc",
@@ -181,9 +180,19 @@ var cmds = cli.Commands{
 	},
 	{
 		Name:    "key",
-		Usage:   "generates a new keypair and prints it on stdout",
+		Usage:   "generates a new keypair and prints the public key in the stdout",
 		Aliases: []string{"k"},
-		Action:  key,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "save",
+				Usage: "file in which the user wants to save the public key instead of printing it",
+			},
+			cli.StringFlag{
+				Name:  "print",
+				Usage: "print the private and public key",
+			},
+		},
+		Action: key,
 	},
 }
 
@@ -210,7 +219,7 @@ func init() {
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
-		dataDir = c.String("config")
+		bcadminlib.ConfigPath = c.String("config")
 		return nil
 	}
 
@@ -267,27 +276,18 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 			return nil, fmt.Errorf("could not make OpenID signer: %v", err)
 		}
 	} else {
-		// Otherwise, get the private key from the env/cmdline.
-		privStr := c.String("priv")
-		if privStr == "" {
-			return nil, errors.New("--priv is required")
+		// Otherwise, get the private key from the cmdline.
+		sstr := c.String("sign")
+		if sstr == "" {
+			return nil, errors.New("--sign is required")
 		}
-		priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
+		signer, err := bcadminlib.LoadKeyFromString(sstr)
 		if err != nil {
 			return nil, err
 		}
-		pub := cothority.Suite.Point().Mul(priv, nil)
-
-		cl.Signers = []darc.Signer{darc.NewSignerEd25519(pub, priv)}
+		cl.Signers = []darc.Signer{*signer}
 	}
 	return cl, nil
-}
-
-func key(c *cli.Context) error {
-	s := darc.NewSignerEd25519(nil, nil)
-	fmt.Println("Identity:", s.Identity())
-	fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
-	return nil
 }
 
 func create(c *cli.Context) error {
@@ -304,7 +304,7 @@ func create(c *cli.Context) error {
 		}
 		cl.DarcID = genDarc.GetBaseID()
 	} else {
-		eb, err := hex.DecodeString(e)
+		eb, err := bcadminlib.StringToDarcID(e)
 		if err != nil {
 			return err
 		}
@@ -589,8 +589,8 @@ func (o *openidCfg) save() (string, error) {
 		return "", nil
 	}
 
-	os.MkdirAll(dataDir, 0755)
-	fn := filepath.Join(dataDir, "openid.cfg")
+	os.MkdirAll(bcadminlib.ConfigPath, 0755)
+	fn := filepath.Join(bcadminlib.ConfigPath, "openid.cfg")
 
 	// perms = 0600 because there is key material inside this file.
 	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0600)
@@ -614,8 +614,8 @@ func (o *openidCfg) save() (string, error) {
 }
 
 func load() (*openidCfg, error) {
-	os.MkdirAll(dataDir, 0755)
-	fn := filepath.Join(dataDir, "openid.cfg")
+	os.MkdirAll(bcadminlib.ConfigPath, 0755)
+	fn := filepath.Join(bcadminlib.ConfigPath, "openid.cfg")
 
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
@@ -781,6 +781,43 @@ func getPublic(c *cli.Context, issuer string) (kyber.Point, error) {
 	}
 
 	return resp.Enrollments[0].Public, nil
+}
+
+func key(c *cli.Context) error {
+	if f := c.String("print"); f != "" {
+		sig, err := bcadminlib.LoadSigner(f)
+		if err != nil {
+			return errors.New("couldn't load signer: " + err.Error())
+		}
+		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
+		return nil
+	}
+	newSigner := darc.NewSignerEd25519(nil, nil)
+	err := bcadminlib.SaveKey(newSigner)
+	if err != nil {
+		return err
+	}
+
+	var fo io.Writer
+
+	save := c.String("save")
+	if save == "" {
+		fo = os.Stdout
+	} else {
+		file, err := os.Create(save)
+		if err != nil {
+			return err
+		}
+		fo = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Error(err)
+			}
+		}()
+	}
+	_, err = fmt.Fprintln(fo, newSigner.Identity().String())
+	return err
 }
 
 func faultThreshold(n int) int {

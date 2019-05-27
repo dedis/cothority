@@ -312,12 +312,12 @@ var cmds = cli.Commands{
 						Usage: "the DARC to update (no default)",
 					},
 					cli.StringFlag{
-						Name:  "rule",
-						Usage: "the rule to be added, updated or deleted",
-					},
-					cli.StringFlag{
 						Name:  "sign",
 						Usage: "public key of the signing entity (default is the admin public key)",
+					},
+					cli.StringFlag{
+						Name:  "rule",
+						Usage: "the rule to be added, updated or deleted",
 					},
 					cli.StringFlag{
 						Name:  "identity",
@@ -1357,7 +1357,6 @@ func key(c *cli.Context) error {
 			return errors.New("couldn't load signer: " + err.Error())
 		}
 		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
-		//log.Infof("Private: 65642e706f696e74%s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
 		return nil
 	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
