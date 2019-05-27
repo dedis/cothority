@@ -23,18 +23,14 @@ main(){
 }
 
 BCSetup(){
-	runGrepSed "export PRIVATE_KEY=" "" ./el key
-	eval $SED
-	[ -z "$PRIVATE_KEY" ] && exit 1
-	ID=`awk '/^Identity: / { print $2}' < $RUNOUT`
-	[ -z "$ID" ] && exit 1
-
 	runCoBG 1 2 3
-	runGrepSed "export BC=" "" ./bcadmin create --roster public.toml --interval 0.5s
+	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval 0.5s
 	eval $SED
 	[ -z "$BC" ] && exit 1
 
-	testOK ./bcadmin darc rule --rule spawn:authproxAdd --identity $ID
+	KEY=$(./el -c . key)
+
+	testOK ./bcadmin -c . darc rule --rule spawn:authproxAdd --identity $KEY
 }
 
 testAdd(){
