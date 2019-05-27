@@ -17,9 +17,7 @@ Skipchain
 This skipchain implementation is based upon the Chainiac-paper
 [1](https://www.usenix.org/system/files/conference/usenixsecurity17/sec17-nikitin.pdf)
 and offers a very simple and extendable voting-based permissioned blockchain.
-Instead of having one global blockchain, the skipchain implementation allows
-users to use a personal blockchain where they can store data. Skipchain is used
-by - but not limited to - the following elements of the cothority:
+Skipchain is used by - but not limited to - the following elements of the cothority:
 
 - [byzcoin](../byzcoin) - a scalable Byzantine fault tolerant consensus
 algorithm for open decentralized blockchain systems. It uses the skipchain as its
