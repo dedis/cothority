@@ -60,6 +60,8 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
+	// make sure the correct default signature scheme is set to BDN
+	assert.Equal(t, BdnSignatureSchemeIndex, sbRoot.SignatureScheme)
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -76,6 +78,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
+	assert.Equal(t, BdnSignatureSchemeIndex, latest.SignatureScheme)
 	assert.Equal(t, blockCount-1, latest.Index)
 	// the genesis block has a random back-link:
 	assert.Equal(t, 1, len(latest.BackLinkIDs))
@@ -178,6 +181,7 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 	csb.MaximumHeight = 2
 	csb.BaseHeight = 2
 	csb.Height = 1
+	csb.SignatureScheme = 0
 
 	err = service.forwardLinkLevel0(psbr.Latest, csb)
 	require.Error(t, err)
@@ -198,6 +202,10 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 	require.Error(t, err)
 
 	csb.BaseHeight = 2
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.SignatureScheme = 1
 	err = service.forwardLinkLevel0(psbr.Latest, csb)
 	require.NoError(t, err)
 }
@@ -1031,7 +1039,7 @@ func TestService_LeaderChange(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(res[0].ForwardLink))
 	// Forward link must be verified with the src block
-	require.Nil(t, res[0].ForwardLink[0].Verify(suite, ro.ServicePublics(ServiceName)))
+	require.Nil(t, res[0].ForwardLink[0].VerifyWithScheme(suite, ro.ServicePublics(ServiceName), BdnSignatureSchemeIndex))
 }
 
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {
@@ -1478,4 +1486,59 @@ func TestService_MissingForwardLinks(t *testing.T) {
 	require.NoError(t, err)
 	// C4 is re-inserted and should then update the missing forward link with the new block.
 	require.Equal(t, 2, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
+}
+
+// Test if the optimization works as expected for a normal situation.
+func TestService_OptimizeProofSimple(t *testing.T) {
+	testOptimizeProof(t, 23, 2, 32, 5)
+}
+
+// Test if the optimization works as expected when the maximum height
+// has to be used.
+func TestService_OptimizeProofMaxHeight(t *testing.T) {
+	testOptimizeProof(t, 23, 2, 2, 13)
+}
+
+// Test that a base of 1 doesn't panic (division by zero because of the log)
+func TestService_OptimizeProofBase1(t *testing.T) {
+	testOptimizeProof(t, 15, 1, 1, 16)
+}
+
+func testOptimizeProof(t *testing.T, numBlock, base, max, expected int) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	srvs, ro, service := local.MakeSRS(cothority.Suite, 6, skipchainSID)
+
+	roster := onet.NewRoster(ro.List[:5])
+	sk1 := service.(*Service)
+	sk5 := srvs[4].Service(ServiceName).(*Service)
+	sk6 := srvs[5].Service(ServiceName).(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(sk1, roster, nil, VerificationStandard, base, max)
+	require.NoError(t, err)
+
+	sb := NewSkipBlock()
+	sb.Roster = roster
+
+	sk1.disableForwardLink = true
+
+	var reply *StoreSkipBlockReply
+	for i := 0; i < numBlock; i++ {
+		reply, err = sk1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		require.NoError(t, err)
+	}
+
+	sk1.disableForwardLink = false
+
+	log.Lvl1("Request to optimize the proof")
+
+	// Ask host 5 to optimize (not the leader)
+	opr, err := sk5.OptimizeProof(&OptimizeProofRequest{Roster: ro, ID: reply.Latest.Hash})
+	require.NoError(t, err)
+	require.Equal(t, expected, len(opr.Proof))
+
+	// And verify the proof is propagated to the roster we asked for
+	sbs, err := sk6.db.GetProofForID(reply.Latest.Hash)
+	require.NoError(t, err)
+	require.Equal(t, expected, len(sbs))
 }

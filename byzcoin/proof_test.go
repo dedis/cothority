@@ -102,10 +102,12 @@ func createSC(t *testing.T) (s sc) {
 	s.c.StoreAll([]StateChange{{StateAction: Create, InstanceID: s.key, Value: s.value}}, 1)
 
 	s.genesis = skipchain.NewSkipBlock()
+	s.genesis.Height = 1
 	s.genesis.Roster, s.genesisPrivs = genRoster(1)
 	s.genesis.Hash = s.genesis.CalculateHash()
 
 	s.sb2 = skipchain.NewSkipBlock()
+	s.sb2.Height = 1
 	s.sb2.Roster, _ = genRoster(2)
 	s.sb2.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: s.c.GetRoot(),
@@ -119,6 +121,7 @@ func createSC(t *testing.T) (s sc) {
 	require.Nil(t, err)
 
 	s.genesis2 = skipchain.NewSkipBlock()
+	s.genesis2.Height = 1
 	s.genesis2.Roster, _ = genRoster(2)
 	s.genesis2.Hash = s.genesis2.CalculateHash()
 	s.s.Store(s.genesis2)

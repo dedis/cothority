@@ -192,7 +192,8 @@ export default class SkipchainRPC {
                 return new Error("no forward link associated with the next block");
             }
 
-            const err = link.verify(prev.roster.getServicePublics(SkipchainRPC.serviceName));
+            const publics = prev.roster.getServicePublics(SkipchainRPC.serviceName);
+            const err = link.verifyWithScheme(publics, prev.signatureScheme);
             if (err) {
                 return new Error(`invalid link: ${err.message}`);
             }

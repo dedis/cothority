@@ -1,6 +1,6 @@
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
 import { Roster, ServerIdentity } from "../../src/network/proto";
-import { ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
+import { BDN_INDEX, ByzcoinSignature, ForwardLink, SkipBlock } from "../../src/skipchain/skipblock";
 
 describe("SkipBlock Tests", () => {
     it("should hash the block", () => {
@@ -20,6 +20,7 @@ describe("SkipBlock Tests", () => {
     });
 
     it("should hash the block with a roster", () => {
+        const ref = "bdbe534e525441980184bb53692da069a7ae9ecc5cafcc4f64cb54fc453ff02b";
         const roster = new Roster({
             list: [
                 new ServerIdentity({
@@ -49,8 +50,15 @@ describe("SkipBlock Tests", () => {
             verifiers: [Buffer.from("a7f6cdb747f856b4aff5ece35a882489", "hex")],
         });
 
-        expect(sb.computeHash().toString("hex"))
-            .toBe("bdbe534e525441980184bb53692da069a7ae9ecc5cafcc4f64cb54fc453ff02b");
+        expect(sb.computeHash().toString("hex")).toBe(ref);
+
+        const sb2 = new SkipBlock({
+            ...sb,
+            signatureScheme: 1,
+        });
+
+        // different hash because of the signature scheme
+        expect(sb2.computeHash().toString("hex")).not.toBe(ref);
     });
 
     it("should hash the forward link", () => {
@@ -84,7 +92,12 @@ describe("SkipBlock Tests", () => {
         expect(fl.verify(publics).message).toBe("recreated message does not match");
 
         fl.signature.msg.fill(fl.hash(), 0);
+        fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([3])]));
+        expect(fl.verify(publics).message).toBe("BLS signature not verified");
+        expect(fl.verifyWithScheme(publics, BDN_INDEX).message).toBe("BDN signature not verified");
+        expect(fl.verifyWithScheme(publics, 123456789).message).toBe("unknown signature scheme");
+
         fl.signature.sig.fill(Buffer.concat([new BN256G1Point().null().marshalBinary(), Buffer.from([1])]));
-        expect(fl.verify(publics).message).toBe("signature not verified");
+        expect(fl.verify(publics).message).toBe("not enough signers");
     });
 });

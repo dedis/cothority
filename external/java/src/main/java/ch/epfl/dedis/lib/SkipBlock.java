@@ -6,6 +6,7 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.ForwardLink;
+import ch.epfl.dedis.skipchain.SignatureScheme;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -69,23 +70,23 @@ public class SkipBlock {
         bb.clear();
         bb.putInt(getBaseHeight());
         digest.update(bb.array());
+        bb.clear();
 
-        getBackLinks().forEach(bl -> {
-            digest.update(bl.getId());
-        });
-        getVerifiers().forEach(v -> {
-            digest.update(v);
-        });
+        getBackLinks().forEach(bl -> digest.update(bl.getId()));
+        getVerifiers().forEach(digest::update);
         try {
             digest.update(skipBlock.getGenesis().toByteArray());
             digest.update(getData());
             if (getRoster() != null) {
-                getRoster().getNodes().forEach(si -> {
-                    digest.update(si.getPublic().toBytes());
-                });
+                getRoster().getNodes().forEach(si -> digest.update(si.getPublic().toBytes()));
             }
         } catch (CothorityCryptoException e) {
             return null;
+        }
+
+        if (getSignatureScheme() != SignatureScheme.BLS) {
+            bb.putInt(getSignatureScheme().getValue());
+            digest.update(bb.array());
         }
 
         return digest.digest();
@@ -151,6 +152,13 @@ public class SkipBlock {
     }
 
     /**
+     * @return the signature scheme index for the block
+     */
+    public SignatureScheme getSignatureScheme() {
+        return SignatureScheme.fromValue(skipBlock.getSignatureScheme());
+    }
+
+    /**
      * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
      * if this is the tip of the chain.
      */
@@ -182,7 +190,7 @@ public class SkipBlock {
                 // forward-link in place.
                 continue;
             }
-            if (!fl.verify(publics)) {
+            if (!fl.verifyWithScheme(publics, getSignatureScheme())) {
                 return false;
             }
         }

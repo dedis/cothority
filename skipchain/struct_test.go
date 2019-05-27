@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -9,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign"
+	"go.dedis.ch/kyber/v3/sign/bls"
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -16,6 +22,8 @@ import (
 	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
+
+var pairingSuite = pairing.NewSuiteBn256()
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
 	l := onet.NewTCPTest(suite)
@@ -118,8 +126,42 @@ func TestSkipBlock_InvalidForwardLinks(t *testing.T) {
 
 	// Try to add a forward link at a wrong height.
 	s.db.Store(sb2)
-
 	require.Contains(t, log.GetStdErr(), "Received a forward link with an invalid height")
+
+	gb2 := s.db.GetByID(sbRoot.Hash)
+	gb2.BackLinkIDs = []SkipBlockID{[]byte{1, 2, 3}}
+	gb2.updateHash()
+	// Try to store a new block with old forward-links
+	s.db.Store(gb2)
+	require.Contains(t, log.GetStdErr(), "found inconsistent forward-link")
+
+	gb2.Height = 0
+	// Try to store a new block with too many forward-links
+	s.db.Store(gb2)
+	require.Contains(t, log.GetStdErr(), "found 1 forward-links for a height of 0")
+}
+
+func TestSkipBlock_WrongSignatures(t *testing.T) {
+	fl := ForwardLink{
+		From:      SkipBlockID{},
+		To:        SkipBlockID{},
+		Signature: byzcoinx.FinalSignature{},
+	}
+	err := fl.VerifyWithScheme(suite, []kyber.Point{}, 0)
+	require.Error(t, err)
+	require.Equal(t, "wrong hash of forward link", err.Error())
+
+	fl.Signature.Msg = fl.Hash()
+
+	err = fl.VerifyWithScheme(suite, []kyber.Point{}, 123456789)
+	require.Error(t, err)
+	require.Equal(t, "unknown signature scheme", err.Error())
+	err = fl.VerifyWithScheme(suite, []kyber.Point{}, BlsSignatureSchemeIndex)
+	require.Error(t, err)
+	require.NotEqual(t, "unknown signature scheme", err.Error())
+	err = fl.VerifyWithScheme(suite, []kyber.Point{}, BdnSignatureSchemeIndex)
+	require.Error(t, err)
+	require.NotEqual(t, "unknown signature scheme", err.Error())
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -156,6 +198,11 @@ func TestSkipBlock_Hash1(t *testing.T) {
 	// Clone, then change field Data: not equal
 	sbd2 = sbd1.Copy()
 	sbd2.Data[0]++
+	h2 = sbd2.updateHash()
+	assert.NotEqual(t, h1, h2)
+
+	sbd2 = sbd1.Copy()
+	sbd2.SignatureScheme++
 	h2 = sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
 }
@@ -274,28 +321,83 @@ func TestSkipBlock_Payload(t *testing.T) {
 	require.Equal(t, h, sb.CalculateHash())
 }
 
+// Vector testing of the function to get the index of the next
+// block when following the chain.
+func TestSkipBlock_PathForIndex(t *testing.T) {
+	sb := NewSkipBlock()
+
+	vectors := []struct{ index, height, base, target, expected int }{
+		{0, 6, 2, 32, 32},
+		{0, 6, 4, 32, 16},
+		{0, 2, 4, 32, 4},
+		{1, 1, 2, 3, 2},
+		{0, 6, 2, 31, 16},
+		{0, 1, 2, 0, 0},
+		{1, 1, 2, 1, 1},
+		// backwards test
+		{32, 6, 2, 0, 0},
+		{32, 6, 2, 1, 16},
+	}
+
+	for _, v := range vectors {
+		sb.Index = v.index
+		sb.Height = v.height
+		sb.BaseHeight = v.base
+
+		_, idx := sb.pathForIndex(v.target)
+		require.Equal(t, v.expected, idx, fmt.Sprintf("%v", v))
+	}
+}
+
 // This checks if the it returns the shortest path or an error
 // when blocks are missing
-func TestGetProof(t *testing.T) {
+func TestSkipBlockDB_GetProof(t *testing.T) {
+	local := onet.NewLocalTest(suite)
+	_, ro, _ := local.GenTree(2, false)
+	defer local.CloseAll()
+
 	db, file := setupSkipBlockDB(t)
 	defer os.Remove(file)
 
 	root := NewSkipBlock()
+	root.Roster = ro
+	root.Index = 0
+	root.Height = 2
+	root.BaseHeight = 2
 	root.updateHash()
 	sb1 := NewSkipBlock()
+	sb1.Roster = ro
+	sb1.Index = 1
+	sb1.Height = 1
+	sb1.BaseHeight = 2
 	sb1.BackLinkIDs = []SkipBlockID{root.Hash}
 	sb1.updateHash()
 	sb2 := NewSkipBlock()
+	sb2.Roster = ro
+	sb2.Index = 2
+	sb2.BaseHeight = 2
+	sb2.GenesisID = root.Hash
 	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.updateHash()
-	sb1.ForwardLink = []*ForwardLink{&ForwardLink{To: sb2.Hash}}
-	root.ForwardLink = []*ForwardLink{&ForwardLink{To: sb1.Hash}, &ForwardLink{To: sb2.Hash}}
+	sb1.ForwardLink = []*ForwardLink{&ForwardLink{From: sb1.Hash, To: sb2.Hash}}
+	require.NoError(t, sb1.ForwardLink[0].sign(ro))
+	root.ForwardLink = []*ForwardLink{
+		&ForwardLink{From: root.Hash, To: sb1.Hash},
+		&ForwardLink{From: root.Hash, To: sb2.Hash},
+	}
+	require.NoError(t, root.ForwardLink[0].sign(ro))
+	require.NoError(t, root.ForwardLink[1].sign(ro))
 
 	_, err := db.StoreBlocks([]*SkipBlock{root, sb1, sb2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	blocks, err := db.GetProof(root.Hash)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(blocks))
+	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
+
+	blocks, err = db.GetProofForID(sb2.Hash)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(blocks))
 	require.True(t, blocks[1].Hash.Equal(sb2.Hash))
 
@@ -305,7 +407,10 @@ func TestGetProof(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = db.GetProof(root.Hash)
-	require.NotNil(t, err)
+	require.Error(t, err)
+
+	_, err = db.GetProofForID(sb2.Hash)
+	require.Error(t, err)
 }
 
 // Test the edge cases of the verification function
@@ -369,4 +474,37 @@ func TestBlockBuffer(t *testing.T) {
 	bb.clear(sid)
 	sb = bb.get(sid, bid)
 	require.Nil(t, sb)
+}
+
+func (fl *ForwardLink) sign(ro *onet.Roster) error {
+	msg := fl.Hash()
+	mask, err := sign.NewMask(pairingSuite, ro.ServicePublics(ServiceName), nil)
+	if err != nil {
+		return err
+	}
+	sigs := make([][]byte, len(ro.List))
+	for i, si := range ro.List {
+		sig, err := bls.Sign(pairingSuite, si.ServicePrivate(ServiceName), msg)
+		if err != nil {
+			return err
+		}
+		sigs[i] = sig
+
+		err = mask.SetBit(i, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	agg, err := bls.AggregateSignatures(pairingSuite, sigs...)
+	if err != nil {
+		return err
+	}
+
+	fl.Signature = byzcoinx.FinalSignature{
+		Msg: msg,
+		Sig: append(agg, mask.Mask()...),
+	}
+
+	return nil
 }

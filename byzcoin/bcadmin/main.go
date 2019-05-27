@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"math/rand"
 	"os"
 	"path"
@@ -18,11 +19,10 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
-
 	"github.com/qantik/qrgo"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
@@ -312,12 +312,12 @@ var cmds = cli.Commands{
 						Usage: "the DARC to update (no default)",
 					},
 					cli.StringFlag{
-						Name:  "rule",
-						Usage: "the rule to be added, updated or deleted",
-					},
-					cli.StringFlag{
 						Name:  "sign",
 						Usage: "public key of the signing entity (default is the admin public key)",
+					},
+					cli.StringFlag{
+						Name:  "rule",
+						Usage: "the rule to be added, updated or deleted",
 					},
 					cli.StringFlag{
 						Name:  "identity",
@@ -1357,7 +1357,6 @@ func key(c *cli.Context) error {
 			return errors.New("couldn't load signer: " + err.Error())
 		}
 		log.Infof("Private: %s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
-		//log.Infof("Private: 65642e706f696e74%s\nPublic: %s", sig.Ed25519.Secret, sig.Ed25519.Point)
 		return nil
 	}
 	newSigner := darc.NewSignerEd25519(nil, nil)
@@ -1768,7 +1767,7 @@ func darcAdd(c *cli.Context) error {
 
 	var desc []byte
 	if c.String("desc") == "" {
-		desc = random.Bits(32, true, random.New())
+		desc = []byte(randString(10))
 	} else {
 		if len(c.String("desc")) > 1024 {
 			return errors.New("descriptions longer than 1024 characters are not allowed")
@@ -2018,6 +2017,18 @@ func qrcode(c *cli.Context) error {
 
 type configPrivate struct {
 	Owner darc.Signer
+}
+
+func randString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	bigN := big.NewInt(int64(len(letters)))
+	b := make([]byte, n)
+	r := random.New()
+	for i := range b {
+		x := int(random.Int(bigN, r).Int64())
+		b[i] = letters[x]
+	}
+	return string(b)
 }
 
 func init() { network.RegisterMessages(&configPrivate{}) }

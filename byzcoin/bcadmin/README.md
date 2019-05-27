@@ -31,7 +31,12 @@ This stores the byzcoin-configuration holding the roster, the byzcoin-id,
 as well as the darc and the identity of the _admin_ in a file called
 `bc-xxxx.cfg`, where `xxxx` is the id of the new byzcoin-instance. 
 The private key of the _admin_ is stored in `key-ed25519:pub_admin.cfg`, 
-where `pub_admin` is the public key of the _admin_. 
+where `pub_admin` is the public key of the _admin_. The `-c $dir` flag means
+the key will be created in the directory `$dir`. If the `-c` flag is not used,
+the key will be created in the default configuration directory. 
+
+Currently it is not possible for the admin to specify the key, the `create`
+sub-command always generates a new one.
 
 ### Sign up a new user
 
@@ -105,7 +110,7 @@ public key with you, the ByzCoin admin. You grant access to a given contract
 for instructions signed by the given secret key like this:
 
 ```
-$ bcadmin add -bc $file spawn:theContractName -identity ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
+$ bcadmin darc rule -bc $file -rule spawn:theContractName -identity ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
 ```
 
 Different contracts will require different permissions. Check
@@ -149,6 +154,8 @@ Optional flags:
  * -owner key:%x             Creates the DARC with the mentioned key as owner (sign & evolve)
  * -darc darc:%x             Creates the DARC using the mentioned DARC for creation (uses Genesis DARC by default)
  * -sign key:%x              Uses this key to sign the transaction (AdminIdentity by default)
+ * -desc description         The description for the new DARC (default: random)
+ * -unrestricted             Add the invoke:evolve_unrestricted rule
 
 ```
 $ bcadmin darc show -bc $file

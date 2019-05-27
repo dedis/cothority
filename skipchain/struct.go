@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/kyber/v3"
@@ -22,6 +23,10 @@ import (
 	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
+
+// ErrorInconsistentForwardLink is triggered when the target of a forward-link
+// doesn't respect the consistency of the chain.
+var ErrorInconsistentForwardLink = errors.New("found inconsistent forward-link")
 
 // How long to wait before a timeout is generated in the propagation. It is not
 // set to a constant because we'd like to change it in the test.
@@ -301,37 +306,6 @@ func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
 	}
 }
 
-// CalculateHash hashes all fixed fields of the skipblock.
-func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
-	hash := sha256.New()
-	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
-		sbf.BaseHeight} {
-		err := binary.Write(hash, binary.LittleEndian, int32(i))
-		if err != nil {
-			panic("error writing to hash:" + err.Error())
-		}
-	}
-
-	for _, bl := range sbf.BackLinkIDs {
-		hash.Write(bl)
-	}
-	for _, v := range sbf.VerifierIDs {
-		hash.Write(v[:])
-	}
-	hash.Write(sbf.GenesisID)
-	hash.Write(sbf.Data)
-	if sbf.Roster != nil {
-		for _, pub := range sbf.Roster.Publics() {
-			_, err := pub.MarshalTo(hash)
-			if err != nil {
-				panic("couldn't marshall point to hash: " + err.Error())
-			}
-		}
-	}
-	buf := hash.Sum(nil)
-	return buf
-}
-
 // SkipBlock represents a SkipBlock of any type - the fields that won't
 // be hashed (yet).
 type SkipBlock struct {
@@ -349,6 +323,9 @@ type SkipBlock struct {
 	// using the skipblocks can return simply the SkipBlockFix, as long as they
 	// don't need the payload.
 	Payload []byte `protobuf:"opt"`
+
+	// SignatureScheme holds the index of the scheme to use to verify the signature.
+	SignatureScheme uint32
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over
@@ -382,7 +359,7 @@ func (sb *SkipBlock) VerifyForwardSignatures() error {
 			// forward-link in place.
 			continue
 		}
-		if err := fl.Verify(suite, publics); err != nil {
+		if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
 	}
@@ -400,10 +377,11 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		return nil
 	}
 	b := &SkipBlock{
-		SkipBlockFix: sb.SkipBlockFix.Copy(),
-		Hash:         make([]byte, len(sb.Hash)),
-		Payload:      make([]byte, len(sb.Payload)),
-		ForwardLink:  make([]*ForwardLink, len(sb.ForwardLink)),
+		SkipBlockFix:    sb.SkipBlockFix.Copy(),
+		Hash:            make([]byte, len(sb.Hash)),
+		Payload:         make([]byte, len(sb.Payload)),
+		ForwardLink:     make([]*ForwardLink, len(sb.ForwardLink)),
+		SignatureScheme: sb.SignatureScheme,
 	}
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
@@ -482,6 +460,83 @@ func (sb *SkipBlock) GetForwardLen() int {
 	return len(sb.ForwardLink)
 }
 
+// pathForIndex computes the highest height that can be used to go
+// to the targeted index and also returns the index associated. It
+// works for forward abd backward links.
+func (sb *SkipBlock) pathForIndex(targetIndex int) (int, int) {
+	diff := math.Log(math.Abs(float64(targetIndex - sb.Index)))
+	base := math.Log(float64(sb.BaseHeight))
+	// Highest forward or backward link height that can be followed.
+	h := int(math.Min(diff/base, float64(sb.Height-1)))
+
+	// We need to round the e^x operation because of the floating-point
+	// precision but unlike the previous division, this will always
+	// produce the index minus ε < 10^-9.
+	offset := int(math.Round(math.Exp(float64(h) * base)))
+	if targetIndex < sb.Index {
+		// Going backwards in that case
+		offset *= -1
+	}
+
+	return h, sb.Index + offset
+}
+
+// SignatureProtocol returns the name of the byzcoinx protocols that should
+// be used to sign forward links coming from this block. The first protocol
+// shall be used for forward link level 0 and the second shall be used to
+// create higher level forward links.
+func (sb *SkipBlock) SignatureProtocol() (string, string) {
+	switch sb.SignatureScheme {
+	case BlsSignatureSchemeIndex:
+		return bftNewBlock, bftFollowBlock
+	case BdnSignatureSchemeIndex:
+		return bdnNewBlock, bdnFollowBlock
+	default:
+		return "", ""
+	}
+}
+
+// CalculateHash hashes all fixed fields of the skipblock.
+func (sb *SkipBlock) CalculateHash() SkipBlockID {
+	hash := sha256.New()
+	for _, i := range []int{sb.Index, sb.Height, sb.MaximumHeight,
+		sb.BaseHeight} {
+		err := binary.Write(hash, binary.LittleEndian, int32(i))
+		if err != nil {
+			panic("error writing to hash:" + err.Error())
+		}
+	}
+
+	for _, bl := range sb.BackLinkIDs {
+		hash.Write(bl)
+	}
+	for _, v := range sb.VerifierIDs {
+		hash.Write(v[:])
+	}
+	hash.Write(sb.GenesisID)
+	hash.Write(sb.Data)
+	if sb.Roster != nil {
+		for _, pub := range sb.Roster.Publics() {
+			_, err := pub.MarshalTo(hash)
+			if err != nil {
+				panic("couldn't marshall point to hash: " + err.Error())
+			}
+		}
+	}
+
+	// For backwards compatibility, the signature scheme is only added to
+	// the hash when different from the previous default (== 0)
+	if sb.SignatureScheme > 0 {
+		err := binary.Write(hash, binary.LittleEndian, sb.SignatureScheme)
+		if err != nil {
+			panic("error writing to hash: " + err.Error())
+		}
+	}
+
+	buf := hash.Sum(nil)
+	return buf
+}
+
 func (sb *SkipBlock) updateHash() SkipBlockID {
 	sb.Hash = sb.CalculateHash()
 	return sb.Hash
@@ -490,6 +545,17 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 // Proof is a list of blocks from the genesis to the latest block
 // using the shortest path
 type Proof []*SkipBlock
+
+// Search returns the block with the given index or nil
+func (sbs Proof) Search(index int) *SkipBlock {
+	for _, sb := range sbs {
+		if sb.Index == index {
+			return sb
+		}
+	}
+
+	return nil
+}
 
 // Verify checks that the proof is correct by checking individual
 // blocks and their back and forward links
@@ -545,7 +611,7 @@ func (sbs Proof) verifyChain() error {
 			}
 
 			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
-			if err := fl.Verify(pairing.NewSuiteBn256(), sb.Roster.ServicePublics(ServiceName)); err != nil {
+			if err := fl.VerifyWithScheme(suite, sb.Roster.ServicePublics(ServiceName), sb.SignatureScheme); err != nil {
 				return err
 			}
 
@@ -557,6 +623,16 @@ func (sbs Proof) verifyChain() error {
 
 	return nil
 }
+
+// Signature schemes should be ordered by robustness such that for any
+// x < y, S(x) <= S(y) where S(i) quantify the security of the signature
+// scheme at index i
+const (
+	// BlsSignatureSchemeIndex is the index for BLS signatures
+	BlsSignatureSchemeIndex = uint32(iota)
+	// BdnSignatureSchemeIndex is the index for BDN signatures
+	BdnSignatureSchemeIndex
+)
 
 // ForwardLink can be used to jump from old blocks to newer
 // blocks. Depending on the BaseHeight and MaximumHeight, older
@@ -628,12 +704,25 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // correspond to the block roster to match the signature.
 // It returns nil if the signature is correct, or an error if not.
 func (fl *ForwardLink) Verify(suite *pairing.SuiteBn256, pubs []kyber.Point) error {
+	return fl.VerifyWithScheme(suite, pubs, 0)
+}
+
+// VerifyWithScheme checks the signature against a list of public keys with
+// a given scheme. The list must correspond to the block roster to match the
+// signature. It returns nil if the signature is correct, or an error if not.
+func (fl *ForwardLink) VerifyWithScheme(suite *pairing.SuiteBn256, pubs []kyber.Point, scheme uint32) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
 
-	// This calculation must match the one in byzcoinx.
-	return protocol.BlsSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
+	switch scheme {
+	case BlsSignatureSchemeIndex:
+		return protocol.BlsSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
+	case BdnSignatureSchemeIndex:
+		return bdnproto.BdnSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
+	default:
+		return errors.New("unknown signature scheme")
+	}
 }
 
 // IsEmpty indicates whether this forwardlink is merely a placeholder for
@@ -723,7 +812,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 
 						publics := sbOld.Roster.ServicePublics(ServiceName)
 
-						if err := fl.Verify(suite, publics); err != nil {
+						if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
 							// Only keep a log of the failing forward links but keep trying others.
 							log.Error("Got a known block with wrong signature in forward-link with error: " + err.Error())
 							continue
@@ -767,6 +856,32 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						return fmt.Errorf("Tried to store unlinkable block: %+v", sb.SkipBlockFix)
 					}
 				}
+
+				// As we don't store the target height in the forward-link, there is no
+				// way to ensure that it will be stored at the right height if the target
+				// block is not yet discovered like in a catch up scenario that will end
+				// up in this path.
+				// Deprecated: This is a notice for v4 to add the target height in the
+				// forward-link so conodes can sign it.
+				if len(sb.ForwardLink) > sb.Height {
+					return fmt.Errorf("found %d forward-links for a height of %d",
+						len(sb.ForwardLink), sb.Height)
+				}
+
+				publics := sb.Roster.ServicePublics(ServiceName)
+
+				for _, fl := range sb.ForwardLink {
+					if !fl.IsEmpty() {
+						if !fl.From.Equal(sb.Hash) {
+							return ErrorInconsistentForwardLink
+						}
+
+						if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
+							return errors.New("invalid forward-link signature: " + err.Error())
+						}
+					}
+				}
+
 				err := db.storeToTx(tx, sb)
 				if err != nil {
 					return err
@@ -1016,11 +1131,71 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 				return errors.New("couldn't find one of the blocks")
 			}
 
+			// One way to insure there is no corrupted forward-link is
+			// to insure the index is monotonically increasing.
+			if sb.Index <= sbs[len(sbs)-1].Index {
+				return ErrorInconsistentForwardLink
+			}
+
 			sbs = append(sbs, sb)
 		}
 
 		return err
 	})
+	return
+}
+
+// GetProofForID returns the shortest chain known from the genesis to the given
+// block using the heighest forward-links available in the local db.
+func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
+	err = db.View(func(tx *bbolt.Tx) error {
+		target, err := db.getFromTx(tx, bid)
+		if err != nil {
+			return err
+		}
+		if target == nil {
+			return errors.New("couldn't find the block")
+		}
+
+		sb, err := db.getFromTx(tx, target.SkipChainID())
+		if err != nil {
+			return err
+		}
+		if sb == nil {
+			// It should never happen if the previous is found.
+			return errors.New("couldn't find the genesis block")
+		}
+
+		sbs = append(sbs, sb)
+
+		for !sb.Hash.Equal(bid) && len(sb.ForwardLink) > 0 {
+			diff := math.Log(float64(target.Index - sb.Index))
+			base := math.Log(float64(sb.BaseHeight))
+			maxHeight := 0
+			if base != 0 {
+				maxHeight = int(math.Min(diff/base, float64(len(sb.ForwardLink)-1)))
+			}
+
+			id := sb.ForwardLink[maxHeight].To
+			sb, err = db.getFromTx(tx, id)
+			if err != nil {
+				return err
+			}
+
+			if sb == nil {
+				return errors.New("couldn't find one of the blocks")
+			}
+
+			if sb.Index <= sbs[len(sbs)-1].Index {
+				return ErrorInconsistentForwardLink
+			}
+
+			sbs = append(sbs, sb)
+		}
+
+		return nil
+	})
+
 	return
 }
 

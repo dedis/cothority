@@ -449,8 +449,8 @@ public class ByzCoinRPC {
     }
 
     /**
-     * Subscribes to all new skipBlocks that might arrive. The subscription is implemented using a polling
-     * approach until we have a working streaming solution.
+     * Subscribes to all new skipBlocks that might arrive. This function does not block, the receiver is called
+     * in a new thread.
      *
      * @param sbr is a SkipBlockReceiver that will be called with any new block(s) available.
      * @throws CothorityCommunicationException if something goes wrong

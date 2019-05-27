@@ -22,11 +22,11 @@ import (
 	"time"
 
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/cothority/v3/messaging"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign/cosi"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
@@ -38,6 +38,8 @@ import (
 const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
+const bdnNewBlock = "SkipchainBDNNew"
+const bdnFollowBlock = "SkipchainBDNFollow"
 
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
@@ -70,6 +72,9 @@ type Service struct {
 	closedMutex             sync.Mutex
 	working                 sync.WaitGroup
 	closing                 chan bool
+
+	// disableForwardLink is useful in testing mode
+	disableForwardLink bool
 }
 
 type chainLocker struct {
@@ -211,6 +216,10 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		random.Bytes(bl[:], random.New())
 		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl[:])}
 		prop.GenesisID = nil
+		// starting with release v3.1.0, new skipchains default to BDN
+		// because BLS is vulnerable a known attack (see ../README.md
+		// about the release).
+		prop.SignatureScheme = BdnSignatureSchemeIndex
 		prop.updateHash()
 		err := s.verifyBlock(prop)
 		if err != nil {
@@ -292,6 +301,7 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		prop.Index = prev.Index + 1
 		prop.GenesisID = scID
 		prop.ForwardLink = []*ForwardLink{}
+		prop.SignatureScheme = prev.SignatureScheme
 		// And calculate the height of that block.
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
@@ -349,27 +359,31 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 				"Couldn't get forward signature on block: " + err.Error())
 		}
 
-		// Now create all further forward links. Again, after creation of each
-		// forward-link, it will propagate them to all nodes.
-		log.Lvl3("Asking forward-links from all linked blocks")
-		for i, bl := range prop.BackLinkIDs[1:] {
-			back := s.db.GetByID(bl)
-			if back == nil {
-				return nil, errors.New(
-					"Didn't get skipblock in back-link")
+		if !s.disableForwardLink {
+			// Now create all further forward links. Again, after creation of each
+			// forward-link, it will propagate them to all nodes.
+			log.Lvl3("Asking forward-links from all linked blocks")
+			for i, bl := range prop.BackLinkIDs[1:] {
+				back := s.db.GetByID(bl)
+				if back == nil {
+					return nil, errors.New(
+						"Didn't get skipblock in back-link")
 
-			}
-			// Requesting creation of secondary forward link.
-			log.Lvlf2("%s: sending request for height %d to %s", s.ServerIdentity(),
-				i+1, back.Roster.List[0])
-			err := s.SendRaw(back.Roster.List[0], &ForwardSignature{
-				TargetHeight: i + 1,
-				Previous:     back.Hash,
-				Newest:       prop.Copy(),
-			})
+				}
+				// Requesting creation of secondary forward link.
+				log.Lvlf2("%s: sending request for height %d to %s", s.ServerIdentity(),
+					i+1, back.Roster.List[0])
+				// Deprecated: it should be replaced by the handler so that it can be checked
+				// that the link has been created and try another node otherwise.
+				err := s.SendRaw(back.Roster.List[0], &ForwardSignature{
+					TargetHeight: i + 1,
+					Previous:     back.Hash,
+					Newest:       prop.Copy(),
+				})
 
-			if err != nil {
-				log.Warn(err)
+				if err != nil {
+					log.Warn(err)
+				}
 			}
 		}
 	}
@@ -379,6 +393,89 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 	}
 	log.Lvlf3("Block added, replying. New latest is: %x, at index %d", prop.Hash, prop.Index)
 	return reply, nil
+}
+
+// sendForwardLinkRequest sends requests to conodes in the given roster until either the forward-link is
+// created or there's not enough online nodes to get a valid signature.
+func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
+	cl := NewClient()
+
+	// Try as many times as it can until the faulty threshold is reached
+	// meaning it's impossible to get a valid signature.
+	retries := protocol.DefaultFaultyThreshold(len(ro.List)) + 1
+
+	for i := 0; i < retries; i++ {
+		// No random permutation as we need a given threshold anyway.
+		err = cl.SendProtobuf(ro.List[i], req, reply)
+		if err == nil {
+			return nil
+		}
+	}
+
+	return err
+}
+
+// OptimizeProof creates missing forward links to optimize the proof of the block
+// at the given index.
+func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply, error) {
+	pr, err := s.db.GetProofForID(req.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	target := pr[len(pr)-1]
+	index := 0
+	h := 0
+	newProof := Proof{}
+
+	for _, sb := range pr[:len(pr)-1] {
+		if sb.Index < index {
+			// Skip blocks thanks to the new forward-link.
+			continue
+		}
+
+		h, index = sb.pathForIndex(target.Index)
+
+		if h > 0 && len(sb.ForwardLink) <= h {
+			to := pr.Search(index)
+			if to == nil {
+				return nil, fmt.Errorf("chain is inconsistent: block at index %d not found", index)
+			}
+
+			req := &ForwardSignature{
+				TargetHeight: h,
+				Previous:     sb.Hash,
+				Newest:       to,
+			}
+			reply := &ForwardSignatureReply{}
+
+			log.Lvlf2("requesting missing forward-link at index %d with height %d / %d", sb.Index, h, index)
+			// The signature must be created by the roster of the block
+			err := sendForwardLinkRequest(sb.Roster, req, reply)
+
+			if err != nil {
+				log.Error("could not create a missing forward link:", err)
+				// reset the index to try to create lower levels
+				index = sb.Index
+			} else {
+				// save the new forward link
+				err = sb.AddForwardLink(reply.Link, h)
+				if err != nil {
+					log.Error("could not store the missing forward-link:", err)
+					index = sb.Index
+				}
+			}
+		}
+
+		newProof = append(newProof, sb)
+	}
+
+	newProof = append(newProof, target)
+
+	// Propagate the optimized proof to the given roster
+	err = s.startPropagation(s.propagateProof, req.Roster, &PropagateProof{newProof})
+
+	return &OptimizeProofReply{newProof}, err
 }
 
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
@@ -427,6 +524,11 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 				break
 			}
 		}
+
+		if next.Index <= block.Index {
+			return nil, ErrorInconsistentForwardLink
+		}
+
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
@@ -514,8 +616,10 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 		}
 		return result, nil
 	case <-time.After(s.propTimeout):
+		pisc.Done()
 		return nil, errors.New("timeout waiting for GetBlocks reply")
 	case <-s.closing:
+		pisc.Done()
 		return nil, errors.New("closing")
 	}
 }
@@ -977,7 +1081,8 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
 	}
 	fwd := NewForwardLink(src, dst)
-	sig, err := s.startBFT(bftNewBlock, roster, dst.Roster, fwd.Hash(), data)
+	protoName, _ := src.SignatureProtocol()
+	sig, err := s.startBFT(protoName, roster, dst.Roster, fwd.Hash(), data)
 	if err != nil {
 		log.Error(s.ServerIdentity().Address, "startBFT failed with", err)
 		return err
@@ -1026,41 +1131,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	// current conode needs to be in the propagation roster
 	newRoster = append(newRoster, s.ServerIdentity())
 	return s.startPropagation(s.propagateProof, onet.NewRoster(newRoster), &PropagateProof{proof})
-}
-
-func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byte, error) {
-	// load the mask of the new roster
-	newMask, err := cosi.NewMask(suite, newRoster.ServicePublics(ServiceName), nil)
-	if err != nil {
-		return nil, err
-	}
-	lenRes := suite.G1().PointLen()
-	if len(sig) < lenRes {
-		return nil, fmt.Errorf("signature is too short, got %v but need %v", len(sig), lenRes)
-	}
-	err = newMask.SetMask(sig[lenRes:])
-	if err != nil {
-		return nil, err
-	}
-
-	// initialise a new mask for the original roster
-	origMask, err := cosi.NewMask(suite, origRoster.ServicePublics(ServiceName), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// map the mask of the new roster to the original roster
-	for i, pk := range origRoster.ServicePublics(ServiceName) {
-		ok, err := newMask.KeyEnabled(pk)
-		if err != nil {
-			return nil, err
-		}
-		err = origMask.SetBit(i, ok)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return append(sig[:lenRes], origMask.Mask()...), nil
 }
 
 // bftForwardLinkLevel0 makes sure that a signature-request for a forward-link
@@ -1168,28 +1238,43 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 // forwardLink receives a signature request of a newly accepted block.
 // It only needs the 2nd-newest block and the forward-link.
 func (s *Service) forwardLink(req *network.Envelope) error {
+	fsOrig, ok := req.Msg.(*ForwardSignature)
+	if !ok {
+		return errors.New("didn't get ForwardSignature message")
+	}
+
+	_, err := s.ForwardLinkHandler(fsOrig)
+	return err
+}
+
+// ForwardLinkHandler receives a forward-link signature request for a block already
+// appended to the chain (height >= 1).
+func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureReply, error) {
 	err := s.incrementWorking()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer s.decrementWorking()
 
-	err = func() error {
-		fsOrig, ok := req.Msg.(*ForwardSignature)
-		if !ok {
-			return errors.New("didn't get ForwardSignature message")
-		}
-		// We need to create a copy here if the message has been sent to ourselves.
-		fs := *fsOrig
+	// Copy to prevent data race when the message is sent to itself.
+	fs := &ForwardSignature{
+		TargetHeight: req.TargetHeight,
+		Previous:     req.Previous,
+		Newest:       req.Newest.Copy(),
+		Links:        make([]*ForwardLink, 0),
+	}
+
+	fl, err := func() (*ForwardLink, error) {
 		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
-			return errors.New("This backlink-height doesn't exist")
+			return nil, fmt.Errorf("This backlink-height doesn't exist for block at index %d: %d / %d",
+				fs.Newest.Index, fs.TargetHeight, len(fs.Newest.BackLinkIDs))
 		}
 		from := s.db.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
 		if from == nil {
-			return errors.New("Didn't find target-block")
+			return nil, errors.New("Didn't find target-block")
 		}
 		if !fs.Previous.Equal(from.Hash) {
-			return errors.New("TargetHeight backlink doesn't correspond to previous")
+			return nil, errors.New("TargetHeight backlink doesn't correspond to previous")
 		}
 		// Add links to prove the newest block is valid.
 		pointer := from
@@ -1197,12 +1282,12 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 			if len(pointer.ForwardLink) == 0 {
 				err := s.SyncChain(pointer.Roster, pointer.Hash)
 				if err != nil {
-					return err
+					return nil, err
 				}
 
 				pointer = s.db.GetByID(pointer.Hash)
 				if pointer == nil || len(pointer.ForwardLink) == 0 {
-					return errors.New("Couldn't reach the proposed block from the backlink")
+					return nil, errors.New("Couldn't reach the proposed block from the backlink")
 				}
 			}
 			highest := pointer.ForwardLink[len(pointer.ForwardLink)-1]
@@ -1211,20 +1296,21 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 			if next == nil {
 				sbs, err := s.getBlocks(pointer.Roster, highest.To, 1)
 				if err != nil || len(sbs) == 0 {
-					return errors.New("cannot create proof that the blocks are linked: " + err.Error())
+					return nil, errors.New("cannot create proof that the blocks are linked: " + err.Error())
 				}
 				next = sbs[0]
 			}
 			pointer = next
 		}
-		data, err := network.Marshal(&fs)
+		data, err := network.Marshal(fs)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		fl := NewForwardLink(from, fs.Newest)
-		sig, err := s.startBFT(bftFollowBlock, from.Roster, fs.Newest.Roster, fl.Hash(), data)
+		_, protoName := from.SignatureProtocol()
+		sig, err := s.startBFT(protoName, from.Roster, fs.Newest.Roster, fl.Hash(), data)
 		if err != nil {
-			return errors.New("Couldn't get signature: " + err.Error())
+			return nil, errors.New("Couldn't get signature: " + err.Error())
 		}
 		log.Lvl2("Adding forward-link level", fs.TargetHeight, "to block", from.Index)
 
@@ -1233,19 +1319,19 @@ func (s *Service) forwardLink(req *network.Envelope) error {
 			fl.NewRoster = fs.Newest.Roster
 		}
 		if err = from.AddForwardLink(fl, fs.TargetHeight); err != nil {
-			return err
+			return nil, err
 		}
 
 		// Forward-links are sent to the new roster so active conodes get the update. If a conode
 		// is exluded from the cothority, it will need to catch up the forward link later when
 		// re-entering the cothority.
 		ro := fs.Newest.Roster.Concat(s.ServerIdentity())
-		return s.startPropagation(s.propagateForwardLink, ro, &PropagateForwardLink{fl, fs.TargetHeight})
+		return fl, s.startPropagation(s.propagateForwardLink, ro, &PropagateForwardLink{fl, fs.TargetHeight})
 	}()
 	if err != nil {
-		return fmt.Errorf("%v couldn't create forwardLink: %v requested by %v", s.ServerIdentity(), err, req.ServerIdentity)
+		return nil, fmt.Errorf("%v couldn't create forwardLink: %v", s.ServerIdentity(), err)
 	}
-	return nil
+	return &ForwardSignatureReply{Link: fl}, nil
 }
 
 // verifyFollowBlock makes sure that a signature-request for a forward-link
@@ -1294,7 +1380,7 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		for i, fl := range fs.Links {
 			publics := newRoster.ServicePublics(ServiceName)
 
-			if err := fl.Verify(suite, publics); err != nil {
+			if err := fl.VerifyWithScheme(suite, publics, src.SignatureScheme); err != nil {
 				return errors.New("verification failed: " + err.Error())
 			}
 			if fl.NewRoster != nil {
@@ -1350,16 +1436,13 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 // order that is more likely to give us non-failing subleaders in the byzcoinx
 // protocol.
 func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
+	// Before BDN signatures, the new roster was used when it was a rotation so
+	// that subleaders were more likely to be alive. It doesn't work anymore with
+	// BDN signatures because the way coefficients are computed.
+	// Instead the co-signing protocol has been modified to generate the tree by
+	// taking in account the position of the root in the roster to assign subleaders
+	// that are more likely alive.
 	roster := origRoster
-	// If the aggregate public key of the two rosters are the same but
-	// their IDs are different, we use the new roster because the byzcoinx
-	// tree that we build from the nodes are more likely to have working
-	// subleaders.
-	var sameAggr bool
-	if newRoster != nil && !roster.ID.Equal(newRoster.ID) && roster.Aggregate.Equal(newRoster.Aggregate) {
-		roster = newRoster
-		sameAggr = true
-	}
 
 	if len(roster.List) == 0 {
 		return nil, errors.New("found empty Roster")
@@ -1403,15 +1486,6 @@ func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		log.Lvl3(s.ServerIdentity(), "bft-cosi done")
-
-		// If a different roster is used for startBFT than the source roster,
-		// then we need to change the mask to match it.
-		if sameAggr {
-			sig.Sig, err = mapMask(origRoster, roster, sig.Sig)
-			if err != nil {
-				return nil, err
-			}
-		}
 
 		return &sig, nil
 	case <-time.After(root.Timeout * 2):
@@ -1715,10 +1789,11 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
-		s.GetAllSkipChainIDs,
+		s.GetAllSkipChainIDs, s.OptimizeProof,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
-		s.DelFollow, s.Listlink))
+		s.DelFollow, s.Listlink, s.ForwardLinkHandler))
 	s.ServiceProcessor.RegisterStatusReporter("Skipblock", s.db)
+	// Deprecated: the handler should be used instead
 	s.RegisterProcessorFunc(network.RegisterMessage(&ForwardSignature{}), s.forwardLink)
 
 	if err := s.registerVerification(VerifyBase, s.verifyFuncBase); err != nil {
@@ -1738,6 +1813,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Register ByzCoinX protocols for BLS
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bftNewBlock)
 	if err != nil {
@@ -1745,6 +1821,17 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
+	if err != nil {
+		return nil, err
+	}
+	// Register ByzCoinX protocols for BDN
+	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
+		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bdnNewBlock)
+	if err != nil {
+		return nil, err
+	}
+	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
+		s.bftForwardLink, s.bftForwardLinkAck, bdnFollowBlock)
 	if err != nil {
 		return nil, err
 	}

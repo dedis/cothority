@@ -122,7 +122,7 @@ public class Proof {
                 continue;
             }
             ForwardLink l = new ForwardLink(this.links.get(i));
-            if (!l.verify(publics)) {
+            if (!l.verifyWithScheme(publics, latest.getSignatureScheme())) {
                 throw new CothorityCryptoException("stored skipblock is not properly evolved from genesis block");
             }
             if (!Arrays.equals(l.getFrom().getId(), sbID.getId())) {

@@ -132,7 +132,12 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 	cosiProto.Threshold = bft.Threshold
 	// For each of the prepare and commit phase we get half of the time.
 	cosiProto.Timeout = bft.Timeout / 2
-	cosiProto.SubleaderFailures = bft.SubleaderFailures
+
+	if bft.SubleaderFailures > 0 {
+		// Only update the parameter if it is defined, else keep the default
+		// value.
+		cosiProto.SubleaderFailures = bft.SubleaderFailures
+	}
 
 	cosiProto.SetNbrSubTree(bft.nSubtrees)
 
@@ -315,12 +320,24 @@ func InitBFTCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack pro
 	return nil
 }
 
+// InitBDNCoSiProtocol creates and registers the protocols required to run
+// BFTCoSi to the context c over the BDN signature scheme
+func InitBDNCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
+	protocolMap := makeBdnProtocols(vf, ack, protoName, suite)
+	for protoName, proto := range protocolMap {
+		if _, err := c.ProtocolRegister(protoName, proto); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // FaultThreshold computes the number of faults that byzcoinx tolerates.
 func FaultThreshold(n int) int {
-	return (n - 1) / 3
+	return protocol.DefaultFaultyThreshold(n)
 }
 
 // Threshold computes the number of nodes needed for successful operation.
 func Threshold(n int) int {
-	return n - FaultThreshold(n)
+	return protocol.DefaultThreshold(n)
 }

@@ -132,7 +132,7 @@ export default class Proof extends Message<Proof> {
         for (let i = 1; i < links.length; i++) {
             const link = links[i];
 
-            const err = link.verify(publics);
+            const err = link.verifyWithScheme(publics, this.latest.signatureScheme);
             if (err) {
                 return new Error("invalid forward link signature: " + err.message);
             }

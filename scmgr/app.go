@@ -440,6 +440,56 @@ func scPrint(c *cli.Context) error {
 	return nil
 }
 
+func scOptimize(c *cli.Context) error {
+	rosterFile := c.String("roster")
+	if rosterFile == "" {
+		return errors.New("Missing roster file")
+	}
+
+	group := readGroup(rosterFile)
+	if group == nil {
+		return errors.New("Error while reading group definition file: " + rosterFile)
+	}
+	roster := group.Roster
+
+	blockID := c.String("id")
+	if blockID == "" {
+		return errors.New("Missing block ID")
+	}
+
+	id, err := hex.DecodeString(blockID)
+	if err != nil {
+		return errors.New("bad block ID")
+	}
+
+	cl := skipchain.NewClient()
+
+	sb, err := cl.GetSingleBlock(roster, id)
+	if err != nil {
+		return fmt.Errorf("couldn't get the block: %v", err)
+	}
+
+	// If a genesis block is provided, we optimize the entire chain
+	if sb.Index == 0 {
+		reply, err := cl.GetUpdateChain(roster, id)
+		if err != nil {
+			return fmt.Errorf("couldn't get the latest block: %v", err)
+		}
+
+		sb = reply.Update[len(reply.Update)-1]
+	}
+
+	log.Infof("Optimizing chain %x for block at index %d...", sb.SkipChainID(), sb.Index)
+
+	reply, err := cl.OptimizeProof(roster, sb.Hash)
+	if err != nil {
+		return fmt.Errorf("couldn't optimize the proof: %v", err)
+	}
+
+	log.Infof("Chain optimized with %d blocks", len(reply.Proof))
+	return nil
+}
+
 // Joins a given skipchain
 func dnsFetch(c *cli.Context) error {
 	if c.NArg() != 2 {

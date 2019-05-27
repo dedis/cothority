@@ -2,21 +2,22 @@ package ch.epfl.dedis.eventlog;
 
 import ch.epfl.dedis.byzcoin.*;
 import ch.epfl.dedis.byzcoin.transaction.*;
+import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.lib.proto.EventLogProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,8 @@ public class EventLogInstance {
     public static String LogCmd = "log";
     private Instance instance;
     private ByzCoinRPC bc;
+    private HashMap<Integer, Subscription.SkipBlockReceiver> handlers;
+    private Random rnd;
 
     private final static Logger logger = LoggerFactory.getLogger(EventLogInstance.class);
 
@@ -74,6 +77,8 @@ public class EventLogInstance {
             throw new CothorityException(e);
         }
         this.setInstance(id);
+        this.handlers = new HashMap<>();
+        this.rnd = new Random();
     }
 
     /**
@@ -170,6 +175,194 @@ public class EventLogInstance {
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
+    }
+
+    /**
+     * This is the interface that must be used for handling new events.
+     */
+    public interface EventHandler {
+        void process(Event e, byte[] id);
+        void error(String s);
+    }
+
+    class EventLogReceiver implements Subscription.SkipBlockReceiver {
+        private EventHandler handler;
+        EventLogReceiver(EventHandler h) {
+            handler = h;
+        }
+
+        @Override
+        public void receive(SkipBlock block) {
+            // check the header is correct
+            try {
+                ByzCoinProto.DataHeader.parseFrom(block.getData());
+            } catch (InvalidProtocolBufferException e) {
+                handler.error(e.getMessage());
+                return;
+            }
+            // parse the payload
+            DataBody body;
+            try {
+                body = new DataBody(ByzCoinProto.DataBody.parseFrom(block.getPayload()));
+            } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+                handler.error(e.getMessage());
+                return;
+            }
+
+            // parse the transactions
+            for (TxResult tx : body.getTxResults()) {
+                if (!tx.isAccepted()){
+                    continue;
+                }
+                for (Instruction instr : tx.getClientTransaction().getInstructions()) {
+                    if (instr.getInvoke() == null) {
+                        continue;
+                    }
+                    if (!instr.getInvoke().getContractID().equals(ContractId) || !instr.getInvoke().getCommand().equals(LogCmd)) {
+                        continue;
+                    }
+                    // try to find the event argument
+                    Optional<Argument> opArg = instr.getInvoke().getArguments().stream()
+                            .filter(x -> x.getName().equals("event"))
+                            .findFirst();
+                    if (!opArg.isPresent()) {
+                        continue;
+                    }
+                    // parse the event argument
+                    Event event;
+                    try {
+                        event = new Event(EventLogProto.Event.parseFrom(opArg.get().getValue()));
+                    } catch (InvalidProtocolBufferException e) {
+                        handler.error(e.getMessage());
+                        continue;
+                    }
+                    handler.process(event, block.getId().getId());
+                }
+            }
+        }
+
+        @Override
+        public void error(String s) {
+            handler.error(s);
+        }
+    }
+
+    /**
+     * Concurrent class.
+     */
+    class BufferedEventLogReceiver extends EventLogReceiver {
+        class Pair {
+            final SkipBlock block;
+            final String error;
+            Pair(SkipBlock b, String s) {
+                block = b;
+                error = s;
+            }
+        }
+
+        List<Pair> buffer;
+        Boolean flushed = false;
+
+        BufferedEventLogReceiver(EventHandler h) {
+            super(h);
+            buffer = new ArrayList<>();
+        }
+
+        synchronized void flush(List<SkipBlock> prepend) {
+            SkipBlock current = null;
+            for (SkipBlock b : prepend) {
+                current = b;
+                super.receive(b);
+            }
+
+            for (Pair p : buffer) {
+                if (p.block == null) {
+                    super.error(p.error);
+                }
+                else if (p.block.getBackLinks().size() == 0) {
+                    super.error("no back links");
+                }
+                else if (current != null && Arrays.equals(p.block.getBackLinks().get(0).getId(), current.getHash())) {
+                    super.receive(p.block);
+                } else {
+                    // do nothing because this is a duplicate block
+                }
+            }
+            flushed = true;
+        }
+
+        @Override
+        public synchronized void receive(SkipBlock block) {
+            if (flushed) {
+                super.receive(block);
+            } else {
+                buffer.add(new Pair(block, null));
+            }
+        }
+
+        @Override
+        public synchronized void error(String s) {
+            if (flushed) {
+                super.error(s);
+            } else {
+                buffer.add(new Pair(null, s));
+            }
+        }
+    }
+
+    /**
+     * Register the handler to listen to new events.
+     * If an error is thrown, the caller should unsubscribe the tag.
+     *
+     * @param handler is the event handler, it will be called in a different thread.
+     * @return an integer tag that can be used to unregister the handler.
+     * @throws CothorityCommunicationException when the server fails or refuses to accept the subscription.
+     */
+    public int subscribeEvents(EventHandler handler) throws CothorityCommunicationException {
+        EventLogReceiver r = new EventLogReceiver(handler);
+        int tag = rnd.nextInt();
+        this.handlers.put(tag, r);
+        this.bc.subscribeSkipBlock(r);
+        return tag;
+    }
+
+    /**
+     * Register the handler to listen to new events from the given block.
+     * The function blocks while it reads old events from the given block.
+     * If an error is thrown, the caller should unsubscribe the tag.
+     *
+     * @param handler is the event handler, it will be called in a different thread.
+     * @param from is the block which marks the beginning of the subscription.
+     * @return an integer tag that can be used to unregister the handler.
+     * @throws CothorityCommunicationException
+     * @throws CothorityCryptoException
+     */
+    public int subscribeEvents(EventHandler handler, byte[] from) throws CothorityCommunicationException, CothorityCryptoException {
+        // 1. stream to a buffer (because we don't know which ones will be duplicates yet)
+        BufferedEventLogReceiver r = new BufferedEventLogReceiver(handler);
+        int tag = rnd.nextInt();
+        this.handlers.put(tag, r);
+        this.bc.subscribeSkipBlock(r);
+
+        // 2. use GetUpdateChain to find the missing events and call handler
+        // if the skipblock ID is wrong or does not exist the function will throw an exception
+        List<SkipBlock> blocks = this.bc.getSkipchain().getUpdateChain(new SkipblockId(from));
+
+        // 3. read from the buffer, remove duplicates and call the handler
+        r.flush(blocks);
+
+        return tag;
+    }
+
+    /**
+     * Unsubscribe a handler.
+     *
+     * @param tag is the ID for the handler, it is created in subscribeEvents.
+     */
+    public void unsubscribeEvents(int tag) {
+        Subscription.SkipBlockReceiver sbr = this.handlers.get(tag);
+        this.handlers.remove(tag);
+        this.bc.unsubscribeBlock(sbr);
     }
 
     /**

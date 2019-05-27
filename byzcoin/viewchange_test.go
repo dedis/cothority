@@ -51,7 +51,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(2 * interval)
+		service.SetPropagationTimeout(10 * interval)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
@@ -71,6 +71,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
+	time.Sleep(s.interval * rw)
+
 	for i := 0; i < nFailures; i++ {
 		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
 	}
