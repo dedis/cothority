@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.crypto.bn256;
 
 import java.math.BigInteger;
 
-class GFp2 {
+class GFp2 implements GFpItf {
     BigInteger x, y;
     private static BigInteger p = Constants.p;
 
@@ -46,7 +46,7 @@ class GFp2 {
         return this;
     }
 
-    GFp2 setZero() {
+    public GFp2 setZero() {
         this.x = BigInteger.ZERO;
         this.y = BigInteger.ZERO;
         return this;
@@ -110,7 +110,7 @@ class GFp2 {
     }
 
     GFp2 exp(GFp2 a, BigInteger power) {
-        GFp2 sum = GFp2Pool.getInstance().get();
+        GFp2 sum = GFpPool.getInstance().get2();
         sum.setOne();
         GFp2 t = new GFp2();
 
@@ -125,7 +125,7 @@ class GFp2 {
 
         this.set(sum);
 
-        GFp2Pool.getInstance().put(sum);
+        GFpPool.getInstance().put2(sum);
 
         return this;
     }

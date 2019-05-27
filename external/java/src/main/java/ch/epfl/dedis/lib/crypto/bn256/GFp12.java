@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.crypto.bn256;
 
 import java.math.BigInteger;
 
-class GFp12 {
+class GFp12 implements GFpItf {
     GFp6 x, y;
 
     GFp12() {
@@ -38,7 +38,7 @@ class GFp12 {
         return other.x.equals(this.x) && other.y.equals(this.y);
     }
 
-    GFp12 setZero() {
+    public GFp12 setZero() {
         this.x.setZero();
         this.y.setZero();
         return this;
@@ -104,18 +104,20 @@ class GFp12 {
     }
 
     GFp12 mul(GFp12 a, GFp12 b) {
-        GFp6 tx = new GFp6();
+        GFp6 tx = GFpPool.getInstance().get6();
         tx.mul(a.x, b.y);
-        GFp6 t = new GFp6();
+        GFp6 t = GFpPool.getInstance().get6();
         t.mul(b.x, a.y);
         tx.add(tx, t);
 
-        GFp6 ty = new GFp6();
+        GFp6 ty = GFpPool.getInstance().get6();
         ty.mul(a.y, b.y);
         t.mul(a.x, b.x);
         t.mulTau(t);
         this.y.add(ty, t);
         this.x.set(tx);
+
+        GFpPool.getInstance().put6(tx, t, ty);
 
         return this;
     }
@@ -127,9 +129,9 @@ class GFp12 {
     }
 
     GFp12 exp(GFp12 a, BigInteger power) {
-        GFp12 sum = new GFp12();
+        GFp12 sum = GFpPool.getInstance().get12();
         sum.setOne();
-        GFp12 t = new GFp12();
+        GFp12 t = GFpPool.getInstance().get12();
 
         for (int i = power.bitLength() - 1; i >= 0; i--) {
             t.square(sum);
@@ -141,17 +143,20 @@ class GFp12 {
         }
 
         this.set(sum);
+
+        GFpPool.getInstance().put12(sum, t);
+
         return this;
     }
 
     GFp12 square(GFp12 a) {
-        GFp6 v0 = new GFp6();
+        GFp6 v0 = GFpPool.getInstance().get6();
         v0.mul(a.x, a.y);
 
-        GFp6 t = new GFp6();
+        GFp6 t = GFpPool.getInstance().get6();
         t.mulTau(a.x);
         t.add(a.y, t);
-        GFp6 ty = new GFp6();
+        GFp6 ty = GFpPool.getInstance().get6();
         ty.add(a.x, a.y);
         ty.mul(ty, t);
         ty.sub(ty, v0);
@@ -161,12 +166,14 @@ class GFp12 {
         this.y.set(ty);
         this.x.dbl(v0);
 
+        GFpPool.getInstance().put6(v0, t, ty);
+
         return this;
     }
 
     GFp12 invert(GFp12 a) {
-        GFp6 t1 = new GFp6();
-        GFp6 t2 = new GFp6();
+        GFp6 t1 = GFpPool.getInstance().get6();
+        GFp6 t2 = GFpPool.getInstance().get6();
 
         t1.square(a.x);
         t2.square(a.y);
@@ -177,6 +184,8 @@ class GFp12 {
         this.x.negative(a.x);
         this.y.set(a.y);
         this.mulScalar(this, t2);
+
+        GFpPool.getInstance().put6(t1, t2);
 
         return this;
     }
