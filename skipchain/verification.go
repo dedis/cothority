@@ -34,6 +34,11 @@ func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 	if prev.Index+1 != newSB.Index {
 		return false
 	}
+	if prev.SignatureScheme > newSB.SignatureScheme {
+		// the signature scheme can only have an index higher than the previous blocks
+		// so that no one can downgrade the verification
+		return false
+	}
 
 	log.Lvl4("No verification - accepted")
 	return true

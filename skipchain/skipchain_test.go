@@ -60,6 +60,8 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
+	// make sure the correct default signature scheme is set to BDN
+	assert.Equal(t, BdnSignatureSchemeIndex, sbRoot.SignatureScheme)
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -76,6 +78,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	blockCount++
+	assert.Equal(t, BdnSignatureSchemeIndex, latest.SignatureScheme)
 	assert.Equal(t, blockCount-1, latest.Index)
 	// the genesis block has a random back-link:
 	assert.Equal(t, 1, len(latest.BackLinkIDs))
@@ -178,6 +181,7 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 	csb.MaximumHeight = 2
 	csb.BaseHeight = 2
 	csb.Height = 1
+	csb.SignatureScheme = 0
 
 	err = service.forwardLinkLevel0(psbr.Latest, csb)
 	require.Error(t, err)
@@ -198,6 +202,10 @@ func TestService_StoreCorruptedSkipBlock(t *testing.T) {
 	require.Error(t, err)
 
 	csb.BaseHeight = 2
+	err = service.forwardLinkLevel0(psbr.Latest, csb)
+	require.Error(t, err)
+
+	csb.SignatureScheme = 1
 	err = service.forwardLinkLevel0(psbr.Latest, csb)
 	require.NoError(t, err)
 }
@@ -1031,7 +1039,7 @@ func TestService_LeaderChange(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(res[0].ForwardLink))
 	// Forward link must be verified with the src block
-	require.Nil(t, res[0].ForwardLink[0].Verify(suite, ro.ServicePublics(ServiceName)))
+	require.Nil(t, res[0].ForwardLink[0].VerifyWithScheme(suite, ro.ServicePublics(ServiceName), BdnSignatureSchemeIndex))
 }
 
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {

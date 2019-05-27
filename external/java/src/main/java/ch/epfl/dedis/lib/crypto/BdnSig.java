@@ -77,6 +77,8 @@ public class BdnSig {
 
             if (mask.indexEnabled(i)) {
                 p = p.mul(c);
+                // R is in the range [1; 2^128] inclusive thus (c+1) * p
+                p = p.add(points.get(i));
                 if (agg == null) {
                     agg = p;
                 } else {

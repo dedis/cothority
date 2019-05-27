@@ -56,12 +56,13 @@ type BlsCosi struct {
 	Threshold         int
 	FinalSignature    chan []byte // final signature that is sent back to client
 
-	stoppedOnce     sync.Once
-	subProtocols    []*SubBlsCosi
-	subProtocolName string
-	verificationFn  VerificationFn
-	suite           *pairing.SuiteBn256
-	subTrees        BlsProtocolTree
+	stoppedOnce      sync.Once
+	subProtocolsLock sync.Mutex
+	subProtocols     []*SubBlsCosi
+	subProtocolName  string
+	verificationFn   VerificationFn
+	suite            *pairing.SuiteBn256
+	subTrees         BlsProtocolTree
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
@@ -141,11 +142,13 @@ func (p *BlsCosi) SetNbrSubTree(nbr int) error {
 // Shutdown stops the protocol
 func (p *BlsCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
+		p.subProtocolsLock.Lock()
 		for _, subCosi := range p.subProtocols {
 			// we're stopping the root thus it will stop the children
 			// by itself using a broadcasted message
 			subCosi.Shutdown()
 		}
+		p.subProtocolsLock.Unlock()
 		close(p.FinalSignature)
 	})
 
@@ -191,16 +194,19 @@ func (p *BlsCosi) runSubProtocols() {
 	}
 
 	// start all subprotocols
+	p.subProtocolsLock.Lock()
 	p.subProtocols = make([]*SubBlsCosi, len(p.subTrees))
 	for i, tree := range p.subTrees {
 		log.Lvlf3("Invoking start sub protocol on %v", tree.Root.ServerIdentity)
 		var err error
 		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
+			p.subProtocolsLock.Unlock()
 			log.Error(err)
 			return
 		}
 	}
+	p.subProtocolsLock.Unlock()
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	// Wait and collect all the signature responses
@@ -286,8 +292,10 @@ func (p *BlsCosi) startSubProtocol(tree *onet.Tree) (*SubBlsCosi, error) {
 // Collect signatures from each sub-leader, restart whereever sub-leaders fail to respond.
 // The collected signatures are already aggregated for a particular group
 func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
-	responsesChan := make(chan StructResponse, len(p.subProtocols))
-	errChan := make(chan error, len(p.subProtocols))
+	p.subProtocolsLock.Lock()
+	numSubProtocols := len(p.subProtocols)
+	responsesChan := make(chan StructResponse, numSubProtocols)
+	errChan := make(chan error, numSubProtocols)
 	closeChan := make(chan bool)
 	// force to stop pending selects in case of timeout or quick answers
 	defer func() { close(closeChan) }()
@@ -336,7 +344,9 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 						return
 					}
 
+					p.subProtocolsLock.Lock()
 					p.subProtocols[i] = subProtocol
+					p.subProtocolsLock.Unlock()
 				case response := <-subProtocol.subResponse:
 					responsesChan <- response
 					return
@@ -344,13 +354,14 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 			}
 		}(i, subProtocol)
 	}
+	p.subProtocolsLock.Unlock()
 
 	// handle answers from all parallel threads
 	responseMap := make(ResponseMap)
 	numSignature := 0
 	numFailure := 0
 	timeout := time.After(p.Timeout)
-	for len(p.subProtocols) > 0 && numSignature < p.Threshold-1 && !p.checkFailureThreshold(numFailure) {
+	for numSubProtocols > 0 && numSignature < p.Threshold-1 && !p.checkFailureThreshold(numFailure) {
 		select {
 		case res := <-responsesChan:
 			publics := p.Publics()

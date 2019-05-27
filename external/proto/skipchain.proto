@@ -87,6 +87,7 @@ message SkipBlock {
     required bytes hash = 10;
     repeated ForwardLink forward = 11;
     optional bytes payload = 12;
+    optional uint32 signature_scheme = 13;
 }
 
 message ForwardLink {

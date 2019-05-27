@@ -78,6 +78,19 @@ public class ForwardLink {
     }
 
     /**
+     * Verifies whether the signature is correctly signed by the given public keys
+     * for the given signature scheme.
+     *
+     * @param publics   the list of public keys
+     * @param scheme    index of the signature scheme
+     * @return true if the signature is ok.
+     */
+    public boolean verifyWithScheme(List<Point> publics, SignatureScheme scheme) {
+        return Arrays.equals(this.getByzcoinSig().getMsg(), this.hash())
+                && this.getByzcoinSig().verifyWithScheme(publics, scheme);
+    }
+
+    /**
      * @return if the From or To fields are missing.
      */
     public boolean isEmpty() {
