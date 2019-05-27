@@ -64,14 +64,14 @@ class TwistPoint {
     }
 
     boolean isOnCurve() {
-        GFp2 yy = GFp2Pool.getInstance().get().square(this.y);
-        GFp2 xxx = GFp2Pool.getInstance().get().square(this.x);
+        GFp2 yy = GFpPool.getInstance().get2().square(this.y);
+        GFp2 xxx = GFpPool.getInstance().get2().square(this.x);
         xxx.mul(xxx, this.x);
         yy.sub(yy, xxx);
         yy.sub(yy, twistB);
         yy.minimal();
         boolean result = yy.x.signum() == 0 && yy.y.signum() == 0;
-        GFp2Pool.getInstance().put(yy, xxx);
+        GFpPool.getInstance().put2(yy, xxx);
         return result;
     }
 
@@ -94,44 +94,44 @@ class TwistPoint {
             return;
         }
 
-        GFp2 z1z1 = GFp2Pool.getInstance().get().square(a.z);
-        GFp2 z2z2 = GFp2Pool.getInstance().get().square(b.z);
-        GFp2 u1 = GFp2Pool.getInstance().get().mul(a.x, z2z2);
-        GFp2 u2 = GFp2Pool.getInstance().get().mul(b.x, z1z1);
+        GFp2 z1z1 = GFpPool.getInstance().get2().square(a.z);
+        GFp2 z2z2 = GFpPool.getInstance().get2().square(b.z);
+        GFp2 u1 = GFpPool.getInstance().get2().mul(a.x, z2z2);
+        GFp2 u2 = GFpPool.getInstance().get2().mul(b.x, z1z1);
 
-        GFp2 t = GFp2Pool.getInstance().get().mul(b.z, z2z2);
-        GFp2 s1 = GFp2Pool.getInstance().get().mul(a.y, t);
+        GFp2 t = GFpPool.getInstance().get2().mul(b.z, z2z2);
+        GFp2 s1 = GFpPool.getInstance().get2().mul(a.y, t);
 
         t.mul(a.z, z1z1);
-        GFp2 s2 = GFp2Pool.getInstance().get().mul(b.y, t);
+        GFp2 s2 = GFpPool.getInstance().get2().mul(b.y, t);
 
-        GFp2 h = GFp2Pool.getInstance().get().sub(u2, u1);
-        GFp2Pool.getInstance().put(u2);
+        GFp2 h = GFpPool.getInstance().get2().sub(u2, u1);
+        GFpPool.getInstance().put2(u2);
 
         boolean xEqual = h.isZero();
 
         t.add(h, h);
-        GFp2 i = GFp2Pool.getInstance().get().square(t);
-        GFp2 j = GFp2Pool.getInstance().get().mul(h, i);
+        GFp2 i = GFpPool.getInstance().get2().square(t);
+        GFp2 j = GFpPool.getInstance().get2().mul(h, i);
 
         t.sub(s2, s1);
-        GFp2Pool.getInstance().put(s2);
+        GFpPool.getInstance().put2(s2);
 
         boolean yEqual = t.isZero();
         if (xEqual && yEqual) {
             this.dbl(a);
             return;
         }
-        GFp2 r = GFp2Pool.getInstance().get().add(t, t);
+        GFp2 r = GFpPool.getInstance().get2().add(t, t);
 
-        GFp2 v = GFp2Pool.getInstance().get().mul(u1, i);
+        GFp2 v = GFpPool.getInstance().get2().mul(u1, i);
 
-        GFp2Pool.getInstance().put(i, u1);
+        GFpPool.getInstance().put2(i, u1);
 
 
-        GFp2 t4 = GFp2Pool.getInstance().get().square(r);
+        GFp2 t4 = GFpPool.getInstance().get2().square(r);
         t.add(v, v);
-        GFp2 t6 = GFp2Pool.getInstance().get().sub(t4, j);
+        GFp2 t6 = GFpPool.getInstance().get2().sub(t4, j);
         this.x.sub(t6, t);
 
         t.sub(v, this.x);
@@ -150,26 +150,26 @@ class TwistPoint {
 
         this.z.mul(t4, h);
 
-        GFp2Pool.getInstance().put(s1, j, v, r, z1z1, z2z2, t, t4, t6, h);
+        GFpPool.getInstance().put2(s1, j, v, r, z1z1, z2z2, t, t4, t6, h);
     }
 
     void dbl(TwistPoint a) {
-        GFp2 A = GFp2Pool.getInstance().get().square(a.x);
-        GFp2 B = GFp2Pool.getInstance().get().square(a.y);
-        GFp2 C = GFp2Pool.getInstance().get().square(B);
+        GFp2 A = GFpPool.getInstance().get2().square(a.x);
+        GFp2 B = GFpPool.getInstance().get2().square(a.y);
+        GFp2 C = GFpPool.getInstance().get2().square(B);
 
-        t = GFp2Pool.getInstance().get().add(a.x, B);
-        GFp2Pool.getInstance().put(B);
+        t = GFpPool.getInstance().get2().add(a.x, B);
+        GFpPool.getInstance().put2(B);
 
-        GFp2 t2 = GFp2Pool.getInstance().get().square(t);
+        GFp2 t2 = GFpPool.getInstance().get2().square(t);
         t.sub(t2, A);
         t2.sub(t, C);
-        GFp2 d = GFp2Pool.getInstance().get().add(t2, t2);
+        GFp2 d = GFpPool.getInstance().get2().add(t2, t2);
         t.add(A, A);
-        GFp2 e = GFp2Pool.getInstance().get().add(t, A);
-        GFp2Pool.getInstance().put(A);
+        GFp2 e = GFpPool.getInstance().get2().add(t, A);
+        GFpPool.getInstance().put2(A);
 
-        GFp2 f = GFp2Pool.getInstance().get().square(e);
+        GFp2 f = GFpPool.getInstance().get2().square(e);
 
         t.add(d, d);
         this.x.sub(f, t);
@@ -184,7 +184,7 @@ class TwistPoint {
         t.mul(a.y, a.z);
         this.z.add(t, t);
 
-        GFp2Pool.getInstance().put(C, t, t2, d, e, f);
+        GFpPool.getInstance().put2(C, t, t2, d, e, f);
     }
 
     TwistPoint mul(TwistPoint a, BigInteger scalar) {
@@ -217,16 +217,16 @@ class TwistPoint {
             return this;
         }
 
-        GFp2 zInv = GFp2Pool.getInstance().get().invert(this.z);
+        GFp2 zInv = GFpPool.getInstance().get2().invert(this.z);
         this.t = new GFp2().mul(this.y, zInv);
-        GFp2 zInv2 = GFp2Pool.getInstance().get().square(zInv);
+        GFp2 zInv2 = GFpPool.getInstance().get2().square(zInv);
         this.y.mul(t, zInv2);
         this.t.mul(this.x, zInv2);
         this.x.set(this.t);
         this.z.setOne();
         this.t.setOne();
 
-        GFp2Pool.getInstance().put(zInv, zInv2);
+        GFpPool.getInstance().put2(zInv, zInv2);
 
         return this;
     }
