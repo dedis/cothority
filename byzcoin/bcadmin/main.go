@@ -357,7 +357,10 @@ var cmds = cli.Commands{
 	{
 		Name: "contract",
 		// Use space instead of tabs for correct formatting
-		Usage: fmt.Sprint(`
+		Usage: "Provides cli interface for contracts",
+		// UsageText should be used instead, but its not working:
+		// see https://github.com/urfave/cli/issues/592
+		Description: fmt.Sprint(`
    bcadmin contract CONTRACT { spawn  --bc <byzcoin config> 
                                       [--<arg name> <arg value>, ...]
                                       [--darc <darc id>] 
