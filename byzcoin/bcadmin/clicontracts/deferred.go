@@ -191,7 +191,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string: " + err.Error())
+		return errors.New("failed to decode the instid string: " + err.Error())
 	}
 
 	instrIdx := c.Uint("instrIdx")
@@ -321,7 +321,7 @@ func ExecProposedTx(c *cli.Context) error {
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	// ---
@@ -398,7 +398,7 @@ func DeferredGet(c *cli.Context) error {
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	pr, err := cl.GetProof(instIDBuf)
@@ -453,7 +453,7 @@ func DeferredDelete(c *cli.Context) error {
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
