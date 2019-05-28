@@ -12,7 +12,7 @@ beforeEach(function () {
     toHold: function () {
       return {
         compare: function (actual, done) {
-          var r = jsc.check(actual);
+          var r = jsc.check(actual, { tests: 100 });
           if (done) {
             Promise.resolve().then(function () { return r; }).then(function (v) {
               // TODO: update jsverify after the fix is merged: https://github.com/jsverify/jsverify/pull/283

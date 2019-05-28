@@ -178,7 +178,7 @@ export default class NistPoint implements Point {
     /** @inheritdoc */
     marshalBinary(): Buffer {
         const byteLen = this.ref.curve.coordLen();
-        const buf = Buffer.allocUnsafe(this.ref.curve.pointLen());
+        const buf = Buffer.alloc(this.ref.curve.pointLen(), 0);
         buf[0] = 4; // uncompressed point
         
         let xBytes = Buffer.from(this.ref.point.x.fromRed().toArray("be"));
