@@ -185,9 +185,9 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return errors.New("coulndn't decode the hash string: " + err.Error())
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
@@ -315,9 +315,9 @@ func ExecProposedTx(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
@@ -392,9 +392,9 @@ func DeferredGet(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
@@ -447,9 +447,9 @@ func DeferredDelete(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {

@@ -82,9 +82,9 @@ testContractDeferredInvoke() {
         }'`
     echo -e "Here is the hash:\t\t$HASH"
     
-    testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
+    testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
-    testOK runBA contract deferred invoke execProposedTx --instID "$DEFERRED_INSTANCE_ID" --sign "$KEY"
+    testOK runBA contract deferred invoke execProposedTx --instid "$DEFERRED_INSTANCE_ID" --sign "$KEY"
 }
 
 testGet() {
@@ -129,7 +129,7 @@ testGet() {
     echo -e "Here is the hash:\t\t$HASH"
 
     # We now use the get function to check if we have the right informations:
-    OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
+    OUTRES=`runBA contract deferred get --instid $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
     testGrep "identities: \[\]" echo "$OUTRES"
     testGrep "counters: \[\]" echo "$OUTRES"
@@ -137,11 +137,11 @@ testGet() {
     testGrep "Spawn:	value" echo "$OUTRES"
     testGrep "Args:value" echo "$OUTRES"
     
-    testOK runBA contract deferred invoke addProof --instID "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
+    testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     # Since we performed an addProof, the result should now contrain a new
     # identity and the field signature set to 1.
-    OUTRES=`runBA contract deferred get --instID $DEFERRED_INSTANCE_ID`
+    OUTRES=`runBA contract deferred get --instid $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
     # Note on the regex used in grep. We want to be sure an identity of form
     # [ed25519:aef123] is added.
@@ -159,7 +159,7 @@ testGet() {
     testGrep "Args:value" echo "$OUTRES"
 
     # Try to get a wrong instance ID
-    testFail runBA contract deferred get --instID deadbeef
+    testFail runBA contract deferred get --instid deadbeef
 }
 
 testDel() {
@@ -191,14 +191,14 @@ testDel() {
     echo -e "Here is the instance ID:\t$DEFERRED_INSTANCE_ID"
 
     # We should be able to get the created deferred instance
-    testOK runBA contract deferred get --instID $DEFERRED_INSTANCE_ID
+    testOK runBA contract deferred get --instid $DEFERRED_INSTANCE_ID
     
     # We delete the instance
-    testOK runBA contract deferred delete --instID $DEFERRED_INSTANCE_ID --darc "$ID" --sign "$KEY"
+    testOK runBA contract deferred delete --instid $DEFERRED_INSTANCE_ID --darc "$ID" --sign "$KEY"
     
     # Now we shouldn't be able to get it back
-    testFail runBA contract deferred get --instID $DEFERRED_INSTANCE_ID
+    testFail runBA contract deferred get --instid $DEFERRED_INSTANCE_ID
 
     # Use the "delete" function, should fail since it does not exist anymore
-    testFail runBA contract deferred delete --instID "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
+    testFail runBA contract deferred delete --instid "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
 }
