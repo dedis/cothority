@@ -309,7 +309,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the DARC to update (no default)",
+						Usage: "the DARC to update (default is the admin DARC)",
 					},
 					cli.StringFlag{
 						Name:  "sign",
