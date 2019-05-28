@@ -27,7 +27,9 @@ export default class IdentityWrapper extends Message<IdentityWrapper> {
      */
     static fromString(idStr: string): IdentityWrapper {
         if (idStr.startsWith("ed25519:")) {
-            const id = new IdentityEd25519({point: Buffer.from(idStr.slice(8), "hex")});
+            const point = new Ed25519Point();
+            point.unmarshalBinary(Buffer.from(idStr.slice(8), "hex"));
+            const id = IdentityEd25519.fromPoint(point);
             return new IdentityWrapper({ed25519: id});
         }
         if (idStr.startsWith("darc:")) {
