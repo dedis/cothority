@@ -268,3 +268,57 @@ func TestViewChange_MonitorFailure(t *testing.T) {
 	require.Contains(t, stderr, "heartbeat monitors are started after the creation")
 	require.Contains(t, stderr, "failed to get the latest block")
 }
+
+// Test to make sure the view change triggers a proof propagation when a conode
+// is sending request for old blocks, meaning it is out-of-sync and as the leader
+// is offline, it will never catch up.
+func TestViewChange_NeedCatchUp(t *testing.T) {
+	rw := time.Duration(3)
+	s := newSerN(t, 1, testInterval, 5, rw)
+	defer s.local.CloseAll()
+
+	for _, service := range s.services {
+		service.SetPropagationTimeout(2 * testInterval)
+	}
+
+	s.hosts[3].Pause()
+
+	// Create a block that host 4 will miss
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx1, 0)
+
+	time.Sleep(5 * time.Second)
+
+	// Kill the leader, but the view change won't happen as
+	// 2 nodes are down
+	s.services[0].TestClose()
+	s.hosts[0].Pause()
+
+	s.hosts[3].Unpause()
+	// This will trigger the proof to be propagated. In that test, the catch up
+	// won't be trigger as only one block is missing.
+	s.services[3].sendViewChangeReq(viewchange.View{
+		ID:          s.genesis.Hash,
+		Gen:         s.genesis.SkipChainID(),
+		LeaderIndex: 1,
+	})
+
+	// It will need a few seconds if it catches the leader index 1 and a bit
+	// more if it goes to the leader index 2 so we give enough time.
+	sb := s.genesis
+	for i := 0; i < 60 && sb.Index != 2; i++ {
+		proof, err := s.services[4].skService().GetDB().GetProof(s.genesis.Hash)
+		require.NoError(t, err)
+		sb = proof[len(proof)-1]
+
+		// wait for the view change to happen
+		time.Sleep(1 * time.Second)
+	}
+
+	// Check that a view change was finally executed
+	leader, err := s.services[4].getLeader(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	require.NotNil(t, leader)
+	require.False(t, leader.Equal(s.services[0].ServerIdentity()))
+}
