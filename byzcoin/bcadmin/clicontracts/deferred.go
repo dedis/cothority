@@ -37,8 +37,6 @@ func DeferredSpawn(c *cli.Context) error {
 		return errors.New("failed to decode transaction, did you use --redirect ? " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the proposed Tx: \n%s\n", proposedTransaction)
-
 	// ---
 	// 2.
 	// ---
