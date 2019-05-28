@@ -232,6 +232,10 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		return fmt.Errorf("%v we do not know this view", s.ServerIdentity())
 	}
 	if len(reqLatest.ForwardLink) != 0 {
+		// This is because the node is out-of-sync with others. If the current leader happens
+		// to be offline, it won't catch up because it doesn't get the requests to collect
+		// transactions so we need to trigger a catch up here to the distant peer.
+		// TODO: how ?
 		return fmt.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
 	}
 
