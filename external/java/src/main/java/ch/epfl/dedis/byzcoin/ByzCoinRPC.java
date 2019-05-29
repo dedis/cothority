@@ -15,6 +15,7 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.network.Roster;
 import ch.epfl.dedis.lib.network.ServerIdentity;
+import ch.epfl.dedis.lib.network.StreamHandler;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
@@ -669,7 +670,7 @@ public class ByzCoinRPC {
         ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
         req.setId(skipchain.getID().toProto());
 
-        ServerIdentity.StreamHandler h = new ServerIdentity.StreamHandler() {
+        StreamHandler h = new StreamHandler() {
             @Override
             public void receive(ByteBuffer message) {
                 try {
@@ -701,7 +702,7 @@ public class ByzCoinRPC {
         ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
         req.setId(skipchain.getID().toProto());
 
-        ServerIdentity.StreamHandler h = new ServerIdentity.StreamHandler() {
+        StreamHandler h = new StreamHandler() {
             @Override
             public void receive(ByteBuffer message) {
                 try {

@@ -117,7 +117,7 @@ public class Roster {
      * @return the streaming connection.
      * @throws CothorityCommunicationException if something went wrong
      */
-    public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
+    public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, StreamHandler h) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return nodes.get(0).MakeStreamingConnection(path, proto.toByteArray(), h);
     }

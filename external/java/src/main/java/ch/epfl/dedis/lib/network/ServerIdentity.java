@@ -7,12 +7,11 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.websocket.Session;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -90,9 +89,13 @@ public class ServerIdentity {
         StatusProto.Request request =
                 StatusProto.Request.newBuilder().build();
         try {
-            SyncSendMessage msg = new SyncSendMessage("Status/Request", request.toByteArray());
-            return StatusProto.Response.parseFrom(msg.response);
-        } catch (InvalidProtocolBufferException e) {
+            URI uri = buildWebSocketAdddress("Status/Request");
+            CompletableFuture<ByteBuffer> reply = SimpleWebSocket.send(uri, request.toByteArray());
+            ByteBuffer buffer = reply.get();
+
+            return StatusProto.Response.parseFrom(buffer);
+        } catch (Exception e) {
+            logger.error("couldn't send", e);
             throw new CothorityCommunicationException(e.toString());
         }
     }
@@ -127,11 +130,15 @@ public class ServerIdentity {
      * @throws CothorityCommunicationException if something went wrong
      */
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
-        SyncSendMessage ssm = new SyncSendMessage(path, data);
-        if (ssm.response == null) {
-            throw new CothorityCommunicationException("Error while retrieving response for " + path + " - try again. Error-string is: " + ssm.error);
+        try {
+            CompletableFuture<ByteBuffer> reply = SimpleWebSocket.send(buildWebSocketAdddress(path), data);
+            ByteBuffer buf = reply.get();
+
+            return buf.array();
+        } catch (Exception e) {
+            logger.error("couldn't send", e);
+            throw new CothorityCommunicationException(e.getMessage());
         }
-        return ssm.response.array();
     }
 
     /**
@@ -180,24 +187,19 @@ public class ServerIdentity {
                 + "\n}";
     }
 
-    /**
-     * The default handler interface for handling streaming responses.
-     */
-    public interface StreamHandler {
-        void receive(ByteBuffer message);
-
-        void error(String s);
-    }
-
     public class StreamingConn {
-        private WebSocketClient ws;
+        private Session session;
 
         /**
          * Close the connection, note that this function is non-blocking, so calling isClosed immediately after calling
          * close might not return the desired result.
          */
         public void close() {
-            ws.close();
+            try {
+                session.close();
+            } catch (IOException e) {
+                logger.error("couldn't close the stream", e);
+            }
         }
 
         /**
@@ -207,7 +209,7 @@ public class ServerIdentity {
          * @return true if closed
          */
         public boolean isClosed() {
-            return ws.isClosed();
+            return !session.isOpen();
         }
 
         /**
@@ -220,95 +222,9 @@ public class ServerIdentity {
          */
         private StreamingConn(String path, byte[] msg, StreamHandler h) throws CothorityCommunicationException {
             try {
-                ws = new WebSocketClient(buildWebSocketAdddress(path)) {
-                    @Override
-                    public void onMessage(String msg) {
-                        logger.error("received a string msg, this should not happen on an honest server");
-                        h.error("received a string msg, this should not happen on an honest server: " + msg);
-                    }
-
-                    @Override
-                    public void onMessage(ByteBuffer message) {
-                        h.receive(message);
-                    }
-
-                    @Override
-                    public void onOpen(ServerHandshake handshake) {
-                        this.send(msg);
-                    }
-
-                    @Override
-                    public void onClose(int code, String reason, boolean remote) {
-                        if (!reason.equals("")) {
-                            h.error(reason);
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception ex) {
-                        h.error(ex.toString());
-                    }
-                };
-
-                ws.connect();
-            } catch (URISyntaxException e) {
+                session = StreamWebSocket.send(buildWebSocketAdddress(path), msg, h);
+            } catch (Exception e) {
                 throw new CothorityCommunicationException(e.getMessage());
-            }
-        }
-    }
-
-    public class SyncSendMessage {
-        public ByteBuffer response;
-        public String error;
-
-        // TODO we're creating a new connection for every message, it's better to re-use connections
-        private SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
-            final CountDownLatch statusLatch = new CountDownLatch(1);
-            try {
-                WebSocketClient ws = new WebSocketClient(buildWebSocketAdddress(path)) {
-                    @Override
-                    public void onMessage(String msg) {
-                        error = "This should never happen:" + msg;
-                        statusLatch.countDown();
-                    }
-
-                    @Override
-                    public void onMessage(ByteBuffer message) {
-                        response = message;
-                        close();
-                        statusLatch.countDown();
-                    }
-
-                    @Override
-                    public void onOpen(ServerHandshake handshake) {
-                        this.send(msg);
-                    }
-
-                    @Override
-                    public void onClose(int code, String reason, boolean remote) {
-                        if (!reason.equals("")) {
-                            error = reason;
-                        }
-                        statusLatch.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception ex) {
-                        error = "Error: " + ex.toString();
-                        statusLatch.countDown();
-                    }
-                };
-
-                // open websocket and send message.
-                ws.connect();
-                // wait for error or message returned.
-                statusLatch.await();
-            } catch (InterruptedException | URISyntaxException e) {
-                throw new CothorityCommunicationException(e.toString());
-            }
-            if (error != null) {
-                logger.error("error sending to {}: {}", path, error);
-                throw new CothorityCommunicationException("sending of " + path + " failed with error: " + error);
             }
         }
     }
