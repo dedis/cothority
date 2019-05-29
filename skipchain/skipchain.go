@@ -1552,6 +1552,20 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	return nil
 }
 
+// PropagateProof is a simple function that will build the proof of a given
+// skipchain and send it the given roster.
+func (s *Service) PropagateProof(roster *onet.Roster, sid SkipBlockID) error {
+	proof, err := s.db.GetProof(sid)
+	if err != nil {
+		return err
+	}
+
+	// The propagation protocol expect this server to be present in the roster.
+	rosterWithRoot := roster.Concat(s.ServerIdentity())
+
+	return s.startPropagation(s.propagateProof, rosterWithRoot, &PropagateProof{proof})
+}
+
 // propagateProofHandler handles a chain propagation message that
 // announces a skipchain to a new conode
 func (s *Service) propagateProofHandler(msg network.Message) error {

@@ -232,6 +232,18 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		return fmt.Errorf("%v we do not know this view", s.ServerIdentity())
 	}
 	if len(reqLatest.ForwardLink) != 0 {
+		// This is because the node is out-of-sync with others. If the current leader happens
+		// to be offline, it won't catch up because it doesn't get the requests to collect
+		// transactions so we need to trigger a catch up here to the distant peer.
+
+		// The simplest solution is to pro-actively send it the current state of the chain
+		// and the distant peer will detect the Trie index difference.
+		ro := onet.NewRoster([]*network.ServerIdentity{env.ServerIdentity})
+		err := s.skService().PropagateProof(ro, req.View.Gen)
+		if err != nil {
+			log.Errorf("View change failed to propagate a proof: %s", err.Error())
+		}
+
 		return fmt.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
 	}
 
