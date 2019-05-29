@@ -59,8 +59,8 @@ class SkipchainRPCTest {
     @Test
     void getAllSkipchainIDs() throws Exception {
         List<SkipblockId> ids = SkipchainRPC.getAllSkipChainIDs(sc.getRoster());
-        assertEquals(1, ids.size());
-        assertEquals(ids.get(0), sc.getID());
+        assertTrue(ids.size() > 0);
+        assertTrue(ids.stream().anyMatch(x -> x.equals(sc.getID())));
     }
 
     /**
