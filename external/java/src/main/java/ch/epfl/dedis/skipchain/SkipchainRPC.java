@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementing an interface to the skipchain service.
@@ -46,6 +47,19 @@ public class SkipchainRPC {
     public SkipchainRPC(Roster roster, SkipblockId scID) throws CothorityCommunicationException {
         this.scID = scID;
         this.roster = roster;
+    }
+
+    public static List<SkipblockId> getAllSkipChainIDs(Roster roster) throws CothorityCommunicationException {
+        SkipchainProto.GetAllSkipChainIDs req = SkipchainProto.GetAllSkipChainIDs.newBuilder().build();
+
+        ByteString msg = roster.sendMessage("Skipchain/GetAllSkipChainIDs", req);
+
+        try {
+            SkipchainProto.GetAllSkipChainIDsReply resp = SkipchainProto.GetAllSkipChainIDsReply.parseFrom(msg);
+            return resp.getSkipChainIDsList().stream().map( SkipblockId::new ).collect(Collectors.toList());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
     }
 
     /**

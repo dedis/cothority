@@ -56,6 +56,13 @@ class SkipchainRPCTest {
         assertEquals(sc.getSkipblock(genesisId).getId(), genesisId);
     }
 
+    @Test
+    void getAllSkipchainIDs() throws Exception {
+        List<SkipblockId> ids = SkipchainRPC.getAllSkipChainIDs(sc.getRoster());
+        assertEquals(1, ids.size());
+        assertEquals(ids.get(0), sc.getID());
+    }
+
     /**
      * This test uses a different skipchain because we customise the genesis block.
      */
