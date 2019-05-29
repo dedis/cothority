@@ -1,5 +1,7 @@
 package ch.epfl.dedis.lib.network;
 
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,18 +27,21 @@ public class StreamWebSocket extends Endpoint {
      * @param h     The stream handler
      * @return a websocket session that can be closed
      */
-    static Session send(URI path, byte[] msg, StreamHandler h)
-            throws IOException, DeploymentException {
+    static Session send(URI path, byte[] msg, StreamHandler h) throws CothorityCommunicationException {
 
         StreamWebSocket ws = new StreamWebSocket(h);
 
         ClientEndpointConfig cfg = ClientEndpointConfig.Builder.create().build();
 
         WebSocketContainer c = ContainerProvider.getWebSocketContainer();
-        Session s = c.connectToServer(ws, cfg, path);
-        s.getBasicRemote().sendBinary(ByteBuffer.wrap(msg));
+        try {
+            Session s = c.connectToServer(ws, cfg, path);
+            s.getBasicRemote().sendBinary(ByteBuffer.wrap(msg));
 
-        return s;
+            return s;
+        } catch (IOException | DeploymentException e) {
+            throw new CothorityCommunicationException("couldn't open the websocket", e);
+        }
     }
 
     private StreamHandler h;
@@ -70,12 +75,12 @@ public class StreamWebSocket extends Endpoint {
 
     @Override
     public void onError(Session session, Throwable throwable) {
-        h.error(throwable.getMessage());
-
         try {
             session.close();
         } catch (IOException e) {
             logger.error("couldn't close the session", e);
         }
+
+        h.error(throwable.getMessage());
     }
 }

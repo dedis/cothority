@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * WebSocket client for a one-shot message that will return the reply
+ * WebSocket client to send a single message that will return the reply
  * inside a future that will either complete with the bytes or with an
  * exception.
  */
@@ -28,16 +28,19 @@ public class SimpleWebSocket extends Endpoint {
      * @param msg   The message to send
      * @return a future that will complete with the reply or an exception
      */
-    static CompletableFuture<ByteBuffer> send(URI path, byte[] msg)
-            throws IOException, DeploymentException {
+    static CompletableFuture<ByteBuffer> send(URI path, byte[] msg) {
 
         SimpleWebSocket ws = new SimpleWebSocket();
 
         ClientEndpointConfig cfg = ClientEndpointConfig.Builder.create().build();
 
         WebSocketContainer c = ContainerProvider.getWebSocketContainer();
-        Session s = c.connectToServer(ws, cfg, path);
-        s.getBasicRemote().sendBinary(ByteBuffer.wrap(msg));
+        try {
+            Session s = c.connectToServer(ws, cfg, path);
+            s.getBasicRemote().sendBinary(ByteBuffer.wrap(msg));
+        } catch (IOException | DeploymentException e) {
+            ws.future.completeExceptionally(e);
+        }
 
         return ws.future;
     }

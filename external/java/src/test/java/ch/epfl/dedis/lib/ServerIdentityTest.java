@@ -2,8 +2,10 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.network.ServerIdentity;
 import ch.epfl.dedis.lib.network.ServerToml;
+import ch.epfl.dedis.lib.network.StreamHandler;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.moandjiezana.toml.Toml;
@@ -15,17 +17,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
     private final static Logger logger = LoggerFactory.getLogger(ServerIdentityTest.class);
     private ServerIdentity si;
+    private ServerIdentity offline;
 
     @BeforeEach
     void initConodes() {
         TestServerController testServerController = TestServerInit.getInstance();
         si = testServerController.getMasterConode();
+
+        offline = testServerController.getConodes().get(3);
     }
 
     @Test
@@ -57,5 +66,45 @@ class ServerIdentityTest {
         assertNotNull(si.getAddress());
         assertNotNull(si.getPublic());
         assertTrue(si.getServiceIdentities().size() > 0);
+    }
+
+    @Test
+    void testSendMessage() throws Exception {
+        CothorityCommunicationException thrown = assertThrows(CothorityCommunicationException.class,
+                () -> si.SendMessage("Status/abc", new byte[0]));
+        // Assert the websocket has been closed...
+        assertTrue(thrown.getCause().getMessage().contains("websocket closed with error:"));
+        // ... because of the correct reason
+        assertTrue(thrown.getCause().getMessage().contains("The requested message hasn't been registered"));
+
+        TestServerInit.getInstance().killConode(4);
+        assertThrows(CothorityCommunicationException.class, () -> offline.GetStatus());
+    }
+
+    @Test
+    void testMakeStream() throws Exception {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        StreamHandler h = new StreamHandler() {
+            @Override
+            public void receive(ByteBuffer message) {
+                future.completeExceptionally(new Throwable("should not receive"));
+            }
+
+            @Override
+            public void error(String s) {
+                if (s.contains("The requested message hasn't been registered")) {
+                    future.complete(true);
+                } else {
+                    future.completeExceptionally(new Throwable(s));
+                }
+            }
+        };
+
+        ServerIdentity.StreamingConn conn = si.MakeStreamingConnection("Status/abc", new byte[0], h);
+
+        // throws if it completes with an exception that we don't expect
+        future.get(2, TimeUnit.SECONDS);
+        // check that an error closes the stream
+        assertTrue(conn.isClosed());
     }
 }

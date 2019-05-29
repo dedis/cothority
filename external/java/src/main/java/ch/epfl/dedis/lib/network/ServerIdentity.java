@@ -7,9 +7,11 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.print.URIException;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.net.URI;
@@ -20,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -94,9 +97,8 @@ public class ServerIdentity {
             ByteBuffer buffer = reply.get();
 
             return StatusProto.Response.parseFrom(buffer);
-        } catch (Exception e) {
-            logger.error("couldn't send", e);
-            throw new CothorityCommunicationException(e.toString());
+        } catch (URISyntaxException | InterruptedException | ExecutionException | InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e.toString(), e);
         }
     }
 
@@ -135,9 +137,8 @@ public class ServerIdentity {
             ByteBuffer buf = reply.get();
 
             return buf.array();
-        } catch (Exception e) {
-            logger.error("couldn't send", e);
-            throw new CothorityCommunicationException(e.getMessage());
+        } catch (URISyntaxException | InterruptedException | ExecutionException e) {
+            throw new CothorityCommunicationException("couldn't send message", e);
         }
     }
 
@@ -223,8 +224,8 @@ public class ServerIdentity {
         private StreamingConn(String path, byte[] msg, StreamHandler h) throws CothorityCommunicationException {
             try {
                 session = StreamWebSocket.send(buildWebSocketAdddress(path), msg, h);
-            } catch (Exception e) {
-                throw new CothorityCommunicationException(e.getMessage());
+            } catch (URISyntaxException e) {
+                throw new CothorityCommunicationException(e.getMessage(), e);
             }
         }
     }
