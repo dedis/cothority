@@ -1488,6 +1488,63 @@ func TestService_MissingForwardLinks(t *testing.T) {
 	require.Equal(t, 2, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
 }
 
+func TestService_ForwardLinkVerification(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	_, ro, service := local.MakeSRS(cothority.Suite, 4, skipchainSID)
+
+	s := service.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(s, ro, nil, VerificationStandard, 2, 2)
+	require.NoError(t, err)
+
+	sb := NewSkipBlock()
+	sb.Roster = ro
+	sbs := []*SkipBlock{}
+	for i := 0; i < 2; i++ {
+		r, err := s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+		require.NoError(t, err)
+
+		sbs = append(sbs, r.Latest)
+	}
+
+	fs := &ForwardSignature{}
+
+	marshal := func(msg *ForwardSignature) []byte {
+		buf, err := network.Marshal(msg)
+		require.NoError(t, err)
+		return buf
+	}
+
+	log.OutputToBuf()
+	defer log.OutputToOs()
+
+	require.False(t, s.bftForwardLink([]byte{}, []byte{}))
+	require.Contains(t, log.GetStdErr(), "EOF")
+	require.False(t, s.bftForwardLink([]byte{}, marshal(fs)))
+	require.Contains(t, log.GetStdErr(), "newest block does not match its hash")
+
+	fs.Newest = NewSkipBlock()
+	fs.Newest.updateHash()
+	fs.TargetHeight = 123456789
+	require.False(t, s.bftForwardLink([]byte{}, marshal(fs)))
+	require.Contains(t, log.GetStdErr(), "unexpected target height")
+
+	fs.Newest = NewSkipBlock()
+	fs.Newest.BackLinkIDs = []SkipBlockID{[]byte{1, 2, 3}}
+	fs.Newest.updateHash()
+	fs.TargetHeight = 0
+	require.False(t, s.bftForwardLink([]byte{}, marshal(fs)))
+	require.Contains(t, log.GetStdErr(), "don't have src-block")
+
+	fs.Newest = sbs[1]
+	fs.Newest.BackLinkIDs[0] = sbs[0].Hash
+	fs.Newest.updateHash()
+	fs.TargetHeight = 0
+	require.False(t, s.bftForwardLink([]byte{}, marshal(fs)))
+	require.Contains(t, log.GetStdErr(), "target height does not match")
+}
+
 // Test if the optimization works as expected for a normal situation.
 func TestService_OptimizeProofSimple(t *testing.T) {
 	testOptimizeProof(t, 23, 2, 32, 5)
