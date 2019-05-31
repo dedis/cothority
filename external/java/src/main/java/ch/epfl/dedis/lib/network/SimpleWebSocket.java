@@ -29,12 +29,10 @@ public class SimpleWebSocket extends Endpoint {
      * @return a future that will complete with the reply or an exception
      */
     static CompletableFuture<ByteBuffer> send(URI path, byte[] msg) {
-
         SimpleWebSocket ws = new SimpleWebSocket();
-
         ClientEndpointConfig cfg = ClientEndpointConfig.Builder.create().build();
-
         WebSocketContainer c = ContainerProvider.getWebSocketContainer();
+
         try {
             Session s = c.connectToServer(ws, cfg, path);
             s.getBasicRemote().sendBinary(ByteBuffer.wrap(msg));
@@ -80,11 +78,14 @@ public class SimpleWebSocket extends Endpoint {
 
     @Override
     public void onError(Session session, Throwable throwable) {
-        future.completeExceptionally(throwable);
         try {
-            session.close();
+            if (session.isOpen()) {
+                session.close();
+            }
         } catch (IOException e) {
             logger.error("Couldn't close the session", e);
         }
+
+        future.completeExceptionally(throwable);
     }
 }

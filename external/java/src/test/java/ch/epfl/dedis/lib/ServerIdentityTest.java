@@ -9,6 +9,7 @@ import ch.epfl.dedis.lib.network.StreamHandler;
 import ch.epfl.dedis.lib.proto.NetworkProto;
 import ch.epfl.dedis.lib.proto.StatusProto;
 import com.moandjiezana.toml.Toml;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,6 @@ import java.io.File;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +35,11 @@ class ServerIdentityTest {
         si = testServerController.getMasterConode();
 
         offline = testServerController.getConodes().get(3);
+    }
+
+    @AfterAll
+    static void startConodes() throws Exception {
+        TestServerInit.getInstance().startConode(4);
     }
 
     @Test

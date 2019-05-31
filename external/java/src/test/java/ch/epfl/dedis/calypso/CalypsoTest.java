@@ -95,16 +95,9 @@ class CalypsoTest {
     }
 
     @AfterEach
-    void restartNodes() {
-        try {
-            for (int i = 1; i <= 4; i++) {
-                testInstanceController.killConode(i);
-            }
-            Thread.sleep(1000);
-            for (int i = 1; i <= 4; i++) {
-                testInstanceController.startConode(i);
-            }
-        } catch (Exception ignored) {
+    void restartNodes() throws Exception {
+        for (int i = 1; i <= 4; i++) {
+            testInstanceController.startConode(i);
         }
     }
 
@@ -197,13 +190,13 @@ class CalypsoTest {
         try {
             calypso.tryDecrypt(pw2, pr1);
         } catch (CothorityCommunicationException e) {
-            assertTrue(e.getMessage().contains("read doesn't point to passed write"));
+            assertTrue(e.getCause().getMessage().contains("read doesn't point to passed write"));
         }
 
         try {
             calypso.tryDecrypt(pw1, pr2);
         } catch (CothorityCommunicationException e) {
-            assertTrue(e.getMessage().contains("read doesn't point to passed write"));
+            assertTrue(e.getCause().getMessage().contains("read doesn't point to passed write"));
         }
 
         logger.info("trying decrypt 1, pk: " + publisher.getPublic().toString());
