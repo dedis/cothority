@@ -361,11 +361,11 @@ var cmds = cli.Commands{
 		// UsageText should be used instead, but its not working:
 		// see https://github.com/urfave/cli/issues/592
 		Description: fmt.Sprint(`
-   bcadmin contract CONTRACT { spawn  --bc <byzcoin config> 
+   bcadmin [--export] contract CONTRACT { 
+                               spawn  --bc <byzcoin config> 
                                       [--<arg name> <arg value>, ...]
                                       [--darc <darc id>] 
-                                      [--sign <pub key>] 
-                                      [--redirect],
+                                      [--sign <pub key>],
                                invoke <command>
                                       --bc <byzcoin config>
                                       --instid, i <instance ID>
@@ -406,10 +406,6 @@ var cmds = cli.Commands{
 							cli.StringFlag{
 								Name:  "sign",
 								Usage: "public key of the signing entity (default is the admin public key)",
-							},
-							cli.BoolFlag{
-								Name:  "redirect",
-								Usage: "redirects the transaction to stdout",
 							},
 						},
 					},
@@ -653,10 +649,6 @@ var cmds = cli.Commands{
 										Name:  "darcContractIDs",
 										Usage: "darcContractIDs separated by comas (optional)",
 									},
-									cli.BoolFlag{
-										Name:  "redirect",
-										Usage: "redirects the transaction to stdout",
-									},
 								},
 							},
 						},
@@ -702,6 +694,10 @@ func init() {
 			EnvVar: "BC_CONFIG",
 			Value:  getDataPath(cliApp.Name),
 			Usage:  "path to configuration-directory",
+		},
+		cli.BoolFlag{
+			Name:  "export, x",
+			Usage: "redirects the transaction to stdout",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {

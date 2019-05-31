@@ -1,13 +1,18 @@
 package lib
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/protobuf"
+	"gopkg.in/urfave/cli.v1"
 )
 
 // StringToDarcID converts a string representation of a DARC to a byte array
@@ -69,4 +74,44 @@ func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 	}
 
 	return d, nil
+}
+
+// AddTransactionWithOption add an option to export the transaction instread of
+// sending it. An export will redirect the transaction to stdout.
+func AddTransactionWithOption(c *cli.Context, cl *byzcoin.Client, tx byzcoin.ClientTransaction) (*byzcoin.AddTxResponse, error) {
+	return AddTransactionAndWaitWithOption(c, cl, tx, 0)
+}
+
+// AddTransactionAndWaitWithOption adds an option to export the transaction
+// instead of sending it. An export will redirect the transaction to stdout.
+func AddTransactionAndWaitWithOption(c *cli.Context, cl *byzcoin.Client, tx byzcoin.ClientTransaction, wait int) (*byzcoin.AddTxResponse, error) {
+	export := c.GlobalBool("export")
+
+	if export {
+		// When exporting, we must not pass SignerCounter, SignerIdentities and
+		// Signatures. Hence, we build a new list of instructions by ommiting
+		// those parameters. We can't edit current ones because those are not
+		// pointers.
+		instrs := make([]byzcoin.Instruction, len(tx.Instructions))
+		for i, instr := range tx.Instructions {
+			instrs[i] = byzcoin.Instruction{
+				InstanceID: instr.InstanceID,
+				Spawn:      instr.Spawn,
+				Invoke:     instr.Invoke,
+				Delete:     instr.Delete,
+			}
+		}
+		tx.Instructions = instrs
+		buf, err := protobuf.Encode(&tx)
+		if err != nil {
+			return nil, errors.New("failed to encode tx: " + err.Error())
+		}
+		reader := bytes.NewReader(buf)
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return nil, errors.New("failed to copy to stdout: " + err.Error())
+		}
+		os.Exit(0)
+	}
+	return cl.AddTransactionAndWait(tx, wait)
 }

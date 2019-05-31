@@ -34,7 +34,7 @@ func DeferredSpawn(c *cli.Context) error {
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(proposedTransactionBuf, &proposedTransaction)
 	if err != nil {
-		return errors.New("failed to decode transaction, did you use --redirect ? " + err.Error())
+		return errors.New("failed to decode transaction, did you use --export ? " + err.Error())
 	}
 
 	// ---
@@ -98,7 +98,7 @@ func DeferredSpawn(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
 	if err != nil {
 		return err
 	}
@@ -343,7 +343,7 @@ func ExecProposedTx(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
 	if err != nil {
 		return err
 	}
@@ -496,7 +496,7 @@ func DeferredDelete(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
 	if err != nil {
 		return err
 	}
