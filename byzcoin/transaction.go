@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -220,24 +221,32 @@ func (instr Instruction) Action() string {
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
-	var out string
-	out += fmt.Sprintf("instr: %x\n", instr.Hash())
-	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
-	out += fmt.Sprintf("\taction: %s\n", instr.Action())
-	out += fmt.Sprintf("\tidentities: %v\n", instr.SignerIdentities)
-	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
-	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
+	var out strings.Builder
+	out.WriteString("- instruction:\n")
+	fmt.Fprintf(&out, "-- hash: %x\n", instr.Hash())
+	fmt.Fprintf(&out, "-- instID: %v\n", instr.InstanceID)
+	fmt.Fprintf(&out, "-- action: %s\n", instr.Action())
+	fmt.Fprintf(&out, "-- identities: %v\n", instr.SignerIdentities)
+	fmt.Fprintf(&out, "-- counters: %v\n", instr.SignerCounter)
+	fmt.Fprintf(&out, "-- signatures: %d\n", len(instr.Signatures))
 	switch instr.GetType() {
 	case SpawnType:
-		out += fmt.Sprintf("Spawn:\t%s\n\tArgs:%s\n", instr.Spawn.ContractID,
-			strings.Join(instr.Spawn.Args.Names(), " - "))
+		out.WriteString("-- Spawn:\n")
+		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Spawn.ContractID)
+		out.WriteString(
+			regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
+				PrintArguments(instr.Action(), instr.Spawn.Args), "---$1"))
 	case InvokeType:
-		out += fmt.Sprintf("Invoke:\t%s\n\tArgs:%s\n", instr.Invoke.ContractID,
-			strings.Join(instr.Invoke.Args.Names(), " - "))
+		out.WriteString("-- Invoke:\n")
+		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Invoke.ContractID)
+		out.WriteString(
+			regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
+				PrintArguments(instr.Action(), instr.Invoke.Args), "---$1"))
 	case DeleteType:
-		out += fmt.Sprintf("Delete:\t%s\n", instr.Delete.ContractID)
+		out.WriteString("-- Delete:\n")
+		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Delete.ContractID)
 	}
-	return out
+	return out.String()
 }
 
 // SignWith creates a signed version of the instruction. The signature is

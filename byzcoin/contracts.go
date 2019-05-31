@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
@@ -17,6 +19,17 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
+
+// PrintArguments returns the string representation of Arguments
+func PrintArguments(action string, args Arguments) string {
+	var out strings.Builder
+	out.WriteString("- Args:\n")
+	for _, name := range args.Names() {
+		fmt.Fprintf(&out, "-- %s\n", name)
+		fmt.Fprintf(&out, "--- %s\n", strconv.Quote(string(args.Search(name))))
+	}
+	return out.String()
+}
 
 // Contract is the interface that an instance needs
 // to implement to be callable as a pre-compiled smart
