@@ -309,7 +309,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the DARC to update (no default)",
+						Usage: "the DARC to update (default is the admin DARC)",
 					},
 					cli.StringFlag{
 						Name:  "sign",
@@ -368,14 +368,14 @@ var cmds = cli.Commands{
                                       [--redirect],
                                invoke <command>
                                       --bc <byzcoin config>
-                                      --instID <instance ID>
+                                      --instid, i <instance ID>
                                       [--<arg name> <arg value>, ...]
                                       [--darc <darc id>] 
                                       [--sign <pub key>],
                                get    --bc <byzcoin config>
-                                      --instID <instance ID>,
+                                      --instid, i <instance ID>,
                                delete --bc <byzcoin config>
-                                      --instID <instance ID>
+                                      --instid, i <instance ID>
                                       [--darc <darc id>] 
                                       [--sign <pub key>]     
                              }
@@ -432,7 +432,7 @@ var cmds = cli.Commands{
 										Usage: "the value to save",
 									},
 									cli.StringFlag{
-										Name:  "instID",
+										Name:  "instid, i",
 										Usage: "the instance ID of the value contract",
 									},
 									cli.StringFlag{
@@ -458,7 +458,7 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "instID",
+								Name:  "instid, i",
 								Usage: "the instance id (required)",
 							},
 						},
@@ -475,7 +475,7 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "instID",
+								Name:  "instid, i",
 								Usage: "the instance ID of the value contract",
 							},
 							cli.StringFlag{
@@ -537,7 +537,7 @@ var cmds = cli.Commands{
 										Usage: "the instruction hash that will be signed",
 									},
 									cli.StringFlag{
-										Name:  "instID",
+										Name:  "instid, i",
 										Usage: "the instance ID of the deferred contract",
 									},
 									cli.StringFlag{
@@ -561,7 +561,7 @@ var cmds = cli.Commands{
 										Usage:  "the ByzCoin config to use (required)",
 									},
 									cli.StringFlag{
-										Name:  "instID",
+										Name:  "instid, i",
 										Usage: "the instance ID of the deferred contract",
 									},
 									cli.StringFlag{
@@ -587,7 +587,7 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "instID",
+								Name:  "instid, i",
 								Usage: "the instance id (required)",
 							},
 						},
@@ -604,7 +604,7 @@ var cmds = cli.Commands{
 								Usage:  "the ByzCoin config to use (required)",
 							},
 							cli.StringFlag{
-								Name:  "instID",
+								Name:  "instid, i",
 								Usage: "the instance ID of the value contract",
 							},
 							cli.StringFlag{

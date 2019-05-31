@@ -132,13 +132,13 @@ func ValueInvokeUpdate(c *cli.Context) error {
 	}
 	valueBuf := []byte(value)
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -217,9 +217,9 @@ func ValueGet(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
@@ -266,13 +266,13 @@ func ValueDelete(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)

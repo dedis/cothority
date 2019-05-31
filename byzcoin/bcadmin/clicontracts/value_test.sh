@@ -32,7 +32,7 @@ testSpawn() {
     VALUE_INSTANCE_ID=`sed -n 2p res.txt`
 
     # Update the value instance based on the instance ID
-    testOK runBA contract value invoke update --value "newValue" --instID $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
+    testOK runBA contract value invoke update --value "newValue" --instid $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
 }
 
 testSpawnRedirect() {
@@ -85,23 +85,23 @@ testGet() {
 
     # Use the "get" function and save the output to the res.txt file. This file
     # should contain the saved value.
-    OUTFILE=res.txt && testOK runBA contract value get --instID "$VALUE_INSTANCE_ID"
+    OUTFILE=res.txt && testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"
     OUTFILE=""
 
     testGrep "myValue" cat res.txt
 
     # Update the value instance based on the instance ID
-    testOK runBA contract value invoke update --value "newValue" --instID $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
+    testOK runBA contract value invoke update --value "newValue" --instid $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
 
     # Use the "get" function and save the output to the res.txt file. This file
     # should contain the newly updated value.
-    OUTFILE=res.txt && testOK runBA contract value get --instID "$VALUE_INSTANCE_ID"
+    OUTFILE=res.txt && testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"
     OUTFILE=""
 
     testGrep "newValue" cat res.txt
 
     # Try to get a wrong instance ID
-    testFail runBA contract value get --instID deadbeef
+    testFail runBA contract value get --instid deadbeef
 }
 
 testDel() {
@@ -130,14 +130,14 @@ testDel() {
     VALUE_INSTANCE_ID=`sed -n 2p res.txt`
 
     # Use the "get" function to retrieve the contract. It should pass.
-    testOK runBA contract value get --instID "$VALUE_INSTANCE_ID"
+    testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"
 
     # Use the "delete" function
-    testOK runBA contract value delete --instID "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
+    testOK runBA contract value delete --instid "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
 
     # Use the "get" function to retrieve the contract. It should fail.
-    testFail runBA contract value get --instID "$VALUE_INSTANCE_ID"
+    testFail runBA contract value get --instid "$VALUE_INSTANCE_ID"
 
     # Use the "delete" function, should fail since it does not exist anymore
-    testFail runBA contract value delete --instID "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
+    testFail runBA contract value delete --instid "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
 }
