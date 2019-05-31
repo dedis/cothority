@@ -1,10 +1,8 @@
 package clicontracts
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -21,7 +19,7 @@ import (
 func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// Here is what this function does:
 	//   1. Get the current config and parse the arguments
-	//   2. Build the transaction and send it to stdout if --redirect is given
+	//   2. Build the transaction and send it to stdout if --export is given
 	//   3. Get the result back and output it
 
 	// ---
@@ -122,30 +120,6 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	// 2.
 	// ---
-	redirect := c.Bool("redirect")
-	// In the case the --redirect flag is provided, the transaction is not
-	// applied but sent to stdout.
-	if redirect {
-		proposedTransaction := byzcoin.ClientTransaction{
-			Instructions: []byzcoin.Instruction{
-				byzcoin.Instruction{
-					InstanceID: byzcoin.ConfigInstanceID,
-					Invoke:     &invoke,
-				},
-			},
-		}
-		proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
-		if err != nil {
-			return errors.New("couldn't encode the transaction: " + err.Error())
-		}
-		reader := bytes.NewReader(proposedTransactionBuf)
-		_, err = io.Copy(c.App.Writer, reader)
-		if err != nil {
-			return errors.New("failed to copy to stdout: " + err.Error())
-		}
-		return nil
-	}
-
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID:    byzcoin.ConfigInstanceID,
@@ -159,7 +133,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(ctx, 10)
+	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
 	if err != nil {
 		return err
 	}
