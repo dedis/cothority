@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.crypto.bn256;
 
 import java.math.BigInteger;
 
-class GFp12 implements GFpItf {
+class GFp12 {
     GFp6 x, y;
 
     GFp12() {
