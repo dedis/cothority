@@ -2041,7 +2041,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	}
 
 	// Then we make sure who's the leader. It may happen that the node is one block away
-	// from the leader (i.e. block still processing) but if the leader are matching, we
+	// from the leader (i.e. block still processing) but if the leaders are matching, we
 	// accept to deliver the transactions as an optimization. The leader is expected to
 	// wait on the processing to start collecting and in the worst case scenario, txs will
 	// simply be lost and will have to be resend.

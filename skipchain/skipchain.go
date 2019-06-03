@@ -357,8 +357,8 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		if err := s.forwardLinkLevel0(prev, prop); err != nil {
 			// As the block's creation failed, we need to clean the block buffer so
 			// that other services know that no block are proposed.
-			// This is done only on the leader and then children won't be noticed until
-			// a different block is proposed.
+			// This is done only on the leader side and then children won't be
+			// notified until a different block is proposed.
 			s.blockBuffer.clear(prev.SkipChainID())
 
 			return nil, errors.New(
