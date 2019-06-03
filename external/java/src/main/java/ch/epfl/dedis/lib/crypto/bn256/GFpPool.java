@@ -7,7 +7,7 @@ import java.util.LinkedList;
  * be eventually deleted by the GC, one can use this class which will keep no longer used objects and re-use them.
  * If the pool is empty a new object is created. Re-used object are not initialized !
  */
-public class GFpPool {
+class GFpPool {
     private static GFpPool ourInstance = new GFpPool();
 
     public static GFpPool getInstance() {
