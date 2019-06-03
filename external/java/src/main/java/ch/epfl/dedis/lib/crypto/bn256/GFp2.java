@@ -46,7 +46,7 @@ class GFp2 {
         return this;
     }
 
-    GFp2 setZero() {
+    public GFp2 setZero() {
         this.x = BigInteger.ZERO;
         this.y = BigInteger.ZERO;
         return this;
@@ -110,7 +110,7 @@ class GFp2 {
     }
 
     GFp2 exp(GFp2 a, BigInteger power) {
-        GFp2 sum = new GFp2();
+        GFp2 sum = GFpPool.getInstance().get2();
         sum.setOne();
         GFp2 t = new GFp2();
 
@@ -124,6 +124,8 @@ class GFp2 {
         }
 
         this.set(sum);
+
+        GFpPool.getInstance().put2(sum);
 
         return this;
     }
