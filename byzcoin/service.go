@@ -1416,7 +1416,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// At this point everything should be stored.
 	s.streamingMan.notify(string(sb.SkipChainID()), sb)
 
-	log.Lvlf4("%s updated trie for %x with root %x", s.ServerIdentity(), sb.SkipChainID(), st.GetRoot())
+	log.Lvlf2("%s updated trie for %x with root %x", s.ServerIdentity(), sb.SkipChainID(), st.GetRoot())
 	return nil
 }
 
@@ -2028,31 +2028,30 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	s.closedMutex.Unlock()
 	defer s.working.Done()
 
-	// First we check if we are up-to-date with this chain (and that we know it)
-	latestSB, doCatchUp := s.skService().WaitBlock(scID, latestID)
-	if latestSB == nil {
-		if doCatchUp {
-			// The function will prevent multiple request to catch up so we can securely call it here
-			err := s.catchupFromID(roster, scID, latestID)
-			if err != nil {
-				log.Error(s.ServerIdentity(), err)
-			}
+	// First we check if we are up-to-date with this chain and catch up
+	// if necessary.
+	_, doCatchUp := s.skService().WaitBlock(scID, latestID)
+	if doCatchUp {
+		// The function will prevent multiple request to catch up so we can securely call it here
+		err := s.catchupFromID(roster, scID, latestID)
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			return []ClientTransaction{}
 		}
-
-		// Give up the current request and wait for the next one, and keep skipping requests
-		// until the catching up is done
-		return []ClientTransaction{}
 	}
 
-	// Then we make sure who's the leader
+	// Then we make sure who's the leader. It may happen that the node is one block away
+	// from the leader (i.e. block still processing) but if the leader are matching, we
+	// accept to deliver the transactions as an optimization. The leader is expected to
+	// wait on the processing to start collecting and in the worst case scenario, txs will
+	// simply be lost and will have to be resend.
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
-		log.Lvlf2("%s: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
+		log.Lvlf2("%v: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
 		return []ClientTransaction{}
 	}
 	if !leader.Equal(actualLeader) {
-		log.Warn(s.ServerIdentity(), "getTxs came from a wrong leader", leader,
-			"should be", actualLeader)
+		log.Lvlf2("%v: getTxs came from a wrong leader %v should be %v", s.ServerIdentity(), leader, actualLeader)
 		return []ClientTransaction{}
 	}
 
