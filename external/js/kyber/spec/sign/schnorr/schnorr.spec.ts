@@ -1,3 +1,4 @@
+import jsc from 'jsverify';
 import Nist from '../../../src/curve/nist';
 import { schnorr } from '../../../src/sign';
 
@@ -51,8 +52,22 @@ describe("Schnorr Signature", () => {
     });
 
     it("returns true for a well formed signature", () => {
-        const sig = sign(group, secretKey, message);
+        const prop = jsc.forall(jsc.string, jsc.array(jsc.nat), (msg, k) => {
+            const message = Buffer.from(msg);
+            const secret = group.scalar().pick()
+            const pub = group.point().mul(secret, null);
 
-        expect(verify(group, publicKey, message, sig)).toBeTruthy();
+            const sig = sign(group, secret, message);
+            const res = verify(group, pub, message, sig);
+
+            if (!res) {
+                console.log("failing scalar: "+secret.toString());
+            }
+
+            return res;
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
     });
 });

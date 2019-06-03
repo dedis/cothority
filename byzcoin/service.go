@@ -2288,7 +2288,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
 
 	// initiate the view-change manager
-	initialDur, err := s.computeInitialDuration(genesisID)
+	initialDur, err := s.computeInitialDuration(latest.Hash)
 	if err != nil {
 		return err
 	}

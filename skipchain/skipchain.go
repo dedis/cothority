@@ -1072,7 +1072,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	log.Lvlf2("%s is adding forward-link level 0 to: %d->%d with roster %s", s.ServerIdentity(),
 		src.Index, dst.Index, roster.List)
 	fs := &ForwardSignature{
-		TargetHeight: len(src.ForwardLink),
+		TargetHeight: 0,
 		Previous:     src.Hash,
 		Newest:       dst,
 	}
@@ -1147,6 +1147,11 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		log.Errorf("got unexpected type %T", fsInt)
 		return false
 	}
+	if fs.TargetHeight != 0 {
+		log.Errorf("got unexpected target height: %d", fs.TargetHeight)
+		return false
+	}
+
 	prevSB := s.db.GetByID(fs.Previous)
 	if prevSB == nil {
 		if !s.BlockIsFriendly(fs.Newest) {
@@ -1344,24 +1349,28 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		}
 		fs, ok := fsInt.(*ForwardSignature)
 		if !ok {
-			return errors.New("Didn't receive a ForwardSignature")
+			return errors.New("didn't receive a ForwardSignature")
 		}
 
 		// Retrieve the src and dst blocks and make sure the basic parameters
 		// are ok.
 		dst := fs.Newest
-		if !dst.CalculateHash().Equal(dst.Hash) {
-			return errors.New("Newest block does not match its hash")
+		if dst == nil || !dst.CalculateHash().Equal(dst.Hash) {
+			return errors.New("newest block does not match its hash")
 		}
-		if fs.TargetHeight > len(dst.BackLinkIDs) {
-			return errors.New("Asked for signing too high a backlink")
+		if fs.TargetHeight > len(dst.BackLinkIDs) || fs.TargetHeight < 0 {
+			return errors.New("unexpected target height value")
 		}
 		src := s.db.GetByID(dst.BackLinkIDs[fs.TargetHeight])
 		if src == nil {
-			return errors.New("Don't have src-block")
+			return errors.New("don't have src-block")
+		}
+		h, index := src.pathForIndex(dst.Index)
+		if dst.Index != index || fs.TargetHeight != h {
+			return errors.New("target height does not match the newest block")
 		}
 		if src.GetForwardLen() >= fs.TargetHeight+1 {
-			return errors.New("Already have forward-link at height " +
+			return errors.New("already have forward-link at height " +
 				strconv.Itoa(fs.TargetHeight+1))
 		}
 		if !src.SkipChainID().Equal(dst.SkipChainID()) {
@@ -1404,7 +1413,7 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		// it.
 		fl := NewForwardLink(src, fs.Newest)
 		if bytes.Compare(fl.Hash(), msg) != 0 {
-			return errors.New("Hash to sign doesn't correspond to ForwardSignature")
+			return errors.New("hash to sign doesn't correspond to ForwardSignature")
 		}
 		return nil
 	}()
@@ -1550,6 +1559,20 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		s.blockBuffer.clear(sb.SkipChainID())
 	}
 	return nil
+}
+
+// PropagateProof is a simple function that will build the proof of a given
+// skipchain and send it the given roster.
+func (s *Service) PropagateProof(roster *onet.Roster, sid SkipBlockID) error {
+	proof, err := s.db.GetProof(sid)
+	if err != nil {
+		return err
+	}
+
+	// The propagation protocol expect this server to be present in the roster.
+	rosterWithRoot := roster.Concat(s.ServerIdentity())
+
+	return s.startPropagation(s.propagateProof, rosterWithRoot, &PropagateProof{proof})
 }
 
 // propagateProofHandler handles a chain propagation message that

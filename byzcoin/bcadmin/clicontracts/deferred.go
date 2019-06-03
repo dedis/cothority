@@ -37,8 +37,6 @@ func DeferredSpawn(c *cli.Context) error {
 		return errors.New("failed to decode transaction, did you use --redirect ? " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the proposed Tx: \n%s\n", proposedTransaction)
-
 	// ---
 	// 2.
 	// ---
@@ -185,13 +183,13 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return errors.New("coulndn't decode the hash string: " + err.Error())
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string: " + err.Error())
+		return errors.New("failed to decode the instid string: " + err.Error())
 	}
 
 	instrIdx := c.Uint("instrIdx")
@@ -315,13 +313,13 @@ func ExecProposedTx(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	// ---
@@ -392,13 +390,13 @@ func DeferredGet(c *cli.Context) error {
 		return err
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	pr, err := cl.GetProof(instIDBuf)
@@ -447,13 +445,13 @@ func DeferredDelete(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
-	instID := c.String("instID")
+	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instID flag is required")
+		return errors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
