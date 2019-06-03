@@ -2115,10 +2115,9 @@ func (s *Service) monitorLeaderFailure() {
 		s.closedMutex.Unlock()
 		return
 	}
-	s.closedMutex.Unlock()
-
 	s.working.Add(1)
 	defer s.working.Done()
+	s.closedMutex.Unlock()
 
 	for {
 		select {

@@ -70,7 +70,17 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 	stopChan := make(chan bool)
 	key := string(msg.ID)
 	outChan, idx := s.streamingMan.newListener(key)
+
 	go func() {
+		s.closedMutex.Lock()
+		if s.closed {
+			s.closedMutex.Unlock()
+			return
+		}
+		s.working.Add(1)
+		defer s.working.Done()
+		s.closedMutex.Unlock()
+
 		<-stopChan
 		s.streamingMan.stopListener(key, idx)
 	}()
