@@ -358,6 +358,12 @@ var cmds = cli.Commands{
 		Name: "contract",
 		// Use space instead of tabs for correct formatting
 		Usage: "Provides cli interface for contracts",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "export, x",
+				Usage: "redirects the transaction to stdout",
+			},
+		},
 		// UsageText should be used instead, but its not working:
 		// see https://github.com/urfave/cli/issues/592
 		Description: fmt.Sprint(`
@@ -694,10 +700,6 @@ func init() {
 			EnvVar: "BC_CONFIG",
 			Value:  getDataPath(cliApp.Name),
 			Usage:  "path to configuration-directory",
-		},
-		cli.BoolFlag{
-			Name:  "export, x",
-			Usage: "redirects the transaction to stdout",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {

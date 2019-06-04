@@ -133,7 +133,12 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 		return err
 	}
 
-	_, err = lib.AddTransactionAndWaitWithOption(c, cl, ctx, 10)
+	if lib.FindRecursivefBool("export", c) {
+		err = lib.ExportTransactionAndExit(ctx)
+		return errors.New("failed to export transaction: " + err.Error())
+	}
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return err
 	}

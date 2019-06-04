@@ -28,7 +28,7 @@ testContractDeferredSpawn() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract. We save the output to the OUTRES variable.
-    OUTRES=`runBA -x contract value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
     testGrep "Here is the deferred data:" echo "$OUTRES"
@@ -63,7 +63,7 @@ testContractDeferredInvoke() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA -x contract value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -109,7 +109,7 @@ testGet() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA -x contract value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -182,7 +182,7 @@ testDel() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA -x contract value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -228,7 +228,7 @@ testContractDeferredInvokeDeferred() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA -x contract value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -251,7 +251,7 @@ testContractDeferredInvokeDeferred() {
     
     # Now we create a new deferred contract that performs an addProof on the
     # first deferred contract
-    OUTRES2=`runBA -x contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH"\
+    OUTRES2=`runBA contract -x deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH"\
                                                    --instrIdx 0 --sign "$KEY" --darc "$ID" |\
                                                    runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
 
