@@ -218,13 +218,6 @@ func checkConfig(c *cli.Context) error {
 }
 
 func setup(c *cli.Context) error {
-	if c.String("config") != "" {
-		log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
-	}
-	if c.String("debug") != "" {
-		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
-	}
-
 	if c.Bool("non-interactive") {
 		host := c.String("host")
 		port := c.Int("port")
