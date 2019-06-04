@@ -23,7 +23,9 @@ public class SignerEd25519 implements Signer {
 
     /**
      * Creates a new signer from a slice of bytes. This must correspond to
-     * what Ed25519.prime_order.toBytes() returns.
+     * what Ed25519.prime_order.toBytes() returns. This constructor does not
+     * correctly decode the result of serialize(). Please use
+     * SignerFactory.New instead.
      * @param data a public key in byte form
      */
     public SignerEd25519(byte[] data){
@@ -39,6 +41,7 @@ public class SignerEd25519 implements Signer {
      * @param msg the message
      * @return the signature
      */
+    @Override
     public byte[] sign(byte[] msg) {
         SchnorrSig sig = new SchnorrSig(msg, priv);
         return sig.toBytes();
@@ -49,6 +52,7 @@ public class SignerEd25519 implements Signer {
      *
      * @return the private key
      */
+    @Override
     public Scalar getPrivate() {
         return priv;
     }
@@ -58,6 +62,7 @@ public class SignerEd25519 implements Signer {
      *
      * @return the public key
      */
+    @Override
     public Point getPublic() {
         return pub;
     }
@@ -67,6 +72,7 @@ public class SignerEd25519 implements Signer {
      *
      * @return an identity
      */
+    @Override
     public Identity getIdentity() {
         return IdentityFactory.New(this);
     }
@@ -77,6 +83,7 @@ public class SignerEd25519 implements Signer {
      * @return the serialised signer
      * @throws IOException if something went wrong with I/O
      */
+    @Override
     public byte[] serialize() throws IOException{
         byte[] result = new byte[1 + priv.toBytes().length];
         result[0] = SignerFactory.IDEd25519;
