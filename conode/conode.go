@@ -72,6 +72,11 @@ func main() {
 					Name:  "non-interactive",
 					Usage: "generate private.toml in non-interactive mode",
 				},
+				cli.StringFlag{
+					Name:  "host",
+					Usage: "which host to listen on",
+					Value: "localhost",
+				},
 				cli.IntFlag{
 					Name:  "port",
 					Usage: "which port to listen on",
@@ -221,10 +226,11 @@ func setup(c *cli.Context) error {
 	}
 
 	if c.Bool("non-interactive") {
+		host := c.String("host")
 		port := c.Int("port")
 		portStr := fmt.Sprintf("%v", port)
 
-		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort("", portStr))
+		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort(host, portStr))
 		kp := key.NewKeyPair(cothority.Suite)
 
 		pub, _ := encoding.PointToStringHex(cothority.Suite, kp.Public)
