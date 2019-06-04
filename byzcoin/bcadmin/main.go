@@ -70,11 +70,11 @@ var cmds = cli.Commands{
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the darc id to be saved (default to admin darc)",
+				Usage: "the darc id to be saved (default to new empty darc)",
 			},
 			cli.StringFlag{
 				Name:  "identity, id",
-				Usage: "the identity to be saved (default to admin identity)",
+				Usage: "the identity to be saved (default to new default identity)",
 			},
 			cli.BoolFlag{
 				Name:  "silent, s",
@@ -236,7 +236,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the darc to show (no default)",
+						Usage: "the darc to show (admin darc by default)",
 					},
 				},
 			},
@@ -863,41 +863,63 @@ func link(c *cli.Context) error {
 		if cl == nil {
 			return errors.New("didn't manage to find a node with a valid copy of the given skipchain-id")
 		}
-		ad := &darc.Darc{}
-		adPub := cothority.Suite.Point()
-		// Accept both plain-darcs, as well as "darc:...." darcs
-		darcID, err := lib.StringToDarcID(c.String("darc"))
-		if err != nil {
-			return errors.New("failed to parse darc: " + err.Error())
-		}
-		if err == nil {
-			idBuf, err := lib.StringToEd25519Buf(c.String("identity"))
+
+		newDarc := &darc.Darc{}
+
+		dstr := c.String("darc")
+		if dstr == "" {
+			log.Info("no darc given, will use an empty default one")
+		} else {
+
+			// Accept both plain-darcs, as well as "darc:...." darcs
+			darcID, err := lib.StringToDarcID(dstr)
 			if err != nil {
-				return err
+				return errors.New("failed to parse darc: " + err.Error())
 			}
-			adPub = cothority.Suite.Point()
-			if err = adPub.UnmarshalBinary(idBuf); err != nil {
-				return errors.New("got an invalid identity: " + err.Error())
-			}
+
 			p, err := cl.GetProof(darcID)
 			if err != nil {
 				return errors.New("couldn't get proof for darc: " + err.Error())
 			}
-			if err = p.Proof.Verify(id); err != nil {
+
+			err = p.Proof.Verify(id)
+			if err != nil {
 				return errors.New("proof for darc is wrong: " + err.Error())
 			}
-			_, adBuf, cid, _, err := p.Proof.KeyValue()
+
+			_, darcBuf, cid, _, err := p.Proof.KeyValue()
 			if err != nil {
 				return errors.New("cannot get value for darc: " + err.Error())
 			}
+
 			if cid != byzcoin.ContractDarcID {
 				return errors.New("please give a darc-instance ID, not: " + cid)
 			}
-			ad, err = darc.NewFromProtobuf(adBuf)
+
+			newDarc, err = darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return errors.New("invalid darc stored in byzcoin: " + err.Error())
 			}
 		}
+
+		identity := cothority.Suite.Point()
+
+		identityStr := c.String("identity")
+		if identityStr == "" {
+			log.Info("no identity provided, will use a default one")
+		} else {
+			identityBuf, err := lib.StringToEd25519Buf(identityStr)
+			if err != nil {
+				return err
+			}
+
+			identity = cothority.Suite.Point()
+			err = identity.UnmarshalBinary(identityBuf)
+			if err != nil {
+				return errors.New("got an invalid identity: " + err.Error())
+			}
+		}
+
 		log.Infof("ByzCoin-config for %+x:\n"+
 			"\tRoster: %s\n"+
 			"\tBlockInterval: %s\n"+
@@ -907,13 +929,18 @@ func link(c *cli.Context) error {
 		filePath, err := lib.SaveConfig(lib.Config{
 			Roster:        cc.Roster,
 			ByzCoinID:     id,
-			AdminDarc:     *ad,
-			AdminIdentity: darc.NewIdentityEd25519(adPub),
+			AdminDarc:     *newDarc,
+			AdminIdentity: darc.NewIdentityEd25519(identity),
 		})
 		if err != nil {
 			return errors.New("while writing config-file: " + err.Error())
 		}
 		log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
+
+		if !c.Bool("silent") {
+			log.Info("updates the BC envvar")
+			os.Setenv("BC", filePath)
+		}
 	}
 	return nil
 }
