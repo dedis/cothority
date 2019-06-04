@@ -2099,6 +2099,7 @@ func (s *Service) cleanupGoroutines() {
 	s.heartbeats.closeAll()
 	s.closeLeaderMonitorChan <- true
 	s.viewChangeMan.closeAll()
+	s.streamingMan.stopAll()
 
 	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {

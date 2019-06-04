@@ -253,20 +253,6 @@ func TestClient_Streaming(t *testing.T) {
 		require.Fail(t, "should have got n transactions")
 	}
 	require.NoError(t, c1.Close())
-
-	// client.Close() won't close the service if there are no more
-	// transactions, so send some more to make sure the service gets an
-	// error and stops its streaming go-routing.
-	for i := 0; i < 2; i++ {
-		value := []byte{5, 6, 7, 8}
-		kind := "dummy"
-		// We added two transactions before, so the latest counter is 2
-		// so we must start the counter here at 3.
-		tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+3)
-		require.Nil(t, err)
-		_, err = c.AddTransactionAndWait(tx, 4)
-		require.Nil(t, err)
-	}
 }
 
 const testServiceName = "TestByzCoin"
