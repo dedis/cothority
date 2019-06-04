@@ -3,6 +3,7 @@ package eventlog
 import (
 	"bytes"
 	"errors"
+	"sync"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -244,7 +245,12 @@ func (c *Client) StreamEventsFrom(handler StreamHandler, id []byte) error {
 	// 1. stream to a buffer (because we don't know which ones will be duplicates yet)
 	blockChan := make(chan blockOrErr, 100)
 	streamDone := make(chan error)
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
+
 		err := c.ByzCoin.StreamTransactions(func(resp byzcoin.StreamingResponse, err error) {
 			blockChan <- blockOrErr{resp.Block, err}
 		})

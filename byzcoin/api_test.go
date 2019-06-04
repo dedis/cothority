@@ -249,7 +249,7 @@ func TestClient_Streaming(t *testing.T) {
 	}()
 	select {
 	case <-done:
-	case <-time.After(time.Duration(n)*msg.BlockInterval + time.Second):
+	case <-time.After(time.Duration(10) * msg.BlockInterval):
 		require.Fail(t, "should have got n transactions")
 	}
 	require.NoError(t, c1.Close())

@@ -384,7 +384,11 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 		}
 	}
 
+	wg := sync.WaitGroup{}
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
+
 		require.NoError(t, c.StreamEventsFrom(h, c.ByzCoin.ID))
 	}()
 
@@ -405,6 +409,8 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	}
 
 	require.NoError(t, c.Close())
+
+	wg.Wait()
 }
 
 func checkProof(t *testing.T, omni *byzcoin.Service, key []byte, scID skipchain.SkipBlockID) []byte {
