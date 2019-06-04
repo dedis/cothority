@@ -239,7 +239,7 @@ func setup(c *cli.Context) error {
 			Services:    app.GenerateServiceKeyPairs(),
 		}
 
-		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
+		out := c.GlobalString("config")
 		err := conf.Save(out)
 		if err == nil {
 			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)
