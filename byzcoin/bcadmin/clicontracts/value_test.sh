@@ -50,7 +50,7 @@ testSpawnRedirect() {
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA --export contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"
+    OUTFILE=res.txt && testOK runBA contract --export value spawn --value "myValue" --darc "$ID" --sign "$KEY"
     OUTFILE=""
 
     # Check if we got the expected output
@@ -72,7 +72,7 @@ testInvokeUpdateRedirect() {
     testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA --export contract value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
+    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
     OUTFILE=""
 
     # Check if we got the expected output
@@ -94,7 +94,7 @@ testDeleteRedirect() {
     testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA --export contract value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
+    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
     OUTFILE=""
 
     # Check if we got the expected output
