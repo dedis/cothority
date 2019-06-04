@@ -34,7 +34,7 @@ func DeferredSpawn(c *cli.Context) error {
 	proposedTransaction := byzcoin.ClientTransaction{}
 	err = protobuf.Decode(proposedTransactionBuf, &proposedTransaction)
 	if err != nil {
-		return errors.New("failed to decode transaction, did you use --redirect ? " + err.Error())
+		return errors.New("failed to decode transaction, did you use --export ? " + err.Error())
 	}
 
 	// ---
@@ -96,6 +96,11 @@ func DeferredSpawn(c *cli.Context) error {
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
+	}
+
+	if lib.FindRecursivefBool("export", c) {
+		err = lib.ExportTransactionAndExit(ctx)
+		return errors.New("failed to export transaction: " + err.Error())
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -246,6 +251,11 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return err
 	}
 
+	if lib.FindRecursivefBool("export", c) {
+		err = lib.ExportTransactionAndExit(ctx)
+		return errors.New("failed to export transaction: " + err.Error())
+	}
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return err
@@ -341,6 +351,11 @@ func ExecProposedTx(c *cli.Context) error {
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
+	}
+
+	if lib.FindRecursivefBool("export", c) {
+		err = lib.ExportTransactionAndExit(ctx)
+		return errors.New("failed to export transaction: " + err.Error())
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -494,6 +509,11 @@ func DeferredDelete(c *cli.Context) error {
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
+	}
+
+	if lib.FindRecursivefBool("export", c) {
+		err = lib.ExportTransactionAndExit(ctx)
+		return errors.New("failed to export transaction: " + err.Error())
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)

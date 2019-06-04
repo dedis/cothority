@@ -3,6 +3,7 @@
 testContractValue() {
     run testSpawn
     run testSpawnRedirect
+    run testInvokeUpdateRedirect
     run testGet
     run testDel
 }
@@ -36,25 +37,69 @@ testSpawn() {
 }
 
 testSpawnRedirect() {
-   # In this test we spawn a value with the --redirect flag
+   # In this test we spawn a value with the --export flag
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
     eval $SED
     [ -z "$BC" ] && exit 1
 
-    # Add the spawn:value and invoke:value.update rules
+    # Add the rules
     testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
     ID=`cat ./darc_id.txt`
     KEY=`cat ./darc_key.txt`
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
-    testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract value spawn --value "myValue" --redirect --darc "$ID" --sign "$KEY"
+    OUTFILE=res.txt && testOK runBA contract --export value spawn --value "myValue" --darc "$ID" --sign "$KEY"
     OUTFILE=""
 
     # Check if we got the expected output
+    testGrep "value" cat res.txt
     testGrep "myValue" cat res.txt
+}
+
+testInvokeUpdateRedirect() {
+   # In this test we update a fake instance with exported output
+    runCoBG 1 2 3
+    runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+    eval $SED
+    [ -z "$BC" ] && exit 1
+
+    # Add the rules
+    testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+    ID=`cat ./darc_id.txt`
+    KEY=`cat ./darc_key.txt`
+    testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
+
+    # Spawn a new value contract, we save the output to the res.txt file
+    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
+    OUTFILE=""
+
+    # Check if we got the expected output
+    testGrep "value" cat res.txt
+    testGrep "newValue" cat res.txt
+}
+
+testDeleteRedirect() {
+   # In this test we delete a fake instance with exported output
+    runCoBG 1 2 3
+    runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+    eval $SED
+    [ -z "$BC" ] && exit 1
+
+    # Add the rules
+    testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+    ID=`cat ./darc_id.txt`
+    KEY=`cat ./darc_key.txt`
+    testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
+
+    # Spawn a new value contract, we save the output to the res.txt file
+    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
+    OUTFILE=""
+
+    # Check if we got the expected output
+    testGrep "value" cat res.txt
+    testGrep "newValue" cat res.txt
 }
 
 testGet() {
@@ -66,12 +111,13 @@ testGet() {
     eval $SED
     [ -z "$BC" ] && exit 1
 
-    # Add the spawn:value and invoke:value.update rules
+    # Add the delete rule
     testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
     ID=`cat ./darc_id.txt`
     KEY=`cat ./darc_key.txt`
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
     testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
+    testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn a new value contract, we save the output to the res.txt file
     OUTFILE=res.txt && testOK runBA contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"
@@ -112,7 +158,7 @@ testDel() {
     eval $SED
     [ -z "$BC" ] && exit 1
 
-    # Add the spawn:value and invoke:value.update rules
+    # Add the rules
     testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
     ID=`cat ./darc_id.txt`
     KEY=`cat ./darc_key.txt`
