@@ -192,7 +192,9 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 	// since the new event is essentially being spawned on this eventlog.
 	eventID := inst.DeriveID("")
 
-	sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, eventID, cid, eventBuf, darcID))
+	// Contract ID is empty because events do not serialize into any
+	// contract instance.
+	sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, eventID, "", eventBuf, darcID))
 
 	// Walk from latest bucket back towards beginning looking for the right bucket.
 	//
@@ -247,7 +249,9 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 			if err != nil {
 				return nil, nil, err
 			}
-			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, catchID, cid, buf, darcID))
+			// Contract ID is empty because buckets do not
+			// serialize into any contract instance.
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, catchID, "", buf, darcID))
 			bID = catchID.Slice()
 		}
 
@@ -263,7 +267,9 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 		if err != nil {
 			return nil, nil, err
 		}
-		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, newBid, cid, buf, darcID))
+		// Contract ID is empty because buckets do not serialize into
+		// any contract instance.
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, newBid, "", buf, darcID))
 
 		// Update the pointer to the latest bucket.
 		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, cid, newBid.Slice(), darcID))

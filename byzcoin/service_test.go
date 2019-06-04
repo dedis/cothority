@@ -221,6 +221,24 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		}
 	}
 
+	// we should see two instances of dummyContract
+	getInstReq := GetInstances{
+		ContractID:   dummyContract,
+		SkipChainID:  s.genesis.SkipChainID(),
+		WithFullDarc: true,
+	}
+	getInstResp, err := s.service().GetInstances(&getInstReq)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(getInstResp.InstanceIDs))
+	require.Equal(t, tx1.Instructions[0].Hash(), getInstResp.InstanceIDs[0][:])
+	require.Equal(t, tx2.Instructions[0].Hash(), getInstResp.InstanceIDs[1][:])
+	require.Equal(t, 2, len(getInstResp.DarcIDs))
+	require.Equal(t, 2, len(getInstResp.Darcs))
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[0])
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[1])
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[0].GetBaseID())
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[1].GetBaseID())
+
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
 		log.Lvl1("bringing the failed node back up")

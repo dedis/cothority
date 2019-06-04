@@ -2,13 +2,11 @@ package byzcoin
 
 import (
 	"errors"
-	"sync"
 
 	"go.dedis.ch/cothority/v3/darc"
 )
 
 type instanceIDCache struct {
-	sync.Mutex
 	// Inner is a map from contract ID to a map of instance ID to darc ID.
 	Inner map[string]map[InstanceID]darc.ID
 }
@@ -49,15 +47,11 @@ func (c *instanceIDCache) rebuild(rst ReadOnlyStateTrie) error {
 	if err != nil {
 		return err
 	}
-	c.Lock()
-	defer c.Unlock()
 	c.Inner = tmpInner
 	return nil
 }
 
 func (c *instanceIDCache) update(scs StateChanges) error {
-	c.Lock()
-	defer c.Unlock()
 	for _, sc := range scs {
 		// Empty contract ID means the state change did not come from a
 		// contract.
@@ -89,11 +83,9 @@ func (c *instanceIDCache) update(scs StateChanges) error {
 }
 
 func (c *instanceIDCache) get(cid string) map[InstanceID]darc.ID {
-	c.Lock()
-	defer c.Unlock()
 	out := make(map[InstanceID]darc.ID)
 	for k, v := range c.Inner[cid] {
-		out[k] = v
+		out[k] = append([]byte{}, v...)
 	}
 	return out
 }

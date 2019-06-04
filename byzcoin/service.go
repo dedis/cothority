@@ -145,6 +145,10 @@ type Service struct {
 	downloadState downloadState
 
 	rotationWindow time.Duration
+
+	// skipchain -> instanceIDCache map
+	iidCache    map[string]*instanceIDCache
+	iidCacheMut sync.Mutex
 }
 
 type downloadState struct {
@@ -461,6 +465,50 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 		}
 	}
 	return resp, nil
+}
+
+// GetInstances finds the instance IDs that correspond to the given contract
+// ID.
+func (s *Service) GetInstances(req *GetInstances) (*GetInstancesReply, error) {
+	if req.ContractID == "" {
+		return nil, errors.New("ContractID cannot be empty")
+	}
+
+	s.iidCacheMut.Lock()
+	if _, ok := s.iidCache[string(req.SkipChainID)]; !ok {
+		s.iidCacheMut.Unlock()
+		return nil, errors.New("SkipChainID does not exist")
+	}
+	iidMap := s.iidCache[string(req.SkipChainID)].get(req.ContractID)
+	// we can unlock here because iidMap is a copy
+	s.iidCacheMut.Unlock()
+
+	resp := GetInstancesReply{}
+	for k, v := range iidMap {
+		resp.InstanceIDs = append(resp.InstanceIDs, k)
+		resp.DarcIDs = append(resp.DarcIDs, v)
+	}
+
+	if req.WithFullDarc {
+		st, err := s.getStateTrie(req.SkipChainID)
+		if err != nil {
+			return nil, err
+		}
+		resp.Darcs = make([]darc.Darc, len(resp.DarcIDs))
+		for i, dID := range resp.DarcIDs {
+			value, _, _, _, err := st.GetValues(dID)
+			if err != nil {
+				return nil, err
+			}
+			thisDarc, err := darc.NewFromProtobuf(value)
+			if err != nil {
+				return nil, err
+			}
+			resp.Darcs[i] = *thisDarc
+		}
+	}
+
+	return &resp, nil
 }
 
 // GetSignerCounters gets the latest signer counters for the given identities.
@@ -1313,6 +1361,23 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		panic("Couldn't append the state changes to the storage - this might " +
 			"mean that the db is broken. Error: " + err.Error())
 	}
+
+	// If there is no cache for this skipchain, we create it. Otherwise we
+	// just do an update.
+	s.iidCacheMut.Lock()
+	if _, ok := s.iidCache[string(sb.SkipChainID())]; !ok {
+		newCache := newInstanceIDCache()
+		if err := newCache.rebuild(st); err != nil {
+			log.Error(s.ServerIdentity(), err)
+		} else {
+			s.iidCache[string(sb.SkipChainID())] = &newCache
+		}
+	} else {
+		if err := s.iidCache[string(sb.SkipChainID())].update(scs); err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+	}
+	s.iidCacheMut.Unlock()
 
 	// Notify all waiting channels for processed ClientTransactions.
 	for _, t := range body.TxResults {
@@ -2278,6 +2343,19 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	s.darcToSc[string(d.GetBaseID())] = genesisID
 	s.darcToScMut.Unlock()
 
+	// load the instance ID cache
+	st, err := s.getStateTrie(genesisID)
+	if err != nil {
+		return err
+	}
+	newCache := newInstanceIDCache()
+	if err := newCache.rebuild(st); err != nil {
+		return err
+	}
+	s.iidCacheMut.Lock()
+	s.iidCache[string(genesisID)] = &newCache
+	s.iidCacheMut.Unlock()
+
 	// start the heartbeat
 	if s.heartbeats.exists(string(genesisID)) {
 		return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
@@ -2362,6 +2440,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closed:                 true,
 		catchingUpHistory:      make(map[string]time.Time),
 		rotationWindow:         defaultRotationWindow,
+		iidCache:               make(map[string]*instanceIDCache),
 	}
 
 	err := s.RegisterHandlers(
@@ -2375,6 +2454,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetLastInstanceVersion,
 		s.GetAllInstanceVersion,
 		s.CheckStateChangeValidity,
+		s.GetInstances,
 		s.Debug,
 		s.DebugRemove)
 	if err != nil {

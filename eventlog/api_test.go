@@ -82,6 +82,16 @@ func TestClient_Log(t *testing.T) {
 		_, err = c.GetEvent(key)
 		require.Nil(t, err)
 	}
+
+	// By the end of it all, we should only see one instance ID.
+	reply, err := c.ByzCoin.GetInstances("eventlog", true)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reply.InstanceIDs))
+	require.Equal(t, c.Instance, reply.InstanceIDs[0])
+	require.Equal(t, 1, len(reply.DarcIDs))
+	require.Equal(t, c.DarcID, reply.DarcIDs[0])
+	require.Equal(t, 1, len(reply.Darcs))
+	require.Equal(t, c.DarcID, reply.Darcs[0].GetBaseID())
 }
 
 func TestClient_Log200(t *testing.T) {
@@ -167,6 +177,16 @@ func TestClient_Log200(t *testing.T) {
 		require.Nil(t, protobuf.Decode(eventBuf, &e))
 	}
 	require.Nil(t, s.local.WaitDone(10*time.Second))
+
+	// By the end of it all, we should only see one instance ID.
+	reply, err := c.ByzCoin.GetInstances("eventlog", true)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reply.InstanceIDs))
+	require.Equal(t, c.Instance, reply.InstanceIDs[0])
+	require.Equal(t, 1, len(reply.DarcIDs))
+	require.Equal(t, c.DarcID, reply.DarcIDs[0])
+	require.Equal(t, 1, len(reply.Darcs))
+	require.Equal(t, c.DarcID, reply.Darcs[0].GetBaseID())
 }
 
 func TestClient_Search(t *testing.T) {

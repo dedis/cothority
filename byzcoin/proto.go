@@ -333,6 +333,24 @@ type GetSignerCountersResponse struct {
 	Counters []uint64
 }
 
+// GetInstances is a request for getting the instances for a given contract,
+// the WithFullDarc flag determines whether the darc that corresponds to every
+// instance should be returned.
+type GetInstances struct {
+	SkipChainID  skipchain.SkipBlockID
+	ContractID   string
+	WithFullDarc bool
+}
+
+// GetInstancesReply holds the instances and their corresponding Darcs for the
+// ContractID in the request. The Darcs field may be empty depending on the flag in the
+// request.
+type GetInstancesReply struct {
+	InstanceIDs []InstanceID
+	DarcIDs     []darc.ID
+	Darcs       []darc.Darc
+}
+
 // GetInstanceVersion is a request asking the service to fetch
 // the version of the given instance
 type GetInstanceVersion struct {

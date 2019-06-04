@@ -366,6 +366,23 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
+// GetInstances finds the instance IDs that correspond to the given contract
+// ID. If the fullDarc flag is set, the returned instance IDs will contain the
+// DARC that is responsible for the instance.
+func (c *Client) GetInstances(contractID string, fullDarc bool) (*GetInstancesReply, error) {
+	req := GetInstances{
+		SkipChainID:  c.ID,
+		ContractID:   contractID,
+		WithFullDarc: fullDarc,
+	}
+	var reply GetInstancesReply
+	err := c.SendProtobuf(c.getServer(), &req, &reply)
+	if err != nil {
+		return nil, err
+	}
+	return &reply, nil
+}
+
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
 func Debug(url string, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
