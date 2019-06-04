@@ -31,6 +31,7 @@ public abstract class SignerX509EC implements Signer {
      *
      * @return the private key
      */
+    @Override
     public Scalar getPrivate()  {
         throw new RuntimeException("cannot reveal private key");
     }
@@ -40,6 +41,7 @@ public abstract class SignerX509EC implements Signer {
      *
      * @return the public key
      */
+    @Override
     public Point getPublic()  {
         throw new RuntimeException("non-ed25519 public keys not yet implemented");
     }
@@ -49,6 +51,7 @@ public abstract class SignerX509EC implements Signer {
      *
      * @return an identity
      */
+    @Override
     public Identity getIdentity() {
         return IdentityFactory.New(this);
     }
@@ -58,6 +61,7 @@ public abstract class SignerX509EC implements Signer {
      *
      * @return the serialized signer
      */
+    @Override
     public byte[] serialize() throws IOException {
         // TODO - serialize this thing so it can be recognized by go. The byte string must
         // start with a SignerFactory.Keycard byte, then comes whatever representation makes
