@@ -17,8 +17,20 @@ export class Rule extends Message<Rule> {
         registerMessage("Rule", Rule);
     }
 
+    /**
+     * Creates a rule given an action and an expression.
+     *
+     * @param action
+     * @param expr
+     */
+    static fromActionExpr(action: string, expr: Buffer) {
+        const r = new Rule({action});
+        r.append(expr.toString(), null);
+        return r;
+    }
+
     readonly action: string;
-    expr: Buffer;
+    private expr: Buffer;
 
     constructor(props?: Properties<Rule>) {
         super(props);
@@ -31,10 +43,7 @@ export class Rule extends Message<Rule> {
      * @returns the new rule
      */
     clone(): Rule {
-        return new Rule({
-            action: this.action,
-            expr: Buffer.from(this.expr),
-        });
+        return Rule.fromActionExpr(this.action, this.expr);
     }
 
     /**
@@ -97,6 +106,7 @@ export default class Rules extends Message<Rules> {
     static register() {
         registerMessage("Rules", Rules, Rule);
     }
+
     readonly list: Rule[];
 
     constructor(properties?: Properties<Rules>) {
@@ -119,7 +129,7 @@ export default class Rules extends Message<Rules> {
         if (idx >= 0) {
             this.list[idx].append(identity.toString(), op);
         } else {
-            this.list.push(new Rule({action, expr: Buffer.from(identity.toString())}));
+            this.list.push(Rule.fromActionExpr(action, Buffer.from(identity.toString())));
         }
     }
 
@@ -142,7 +152,7 @@ export default class Rules extends Message<Rules> {
     setRuleExp(action: string, expression: Buffer) {
         const idx = this.list.findIndex((r) => r.action === action);
 
-        const nr = new Rule({action, expr: expression});
+        const nr = Rule.fromActionExpr(action, expression);
         if (idx >= 0) {
             this.list[idx] = nr;
         } else {
