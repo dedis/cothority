@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,17 +64,21 @@ var cmds = cli.Commands{
 
 	{
 		Name:      "link",
-		Usage:     "link to existing ledger",
-		Aliases:   []string{"ln"},
-		ArgsUsage: "roster.toml [bcid]",
+		Usage:     "create a BC config file that sets the specified roster, darc and identity",
+		Aliases:   []string{"login"},
+		ArgsUsage: "roster.toml [byzcoin id]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "admindarc, ad",
-				Usage: "the admin darc that has 'evolve_unrestricted'",
+				Name:  "darc",
+				Usage: "the darc id to be saved (default to admin darc)",
 			},
 			cli.StringFlag{
-				Name:  "adminpub, ap",
-				Usage: "the public key of the admin to use",
+				Name:  "identity, id",
+				Usage: "the identity to be saved (default to admin identity)",
+			},
+			cli.BoolFlag{
+				Name:  "silent, s",
+				Usage: "if set, the BC variable will not be updated with the newly created config file",
 			},
 		},
 		Action: link,
@@ -352,6 +355,19 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: qrcode,
+	},
+
+	{
+		Name:  "info",
+		Usage: "displays infos about the BC config",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config to use (required)",
+			},
+		},
+		Action: getInfo,
 	},
 
 	{
@@ -782,7 +798,7 @@ func create(c *cli.Context) error {
 
 func link(c *cli.Context) error {
 	if c.NArg() < 1 {
-		return errors.New("please give the following args: roster.toml [bcid]")
+		return errors.New("please give the following args: roster.toml [byzcoin id]")
 	}
 	r, err := lib.ReadRoster(c.Args().First())
 	if err != nil {
@@ -850,22 +866,25 @@ func link(c *cli.Context) error {
 		ad := &darc.Darc{}
 		adPub := cothority.Suite.Point()
 		// Accept both plain-darcs, as well as "darc:...." darcs
-		adID, err := lib.StringToDarcID(c.String("admindarc"))
+		darcID, err := lib.StringToDarcID(c.String("darc"))
+		if err != nil {
+			return errors.New("failed to parse darc: " + err.Error())
+		}
 		if err == nil {
-			adPubBuf, err := lib.StringToEd25519Buf(c.String("adminpub"))
+			idBuf, err := lib.StringToEd25519Buf(c.String("identity"))
 			if err != nil {
 				return err
 			}
 			adPub = cothority.Suite.Point()
-			if err = adPub.UnmarshalBinary(adPubBuf); err != nil {
-				return errors.New("got an invalid admin public key: " + err.Error())
+			if err = adPub.UnmarshalBinary(idBuf); err != nil {
+				return errors.New("got an invalid identity: " + err.Error())
 			}
-			p, err := cl.GetProof(adID)
+			p, err := cl.GetProof(darcID)
 			if err != nil {
-				return errors.New("couldn't get proof for admin-darc: " + err.Error())
+				return errors.New("couldn't get proof for darc: " + err.Error())
 			}
 			if err = p.Proof.Verify(id); err != nil {
-				return errors.New("proof for admin is wrong: " + err.Error())
+				return errors.New("proof for darc is wrong: " + err.Error())
 			}
 			_, adBuf, cid, _, err := p.Proof.KeyValue()
 			if err != nil {
@@ -885,7 +904,7 @@ func link(c *cli.Context) error {
 			"\tMacBlockSize: %d\n"+
 			"\tDarcContracts: %s",
 			id[:], cc.Roster.List, cc.BlockInterval, cc.MaxBlockSize, cc.DarcContractIDs)
-		fn, err := lib.SaveConfig(lib.Config{
+		filePath, err := lib.SaveConfig(lib.Config{
 			Roster:        cc.Roster,
 			ByzCoinID:     id,
 			AdminDarc:     *ad,
@@ -894,7 +913,7 @@ func link(c *cli.Context) error {
 		if err != nil {
 			return errors.New("while writing config-file: " + err.Error())
 		}
-		log.Info("Wrote config to", path.Join(lib.ConfigPath, fn))
+		log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
 	}
 	return nil
 }
@@ -2014,6 +2033,28 @@ func qrcode(c *cli.Context) error {
 	}
 
 	qr.OutputTerminal()
+
+	return nil
+}
+
+func getInfo(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	cfg, _, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("BC configuration:\n"+
+		"\tCongig path: %s\n"+
+		"\tRoster: %s\n"+
+		"\tByzCoinID: %x\n"+
+		"\tDarc Base ID: %x\n"+
+		"\tIdentity: %s\n",
+		bcArg, cfg.Roster.List, cfg.ByzCoinID, cfg.AdminDarc.GetBaseID(), cfg.AdminIdentity.String())
 
 	return nil
 }
