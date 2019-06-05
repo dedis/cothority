@@ -4,7 +4,7 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../../src/byzcoin/contracts/coin-instance";
 import Darc from "../../src/darc/darc";
-import Rules from "../../src/darc/rules";
+import { Rule } from "../../src/darc/rules";
 import Signer from "../../src/darc/signer";
 import Log from "../../src/log";
 import RoPaSciInstance, { RoPaSciStruct } from "../../src/personhood/ro-pa-sci-instance";
@@ -70,10 +70,10 @@ describe("Rock-Paper-scissors Instance Tests", () => {
     it("should play a game", async () => {
         const coinType = CoinInstance.coinIID(Buffer.from("secure coin"));
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-        darc.addIdentity("spawn:coin", SIGNER, Rules.OR);
-        darc.addIdentity("invoke:coin.mint", SIGNER, Rules.OR);
-        darc.addIdentity("invoke:coin.fetch", SIGNER, Rules.OR);
-        darc.addIdentity("spawn:ropasci", SIGNER, Rules.OR);
+        darc.addIdentity("spawn:coin", SIGNER, Rule.OR);
+        darc.addIdentity("invoke:coin.mint", SIGNER, Rule.OR);
+        darc.addIdentity("invoke:coin.fetch", SIGNER, Rule.OR);
+        darc.addIdentity("spawn:ropasci", SIGNER, Rule.OR);
 
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const p1 = await CoinInstance.spawn(rpc, darc.getBaseID(), [SIGNER], coinType);

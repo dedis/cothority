@@ -2,7 +2,7 @@ import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import Darc from "../../src/darc/darc";
 import IdentityDarc from "../../src/darc/identity-darc";
-import Rules from "../../src/darc/rules";
+import { Rule } from "../../src/darc/rules";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
@@ -15,7 +15,7 @@ describe("DarcInstance Tests", () => {
 
     it("should find related rule", async () => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-        darc.addIdentity("spawn:darc", SIGNER, Rules.OR);
+        darc.addIdentity("spawn:darc", SIGNER, Rule.OR);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
         const sig = SignerEd25519.random();
