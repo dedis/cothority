@@ -229,8 +229,7 @@ export class PopPartyInstance extends Instance {
 
     async fetchOrgKeys(): Promise<Point[]> {
         const piDarc = await DarcInstance.fromByzcoin(this.rpc, this.darcID);
-        const exprOrgs = piDarc.darc.rules.list.find((l) => l.action === "invoke:popParty.finalize").expr;
-        const orgDarcs = exprOrgs.toString().split(" | ");
+        const orgDarcs = piDarc.darc.rules.list.find((l) => l.action === "invoke:popParty.finalize").getIdentities();
         const orgPers: Point[] = [];
 
         for (let orgDarc of orgDarcs) {
