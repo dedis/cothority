@@ -37,6 +37,7 @@ const invalidContract = "invalid"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
+	log.SetShowTime(true)
 	log.MainTest(m)
 }
 

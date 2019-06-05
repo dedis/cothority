@@ -97,7 +97,7 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 
 	sb, doCatchUp := s.skService().WaitBlock(s.scID, nil)
 	if sb == nil && !doCatchUp {
-		// block is still processing but the skipchain is known
+		log.Lvl2("Skip tx collection during block processing")
 		return nil, nil
 	}
 
