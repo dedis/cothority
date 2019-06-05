@@ -31,6 +31,8 @@ main(){
     run testRoster
     run testCreateStoreRead
     run testAddDarc
+    testDarcAddDeferred
+    testDarcAddRuleMinimum
     run testRuleDarc
     run testAddDarcFromOtherOne
     run testAddDarcWithOwner
@@ -183,6 +185,46 @@ testAddDarc(){
   testOK runBA darc add
   ID=`cat ./darc_id.txt`
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+}
+
+testDarcAddDeferred() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # standard stuff
+  testOK runBA darc adeferred
+  testOK runBA darc adeferred -out_id ./darc_id.txt
+  testOK runBA darc adeferred
+  ID=`cat ./darc_id.txt`
+  testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+  testGrep "spawn:deferred" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.addProof" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.execProposedTx" runBA darc show --darc "$ID"
+
+  # more advanced
+  testOK runBA darc adeferred -id A -id B -id C -id D -out_id ./darc_id.txt
+  ID=`cat ./darc_id.txt`
+  testGrep "spawn:deferred - \"A | B | C | D\"" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.addProof - \"A | B | C | D\"" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.execProposedTx - \"A | B | C | D\"" runBA darc show --darc "$ID"
+}
+
+testDarcAddRuleMinimum(){
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # With M out of N
+  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+  ID=`cat ./darc_id.txt`
+  KEY=`cat ./darc_key.txt`
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id A -id B -id C -id D --minimum 1
+  testGrep "test:contract - \"A \| B \| C \| D\"" runBA darc show --darc "$ID"
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id A -id B -id C -id D --minimum 2 -replace
+  testGrep "test:contract - \"A & B \| A & C \| A & D \| B & C \| B & D \| C & D\"" runBA darc show --darc "$ID"
 }
 
 testRuleDarc(){
