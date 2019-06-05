@@ -97,10 +97,10 @@ export default class DarcInstance extends Instance {
      * Searches for the rule that corresponds to the Darc.ruleSign action. If that rule
      * does not exist, it returns an error.
      */
-    getSignerExpression(): Buffer {
+    getSignerIdentities(): string[] {
         for (const rule of this._darc.rules.list) {
             if (rule.action === Darc.ruleSign) {
-                return rule.expr;
+                return rule.getIdentities();
             }
         }
         throw new Error("This darc doesn't have a sign expression");
@@ -111,17 +111,13 @@ export default class DarcInstance extends Instance {
      * other element of the expression.
      */
     getSignerDarcIDs(): InstanceID[] {
-        const expr = this.getSignerExpression().toString();
-        if (expr.match(/\(&/)) {
-            throw new Error('Don\'t know what to do with "(" or "&" in expression');
-        }
+        const ids = this.getSignerIdentities();
         const ret: InstanceID[] = [];
-        expr.split("|").forEach((e) => {
-            const exp = e.trim();
-            if (exp.startsWith("darc:")) {
-                ret.push(Buffer.from(exp.slice(5), "hex"));
+        ids.forEach((e) => {
+            if (e.startsWith("darc:")) {
+                ret.push(Buffer.from(e.slice(5), "hex"));
             } else {
-                Log.warn("Non-darc expression in signer:", exp);
+                Log.warn("Non-darc expression in signer:", e);
             }
         });
         return ret;

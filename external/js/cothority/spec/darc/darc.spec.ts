@@ -44,8 +44,8 @@ describe("Darc Tests", () => {
         const id2 = "identity2";
         const id3 = "identity3";
         expect(rule.append(id1, Rule.OR).toString()).toEqual(id1);
-        rule = new Rule({action: "sign", expr: Buffer.from(id1)});
-        expect(rule.expr.toString()).toEqual(id1);
+        rule = Rule.fromActionExpr("sign", Buffer.from(id1));
+        expect(rule.getExpr().toString()).toEqual(id1);
         expect(rule.append(id2, Rule.OR).toString()).toEqual(`${id1} | ${id2}`);
         expect(rule.append(id3, Rule.OR).toString()).toEqual(`${id1} | ${id2} | ${id3}`);
 
@@ -59,8 +59,8 @@ describe("Darc Tests", () => {
         expect(rule.remove(id1).toString()).toEqual(`${id2} | ${id3}`);
 
         const rules = new Rules({list: [rule]});
-        expect(rules.getRule("sign").expr.toString().split("|").length).toBe(2);
+        expect(rules.getRule("sign").getExpr().toString().split("|").length).toBe(2);
         expect(rules.getRule("sign").remove(id2).toString()).toBe(id3);
-        expect(rules.getRule("sign").expr.toString()).toBe(id3);
+        expect(rules.getRule("sign").getExpr().toString()).toBe(id3);
     });
 });

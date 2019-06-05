@@ -1,4 +1,6 @@
 import { Message, Properties } from "protobufjs/light";
+import { InstanceID } from "../byzcoin";
+import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { IIdentity } from "./identity-wrapper";
 
@@ -82,6 +84,25 @@ export class Rule extends Message<Rule> {
         expr = expr.replace(/\s*\|\s*$/, "");
         expr = expr.replace(/^\s*\|\s*/, "");
         this.expr = Buffer.from(expr);
+        return Buffer.from(this.expr);
+    }
+
+    /**
+     * Returns the identities in the expression, in the case it is a single identity,
+     * or if the identities are ORed together. If there are brakcets '()' or AND in the
+     * expression, it will throw an error.
+     */
+    getIdentities(): string[] {
+        if (this.expr.toString().match(/\(&/)) {
+            throw new Error('Don\'t know what to do with "(" or "&" in expression');
+        }
+        return this.expr.toString().split("|").map((e) => e.trim());
+    }
+
+    /**
+     * Returns a copy of the expression.
+     */
+    getExpr(): Buffer {
         return Buffer.from(this.expr);
     }
 

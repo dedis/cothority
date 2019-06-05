@@ -29,7 +29,7 @@ export default class Darc extends Message<Darc> {
 
         this.rules.list.forEach((r) => {
             h.update(r.action);
-            h.update(r.expr);
+            h.update(r.getExpr());
         });
 
         return h.digest();
@@ -206,13 +206,9 @@ export default class Darc extends Message<Darc> {
         if (signers.length !== 1) {
             throw new Error("Currently only supports checking 1 identity");
         }
-        const expr = rule.expr.toString();
-        if (expr.match(/(\(|\)|\&)/)) {
-            throw new Error("Cannot handle Rule.AND, (, ) for the moment.");
-        }
-        const ids = expr.split(Rule.OR);
+        const ids = rule.getIdentities();
         for (const idStr of ids) {
-            const id = IdentityWrapper.fromString(idStr.trim());
+            const id = IdentityWrapper.fromString(idStr);
             if (id.toString() === signers[0].toString()) {
                 return signers;
             }
