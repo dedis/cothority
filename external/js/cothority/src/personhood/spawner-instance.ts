@@ -11,7 +11,7 @@ import { CalypsoWriteInstance, Write } from "../calypso/calypso-instance";
 import { LongTermSecret } from "../calypso/calypso-rpc";
 import { IIdentity } from "../darc";
 import Darc from "../darc/darc";
-import Rules from "../darc/rules";
+import { Rule } from "../darc/rules";
 import Signer from "../darc/signer";
 import ISigner from "../darc/signer";
 import Log from "../log";
@@ -398,7 +398,7 @@ export default class SpawnerInstance extends Instance {
         const cwDarc = Darc.createBasic([ident[0]], [ident[0]],
             Buffer.from("calypso write protection " + randomBytes(8).toString("hex")),
             ["spawn:" + CalypsoReadInstance.contractID]);
-        ident.slice(1).forEach((id) => cwDarc.rules.appendToRule("spawn:calypsoRead", id, Rules.OR));
+        ident.slice(1).forEach((id) => cwDarc.rules.appendToRule("spawn:calypsoRead", id, Rule.OR));
         const d = await this.spawnDarcs(coinInst, signers, cwDarc);
 
         const write = await Write.createWrite(lts.id, d[0].id, lts.X, key);

@@ -5,7 +5,7 @@ import CoinInstance from "../../src/byzcoin/contracts/coin-instance";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
 import { IdentityEd25519 } from "../../src/darc";
 import Darc from "../../src/darc/darc";
-import Rules from "../../src/darc/rules";
+import { Rule } from "../../src/darc/rules";
 import ISigner from "../../src/darc/signer";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
 import { Roster } from "../../src/network";
@@ -215,10 +215,10 @@ async function spawnUserDarc(si: SpawnerInstance, ci: CoinInstance, signers: ISi
 
 async function makeDarc(roster: Roster): Promise<Darc> {
     const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
-    darc.addIdentity("spawn:coin", SIGNER, Rules.OR);
-    darc.addIdentity("invoke:coin.mint", SIGNER, Rules.OR);
-    darc.addIdentity("invoke:coin.fetch", SIGNER, Rules.OR);
-    darc.addIdentity("spawn:spawner", SIGNER, Rules.OR);
+    darc.addIdentity("spawn:coin", SIGNER, Rule.OR);
+    darc.addIdentity("invoke:coin.mint", SIGNER, Rule.OR);
+    darc.addIdentity("invoke:coin.fetch", SIGNER, Rule.OR);
+    darc.addIdentity("spawn:spawner", SIGNER, Rule.OR);
 
     return darc;
 }
