@@ -34,7 +34,7 @@ export default class SignerEd25519 extends IdentityEd25519 implements ISigner {
     private priv: Scalar;
 
     constructor(pub: Point, priv: Scalar) {
-        super({point: pub.toProto()});
+        super({point: pub.marshalBinary()});
         this.priv = priv;
     }
 
