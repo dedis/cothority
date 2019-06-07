@@ -51,7 +51,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(10 * interval)
+		service.SetPropagationTimeout(2 * interval)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
@@ -241,9 +241,9 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	time.Sleep(2 * s.interval)
-
 	for _, service := range s.services {
+		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
+
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)

@@ -471,6 +471,10 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 	defer s.Unlock()
 	err = s.db.View(func(tx *bbolt.Tx) error {
 		b := s.getBucket(tx, sid)
+		if b == nil {
+			// No bucket means that the chain hasn't been processed yet.
+			return nil
+		}
 
 		var suffix bytes.Buffer
 		// The key is built using BigEndian order

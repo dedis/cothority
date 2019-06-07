@@ -10,7 +10,9 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID) []ClientTransaction
+const defaultMaxNumTxs = 100
+
+type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID, int) []ClientTransaction
 
 func init() {
 	network.RegisterMessages(CollectTxRequest{}, CollectTxResponse{})
@@ -22,6 +24,7 @@ type CollectTxProtocol struct {
 	TxsChan      chan []ClientTransaction
 	SkipchainID  skipchain.SkipBlockID
 	LatestID     skipchain.SkipBlockID
+	MaxNumTxs    int
 	requestChan  chan structCollectTxRequest
 	responseChan chan structCollectTxResponse
 	getTxs       getTxsCallback
@@ -34,6 +37,7 @@ type CollectTxProtocol struct {
 type CollectTxRequest struct {
 	SkipchainID skipchain.SkipBlockID
 	LatestID    skipchain.SkipBlockID
+	MaxNumTxs   int
 }
 
 // CollectTxResponse is the response message that contains all the pending
@@ -60,10 +64,11 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			// If we do not buffer this channel then the protocol
 			// might be blocked from stopping when the receiver
 			// stops reading from this channel.
-			TxsChan: make(chan []ClientTransaction, len(node.List())),
-			getTxs:  getTxs,
-			Finish:  make(chan bool),
-			closing: make(chan bool),
+			TxsChan:   make(chan []ClientTransaction, len(node.List())),
+			MaxNumTxs: defaultMaxNumTxs,
+			getTxs:    getTxs,
+			Finish:    make(chan bool),
+			closing:   make(chan bool),
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -86,6 +91,7 @@ func (p *CollectTxProtocol) Start() error {
 	req := &CollectTxRequest{
 		SkipchainID: p.SkipchainID,
 		LatestID:    p.LatestID,
+		MaxNumTxs:   p.MaxNumTxs,
 	}
 	// send to myself and the children
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
@@ -119,7 +125,7 @@ func (p *CollectTxProtocol) Dispatch() error {
 
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{
-		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID),
+		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, req.MaxNumTxs),
 	}
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
@@ -137,7 +143,11 @@ func (p *CollectTxProtocol) Dispatch() error {
 		for range p.List() {
 			select {
 			case resp := <-p.responseChan:
-				p.TxsChan <- resp.Txs
+				// If more than the limit is sent, we simply drop all of them
+				// as the conode is not behaving correctly.
+				if len(resp.Txs) <= p.MaxNumTxs {
+					p.TxsChan <- resp.Txs
+				}
 			case <-p.Finish:
 				return nil
 			case <-p.closing:
