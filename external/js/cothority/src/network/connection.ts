@@ -113,15 +113,23 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onClose((code: number, reason: string) => {
-                if (code !== 1000) {
-                    Log.error("Got close:", code, reason);
-                    reject(new Error(reason));
+                switch (code) {
+                    case 1000:
+                        Log.lvl3("Normal closing of connection");
+                        break;
+                    case 1006:
+                        Log.lvl2("abnormal close of connection");
+                        reject(new Error(reason));
+                        break;
+                    default:
+                        Log.error("Got error close:", code, reason);
+                        reject(new Error(reason));
+                        break;
                 }
             });
 
             ws.onError((err: Error) => {
                 clearTimeout(timer);
-
                 reject(new Error("error in websocket " + path + ": " + err));
             });
         });
@@ -141,25 +149,28 @@ export class RosterWSConnection extends WebSocketConnection {
     constructor(r: Roster, service: string) {
         super("", service);
         this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
+        shuffle(this.addresses);
     }
 
     /** @inheritdoc */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
-        const addresses = this.addresses.slice();
-        shuffle(addresses);
-
         const errors: string[] = [];
-        for (const addr of addresses) {
-            this.url = addr;
+        for (let i = 0; i < this.addresses.length; i++) {
+            this.url = this.addresses[0];
+            Log.lvl3("sending", message.constructor.name, "to address", this.url);
 
             try {
                 // we need to await here to catch and try another conode
                 return await super.send(message, reply);
             } catch (e) {
-                Log.lvl3(`fail to send on ${addr} with error:`, e);
+                Log.lvl3(`failed to send on ${this.url} with error:`, e);
                 errors.push(e.message);
-                // TODO: send again over all nodes
-                return Promise.reject(e.message);
+                if (i > 2) {
+                    return Promise.reject(errors.join(" :: "));
+                }
+                Log.error("Error while sending - trying with next node");
+                this.addresses = this.addresses.slice(1);
+                this.addresses.push(this.url);
             }
         }
 
