@@ -189,10 +189,10 @@ func prependAndToEach(list []string, prefix string) []string {
 }
 
 // removes duplicate from a slice and return a new list
-func unique(intSlice []string) []string {
+func unique(stringSlice []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
-	for _, entry := range intSlice {
+	for _, entry := range stringSlice {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
 			list = append(list, entry)
