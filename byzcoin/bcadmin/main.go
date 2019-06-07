@@ -76,10 +76,6 @@ var cmds = cli.Commands{
 				Name:  "identity, id",
 				Usage: "the identity to be saved (default to new default identity)",
 			},
-			cli.BoolFlag{
-				Name:  "silent, s",
-				Usage: "if set, the BC variable will not be updated with the newly created config file",
-			},
 		},
 		Action: link,
 	},
@@ -936,11 +932,6 @@ func link(c *cli.Context) error {
 			return errors.New("while writing config-file: " + err.Error())
 		}
 		log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
-
-		if !c.Bool("silent") {
-			log.Info("updates the BC envvar")
-			os.Setenv("BC", filePath)
-		}
 	}
 	return nil
 }
