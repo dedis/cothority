@@ -40,7 +40,7 @@ func (c *instanceIDCache) rebuild(rst ReadOnlyStateTrie) error {
 		}
 
 		iidMap := tmpInner[vals.ContractID]
-		iidMap[iid] = vals.DarcID
+		iidMap[iid] = append([]byte{}, vals.DarcID...)
 		tmpInner[vals.ContractID] = iidMap
 		return nil
 	})
@@ -68,7 +68,7 @@ func (c *instanceIDCache) update(scs StateChanges) error {
 				c.Inner[sc.ContractID] = make(map[InstanceID]darc.ID)
 			}
 			iidMap := c.Inner[sc.ContractID]
-			iidMap[iid] = sc.DarcID
+			iidMap[iid] = append([]byte{}, sc.DarcID...)
 			c.Inner[sc.ContractID] = iidMap
 		} else if sc.StateAction == Remove {
 			if _, ok := c.Inner[sc.ContractID]; !ok {

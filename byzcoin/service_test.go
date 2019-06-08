@@ -196,6 +196,24 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
+	// we should see two instances of dummyContract
+	getInstReq := GetInstances{
+		ContractID:   dummyContract,
+		SkipChainID:  s.genesis.SkipChainID(),
+		WithFullDarc: true,
+	}
+	getInstResp, err := s.services[sendToIdx].GetInstances(&getInstReq)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(getInstResp.InstanceIDs))
+	require.Contains(t, getInstResp.InstanceIDs, NewInstanceID(tx1.Instructions[0].Hash()))
+	require.Contains(t, getInstResp.InstanceIDs, NewInstanceID(tx2.Instructions[0].Hash()))
+	require.Equal(t, 2, len(getInstResp.DarcIDs))
+	require.Equal(t, 2, len(getInstResp.Darcs))
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[0])
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[1])
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[0].GetBaseID())
+	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[1].GetBaseID())
+
 	// try to read the transaction back again
 	log.Lvl1("reading the transactions back")
 	txs := []ClientTransaction{tx1, tx2}
@@ -220,24 +238,6 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 			require.Equal(t, pr.Latest.Index, idx)
 		}
 	}
-
-	// we should see two instances of dummyContract
-	getInstReq := GetInstances{
-		ContractID:   dummyContract,
-		SkipChainID:  s.genesis.SkipChainID(),
-		WithFullDarc: true,
-	}
-	getInstResp, err := s.service().GetInstances(&getInstReq)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(getInstResp.InstanceIDs))
-	require.Equal(t, tx1.Instructions[0].Hash(), getInstResp.InstanceIDs[0][:])
-	require.Equal(t, tx2.Instructions[0].Hash(), getInstResp.InstanceIDs[1][:])
-	require.Equal(t, 2, len(getInstResp.DarcIDs))
-	require.Equal(t, 2, len(getInstResp.Darcs))
-	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[0])
-	require.Equal(t, s.darc.GetBaseID(), getInstResp.DarcIDs[1])
-	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[0].GetBaseID())
-	require.Equal(t, s.darc.GetBaseID(), getInstResp.Darcs[1].GetBaseID())
 
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
@@ -270,6 +270,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Wait for tasks to finish.
 		time.Sleep(blockInterval)
 	}
+
 }
 
 func TestService_AddTransaction_WrongNode(t *testing.T) {
