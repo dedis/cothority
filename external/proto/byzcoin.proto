@@ -313,6 +313,24 @@ message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
 }
 
+// GetInstances is a request for getting the instances for a given contract,
+// the WithFullDarc flag determines whether the darc that corresponds to every
+// instance should be returned.
+message GetInstances {
+  required bytes skipchainid = 1;
+  required string contractid = 2;
+  required bool withfulldarc = 3;
+}
+
+// GetInstancesReply holds the instances and their corresponding Darcs for the
+// ContractID in the request. The Darcs field may be empty depending on the flag in the
+// request.
+message GetInstancesReply {
+  repeated bytes instanceids = 1;
+  repeated bytes darcids = 2;
+  repeated darc.Darc darcs = 3;
+}
+
 // GetInstanceVersion is a request asking the service to fetch
 // the version of the given instance
 message GetInstanceVersion {
