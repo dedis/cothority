@@ -83,7 +83,7 @@ func TestCli(t *testing.T) {
 	b = &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b
-	args = []string{"bcadmin", "darc", "rule", "-identity", "foo", "-rule", "spawn:xxx"}
+	args = []string{"bcadmin", "darc", "rule", "-identity", "darc:aef123", "-rule", "spawn:xxx"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 	require.Equal(t, string(b.Bytes()), "")
