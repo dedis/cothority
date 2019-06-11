@@ -113,19 +113,12 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onClose((code: number, reason: string) => {
-                switch (code) {
-                    case 1000:
-                        Log.lvl3("Normal closing of connection");
-                        break;
-                    case 1006:
-                        Log.lvl2("abnormal close of connection");
-                        reject(new Error(reason));
-                        break;
-                    default:
-                        Log.error("Got error close:", code, reason);
-                        reject(new Error(reason));
-                        break;
+                if (code === 1000) {
+                    Log.lvl3("Normal closing of connection");
+                    return;
                 }
+                Log.error("Got error close:", code, reason);
+                reject(new Error(reason));
             });
 
             ws.onError((err: Error) => {
@@ -145,8 +138,9 @@ export class RosterWSConnection extends WebSocketConnection {
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
+     * @param retry = 2 How many times to retry a failing connection with another node
      */
-    constructor(r: Roster, service: string) {
+    constructor(r: Roster, service: string, private retry: number = 2) {
         super("", service);
         this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
         shuffle(this.addresses);
@@ -165,12 +159,11 @@ export class RosterWSConnection extends WebSocketConnection {
             } catch (e) {
                 Log.lvl3(`failed to send on ${this.url} with error:`, e);
                 errors.push(e.message);
-                if (i > 2) {
+                if (i > this.retry) {
                     return Promise.reject(errors.join(" :: "));
                 }
                 Log.error("Error while sending - trying with next node");
-                this.addresses = this.addresses.slice(1);
-                this.addresses.push(this.url);
+                this.addresses = [...this.addresses.slice(1), this.url];
             }
         }
 
