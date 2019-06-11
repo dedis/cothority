@@ -304,7 +304,7 @@ var cmds = cli.Commands{
 				Flags: []cli.Flag{
 					cli.StringSliceFlag{
 						Name:  "identity, id",
-						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity",
+						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity. Each provided identity is checked by the evaluation parser.",
 					},
 					cli.StringFlag{
 						Name:   "bc",
@@ -344,7 +344,7 @@ var cmds = cli.Commands{
 				Flags: []cli.Flag{
 					cli.StringSliceFlag{
 						Name:  "identity, id",
-						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity",
+						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity. Each provided identity is checked by the evaluation parser.",
 					},
 					cli.UintFlag{
 						Name:  "minimum, M",
@@ -376,7 +376,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringSliceFlag{
 						Name:  "identity, id",
-						Usage: "the identity of the signer who will be allowed to use the rule. Multiple use of this param is allowed.",
+						Usage: "the identity of the signer who will be allowed to use the rule. Multiple use of this param is allowed. Each identity is checked by the evaluation parser.",
 					},
 					cli.UintFlag{
 						Name:  "minimum, M",
@@ -1955,6 +1955,16 @@ func darcAddDeferred(c *cli.Context) error {
 		identities = append(identities, s.Identity().String())
 	}
 
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
+		}
+	}
+
 	var desc []byte
 	if c.String("desc") == "" {
 		desc = []byte(randString(10))
@@ -2093,6 +2103,16 @@ func darcRule(c *cli.Context) error {
 		}
 	}
 
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
+		}
+	}
+
 	var groupExpr expression.Expr
 	min := c.Uint("minimum")
 	if min == 0 {
@@ -2169,6 +2189,16 @@ func darcPrintRule(c *cli.Context) error {
 	if len(identities) == 0 {
 		if !c.Bool("delete") {
 			return errors.New("--identity (-id) flag is required")
+		}
+	}
+
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
 		}
 	}
 

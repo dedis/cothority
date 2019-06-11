@@ -31,8 +31,8 @@ main(){
     run testRoster
     run testCreateStoreRead
     run testAddDarc
-    testDarcAddDeferred
-    testDarcAddRuleMinimum
+    run testDarcAddDeferred
+    run testDarcAddRuleMinimum
     run testRuleDarc
     run testAddDarcFromOtherOne
     run testAddDarcWithOwner
@@ -160,7 +160,7 @@ testLinkPermission() {
   $SCMGR_APP link add co2/private.toml
   $SCMGR_APP link add co3/private.toml
   testOK runBA create --roster public.toml --interval .5s
-  testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo 
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:aef 
 }
 
 
@@ -204,11 +204,11 @@ testDarcAddDeferred() {
   testGrep "invoke:deferred.execProposedTx" runBA darc show --darc "$ID"
 
   # more advanced
-  testOK runBA darc adeferred -id A -id B -id C -id D -out_id ./darc_id.txt
+  testOK runBA darc adeferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt
   ID=`cat ./darc_id.txt`
-  testGrep "spawn:deferred - \"A | B | C | D\"" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.addProof - \"A | B | C | D\"" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.execProposedTx - \"A | B | C | D\"" runBA darc show --darc "$ID"
+  testGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
 }
 
 testDarcAddRuleMinimum(){
@@ -221,10 +221,23 @@ testDarcAddRuleMinimum(){
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
-  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id A -id B -id C -id D --minimum 1
-  testGrep "test:contract - \"A \| B \| C \| D\"" runBA darc show --darc "$ID"
-  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id A -id B -id C -id D --minimum 2 -replace
-  testGrep "test:contract - \"A & B \| A & C \| A & D \| B & C \| B & D \| C & D\"" runBA darc show --darc "$ID"
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 1
+  testFGrep "test:contract - \"((darc:A)) | ((darc:B)) | ((darc:C)) | ((darc:D))\"" runBA darc show --darc "$ID"
+  
+  # with a minimum
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 2 -replace
+  testFGrep "test:contract - \"((darc:A) & (darc:B)) | ((darc:A) & (darc:C)) | ((darc:A) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+
+  # with a minimum and a special id composed of an AND
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'darc:A & ed25519:aef' -id darc:B -id darc:C -id darc:D --minimum 2 -replace
+  testFGrep "test:contract - \"((darc:A & ed25519:aef) & (darc:B)) | ((darc:A & ed25519:aef) & (darc:C)) | ((darc:A & ed25519:aef) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+
+  # with some wrong identities
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'xdarc:A & ed25519:aef' -id darc:B --minimum 2 -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'xdarc:A & ed25519:aef' -id darc:B -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'ed25519:aef &' -id darc:B --minimum 2 -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'darc:A & C & ed25519:aef' -id darc:B -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id ' ' -id darc:B --minimum 2 -replace
 }
 
 testRuleDarc(){
@@ -237,10 +250,10 @@ testRuleDarc(){
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
   testGrep "Description: \"testing\"" runBA darc show -darc $ID
-  testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:foo\"" runBA darc show -darc "$ID"
-  testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:foo | ed25519:oof" -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:foo | ed25519:oof\"" runBA darc show -darc "$ID"
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
+  testGrep "spawn:xxx - \"ed25519:abc\"" runBA darc show -darc "$ID"
+  testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
   testNGrep "spawn:xxx" runBA darc show -darc "$ID"
 }

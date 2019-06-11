@@ -119,17 +119,18 @@ func FindRecursivefBool(argname string, c *cli.Context) bool {
 }
 
 // CombinationAnds returns a list that contains AND groups of M elements. It
-// allows to compute rule of kind "M out of N".
+// allows to compute rule of kind "M out of N". Each single element and each
+// group is surrounded by parenthesis.
 //
-// If the input list is ["A", "B", "C", "D"], and M = 2, it will return the
+// If the input list is ["A", "B", "C", "D | E"], and M = 2, it will return the
 // following list:
 //
-// [ "A & B",
-//   "A & C",
-//   "A & D",
-//   "B & C",
-//   "B & D",
-//   "C & D" ]
+// [ "((A) & (B))",
+//   "((A) & (C))",
+//   "((A) & (D | E))",
+//   "((B) & (C))",
+//   "((B) & (D | E))",
+//   "((C) & (D | E))" ]
 //
 // Duplicates in the input list are removed.
 //
@@ -138,7 +139,11 @@ func CombinationAnds(list []string, m int) []string {
 		return []string{}
 	}
 	list = unique(list)
-	return upperSiblings(m, 0, list)
+	list = upperSiblings(m, 0, list)
+	for i := range list {
+		list[i] = "(" + list[i] + ")"
+	}
+	return list
 }
 
 // We are recursively building the leaves of a tree that contains every
@@ -165,14 +170,14 @@ func upperSiblings(level int, index int, elements []string) []string {
 	res := make([]string, 0)
 	if level == 1 {
 		for i := index; i <= len(elements)-level; i++ {
-			res = append(res, elements[i])
+			res = append(res, "("+elements[i]+")")
 		}
 		return res
 	}
 	for i := index; i <= len(elements)-level; i++ {
 		// Get upper level (level-1) sibling (i+1) elements
 		subRes := upperSiblings(level-1, i+1, elements)
-		subRes = prependAndToEach(subRes, elements[i])
+		subRes = prependAndToEach(subRes, "("+elements[i]+")")
 		res = append(res, subRes...)
 	}
 	return res

@@ -126,6 +126,23 @@ testGrep(){
   fi
 }
 
+# Asserts that `String` is in the output of the command being run by `dbgRun`
+# and all but the first input argument. Ignores the exit-code of the command.
+# Uses fgrep, which interprets pattern as a set of fixed string.
+# Arguments:
+#   `String` - what to search for
+#   `$@[1..]` - command to run
+testFGrep(){
+  S="$1"
+  shift
+  testOut "Assert fgrepping '$S' in '$@'"
+  runOutFile "$@"
+  doFGrep "$S"
+  if [ ! "$EGREP" ]; then
+    fail "Didn't find '$S' in output of '$@': $GREP"
+  fi
+}
+
 # Asserts the output of the command being run by `dbgRun` and all but the first
 # input argument is N lines long. Ignores the exit-code of the command.
 # Arguments:
@@ -190,6 +207,14 @@ doGrep(){
   # cat $RUNOUT
   WC=$( cat $RUNOUT | egrep "$1" | wc -l )
   EGREP=$( cat $RUNOUT | egrep "$1" )
+}
+
+# used in test*FGrep methods.
+doFGrep(){
+  # echo "grepping in $RUNOUT"
+  # cat $RUNOUT
+  WC=$( cat $RUNOUT | fgrep "$1" | wc -l )
+  EGREP=$( cat $RUNOUT | fgrep "$1" )
 }
 
 # Asserts that `String` exists exactly `Count` times in the output of the
