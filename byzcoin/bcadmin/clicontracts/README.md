@@ -17,7 +17,7 @@ Use `bcadmin contract -h` to get the usage.
 
 **Functionalities**:
 
-* With the `--redirect`, the contract's transaction should not be executed, but
+* With the `--export` (`--x`), the contract's transaction should not be executed, but
 redirected to stdout.
 
 * Each contract should have a `get` function, which allows one to get the
@@ -49,7 +49,7 @@ $ bcadmin contract value invoke update --value "Bye World" --instid ...
 Spawn a deferred contract with a value contract as the proposed transaction:
 
 ```bash
-$ bcadmin contract value spawn --value "Hello Word" --redirect | bcadmin contract deferred spawn
+$ bcadmin --export contract value spawn --value "Hello Word" | bcadmin contract deferred spawn
 ```
 
 Invoke an addProof on a deferred contract:
@@ -77,7 +77,7 @@ bcadmin darc rule -rule invoke:deferred.addProof --identity ed25519:...
 bcadmin darc rule -rule invoke:deferred.execProposedTx --identity ed25519:...                                                                                                                                                     
 
 # Spawn a value contract, but redirect the transaction to the spawn of a deferred contract
-bcadmin contract value spawn --value myValue --redirect | bcadmin contract deferred spawn
+bcadmin --export contract value spawn --value myValue | bcadmin contract deferred spawn
 
 # Add the proof on the single instruction of the deferred transaction 
 # (the --hash and --instid values are given when we spawn the deferred contract)
@@ -110,10 +110,10 @@ bcadmin darc rule --identity ed25519:... --rule invoke:deferred.execProposedTx
 bcadmin contract config invoke updateConfig
 
 # Perform an update that is redirected to the spawn of a deferred contract
-bcadmin contract config invoke updateConfig --blockInterval 7s \
-                                            --maxBlockSize 5000000 \
-                                            --darcContractIDs darc,darc2 \
-                                            --redirect | bcadmin contract deferred spawn
+bcadmin -x contract config invoke updateConfig --blockInterval 7s \
+                                               --maxBlockSize 5000000 \
+                                               --darcContractIDs darc,darc2 \
+                                               | bcadmin contract deferred spawn
 
 # Add the proof on the single instruction of the deferred transaction 
 # (the --hash and --instid values are given when we spawn the deferred contract)

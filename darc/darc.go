@@ -467,16 +467,21 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 
 // String returns a human-readable string representation of the darc.
 func (d Darc) String() string {
-	s := fmt.Sprintf("ID:\tdarc:%x (Description: %-v)\nBase:\tdarc:%x\nPrev:\tdarc:%x\nVer:\t%d\nRules:",
-		d.GetID(), strconv.Quote(string(d.Description)), d.GetBaseID(), d.PrevID, d.Version)
+	var res strings.Builder
+	res.WriteString("- Darc:\n")
+	fmt.Fprintf(&res, "-- Description: %-v\n", strconv.Quote(string(d.Description)))
+	fmt.Fprintf(&res, "-- BaseID: darc:%x\n", d.GetBaseID())
+	fmt.Fprintf(&res, "-- PrevID: darc:%x\n", d.PrevID)
+	fmt.Fprintf(&res, "-- Version: %d\n", d.Version)
+	res.WriteString("-- Rules:")
 	for _, v := range d.Rules.List {
-		s += fmt.Sprintf("\n\t%s - \"%s\"", v.Action, v.Expr)
+		fmt.Fprintf(&res, "\n--- %s - \"%s\"", v.Action, v.Expr)
 	}
-	s += "\nSignatures:"
+	res.WriteString("\n-- Signatures:")
 	for i, sig := range d.Signatures {
-		s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
+		fmt.Fprintf(&res, "\n--- %d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
 	}
-	return s
+	return res.String()
 }
 
 // IsNull returns true if this DarcID is not initialised.

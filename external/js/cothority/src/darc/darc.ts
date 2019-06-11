@@ -3,7 +3,7 @@ import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import IdentityWrapper, { IIdentity } from "./identity-wrapper";
-import Rules from "./rules";
+import Rules, { Rule } from "./rules";
 
 /**
  * Distributed Access Right Controls
@@ -29,7 +29,7 @@ export default class Darc extends Message<Darc> {
 
         this.rules.list.forEach((r) => {
             h.update(r.action);
-            h.update(r.expr);
+            h.update(r.getExpr());
         });
 
         return h.digest();
@@ -45,8 +45,8 @@ export default class Darc extends Message<Darc> {
     static initRules(owners: IIdentity[], signers: IIdentity[]): Rules {
         const rules = new Rules();
 
-        owners.forEach((o) => rules.appendToRule("invoke:darc.evolve", o, Rules.AND));
-        signers.forEach((s) => rules.appendToRule(Darc.ruleSign, s, Rules.OR));
+        owners.forEach((o) => rules.appendToRule("invoke:darc.evolve", o, Rule.AND));
+        signers.forEach((s) => rules.appendToRule(Darc.ruleSign, s, Rule.OR));
 
         return rules;
     }
@@ -189,7 +189,7 @@ export default class Darc extends Message<Darc> {
      * Checks whether the given rule can be matched by a multi-signature created by all
      * signers. If the rule doesn't exist, it throws an error.
      * Currently restrictions:
-     *  - only Rules.OR are supported. A Rules.AND or "(" will return an error.
+     *  - only Rule.OR are supported. A Rule.AND or "(" will return an error.
      *  - only one identity can be checked. If more identities are given, the function
      *  returns an error.
      *
@@ -206,13 +206,9 @@ export default class Darc extends Message<Darc> {
         if (signers.length !== 1) {
             throw new Error("Currently only supports checking 1 identity");
         }
-        const expr = rule.expr.toString();
-        if (expr.match(/(\(|\)|\&)/)) {
-            throw new Error("Cannot handle Rules.AND, (, ) for the moment.");
-        }
-        const ids = expr.split(Rules.OR);
+        const ids = rule.getIdentities();
         for (const idStr of ids) {
-            const id = IdentityWrapper.fromString(idStr.trim());
+            const id = IdentityWrapper.fromString(idStr);
             if (id.toString() === signers[0].toString()) {
                 return signers;
             }

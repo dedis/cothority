@@ -1,8 +1,8 @@
 import Long from "long";
+import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import { IIdentity } from "../darc/identity-wrapper";
-import Rules from "../darc/rules";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
@@ -46,12 +46,12 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const d = Darc.createBasic(signers, signers, Buffer.from(description || "Genesis darc"));
         roster.list.forEach((srvid) => {
-            d.addIdentity("invoke:config.view_change", IdentityEd25519.fromPoint(srvid.getPublic()), Rules.OR);
+            d.addIdentity("invoke:config.view_change", IdentityEd25519.fromPoint(srvid.getPublic()), Rule.OR);
         });
 
         signers.forEach((signer) => {
-            d.addIdentity("spawn:darc", signer, Rules.OR);
-            d.addIdentity("invoke:config.update_config", signer, Rules.OR);
+            d.addIdentity("spawn:darc", signer, Rule.OR);
+            d.addIdentity("invoke:config.update_config", signer, Rule.OR);
         });
 
         return d;
