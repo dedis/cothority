@@ -214,10 +214,6 @@ func ValueGet(c *cli.Context) error {
 		return errors.New("couldn't get proof: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	exist, err := proof.InclusionProof.Exists(instIDBuf)
 	if err != nil {

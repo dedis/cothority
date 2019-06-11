@@ -46,6 +46,7 @@ func TestVerify(t *testing.T) {
 	require.Equal(t, s.value, val)
 
 	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
+	require.Equal(t, ErrorMismatchGenesis, p.VerifyFromBlock(s.genesis2.SkipChainID(), s.genesis))
 
 	p.Latest.BaseHeight = 123
 	require.Equal(t, ErrorVerifyHash, p.Verify(s.genesis.SkipChainID()))

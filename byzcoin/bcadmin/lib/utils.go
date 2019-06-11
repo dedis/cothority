@@ -55,10 +55,6 @@ func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 	}
 
 	p := &pr.Proof
-	err = p.Verify(cl.ID)
-	if err != nil {
-		return nil, err
-	}
 
 	vs, cid, _, err := p.Get(id)
 	if err != nil {

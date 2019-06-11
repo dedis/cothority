@@ -71,8 +71,35 @@ var ErrorVerifyTrieRoot = errors.New("root of trie is not in skipblock")
 var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved from genesis block")
 
 // ErrorVerifyHash is returned if the latest block hash does not match
-// the target of the last forward link
+// the target of the last forward link.
 var ErrorVerifyHash = errors.New("last forward link does not point to the latest block")
+
+// ErrorMismatchGenesis is returned if the genesis block provided by the proof
+// doesn't match the expected skipchain ID.
+var ErrorMismatchGenesis = errors.New("mismatching genesis block hash and skipchain ID")
+
+// VerifyFromBlock takes a skipchain id and the first block of the proof. It
+// verifies that the proof is valid for this skipchain. It verifies the proof,
+// that the merkle-root is stored in the skipblock of the proof and the fact that
+// the skipblock is indeed part of the skipchain. It also uses the provided block
+// to insure the first roster is correct. If all verifications are correct, the error
+// will be nil. It does not verify wether a certain key/pair pair exists in the proof.
+func (p Proof) VerifyFromBlock(scID skipchain.SkipBlockID, from *skipchain.SkipBlock) error {
+	// Only interested in the roster so we only check the hash is correct.
+	if !from.CalculateHash().Equal(scID) {
+		return ErrorMismatchGenesis
+	}
+
+	if len(p.Links) == 0 {
+		return errors.New("missing forward-links")
+	}
+
+	// Backwards compatible usage of the genesis block to insure the
+	// roster matches.
+	p.Links[0].NewRoster = from.Roster
+
+	return p.Verify(scID)
+}
 
 // Verify takes a skipchain id and verifies that the proof is valid for this
 // skipchain. It verifies the proof, that the merkle-root is stored in the

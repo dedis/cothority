@@ -27,6 +27,7 @@ type Client struct {
 	*onet.Client
 	ID           skipchain.SkipBlockID
 	Roster       onet.Roster
+	Genesis      *skipchain.SkipBlock
 	ServerNumber int // Which server in the Roster to contact, -1 means random.
 }
 
@@ -64,6 +65,7 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	}
 
 	c.ID = reply.Skipblock.Hash
+	c.Genesis = reply.Skipblock
 	return c, reply, nil
 }
 
@@ -113,6 +115,12 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
+	if c.Genesis == nil {
+		if err := c.fetchGenesis(); err != nil {
+			return nil, err
+		}
+	}
+
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.getServer(), &GetProof{
 		Version: CurrentVersion,
@@ -124,7 +132,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	}
 
 	// verify the integrity of the proof only
-	err = reply.Proof.Verify(c.ID)
+	err = reply.Proof.VerifyFromBlock(c.ID, c.Genesis)
 	if err != nil {
 		return nil, err
 	}
@@ -457,6 +465,18 @@ func (c *Client) getServer() *network.ServerIdentity {
 		n = int(rand.Int31n(int32(len(c.Roster.List))))
 	}
 	return c.Roster.List[n]
+}
+
+func (c *Client) fetchGenesis() error {
+	skClient := skipchain.NewClient()
+
+	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
+	if err != nil {
+		return err
+	}
+
+	c.Genesis = sb
+	return nil
 }
 
 func verifyGenesisBlock(actual *skipchain.SkipBlock, expected *CreateGenesisBlock) error {

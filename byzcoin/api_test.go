@@ -158,14 +158,19 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	service := servers[0].Service(testServiceName).(*corruptedService)
 
 	c := &Client{
-		Client: onet.NewClient(cothority.Suite, testServiceName),
-		Roster: *roster,
+		Client:  onet.NewClient(cothority.Suite, testServiceName),
+		Roster:  *roster,
+		Genesis: skipchain.NewSkipBlock(),
 	}
+	c.ID = c.Genesis.CalculateHash()
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
 	service.GetProofResponse = &GetProofResponse{
-		Proof: Proof{Latest: *sb},
+		Proof: Proof{
+			Latest: *sb,
+			Links:  []skipchain.ForwardLink{skipchain.ForwardLink{}},
+		},
 	}
 
 	_, err := c.GetProof([]byte{})

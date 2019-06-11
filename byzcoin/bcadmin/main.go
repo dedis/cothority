@@ -876,11 +876,6 @@ func link(c *cli.Context) error {
 				return errors.New("couldn't get proof for darc: " + err.Error())
 			}
 
-			err = p.Proof.Verify(id)
-			if err != nil {
-				return errors.New("proof for darc is wrong: " + err.Error())
-			}
-
 			_, darcBuf, cid, _, err := p.Proof.KeyValue()
 			if err != nil {
 				return errors.New("cannot get value for darc: " + err.Error())
@@ -973,11 +968,6 @@ func latest(c *cli.Context) error {
 
 	// Find the latest block by asking for the Proof of the config instance.
 	p, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
-	if err != nil {
-		return err
-	}
-
-	err = p.Proof.Verify(cfg.ByzCoinID)
 	if err != nil {
 		return err
 	}
