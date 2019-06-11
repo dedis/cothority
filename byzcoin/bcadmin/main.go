@@ -64,17 +64,17 @@ var cmds = cli.Commands{
 
 	{
 		Name:      "link",
-		Usage:     "create a BC config file that sets the specified roster, darc and identity",
+		Usage:     "create a BC config file that sets the specified roster, darc and identity. If no identity is provided, it will use an empty one. Same for the darc param. This allows one that has no private key to perform basic operations that do not require authentication.",
 		Aliases:   []string{"login"},
 		ArgsUsage: "roster.toml [byzcoin id]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the darc id to be saved (default to new empty darc)",
+				Usage: "the darc id to be saved (defaults to an empty darc)",
 			},
 			cli.StringFlag{
 				Name:  "identity, id",
-				Usage: "the identity to be saved (default to new default identity)",
+				Usage: "the identity to be saved (defaults to an empty identity)",
 			},
 		},
 		Action: link,
