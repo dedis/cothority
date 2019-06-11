@@ -75,7 +75,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "host",
 					Usage: "which host to listen on",
-					Value: "localhost",
+					Value: "",
 				},
 				cli.IntFlag{
 					Name:  "port",
