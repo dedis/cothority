@@ -274,53 +274,17 @@ var cmds = cli.Commands{
 						Name:  "darc",
 						Usage: "DARC with the right to create a new DARC (default is the admin DARC)",
 					},
-					cli.StringFlag{
-						Name:  "owner",
-						Usage: "the identity who is allowed to sign and evolve it (default is a new key pair)",
-					},
-					cli.BoolFlag{
-						Name:  "unrestricted",
-						Usage: "add the invoke:evolve_unrestricted rule",
-					},
-					cli.StringFlag{
-						Name:  "out_id",
-						Usage: "output file for the darc id (optional)",
-					},
-					cli.StringFlag{
-						Name:  "out_key",
-						Usage: "output file for the darc key (optional)",
-					},
-					cli.StringFlag{
-						Name:  "desc",
-						Usage: "the description for the new DARC (default: random)",
-					},
-				},
-			},
-			{
-				Name:   "adeferred",
-				Usage:  "add deferred darc that already contains the needed rules. Deferred rules use ORs, _sign and _evolve use ANDs",
-				Action: darcAddDeferred,
-				Flags: []cli.Flag{
 					cli.StringSliceFlag{
 						Name:  "identity, id",
 						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity. Each provided identity is checked by the evaluation parser.",
 					},
-					cli.StringFlag{
-						Name:   "bc",
-						EnvVar: "BC",
-						Usage:  "the ByzCoin config to use (required)",
-					},
-					cli.StringFlag{
-						Name:  "sign, signer",
-						Usage: "public key which will sign the DARC spawn request (default: the ledger admin identity)",
-					},
-					cli.StringFlag{
-						Name:  "darc",
-						Usage: "DARC with the right to create a new DARC (default is the admin DARC)",
-					},
 					cli.BoolFlag{
 						Name:  "unrestricted",
 						Usage: "add the invoke:evolve_unrestricted rule",
+					},
+					cli.BoolFlag{
+						Name:  "deferred",
+						Usage: "adds rules related to deferred contract: spawn:deferred, invoke:deferred.addProof, invoke:deferred.execProposedTx",
 					},
 					cli.StringFlag{
 						Name:  "out_id",
@@ -1833,154 +1797,6 @@ func darcAdd(c *cli.Context) error {
 
 	var signer *darc.Signer
 
-	sstr := c.String("sign")
-	if sstr == "" {
-		signer, err = lib.LoadKey(cfg.AdminIdentity)
-	} else {
-		signer, err = lib.LoadKeyFromString(sstr)
-	}
-	if err != nil {
-		return err
-	}
-
-	var identity darc.Identity
-	var newSigner *darc.Signer
-
-	owner := c.String("owner")
-	if owner != "" {
-		identity, err = darc.ParseIdentity(owner)
-		if err != nil {
-			return err
-		}
-	} else {
-		s := darc.NewSignerEd25519(nil, nil)
-		err = lib.SaveKey(s)
-		if err != nil {
-			return err
-		}
-		identity = s.Identity()
-		newSigner = &s
-	}
-
-	var desc []byte
-	if c.String("desc") == "" {
-		desc = []byte(randString(10))
-	} else {
-		if len(c.String("desc")) > 1024 {
-			return errors.New("descriptions longer than 1024 characters are not allowed")
-		}
-		desc = []byte(c.String("desc"))
-	}
-
-	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:"+byzcoin.ContractDarcID+".evolve")
-	if c.Bool("unrestricted") {
-		err = rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve_unrestricted", expression.Expr(identity.String()))
-		if err != nil {
-			return err
-		}
-	}
-	d := darc.NewDarc(rules, desc)
-
-	dBuf, err := d.ToProto()
-	if err != nil {
-		return err
-	}
-
-	instID := byzcoin.NewInstanceID(dSpawn.GetBaseID())
-
-	counters, err := cl.GetSignerCounters(signer.Identity().String())
-
-	spawn := byzcoin.Spawn{
-		ContractID: byzcoin.ContractDarcID,
-		Args: []byzcoin.Argument{
-			{
-				Name:  "darc",
-				Value: dBuf,
-			},
-		},
-	}
-
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    instID,
-				Spawn:         &spawn,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
-	}
-	err = ctx.FillSignersAndSignWith(*signer)
-	if err != nil {
-		return err
-	}
-
-	_, err = cl.AddTransactionAndWait(ctx, 10)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintln(c.App.Writer, d.String())
-	if err != nil {
-		return err
-	}
-
-	// Saving ID in special file
-	output := c.String("out_id")
-	if output != "" {
-		err = ioutil.WriteFile(output, []byte(d.GetIdentityString()), 0644)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Saving key in special file
-	output = c.String("out_key")
-	if newSigner != nil && output != "" {
-		err = ioutil.WriteFile(output, []byte(newSigner.Identity().String()), 0600)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Creates a new darc with the specific rules for the deferred contract.
-// Darc rules use Ors and _sign and _evolve use ANDs.
-func darcAddDeferred(c *cli.Context) error {
-	bcArg := c.String("bc")
-	if bcArg == "" {
-		return errors.New("--bc flag is required")
-	}
-
-	cfg, cl, err := lib.LoadConfig(bcArg)
-	if err != nil {
-		return err
-	}
-
-	dstr := c.String("darc")
-	if dstr == "" {
-		dstr = cfg.AdminDarc.GetIdentityString()
-	}
-	dSpawn, err := lib.GetDarcByString(cl, dstr)
-	if err != nil {
-		return err
-	}
-
-	var signer *darc.Signer
-
-	sstr := c.String("sign")
-	if sstr == "" {
-		signer, err = lib.LoadKey(cfg.AdminIdentity)
-	} else {
-		signer, err = lib.LoadKeyFromString(sstr)
-	}
-	if err != nil {
-		return err
-	}
-
-	var newSigner *darc.Signer
-
 	identities := c.StringSlice("identity")
 
 	if len(identities) == 0 {
@@ -2002,6 +1818,16 @@ func darcAddDeferred(c *cli.Context) error {
 		}
 	}
 
+	sstr := c.String("sign")
+	if sstr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(sstr)
+	}
+	if err != nil {
+		return err
+	}
+
 	var desc []byte
 	if c.String("desc") == "" {
 		desc = []byte(randString(10))
@@ -2019,9 +1845,11 @@ func darcAddDeferred(c *cli.Context) error {
 	rules := darc.NewRules()
 	rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve", adminExpr)
 	rules.AddRule("_sign", adminExpr)
-	rules.AddRule("spawn:deferred", deferredExpr)
-	rules.AddRule("invoke:deferred.addProof", deferredExpr)
-	rules.AddRule("invoke:deferred.execProposedTx", deferredExpr)
+	if c.Bool("deferred") {
+		rules.AddRule("spawn:deferred", deferredExpr)
+		rules.AddRule("invoke:deferred.addProof", deferredExpr)
+		rules.AddRule("invoke:deferred.execProposedTx", deferredExpr)
+	}
 	if c.Bool("unrestricted") {
 		err = rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve_unrestricted", adminExpr)
 		if err != nil {
@@ -2085,8 +1913,8 @@ func darcAddDeferred(c *cli.Context) error {
 
 	// Saving key in special file
 	output = c.String("out_key")
-	if newSigner != nil && output != "" {
-		err = ioutil.WriteFile(output, []byte(newSigner.Identity().String()), 0600)
+	if len(c.StringSlice("identity")) == 0 && output != "" {
+		err = ioutil.WriteFile(output, []byte(identities[0]), 0600)
 		if err != nil {
 			return err
 		}

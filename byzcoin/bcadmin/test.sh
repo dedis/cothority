@@ -74,7 +74,7 @@ testLink(){
   bc=config/bc*cfg
   key=config/key*cfg
   runBA key --save newkey.id
-  testOK runBA darc add --bc $bc --owner $( cat newkey.id ) --out_id darc.id
+  testOK runBA darc add --bc $bc --id $( cat newkey.id ) --out_id darc.id
 
   rm -rf linkDir
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
@@ -101,7 +101,7 @@ testLinkScenario(){
   # Create new client
   runBA key --save newkey.id
   # Create new darc for the client
-  testOK runBA darc add --owner $( cat newkey.id ) --out_id darc.id --unrestricted
+  testOK runBA darc add --id $( cat newkey.id ) --out_id darc.id --unrestricted
 
   # Try to spawn a new value contract with the client's darc. It should fail
   # since we did not add the rule
@@ -236,21 +236,33 @@ testDarcAddDeferred() {
   [ -z "$BC" ] && exit 1
 
   # standard stuff
-  testOK runBA darc adeferred
-  testOK runBA darc adeferred -out_id ./darc_id.txt
-  testOK runBA darc adeferred
+  testOK runBA darc add -deferred
+  testOK runBA darc add -deferred -out_id ./darc_id.txt
+  testOK runBA darc add -deferred
   ID=`cat ./darc_id.txt`
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
   testGrep "spawn:deferred" runBA darc show --darc "$ID"
   testGrep "invoke:deferred.addProof" runBA darc show --darc "$ID"
   testGrep "invoke:deferred.execProposedTx" runBA darc show --darc "$ID"
 
-  # more advanced
-  testOK runBA darc adeferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt
+  # with minimum
+  testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt
   ID=`cat ./darc_id.txt`
-  testGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
-  testGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+
+  # with minimum, with unrestricted
+  testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt -unrestricted
+  ID=`cat ./darc_id.txt`
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve_unrestricted - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
 }
 
 testDarcAddRuleMinimum(){
@@ -321,7 +333,7 @@ testAddDarcWithOwner(){
 
   testOK runBA key -save ./key.txt
   KEY=`cat ./key.txt`
-  testOK runBA darc add -owner "$KEY" -out_id "darc_id.txt"
+  testOK runBA darc add -id "$KEY" -out_id "darc_id.txt"
   ID=`cat ./darc_id.txt`
   testGrep "$KEY" runBA darc show -darc "$ID"
 }

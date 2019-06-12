@@ -198,7 +198,7 @@ func unique(stringSlice []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
 	for _, entry := range stringSlice {
-		if _, value := keys[entry]; !value {
+		if _, ok := keys[entry]; !ok {
 			keys[entry] = true
 			list = append(list, entry)
 		}
