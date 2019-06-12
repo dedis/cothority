@@ -27,16 +27,17 @@ type Client struct {
 	*onet.Client
 	ID           skipchain.SkipBlockID
 	Roster       onet.Roster
-	Genesis      *skipchain.SkipBlock
+	KnownBlocks  map[string]*skipchain.SkipBlock
 	ServerNumber int // Which server in the Roster to contact, -1 means random.
 }
 
 // NewClient instantiates a new ByzCoin client.
 func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client: onet.NewClient(cothority.Suite, ServiceName),
-		ID:     ID,
-		Roster: Roster,
+		Client:      onet.NewClient(cothority.Suite, ServiceName),
+		ID:          ID,
+		Roster:      Roster,
+		KnownBlocks: make(map[string]*skipchain.SkipBlock),
 	}
 }
 
@@ -44,9 +45,10 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 // sending requests to the same conode.
 func NewClientKeep(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
-		ID:     ID,
-		Roster: Roster,
+		Client:      onet.NewClientKeep(cothority.Suite, ServiceName),
+		ID:          ID,
+		Roster:      Roster,
+		KnownBlocks: make(map[string]*skipchain.SkipBlock),
 	}
 }
 
@@ -65,7 +67,7 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	}
 
 	c.ID = reply.Skipblock.Hash
-	c.Genesis = reply.Skipblock
+	c.KnownBlocks[string(c.ID)] = reply.Skipblock
 	return c, reply, nil
 }
 
@@ -115,7 +117,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
-	if c.Genesis == nil {
+	if c.KnownBlocks[string(c.ID)] == nil {
 		if err := c.fetchGenesis(); err != nil {
 			return nil, err
 		}
@@ -124,18 +126,23 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.getServer(), &GetProof{
 		Version: CurrentVersion,
-		ID:      c.ID,
-		Key:     key,
+		// TODO: use Latest
+		ID:  c.ID,
+		Key: key,
 	}, reply)
 	if err != nil {
 		return nil, err
 	}
 
-	// verify the integrity of the proof only
-	err = reply.Proof.VerifyFromBlock(c.ID, c.Genesis)
+	// Verify the integrity of the proof only.
+	err = reply.Proof.VerifyFromBlock(c.ID, c.KnownBlocks)
 	if err != nil {
 		return nil, err
 	}
+
+	// Keep the verified block in memory.
+	// TODO: space management
+	c.KnownBlocks[string(reply.Proof.Latest.CalculateHash())] = &reply.Proof.Latest
 
 	return reply, nil
 }
@@ -475,7 +482,7 @@ func (c *Client) fetchGenesis() error {
 		return err
 	}
 
-	c.Genesis = sb
+	c.KnownBlocks[string(c.ID)] = sb
 	return nil
 }
 

@@ -411,10 +411,6 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		if err != nil {
 			return err
 		}
-		err = popProof.Proof.Verify(cl.ID)
-		if err != nil {
-			return err
-		}
 		_, value, cID, _, err := popProof.Proof.KeyValue()
 		if err != nil {
 			return err
