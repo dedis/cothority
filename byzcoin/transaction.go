@@ -207,20 +207,36 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 // Action returns the action that the user wants to do with this
 // instruction.
 func (instr Instruction) Action() string {
+	contractID := instr.ContractID()
 	a := "invalid"
 	switch instr.GetType() {
 	case SpawnType:
-		a = "spawn:" + instr.Spawn.ContractID
+		a = "spawn:" + contractID
 	case InvokeType:
-		a = "invoke:" + instr.Invoke.ContractID + "." + instr.Invoke.Command
+		a = "invoke:" + contractID + "." + instr.Invoke.Command
 	case DeleteType:
-		a = "delete:" + instr.Delete.ContractID
+		a = "delete:" + contractID
+	}
+	return a
+}
+
+// ContractID returns the ContractID that the user specified
+func (instr Instruction) ContractID() string {
+	a := "invalid"
+	switch instr.GetType() {
+	case SpawnType:
+		a = instr.Spawn.ContractID
+	case InvokeType:
+		a = instr.Invoke.ContractID
+	case DeleteType:
+		a = instr.Delete.ContractID
 	}
 	return a
 }
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
+
 	var out strings.Builder
 	out.WriteString("- instruction:\n")
 	fmt.Fprintf(&out, "-- hash: %x\n", instr.Hash())
@@ -229,6 +245,7 @@ func (instr Instruction) String() string {
 	fmt.Fprintf(&out, "-- identities: %v\n", instr.SignerIdentities)
 	fmt.Fprintf(&out, "-- counters: %v\n", instr.SignerCounter)
 	fmt.Fprintf(&out, "-- signatures: %d\n", len(instr.Signatures))
+
 	switch instr.GetType() {
 	case SpawnType:
 		out.WriteString("-- Spawn:\n")
