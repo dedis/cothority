@@ -17,11 +17,15 @@ import { DecodeKey, OnChainSecretInstance } from "./calypso-instance";
 export class OnChainSecretRPC {
     static serviceID = "Calypso";
     private socket: IConnection;
-    private list: ServerIdentity[];
+    private readonly list: ServerIdentity[];
 
-    constructor(public bc: ByzCoinRPC) {
+    constructor(public bc: ByzCoinRPC, roster?: Roster) {
         this.socket = new RosterWSConnection(bc.getConfig().roster, OnChainSecretRPC.serviceID);
-        this.list = this.bc.getConfig().roster.list;
+        if (roster) {
+            this.list = roster.list;
+        } else {
+            this.list = this.bc.getConfig().roster.list;
+        }
     }
 
     // CreateLTS creates a random LTSID that can be used to reference the LTS group
@@ -102,10 +106,11 @@ export class LongTermSecret extends OnChainSecretRPC {
         }
         const ocs = new OnChainSecretRPC(bc);
         const lr = await ocs.createLTS(roster, darcID, signers);
-        return new LongTermSecret(bc, lr.instanceid, lr.X);
+        return new LongTermSecret(bc, lr.instanceid, lr.X, roster);
     }
-    constructor(bc: ByzCoinRPC, public id: InstanceID, public X: Point) {
-        super(bc);
+
+    constructor(bc: ByzCoinRPC, public id: InstanceID, public X: Point, roster?: Roster) {
+        super(bc, roster);
     }
 }
 

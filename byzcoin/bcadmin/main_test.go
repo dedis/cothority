@@ -77,7 +77,7 @@ func TestCli(t *testing.T) {
 	args = []string{"bcadmin", "darc", "show"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
-	require.Contains(t, string(b.Bytes()), "Ver:\t0")
+	require.Contains(t, string(b.Bytes()), "-- Version: 0")
 
 	log.Lvl1("darc rule: ")
 	b = &bytes.Buffer{}
@@ -95,7 +95,7 @@ func TestCli(t *testing.T) {
 	args = []string{"bcadmin", "darc", "show"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
-	require.Contains(t, string(b.Bytes()), "Ver:\t1")
-	require.Contains(t, string(b.Bytes()), "spawn:xxx")
+	require.Contains(t, string(b.Bytes()), "-- Version: 1")
+	require.Contains(t, string(b.Bytes()), "--- spawn:xxx")
 
 }

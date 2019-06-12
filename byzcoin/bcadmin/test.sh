@@ -27,6 +27,7 @@ main(){
     [[ ! -x ./bcadmin ]] && exit 1
     run testReplay
     run testLink
+    run testLinkScenario
     run testCoin
     run testRoster
     run testCreateStoreRead
@@ -81,8 +82,49 @@ testLink(){
   bcIDWrong=$( printf "%032d" 1234 )
   testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
-  testOK runBA -c linkDir link --admindarc $( cat darc.id ) --adminpub $( cat newkey.id ) public.toml $bcID
+  testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
   testFile linkDir/bc*
+}
+
+# This is a complete scenario with link that uses the value clicontract.
+# We create a new client and a new associated darc that is allowed to call
+# "spawn:value". We first need to specify --darc and --sign to use the value
+# contract. But then we link to the client and its darc, which will then use
+# by default the client's identity and darc.
+testLinkScenario(){
+  rm -f config/*
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # Create new client
+  runBA key --save newkey.id
+  # Create new darc for the client
+  testOK runBA darc add --owner $( cat newkey.id ) --out_id darc.id --unrestricted
+
+  # Try to spawn a new value contract with the client's darc. It should fail
+  # since we did not add the rule
+  testFail runBA contract value spawn --value "should fail" --darc $( cat darc.id ) --sign $( cat newkey.id )
+
+  # Update the client darc so that it can spawn:value new contracts
+  testOK runBA darc rule --rule "spawn:value" --identity $( cat newkey.id ) --sign $( cat newkey.id ) --darc $( cat darc.id )
+
+  # Try to spawn again, should work this time
+  testOK runBA contract value spawn --value "shoudl fail" --darc $( cat darc.id ) --sign $( cat newkey.id )
+
+  # Now if we don't specify any --darc and --sign, it will use the admin darc,
+  # which should fail since it doesn't have the rule
+  testFail runBA contract value spawn --value "should fail"
+
+  # Let's try now to link with the client darc and identity. This will make that
+  # default --darc and --sign will be the client's darc and identiity
+  bcID=$( echo $BC | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  testOK runBA link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # The final test
+  testOK runBA contract value spawn --value "shoud pass"
+
+  testOK unset BC
 }
 
 testCoin(){
