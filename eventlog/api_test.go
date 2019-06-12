@@ -328,13 +328,6 @@ func TestClient_StreamEvents(t *testing.T) {
 	}
 
 	require.NoError(t, c.Close())
-
-	// send a couple more to close the stream, see byzcoin/api_test.go:TestClient_Streaming
-	for i := 0; i < 2; i++ {
-		finalID, err := c.Log(NewEvent("dummy", "dummy"))
-		require.NoError(t, err)
-		waitForKey(t, leader.omni, c.ByzCoin.ID, finalID[0], testBlockInterval)
-	}
 }
 
 func TestClient_StreamEventsFrom(t *testing.T) {
@@ -416,13 +409,6 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	}
 
 	require.NoError(t, c.Close())
-
-	// send a couple more to close the stream, see byzcoin/api_test.go:TestClient_Streaming
-	for i := 0; i < 2; i++ {
-		finalID, err := c.Log(NewEvent("dummy", "dummy"))
-		require.NoError(t, err)
-		waitForKey(t, leader.omni, c.ByzCoin.ID, finalID[0], testBlockInterval)
-	}
 
 	wg.Wait()
 }

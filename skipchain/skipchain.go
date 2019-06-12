@@ -355,6 +355,12 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		// forward links can depend on this forward link.
 		// After creating the forward link, it will propagate it to all nodes.
 		if err := s.forwardLinkLevel0(prev, prop); err != nil {
+			// As the block's creation failed, we need to clean the block buffer so
+			// that other services know that no block are proposed.
+			// This is done only on the leader side and then children won't be
+			// notified until a different block is proposed.
+			s.blockBuffer.clear(prev.SkipChainID())
+
 			return nil, errors.New(
 				"Couldn't get forward signature on block: " + err.Error())
 		}

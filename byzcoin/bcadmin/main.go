@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,17 +64,17 @@ var cmds = cli.Commands{
 
 	{
 		Name:      "link",
-		Usage:     "link to existing ledger",
-		Aliases:   []string{"ln"},
-		ArgsUsage: "roster.toml [bcid]",
+		Usage:     "create a BC config file that sets the specified roster, darc and identity. If no identity is provided, it will use an empty one. Same for the darc param. This allows one that has no private key to perform basic operations that do not require authentication.",
+		Aliases:   []string{"login"},
+		ArgsUsage: "roster.toml [byzcoin id]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "admindarc, ad",
-				Usage: "the admin darc that has 'evolve_unrestricted'",
+				Name:  "darc",
+				Usage: "the darc id to be saved (defaults to an empty darc)",
 			},
 			cli.StringFlag{
-				Name:  "adminpub, ap",
-				Usage: "the public key of the admin to use",
+				Name:  "identity, id",
+				Usage: "the identity to be saved (defaults to an empty identity)",
 			},
 		},
 		Action: link,
@@ -233,7 +232,7 @@ var cmds = cli.Commands{
 					},
 					cli.StringFlag{
 						Name:  "darc",
-						Usage: "the darc to show (no default)",
+						Usage: "the darc to show (admin darc by default)",
 					},
 				},
 			},
@@ -355,17 +354,36 @@ var cmds = cli.Commands{
 	},
 
 	{
+		Name:  "info",
+		Usage: "displays infos about the BC config",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config to use (required)",
+			},
+		},
+		Action: getInfo,
+	},
+
+	{
 		Name: "contract",
 		// Use space instead of tabs for correct formatting
 		Usage: "Provides cli interface for contracts",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "export, x",
+				Usage: "redirects the transaction to stdout",
+			},
+		},
 		// UsageText should be used instead, but its not working:
 		// see https://github.com/urfave/cli/issues/592
 		Description: fmt.Sprint(`
-   bcadmin contract CONTRACT { spawn  --bc <byzcoin config> 
+   bcadmin [--export] contract CONTRACT { 
+                               spawn  --bc <byzcoin config> 
                                       [--<arg name> <arg value>, ...]
                                       [--darc <darc id>] 
-                                      [--sign <pub key>] 
-                                      [--redirect],
+                                      [--sign <pub key>],
                                invoke <command>
                                       --bc <byzcoin config>
                                       --instid, i <instance ID>
@@ -406,10 +424,6 @@ var cmds = cli.Commands{
 							cli.StringFlag{
 								Name:  "sign",
 								Usage: "public key of the signing entity (default is the admin public key)",
-							},
-							cli.BoolFlag{
-								Name:  "redirect",
-								Usage: "redirects the transaction to stdout",
 							},
 						},
 					},
@@ -653,10 +667,6 @@ var cmds = cli.Commands{
 										Name:  "darcContractIDs",
 										Usage: "darcContractIDs separated by comas (optional)",
 									},
-									cli.BoolFlag{
-										Name:  "redirect",
-										Usage: "redirects the transaction to stdout",
-									},
 								},
 							},
 						},
@@ -782,7 +792,7 @@ func create(c *cli.Context) error {
 
 func link(c *cli.Context) error {
 	if c.NArg() < 1 {
-		return errors.New("please give the following args: roster.toml [bcid]")
+		return errors.New("please give the following args: roster.toml [byzcoin id]")
 	}
 	r, err := lib.ReadRoster(c.Args().First())
 	if err != nil {
@@ -847,54 +857,79 @@ func link(c *cli.Context) error {
 		if cl == nil {
 			return errors.New("didn't manage to find a node with a valid copy of the given skipchain-id")
 		}
-		ad := &darc.Darc{}
-		adPub := cothority.Suite.Point()
-		// Accept both plain-darcs, as well as "darc:...." darcs
-		adID, err := lib.StringToDarcID(c.String("admindarc"))
-		if err == nil {
-			adPubBuf, err := lib.StringToEd25519Buf(c.String("adminpub"))
+
+		newDarc := &darc.Darc{}
+
+		dstr := c.String("darc")
+		if dstr == "" {
+			log.Info("no darc given, will use an empty default one")
+		} else {
+
+			// Accept both plain-darcs, as well as "darc:...." darcs
+			darcID, err := lib.StringToDarcID(dstr)
 			if err != nil {
-				return err
+				return errors.New("failed to parse darc: " + err.Error())
 			}
-			adPub = cothority.Suite.Point()
-			if err = adPub.UnmarshalBinary(adPubBuf); err != nil {
-				return errors.New("got an invalid admin public key: " + err.Error())
-			}
-			p, err := cl.GetProof(adID)
+
+			p, err := cl.GetProof(darcID)
 			if err != nil {
-				return errors.New("couldn't get proof for admin-darc: " + err.Error())
+				return errors.New("couldn't get proof for darc: " + err.Error())
 			}
-			if err = p.Proof.Verify(id); err != nil {
-				return errors.New("proof for admin is wrong: " + err.Error())
+
+			err = p.Proof.Verify(id)
+			if err != nil {
+				return errors.New("proof for darc is wrong: " + err.Error())
 			}
-			_, adBuf, cid, _, err := p.Proof.KeyValue()
+
+			_, darcBuf, cid, _, err := p.Proof.KeyValue()
 			if err != nil {
 				return errors.New("cannot get value for darc: " + err.Error())
 			}
+
 			if cid != byzcoin.ContractDarcID {
 				return errors.New("please give a darc-instance ID, not: " + cid)
 			}
-			ad, err = darc.NewFromProtobuf(adBuf)
+
+			newDarc, err = darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return errors.New("invalid darc stored in byzcoin: " + err.Error())
 			}
 		}
+
+		identity := cothority.Suite.Point()
+
+		identityStr := c.String("identity")
+		if identityStr == "" {
+			log.Info("no identity provided, will use a default one")
+		} else {
+			identityBuf, err := lib.StringToEd25519Buf(identityStr)
+			if err != nil {
+				return err
+			}
+
+			identity = cothority.Suite.Point()
+			err = identity.UnmarshalBinary(identityBuf)
+			if err != nil {
+				return errors.New("got an invalid identity: " + err.Error())
+			}
+		}
+
 		log.Infof("ByzCoin-config for %+x:\n"+
 			"\tRoster: %s\n"+
 			"\tBlockInterval: %s\n"+
 			"\tMacBlockSize: %d\n"+
 			"\tDarcContracts: %s",
 			id[:], cc.Roster.List, cc.BlockInterval, cc.MaxBlockSize, cc.DarcContractIDs)
-		fn, err := lib.SaveConfig(lib.Config{
+		filePath, err := lib.SaveConfig(lib.Config{
 			Roster:        cc.Roster,
 			ByzCoinID:     id,
-			AdminDarc:     *ad,
-			AdminIdentity: darc.NewIdentityEd25519(adPub),
+			AdminDarc:     *newDarc,
+			AdminIdentity: darc.NewIdentityEd25519(identity),
 		})
 		if err != nil {
 			return errors.New("while writing config-file: " + err.Error())
 		}
-		log.Info("Wrote config to", path.Join(lib.ConfigPath, fn))
+		log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
 	}
 	return nil
 }
@@ -2014,6 +2049,28 @@ func qrcode(c *cli.Context) error {
 	}
 
 	qr.OutputTerminal()
+
+	return nil
+}
+
+func getInfo(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	cfg, _, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("BC configuration:\n"+
+		"\tCongig path: %s\n"+
+		"\tRoster: %s\n"+
+		"\tByzCoinID: %x\n"+
+		"\tDarc Base ID: %x\n"+
+		"\tIdentity: %s\n",
+		bcArg, cfg.Roster.List, cfg.ByzCoinID, cfg.AdminDarc.GetBaseID(), cfg.AdminIdentity.String())
 
 	return nil
 }

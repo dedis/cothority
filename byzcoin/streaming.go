@@ -33,7 +33,7 @@ func (s *streamingManager) notify(scID string, block *skipchain.SkipBlock) {
 	}
 }
 
-func (s *streamingManager) newListener(scID string) (chan *StreamingResponse, int) {
+func (s *streamingManager) newListener(scID string) chan *StreamingResponse {
 	s.Lock()
 	defer s.Unlock()
 
@@ -42,26 +42,42 @@ func (s *streamingManager) newListener(scID string) (chan *StreamingResponse, in
 	}
 
 	ls := s.listeners[scID]
-	id := len(s.listeners)
 	outChan := make(chan *StreamingResponse)
 	ls = append(ls, outChan)
 	s.listeners[scID] = ls
-	return outChan, id
+	return outChan
 }
 
-func (s *streamingManager) stopListener(scID string, i int) {
+func (s *streamingManager) stopListener(scID string, outChan chan *StreamingResponse) {
 	s.Lock()
 	defer s.Unlock()
 
-	ls, ok := s.listeners[scID]
-	if !ok || i >= len(ls) {
-		panic("listener does not exist")
+	ls := s.listeners[scID]
+	if ls == nil {
+		return
 	}
 
-	close(ls[i])
+	for i, listener := range ls {
+		if listener == outChan {
+			close(listener)
+			s.listeners[scID] = append(ls[:i], ls[i+1:]...)
+			return
+		}
+	}
+}
 
-	ls = append(ls[:i], ls[i+1:]...)
-	s.listeners[scID] = ls
+func (s *streamingManager) stopAll() {
+	s.Lock()
+	defer s.Unlock()
+
+	for key, l := range s.listeners {
+		for _, c := range l {
+			// Force the streaming connection in Onet to close.
+			close(c)
+		}
+
+		delete(s.listeners, key)
+	}
 }
 
 // StreamTransactions will stream all transactions IDs to the client until the
@@ -69,10 +85,23 @@ func (s *streamingManager) stopListener(scID string, i int) {
 func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResponse, chan bool, error) {
 	stopChan := make(chan bool)
 	key := string(msg.ID)
-	outChan, idx := s.streamingMan.newListener(key)
+	outChan := s.streamingMan.newListener(key)
+
 	go func() {
+		s.closedMutex.Lock()
+		if s.closed {
+			s.closedMutex.Unlock()
+			return
+		}
+		s.working.Add(1)
+		defer s.working.Done()
+		s.closedMutex.Unlock()
+
+		// Either the service is closing and we force the connection to stop or
+		// the streaming connection is closed upfront.
 		<-stopChan
-		s.streamingMan.stopListener(key, idx)
+		// In both cases we clean the listener.
+		s.streamingMan.stopListener(key, outChan)
 	}()
 	return outChan, stopChan, nil
 }

@@ -72,6 +72,11 @@ func main() {
 					Name:  "non-interactive",
 					Usage: "generate private.toml in non-interactive mode",
 				},
+				cli.StringFlag{
+					Name:  "host",
+					Usage: "which host to listen on",
+					Value: "",
+				},
 				cli.IntFlag{
 					Name:  "port",
 					Usage: "which port to listen on",
@@ -213,18 +218,12 @@ func checkConfig(c *cli.Context) error {
 }
 
 func setup(c *cli.Context) error {
-	if c.String("config") != "" {
-		log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
-	}
-	if c.String("debug") != "" {
-		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
-	}
-
 	if c.Bool("non-interactive") {
+		host := c.String("host")
 		port := c.Int("port")
 		portStr := fmt.Sprintf("%v", port)
 
-		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort("", portStr))
+		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort(host, portStr))
 		kp := key.NewKeyPair(cothority.Suite)
 
 		pub, _ := encoding.PointToStringHex(cothority.Suite, kp.Public)
@@ -239,7 +238,7 @@ func setup(c *cli.Context) error {
 			Services:    app.GenerateServiceKeyPairs(),
 		}
 
-		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
+		out := c.GlobalString("config")
 		err := conf.Save(out)
 		if err == nil {
 			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)

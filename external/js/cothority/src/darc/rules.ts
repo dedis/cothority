@@ -1,4 +1,6 @@
 import { Message, Properties } from "protobufjs/light";
+import { InstanceID } from "../byzcoin";
+import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { IIdentity } from "./identity-wrapper";
 
@@ -7,6 +9,9 @@ import { IIdentity } from "./identity-wrapper";
  */
 export class Rule extends Message<Rule> {
 
+    static readonly OR = "|";
+    static readonly AND = "&";
+
     /**
      * @see README#Message classes
      */
@@ -14,8 +19,20 @@ export class Rule extends Message<Rule> {
         registerMessage("Rule", Rule);
     }
 
+    /**
+     * Creates a rule given an action and an expression.
+     *
+     * @param action
+     * @param expr
+     */
+    static fromActionExpr(action: string, expr: Buffer) {
+        const r = new Rule({action});
+        r.append(expr.toString(), null);
+        return r;
+    }
+
     readonly action: string;
-    readonly expr: Buffer;
+    private expr: Buffer;
 
     constructor(props?: Properties<Rule>) {
         super(props);
@@ -28,10 +45,65 @@ export class Rule extends Message<Rule> {
      * @returns the new rule
      */
     clone(): Rule {
-        return new Rule({
-            action: this.action,
-            expr: Buffer.from(this.expr),
-        });
+        return Rule.fromActionExpr(this.action, this.expr);
+    }
+
+    /**
+     * Appends an identity given as a string to the expression and returns a copy of the
+     * new expression.
+     *
+     * @param identity the identity to add, given as a string
+     * @param op the operator to apply to the expression
+     */
+    append(identity: string, op: string): Buffer {
+        if (this.expr.length > 0) {
+            this.expr = Buffer.from(`${this.expr.toString()} ${op} ${identity}`);
+        } else {
+            this.expr = Buffer.from(identity);
+        }
+        return Buffer.from(this.expr);
+    }
+
+    /**
+     * Searches for the given identity and removes it from the expression. Currently only
+     * expressions containing Rule.OR are supported. It returns a copy of the new expression.
+     *
+     * @param identity the string representation of the identity
+     */
+    remove(identity: string): Buffer {
+        let expr = this.expr.toString();
+        if (expr.match(/(\(|\)|\&)/)) {
+            throw new Error("don't know how to remove identity from expression with () or Rule.AND");
+        }
+        const matchReg = new RegExp(`\\b${identity}\\b`);
+        if (!expr.match(matchReg)) {
+            throw new Error("this identity is not part of the rule");
+        }
+        expr = expr.replace(matchReg, "");
+        expr = expr.replace(/\|\s*\|/, "|");
+        expr = expr.replace(/\s*\|\s*$/, "");
+        expr = expr.replace(/^\s*\|\s*/, "");
+        this.expr = Buffer.from(expr);
+        return Buffer.from(this.expr);
+    }
+
+    /**
+     * Returns the identities in the expression, in the case it is a single identity,
+     * or if the identities are ORed together. If there are brakcets '()' or AND in the
+     * expression, it will throw an error.
+     */
+    getIdentities(): string[] {
+        if (this.expr.toString().match(/\(&/)) {
+            throw new Error('Don\'t know what to do with "(" or "&" in expression');
+        }
+        return this.expr.toString().split("|").map((e) => e.trim());
+    }
+
+    /**
+     * Returns a copy of the expression.
+     */
+    getExpr(): Buffer {
+        return Buffer.from(this.expr);
     }
 
     /**
@@ -49,15 +121,13 @@ export class Rule extends Message<Rule> {
  */
 export default class Rules extends Message<Rules> {
 
-    static OR = "|";
-    static AND = "&";
-
     /**
      * @see README#Message classes
      */
     static register() {
         registerMessage("Rules", Rules, Rule);
     }
+
     readonly list: Rule[];
 
     constructor(properties?: Properties<Rules>) {
@@ -78,13 +148,9 @@ export default class Rules extends Message<Rules> {
         const idx = this.list.findIndex((r) => r.action === action);
 
         if (idx >= 0) {
-            const rule = this.list[idx];
-            this.list[idx] = new Rule({
-                action: rule.action,
-                expr: Buffer.concat([rule.expr, Buffer.from(` ${op} ${identity.toString()}`)]),
-            });
+            this.list[idx].append(identity.toString(), op);
         } else {
-            this.list.push(new Rule({action, expr: Buffer.from(identity.toString())}));
+            this.list.push(Rule.fromActionExpr(action, Buffer.from(identity.toString())));
         }
     }
 
@@ -107,7 +173,7 @@ export default class Rules extends Message<Rules> {
     setRuleExp(action: string, expression: Buffer) {
         const idx = this.list.findIndex((r) => r.action === action);
 
-        const nr = new Rule({action, expr: expression});
+        const nr = Rule.fromActionExpr(action, expression);
         if (idx >= 0) {
             this.list[idx] = nr;
         } else {

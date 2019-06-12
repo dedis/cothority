@@ -6,7 +6,7 @@ import { CalypsoReadInstance, CalypsoWriteInstance, Write } from "../../src/caly
 import { LongTermSecret, OnChainSecretRPC } from "../../src/calypso/calypso-rpc";
 import { SignerEd25519 } from "../../src/darc";
 import Darc from "../../src/darc/darc";
-import Rules from "../../src/darc/rules";
+import { Rule } from "../../src/darc/rules";
 import Log from "../../src/log";
 import SpawnerInstance from "../../src/personhood/spawner-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
@@ -101,7 +101,7 @@ describe("In a full byzcoin setting, it should", async () => {
         darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         ["spawn:longTermSecret", "spawn:credential", "invoke:credential.update",
             "spawn:calypsoWrite", "spawn:calypsoRead", "spawn:spawner"].forEach((rule) =>
-            darc.addIdentity(rule, SIGNER, Rules.OR));
+            darc.addIdentity(rule, SIGNER, Rule.OR));
 
         bc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const ocs = new OnChainSecretRPC(bc);

@@ -31,7 +31,7 @@
   "license": "LGPL-3.0-or-later",
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@dedis/kyber": "^3.0.6",
+    "@dedis/kyber": "^3.0.7",
     "@stablelib/blake2xs": "^0.10.4",
     "@types/crypto-js": "^3.1.43",
     "@types/node": "^10.12.18",
