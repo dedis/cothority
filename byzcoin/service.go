@@ -34,6 +34,9 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
+// ContractsFn ...
+var ContractsFn map[string]ContractFn
+
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // This is to boost the acceptable timestamp window when dealing with
@@ -78,6 +81,11 @@ func init() {
 	log.ErrFatal(err)
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
+
+	ContractsFn = make(map[string]ContractFn)
+	ContractsFn[ContractConfigID] = contractConfigFromBytes
+	ContractsFn[ContractDarcID] = contractSecureDarcFromBytes
+	ContractsFn[ContractDeferredID] = contractDeferredFromBytes
 }
 
 // GenNonce returns a random nonce.
@@ -118,7 +126,7 @@ type Service struct {
 	closeLeaderMonitorChan chan bool
 
 	// contracts map kinds to kind specific verification functions
-	contracts map[string]ContractFn
+	// contracts map[string]ContractFn
 
 	storage *bcStorage
 
@@ -1919,7 +1927,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 // GetContractConstructor gets the contract constructor of the contract
 // contractName.
 func (s *Service) GetContractConstructor(contractName string) (ContractFn, bool) {
-	fn, exists := s.contracts[contractName]
+	fn, exists := ContractsFn[contractName]
 	return fn, exists
 }
 
@@ -1936,11 +1944,11 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 
-	contractFactory, exists := s.contracts[contractID]
+	contractFactory, exists := ContractsFn[contractID]
 	if !exists && ConfigInstanceID.Equal(instr.InstanceID) {
 		// Special case: first time call to genesis-configuration must return
 		// correct contract type.
-		contractFactory, exists = s.contracts[ContractConfigID]
+		contractFactory, exists = ContractsFn[ContractConfigID]
 	}
 
 	// If the leader does not have a verifier for this contract, it drops the
@@ -2163,7 +2171,7 @@ func (s *Service) monitorLeaderFailure() {
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
 func (s *Service) registerContract(contractID string, c ContractFn) error {
-	s.contracts[contractID] = c
+	ContractsFn[contractID] = c
 	return nil
 }
 
@@ -2348,7 +2356,6 @@ var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor:       onet.NewServiceProcessor(c),
-		contracts:              make(map[string]ContractFn),
 		txBuffer:               newTxBuffer(),
 		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
@@ -2385,19 +2392,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
-
-	err = s.registerContract(ContractConfigID, contractConfigFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = s.registerContract(ContractDeferredID, s.contractDeferredFromBytes)
-	if err != nil {
-		return nil, err
-	}
 
 	if err := skipchain.RegisterVerification(c, Verify, s.verifySkipBlock); err != nil {
 		log.ErrFatal(err)

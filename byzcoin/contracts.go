@@ -49,6 +49,13 @@ type Contract interface {
 	Invoke(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Delete removes the current instance
 	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	// Print ...
+	Print() string
+}
+
+// Print ...
+func (b BasicContract) Print() string {
+	return "what a miracle..."
 }
 
 // ContractFn is the type signature of the instance factory functions which can be

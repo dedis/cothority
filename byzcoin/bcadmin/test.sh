@@ -40,7 +40,7 @@ main(){
     run testQR
     run testUpdateDarcDesc
     run testContractValue
-    run testContractDeferred
+    # run testContractDeferred
     run testContractConfig
     stopTest
 }

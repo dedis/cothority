@@ -236,8 +236,27 @@ func (instr Instruction) ContractID() string {
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
+	// ls := onet.NewLocalServer(cothority.Suite, 1234)
+	// defer ls.Close()
+	// bc := ls.Service(ServiceName)
+	// cc := bc.GetContractConstructor("config")
+
+	// fmt.Printf(("HERE IS THE MAP: %s",))
+	contractFn, ok := ContractsFn[instr.ContractID()]
+	var res string
+	if !ok {
+		res = "error in getting constructor: " + instr.ContractID()
+	} else {
+		contract, err := contractFn(nil)
+		if err != nil {
+			res = "error in getting contract"
+		} else {
+			res = contract.Print()
+		}
+	}
 
 	var out strings.Builder
+	out.WriteString(res + "\n")
 	out.WriteString("- instruction:\n")
 	fmt.Fprintf(&out, "-- hash: %x\n", instr.Hash())
 	fmt.Fprintf(&out, "-- instID: %v\n", instr.InstanceID)

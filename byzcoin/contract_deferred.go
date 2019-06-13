@@ -82,8 +82,8 @@ type contractDeferred struct {
 	s *Service
 }
 
-func (s *Service) contractDeferredFromBytes(in []byte) (Contract, error) {
-	c := &contractDeferred{s: s}
+func contractDeferredFromBytes(in []byte) (Contract, error) {
+	c := &contractDeferred{}
 
 	err := protobuf.Decode(in, &c.DeferredData)
 	if err != nil {
@@ -262,7 +262,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 				return nil, nil, errors.New("couldn't get contract buf: " + err.Error())
 			}
 			// Get the contract's constructor (like "contractValueFromByte(...)")
-			fn, exists := c.s.contracts[contractID]
+			fn, exists := ContractsFn[contractID]
 			if !exists {
 				return nil, nil, errors.New("couldn't get the root function")
 			}

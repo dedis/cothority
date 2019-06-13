@@ -13,6 +13,9 @@ import (
 func init() {
 	_, err := onet.RegisterNewService("contracts", newService)
 	log.ErrFatal(err)
+	byzcoin.ContractsFn[ContractValueID] = contractValueFromBytes
+	byzcoin.ContractsFn[ContractCoinID] = contractCoinFromBytes
+	byzcoin.ContractsFn[ContractInsecureDarcID] = contractInsecureDarcFromBytes
 }
 
 // Service is only used to being able to store our contracts
@@ -31,8 +34,5 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	byzcoin.RegisterContract(c, ContractValueID, contractValueFromBytes)
-	byzcoin.RegisterContract(c, ContractCoinID, contractCoinFromBytes)
-	byzcoin.RegisterContract(c, ContractInsecureDarcID, s.contractInsecureDarcFromBytes)
 	return s, nil
 }

@@ -23,7 +23,6 @@ const ContractDarcID = "darc"
 type contractSecureDarc struct {
 	BasicContract
 	darc.Darc
-	s *Service
 }
 
 var _ Contract = (*contractSecureDarc)(nil)
@@ -31,12 +30,12 @@ var _ Contract = (*contractSecureDarc)(nil)
 const cmdDarcEvolveUnrestriction = "evolve_unrestricted"
 const cmdDarcEvolve = "evolve"
 
-func (s *Service) contractSecureDarcFromBytes(in []byte) (Contract, error) {
+func contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	d, err := darc.NewFromProtobuf(in)
 	if err != nil {
 		return nil, err
 	}
-	c := &contractSecureDarc{s: s, Darc: *d}
+	c := &contractSecureDarc{Darc: *d}
 	return c, nil
 }
 
@@ -83,7 +82,7 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	// If we got here this is a spawn:xxx in order to spawn
 	// a new instance of contract xxx, so do that.
 
-	cfact, found := c.s.GetContractConstructor(inst.Spawn.ContractID)
+	cfact, found := ContractsFn[inst.Spawn.ContractID]
 	if !found {
 		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
 	}
