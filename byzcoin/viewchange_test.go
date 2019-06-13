@@ -25,12 +25,18 @@ func TestViewChange_Basic(t *testing.T) {
 }
 
 func TestViewChange_Basic2(t *testing.T) {
-	testViewChange(t, 7, 2, testInterval)
+	if testing.Short() {
+		// Block interval needs to be big enough so that the protocol
+		// timeout is big enough but the test takes too much time then.
+		t.Skip("protocol timeout too short for Travis")
+	}
+
+	testViewChange(t, 7, 2, 4*testInterval)
 }
 
 func TestViewChange_Basic3(t *testing.T) {
 	if testing.Short() {
-		t.Skip("not for Travis")
+		t.Skip("protocol timeout too short for Travis")
 	}
 
 	// Enough nodes and failing ones to test what happens when propagation
