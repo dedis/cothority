@@ -82,7 +82,9 @@ func init() {
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
 
-	ContractsFn = make(map[string]ContractFn)
+	if ContractsFn == nil {
+		ContractsFn = make(map[string]ContractFn)
+	}
 	ContractsFn[ContractConfigID] = contractConfigFromBytes
 	ContractsFn[ContractDarcID] = contractSecureDarcFromBytes
 	ContractsFn[ContractDeferredID] = contractDeferredFromBytes
