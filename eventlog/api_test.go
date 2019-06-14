@@ -363,8 +363,6 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 		checkProof(t, leader.omni, id, c.ByzCoin.ID)
 	}
 
-	time.Sleep(10 * time.Second)
-
 	// set up the listener, it starts listening from the genesis block so even when we start after logging the first
 	// batch, it should see the events from the first batch
 	done := make(chan bool)
