@@ -30,6 +30,7 @@ type CollectTxProtocol struct {
 	getTxs       getTxsCallback
 	Finish       chan bool
 	closing      chan bool
+	version      int
 }
 
 // CollectTxRequest is the request message that asks the receiver to send their
@@ -38,6 +39,7 @@ type CollectTxRequest struct {
 	SkipchainID skipchain.SkipBlockID
 	LatestID    skipchain.SkipBlockID
 	MaxNumTxs   int
+	Version     int
 }
 
 // CollectTxResponse is the response message that contains all the pending
@@ -69,6 +71,7 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			getTxs:    getTxs,
 			Finish:    make(chan bool),
 			closing:   make(chan bool),
+			version:   1,
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -92,6 +95,7 @@ func (p *CollectTxProtocol) Start() error {
 		SkipchainID: p.SkipchainID,
 		LatestID:    p.LatestID,
 		MaxNumTxs:   p.MaxNumTxs,
+		Version:     p.version,
 	}
 	// send to myself and the children
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
@@ -123,9 +127,16 @@ func (p *CollectTxProtocol) Dispatch() error {
 		return errors.New("closing down system")
 	}
 
+	maxOut := -1
+	if req.Version >= 1 {
+		// Leader with older version will send a maximum value of 0 which
+		// is the default value as the field is unknown.
+		maxOut = req.MaxNumTxs
+	}
+
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{
-		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, req.MaxNumTxs),
+		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, maxOut),
 	}
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
@@ -145,7 +156,7 @@ func (p *CollectTxProtocol) Dispatch() error {
 			case resp := <-p.responseChan:
 				// If more than the limit is sent, we simply drop all of them
 				// as the conode is not behaving correctly.
-				if len(resp.Txs) <= p.MaxNumTxs {
+				if p.version == 0 || len(resp.Txs) <= p.MaxNumTxs {
 					p.TxsChan <- resp.Txs
 				}
 			case <-p.Finish:

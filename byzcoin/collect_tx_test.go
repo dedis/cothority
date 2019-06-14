@@ -20,19 +20,27 @@ func TestCollectTx(t *testing.T) {
 	}
 
 	for _, n := range nNodes {
-		txs, err := testRunCollectionTxProtocol(n, 1)
+		txs, err := testRunCollectionTxProtocol(n, 1, 1)
 		require.NoError(t, err)
 		require.Equal(t, n, len(txs))
 	}
 }
 
+// Test that the limit is respected.
 func TestCollectTx_Empty(t *testing.T) {
-	txs, err := testRunCollectionTxProtocol(4, 0)
+	txs, err := testRunCollectionTxProtocol(4, 0, 1)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(txs))
 }
 
-func testRunCollectionTxProtocol(n int, max int) ([]ClientTransaction, error) {
+// Test that an older version will ignore the limit.
+func TestCollectTx_Version(t *testing.T) {
+	txs, err := testRunCollectionTxProtocol(4, 0, 0)
+	require.NoError(t, err)
+	require.Equal(t, 4, len(txs))
+}
+
+func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, error) {
 	protoPrefix := "TestCollectTx"
 
 	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, max int) []ClientTransaction {
@@ -42,7 +50,7 @@ func testRunCollectionTxProtocol(n int, max int) ([]ClientTransaction, error) {
 		return []ClientTransaction{tx}
 	}
 
-	protoName := fmt.Sprintf("%s_%d", protoPrefix, n)
+	protoName := fmt.Sprintf("%s_%d_%d_%d", protoPrefix, n, max, version)
 	_, err := onet.GlobalProtocolRegister(protoName, NewCollectTxProtocol(getTx))
 	if err != nil {
 		return nil, err
@@ -61,6 +69,7 @@ func testRunCollectionTxProtocol(n int, max int) ([]ClientTransaction, error) {
 	root.SkipchainID = skipchain.SkipBlockID("hello")
 	root.LatestID = skipchain.SkipBlockID("goodbye")
 	root.MaxNumTxs = max
+	root.version = version
 	err = root.Start()
 	if err != nil {
 		return nil, err

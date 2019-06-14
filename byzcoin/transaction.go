@@ -564,7 +564,7 @@ func (r *txBuffer) take(key string, max int) []ClientTransaction {
 	}
 
 	out := len(txs)
-	if out > max {
+	if max >= 0 && out > max {
 		// Take only up to the maximum required transactions.
 		out = max
 	}

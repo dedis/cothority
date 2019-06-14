@@ -110,6 +110,20 @@ func TestTransactionBuffer_Take(t *testing.T) {
 	require.Equal(t, 0, len(txs))
 }
 
+func TestTransactionBuffer_TakeDisabled(t *testing.T) {
+	b := newTxBuffer()
+	key := "abc"
+
+	for i := 0; i < 10; i++ {
+		b.add(key, ClientTransaction{})
+	}
+
+	txs := b.take(key, -1)
+	require.Equal(t, 10, len(txs))
+	_, ok := b.txsMap[key]
+	require.False(t, ok)
+}
+
 func setSignerCounter(sst *stagingStateTrie, id string, v uint64) error {
 	key := publicVersionKey(id)
 	verBuf := make([]byte, 8)
