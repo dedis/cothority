@@ -236,27 +236,20 @@ func (instr Instruction) ContractID() string {
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
-	// ls := onet.NewLocalServer(cothority.Suite, 1234)
-	// defer ls.Close()
-	// bc := ls.Service(ServiceName)
-	// cc := bc.GetContractConstructor("config")
-
-	// fmt.Printf(("HERE IS THE MAP: %s",))
 	contractFn, ok := ContractsFn[instr.ContractID()]
-	var res string
+	var methodStr string
 	if !ok {
-		res = "error in getting constructor: " + instr.ContractID()
+		methodStr = "error in getting constructor: " + instr.ContractID()
 	} else {
 		contract, err := contractFn(nil)
 		if err != nil {
-			res = "error in getting contract"
+			methodStr = "error in getting contract"
 		} else {
-			res = contract.Print()
+			methodStr = contract.PrintMethod(instr)
 		}
 	}
 
 	var out strings.Builder
-	out.WriteString(res + "\n")
 	out.WriteString("- instruction:\n")
 	fmt.Fprintf(&out, "-- hash: %x\n", instr.Hash())
 	fmt.Fprintf(&out, "-- instID: %v\n", instr.InstanceID)
@@ -264,24 +257,9 @@ func (instr Instruction) String() string {
 	fmt.Fprintf(&out, "-- identities: %v\n", instr.SignerIdentities)
 	fmt.Fprintf(&out, "-- counters: %v\n", instr.SignerCounter)
 	fmt.Fprintf(&out, "-- signatures: %d\n", len(instr.Signatures))
+	out.WriteString(
+		regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(methodStr, "-$1"))
 
-	switch instr.GetType() {
-	case SpawnType:
-		out.WriteString("-- Spawn:\n")
-		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Spawn.ContractID)
-		out.WriteString(
-			regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
-				PrintArguments(instr.Action(), instr.Spawn.Args), "---$1"))
-	case InvokeType:
-		out.WriteString("-- Invoke:\n")
-		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Invoke.ContractID)
-		out.WriteString(
-			regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
-				PrintArguments(instr.Action(), instr.Invoke.Args), "---$1"))
-	case DeleteType:
-		out.WriteString("-- Delete:\n")
-		fmt.Fprintf(&out, "--- ContractID: %s\n", instr.Delete.ContractID)
-	}
 	return out.String()
 }
 

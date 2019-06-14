@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,17 +20,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
-
-// PrintArguments returns the string representation of Arguments
-func PrintArguments(action string, args Arguments) string {
-	var out strings.Builder
-	out.WriteString("- Args:\n")
-	for _, name := range args.Names() {
-		fmt.Fprintf(&out, "-- %s\n", name)
-		fmt.Fprintf(&out, "--- %s\n", strconv.Quote(string(args.Search(name))))
-	}
-	return out.String()
-}
 
 // Contract is the interface that an instance needs
 // to implement to be callable as a pre-compiled smart
@@ -50,12 +40,39 @@ type Contract interface {
 	// Delete removes the current instance
 	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Print ...
-	Print() string
+	PrintMethod(Instruction) string
 }
 
-// Print ...
-func (b BasicContract) Print() string {
-	return "what a miracle..."
+// PrintMethod prints the method of a given instruction (ie. "Spawn", "Invoke",
+// or "Delete"). This basic function simply calls "strconv.Quote" on the args of
+// the method. It should be overrided by contracts that have more complex
+// arguments. See the config contract for an example.
+func (b BasicContract) PrintMethod(instr Instruction) string {
+	var out strings.Builder
+	var instArgs Arguments
+
+	switch instr.GetType() {
+	case SpawnType:
+		out.WriteString("- Spawn:\n")
+		fmt.Fprintf(&out, "-- ContractID: %s\n", instr.Spawn.ContractID)
+		instArgs = instr.Spawn.Args
+	case InvokeType:
+		out.WriteString("- Invoke:\n")
+		fmt.Fprintf(&out, "-- ContractID: %s\n", instr.Invoke.ContractID)
+		fmt.Fprintf(&out, "-- Command: %s\n", instr.Invoke.Command)
+		instArgs = instr.Invoke.Args
+	case DeleteType:
+		out.WriteString("- Delete:\n")
+		fmt.Fprintf(&out, "-- ContractID: %s\n", instr.Delete.ContractID)
+		instArgs = []Argument{}
+	}
+
+	out.WriteString("-- Args:\n")
+	for _, name := range instArgs.Names() {
+		fmt.Fprintf(&out, "--- %s\n", name)
+		fmt.Fprintf(&out, "---- %s\n", strconv.Quote(string(instArgs.Search(name))))
+	}
+	return out.String()
 }
 
 // ContractFn is the type signature of the instance factory functions which can be
@@ -187,6 +204,30 @@ func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst I
 	}
 
 	return inst.VerifyWithOption(rst, msg, false)
+}
+
+// PrintMethod overrides the implementation from the BasicContract in order to
+// proprely print "invoke:config.update_config"
+func (c *contractConfig) PrintMethod(instr Instruction) string {
+	var out strings.Builder
+	if instr.GetType() == InvokeType && instr.Invoke.Command == "update_config" {
+		out.WriteString("- Invoke:\n")
+		fmt.Fprintf(&out, "-- ContractID: %s\n", instr.Invoke.ContractID)
+		fmt.Fprintf(&out, "-- Command: %s\n", instr.Invoke.Command)
+
+		contractConfig := ChainConfig{}
+		err := protobuf.Decode(instr.Invoke.Args.Search("config"), &contractConfig)
+		if err != nil {
+			return "[!!!] failed to decode contractConfig: " + err.Error()
+		}
+
+		out.WriteString("-- Args:\n")
+		out.WriteString(regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
+			contractConfig.String(), "--$1"))
+
+		return out.String()
+	}
+	return c.BasicContract.PrintMethod(instr)
 }
 
 // Spawn expects those arguments:
