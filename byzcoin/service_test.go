@@ -759,12 +759,6 @@ func TestService_BigTx(t *testing.T) {
 	s := newSer(t, 1, 1*time.Second)
 	defer s.local.CloseAll()
 
-	// Check block number before.
-	reply, err := skipchain.NewClient().GetUpdateChain(s.genesis.Roster, s.genesis.SkipChainID())
-	require.Nil(t, err)
-	latest := reply.Update[len(reply.Update)-1]
-	require.Equal(t, 0, latest.Index)
-
 	smallVal := s.value
 
 	// Try to send a value so big it will be refused.
