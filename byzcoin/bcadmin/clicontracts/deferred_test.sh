@@ -36,8 +36,11 @@ testContractDeferredSpawn() {
     testGrep "identities: \[\]" echo "$OUTRES"
     testGrep "counters: \[\]" echo "$OUTRES"
     testGrep "signatures: 0" echo "$OUTRES"
-    testGrep "Spawn:	value" echo "$OUTRES"
-    testGrep "Args:value" echo "$OUTRES"
+    testGrep "Spawn:" echo "$OUTRES"
+    testGrep "ContractID: value" echo "$OUTRES"
+    testGrep "Args:" echo "$OUTRES"
+    testGrep "value:" echo "$OUTRES"
+    testGrep "\"myValue\"" echo "$OUTRES"
     testGrep "Spawned new deferred contract, its instance id is:" echo "$OUTRES"
 }
 

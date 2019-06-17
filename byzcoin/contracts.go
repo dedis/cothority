@@ -69,7 +69,7 @@ func (b BasicContract) PrintMethod(instr Instruction) string {
 
 	out.WriteString("-- Args:\n")
 	for _, name := range instArgs.Names() {
-		fmt.Fprintf(&out, "--- %s\n", name)
+		fmt.Fprintf(&out, "--- %s:\n", name)
 		fmt.Fprintf(&out, "---- %s\n", strconv.Quote(string(instArgs.Search(name))))
 	}
 	return out.String()
