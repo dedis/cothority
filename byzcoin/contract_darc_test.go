@@ -240,5 +240,5 @@ func TestSecureDarc(t *testing.T) {
 		require.Equal(t, myDarc.Rules.Get("spawn:coin"), myDarc.Rules.Get("invoke:darc."+cmdDarcEvolveUnrestriction))
 	}
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
+	require.NoError(t, local.WaitDone(5*genesisMsg.BlockInterval))
 }

@@ -95,11 +95,7 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 		return nil, err
 	}
 
-	sb, doCatchUp := s.skService().WaitBlock(s.scID, nil)
-	if sb == nil && !doCatchUp {
-		log.Lvl2("Skip tx collection during block processing")
-		return nil, nil
-	}
+	_, isNotProcessingBlock := s.skService().WaitBlock(s.scID, nil)
 
 	latest, err := s.db().GetLatestByID(s.scID)
 	if err != nil {
@@ -124,6 +120,12 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 	root := proto.(*CollectTxProtocol)
 	root.SkipchainID = s.scID
 	root.LatestID = latest.Hash
+	// When a block is processed, we prevent conodes to send us back transactions
+	// until the next collection.
+	if !isNotProcessingBlock {
+		root.MaxNumTxs = 0
+	}
+
 	if err := root.Start(); err != nil {
 		log.Error(s.ServerIdentity(), "Failed to start the protocol with error: "+err.Error()+
 			" Start() only returns an error when the protocol is not initialised correctly,"+

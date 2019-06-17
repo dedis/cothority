@@ -1053,7 +1053,9 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	for latest.GetForwardLen() > 0 {
 		next := db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
 		if next == nil {
-			return latest, errors.New("missing block")
+			// During a block creation, the level-0 link is created first and then the
+			// new block could still be processing.
+			return latest, nil
 		}
 		latest = next
 	}
@@ -1120,15 +1122,31 @@ func (db *SkipBlockDB) GetProof(sid SkipBlockID) (sbs []*SkipBlock, err error) {
 		sbs = append(sbs, sb)
 
 		for sb != nil && len(sb.ForwardLink) > 0 {
-			id := sb.ForwardLink[len(sb.ForwardLink)-1].To
-			sb, err = db.getFromTx(tx, id)
+			// In some cases, a forward-link could be stored before the
+			// actual target block is so we go as far as we can when
+			// following the forward-links.
+			links := sb.ForwardLink
+			for k := len(links) - 1; k >= 0; k-- {
+				fl := links[k]
+				if fl == nil || fl.IsEmpty() {
+					continue
+				}
 
-			if err != nil {
-				return err
+				sb, err = db.getFromTx(tx, fl.To)
+
+				if err != nil {
+					return err
+				}
+
+				if sb != nil {
+					k = -1
+				}
 			}
 
 			if sb == nil {
-				return errors.New("couldn't find one of the blocks")
+				// The very latest block could still in processing but the
+				// forward-link level 0 is already stored.
+				return nil
 			}
 
 			// One way to insure there is no corrupted forward-link is

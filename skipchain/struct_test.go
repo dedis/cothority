@@ -406,8 +406,10 @@ func TestSkipBlockDB_GetProof(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	_, err = db.GetProof(root.Hash)
-	require.Error(t, err)
+	// last block is missing so it should return only until sb1.
+	bb, err := db.GetProof(root.Hash)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(bb))
 
 	_, err = db.GetProofForID(sb2.Hash)
 	require.Error(t, err)

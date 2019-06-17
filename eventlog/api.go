@@ -58,7 +58,7 @@ func (c *Client) Create() error {
 	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return err
 	}
-	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 2); err != nil {
+	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 10); err != nil {
 		return err
 	}
 

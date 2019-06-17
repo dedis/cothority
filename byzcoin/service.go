@@ -1863,7 +1863,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 			if err2 != nil {
 				err = fmt.Errorf("%s - while getting value: %s", err, err2)
 			}
-			return nil, nil, fmt.Errorf("%s Contract %s got Instruction %s and returned error: %s", s.ServerIdentity(), cid, instr, err)
+			return nil, nil, fmt.Errorf("%s Contract %s got Instruction %x and returned error: %s", s.ServerIdentity(), cid, instr.Hash(), err)
 		}
 		var counterScs StateChanges
 		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
@@ -2018,7 +2018,7 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 // a set of pending transactions. However, it is a very useful way to piggy
 // back additional functionalities that need to be executed at every interval,
 // such as updating the heartbeat monitor and synchronising the state.
-func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
+func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, maxNumTxs int) []ClientTransaction {
 	s.closedMutex.Lock()
 	if s.closed {
 		s.closedMutex.Unlock()
@@ -2057,7 +2057,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 
 	s.heartbeats.beat(string(scID))
 
-	return s.txBuffer.take(string(scID))
+	return s.txBuffer.take(string(scID), maxNumTxs)
 }
 
 // loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.

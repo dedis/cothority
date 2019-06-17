@@ -19,42 +19,74 @@ func TestCollectTx(t *testing.T) {
 		nNodes = []int{2, 3}
 	}
 
+	for _, n := range nNodes {
+		txs, err := testRunCollectionTxProtocol(n, 1, 1)
+		require.NoError(t, err)
+		require.Equal(t, n, len(txs))
+	}
+}
+
+// Test that the limit is respected.
+func TestCollectTx_Empty(t *testing.T) {
+	txs, err := testRunCollectionTxProtocol(4, 0, 1)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(txs))
+}
+
+// Test that an older version will ignore the limit.
+func TestCollectTx_Version(t *testing.T) {
+	txs, err := testRunCollectionTxProtocol(4, 0, 0)
+	require.NoError(t, err)
+	require.Equal(t, 4, len(txs))
+}
+
+func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, error) {
 	protoPrefix := "TestCollectTx"
-	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
+
+	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID, max int) []ClientTransaction {
 		tx := ClientTransaction{
 			Instructions: []Instruction{Instruction{}},
 		}
 		return []ClientTransaction{tx}
 	}
-	for _, n := range nNodes {
-		protoName := fmt.Sprintf("%s_%d", protoPrefix, n)
-		_, err := onet.GlobalProtocolRegister(protoName, NewCollectTxProtocol(getTx))
-		require.NoError(t, err)
 
-		local := onet.NewLocalTest(testSuite)
-		_, _, tree := local.GenBigTree(n, n, n-1, true)
+	protoName := fmt.Sprintf("%s_%d_%d_%d", protoPrefix, n, max, version)
+	_, err := onet.GlobalProtocolRegister(protoName, NewCollectTxProtocol(getTx))
+	if err != nil {
+		return nil, err
+	}
 
-		p, err := local.CreateProtocol(protoName, tree)
-		require.NoError(t, err)
+	local := onet.NewLocalTest(testSuite)
+	defer local.CloseAll()
+	_, _, tree := local.GenBigTree(n, n, n-1, true)
 
-		root := p.(*CollectTxProtocol)
-		root.SkipchainID = skipchain.SkipBlockID("hello")
-		root.LatestID = skipchain.SkipBlockID("goodbye")
-		require.NoError(t, root.Start())
+	p, err := local.CreateProtocol(protoName, tree)
+	if err != nil {
+		return nil, err
+	}
 
-		var txs []ClientTransaction
-	outer:
-		for {
-			select {
-			case newTxs, more := <-root.TxsChan:
-				if more {
-					txs = append(txs, newTxs...)
-				} else {
-					break outer
-				}
+	root := p.(*CollectTxProtocol)
+	root.SkipchainID = skipchain.SkipBlockID("hello")
+	root.LatestID = skipchain.SkipBlockID("goodbye")
+	root.MaxNumTxs = max
+	root.version = version
+	err = root.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	var txs []ClientTransaction
+outer:
+	for {
+		select {
+		case newTxs, more := <-root.TxsChan:
+			if more {
+				txs = append(txs, newTxs...)
+			} else {
+				break outer
 			}
 		}
-		require.Equal(t, len(txs), n)
-		local.CloseAll()
 	}
+
+	return txs, nil
 }
