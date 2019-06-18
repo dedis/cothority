@@ -366,6 +366,20 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
+func (c *Client) ResolveInstanceID(byzcoinID skipchain.SkipBlockID, identity darc.Identity, name string) (InstanceID, error) {
+	req := ResolveInstanceID{
+		SkipChainID: byzcoinID,
+		Identity:    identity,
+		Name:        name,
+	}
+	reply := ResolvedInstanceID{}
+
+	if err := c.SendProtobuf(c.getServer(), &req, &reply); err != nil {
+		return InstanceID{}, err
+	}
+	return reply.InstanceID, nil
+}
+
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
 func Debug(url string, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {

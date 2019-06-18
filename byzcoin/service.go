@@ -243,7 +243,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// TODO this nonce is picked by the root, how to make sure it's secure?
 	nonce := GenNonce()
 
-	spawn := &Spawn{
+	spawnGenesis := &Spawn{
 		ContractID: ContractConfigID,
 		Args: Arguments{
 			{Name: "darc", Value: darcBuf},
@@ -255,13 +255,23 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		},
 	}
 
+	spawnNaming := &Spawn{
+		ContractID: ContractNamingID,
+	}
+
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
 	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: ConfigInstanceID,
-			Spawn:      spawn,
-		}},
+		Instructions: []Instruction{
+			{
+				InstanceID: ConfigInstanceID,
+				Spawn:      spawnGenesis,
+			},
+			{
+				InstanceID: NamingInstanceID,
+				Spawn:      spawnNaming,
+			},
+		},
 	}
 
 	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
@@ -311,7 +321,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	}
 
 	for i, instr := range req.Transaction.Instructions {
-		log.Lvlf2("Instruction[%d]: %s", i, instr.Action())
+		log.Lvlf2("Instruction[%d]: %s on instance ID %s", i, instr.Action(), instr.InstanceID.String())
 	}
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
@@ -643,6 +653,20 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 	}, nil
 }
 
+func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID, error) {
+	st, err := s.GetReadOnlyStateTrie(req.SkipChainID)
+	if err != nil {
+		return nil, err
+	}
+
+	key := sha256.Sum256(append(req.Identity.GetPublicBytes(), []byte(req.Name)...))
+	val, _, _, _, err := st.GetValues(key[:])
+	if err != nil {
+		return nil, err
+	}
+	return &ResolvedInstanceID{NewInstanceID(val)}, nil
+}
+
 type leafNode struct {
 	Prefix []bool
 	Key    []byte
@@ -850,10 +874,12 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
+	log.Info(tx)
 	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
+	log.Info(scs.ShortStrings())
 
 	// Store transactions in the body
 	body := &DataBody{TxResults: txRes}
@@ -1302,7 +1328,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
+	log.LLvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
 	if err = st.VerifiedStoreAll(scs, sb.Index, header.TrieRoot); err != nil {
 		return err
@@ -1795,6 +1821,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
+		fmt.Printf("TX: %+v\n", tx.ClientTransaction.Instructions)
 		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
 		if err != nil {
 			tx.Accepted = false
@@ -1883,6 +1910,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 				}
 			case Update:
 				if v, err := sst.Get(sc.InstanceID); err != nil || v == nil {
+					fmt.Printf("%x\n", sc.InstanceID)
 					reason = "tried to update non-existing instanceID"
 				}
 			case Remove:
@@ -1937,32 +1965,42 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 
 	contractFactory, exists := s.contracts[contractID]
-	if !exists && ConfigInstanceID.Equal(instr.InstanceID) {
-		// Special case: first time call to genesis-configuration must return
-		// correct contract type.
-		contractFactory, exists = s.contracts[ContractConfigID]
+	if !exists {
+		if ConfigInstanceID.Equal(instr.InstanceID) {
+			// Special case 1: first time call to
+			// genesis-configuration must return correct contract
+			// type.
+			contractFactory, exists = s.contracts[ContractConfigID]
+		} else if NamingInstanceID.Equal(instr.InstanceID) {
+			// Special case 2: first time call to the naming
+			// contract must return the correct type too.
+			contractFactory, exists = s.contracts[ContractNamingID]
+		} else {
+			// If the leader does not have a verifier for this
+			// contract, it drops the transaction.
+			err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"",
+				contractID, instr.InstanceID.Slice())
+			return
+		}
 	}
 
-	// If the leader does not have a verifier for this contract, it drops the
-	// transaction.
-	if !exists {
-		err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
-		return
-	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
 
-	c, err := contractFactory(contents)
+	var c Contract
+	c, err = contractFactory(contents)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 	if c == nil {
-		return nil, nil, errors.New("contract factory returned nil contract instance")
+		err = errors.New("contract factory returned nil contract instance")
+		return
 	}
 
 	err = c.VerifyInstruction(st, instr, ctxHash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("instruction verification failed: %v", err)
+		err = fmt.Errorf("instruction verification failed: %v", err)
+		return
 	}
 
 	switch instr.GetType() {
@@ -2066,8 +2104,8 @@ func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 		return nil, errors.New("no transactions")
 	}
 	instrs := txs[0].ClientTransaction.Instructions
-	if len(instrs) != 1 {
-		return nil, fmt.Errorf("expected 1 instruction, got %v", len(instrs))
+	if len(instrs) != 2 {
+		return nil, fmt.Errorf("expected 2 instruction, got %v", len(instrs))
 	}
 	if instrs[0].Spawn == nil {
 		return nil, errors.New("first instruction is not a Spawn")
@@ -2375,6 +2413,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetLastInstanceVersion,
 		s.GetAllInstanceVersion,
 		s.CheckStateChangeValidity,
+		s.ResolveInstanceID,
 		s.Debug,
 		s.DebugRemove)
 	if err != nil {
@@ -2387,6 +2426,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
 	err = s.registerContract(ContractConfigID, contractConfigFromBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = s.registerContract(ContractNamingID, contractNamingFromBytes)
 	if err != nil {
 		return nil, err
 	}

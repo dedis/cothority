@@ -387,6 +387,16 @@ type CheckStateChangeValidityResponse struct {
 	BlockID      skipchain.SkipBlockID
 }
 
+type ResolveInstanceID struct {
+	SkipChainID skipchain.SkipBlockID
+	Identity    darc.Identity
+	Name        string
+}
+
+type ResolvedInstanceID struct {
+	InstanceID InstanceID
+}
+
 // DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
 // a dump of all instances if byzcoinid is given and exists.
 type DebugRequest struct {

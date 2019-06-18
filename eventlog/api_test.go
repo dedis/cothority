@@ -82,6 +82,38 @@ func TestClient_Log(t *testing.T) {
 		_, err = c.GetEvent(key)
 		require.Nil(t, err)
 	}
+
+	// Test naming
+	namingTx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{
+			{
+				InstanceID: byzcoin.NamingInstanceID,
+				Invoke: &byzcoin.Invoke{
+					ContractID: byzcoin.ContractNamingID,
+					Command:    "add",
+					Args: byzcoin.Arguments{
+						{
+							Name:  "instanceID",
+							Value: c.Instance.Slice(),
+						},
+						{
+							Name:  "name",
+							Value: []byte("myeventlog"),
+						},
+					},
+				},
+				SignerCounter: c.incrementCtrs(),
+			},
+		},
+	}
+	require.NoError(t, namingTx.FillSignersAndSignWith(c.Signers...))
+
+	_, err = c.ByzCoin.AddTransactionAndWait(namingTx, 10)
+	require.NoError(t, err)
+
+	replyID, err := c.ByzCoin.ResolveInstanceID(c.ByzCoin.ID, c.Signers[0].Identity(), "myeventlog")
+	require.NoError(t, err)
+	require.Equal(t, replyID, c.Instance)
 }
 
 func TestClient_Log200(t *testing.T) {

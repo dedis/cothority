@@ -853,7 +853,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 	}
 }
 
-// GetPublicBytes gets the public identifier in bytes. The returned value is not a serialisation of the identity.
+// GetPublicBytes gets the public identifier in bytes. The returned value is
+// not a serialisation of the identity.
 func (id Identity) GetPublicBytes() []byte {
 	switch id.Type() {
 	case 0:
