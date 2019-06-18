@@ -25,19 +25,23 @@ const ServiceName = "ByzCoin"
 // Client is a structure to communicate with the ByzCoin service.
 type Client struct {
 	*onet.Client
-	ID           skipchain.SkipBlockID
-	Roster       onet.Roster
-	KnownBlocks  map[string]*skipchain.SkipBlock
-	ServerNumber int // Which server in the Roster to contact, -1 means random.
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
+	// Genesis is required when a full proof is sent by the server
+	// to verify the roster provided.
+	Genesis *skipchain.SkipBlock
+	// Latest keeps track of the most recent known block for the client.
+	Latest *skipchain.SkipBlock
+	// Which server in the Roster to contact, -1 means random.
+	ServerNumber int
 }
 
 // NewClient instantiates a new ByzCoin client.
 func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client:      onet.NewClient(cothority.Suite, ServiceName),
-		ID:          ID,
-		Roster:      Roster,
-		KnownBlocks: make(map[string]*skipchain.SkipBlock),
+		Client: onet.NewClient(cothority.Suite, ServiceName),
+		ID:     ID,
+		Roster: Roster,
 	}
 }
 
@@ -45,10 +49,9 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 // sending requests to the same conode.
 func NewClientKeep(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client:      onet.NewClientKeep(cothority.Suite, ServiceName),
-		ID:          ID,
-		Roster:      Roster,
-		KnownBlocks: make(map[string]*skipchain.SkipBlock),
+		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
+		ID:     ID,
+		Roster: Roster,
 	}
 }
 
@@ -67,7 +70,8 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	}
 
 	c.ID = reply.Skipblock.Hash
-	c.KnownBlocks[string(c.ID)] = reply.Skipblock
+	c.Genesis = reply.Skipblock
+	c.Latest = c.Genesis
 	return c, reply, nil
 }
 
@@ -117,32 +121,51 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
-	if c.KnownBlocks[string(c.ID)] == nil {
+	if c.Genesis == nil {
 		if err := c.fetchGenesis(); err != nil {
 			return nil, err
 		}
 	}
 
+	return c.GetProofFrom(key, c.Genesis)
+}
+
+// GetProofFromLatest returns a proof for the key stored in the skipchain. The proof
+// can prove the existence or the absence of the key. Note that the integrity
+// of the proof is verified.
+// Caution: the proof will be verifiable only by client/service that know the
+// state of the chain up to the block. If you want to share the proof, we may
+// prefer to use GetProof.
+func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
+	if c.Latest == nil {
+		return c.GetProof(key)
+	}
+
+	return c.GetProofFrom(key, c.Latest)
+}
+
+// GetProofFrom returns a proof for the key stored in the skipchain. The proof
+// can prove the existence or the absence of the key. Note that the integrity
+// of the proof is verified.
+// Caution: the proof will be verifiable only by client/service that know the
+// state of the chain up to the block. If you want to share the proof, we may
+// prefer to use GetProof.
+func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.getServer(), &GetProof{
 		Version: CurrentVersion,
-		// TODO: use Latest
-		ID:  c.ID,
-		Key: key,
+		ID:      from.Hash,
+		Key:     key,
 	}, reply)
 	if err != nil {
 		return nil, err
 	}
 
-	// Verify the integrity of the proof only.
-	err = reply.Proof.VerifyFromBlock(c.ID, c.KnownBlocks)
-	if err != nil {
+	if err := reply.Proof.VerifyFromBlock(from); err != nil {
 		return nil, err
 	}
 
-	// Keep the verified block in memory.
-	// TODO: space management
-	c.KnownBlocks[string(reply.Proof.Latest.CalculateHash())] = &reply.Proof.Latest
+	c.Latest = &reply.Proof.Latest
 
 	return reply, nil
 }
@@ -477,12 +500,14 @@ func (c *Client) getServer() *network.ServerIdentity {
 func (c *Client) fetchGenesis() error {
 	skClient := skipchain.NewClient()
 
+	// Integrity is done by the request function.
 	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
 	if err != nil {
 		return err
 	}
 
-	c.KnownBlocks[string(c.ID)] = sb
+	c.Genesis = sb
+	c.Latest = sb
 	return nil
 }
 

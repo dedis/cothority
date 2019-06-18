@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
@@ -74,9 +72,13 @@ var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved 
 // the target of the last forward link.
 var ErrorVerifyHash = errors.New("last forward link does not point to the latest block")
 
-// ErrorMismatchGenesis is returned if the genesis block provided by the proof
-// doesn't match the expected skipchain ID.
-var ErrorMismatchGenesis = errors.New("mismatching genesis block hash and skipchain ID")
+// ErrorMissingForwardLinks is returned if no forward-link is found
+// in the proof.
+var ErrorMissingForwardLinks = errors.New("missing forward-links")
+
+// ErrorMalformedForwardLink is returned when the new roster is not defined in the link
+// but is expected to be.
+var ErrorMalformedForwardLink = errors.New("missing new roster from the forward-link")
 
 // VerifyFromBlock takes a skipchain id and the first block of the proof. It
 // verifies that the proof is valid for this skipchain. It verifies the proof,
@@ -84,38 +86,16 @@ var ErrorMismatchGenesis = errors.New("mismatching genesis block hash and skipch
 // the skipblock is indeed part of the skipchain. It also uses the provided block
 // to insure the first roster is correct. If all verifications are correct, the error
 // will be nil. It does not verify wether a certain key/pair pair exists in the proof.
-func (p Proof) VerifyFromBlock(scID skipchain.SkipBlockID, knownBlocks map[string]*skipchain.SkipBlock) error {
-	// First look for the first known block from the end to the beginning of the proof.
-	// It will always use the genesis block in the worst case scenario where none of the
-	// following blocks are known that's why the map should always contain at least the
-	// genesis block.
-	for i := len(p.Links) - 1; ; i-- {
-		if i < 0 {
-			return errors.New("couldn't find any block matching the proof")
-		}
-
-		fl := p.Links[i]
-		if kb := knownBlocks[string(fl.To)]; kb != nil {
-			// Create a smaller proof starting from the known block.
-			newProof := Proof{
-				InclusionProof: p.InclusionProof,
-				Latest:         p.Latest,
-				Links:          make([]skipchain.ForwardLink, len(p.Links[i:])),
-			}
-			// The root proof should NOT be modified.
-			copy(newProof.Links, p.Links[i:])
-
-			if len(newProof.Links) > 0 {
-				// Key of the hash is the calculated hash so we can trust the
-				// roster at this point.
-				newProof.Links[0].NewRoster = kb.Roster
-			}
-
-			// The signature of the first link is not checked as we use it as
-			// a synthetic link to provide the initial roster.
-			return newProof.Verify(fl.To)
-		}
+func (p Proof) VerifyFromBlock(verifiedBlock *skipchain.SkipBlock) error {
+	if len(p.Links) > 0 {
+		// Hash of the block has been verified previously so we can trust the roster
+		// coming from it which should be the same. If not, the proof won't verified.
+		p.Links[0].NewRoster = verifiedBlock.Roster
 	}
+
+	// The signature of the first link is not checked as we use it as
+	// a synthetic link to provide the initial roster.
+	return p.Verify(verifiedBlock.Hash)
 }
 
 // Verify takes a skipchain id and verifies that the proof is valid for this
@@ -125,29 +105,25 @@ func (p Proof) VerifyFromBlock(scID skipchain.SkipBlockID, knownBlocks map[strin
 // not verify whether a certain key/value pair exists in the proof.
 //
 // Notice: this verification alone is not sufficient. The roster of the first link
-// must verified beforehands. See Proof.VerifyFromBlock for example.
-func (p Proof) Verify(scID skipchain.SkipBlockID) error {
-	var header DataHeader
-	err := protobuf.DecodeWithConstructors(p.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+// must be verified beforehands. See Proof.VerifyFromBlock for example.
+func (p Proof) Verify(sbID skipchain.SkipBlockID) error {
+	err := p.VerifyInclusionProof(&p.Latest)
 	if err != nil {
 		return err
 	}
-	if !bytes.Equal(p.InclusionProof.GetRoot(), header.TrieRoot) {
-		return ErrorVerifyTrieRoot
+
+	if len(p.Links) == 0 {
+		return ErrorMissingForwardLinks
+	}
+	if p.Links[0].NewRoster == nil {
+		return ErrorMalformedForwardLink
 	}
 
-	sbID := scID
-	var publics []kyber.Point
-	for i, l := range p.Links {
-		if i == 0 {
-			// The first forward link is a pointer from []byte{} to the genesis
-			// block and holds the roster of the genesis block.
-			if !l.To.Equal(scID) {
-				return ErrorVerifySkipchain
-			}
-			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
-			continue
-		}
+	// Get the first from the synthetic link which is assumed to be verified
+	// beforehands against the block with ID stored in the To field by the caller.
+	publics := p.Links[0].NewRoster.ServicePublics(skipchain.ServiceName)
+
+	for _, l := range p.Links[1:] {
 		if err = l.VerifyWithScheme(pairing.NewSuiteBn256(), publics, p.Latest.SignatureScheme); err != nil {
 			return ErrorVerifySkipchain
 		}
@@ -163,6 +139,21 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	// Check that the given latest block matches the last forward link target
 	if !p.Latest.CalculateHash().Equal(sbID) {
 		return ErrorVerifyHash
+	}
+
+	return nil
+}
+
+// VerifyInclusionProof verifies that the inclusion proof matches the skipblock
+// given in parameter.
+func (p Proof) VerifyInclusionProof(latest *skipchain.SkipBlock) error {
+	var header DataHeader
+	err := protobuf.Decode(latest.Data, &header)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(p.InclusionProof.GetRoot(), header.TrieRoot) {
+		return ErrorVerifyTrieRoot
 	}
 
 	return nil

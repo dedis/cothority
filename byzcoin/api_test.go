@@ -158,13 +158,13 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	service := servers[0].Service(testServiceName).(*corruptedService)
 
 	c := &Client{
-		Client:      onet.NewClient(cothority.Suite, testServiceName),
-		Roster:      *roster,
-		KnownBlocks: make(map[string]*skipchain.SkipBlock),
+		Client: onet.NewClient(cothority.Suite, testServiceName),
+		Roster: *roster,
 	}
 	gen := skipchain.NewSkipBlock()
-	c.ID = gen.CalculateHash()
-	c.KnownBlocks[string(c.ID)] = gen
+	gen.Hash = gen.CalculateHash()
+	c.ID = gen.Hash
+	c.Genesis = gen
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
