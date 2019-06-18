@@ -117,3 +117,91 @@ func FindRecursivefBool(argname string, c *cli.Context) bool {
 	}
 	return false
 }
+
+// CombinationAnds returns a list that contains AND groups of M elements. It
+// allows to compute rule of kind "M out of N". Each single element and each
+// group is surrounded by parenthesis.
+//
+// If the input list is ["A", "B", "C", "D | E"], and M = 2, it will return the
+// following list:
+//
+// [ "((A) & (B))",
+//   "((A) & (C))",
+//   "((A) & (D | E))",
+//   "((B) & (C))",
+//   "((B) & (D | E))",
+//   "((C) & (D | E))" ]
+//
+// Duplicates in the input list are removed.
+//
+func CombinationAnds(list []string, m int) []string {
+	if m <= 0 {
+		return []string{}
+	}
+	list = unique(list)
+	list = upperSiblings(m, 0, list)
+	for i := range list {
+		list[i] = "(" + list[i] + ")"
+	}
+	return list
+}
+
+// We are recursively building the leaves of a tree that contains every
+// M combination at each level.
+// The following illustrate such tree for 4 elements and up to M = 3.
+//
+//  M = 1           A         B     C     D
+//                  |         |     |
+//                / | \      / \     \
+//               /  |  \    /   \     \
+//  M = 2       AB  AC AD   BC  BD    CD
+//              --    \      |
+//             /  \    \     |
+//  M = 3    ABC  ABD  ACD  BCD
+//
+// From M = 3, building the leaves that start with "A" is done by prepending
+// "A" to all the sublings element of the previous level (M = 2).
+// In that case, "A" must be prepended to its upper siblings elements, which
+// are "BC", "BD", and "CD".
+// This process is recursively done for every element until the trivial case,
+// where M =1. Making a combination of 1 with one element is the element itself.
+// Level indicates the depth (M) and index the element (0 = "A", 1 = "B", ..)
+func upperSiblings(level int, index int, elements []string) []string {
+	res := make([]string, 0)
+	if level == 1 {
+		for i := index; i <= len(elements)-level; i++ {
+			res = append(res, "("+elements[i]+")")
+		}
+		return res
+	}
+	for i := index; i <= len(elements)-level; i++ {
+		// Get upper level (level-1) sibling (i+1) elements
+		subRes := upperSiblings(level-1, i+1, elements)
+		subRes = prependAndToEach(subRes, "("+elements[i]+")")
+		res = append(res, subRes...)
+	}
+	return res
+}
+
+// This utility method prepends a given string to every element of the given
+// list with an " & " and returns it
+func prependAndToEach(list []string, prefix string) []string {
+	res := make([]string, len(list))
+	for i := range list {
+		res[i] = prefix + " & " + list[i]
+	}
+	return res
+}
+
+// removes duplicate from a slice and return a new list
+func unique(stringSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range stringSlice {
+		if _, ok := keys[entry]; !ok {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}
