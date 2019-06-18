@@ -501,7 +501,7 @@ func (c *Client) getServer() *network.ServerIdentity {
 func (c *Client) fetchGenesis() error {
 	skClient := skipchain.NewClient()
 
-	// Integrity is done by the request function.
+	// Integrity check is done by the request function.
 	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
 	if err != nil {
 		return err
