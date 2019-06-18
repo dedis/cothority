@@ -117,7 +117,7 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err := cl.GetProof(instID)
+	pr, err := cl.GetProofFromLatest(instID)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
@@ -260,7 +260,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	// 4.
 	// ---
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
@@ -358,7 +358,7 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
@@ -402,7 +402,7 @@ func DeferredGet(c *cli.Context) error {
 		return errors.New("failed to decode the instid string")
 	}
 
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof: " + err.Error())
 	}

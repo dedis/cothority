@@ -48,7 +48,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	}
 
 	// Get the latest chain config
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for chainConfig: " + err.Error())
 	}
@@ -142,7 +142,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err = cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err = cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for config: " + err.Error())
 	}
@@ -183,7 +183,7 @@ func ConfigGet(c *cli.Context) error {
 	}
 
 	// Get the latest chain config
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for chainConfig: " + err.Error())
 	}

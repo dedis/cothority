@@ -407,7 +407,7 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		return errors.New("either set coinIID or d, but not both")
 	}
 	if atts == nil {
-		popProof, err := cl.GetProof(popIID.Slice())
+		popProof, err := cl.GetProofFromLatest(popIID.Slice())
 		if err != nil {
 			return err
 		}
@@ -480,7 +480,7 @@ func PopPartyMineDarcToCoin(cl *byzcoin.Client, d *darc.Darc) (coinIID byzcoin.I
 	coinIID = byzcoin.NewInstanceID(h.Sum(nil))
 
 	var proof *byzcoin.GetProofResponse
-	proof, err = cl.GetProof(coinIID.Slice())
+	proof, err = cl.GetProofFromLatest(coinIID.Slice())
 	if err != nil {
 		return
 	}

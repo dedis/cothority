@@ -115,9 +115,9 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	return reply, nil
 }
 
-// GetProof returns a proof for the key stored in the skipchain by sending a
-// message to the node on index 0 of the roster. The proof can prove the existence
-// or the absence of the key. Note that the integrity of the proof is verified.
+// GetProof returns a proof for the key stored in the skipchain starting from
+// the genesis block. The proof can prove the existence or the absence of the
+// key. Note that the integrity of the proof is verified.
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
@@ -130,11 +130,12 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	return c.GetProofFrom(key, c.Genesis)
 }
 
-// GetProofFromLatest returns a proof for the key stored in the skipchain. The proof
+// GetProofFromLatest returns a proof for the key stored in the skipchain
+// starting from the latest known block by this client. The proof
 // can prove the existence or the absence of the key. Note that the integrity
 // of the proof is verified.
 // Caution: the proof will be verifiable only by client/service that know the
-// state of the chain up to the block. If you want to share the proof, we may
+// state of the chain up to the block. If you want to share the proof, you may
 // prefer to use GetProof.
 func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 	if c.Latest == nil {
@@ -144,11 +145,11 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 	return c.GetProofFrom(key, c.Latest)
 }
 
-// GetProofFrom returns a proof for the key stored in the skipchain. The proof
-// can prove the existence or the absence of the key. Note that the integrity
-// of the proof is verified.
+// GetProofFrom returns a proof for the key stored in the skipchain starting
+// from the block given in parameter. The proof can prove the existence or
+// the absence of the key. Note that the integrity of the proof is verified.
 // Caution: the proof will be verifiable only by client/service that know the
-// state of the chain up to the block. If you want to share the proof, we may
+// state of the chain up to the block. If you want to share the proof, you may
 // prefer to use GetProof.
 func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
@@ -194,7 +195,7 @@ func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.A
 // Genesis Darc from ByzCoin and parses it.
 func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	// Get proof of the genesis darc.
-	p, err := c.GetProof(NewInstanceID(nil).Slice())
+	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	}
 
 	// Find the actual darc.
-	p, err = c.GetProof(darcID)
+	p, err = c.GetProofFromLatest(darcID)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +247,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 // GetChainConfig uses the GetProof method to fetch the chain config
 // from ByzCoin.
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
-	p, err := c.GetProof(NewInstanceID(nil).Slice())
+	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}

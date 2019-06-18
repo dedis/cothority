@@ -130,7 +130,7 @@ func (c *Client) LogAndWait(numInterval int, ev ...Event) ([]LogID, error) {
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(key []byte) (*Event, error) {
-	reply, err := c.ByzCoin.GetProof(key)
+	reply, err := c.ByzCoin.GetProofFromLatest(key)
 	if err != nil {
 		return nil, err
 	}
