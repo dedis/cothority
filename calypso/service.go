@@ -35,6 +35,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -88,8 +89,14 @@ func init() {
 // Service is our calypso-service. It stores all created LTSs.
 type Service struct {
 	*onet.ServiceProcessor
-	storage      *storage
-	afterReshare func() // for use by testing only
+	storage *storage
+	// Genesis blocks are stored here instead of the usual skipchain DB as we don't
+	// want to override authorized skipchains or related security. The blocks are
+	// only used to insure that proofs start with the expected roster.
+	genesisBlocks     map[string]*skipchain.SkipBlock
+	genesisBlocksLock sync.Mutex
+	// for use by testing only
+	afterReshare func()
 }
 
 // pubPoly is a serializable version of share.PubPoly
@@ -200,7 +207,7 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 // participate in the DKG. Every node will store its private key and wait for
 // decryption requests. The LTSID should be the InstanceID.
 func (s *Service) CreateLTS(req *CreateLTS) (reply *CreateLTSReply, err error) {
-	if err := s.verifyProof(&req.Proof, nil); err != nil {
+	if err := s.verifyProof(&req.Proof); err != nil {
 		return nil, err
 	}
 
@@ -277,7 +284,7 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := s.verifyProof(&req.Proof, roster); err != nil {
+	if err := s.verifyProof(&req.Proof); err != nil {
 		return nil, err
 	}
 
@@ -384,7 +391,7 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 	return &ReshareLTSReply{}, nil
 }
 
-func (s *Service) verifyProof(proof *byzcoin.Proof, roster *onet.Roster) error {
+func (s *Service) verifyProof(proof *byzcoin.Proof) error {
 	scID := proof.Latest.SkipChainID()
 	s.storage.Lock()
 	defer s.storage.Unlock()
@@ -392,12 +399,32 @@ func (s *Service) verifyProof(proof *byzcoin.Proof, roster *onet.Roster) error {
 		return errors.New("this ByzCoin ID is not authorised")
 	}
 
-	// We used to check that the roster ID did not change here, but with
-	// resharing, it is expected that the roster can change.
-	// TODO: Confirm with Kelong that this is correct to remove; that this
-	// does not open us up to abuse/attack.
+	sb, err := s.fetchGenesisBlock(scID, proof.Links[0].NewRoster)
+	if err != nil {
+		return err
+	}
 
-	return proof.Verify(scID)
+	return proof.VerifyFromBlock(sb)
+}
+
+func (s *Service) fetchGenesisBlock(scID skipchain.SkipBlockID, roster *onet.Roster) (*skipchain.SkipBlock, error) {
+	s.genesisBlocksLock.Lock()
+	defer s.genesisBlocksLock.Unlock()
+	sb := s.genesisBlocks[string(scID)]
+	if sb != nil {
+		return sb, nil
+	}
+
+	cl := skipchain.NewClient()
+	sb, err := cl.GetSingleBlock(roster, scID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Genesis block can be reused later on.
+	s.genesisBlocks[string(scID)] = sb
+
+	return sb, nil
 }
 
 func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.InstanceID, error) {
@@ -443,13 +470,12 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 		s.storage.Unlock()
 		return nil, fmt.Errorf("don't know the LTSID '%v' stored in write", id)
 	}
-	scID := make([]byte, 32)
-	copy(scID, s.storage.Replies[id].ByzCoinID)
 	s.storage.Unlock()
-	if err = dkr.Read.Verify(scID); err != nil {
+
+	if err = s.verifyProof(&dkr.Read); err != nil {
 		return nil, errors.New("read proof cannot be verified to come from scID: " + err.Error())
 	}
-	if err = dkr.Write.Verify(scID); err != nil {
+	if err = s.verifyProof(&dkr.Write); err != nil {
 		return nil, errors.New("write proof cannot be verified to come from scID: " + err.Error())
 	}
 
@@ -542,7 +568,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := s.verifyProof(&cfg.Proof, tn.Roster()); err != nil {
+		if err := s.verifyProof(&cfg.Proof); err != nil {
 			return nil, err
 		}
 		inst, _, _, _, err := cfg.KeyValue()
@@ -589,7 +615,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		if err := protobuf.DecodeWithConstructors(conf.Data, &cfg, network.DefaultConstructors(cothority.Suite)); err != nil {
 			return nil, err
 		}
-		if err := s.verifyProof(&cfg.Proof, tn.Roster()); err != nil {
+		if err := s.verifyProof(&cfg.Proof); err != nil {
 			return nil, err
 		}
 
@@ -742,6 +768,7 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		genesisBlocks:    make(map[string]*skipchain.SkipBlock),
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
 		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
