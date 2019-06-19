@@ -63,10 +63,11 @@ var cmds = cli.Commands{
 	},
 
 	{
-		Name:      "link",
-		Usage:     "create a BC config file that sets the specified roster, darc and identity. If no identity is provided, it will use an empty one. Same for the darc param. This allows one that has no private key to perform basic operations that do not require authentication.",
-		Aliases:   []string{"login"},
-		ArgsUsage: "roster.toml [byzcoin id]",
+		Name:        "link",
+		Usage:       "create a BC config file that sets the specified roster, darc and identity",
+		Description: "If no identity is provided, it will use an empty one. Same for the darc param. This allows one that has no private key to perform basic operations that do not require authentication.",
+		Aliases:     []string{"login"},
+		ArgsUsage:   "roster.toml [byzcoin id]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "darc",
@@ -274,13 +275,17 @@ var cmds = cli.Commands{
 						Name:  "darc",
 						Usage: "DARC with the right to create a new DARC (default is the admin DARC)",
 					},
-					cli.StringFlag{
-						Name:  "owner",
-						Usage: "the identity who is allowed to sign and evolve it (default is a new key pair)",
+					cli.StringSliceFlag{
+						Name:  "identity, id",
+						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity. Each provided identity is checked by the evaluation parser.",
 					},
 					cli.BoolFlag{
 						Name:  "unrestricted",
 						Usage: "add the invoke:evolve_unrestricted rule",
+					},
+					cli.BoolFlag{
+						Name:  "deferred",
+						Usage: "adds rules related to deferred contract: spawn:deferred, invoke:deferred.addProof, invoke:deferred.execProposedTx",
 					},
 					cli.StringFlag{
 						Name:  "out_id",
@@ -293,6 +298,21 @@ var cmds = cli.Commands{
 					cli.StringFlag{
 						Name:  "desc",
 						Usage: "the description for the new DARC (default: random)",
+					},
+				},
+			},
+			{
+				Name:   "prule",
+				Usage:  "print rule. Will print the rule given identities and a minimum to have M out of N rule",
+				Action: darcPrintRule,
+				Flags: []cli.Flag{
+					cli.StringSliceFlag{
+						Name:  "identity, id",
+						Usage: "an identity, multiple use of this param is allowed. If empty it will create a new identity. Each provided identity is checked by the evaluation parser.",
+					},
+					cli.UintFlag{
+						Name:  "minimum, M",
+						Usage: "if this flag is set, the rule is computed to be \"M out of N\" identities. Otherwise it uses ANDs",
 					},
 				},
 			},
@@ -318,9 +338,13 @@ var cmds = cli.Commands{
 						Name:  "rule",
 						Usage: "the rule to be added, updated or deleted",
 					},
-					cli.StringFlag{
-						Name:  "identity",
-						Usage: "the identity of the signer who will be allowed to use the rule",
+					cli.StringSliceFlag{
+						Name:  "identity, id",
+						Usage: "the identity of the signer who will be allowed to use the rule. Multiple use of this param is allowed. Each identity is checked by the evaluation parser.",
+					},
+					cli.UintFlag{
+						Name:  "minimum, M",
+						Usage: "if this flag is set, the rule is computed to be \"M out of N\" identities. Otherwise it uses ANDs",
 					},
 					cli.BoolFlag{
 						Name:  "replace",
@@ -1774,6 +1798,27 @@ func darcAdd(c *cli.Context) error {
 
 	var signer *darc.Signer
 
+	identities := c.StringSlice("identity")
+
+	if len(identities) == 0 {
+		s := darc.NewSignerEd25519(nil, nil)
+		err = lib.SaveKey(s)
+		if err != nil {
+			return err
+		}
+		identities = append(identities, s.Identity().String())
+	}
+
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
+		}
+	}
+
 	sstr := c.String("sign")
 	if sstr == "" {
 		signer, err = lib.LoadKey(cfg.AdminIdentity)
@@ -1782,25 +1827,6 @@ func darcAdd(c *cli.Context) error {
 	}
 	if err != nil {
 		return err
-	}
-
-	var identity darc.Identity
-	var newSigner *darc.Signer
-
-	owner := c.String("owner")
-	if owner != "" {
-		identity, err = darc.ParseIdentity(owner)
-		if err != nil {
-			return err
-		}
-	} else {
-		s := darc.NewSignerEd25519(nil, nil)
-		err = lib.SaveKey(s)
-		if err != nil {
-			return err
-		}
-		identity = s.Identity()
-		newSigner = &s
 	}
 
 	var desc []byte
@@ -1813,13 +1839,25 @@ func darcAdd(c *cli.Context) error {
 		desc = []byte(c.String("desc"))
 	}
 
-	rules := darc.InitRulesWith([]darc.Identity{identity}, []darc.Identity{identity}, "invoke:"+byzcoin.ContractDarcID+".evolve")
+	deferredExpr := expression.InitOrExpr(identities...)
+
+	adminExpr := expression.InitAndExpr(identities...)
+
+	rules := darc.NewRules()
+	rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve", adminExpr)
+	rules.AddRule("_sign", adminExpr)
+	if c.Bool("deferred") {
+		rules.AddRule("spawn:deferred", deferredExpr)
+		rules.AddRule("invoke:deferred.addProof", deferredExpr)
+		rules.AddRule("invoke:deferred.execProposedTx", deferredExpr)
+	}
 	if c.Bool("unrestricted") {
-		err = rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve_unrestricted", expression.Expr(identity.String()))
+		err = rules.AddRule("invoke:"+byzcoin.ContractDarcID+".evolve_unrestricted", adminExpr)
 		if err != nil {
 			return err
 		}
 	}
+
 	d := darc.NewDarc(rules, desc)
 
 	dBuf, err := d.ToProto()
@@ -1876,8 +1914,8 @@ func darcAdd(c *cli.Context) error {
 
 	// Saving key in special file
 	output = c.String("out_key")
-	if newSigner != nil && output != "" {
-		err = ioutil.WriteFile(output, []byte(newSigner.Identity().String()), 0600)
+	if len(c.StringSlice("identity")) == 0 && output != "" {
+		err = ioutil.WriteFile(output, []byte(identities[0]), 0600)
 		if err != nil {
 			return err
 		}
@@ -1923,11 +1961,31 @@ func darcRule(c *cli.Context) error {
 		return errors.New("--rule flag is required")
 	}
 
-	identity := c.String("identity")
-	if identity == "" {
+	identities := c.StringSlice("identity")
+
+	if len(identities) == 0 {
 		if !c.Bool("delete") {
 			return errors.New("--identity flag is required")
 		}
+	}
+
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
+		}
+	}
+
+	var groupExpr expression.Expr
+	min := c.Uint("minimum")
+	if min == 0 {
+		groupExpr = expression.InitAndExpr(identities...)
+	} else {
+		andGroups := lib.CombinationAnds(identities, int(min))
+		groupExpr = expression.InitOrExpr(andGroups...)
 	}
 
 	d2 := d.Copy()
@@ -1940,9 +1998,9 @@ func darcRule(c *cli.Context) error {
 	case c.Bool("delete"):
 		err = d2.Rules.DeleteRules(darc.Action(action))
 	case c.Bool("replace"):
-		err = d2.Rules.UpdateRule(darc.Action(action), []byte(identity))
+		err = d2.Rules.UpdateRule(darc.Action(action), groupExpr)
 	default:
-		err = d2.Rules.AddRule(darc.Action(action), []byte(identity))
+		err = d2.Rules.AddRule(darc.Action(action), groupExpr)
 	}
 
 	if err != nil {
@@ -1985,6 +2043,41 @@ func darcRule(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// print a rule based on the identities and the minimum given.
+func darcPrintRule(c *cli.Context) error {
+
+	identities := c.StringSlice("identity")
+
+	if len(identities) == 0 {
+		if !c.Bool("delete") {
+			return errors.New("--identity (-id) flag is required")
+		}
+	}
+
+	Y := expression.InitParser(func(s string) bool { return true })
+
+	for _, id := range identities {
+		expr := []byte(id)
+		_, err := expression.Evaluate(Y, expr)
+		if err != nil {
+			return errors.New("failed to parse id: " + err.Error())
+		}
+	}
+
+	var groupExpr expression.Expr
+	min := c.Uint("minimum")
+	if min == 0 {
+		groupExpr = expression.InitAndExpr(identities...)
+	} else {
+		andGroups := lib.CombinationAnds(identities, int(min))
+		groupExpr = expression.InitOrExpr(andGroups...)
+	}
+
+	fmt.Fprintf(c.App.Writer, "%s\n", groupExpr)
 
 	return nil
 }

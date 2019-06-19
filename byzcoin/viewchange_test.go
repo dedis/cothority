@@ -25,12 +25,18 @@ func TestViewChange_Basic(t *testing.T) {
 }
 
 func TestViewChange_Basic2(t *testing.T) {
-	testViewChange(t, 7, 2, testInterval)
+	if testing.Short() {
+		// Block interval needs to be big enough so that the protocol
+		// timeout is big enough but the test takes too much time then.
+		t.Skip("protocol timeout too short for Travis")
+	}
+
+	testViewChange(t, 7, 2, 4*testInterval)
 }
 
 func TestViewChange_Basic3(t *testing.T) {
 	if testing.Short() {
-		t.Skip("not for Travis")
+		t.Skip("protocol timeout too short for Travis")
 	}
 
 	// Enough nodes and failing ones to test what happens when propagation
@@ -51,7 +57,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(10 * interval)
+		service.SetPropagationTimeout(2 * interval)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
@@ -241,9 +247,9 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	time.Sleep(2 * s.interval)
-
 	for _, service := range s.services {
+		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
+
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)

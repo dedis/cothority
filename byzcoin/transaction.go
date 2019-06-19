@@ -563,6 +563,8 @@ func (sc StateAction) String() string {
 	}
 }
 
+const defaultMaxBufferSize = 1000
+
 // txBuffer is thread-safe data structure that store client transactions.
 type txBuffer struct {
 	sync.Mutex
@@ -575,7 +577,7 @@ func newTxBuffer() txBuffer {
 	}
 }
 
-func (r *txBuffer) take(key string) []ClientTransaction {
+func (r *txBuffer) take(key string, max int) []ClientTransaction {
 	r.Lock()
 	defer r.Unlock()
 
@@ -583,8 +585,24 @@ func (r *txBuffer) take(key string) []ClientTransaction {
 	if !ok {
 		return []ClientTransaction{}
 	}
-	delete(r.txsMap, key)
-	return txs
+
+	out := len(txs)
+	if max >= 0 && out > max {
+		// Take only up to the maximum required transactions.
+		out = max
+	}
+
+	ret := make([]ClientTransaction, out)
+	copy(ret, txs)
+
+	if out == max {
+		// Keep the overflow for the next collection.
+		r.txsMap[key] = txs[max:]
+	} else {
+		delete(r.txsMap, key)
+	}
+
+	return ret
 }
 
 func (r *txBuffer) add(key string, newTx ClientTransaction) {
@@ -594,6 +612,13 @@ func (r *txBuffer) add(key string, newTx ClientTransaction) {
 	if txs, ok := r.txsMap[key]; !ok {
 		r.txsMap[key] = []ClientTransaction{newTx}
 	} else {
+		if len(txs) >= defaultMaxBufferSize {
+			// Drop transactions if the buffer is full. We cannot drop earlier
+			// transactions because an attacker could send multiple ones to
+			// replace legit transactions.
+			return
+		}
+
 		txs = append(txs, newTx)
 		r.txsMap[key] = txs
 	}
