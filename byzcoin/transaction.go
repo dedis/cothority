@@ -21,6 +21,9 @@ import (
 // An InstanceID is a unique identifier for one instance of a contract.
 type InstanceID [32]byte
 
+// eachLine matches the content of non-empty lines
+var eachLine = regexp.MustCompile(`(?m)^(.+)$`)
+
 func (iID InstanceID) String() string {
 	return fmt.Sprintf("%x", iID.Slice())
 }
@@ -245,7 +248,7 @@ func (instr Instruction) String() string {
 		if err != nil {
 			methodStr = "error in getting contract"
 		} else {
-			methodStr = contract.PrintMethod(instr)
+			methodStr = contract.FormatMethod(instr)
 		}
 	}
 
@@ -257,8 +260,7 @@ func (instr Instruction) String() string {
 	fmt.Fprintf(&out, "-- identities: %v\n", instr.SignerIdentities)
 	fmt.Fprintf(&out, "-- counters: %v\n", instr.SignerCounter)
 	fmt.Fprintf(&out, "-- signatures: %d\n", len(instr.Signatures))
-	out.WriteString(
-		regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(methodStr, "-$1"))
+	out.WriteString(eachLine.ReplaceAllString(methodStr, "-$1"))
 
 	return out.String()
 }

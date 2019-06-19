@@ -34,8 +34,10 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
-// ContractsFn ...
-var ContractsFn map[string]ContractFn
+// ContractsFn maps a contract name to its constructor. Access to this map is
+// not threadsafe, so it must only be written to from a package's init()
+// function.
+var ContractsFn = make(map[string]ContractFn)
 
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
@@ -82,9 +84,6 @@ func init() {
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
 
-	if ContractsFn == nil {
-		ContractsFn = make(map[string]ContractFn)
-	}
 	ContractsFn[ContractConfigID] = contractConfigFromBytes
 	ContractsFn[ContractDarcID] = contractSecureDarcFromBytes
 	ContractsFn[ContractDeferredID] = contractDeferredFromBytes

@@ -688,14 +688,14 @@ func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 // --- darc contract ID 2: darc3'
 // ```
 func (c ChainConfig) String() string {
-	var res strings.Builder
+	res := new(strings.Builder)
 	res.WriteString("- ChainConfig:\n")
-	fmt.Fprintf(&res, "-- BlockInterval: %s\n", c.BlockInterval.String())
-	fmt.Fprintf(&res, "-- Roster: %s\n", c.Roster)
-	fmt.Fprintf(&res, "-- MaxBlockSize: %d\n", c.MaxBlockSize)
+	fmt.Fprintf(res, "-- BlockInterval: %s\n", c.BlockInterval.String())
+	fmt.Fprintf(res, "-- Roster: %s\n", c.Roster)
+	fmt.Fprintf(res, "-- MaxBlockSize: %d\n", c.MaxBlockSize)
 	res.WriteString("-- DarcContractIDs:\n")
 	for i, darcID := range c.DarcContractIDs {
-		fmt.Fprintf(&res, "--- darc contract ID %d: %s\n", i, darcID)
+		fmt.Fprintf(res, "--- darc contract ID %d: %s\n", i, darcID)
 	}
 	return res.String()
 }

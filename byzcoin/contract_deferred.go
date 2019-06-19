@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"go.dedis.ch/cothority/v3/darc"
@@ -53,25 +52,23 @@ type DeferredData struct {
 
 // String returns a human readable string representation of the deferred data
 func (dd DeferredData) String() string {
-	var out strings.Builder
+	out := new(strings.Builder)
 	out.WriteString("- Proposed Tx:\n")
 	for i, inst := range dd.ProposedTransaction.Instructions {
-		fmt.Fprintf(&out, "-- Instruction %d:\n", i)
-		out.WriteString(
-			regexp.MustCompile(`(?m)^(.+)$`).ReplaceAllString(
-				inst.String(), "--$1"))
+		fmt.Fprintf(out, "-- Instruction %d:\n", i)
+		out.WriteString(eachLine.ReplaceAllString(inst.String(), "--$1"))
 	}
-	fmt.Fprintf(&out, "- Expire Block Index: %d\n", dd.ExpireBlockIndex)
-	fmt.Fprint(&out, "- Instruction hashes: \n")
+	fmt.Fprintf(out, "- Expire Block Index: %d\n", dd.ExpireBlockIndex)
+	fmt.Fprint(out, "- Instruction hashes: \n")
 	for i, hash := range dd.InstructionHashes {
-		fmt.Fprintf(&out, "-- hash %d:\n", i)
-		fmt.Fprintf(&out, "--- %x\n", hash)
+		fmt.Fprintf(out, "-- hash %d:\n", i)
+		fmt.Fprintf(out, "--- %x\n", hash)
 	}
-	fmt.Fprintf(&out, "- Max num execution: %d\n", dd.MaxNumExecution)
-	fmt.Fprintf(&out, "- Exec results: \n")
+	fmt.Fprintf(out, "- Max num execution: %d\n", dd.MaxNumExecution)
+	fmt.Fprintf(out, "- Exec results: \n")
 	for i, res := range dd.ExecResult {
-		fmt.Fprintf(&out, "-- res %d:\n", i)
-		fmt.Fprintf(&out, "--- %x\n", res)
+		fmt.Fprintf(out, "-- res %d:\n", i)
+		fmt.Fprintf(out, "--- %x\n", res)
 	}
 	return out.String()
 }
