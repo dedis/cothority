@@ -389,7 +389,7 @@ type CheckStateChangeValidityResponse struct {
 
 type ResolveInstanceID struct {
 	SkipChainID skipchain.SkipBlockID
-	Identity    darc.Identity
+	DarcID      darc.ID
 	Name        string
 }
 

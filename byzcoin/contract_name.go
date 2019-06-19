@@ -2,7 +2,9 @@ package byzcoin
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
@@ -13,10 +15,12 @@ import (
 // NamingInstanceID is the instance ID for the singleton naming contract.
 var NamingInstanceID = InstanceID([32]byte{1})
 
+// NamingConfig holds the latest pointer of a linked list of naming entries.
 type NamingConfig struct {
-	Dummy string
+	Latest InstanceID
 }
 
+// ContractNamingID is the ID of the naming contract.
 const ContractNamingID = "naming"
 
 type contractNaming struct {
@@ -49,19 +53,17 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return nil
 	}
 
-	// The authorization of this contract is not controlled by its own
-	// darc. Instead, it is controlled by the darc that guards the instance
-	// ID in the invoke argument. So we just check the counter and the
-	// signature for now.
+	// If this is not a genesis transaction, the authorization of this
+	// contract is not controlled by its own darc. Instead, it is
+	// controlled by the darc that guards the instance ID in the invoke
+	// argument.
 
 	// check the number of signers match with the number of signatures
 	if len(inst.SignerIdentities) != len(inst.Signatures) {
 		return errors.New("lengh of identities does not match the length of signatures")
 	}
-
-	// only one signer is supported
-	if len(inst.SignerIdentities) != 1 {
-		return errors.New("only one signer is supported")
+	if len(inst.Signatures) == 0 {
+		return errors.New("no signatures - nothing to verify")
 	}
 
 	// check the signature counters
@@ -69,13 +71,66 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return err
 	}
 
-	return inst.SignerIdentities[0].Verify(msg, inst.Signatures[0])
+	// get the darc, we have to do it differently than the normal
+	// verification because the darc that we are interested in is the darc
+	// that guards the instance ID in the instruction
+	if inst.Invoke == nil {
+		// TODO this needs to be changed when we add delete
+		return errors.New("only invoke is supported")
+	}
+	value := inst.Invoke.Args.Search("instanceID")
+	if value == nil {
+		return errors.New("argument instanceID is missing")
+	}
+	_, _, cID, dID, err := rst.GetValues(value)
+	if err != nil {
+		return err
+	}
+	d, err := LoadDarcFromTrie(rst, dID)
+	if err != nil {
+		return err
+	}
+
+	// check the action, again we do this differently because we only care
+	// about the spawn part of the given instance ID
+	action := "spawn:" + cID
+	ex := d.Rules.Get(darc.Action(action))
+	if len(ex) == 0 {
+		return fmt.Errorf("action '%v' does not exist", action)
+	}
+
+	// check the signature
+	// Save the identities that provide good signatures
+	goodIdentities := make([]string, 0)
+	for i := range inst.Signatures {
+		if err := inst.SignerIdentities[i].Verify(msg, inst.Signatures[i]); err == nil {
+			goodIdentities = append(goodIdentities, inst.SignerIdentities[i].String())
+		}
+	}
+
+	// check the expression
+	getDarc := func(str string, latest bool) *darc.Darc {
+		if len(str) < 5 || string(str[0:5]) != "darc:" {
+			return nil
+		}
+		darcID, err := hex.DecodeString(str[5:])
+		if err != nil {
+			return nil
+		}
+		d, err := LoadDarcFromTrie(rst, darcID)
+		if err != nil {
+			return nil
+		}
+		return d
+	}
+	return darc.EvalExpr(ex, getDarc, goodIdentities...)
 }
 
 func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 	var buf []byte
-	buf, err = protobuf.Encode(&NamingConfig{"hello"})
+	// For the very first pointer, we use the default InstanceID value.
+	buf, err = protobuf.Encode(&NamingConfig{Latest: InstanceID{}})
 	if err != nil {
 		return
 	}
@@ -88,71 +143,57 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	return
 }
 
+type namingValue struct {
+	IID  InstanceID
+	Prev InstanceID
+}
+
 func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
 	switch inst.Invoke.Command {
 	case "add":
-		// We only support the primary identity. The length is one
-		// because we checked it in the verification function.
-		if !inst.SignerIdentities[0].PrimaryIdentity() {
-			err = errors.New("only the primary identity is supported")
+		iID := inst.Invoke.Args.Search("instanceID")
+		var dID darc.ID
+		_, _, _, dID, err = rst.GetValues(iID)
+		if err != nil {
 			return
 		}
 
-		// Check that the value exists and the signer is authorised to
-		// do the spawn.
-		value := inst.Invoke.Args.Search("instanceID")
-		{
-			var cID string
-			var dID darc.ID
-			_, _, cID, dID, err = rst.GetValues(value)
-			if err != nil {
-				return
-			}
-			var d *darc.Darc
-			d, err = LoadDarcFromTrie(rst, dID)
-			if err != nil {
-				return
-			}
-			action := "spawn:" + cID
-			ex := d.Rules.Get(darc.Action(action))
-			if len(ex) == 0 {
-				err = errors.New("action: " + action + " does not exist")
-				return
-			}
-			// getDarc always fails (returns nil) because we are
-			// always evaluating the expression on a primary
-			// identity.
-			getDarc := func(s string, latest bool) *darc.Darc {
-				return nil
-			}
-			err = darc.EvalExpr(ex, getDarc, inst.SignerIdentities[0].String())
-			if err != nil {
-				return
-			}
-		}
-
 		// Construct the key.
-		// TODO domain separation?
 		name := inst.Invoke.Args.Search("name")
 		if len(name) == 0 {
 			err = errors.New("the name cannot be empty")
 			return
 		}
-		namespace := inst.SignerIdentities[0].GetPublicBytes()
-		// TODO add a delimiter like / between the namespace and the name
-		key := sha256.Sum256(append(namespace, name...))
+		key := sha256.Sum256(append(append(dID, '/'), name...))
 
-		// TODO check whether the key already exists? or leave it for
-		// the contract executor to check
+		// Construct the value.
+		valueStruct := namingValue{
+			IID:  NewInstanceID(iID),
+			Prev: c.Latest,
+		}
+		var valueBuf []byte
+		valueBuf, err = protobuf.Encode(&valueStruct)
+		if err != nil {
+			return
+		}
 
-		// TODO put value in a struct and profobuf encode it
+		// Create the new naming contract buffer where the pointer to
+		// the latest value is updated.
+		var contractBuf []byte
+		contractBuf, err = protobuf.Encode(&NamingConfig{Latest: key})
+		if err != nil {
+			return
+		}
+
+		// Create the state change.
 		sc = []StateChange{
-			NewStateChange(Create, NewInstanceID(key[:]), "", value, nil),
+			NewStateChange(Create, NewInstanceID(key[:]), "", valueBuf, nil),
+			NewStateChange(Update, NamingInstanceID, ContractNamingID, contractBuf, nil),
 		}
 		return
-	// case "remove":
+	// TODO case "remove":
 	default:
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
 		return

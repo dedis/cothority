@@ -111,7 +111,7 @@ func TestClient_Log(t *testing.T) {
 	_, err = c.ByzCoin.AddTransactionAndWait(namingTx, 10)
 	require.NoError(t, err)
 
-	replyID, err := c.ByzCoin.ResolveInstanceID(c.ByzCoin.ID, c.Signers[0].Identity(), "myeventlog")
+	replyID, err := c.ByzCoin.ResolveInstanceID(c.ByzCoin.ID, c.DarcID, "myeventlog")
 	require.NoError(t, err)
 	require.Equal(t, replyID, c.Instance)
 }

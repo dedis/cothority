@@ -366,10 +366,10 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
-func (c *Client) ResolveInstanceID(byzcoinID skipchain.SkipBlockID, identity darc.Identity, name string) (InstanceID, error) {
+func (c *Client) ResolveInstanceID(byzcoinID skipchain.SkipBlockID, darcID darc.ID, name string) (InstanceID, error) {
 	req := ResolveInstanceID{
 		SkipChainID: byzcoinID,
-		Identity:    identity,
+		DarcID:      darcID,
 		Name:        name,
 	}
 	reply := ResolvedInstanceID{}

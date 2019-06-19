@@ -659,12 +659,22 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 		return nil, err
 	}
 
-	key := sha256.Sum256(append(req.Identity.GetPublicBytes(), []byte(req.Name)...))
+	if len(req.DarcID) == 0 {
+		return nil, errors.New("darc ID must be set")
+	}
+
+	key := sha256.Sum256(append(append(req.DarcID, '/'), []byte(req.Name)...))
 	val, _, _, _, err := st.GetValues(key[:])
 	if err != nil {
 		return nil, err
 	}
-	return &ResolvedInstanceID{NewInstanceID(val)}, nil
+
+	valStruct := namingValue{}
+	if err := protobuf.Decode(val, &valStruct); err != nil {
+		return nil, err
+	}
+
+	return &ResolvedInstanceID{valStruct.IID}, nil
 }
 
 type leafNode struct {
