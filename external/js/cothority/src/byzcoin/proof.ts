@@ -73,19 +73,12 @@ export default class Proof extends Message<Proof> {
     }
 
     /**
-     * Serves as a cache of the known blocks in different skipchains. The key is the
-     * skipchain-id (byzcoin-id), while the value is an array of known block-ids. The
-     * known block-ids are in order, but because of the skipchain nature, they will
-     * have 'holes' in it.
-     */
-    static knownBlocks: Map<Buffer, Buffer[]> = new Map<Buffer, Buffer[]>();
-
-    /**
      * @see README#Message classes
      */
     static register() {
         registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
     }
+
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;
     readonly links: ForwardLink[];
@@ -160,36 +153,11 @@ export default class Proof extends Message<Proof> {
             return new Error("mismatching block ID in the first link");
         }
 
-        // Start by getting the latest known block, to avoid checking the proofs
-        // of blocks we're already sure that they are correct.
-        let latestKnown = 0;
-        const latestBlocks = Proof.knownBlocks.get(id);
-        if (latestBlocks) {
-            links.slice().reverse().find((link, index) => {
-                if (latestBlocks.find((cache) => cache.equals(link.to))) {
-                    latestKnown = links.length - index - 1;
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        if (latestKnown === links.length - 1) {
-            return null;
-        }
-
-        // Get the most recent roster with respect to the latest block.
-        const latestRosterLink = links.slice(0, latestKnown + 1).reverse().find((link) => {
-            return !!link.newRoster;
-        });
-        if (!latestRosterLink) {
-            return new Error("didn't find a roster in the links");
-        }
-        let publics = latestRosterLink.newRoster.getServicePublics(SkipchainRPC.serviceName);
+        let publics = links[0].newRoster.getServicePublics(SkipchainRPC.serviceName);
 
         // Check that all forward-links are correct.
-        let prev = links[latestKnown].to;
-        for (let i = latestKnown + 1; i < links.length; i++) {
+        let prev = links[0].to;
+        for (let i = 1; i < links.length; i++) {
             const link = links[i];
 
             const err = link.verifyWithScheme(publics, this.latest.signatureScheme);
@@ -207,10 +175,6 @@ export default class Proof extends Message<Proof> {
                 publics = link.newRoster.getServicePublics(SkipchainRPC.serviceName);
             }
         }
-
-        // Update the known list of links. If we had access to the link-height, we could
-        // very much optimize this. But as it is, we can only store the current link list.
-        Proof.knownBlocks.set(id, links.map((link) => link.to));
 
         if (!prev.equals(this.latest.hash)) {
             return new Error("last forward link does not point to the latest block");
