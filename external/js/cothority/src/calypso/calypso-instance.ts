@@ -186,8 +186,12 @@ export class CalypsoReadInstance extends Instance {
     }
 
     async decrypt(ocs: OnChainSecretRPC, priv: Scalar): Promise<Buffer> {
-        const xhatenc = await ocs.reencryptKey(await this.rpc.getProof(this.read.write),
-            await this.rpc.getProof(this.id));
+        // Note that we send the full proof in that case to insure the conodes
+        // can easily verify the proof.
+        const xhatenc = await ocs.reencryptKey(
+            await this.rpc.getProof(this.read.write),
+            await this.rpc.getProof(this.id),
+        );
         return xhatenc.decrypt(priv);
     }
 }

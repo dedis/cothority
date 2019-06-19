@@ -1,9 +1,7 @@
-import { Point } from "@dedis/kyber";
 import { createHash } from "crypto";
 import _ from "lodash";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
-import Log from "../log";
 import { registerMessage } from "../protobuf";
 import { SkipchainRPC } from "../skipchain";
 import { ForwardLink, SkipBlock } from "../skipchain/skipblock";
@@ -105,6 +103,7 @@ export default class Proof extends Message<Proof> {
      * @param contractID what contract the instance is supposed to be of
      * @throws an error if the proof is not based on genesisID, if it is a proof of absence,
      * or if the instance is not of type contractID.
+     * @deprecated this function is unsecure
      */
     async getVerifiedInstance(genesisID: InstanceID, contractID: string): Promise<Instance> {
         const err = this.verify(genesisID);
@@ -121,12 +120,32 @@ export default class Proof extends Message<Proof> {
     }
 
     /**
-     * Verify that the proof contains a correct chain from the given genesis
+     * Verify that the proof contains a correct chain from the given block.
+     *
+     * @param block the first block of the proof
+     * @returns an error if something is wrong, null otherwise
+     */
+    verifyFrom(block: SkipBlock): Error {
+        if (this.links.length === 0) {
+            return new Error("missing forward-links");
+        }
+
+        if (!this.links[0].newRoster.id.equals(block.roster.id)) {
+            return new Error("invalid first roster found in proof");
+        }
+
+        return this.verify(block.hash);
+    }
+
+    /**
+     * Verify that the proof contains a correct chain from the given genesis. Note that
+     * this function doesn't verify the first roster of the chain.
      *
      * @param genesisID The skipchain ID
      * @returns an error if something is wrong, null otherwise
+     * @deprecated use verifyFrom for a complete verification
      */
-    verify(genesisID: InstanceID): Error {
+    verify(id: InstanceID): Error {
         if (!this.latest.computeHash().equals(this.latest.hash)) {
             return new Error("invalid latest block");
         }
@@ -137,14 +156,14 @@ export default class Proof extends Message<Proof> {
         }
 
         const links = this.links;
-        if (!links[0].to.equals(genesisID)) {
-            return new Error("first link must come from the genesis block");
+        if (!links[0].to.equals(id)) {
+            return new Error("mismatching block ID in the first link");
         }
 
         // Start by getting the latest known block, to avoid checking the proofs
         // of blocks we're already sure that they are correct.
         let latestKnown = 0;
-        const latestBlocks = Proof.knownBlocks.get(genesisID);
+        const latestBlocks = Proof.knownBlocks.get(id);
         if (latestBlocks) {
             links.slice().reverse().find((link, index) => {
                 if (latestBlocks.find((cache) => cache.equals(link.to))) {
@@ -191,7 +210,7 @@ export default class Proof extends Message<Proof> {
 
         // Update the known list of links. If we had access to the link-height, we could
         // very much optimize this. But as it is, we can only store the current link list.
-        Proof.knownBlocks.set(genesisID, links.map((link) => link.to));
+        Proof.knownBlocks.set(id, links.map((link) => link.to));
 
         if (!prev.equals(this.latest.hash)) {
             return new Error("last forward link does not point to the latest block");
