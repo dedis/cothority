@@ -54,11 +54,23 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Hash = sb.CalculateHash()
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "genesis darc tx should only have one instruction", err.Error())
+	require.Equal(t, "genesis block should only have one transaction", err.Error())
 
 	data := &DataBody{
 		TxResults: []TxResult{
 			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}}}},
+		},
+	}
+	sb.Payload, err = protobuf.Encode(data)
+	sb.Hash = sb.CalculateHash()
+	require.NoError(t, err)
+	_, err = newLedgerWithClient(msg, c)
+	require.Error(t, err)
+	require.Equal(t, "genesis transaction should have exactly two instructions", err.Error())
+
+	data = &DataBody{
+		TxResults: []TxResult{
+			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}, Instruction{}}}},
 		},
 	}
 	sb.Payload, err = protobuf.Encode(data)

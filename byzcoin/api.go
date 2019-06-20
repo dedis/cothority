@@ -513,7 +513,7 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 	}
 
 	if len(data.TxResults[0].ClientTransaction.Instructions) != 2 {
-		return nil, errors.New("genesis transaction should only have two instructions")
+		return nil, errors.New("genesis transaction should have exactly two instructions")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]
