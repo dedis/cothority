@@ -886,12 +886,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	log.Info(tx)
 	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
-	log.Info(scs.ShortStrings())
 
 	// Store transactions in the body
 	body := &DataBody{TxResults: txRes}
@@ -1833,7 +1831,6 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		fmt.Printf("TX: %+v\n", tx.ClientTransaction.Instructions)
 		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
 		if err != nil {
 			tx.Accepted = false
@@ -1922,7 +1919,6 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 				}
 			case Update:
 				if v, err := sst.Get(sc.InstanceID); err != nil || v == nil {
-					fmt.Printf("%x\n", sc.InstanceID)
 					reason = "tried to update non-existing instanceID"
 				}
 			case Remove:

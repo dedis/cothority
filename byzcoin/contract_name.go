@@ -216,5 +216,4 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
 		return
 	}
-	return nil, nil, nil
 }
