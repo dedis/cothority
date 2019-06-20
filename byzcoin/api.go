@@ -134,9 +134,10 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 // starting from the latest known block by this client. The proof
 // can prove the existence or the absence of the key. Note that the integrity
 // of the proof is verified.
-// Caution: the proof will be verifiable only by client/service that know the
-// state of the chain up to the block. If you want to share the proof, you may
-// prefer to use GetProof.
+// Caution: the proof will be verifiable only by client/service that knows the
+// state of the chain up to the block. If you need to pass the Proof onwards to
+// another server, you must use GetProof in order to create a complete standalone
+// proof starting from the genesis block.
 func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 	if c.Latest == nil {
 		return c.GetProof(key)
@@ -149,8 +150,9 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // from the block given in parameter. The proof can prove the existence or
 // the absence of the key. Note that the integrity of the proof is verified.
 // Caution: the proof will be verifiable only by client/service that know the
-// state of the chain up to the block. If you want to share the proof, you may
-// prefer to use GetProof.
+// state of the chain up to the block. If you need to pass the Proof onwards to
+// another server, you must use GetProof in order to create a complete standalone
+// proof starting from the genesis block.
 func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.getServer(), &GetProof{

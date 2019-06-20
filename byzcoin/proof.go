@@ -85,7 +85,7 @@ var ErrorMalformedForwardLink = errors.New("missing new roster from the forward-
 // that the merkle-root is stored in the skipblock of the proof and the fact that
 // the skipblock is indeed part of the skipchain. It also uses the provided block
 // to insure the first roster is correct. If all verifications are correct, the error
-// will be nil. It does not verify wether a certain key/pair pair exists in the proof.
+// will be nil. It does not verify wether a certain key/value pair exists in the proof.
 func (p Proof) VerifyFromBlock(verifiedBlock *skipchain.SkipBlock) error {
 	if len(p.Links) > 0 {
 		// Hash of the block has been verified previously so we can trust the roster
@@ -105,7 +105,7 @@ func (p Proof) VerifyFromBlock(verifiedBlock *skipchain.SkipBlock) error {
 // not verify whether a certain key/value pair exists in the proof.
 //
 // Notice: this verification alone is not sufficient. The roster of the first link
-// must be verified beforehands. See Proof.VerifyFromBlock for example.
+// must be verified before. See Proof.VerifyFromBlock for example.
 func (p Proof) Verify(sbID skipchain.SkipBlockID) error {
 	err := p.VerifyInclusionProof(&p.Latest)
 	if err != nil {
@@ -120,7 +120,7 @@ func (p Proof) Verify(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Get the first from the synthetic link which is assumed to be verified
-	// beforehands against the block with ID stored in the To field by the caller.
+	// before against the block with ID stored in the To field by the caller.
 	publics := p.Links[0].NewRoster.ServicePublics(skipchain.ServiceName)
 
 	for _, l := range p.Links[1:] {
