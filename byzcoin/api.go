@@ -366,9 +366,9 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
-func (c *Client) ResolveInstanceID(byzcoinID skipchain.SkipBlockID, darcID darc.ID, name string) (InstanceID, error) {
+func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, error) {
 	req := ResolveInstanceID{
-		SkipChainID: byzcoinID,
+		SkipChainID: c.ID,
 		DarcID:      darcID,
 		Name:        name,
 	}
@@ -506,8 +506,12 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 		return nil, fmt.Errorf("fail to decode data: %v", err)
 	}
 
-	if len(data.TxResults) != 1 || len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
-		return nil, errors.New("genesis darc tx should only have one instruction")
+	if len(data.TxResults) != 1 {
+		return nil, errors.New("genesis block should only have one transaction")
+	}
+
+	if len(data.TxResults[0].ClientTransaction.Instructions) != 2 {
+		return nil, errors.New("genesis transaction should only have two instructions")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]

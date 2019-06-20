@@ -83,7 +83,8 @@ func TestClient_Log(t *testing.T) {
 		require.Nil(t, err)
 	}
 
-	// Test naming
+	// Test naming, this is just a sanity check for eventlogs, the main
+	// naming test is in the byzcoin package.
 	namingTx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{
 			{
@@ -111,7 +112,7 @@ func TestClient_Log(t *testing.T) {
 	_, err = c.ByzCoin.AddTransactionAndWait(namingTx, 10)
 	require.NoError(t, err)
 
-	replyID, err := c.ByzCoin.ResolveInstanceID(c.ByzCoin.ID, c.DarcID, "myeventlog")
+	replyID, err := c.ByzCoin.ResolveInstanceID(c.DarcID, "myeventlog")
 	require.NoError(t, err)
 	require.Equal(t, replyID, c.Instance)
 }

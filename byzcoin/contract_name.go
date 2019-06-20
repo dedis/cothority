@@ -108,6 +108,10 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		}
 	}
 
+	if len(goodIdentities) == 0 {
+		return errors.New("all signatures failed to verify")
+	}
+
 	// check the expression
 	getDarc := func(str string, latest bool) *darc.Darc {
 		if len(str) < 5 || string(str[0:5]) != "darc:" {
