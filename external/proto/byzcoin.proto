@@ -367,6 +367,19 @@ message CheckStateChangeValidityResponse {
   required bytes blockid = 2;
 }
 
+// ResolveInstanceID is the request for resolving the instance ID based on the
+// Darc ID and the name.
+message ResolveInstanceID {
+  required bytes skipchainid = 1;
+  required bytes darcid = 2;
+  required string name = 3;
+}
+
+// ResolvedInstanceID is the result of the instance ID resolution.
+message ResolvedInstanceID {
+  required bytes instanceid = 1;
+}
+
 // DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
 // a dump of all instances if byzcoinid is given and exists.
 message DebugRequest {
