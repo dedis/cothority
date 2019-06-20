@@ -366,6 +366,8 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
+// ResolveInstanceID resolves the instance ID using the given darc ID and name.
+// The name must be already set by calling the naming contract.
 func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, error) {
 	req := ResolveInstanceID{
 		SkipChainID: c.ID,

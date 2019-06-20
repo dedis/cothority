@@ -653,6 +653,8 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 	}, nil
 }
 
+// ResolveInstanceID resolves the instance ID using the given request. The name
+// must be already set by calling the naming contract.
 func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID, error) {
 	st, err := s.GetReadOnlyStateTrie(req.SkipChainID)
 	if err != nil {
@@ -669,7 +671,7 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 		return nil, err
 	}
 
-	valStruct := namingValue{}
+	valStruct := contractNamingEntry{}
 	if err := protobuf.Decode(val, &valStruct); err != nil {
 		return nil, err
 	}
@@ -1338,7 +1340,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	log.LLvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
+	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
 	if err = st.VerifiedStoreAll(scs, sb.Index, header.TrieRoot); err != nil {
 		return err

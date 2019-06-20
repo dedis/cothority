@@ -387,12 +387,15 @@ type CheckStateChangeValidityResponse struct {
 	BlockID      skipchain.SkipBlockID
 }
 
+// ResolveInstanceID is the request for resolving the instance ID based on the
+// Darc ID and the name.
 type ResolveInstanceID struct {
 	SkipChainID skipchain.SkipBlockID
 	DarcID      darc.ID
 	Name        string
 }
 
+// ResolvedInstanceID is the result of the instance ID resolution.
 type ResolvedInstanceID struct {
 	InstanceID InstanceID
 }

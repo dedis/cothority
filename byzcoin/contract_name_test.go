@@ -247,7 +247,7 @@ func TestService_Naming(t *testing.T) {
 	require.Equal(t, "naming", cID)
 	require.Empty(t, dID)
 
-	name := NamingConfig{}
+	name := ContractNamingBody{}
 	require.NoError(t, protobuf.Decode(buf, &name))
 	latest := name.Latest
 	require.NotEqual(t, latest, InstanceID{})
@@ -259,7 +259,7 @@ func TestService_Naming(t *testing.T) {
 		require.Empty(t, cID)
 		require.Empty(t, dID)
 
-		entry := namingValue{}
+		entry := contractNamingEntry{}
 		require.NoError(t, protobuf.Decode(buf, &entry))
 
 		latest = entry.Prev

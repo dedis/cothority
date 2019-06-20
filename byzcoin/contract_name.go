@@ -12,25 +12,40 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-// NamingInstanceID is the instance ID for the singleton naming contract.
-var NamingInstanceID = InstanceID([32]byte{1})
+// ContractNamingID is the ID of the naming contract. This contract is a
+// singleton contract that is always created in the genesis block. One can only
+// invoke the naming contract to create a mapping from a darc ID and name tuple
+// to another instance ID. This contract helps with useability so that the
+// client does not need to store instance IDs as long as they are named.
+//
+// To add a mapping, create an Invoke instruction to the NamingInstanceID with
+// the add command. You muse provide two arguments. The first is the instance
+// ID that you wish to name which must exist. The second is the name that you
+// want to use which is a string and must not be empty. The instruction must be
+// signed by the signer(s) that has the permission to spawn the to-be-named
+// instance ID.
+//
+// To get back a named instance ID, you should use the byzcoin API -
+// ResolveInstanceID. You need to provide a darc ID and the name. The darc ID
+// is the one that "guards" the the instance.
+const ContractNamingID = "naming"
 
-// NamingConfig holds the latest pointer of a linked list of naming entries.
-type NamingConfig struct {
+// ContractNamingBody holds the latest pointer of a linked list of naming entries.
+type ContractNamingBody struct {
 	Latest InstanceID
 }
 
-// ContractNamingID is the ID of the naming contract.
-const ContractNamingID = "naming"
+// NamingInstanceID is the instance ID for the singleton naming contract.
+var NamingInstanceID = InstanceID([32]byte{1})
 
 type contractNaming struct {
 	BasicContract
-	NamingConfig
+	ContractNamingBody
 }
 
 func contractNamingFromBytes(in []byte) (Contract, error) {
 	c := &contractNaming{}
-	err := protobuf.DecodeWithConstructors(in, &c.NamingConfig, network.DefaultConstructors(cothority.Suite))
+	err := protobuf.DecodeWithConstructors(in, &c.ContractNamingBody, network.DefaultConstructors(cothority.Suite))
 
 	if err != nil {
 		return nil, err
@@ -107,7 +122,6 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 			goodIdentities = append(goodIdentities, inst.SignerIdentities[i].String())
 		}
 	}
-
 	if len(goodIdentities) == 0 {
 		return errors.New("all signatures failed to verify")
 	}
@@ -134,7 +148,7 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	cout = coins
 	var buf []byte
 	// For the very first pointer, we use the default InstanceID value.
-	buf, err = protobuf.Encode(&NamingConfig{Latest: InstanceID{}})
+	buf, err = protobuf.Encode(&ContractNamingBody{Latest: InstanceID{}})
 	if err != nil {
 		return
 	}
@@ -147,7 +161,7 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	return
 }
 
-type namingValue struct {
+type contractNamingEntry struct {
 	IID  InstanceID
 	Prev InstanceID
 }
@@ -173,7 +187,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		key := sha256.Sum256(append(append(dID, '/'), name...))
 
 		// Construct the value.
-		valueStruct := namingValue{
+		valueStruct := contractNamingEntry{
 			IID:  NewInstanceID(iID),
 			Prev: c.Latest,
 		}
@@ -186,7 +200,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		// Create the new naming contract buffer where the pointer to
 		// the latest value is updated.
 		var contractBuf []byte
-		contractBuf, err = protobuf.Encode(&NamingConfig{Latest: key})
+		contractBuf, err = protobuf.Encode(&ContractNamingBody{Latest: key})
 		if err != nil {
 			return
 		}
