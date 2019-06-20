@@ -292,7 +292,7 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 
 func getParty(p *Party) (cpp *ContractPopParty, err error) {
 	cl := byzcoin.NewClient(p.ByzCoinID, p.Roster)
-	pr, err := cl.GetProof(p.InstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(p.InstanceID.Slice())
 	if err != nil {
 		return
 	}

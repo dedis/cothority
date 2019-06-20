@@ -475,7 +475,6 @@ func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof 
 	for i := 0; i < 10; i++ {
 		pr, err = s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
 		if err == nil {
-			require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 			break
 		}
 		time.Sleep(100 * time.Millisecond)

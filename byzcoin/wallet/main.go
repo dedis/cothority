@@ -143,7 +143,7 @@ func show(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, err := cl.GetProof(iid.Slice())
+	resp, err := cl.GetProofFromLatest(iid.Slice())
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func transfer(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, err := cl.GetProof(iid.Slice())
+	resp, err := cl.GetProofFromLatest(iid.Slice())
 	if err != nil {
 		return err
 	}

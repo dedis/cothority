@@ -899,14 +899,9 @@ func link(c *cli.Context) error {
 				return errors.New("failed to parse darc: " + err.Error())
 			}
 
-			p, err := cl.GetProof(darcID)
+			p, err := cl.GetProofFromLatest(darcID)
 			if err != nil {
 				return errors.New("couldn't get proof for darc: " + err.Error())
-			}
-
-			err = p.Proof.Verify(id)
-			if err != nil {
-				return errors.New("proof for darc is wrong: " + err.Error())
 			}
 
 			_, darcBuf, cid, _, err := p.Proof.KeyValue()
@@ -1000,12 +995,7 @@ func latest(c *cli.Context) error {
 	}
 
 	// Find the latest block by asking for the Proof of the config instance.
-	p, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
-	if err != nil {
-		return err
-	}
-
-	err = p.Proof.Verify(cfg.ByzCoinID)
+	p, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return err
 	}
@@ -1071,7 +1061,7 @@ func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.
 	}
 
 	log.Lvl2("Getting latest chainConfig")
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		err = errors.New("couldn't get proof for chainConfig: " + err.Error())
 		return
@@ -1219,7 +1209,7 @@ func mint(c *cli.Context) error {
 	}
 	counters := cReply.Counters
 
-	p, err := cl.GetProof(account.Slice())
+	p, err := cl.GetProofFromLatest(account.Slice())
 	if err != nil {
 		return err
 	}
