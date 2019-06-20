@@ -35,7 +35,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	"gopkg.in/urfave/cli.v1"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
 func init() {
@@ -100,6 +100,10 @@ var cmds = cli.Commands{
 			cli.BoolFlag{
 				Name:  "update",
 				Usage: "update the ByzCoin config file with the fetched roster",
+			},
+			cli.BoolFlag{
+				Name:  "roster",
+				Usage: "display the latest block's roster",
 			},
 		},
 		Action: latest,
@@ -1013,6 +1017,15 @@ func latest(c *cli.Context) error {
 		return err
 	}
 
+	if c.Bool("roster") {
+		g := &app.Group{Roster: sb.Roster}
+		gt, err := g.Toml(cothority.Suite)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(c.App.Writer, gt.String())
+	}
+
 	if c.Bool("update") {
 		cfg.Roster = *sb.Roster
 		var fn string
@@ -1469,6 +1482,7 @@ func darcShow(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = fmt.Fprintln(c.App.Writer, d.String())
 	return err
 }
