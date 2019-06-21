@@ -20,14 +20,15 @@ import (
 )
 
 var (
-	argRoster = flag.String("roster", "", "path to roster toml file")
-	argAdmins = flag.String("admins", "", "list of admin users")
-	argPin    = flag.String("pin", "", "service pin")
-	argKey    = flag.String("key", "", "public key of authentication server")
-	argID     = flag.String("id", "", "ID of the master chain to modify (optional)")
-	argUser   = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
-	argSig    = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
-	argShow   = flag.Bool("show", false, "Show the current Master config")
+	argRoster     = flag.String("roster", "", "path to roster toml file")
+	argAdmins     = flag.String("admins", "", "list of admin users")
+	argPin        = flag.String("pin", "", "service pin")
+	argKey        = flag.String("key", "", "public key of authentication server")
+	argID         = flag.String("id", "", "ID of the master chain to modify (optional)")
+	argUser       = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
+	argSig        = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
+	argShow       = flag.Bool("show", false, "Show the current Master config")
+	argDumpVoters = flag.Bool("dumpvoters", false, "Dump a list of voters for election skipchain specified with -id (ballot de-duplication has already been taken into account, order is preserved)")
 )
 
 func main() {
@@ -56,6 +57,23 @@ func main() {
 		fmt.Printf(" Admins: %v\n", m.Admins)
 		fmt.Printf(" Roster: %v\n", m.Roster.List)
 		fmt.Printf("    Key: %v\n", m.Key)
+		return
+	}
+
+	if *argDumpVoters {
+		id, err := hex.DecodeString(*argID)
+		if err != nil {
+			log.Fatal("id decode", err)
+		}
+		reply := &evoting.GetBoxReply{}
+		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
+		if err = client.SendProtobuf(roster.List[0], &evoting.GetBox{ID: id}, reply); err != nil {
+			log.Fatal("get box request: ", err)
+		}
+
+		for _, b := range reply.Box.Ballots {
+			fmt.Println(b.User)
+		}
 		return
 	}
 

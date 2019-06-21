@@ -44,7 +44,7 @@ export interface IConnection {
  * Single peer connection
  */
 export class WebSocketConnection implements IConnection {
-    protected url: string;
+    url: string;
     private service: string;
     private timeout: number;
 
@@ -131,39 +131,85 @@ export class WebSocketConnection implements IConnection {
 /**
  * Multi peer connection that tries all nodes one after another
  */
-export class RosterWSConnection extends WebSocketConnection {
+export class RosterWSConnection {
+    static parallel: number = 2;
     addresses: string[];
+    addressNext: number;
+    connections: WebSocketConnection[] = [];
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
      */
     constructor(r: Roster, service: string) {
-        super("", service);
         this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
+        shuffle(this.addresses);
+        this.addressNext = RosterWSConnection.parallel;
+        if (this.addressNext > this.addresses.length) {
+            this.addressNext = this.addresses.length;
+        }
+        for (let i = 0; i < this.addressNext; i++) {
+            this.connections.push(new WebSocketConnection(this.addresses[i], service));
+        }
     }
 
-    /** @inheritdoc */
+    /**
+     * Sends a message to conodes in parallel. As soon as one of the conodes returns
+     * success, the message is returned. If a conode returns an error (or times out),
+     * a next conode from this.addresses is contacted. If all conodes return an error,
+     * the promise is rejected.
+     *
+     * @param message the message to send
+     * @param reply the type of the message to return
+     */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
-        const addresses = this.addresses.slice();
-        shuffle(addresses);
-
         const errors: string[] = [];
-        for (const addr of addresses) {
-            this.url = addr;
+        let rotate = this.addresses.length - this.connections.length;
 
-            try {
-                // we need to await here to catch and try another conode
-                return await super.send(message, reply);
-            } catch (e) {
-                Log.lvl3(`fail to send on ${addr} with error:`, e);
-                errors.push(e.message);
-                // TODO: send again over all nodes
-                return Promise.reject(e.message);
-            }
-        }
+        // Get the first reply - need to take care not to return a reject too soon, else
+        // all other promises will be ignored.
+        return Promise.race(this.connections.map((connection) => {
+            return new Promise<T>(async (resolve, reject) => {
+                do {
+                    try {
+                        const sub = await connection.send(message, reply);
+                        // Signal to other connections that have an error that they don't need
+                        // to retry.
+                        rotate = -1;
+                        resolve(sub as T);
+                    } catch (e) {
+                        errors.push(e);
+                        if (errors.length === this.addresses.length) {
+                            // It's the last connection that also threw an error, so let's quit
+                            reject(errors);
+                        }
+                        rotate--;
+                        if (rotate >= 0) {
+                            // Only switch to next address if the other promises didn't exhaust all
+                            // our addresses yet.
+                            this.addressNext = (this.addressNext + 1) % this.addresses.length;
+                            connection.url = this.addresses[this.addressNext];
+                        }
+                    }
+                } while (rotate >= 0);
+            });
+        }));
+    }
 
-        throw new Error(`send fails with errors: [${errors.join("; ")}]`);
+    /**
+     * To be conform with an IConnection
+     */
+    getURL(): string {
+        return this.connections[0].url;
+    }
+
+    /**
+     * To be conform with an IConnection - sets the timeout on all connections.
+     */
+    setTimeout(value: number) {
+        this.connections.forEach((conn) => {
+            conn.setTimeout(value);
+        });
     }
 }
 

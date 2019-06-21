@@ -355,7 +355,10 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	// log the first batch
 	ids, err := c.Log(batch1...)
 	require.NoError(t, err)
-	waitForKey(t, leader.omni, c.ByzCoin.ID, ids[len(batch1)-1], testBlockInterval)
+	// Makes sure the block is processed on each conode.
+	for _, srv := range s.services {
+		waitForKey(t, srv.omni, c.ByzCoin.ID, ids[len(batch1)-1], testBlockInterval)
+	}
 	for _, id := range ids {
 		checkProof(t, leader.omni, id, c.ByzCoin.ID)
 	}
@@ -399,7 +402,7 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	// all the events should've been streamed to us.
 	select {
 	case <-done:
-	case <-time.After(2*testBlockInterval + time.Second):
+	case <-time.After(10 * testBlockInterval):
 		require.Fail(t, "should have got n transactions")
 	}
 

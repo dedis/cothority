@@ -58,7 +58,7 @@ func (c *Client) Create() error {
 	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return err
 	}
-	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 2); err != nil {
+	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 10); err != nil {
 		return err
 	}
 
@@ -130,7 +130,7 @@ func (c *Client) LogAndWait(numInterval int, ev ...Event) ([]LogID, error) {
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(key []byte) (*Event, error) {
-	reply, err := c.ByzCoin.GetProof(key)
+	reply, err := c.ByzCoin.GetProofFromLatest(key)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,9 @@ func (c *Client) StreamEvents(handler StreamHandler) error {
 func (c *Client) StreamEventsFrom(handler StreamHandler, id []byte) error {
 	// 1. stream to a buffer (because we don't know which ones will be duplicates yet)
 	blockChan := make(chan blockOrErr, 100)
-	streamDone := make(chan error)
+	// The done channel is also buffered if a panic occurs in the client handler which
+	// would prevent the wait group to close correctly.
+	streamDone := make(chan error, 1)
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 	go func() {

@@ -1,3 +1,4 @@
+import { Point } from "@dedis/kyber";
 import { createHash } from "crypto";
 import _ from "lodash";
 import Long from "long";
@@ -72,17 +73,24 @@ export default class Proof extends Message<Proof> {
     get key(): Buffer {
         return this.inclusionproof.key;
     }
+
+    /**
+     * Serves as a cache of the known blocks in different skipchains. The key is the
+     * skipchain-id (byzcoin-id), while the value is an array of known block-ids. The
+     * known block-ids are in order, but because of the skipchain nature, they will
+     * have 'holes' in it.
+     */
+    static knownBlocks: Map<Buffer, Buffer[]> = new Map<Buffer, Buffer[]>();
+
     /**
      * @see README#Message classes
      */
     static register() {
         registerMessage("byzcoin.Proof", Proof, InclusionProof, SkipBlock, ForwardLink);
     }
-
     readonly inclusionproof: InclusionProof;
     readonly latest: SkipBlock;
     readonly links: ForwardLink[];
-
     protected _state: StateChangeBody;
 
     constructor(props: Properties<Proof>) {
@@ -91,6 +99,13 @@ export default class Proof extends Message<Proof> {
         this.links = this.links || [];
     }
 
+    /**
+     * Verifies that the proof is of the given type and starts at the given byzcoin-id.
+     * @param genesisID the hash of the first block, the byzcoin-id
+     * @param contractID what contract the instance is supposed to be of
+     * @throws an error if the proof is not based on genesisID, if it is a proof of absence,
+     * or if the instance is not of type contractID.
+     */
     async getVerifiedInstance(genesisID: InstanceID, contractID: string): Promise<Instance> {
         const err = this.verify(genesisID);
         if (err != null) {
@@ -121,15 +136,41 @@ export default class Proof extends Message<Proof> {
             return new Error("invalid root");
         }
 
-        let publics = this.links[0].newRoster.getServicePublics(SkipchainRPC.serviceName);
-        let prev = this.links[0].to;
-
-        if (!prev.equals(genesisID)) {
+        const links = this.links;
+        if (!links[0].to.equals(genesisID)) {
             return new Error("first link must come from the genesis block");
         }
 
-        const links = this.links;
-        for (let i = 1; i < links.length; i++) {
+        // Start by getting the latest known block, to avoid checking the proofs
+        // of blocks we're already sure that they are correct.
+        let latestKnown = 0;
+        const latestBlocks = Proof.knownBlocks.get(genesisID);
+        if (latestBlocks) {
+            links.slice().reverse().find((link, index) => {
+                if (latestBlocks.find((cache) => cache.equals(link.to))) {
+                    latestKnown = links.length - index - 1;
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        if (latestKnown === links.length - 1) {
+            return null;
+        }
+
+        // Get the most recent roster with respect to the latest block.
+        const latestRosterLink = links.slice(0, latestKnown + 1).reverse().find((link) => {
+            return !!link.newRoster;
+        });
+        if (!latestRosterLink) {
+            return new Error("didn't find a roster in the links");
+        }
+        let publics = latestRosterLink.newRoster.getServicePublics(SkipchainRPC.serviceName);
+
+        // Check that all forward-links are correct.
+        let prev = links[latestKnown].to;
+        for (let i = latestKnown + 1; i < links.length; i++) {
             const link = links[i];
 
             const err = link.verifyWithScheme(publics, this.latest.signatureScheme);
@@ -147,6 +188,10 @@ export default class Proof extends Message<Proof> {
                 publics = link.newRoster.getServicePublics(SkipchainRPC.serviceName);
             }
         }
+
+        // Update the known list of links. If we had access to the link-height, we could
+        // very much optimize this. But as it is, we can only store the current link list.
+        Proof.knownBlocks.set(genesisID, links.map((link) => link.to));
 
         if (!prev.equals(this.latest.hash)) {
             return new Error("last forward link does not point to the latest block");

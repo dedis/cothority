@@ -27,10 +27,13 @@ main(){
     [[ ! -x ./bcadmin ]] && exit 1
     run testReplay
     run testLink
+    run testLinkScenario
     run testCoin
     run testRoster
     run testCreateStoreRead
     run testAddDarc
+    run testDarcAddDeferred
+    run testDarcAddRuleMinimum
     run testRuleDarc
     run testAddDarcFromOtherOne
     run testAddDarcWithOwner
@@ -71,7 +74,7 @@ testLink(){
   bc=config/bc*cfg
   key=config/key*cfg
   runBA key --save newkey.id
-  testOK runBA darc add --bc $bc --owner $( cat newkey.id ) --out_id darc.id
+  testOK runBA darc add --bc $bc --id $( cat newkey.id ) --out_id darc.id
 
   rm -rf linkDir
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
@@ -79,8 +82,49 @@ testLink(){
   bcIDWrong=$( printf "%032d" 1234 )
   testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
-  testOK runBA -c linkDir link --admindarc $( cat darc.id ) --adminpub $( cat newkey.id ) public.toml $bcID
+  testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
   testFile linkDir/bc*
+}
+
+# This is a complete scenario with link that uses the value clicontract.
+# We create a new client and a new associated darc that is allowed to call
+# "spawn:value". We first need to specify --darc and --sign to use the value
+# contract. But then we link to the client and its darc, which will then use
+# by default the client's identity and darc.
+testLinkScenario(){
+  rm -f config/*
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # Create new client
+  runBA key --save newkey.id
+  # Create new darc for the client
+  testOK runBA darc add --id $( cat newkey.id ) --out_id darc.id --unrestricted
+
+  # Try to spawn a new value contract with the client's darc. It should fail
+  # since we did not add the rule
+  testFail runBA contract value spawn --value "should fail" --darc $( cat darc.id ) --sign $( cat newkey.id )
+
+  # Update the client darc so that it can spawn:value new contracts
+  testOK runBA darc rule --rule "spawn:value" --identity $( cat newkey.id ) --sign $( cat newkey.id ) --darc $( cat darc.id )
+
+  # Try to spawn again, should work this time
+  testOK runBA contract value spawn --value "shoudl fail" --darc $( cat darc.id ) --sign $( cat newkey.id )
+
+  # Now if we don't specify any --darc and --sign, it will use the admin darc,
+  # which should fail since it doesn't have the rule
+  testFail runBA contract value spawn --value "should fail"
+
+  # Let's try now to link with the client darc and identity. This will make that
+  # default --darc and --sign will be the client's darc and identiity
+  bcID=$( echo $BC | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  testOK runBA link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # The final test
+  testOK runBA contract value spawn --value "shoud pass"
+
+  testOK unset BC
 }
 
 testCoin(){
@@ -158,7 +202,7 @@ testLinkPermission() {
   $SCMGR_APP link add co2/private.toml
   $SCMGR_APP link add co3/private.toml
   testOK runBA create --roster public.toml --interval .5s
-  testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo 
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:aef 
 }
 
 
@@ -185,6 +229,71 @@ testAddDarc(){
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
 }
 
+testDarcAddDeferred() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # standard stuff
+  testOK runBA darc add -deferred
+  testOK runBA darc add -deferred -out_id ./darc_id.txt
+  testOK runBA darc add -deferred
+  ID=`cat ./darc_id.txt`
+  testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+  testGrep "spawn:deferred" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.addProof" runBA darc show --darc "$ID"
+  testGrep "invoke:deferred.execProposedTx" runBA darc show --darc "$ID"
+
+  # with minimum
+  testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt
+  ID=`cat ./darc_id.txt`
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+
+  # with minimum, with unrestricted
+  testOK runBA darc add -deferred -id darc:A -id ed25519:B -id darc:C -id darc:D -out_id ./darc_id.txt -unrestricted
+  ID=`cat ./darc_id.txt`
+  testFGrep "spawn:deferred - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.addProof - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:deferred.execProposedTx - \"darc:A | ed25519:B | darc:C | darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "_sign - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+  testFGrep "invoke:darc.evolve_unrestricted - \"darc:A & ed25519:B & darc:C & darc:D\"" runBA darc show --darc "$ID"
+}
+
+testDarcAddRuleMinimum(){
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  # With M out of N
+  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+  ID=`cat ./darc_id.txt`
+  KEY=`cat ./darc_key.txt`
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 1
+  testFGrep "test:contract - \"((darc:A)) | ((darc:B)) | ((darc:C)) | ((darc:D))\"" runBA darc show --darc "$ID"
+  
+  # with a minimum
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id darc:A -id darc:B -id darc:C -id darc:D --minimum 2 -replace
+  testFGrep "test:contract - \"((darc:A) & (darc:B)) | ((darc:A) & (darc:C)) | ((darc:A) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+
+  # with a minimum and a special id composed of an AND
+  testOK runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'darc:A & ed25519:aef' -id darc:B -id darc:C -id darc:D --minimum 2 -replace
+  testFGrep "test:contract - \"((darc:A & ed25519:aef) & (darc:B)) | ((darc:A & ed25519:aef) & (darc:C)) | ((darc:A & ed25519:aef) & (darc:D)) | ((darc:B) & (darc:C)) | ((darc:B) & (darc:D)) | ((darc:C) & (darc:D))\"" runBA darc show --darc "$ID"
+
+  # with some wrong identities
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'xdarc:A & ed25519:aef' -id darc:B --minimum 2 -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'xdarc:A & ed25519:aef' -id darc:B -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'ed25519:aef &' -id darc:B --minimum 2 -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id 'darc:A & C & ed25519:aef' -id darc:B -replace
+  testFail runBA darc rule -rule test:contract --darc "$ID" -sign "$KEY" -id ' ' -id darc:B --minimum 2 -replace
+}
+
 testRuleDarc(){
   runCoBG 1 2 3
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -195,10 +304,10 @@ testRuleDarc(){
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
   testGrep "Description: \"testing\"" runBA darc show -darc $ID
-  testOK runBA darc rule -rule spawn:xxx -identity ed25519:foo -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:foo\"" runBA darc show -darc "$ID"
-  testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:foo | ed25519:oof" -darc "$ID" -sign "$KEY"
-  testGrep "spawn:xxx - \"ed25519:foo | ed25519:oof\"" runBA darc show -darc "$ID"
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
+  testGrep "spawn:xxx - \"ed25519:abc\"" runBA darc show -darc "$ID"
+  testOK runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
   testNGrep "spawn:xxx" runBA darc show -darc "$ID"
 }
@@ -224,7 +333,7 @@ testAddDarcWithOwner(){
 
   testOK runBA key -save ./key.txt
   KEY=`cat ./key.txt`
-  testOK runBA darc add -owner "$KEY" -out_id "darc_id.txt"
+  testOK runBA darc add -id "$KEY" -out_id "darc_id.txt"
   ID=`cat ./darc_id.txt`
   testGrep "$KEY" runBA darc show -darc "$ID"
 }

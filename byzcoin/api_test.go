@@ -124,30 +124,24 @@ func TestClient_GetProof(t *testing.T) {
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
 	require.Nil(t, err)
-	_, err = c.AddTransaction(tx)
+	_, err = c.AddTransactionAndWait(tx, 10)
 	require.Nil(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
-	var p *GetProofResponse
-	var i int
-	for i = 0; i < 10; i++ {
-		time.Sleep(4 * msg.BlockInterval)
-		var err error
-		p, err = c.GetProof(newID)
-		if err != nil {
-			continue
-		}
-		if p.Proof.InclusionProof.Match(newID) {
-			break
-		}
-	}
-	require.NotEqual(t, 10, i, "didn't get proof in time")
+	p, err := c.GetProof(newID)
+	require.NoError(t, err)
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
+	require.Equal(t, 2, len(p.Proof.Links))
 	k, v0, _, _, err := p.Proof.KeyValue()
 	require.Nil(t, err)
 	require.Equal(t, k, newID)
 	require.Equal(t, value, v0)
+
+	// The proof should now be smaller as we learnt about the block
+	p, err = c.GetProofFromLatest(newID)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(p.Proof.Links))
 }
 
 func TestClient_GetProofCorrupted(t *testing.T) {
@@ -161,11 +155,18 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 		Client: onet.NewClient(cothority.Suite, testServiceName),
 		Roster: *roster,
 	}
+	gen := skipchain.NewSkipBlock()
+	gen.Hash = gen.CalculateHash()
+	c.ID = gen.Hash
+	c.Genesis = gen
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
 	service.GetProofResponse = &GetProofResponse{
-		Proof: Proof{Latest: *sb},
+		Proof: Proof{
+			Latest: *sb,
+			Links:  []skipchain.ForwardLink{skipchain.ForwardLink{To: c.ID}},
+		},
 	}
 
 	_, err := c.GetProof([]byte{})

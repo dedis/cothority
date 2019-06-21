@@ -48,15 +48,11 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	}
 
 	// Get the latest chain config
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for chainConfig: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, value, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -146,15 +142,11 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err = cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err = cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for config: " + err.Error())
 	}
 	proof = pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -191,15 +183,11 @@ func ConfigGet(c *cli.Context) error {
 	}
 
 	// Get the latest chain config
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for chainConfig: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, value, _, _, err := proof.KeyValue()
 	if err != nil {
