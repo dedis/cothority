@@ -166,14 +166,15 @@ export class RosterWSConnection {
         const errors: string[] = [];
         let rotate = this.addresses.length - this.connections.length;
 
-        Log.print("sending to", this.connections.map((conn) => conn.url));
-
+        // Get the first reply - need to take care not to return a reject too soon, else
+        // all other promises will be ignored.
         return Promise.race(this.connections.map((connection) => {
             return new Promise<T>(async (resolve, reject) => {
                 do {
                     try {
                         const sub = await connection.send(message, reply);
-                        Log.print("Got from", rotate, connection.url);
+                        // Signal to other connections that have an error that they don't need
+                        // to retry.
                         rotate = -1;
                         resolve(sub as T);
                     } catch (e) {
@@ -195,10 +196,16 @@ export class RosterWSConnection {
         }));
     }
 
+    /**
+     * To be conform with an IConnection
+     */
     getURL(): string {
         return this.connections[0].url;
     }
 
+    /**
+     * To be conform with an IConnection - sets the timeout on all connections.
+     */
     setTimeout(value: number) {
         this.connections.forEach((conn) => {
             conn.setTimeout(value);
