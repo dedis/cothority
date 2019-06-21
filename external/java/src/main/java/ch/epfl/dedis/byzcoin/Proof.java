@@ -35,6 +35,12 @@ public class Proof {
     private final byte[] key;
     private final StateChangeBody body;
 
+    /**
+     * Creates a proof given a protobuf representation.
+     *
+     * @param p     The proof encoded as a protobuf representation
+     * @param iid   The key of the instance
+     */
     public Proof(ByzCoinProto.Proof p, InstanceId iid) {
         this.proof = p.getInclusionproof();
         this.latest = new SkipBlock(p.getLatest());
