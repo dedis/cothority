@@ -44,7 +44,7 @@ export interface IConnection {
  * Single peer connection
  */
 export class WebSocketConnection implements IConnection {
-    url: string;
+    private url: string;
     private service: string;
     private timeout: number;
 
@@ -129,28 +129,31 @@ export class WebSocketConnection implements IConnection {
 }
 
 /**
- * Multi peer connection that tries all nodes one after another
+ * Multi peer connection that tries all nodes one after another. It can send the command to more
+ * than one node in parallel and return the first success if 'parallel' i > 1.
  */
 export class RosterWSConnection {
-    static parallel: number = 2;
-    addresses: string[];
-    addressNext: number;
-    connections: WebSocketConnection[] = [];
+    private addresses: string[];
+    private connectionsActive: WebSocketConnection[];
+    private connectionsPool: WebSocketConnection[];
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
+     * @param parallel how many nodes to contact in parallel
      */
-    constructor(r: Roster, service: string) {
+    constructor(r: Roster, private service: string, parallel: number = 2) {
+        if (parallel < 1) {
+            throw new Error("parallel must be >= 1");
+        }
         this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
         shuffle(this.addresses);
-        this.addressNext = RosterWSConnection.parallel;
-        if (this.addressNext > this.addresses.length) {
-            this.addressNext = this.addresses.length;
-        }
-        for (let i = 0; i < this.addressNext; i++) {
-            this.connections.push(new WebSocketConnection(this.addresses[i], service));
-        }
+        // Initialize the pool of connections
+        this.connectionsPool = this.addresses.map((addr) => new WebSocketConnection(addr, service));
+        // And take the first 'parallel' connections
+        this.connectionsActive = this.connectionsPool.splice(0, parallel);
+        // Upon failure of a connection, it is pushed to the end of the connectionsPool, and a
+        // new connection is taken from the beginning of the connectionsPool.
     }
 
     /**
@@ -164,15 +167,17 @@ export class RosterWSConnection {
      */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         const errors: string[] = [];
-        let rotate = this.addresses.length - this.connections.length;
+        let rotate = this.addresses.length - this.connectionsActive.length;
 
         // Get the first reply - need to take care not to return a reject too soon, else
         // all other promises will be ignored.
-        return Promise.race(this.connections.map((connection) => {
+        // The promises that never 'resolve' or 'reject' will later be collected by GC:
+        // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
+        return Promise.race(this.connectionsActive.map((_, i) => {
             return new Promise<T>(async (resolve, reject) => {
                 do {
                     try {
-                        const sub = await connection.send(message, reply);
+                        const sub = await this.connectionsActive[i].send(message, reply);
                         // Signal to other connections that have an error that they don't need
                         // to retry.
                         rotate = -1;
@@ -185,10 +190,9 @@ export class RosterWSConnection {
                         }
                         rotate--;
                         if (rotate >= 0) {
-                            // Only switch to next address if the other promises didn't exhaust all
-                            // our addresses yet.
-                            this.addressNext = (this.addressNext + 1) % this.addresses.length;
-                            connection.url = this.addresses[this.addressNext];
+                            // Take the oldest connection that hasn't been used yet
+                            this.connectionsPool.push(this.connectionsActive[i]);
+                            this.connectionsActive[i] = this.connectionsPool.shift();
                         }
                     }
                 } while (rotate >= 0);
@@ -200,14 +204,17 @@ export class RosterWSConnection {
      * To be conform with an IConnection
      */
     getURL(): string {
-        return this.connections[0].url;
+        return this.connectionsActive[0].getURL();
     }
 
     /**
      * To be conform with an IConnection - sets the timeout on all connections.
      */
     setTimeout(value: number) {
-        this.connections.forEach((conn) => {
+        this.connectionsPool.forEach((conn) => {
+            conn.setTimeout(value);
+        });
+        this.connectionsActive.forEach((conn) => {
             conn.setTimeout(value);
         });
     }
