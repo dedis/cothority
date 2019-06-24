@@ -1,4 +1,5 @@
 import { Buffer } from "buffer/";
+import { sprintf } from "sprintf-js";
 import util from "util";
 
 const defaultLvl = 2;
@@ -20,8 +21,11 @@ export class Logger {
         this._lvl = lvl === undefined ? defaultLvl : lvl;
     }
     out = (...str: string[]) => {
+        const t = new Date();
+        const timeStr = sprintf("%02d:%02d-%02d:%03d",
+            t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
         // tslint:disable-next-line
-        console.log(str.join(" "));
+        console.log(timeStr, str.join(" "));
     }
 
     joinArgs(args: any) {

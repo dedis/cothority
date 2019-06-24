@@ -132,7 +132,7 @@ export class WebSocketConnection implements IConnection {
  * Multi peer connection that tries all nodes one after another
  */
 export class RosterWSConnection {
-    static parallel: number = 2;
+    static parallel: number = 3;
     addresses: string[];
     addressNext: number;
     connections: WebSocketConnection[] = [];
@@ -168,7 +168,9 @@ export class RosterWSConnection {
 
         // Get the first reply - need to take care not to return a reject too soon, else
         // all other promises will be ignored.
-        return Promise.race(this.connections.map((connection) => {
+        const d = new Date();
+        const nodes = this.connections.map((conn) => conn.getURL()).join(" :: ");
+        const ret = await Promise.race(this.connections.map((connection) => {
             return new Promise<T>(async (resolve, reject) => {
                 do {
                     try {
@@ -194,6 +196,8 @@ export class RosterWSConnection {
                 } while (rotate >= 0);
             });
         }));
+        Log.lvl2(`Time for ${message.$type.name}: ${new Date().getTime() - d.getTime()}ms - nodes:`, nodes);
+        return ret;
     }
 
     /**
