@@ -2,7 +2,6 @@ package ch.epfl.dedis.skipchain;
 
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.crypto.bn256.BN;
-import ch.epfl.dedis.lib.darc.Signature;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.ByteString;

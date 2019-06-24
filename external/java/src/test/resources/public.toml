@@ -1,6 +1,7 @@
 
 [[servers]]
   Address = "tls://127.0.0.1:7770"
+  URL = "http://localhost:7771"
   Suite = "Ed25519"
   Public = "741b3af1fa069b2b964102bae6bc707315f61f5564fae426c261f5b6ceda3590"
   Description = "Conode_1"

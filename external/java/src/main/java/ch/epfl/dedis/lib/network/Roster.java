@@ -130,6 +130,10 @@ public class Roster {
         for (Toml srvToml : servers) {
             try {
                 ServerToml srv = srvToml.to(ServerToml.class);
+                // Special case: allow URL when it should be Url
+                if (srvToml.contains("URL")) {
+                    srv.Url = srvToml.getString("URL");
+                }
                 cothority.add(new ServerIdentity(srv));
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
