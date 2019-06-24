@@ -9,6 +9,7 @@ import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,6 +247,7 @@ public class ServerIdentity {
 
                     @Override
                     public void onError(Exception ex) {
+                        close(CloseFrame.PROTOCOL_ERROR, "error occurred: "+ex.getMessage());
                         h.error(ex.toString());
                     }
                 };
@@ -288,6 +290,8 @@ public class ServerIdentity {
                     public void onClose(int code, String reason, boolean remote) {
                         if (!reason.equals("")) {
                             error = reason;
+                        } else if (code == CloseFrame.NEVER_CONNECTED) {
+                            error = "couldn't connect";
                         }
                         statusLatch.countDown();
                     }
@@ -295,6 +299,7 @@ public class ServerIdentity {
                     @Override
                     public void onError(Exception ex) {
                         error = "Error: " + ex.toString();
+                        close(CloseFrame.PROTOCOL_ERROR, "error occurred: "+ex.getMessage());
                         statusLatch.countDown();
                     }
                 };
