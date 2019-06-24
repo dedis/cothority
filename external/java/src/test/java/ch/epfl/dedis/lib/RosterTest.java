@@ -86,6 +86,7 @@ class RosterTest {
         Roster roster = Roster.FromToml(content);
         assertEquals(7, roster.getNodes().size());
         assertTrue(roster.getNodes().get(0).getServiceIdentities().size() > 0);
+        assertEquals("http://localhost:7771", roster.getNodes().get(0).getWebsockAddress().toString());
     }
 }
 

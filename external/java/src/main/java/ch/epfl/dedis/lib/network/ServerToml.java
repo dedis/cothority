@@ -19,6 +19,11 @@ public class ServerToml {
      */
     String Address;
     /**
+     * The address of the conode's webserver (optional; if not provided the webserver is
+     * assumed to be on address:port+1.
+     */
+    String Url;
+    /**
      * The list of service configurations containing the public key
      */
     Map<String, ServiceToml> Services;

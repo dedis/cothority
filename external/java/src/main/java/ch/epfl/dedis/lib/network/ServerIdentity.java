@@ -33,17 +33,22 @@ import java.util.stream.Collectors;
 public class ServerIdentity {
     private Point pubkey;
     private List<ServiceIdentity> serviceIdentities;
-    private final URI conodeAddress;
+    private final URI address;
+    private URI uri;
     private final Logger logger = LoggerFactory.getLogger(ServerIdentity.class);
 
-    public ServerIdentity(final URI serverWsAddress, Point pubkey) {
-        this.conodeAddress = serverWsAddress;
+    public ServerIdentity(final URI address, Point pubkey) {
+        this.address = address;
+        this.uri = null;
         this.pubkey = pubkey;
         this.serviceIdentities = new ArrayList<>();
     }
 
     public ServerIdentity(ServerToml toml) throws URISyntaxException {
         this(new URI(toml.Address), null);
+        if (toml.Url != null) {
+            uri = new URI(toml.Url);
+        }
 
         this.pubkey = PointFactory.getInstance().fromToml(toml.Suite, toml.Public);
 
@@ -62,8 +67,25 @@ public class ServerIdentity {
                 .collect(Collectors.toList());
     }
 
-    public URI getAddress() {
-        return conodeAddress;
+    public URI getAddress() { return address; }
+
+    public URI getWebsockAddress() {
+        if (this.uri == null) {
+            try {
+                return new URI(address.getScheme(),
+                        address.getUserInfo(),
+                        address.getHost(),
+                        address.getPort() + 1,
+                        "",
+                        address.getQuery(),
+                        address.getFragment());
+            } catch (Exception e) {
+                // should not be possible.
+                throw new RuntimeException(e);
+            }
+        } else {
+            return this.uri;
+        }
     }
 
     public Point getPublic() {
@@ -163,19 +185,32 @@ public class ServerIdentity {
     }
 
     private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
-        return new URI("ws",
-                conodeAddress.getUserInfo(),
-                conodeAddress.getHost(),
-                conodeAddress.getPort() + 1, // client operation use higher port number
+        URI address;
+        int port;
+        if (this.uri != null) {
+            address = this.uri;
+            port = address.getPort();
+        } else {
+            address = this.address;
+            port = address.getPort()+1;
+        }
+        String scheme = "ws";
+        if (address.getScheme().equalsIgnoreCase("https")) {
+            scheme = "wss";
+        }
+        return new URI(scheme,
+                address.getUserInfo(),
+                address.getHost(),
+                port,
                 servicePath.startsWith("/") ? servicePath : "/".concat(servicePath),
-                conodeAddress.getQuery(),
-                conodeAddress.getFragment());
+                address.getQuery(),
+                address.getFragment());
     }
 
     @Override
     public String toString() {
         return "ServerIdentitiy {"
-                + "\n\tAddress: " + conodeAddress.toString()
+                + "\n\tAddress: " + address.toString()
                 + "\n\tPublic: " + pubkey.toString()
                 + "\n\tServices: " + serviceIdentities.toString()
                 + "\n}";
