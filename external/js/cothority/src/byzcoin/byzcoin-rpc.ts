@@ -200,7 +200,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * Gets a proof from byzcoin to show that a given instance is in the
      * global state. The proof starts from the latest known block.
      * Caution: If you need to pass the Proof onwards to another server,
-     * you must use GetProof in order to create a complete standalone
+     * you must use getProof in order to create a complete standalone
      * proof starting from the genesis block.
      *
      * @param id the instance key
@@ -220,7 +220,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * Gets a proof from byzcoin to show that a given instance is in the
      * global state. The proof starts from the block given in parameter.
      * Caution: If you need to pass the Proof onwards to another server,
-     * you must use GetProof in order to create a complete standalone
+     * you must use getProof in order to create a complete standalone
      * proof starting from the genesis block.
      *
      * @param id the instance key

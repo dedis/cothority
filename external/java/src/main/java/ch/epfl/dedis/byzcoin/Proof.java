@@ -36,7 +36,8 @@ public class Proof {
     private final StateChangeBody body;
 
     /**
-     * Creates a proof given a protobuf representation.
+     * Creates a proof given a protobuf representation. It is the caller's responsibility to call
+     * verify() on the resulting Proof.
      *
      * @param p     The proof encoded as a protobuf representation
      * @param iid   The key of the instance
@@ -58,7 +59,7 @@ public class Proof {
 
     /**
      * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
-     * Deprecated: the verification should be performed against a known block
+     * Deprecated: the verification should be performed against a known block.
      *
      * @param p    is the protobuf representation
      * @param scID is the skipchain ID
