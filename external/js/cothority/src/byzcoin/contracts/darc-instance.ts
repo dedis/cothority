@@ -86,8 +86,8 @@ export default class DarcInstance extends Instance {
      * @return a promise that resolves once the data is up-to-date
      */
     async update(): Promise<DarcInstance> {
-        const proof = await this.rpc.getProof(this._darc.getBaseID());
-        const inst = await proof.getVerifiedInstance(this.rpc.getGenesis().computeHash(), DarcInstance.contractID);
+        const proof = await this.rpc.getProofFromLatest(this._darc.getBaseID());
+        const inst = Instance.fromProof(this._darc.getBaseID(), proof);
         this._darc = Darc.decode(inst.data);
 
         return this;

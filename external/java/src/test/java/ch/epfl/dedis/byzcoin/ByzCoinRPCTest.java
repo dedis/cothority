@@ -87,12 +87,18 @@ public class ByzCoinRPCTest {
     void getProof() throws Exception {
         // Then make a transaction so we can do something with the proof.
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 10);
 
         // Get one Proof.
         InstanceId inst = bc.getGenesisDarcInstance().getInstance().getId();
         Proof p = bc.getProof(inst);
         assertTrue(p.exists(inst.getId()));
+        assertEquals(2, p.toProto().getLinksList().size());
+
+        bc.update();
+        p = bc.getProofFromLatest(inst);
+        assertTrue(p.exists(inst.getId()));
+        assertEquals(1, p.toProto().getLinksList().size());
     }
 
     /**

@@ -36,18 +36,17 @@ public class Proof {
     private final StateChangeBody body;
 
     /**
-     * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
+     * Creates a proof given a protobuf representation. It is the caller's responsibility to call
+     * verify() on the resulting Proof.
      *
-     * @param p    is the protobuf representation
-     * @param scID is the skipchain ID
-     * @throws CothorityCryptoException       if the verification of the forward links are wrong
+     * @param p     The proof encoded as a protobuf representation
+     * @param iid   The key of the instance
      */
-    public Proof(ByzCoinProto.Proof p, SkipblockId scID, InstanceId iid) throws CothorityCryptoException {
+    public Proof(ByzCoinProto.Proof p, InstanceId iid) {
         this.proof = p.getInclusionproof();
         this.latest = new SkipBlock(p.getLatest());
         this.links = p.getLinksList();
         this.key = iid.getId();
-        this.verify(scID);
 
         StateChangeBody tmpBody;
         try {
@@ -56,6 +55,20 @@ public class Proof {
             tmpBody = null;
         }
         this.body = tmpBody;
+    }
+
+    /**
+     * Creates a new proof given a protobuf-representation and a trusted skipchain ID.
+     * Deprecated: the verification should be performed against a known block.
+     *
+     * @param p    is the protobuf representation
+     * @param scID is the skipchain ID
+     * @throws CothorityCryptoException       if the verification of the forward links are wrong
+     */
+    @Deprecated
+    public Proof(ByzCoinProto.Proof p, SkipblockId scID, InstanceId iid) throws CothorityCryptoException {
+        this(p, iid);
+        this.verify(scID);
     }
 
     /**
@@ -89,6 +102,25 @@ public class Proof {
      */
     public SkipBlock getLatest() {
         return this.latest;
+    }
+
+    /**
+     * It makes sure that the proof is valid by following and verifying the
+     * forward-links.
+     *
+     * @param from The block referenced by the first link
+     * @throws CothorityCryptoException if the verification fails
+     */
+    public void verify(SkipBlock from) throws CothorityCryptoException {
+        if (links.size() == 0) {
+            throw new CothorityCryptoException("missing forward-links");
+        }
+
+        if (links.get(0).getNewRoster().equals(from.getRoster().toProto())) {
+            throw new CothorityCryptoException("invalid first roster in proof");
+        }
+
+        verify(from.getId());
     }
 
     /**

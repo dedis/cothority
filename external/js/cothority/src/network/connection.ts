@@ -84,11 +84,9 @@ export class WebSocketConnection implements IConnection {
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
-            const timer = setTimeout(() => ws.close(4000, "timeout"), this.timeout);
+            const timer = setTimeout(() => ws.close(1002, "timeout"), this.timeout);
 
-            ws.onOpen(() => {
-                ws.send(bytes);
-            });
+            ws.onOpen(() => ws.send(bytes));
 
             ws.onMessage((data: Buffer) => {
                 clearTimeout(timer);

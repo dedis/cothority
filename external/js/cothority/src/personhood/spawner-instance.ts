@@ -118,7 +118,7 @@ export default class SpawnerInstance extends Instance {
      * @returns a promise that resolves once the data is up-to-date
      */
     async update(): Promise<SpawnerInstance> {
-        const proof = await this.rpc.getProof(this.id);
+        const proof = await this.rpc.getProofFromLatest(this.id);
         this.struct = SpawnerStruct.decode(proof.value);
         return this;
     }

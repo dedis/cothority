@@ -165,7 +165,7 @@ export default class RoPaSciInstance extends Instance {
      * or rejects with the error
      */
     async update(): Promise<RoPaSciInstance> {
-        const proof = await this.rpc.getProof(this.id);
+        const proof = await this.rpc.getProofFromLatest(this.id);
         if (!proof.exists(this.id)) {
             throw new Error("fail to get a matching proof");
         }
