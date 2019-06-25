@@ -858,8 +858,8 @@ func TestService_InvalidVerification(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	for i := range s.hosts {
-		RegisterContract(s.hosts[i], panicContract, adaptor(panicContractFunc))
+	for _, s := range s.services {
+		s.testRegisterContract(panicContract, adaptor(panicContractFunc))
 	}
 
 	// tx0 uses the panicing contract, so it should _not_ be stored.
@@ -990,7 +990,7 @@ func TestService_StateChange(t *testing.T) {
 		}
 		return nil, nil, errors.New("need spawn or invoke")
 	}
-	RegisterContract(s.hosts[0], "add", adaptorNoVerify(f))
+	s.service().testRegisterContract("add", adaptorNoVerify(f))
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -1083,7 +1083,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 			},
 		}, nil, nil
 	}
-	require.NoError(t, RegisterContract(s.hosts[0], cid, adaptorNoVerify(f)))
+	require.NoError(t, s.service().testRegisterContract(cid, adaptorNoVerify(f)))
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, cdb)
@@ -1949,7 +1949,7 @@ func TestService_StateChangeCache(t *testing.T) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
-	require.NoError(t, s.service().registerContract(contractID, adaptor(contract)))
+	require.NoError(t, s.service().testRegisterContract(contractID, adaptor(contract)))
 
 	scID := s.genesis.SkipChainID()
 	st, err := s.service().getStateTrie(scID)
@@ -2036,8 +2036,8 @@ func TestService_StateChangeStorage(t *testing.T) {
 		})
 		return scs, []Coin{}, nil
 	}
-	for _, s := range s.hosts {
-		RegisterContract(s, contractID, adaptor(contract))
+	for _, s := range s.services {
+		s.testRegisterContract(contractID, adaptor(contract))
 	}
 
 	for i := 0; i < n; i++ {
@@ -2530,11 +2530,13 @@ func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.Service in the method signature doesn't work :(
 	for _, s := range servers {
-		err := RegisterContract(s, dummyContract, adaptor(dummyContractFunc))
+		service := s.Service(ServiceName).(*Service)
+
+		err := service.testRegisterContract(dummyContract, adaptor(dummyContractFunc))
 		log.ErrFatal(err)
-		err = RegisterContract(s, slowContract, adaptor(slowContractFunc))
+		err = service.testRegisterContract(slowContract, adaptor(slowContractFunc))
 		log.ErrFatal(err)
-		err = RegisterContract(s, invalidContract, adaptor(invalidContractFunc))
+		err = service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
 		log.ErrFatal(err)
 	}
 }
@@ -2542,4 +2544,11 @@ func registerDummy(servers []*onet.Server) {
 func genID() (i InstanceID) {
 	random.Bytes(i[:], random.New())
 	return i
+}
+
+// registerContract stores the contract in a map and will
+// call it whenever a contract needs to be done.
+func (s *Service) testRegisterContract(contractID string, c ContractFn) error {
+	s.contracts.registry[contractID] = c
+	return nil
 }

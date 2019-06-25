@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.dedis.ch/cothority/v3"
@@ -38,19 +39,111 @@ type Contract interface {
 	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 }
 
+// ReadOnlyContractRegistry is the read-only interface for the contract registry.
+type ReadOnlyContractRegistry interface {
+	Search(contractID string) (ContractFn, bool)
+}
+
+// SpawnerContract is an interface to detect contracts that need a reference
+// to the registry.
+type SpawnerContract interface {
+	SetRegistry(ReadOnlyContractRegistry)
+}
+
 // ContractFn is the type signature of the instance factory functions which can be
 // registered with the ByzCoin service.
 type ContractFn func(in []byte) (Contract, error)
 
-// RegisterContract stores the contract in a map and will call it whenever a
-// contract needs to be done. GetService makes it possible to give either an
-// `onet.Context` or `onet.Server` to `RegisterContract`.
+// contractRegistry maps a contract ID with its constructor function. As soon
+// as the first cloning happens, the registry will be locked and no new contract
+// can be added for the global call.
+type contractRegistry struct {
+	registry map[string]ContractFn
+	locked   bool
+	sync.Mutex
+}
+
+func (cr *contractRegistry) register(contractID string, f ContractFn, ignoreLock bool) error {
+	cr.Lock()
+	if cr.locked && !ignoreLock {
+		cr.Unlock()
+		return errors.New("contract registry is locked")
+	}
+
+	_, exists := cr.registry[contractID]
+	if exists {
+		cr.Unlock()
+		return errors.New("contract already registered")
+	}
+
+	cr.registry[contractID] = f
+	cr.Unlock()
+	return nil
+}
+
+// Search looks up the contract ID and returns the constructor function
+// it it exists and nil otherwise.
+func (cr *contractRegistry) Search(contractID string) (ContractFn, bool) {
+	cr.Lock()
+	fn, exists := cr.registry[contractID]
+	cr.Unlock()
+	return fn, exists
+}
+
+// Clone returns a copy of the registry and locks the source so that
+// static registration is not allowed anymore. This is to prevent
+// registration of a contract at runtime and limit it only to the
+// initialization phase.
+func (cr *contractRegistry) clone() *contractRegistry {
+	cr.Lock()
+	cr.locked = true
+
+	clone := newContractRegistry()
+	// It is locked for outsiders but the package can manually update
+	// the registry (e.g. tests)
+	clone.locked = true
+	for key, value := range cr.registry {
+		clone.registry[key] = value
+	}
+	cr.Unlock()
+
+	return clone
+}
+
+func newContractRegistry() *contractRegistry {
+	return &contractRegistry{
+		registry: make(map[string]ContractFn),
+		locked:   false,
+	}
+}
+
+var globalContractRegistry = newContractRegistry()
+
+// RegisterGlobalContract stores the contract in the global registry. This should
+// be called during module initialization as the registry will be locked down
+// after the first cloning.
+func RegisterGlobalContract(contractID string, f ContractFn) error {
+	return globalContractRegistry.register(contractID, f, false)
+}
+
+// RegisterContract stores the contract in the service registry which
+// makes it only available to byzcoin.
+//
+// Deprecated: Use RegisterGlobalContract during the module initialization
+// for a global access to the contract.
 func RegisterContract(s skipchain.GetService, contractID string, f ContractFn) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)
 	}
-	return scs.(*Service).registerContract(contractID, f)
+
+	return scs.(*Service).contracts.register(contractID, f, true)
+}
+
+// GetContractRegistry clones the global registry and returns a read-only one.
+// Caution: calling this during the initialization will lock the registry.
+func GetContractRegistry() ReadOnlyContractRegistry {
+	return globalContractRegistry.clone()
 }
 
 // BasicContract is a type that contracts may choose to embed in order to provide
