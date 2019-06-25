@@ -176,7 +176,7 @@ public class ByzCoinRPC {
      * Gets a proof from byzcoin starting from the latest known block to show that
      * a given instance is stored in the global state.
      * Caution: If you need to pass the Proof onwards to another server, you must
-     * use GetProof in order to create a complete standalone proof starting from
+     * use getProof in order to create a complete standalone proof starting from
      * the genesis block.
      *
      * @param id is the ID of the instance to be fetched
