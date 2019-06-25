@@ -665,7 +665,11 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 		return nil, errors.New("darc ID must be set")
 	}
 
-	key := sha256.Sum256(append(append(req.DarcID, '/'), []byte(req.Name)...))
+	h := sha256.New()
+	h.Write(req.DarcID)
+	h.Write([]byte{'/'})
+	h.Write([]byte(req.Name))
+	key := NewInstanceID(h.Sum(nil))
 	val, _, _, _, err := st.GetValues(key[:])
 	if err != nil {
 		return nil, err
@@ -674,6 +678,10 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 	valStruct := contractNamingEntry{}
 	if err := protobuf.Decode(val, &valStruct); err != nil {
 		return nil, err
+	}
+
+	if valStruct.Removed {
+		return nil, errKeyNotSet
 	}
 
 	return &ResolvedInstanceID{valStruct.IID}, nil

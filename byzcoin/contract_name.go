@@ -278,7 +278,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		sc = []StateChange{
-			NewStateChange(Create, key, "", entryBuf, nil),
+			NewStateChange(Update, key, "", entryBuf, nil),
 		}
 		return
 	default:

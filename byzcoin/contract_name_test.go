@@ -290,4 +290,95 @@ func TestService_Naming(t *testing.T) {
 	verifyNameResolution("my genesis darc")
 	verifyNameResolution("your genesis darc")
 	verifyNameResolution("everyone's genesis darc")
+
+	// Tests below are for removal.
+
+	// FAIL - do not allow removal for what does not exist.
+	removalTx := ClientTransaction{
+		Instructions: Instructions{
+			{
+				InstanceID: NamingInstanceID,
+				Invoke: &Invoke{
+					ContractID: ContractNamingID,
+					Command:    "remove",
+					Args: Arguments{
+						{
+							Name:  "instanceID",
+							Value: gDarc.GetBaseID(),
+						},
+						{
+							Name:  "name",
+							Value: []byte("not exists"),
+						},
+					},
+				},
+				SignerCounter: []uint64{4},
+			},
+		},
+	}
+	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
+	_, err = cl.AddTransactionAndWait(removalTx, 10)
+	require.Error(t, err)
+
+	// SUCCESS - try to remove an entry.
+	removalTx = ClientTransaction{
+		Instructions: Instructions{
+			{
+				InstanceID: NamingInstanceID,
+				Invoke: &Invoke{
+					ContractID: ContractNamingID,
+					Command:    "remove",
+					Args: Arguments{
+						{
+							Name:  "instanceID",
+							Value: gDarc.GetBaseID(),
+						},
+						{
+							Name:  "name",
+							Value: []byte("my genesis darc"),
+						},
+					},
+				},
+				SignerCounter: []uint64{4},
+			},
+		},
+	}
+	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
+	_, err = cl.AddTransactionAndWait(removalTx, 10)
+	require.NoError(t, err)
+
+	// FAIL - the removed entry cannot be "removed" again.
+	removalTx = ClientTransaction{
+		Instructions: Instructions{
+			{
+				InstanceID: NamingInstanceID,
+				Invoke: &Invoke{
+					ContractID: ContractNamingID,
+					Command:    "remove",
+					Args: Arguments{
+						{
+							Name:  "instanceID",
+							Value: gDarc.GetBaseID(),
+						},
+						{
+							Name:  "name",
+							Value: []byte("my genesis darc"),
+						},
+					},
+				},
+				SignerCounter: []uint64{5},
+			},
+		},
+	}
+	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
+	_, err = cl.AddTransactionAndWait(removalTx, 10)
+	require.Error(t, err)
+
+	// Try to resolve the deleted entry should fail, but the others should
+	// exist.
+	_, err = cl.ResolveInstanceID(gDarc.GetBaseID(), "my genesis darc")
+	require.Error(t, err)
+
+	verifyNameResolution("your genesis darc")
+	verifyNameResolution("everyone's genesis darc")
 }
