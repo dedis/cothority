@@ -162,8 +162,9 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 }
 
 type contractNamingEntry struct {
-	IID  InstanceID
-	Prev InstanceID
+	IID     InstanceID
+	Prev    InstanceID
+	Removed bool
 }
 
 func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -184,15 +185,36 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 			err = errors.New("the name cannot be empty")
 			return
 		}
-		key := sha256.Sum256(append(append(dID, '/'), name...))
+		h := sha256.New()
+		h.Write(dID)
+		h.Write([]byte{'/'})
+		h.Write(name)
+		key := NewInstanceID(h.Sum(nil))
+
+		// Check that we are not overwriting.
+		var oldEntryBuf []byte
+		oldEntryBuf, _, _, _, err = rst.GetValues(key.Slice())
+		if err != errKeyNotSet {
+			oldEntry := contractNamingEntry{}
+			err = protobuf.Decode(oldEntryBuf, &oldEntry)
+			if err != nil {
+				return
+			}
+			if oldEntry.Removed {
+				err = errors.New("cannot create a name that existed before")
+				return
+			}
+			err = errors.New("this name already exists")
+			return
+		}
 
 		// Construct the value.
-		valueStruct := contractNamingEntry{
+		entry := contractNamingEntry{
 			IID:  NewInstanceID(iID),
 			Prev: c.Latest,
 		}
-		var valueBuf []byte
-		valueBuf, err = protobuf.Encode(&valueStruct)
+		var entryBuf []byte
+		entryBuf, err = protobuf.Encode(&entry)
 		if err != nil {
 			return
 		}
@@ -207,11 +229,58 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 
 		// Create the state change.
 		sc = []StateChange{
-			NewStateChange(Create, NewInstanceID(key[:]), "", valueBuf, nil),
+			NewStateChange(Create, key, "", entryBuf, nil),
 			NewStateChange(Update, NamingInstanceID, ContractNamingID, contractBuf, nil),
 		}
 		return
-	// TODO case "remove":
+	case "remove":
+		iID := inst.Invoke.Args.Search("instanceID")
+		var dID darc.ID
+		_, _, _, dID, err = rst.GetValues(iID)
+		if err != nil {
+			return
+		}
+
+		// Construct the key.
+		name := inst.Invoke.Args.Search("name")
+		if len(name) == 0 {
+			err = errors.New("the name cannot be empty")
+			return
+		}
+		h := sha256.New()
+		h.Write(dID)
+		h.Write([]byte{'/'})
+		h.Write(name)
+		key := NewInstanceID(h.Sum(nil))
+
+		// Check that the name that we want to delete exists and is alive.
+		var oldEntryBuf []byte
+		oldEntryBuf, _, _, _, err = rst.GetValues(key.Slice())
+		if err != nil {
+			return
+		}
+		oldEntry := contractNamingEntry{}
+		err = protobuf.Decode(oldEntryBuf, &oldEntry)
+		if err != nil {
+			return
+		}
+		if oldEntry.Removed {
+			err = errors.New("this entry is already removed")
+			return
+		}
+
+		// Construct the value.
+		oldEntry.Removed = true
+		var entryBuf []byte
+		entryBuf, err = protobuf.Encode(&oldEntry)
+		if err != nil {
+			return
+		}
+
+		sc = []StateChange{
+			NewStateChange(Create, key, "", entryBuf, nil),
+		}
+		return
 	default:
 		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
 		return
