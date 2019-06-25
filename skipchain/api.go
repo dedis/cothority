@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"go.dedis.ch/cothority/v3"
 	status "go.dedis.ch/cothority/v3/status/service"
@@ -249,20 +248,17 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 	maxLevel int, maxBlocks int) (update []*SkipBlock, err error) {
 	const retries = 3
-	delay := 1 * time.Second
 
 	for {
 		r2 := &GetUpdateChainReply{}
 
 		// Try up to retries random servers from the given roster.
-		i := 0
 		// TODO: not random until the seed is set up
 		perm := rand.Perm(len(roster.List))
-		for ; i < retries; i++ {
+		for i, node := range perm {
 			// To handle the case where len(perm) < retries.
-			which := i % len(perm)
-			log.Lvl2("Getting chain from", roster.List[perm[which]])
-			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{
+			log.Lvl2("Getting chain from", roster.List[node])
+			err = c.SendProtobuf(roster.List[node], &GetUpdateChain{
 				LatestID:  latest,
 				MaxHeight: maxLevel,
 				MaxBlocks: maxBlocks,
@@ -270,15 +266,9 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 			if err == nil && len(r2.Update) != 0 {
 				break
 			}
-			// Don't want to sleep on the last time thru this loop.
-			if i < retries-1 {
-				time.Sleep(delay)
-				// exponential backoff
-				delay *= 2
+			if i == retries-1 {
+				return nil, fmt.Errorf("too many retries; last error: %v", err)
 			}
-		}
-		if i == retries {
-			return nil, fmt.Errorf("too many retries; last error: %v", err)
 		}
 
 		// Does this chain start where we expect it to?

@@ -17,8 +17,8 @@ import (
 // and return the block or an error
 type BlockFetcherFunc func(roster *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
-func replayError(sb *skipchain.SkipBlock, msg string) error {
-	return fmt.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
+func replayError(sb *skipchain.SkipBlock, test, msg string) error {
+	return fmt.Errorf("replay failed in test %s in block at index %d with message: %s", test, sb.Index, msg)
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until
@@ -56,26 +56,26 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			var dBody DataBody
 			err := protobuf.Decode(sb.Payload, &dBody)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, "decode payload", err.Error())
 			}
 			var dHead DataHeader
 			err = protobuf.Decode(sb.Data, &dHead)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, "decode header", err.Error())
 			}
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
-				return nil, replayError(sb, "client transaction hash does not match")
+				return nil, replayError(sb, "client transaction hash does not match", "wrong hash")
 			}
 
 			if sb.Index == 0 {
 				nonce, err := s.loadNonceFromTxs(dBody.TxResults)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, "loading nonce", err.Error())
 				}
 				st, err = newMemStateTrie(nonce)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, "creating new state trie", err.Error())
 				}
 			}
 
@@ -86,12 +86,12 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 					var scs StateChanges
 					scs, sst, err = s.processOneTx(sst, tx.ClientTransaction)
 					if err != nil {
-						return nil, replayError(sb, err.Error())
+						return nil, replayError(sb, "process one tx", err.Error())
 					}
 
 					err = st.StoreAll(scs, sb.Index)
 					if err != nil {
-						return nil, replayError(sb, err.Error())
+						return nil, replayError(sb, "storing all", err.Error())
 					}
 				}
 			}
@@ -110,7 +110,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 						}
 					}
 				}
-				return nil, replayError(sb, "merkle tree root doesn't match with trie root")
+				return nil, replayError(sb, "merkle tree root doesn't match with trie root", "wrong hash")
 			}
 
 			log.Lvl2("Checking links for block", sb.Index)
