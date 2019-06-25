@@ -108,7 +108,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 
 	// check the action, again we do this differently because we only care
 	// about the spawn part of the given instance ID
-	action := "spawn:" + cID
+	action := "_name:" + cID
 	ex := d.Rules.Get(darc.Action(action))
 	if len(ex) == 0 {
 		return fmt.Errorf("action '%v' does not exist", action)

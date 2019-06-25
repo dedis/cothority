@@ -21,7 +21,7 @@ func TestService_Naming(t *testing.T) {
 	hosts, roster, _ := local.GenTree(4, true)
 	s := local.GetServices(hosts, ByzCoinID)[0].(*Service)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{}, signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"_name:" + ContractDarcID}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
