@@ -261,6 +261,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 		for ; i < retries; i++ {
 			// To handle the case where len(perm) < retries.
 			which := i % len(perm)
+			log.Lvl2("Getting chain from", roster.List[perm[which]])
 			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{
 				LatestID:  latest,
 				MaxHeight: maxLevel,
@@ -287,6 +288,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 
 		// Step through the returned blocks one at a time, verifying
 		// the forward links, and that they link correctly backwards.
+		log.Lvl2("Verifying forward links of block", r2.Update[0].Index)
 		for j, b := range r2.Update {
 			if j == 0 && len(update) > 0 {
 				if update[len(update)-1].Hash.Equal(b.Hash) {

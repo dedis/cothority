@@ -1527,7 +1527,8 @@ func debugReplay(c *cli.Context) error {
 		// Try to get more than a block at once to speed up the process.
 		blocks, err := cl.GetUpdateChainLevel(ro, sib, 1, 50)
 		if err != nil {
-			log.Info("An error occurred when getting the chain. Trying a single block.")
+			log.Warn("Error while getting the chain:", err)
+			log.Info("An error occurred when getting the chain. Trying a single block from roster", ro.List)
 			// In the worst case, it fetches only the requested block.
 			return cl.GetSingleBlock(ro, sib)
 		}
