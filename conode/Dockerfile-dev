@@ -10,4 +10,4 @@ COPY exe/conode.Linux.x86_64 ./conode
 
 EXPOSE 7770 7771
 
-CMD [ "./run_nodes.sh", "-n 1" ]
+CMD ["./run_nodes.sh", "-n", "1"]
