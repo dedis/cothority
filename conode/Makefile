@@ -15,15 +15,21 @@ ldflags=-s -w -X main.gitTag=$(TAG)
 
 all: docker
 
+.PHONY: docker-base
+docker-base: Dockerfile-base
+	docker build -t $(IMAGE_NAME)-base:latest -f Dockerfile-base .
+
 # Use this target to build from only published sources.
-docker: clean Dockerfile
+docker: clean Dockerfile docker-base
 	@[ -z "$(BUILD_TAG)" ] && echo "Must specify BUILD_TAG." && exit 1 || true
-	docker build -t $(IMAGE_NAME):$(BUILD_TAG) --build-arg BUILD_TAG="$(BUILD_TAG)" --build-arg ldflags="$(ldflags)" .
+	docker build -t $(IMAGE_NAME):$(BUILD_TAG) \
+		--build-arg BUILD_TAG="$(BUILD_TAG)" --build-arg ldflags="$(ldflags)" \
+		--build-arg FROM=$(IMAGE_NAME)-base:latest .
 	docker tag $(IMAGE_NAME):$(BUILD_TAG) $(IMAGE_NAME):dev
 
 # Use this target to build from local source instead of from publish sources.
-docker_dev: clean Dockerfile-dev verify exe/conode.Linux.x86_64
-	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
+docker_dev: clean Dockerfile-dev verify exe/conode.Linux.x86_64 docker-base
+	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev --build-arg FROM=$(IMAGE_NAME)-base:latest .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):dev
 
 docker_push: docker
