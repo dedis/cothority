@@ -22,7 +22,7 @@ import (
 // the add command. You muse provide two arguments. The first is the instance
 // ID that you wish to name which must exist. The second is the name that you
 // want to use which is a string and must not be empty. The instruction must be
-// signed by the signer(s) that has the permission to spawn the to-be-named
+// signed by the signer(s) that has the "_name" permission to spawn the to-be-named
 // instance ID.
 //
 // To get back a named instance ID, you should use the byzcoin API -
@@ -73,7 +73,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	// controlled by the darc that guards the instance ID in the invoke
 	// argument.
 
-	// check the number of signers match with the number of signatures
+	// Check the number of signers match with the number of signatures.
 	if len(inst.SignerIdentities) != len(inst.Signatures) {
 		return errors.New("lengh of identities does not match the length of signatures")
 	}
@@ -81,14 +81,14 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return errors.New("no signatures - nothing to verify")
 	}
 
-	// check the signature counters
+	// Check the signature counters.
 	if err := verifySignerCounters(rst, inst.SignerCounter, inst.SignerIdentities); err != nil {
 		return err
 	}
 
-	// get the darc, we have to do it differently than the normal
+	// Get the darc, we have to do it differently than the normal
 	// verification because the darc that we are interested in is the darc
-	// that guards the instance ID in the instruction
+	// that guards the instance ID in the instruction.
 	if inst.Invoke == nil {
 		// TODO this needs to be changed when we add delete
 		return errors.New("only invoke is supported")
@@ -106,16 +106,14 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return err
 	}
 
-	// check the action, again we do this differently because we only care
-	// about the spawn part of the given instance ID
+	// Check that the darc has the right permission to allow naming.
 	action := "_name:" + cID
 	ex := d.Rules.Get(darc.Action(action))
 	if len(ex) == 0 {
 		return fmt.Errorf("action '%v' does not exist", action)
 	}
 
-	// check the signature
-	// Save the identities that provide good signatures
+	// Save the identities that provide good signatures.
 	goodIdentities := make([]string, 0)
 	for i := range inst.Signatures {
 		if err := inst.SignerIdentities[i].Verify(msg, inst.Signatures[i]); err == nil {
@@ -126,7 +124,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return errors.New("all signatures failed to verify")
 	}
 
-	// check the expression
+	// Evaluate the expression using the good signatures.
 	getDarc := func(str string, latest bool) *darc.Darc {
 		if len(str) < 5 || string(str[0:5]) != "darc:" {
 			return nil
