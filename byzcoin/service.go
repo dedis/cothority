@@ -1166,18 +1166,29 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 
 	// Get the latest block known and processed by the conode
 	trieIndex := st.GetIndex()
-	req, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
-		Genesis: sb.SkipChainID(),
-		Index:   trieIndex,
-	})
-	if err != nil {
-		// because we rely on the trie index, this should never happen because we're only
-		// asking locally to get the block associated with the index (thus processed already)
-		log.Errorf("%v cannot find latest block to catch up", s.ServerIdentity())
+	var reply *skipchain.GetSingleBlockByIndexReply
+	for trieIndex >= 0 {
+		reply, err = s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
+			Genesis: sb.SkipChainID(),
+			Index:   trieIndex,
+		})
+		if err != nil {
+			trieIndex--
+			log.Errorf("%v cannot catch up from block %v: %v, retrying with block before", s.ServerIdentity(), trieIndex, err)
+		} else {
+			// Got it, exit loop.
+			break
+		}
+	}
+
+	// All the trieIndex failed and we did not get a reply.
+	if reply == nil || err != nil {
+		log.Errorf("%v could not catch up, tried all previous blocks", s.ServerIdentity())
 		return
 	}
 
-	latest := req.SkipBlock
+	// TODO: Why is this nil here? fix then ship it!
+	latest := reply.SkipBlock
 
 	// Fetch all missing blocks to fill the hole
 	cl := skipchain.NewClient()
