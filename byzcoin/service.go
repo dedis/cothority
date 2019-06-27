@@ -1188,7 +1188,6 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		return
 	}
 
-	// TODO: Why is this nil here? fix then ship it!
 	latest := reply.SkipBlock
 
 	// Fetch all missing blocks to fill the hole
