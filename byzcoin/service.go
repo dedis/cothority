@@ -78,6 +78,7 @@ func init() {
 	log.ErrFatal(err)
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
+	network.SetTCPDialTimeout(2 * time.Second)
 }
 
 // GenNonce returns a random nonce.
