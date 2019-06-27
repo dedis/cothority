@@ -2,7 +2,7 @@ import Long from "long";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
-import { IIdentity } from "../darc/identity-wrapper";
+import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
@@ -12,6 +12,7 @@ import ChainConfig from "./config";
 import DarcInstance from "./contracts/darc-instance";
 import { InstanceID } from "./instance";
 import Proof from "./proof";
+import CheckAuthorization, { CheckAuthorizationResponse } from "./proto/check-auth";
 import {
     AddTxRequest,
     AddTxResponse,
@@ -269,5 +270,29 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const rep = await this.conn.send<GetSignerCountersResponse>(req, GetSignerCountersResponse);
         return rep.counters.map((c) => c.add(add));
+    }
+
+    /**
+     * checks the authorization of a set of identities with respect to a given darc. This calls
+     * an OmniLedger node and trusts it to return the name of the actions that a hypotethic set of
+     * signatures from the given identities can execute using the given darc.
+     *
+     * This is useful if a darc delegates one or more actions to other darc, who delegate also, so
+     * this call will test what actions are possible to be executed.
+     *
+     * @param darcID the base darc whose actions are verified
+     * @param identities the set of identities that are hypothetically signing
+     */
+    async checkAuthorization(byzCoinID: InstanceID, darcID: InstanceID, ...identities: IdentityWrapper[])
+        : Promise<string[]> {
+        const req = new CheckAuthorization({
+            byzcoinID: byzCoinID,
+            darcID,
+            identities,
+            version: currentVersion,
+        });
+
+        const reply = await this.conn.send<CheckAuthorizationResponse>(req, CheckAuthorizationResponse);
+        return reply.actions;
     }
 }
