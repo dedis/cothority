@@ -51,7 +51,7 @@ public class Proof {
         StateChangeBody tmpBody;
         try {
             tmpBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
-        } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+        } catch (InvalidProtocolBufferException e) {
             tmpBody = null;
         }
         this.body = tmpBody;

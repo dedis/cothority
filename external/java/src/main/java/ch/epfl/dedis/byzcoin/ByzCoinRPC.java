@@ -445,6 +445,29 @@ public class ByzCoinRPC {
     }
 
     /**
+     * Resolves a previously named instance ID from a darc ID and a name.
+     *
+     * @param dID is the darc ID that guards the instance.
+     * @param name is the name given to the instance when it was named.
+     * @return the instance ID.
+     * @throws CothorityCommunicationException if the name does not exist or other failures.
+     */
+    public InstanceId resolveInstanceID(DarcId dID, String name) throws CothorityCommunicationException {
+        ByzCoinProto.ResolveInstanceID.Builder req = ByzCoinProto.ResolveInstanceID.newBuilder();
+        req.setDarcid(dID.toProto());
+        req.setName(name);
+        req.setSkipchainid(genesis.getId().toProto());
+
+        ByteString msg = roster.sendMessage("ByzCoin/ResolveInstanceID", req.build());
+        try {
+            ByzCoinProto.ResolvedInstanceID reply = ByzCoinProto.ResolvedInstanceID.parseFrom(msg);
+            return new InstanceId(reply.getInstanceid());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
      * Checks if the state change is valid or has been tempered
      *
      * @param sc the state change

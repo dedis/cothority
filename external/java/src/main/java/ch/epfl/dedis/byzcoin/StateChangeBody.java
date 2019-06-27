@@ -18,15 +18,17 @@ public class StateChangeBody {
     /**
      * Construct a StateChangeBody object from its protobuf representation.
      */
-    public StateChangeBody(ByzCoinProto.StateChangeBody proto) throws CothorityCryptoException {
+    public StateChangeBody(ByzCoinProto.StateChangeBody proto) {
         stateAction = proto.getStateaction();
         contractID = proto.getContractid();
         value = proto.getValue().toByteArray();
         version = proto.getVersion();
         if (proto.getDarcid().toByteArray().length != Sha256id.length) {
-            throw new CothorityCryptoException("darc ID has the wrong length");
+            // It is ok to have a null darc ID because some instances are not associated with darcs.
+            darcBaseId = null;
+        } else {
+            darcBaseId = new DarcId(proto.getDarcid());
         }
-        darcBaseId = new DarcId(proto.getDarcid());
     }
 
     /**
