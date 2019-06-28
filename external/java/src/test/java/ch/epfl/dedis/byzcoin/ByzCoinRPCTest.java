@@ -2,7 +2,6 @@ package ch.epfl.dedis.byzcoin;
 
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
-import ch.epfl.dedis.byzcoin.contracts.NamingInstance;
 import ch.epfl.dedis.byzcoin.transaction.*;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
@@ -406,30 +405,6 @@ public class ByzCoinRPCTest {
 
         boolean isValid = bc.checkStateChangeValidity(sc);
         assertTrue(isValid);
-    }
-
-    @Test
-    void resolveInstanceID() throws Exception {
-        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
-        counters.increment();
-
-        // add the _name rule
-        Darc newGenesis = bc.getGenesisDarc().partialCopy();
-        newGenesis.setRule("_name:darc", newGenesis.getExpression("spawn:darc"));
-        bc.getGenesisDarcInstance().evolveDarcAndWait(newGenesis, admin, counters.head(), 10);
-
-        // set a name for the genesis darc
-        counters.increment();
-        NamingInstance namingInst = NamingInstance.fromByzcoin(bc);
-        namingInst.setInstanceNameAndWait("my genesis darc",
-                new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
-                Collections.singletonList(admin),
-                counters.getCounters(),
-                10);
-
-        // try to get the name back
-        InstanceId iID = bc.resolveInstanceID(bc.getGenesisDarc().getBaseId(), "my genesis darc");
-        assertTrue(iID.equals(new InstanceId(bc.getGenesisDarc().getBaseId().getId())));
     }
 
     @Test

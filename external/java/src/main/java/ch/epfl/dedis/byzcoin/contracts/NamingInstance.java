@@ -51,33 +51,65 @@ public class NamingInstance {
 
     /**
      * Asynchronously assigns a name to an instance ID. After the instance is named, ByzCoin.resolveInstanceID can be
-     * used to resolve the name.
+     * used to resolve the name. Once set, the name or instance ID cannot be changed. It is not allowed to set a name
+     * that was previously removed.
      *
-     * @param instanceName is the name of the instance
-     * @param iID          is the to-be-named instance
+     * @param instanceName is the name given to the instance ID
+     * @param iID          is the to-be-named instance ID
      * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
      * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
      * @throws CothorityException if any error occurs
      */
-    public void setInstanceName(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
-        bc.sendTransaction(makeNamingTx(instanceName, iID, owners, ownerCtrs));
+    public void set(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
+        bc.sendTransaction(makeAddTx(instanceName, iID, owners, ownerCtrs));
     }
 
     /**
      * Assigns a name to an instance ID and wait for confirmation. After the instance is named,
-     * ByzCoin.resolveInstanceID can be used to resolve the name.
+     * ByzCoin.resolveInstanceID can be used to resolve the name. Once set, the name or instance ID cannot be changed.
+     * It is not allowed to set a name that was previously removed.
      *
-     * @param instanceName is the name of the instance
-     * @param iID          is the to-be-named instance
+     * @param instanceName is the name given to the instance ID
+     * @param iID          is the to-be-named instance ID
      * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
      * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
-     * @param wait         how many blocks to wait for inclusion of the instruction
+     * @param wait         how many blocks to wait for inclusion of the transaction
      * @throws CothorityException if any error occurs
      */
-    public void setInstanceNameAndWait(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
-        bc.sendTransactionAndWait(makeNamingTx(instanceName, iID, owners, ownerCtrs), wait);
+    public void setAndWait(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
+        bc.sendTransactionAndWait(makeAddTx(instanceName, iID, owners, ownerCtrs), wait);
+    }
+
+    /**
+     * This method asynchronously removes an instance name. Once removed, the name cannot be used in set again.
+     *
+     * @param instanceName is the name of the instance to remove
+     * @param iID          is instance ID which must have been named previously to instanceName
+     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     *                     they must match the signers who will eventually sign the instruction
+     * @throws CothorityException
+     */
+    public void remove(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
+        bc.sendTransaction(makeRemoveTx(instanceName, iID, owners, ownerCtrs));
+    }
+
+    /**
+     * This method removes an instance name and then waits for confirmation. Once removed, the name cannot be used in
+     * set again.
+     *
+     * @param instanceName is the name of the instance to remove
+     * @param iID          is instance ID which must have been named previously to instanceName
+     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     *                     they must match the signers who will eventually sign the instruction
+     * @param wait         how many blocks to wait for inclusion of the transaction
+     * @throws CothorityException
+     */
+    public void removeAndWait(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
+        bc.sendTransactionAndWait(makeRemoveTx(instanceName, iID, owners, ownerCtrs), wait);
     }
 
     private NamingInstance(ByzCoinRPC bc, Instance instance) throws CothorityNotFoundException {
@@ -89,11 +121,11 @@ public class NamingInstance {
         this.instance = instance;
     }
 
-    private ClientTransaction makeNamingTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
+    private ClientTransaction makeTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, String cmd) throws CothorityCryptoException {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("name", instanceName.getBytes()));
         args.add(new Argument("instanceID", iID.getId()));
-        Invoke inv = new Invoke(ContractId, "add", args);
+        Invoke inv = new Invoke(ContractId, cmd, args);
         Instruction namingInst = new Instruction(
                 this.instance.getId(),
                 owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
@@ -104,4 +136,11 @@ public class NamingInstance {
         return ct;
     }
 
+    private ClientTransaction makeRemoveTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
+        return makeTx(instanceName, iID, owners, ownerCtrs, "remove");
+    }
+
+    private ClientTransaction makeAddTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
+        return makeTx(instanceName, iID, owners, ownerCtrs, "add");
+    }
 }

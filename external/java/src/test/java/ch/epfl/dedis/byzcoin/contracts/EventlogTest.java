@@ -223,10 +223,17 @@ class EventLogTest {
     void nameResolution() throws Exception {
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
         adminCtrs.increment();
-        NamingInstance.fromByzcoin(bc).setInstanceNameAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
+        NamingInstance namingInstance = NamingInstance.fromByzcoin(bc);
+        namingInstance.setAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
 
         // We use a fixed genesis ID so make sure there is no randomness in the genesis darc between test executions.
         InstanceId iID = bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("D4A8BC3AAD344F8A1F9E5B5B49E77EEB60CF3B10044053AEC29DBF9B982F7340")), "my event log");
         assertEquals(iID, el.getInstanceId());
+
+        // Remove it and the resolution should fail.
+        adminCtrs.increment();
+        namingInstance.removeAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
+        assertThrows(CothorityCommunicationException.class,
+                () -> bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("D4A8BC3AAD344F8A1F9E5B5B49E77EEB60CF3B10044053AEC29DBF9B982F7340")), "my event log"));
     }
 }

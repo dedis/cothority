@@ -787,5 +787,4 @@ public class ByzCoinRPC {
 
         return roster.makeStreamingConn("ByzCoin/StreamingRequest", req.build(), h);
     }
-
 }
