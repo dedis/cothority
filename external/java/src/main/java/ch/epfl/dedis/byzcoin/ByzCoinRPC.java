@@ -64,7 +64,7 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong
      */
     public ByzCoinRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
-        if (d.getExpression("invoke:"  + ChainConfigInstance.ContractId + ".view_change") == null) {
+        if (d.getExpression("invoke:" + ChainConfigInstance.ContractId + ".view_change") == null) {
             throw new CothorityCommunicationException("need a 'invoke:view_change' rule.");
         }
         ByzCoinProto.CreateGenesisBlock.Builder request =
@@ -166,7 +166,7 @@ public class ByzCoinRPC {
      * @param id is the id of the instance to be fetched
      * @return the proof
      * @throws CothorityCommunicationException if something goes wrong
-     * @throws CothorityCryptoException if the verification fails
+     * @throws CothorityCryptoException        if the verification fails
      */
     public Proof getProof(InstanceId id) throws CothorityCommunicationException, CothorityCryptoException {
         return getProofFrom(id, genesis);
@@ -447,7 +447,7 @@ public class ByzCoinRPC {
     /**
      * Resolves a previously named instance ID from a darc ID and a name.
      *
-     * @param dID is the darc ID that guards the instance.
+     * @param dID  is the darc ID that guards the instance.
      * @param name is the name given to the instance when it was named.
      * @return the instance ID.
      * @throws CothorityCommunicationException if the name does not exist or other failures.
@@ -673,7 +673,7 @@ public class ByzCoinRPC {
         Darc d = new Darc(Arrays.asList(admin.getIdentity()), Arrays.asList(admin.getIdentity()), "Genesis darc".getBytes());
         roster.getNodes().forEach(node -> {
             try {
-                d.addIdentity("invoke:"  + ChainConfigInstance.ContractId + ".view_change", new IdentityEd25519((Ed25519Point) node.getPublic()), Rules.OR);
+                d.addIdentity("invoke:" + ChainConfigInstance.ContractId + ".view_change", new IdentityEd25519((Ed25519Point) node.getPublic()), Rules.OR);
             } catch (CothorityCryptoException e) {
                 logger.warn("didn't find Ed25519 point");
             }
@@ -693,7 +693,7 @@ public class ByzCoinRPC {
      * @param key         which key we're interested in
      * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
      * @throws CothorityCommunicationException if there is an error in getting the proof
-     * @throws CothorityCryptoException if there is an issue with the validity of the proof
+     * @throws CothorityCryptoException        if there is an issue with the validity of the proof
      */
     private static Proof getProof(Roster roster, SkipBlock from, InstanceId key)
             throws CothorityCommunicationException, CothorityCryptoException {
