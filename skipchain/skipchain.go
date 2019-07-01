@@ -1164,7 +1164,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), fs.Newest.Hash)
 			return false
 		}
-		log.Lvl3(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
+		log.Lvl2(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
 		if err := s.SyncChain(fs.Newest.Roster, fs.Previous); err != nil {
 			log.Error("failed to sync skipchain", err)
 			return false

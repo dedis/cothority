@@ -46,11 +46,10 @@ github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UV
 go.dedis.ch/fixbuf v1.0.3 h1:hGcV9Cd/znUxlusJ64eAlExS+5cJDIyTyEG+otu5wQs=
 go.dedis.ch/fixbuf v1.0.3/go.mod h1:yzJMt34Wa5xD37V5RTdmp38cz3QhMagdGoem9anUalw=
 go.dedis.ch/kyber/v3 v3.0.0-pre2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
-go.dedis.ch/kyber/v3 v3.0.2/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
 go.dedis.ch/kyber/v3 v3.0.3 h1:XdqCfDQSuSJli/KhO5jnUFfcr8GWfMimwnwScOH5Lg8=
 go.dedis.ch/kyber/v3 v3.0.3/go.mod h1:OzvaEnPvKlyrWyp3kGXlFdp7ap1VC6RkZDTaPikqhsQ=
-go.dedis.ch/onet/v3 v3.0.15 h1:S/n0sI9ed5+OMurPEyijZnC+CB9khyk8L+1p+fBs5CI=
-go.dedis.ch/onet/v3 v3.0.15/go.mod h1:8zNbWaMMpTiBfa8gftpoe726sivOF1ymxqkiPuvpdFA=
+go.dedis.ch/onet/v3 v3.0.16 h1:BXTPdGaelN02oydChoSEwPsC267Qg5K0MNDZ64uHIb8=
+go.dedis.ch/onet/v3 v3.0.16/go.mod h1:ImNGuFERh9xpFGfXH9nYBzkSk1TKTx6DPaeaeqvvQzc=
 go.dedis.ch/protobuf v1.0.5/go.mod h1:eIV4wicvi6JK0q/QnfIEGeSFNG0ZeB24kzut5+HaRLo=
 go.dedis.ch/protobuf v1.0.6 h1:E61p2XjYbYrTf3WeXE8M8Ui5WA3hX/NgbHHi5D0FLxI=
 go.dedis.ch/protobuf v1.0.6/go.mod h1:YHYXW6dQ9p2iJ3f+2fxKnOpjGx0MvL4cwpg1RVNXaV8=

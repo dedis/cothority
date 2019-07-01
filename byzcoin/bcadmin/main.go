@@ -862,7 +862,7 @@ func link(c *cli.Context) error {
 		for _, si := range r.List {
 			reply, err := scl.GetAllSkipChainIDs(si)
 			if err != nil {
-				log.Warn("Got error while asking", si.Address, "for skipchains")
+				log.Warn("Got error while asking", si.Address, "for skipchains:", err)
 			}
 			found := false
 			for _, idc := range reply.IDs {
@@ -876,6 +876,7 @@ func link(c *cli.Context) error {
 				cc, err = cl.GetChainConfig()
 				if err != nil {
 					cl = nil
+					log.Warnf("Could not get chain config from %v: %v\n", si, err)
 					continue
 				}
 				cl.Roster = cc.Roster
