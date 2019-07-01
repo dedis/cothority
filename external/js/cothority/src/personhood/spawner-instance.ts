@@ -124,6 +124,33 @@ export default class SpawnerInstance extends Instance {
     }
 
     /**
+     * Create the instructions necessary to spawn one or more darcs. This is separated from the
+     * spanDarcs method itself, so that a caller can create a bigger ClientTransaction with
+     * multiple sets of instructions inside.
+     *
+     * @param coin where to take the coins from
+     * @param darcs the darcs to create
+     */
+    spawnDarcInstructions(coin: CoinInstance, ...darcs: Darc[]): Instruction[] {
+        const cost = this.struct.costDarc.value.mul(darcs.length);
+        const ret: Instruction[] = [
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(cost.toBytesLE())})],
+            ),
+            ...darcs.map((darc) =>
+                Instruction.createSpawn(
+                    this.id,
+                    DarcInstance.contractID,
+                    [new Argument({name: SpawnerInstance.argumentDarc, value: darc.toBytes()})],
+                )),
+        ];
+        return ret;
+    }
+
+    /**
      * Spawns one or more darc and returns an array of all the spawned darcs.
      *
      * @param coin      The coin instance to take coins from
@@ -133,25 +160,7 @@ export default class SpawnerInstance extends Instance {
      * @returns a promise that resolves with the new array of the instantiated darc instances
      */
     async spawnDarcs(coin: CoinInstance, signers: Signer[], ...darcs: Darc[]): Promise<DarcInstance[]> {
-        const cost = this.struct.costDarc.value.mul(darcs.length);
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(
-                    coin.id,
-                    CoinInstance.contractID,
-                    CoinInstance.commandFetch,
-                    [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(cost.toBytesLE())})],
-                ),
-            ],
-        });
-        darcs.forEach((darc) => {
-            ctx.instructions.push(
-                Instruction.createSpawn(
-                    this.id,
-                    DarcInstance.contractID,
-                    [new Argument({name: SpawnerInstance.argumentDarc, value: darc.toBytes()})],
-                ));
-        });
+        const ctx = new ClientTransaction({instructions: this.spawnDarcInstructions(coin, ...darcs)});
         await ctx.updateCountersAndSign(this.rpc, [signers]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -171,6 +180,37 @@ export default class SpawnerInstance extends Instance {
     }
 
     /**
+     * Creates all the necessary instruction to create a new coin - either with a 0 balance, or with
+     * a given balance by the caller.
+     *
+     * @param coin where to take the coins to create the instance
+     * @param darcID the responsible darc for the new coin
+     * @param coinID the type of coin - must be the same as the `coin` in case of balance > 0
+     * @param balance how many coins to transfer to the new coin
+     */
+    spawnCoinInstructions(coin: CoinInstance, darcID: InstanceID, coinID: Buffer, balance?: Long): Instruction[] {
+        balance = balance || Long.fromNumber(0);
+        const valueBuf = this.struct.costCoin.value.add(balance).toBytesLE();
+        return [
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                CoinInstance.contractID,
+                [
+                    new Argument({name: SpawnerInstance.argumentCoinName, value: SPAWNER_COIN}),
+                    new Argument({name: SpawnerInstance.argumentCoinID, value: coinID}),
+                    new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
+                ],
+            ),
+        ];
+    }
+
+    /**
      * Create a coin instance for a given darc
      *
      * @param coin      The coin instance to take the coins from
@@ -183,31 +223,48 @@ export default class SpawnerInstance extends Instance {
     async spawnCoin(coin: CoinInstance, signers: Signer[], darcID: InstanceID, coinID: Buffer, balance?: Long):
         Promise<CoinInstance> {
 
-        balance = balance || Long.fromNumber(0);
-        const valueBuf = this.struct.costCoin.value.add(balance).toBytesLE();
         const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(
-                    coin.id,
-                    CoinInstance.contractID,
-                    CoinInstance.commandFetch,
-                    [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
-                ),
-                Instruction.createSpawn(
-                    this.id,
-                    CoinInstance.contractID,
-                    [
-                        new Argument({name: SpawnerInstance.argumentCoinName, value: SPAWNER_COIN}),
-                        new Argument({name: SpawnerInstance.argumentCoinID, value: coinID}),
-                        new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
-                    ],
-                ),
-            ],
+            instructions: this.spawnCoinInstructions(coin, darcID, coinID, balance),
         });
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
         return CoinInstance.fromByzcoin(this.rpc, CoinInstance.coinIID(coinID), 2);
+    }
+
+    /**
+     * Creates the instructions necessary to create a credential. This is separated from the spawnCredential
+     * method, so that a caller can get the instructions separated and then put all the instructions
+     * together in a big ClientTransaction.
+     *
+     * @param coin coin-instance to pay for the credential
+     * @param darcID responsible darc for the credential
+     * @param cred the credential structure
+     * @param credID if given, used to calculate the iid of the credential, else the darcID will be used
+     */
+    spawnCredentialInstruction(coin: CoinInstance, darcID: Buffer, cred: CredentialStruct, credID: Buffer = null):
+        Instruction[] {
+        const valueBuf = this.struct.costCredential.value.toBytesLE();
+        const credArgs = [
+            new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
+            new Argument({name: SpawnerInstance.argumentCredential, value: cred.toBytes()}),
+        ];
+        if (credID) {
+            credArgs.push(new Argument({name: SpawnerInstance.argumentCredID, value: credID}));
+        }
+        return [
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                CredentialInstance.contractID,
+                credArgs,
+            ),
+        ];
     }
 
     /**
@@ -227,36 +284,13 @@ export default class SpawnerInstance extends Instance {
         cred: CredentialStruct,
         credID: Buffer = null,
     ): Promise<CredentialsInstance> {
-        const valueBuf = this.struct.costCredential.value.toBytesLE();
-        const credArgs = [
-            new Argument({name: SpawnerInstance.argumentDarcID, value: darcID}),
-            new Argument({name: SpawnerInstance.argumentCredential, value: cred.toBytes()}),
-        ];
-        let finalCredID: Buffer;
-        if (credID) {
-            credArgs.push(new Argument({name: SpawnerInstance.argumentCredID, value: credID}));
-            finalCredID = CredentialInstance.credentialIID(credID);
-        } else {
-            finalCredID = CredentialsInstance.credentialIID(darcID);
-        }
         const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(
-                    coin.id,
-                    CoinInstance.contractID,
-                    CoinInstance.commandFetch,
-                    [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
-                ),
-                Instruction.createSpawn(
-                    this.id,
-                    CredentialInstance.contractID,
-                    credArgs,
-                ),
-            ],
+            instructions: this.spawnCredentialInstruction(coin, darcID, cred, credID),
         });
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
+        const finalCredID = CredentialInstance.credentialIID(credID || darcID);
         return CredentialInstance.fromByzcoin(this.rpc, finalCredID, 2);
     }
 
@@ -525,67 +559,67 @@ export class SpawnerStruct extends Message<SpawnerStruct> {
  * Fields of the costs of a spawner instance
  */
 interface ICreateCost {
-    [k: string]: Long;
-
     costCRead: Long;
     costCWrite: Long;
     costCoin: Long;
     costCredential: Long;
     costDarc: Long;
     costParty: Long;
+
+    [k: string]: Long;
 }
 
 /**
  * Parameters to create a spawner instance
  */
 interface ICreateSpawner {
-    [k: string]: any;
-
     bc: ByzCoinRPC;
     darcID: InstanceID;
     signers: Signer[];
     costs: ICreateCost;
     beneficiary: InstanceID;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a rock-paper-scissors game
  */
 interface ICreateRoPaSci {
-    [k: string]: any;
-
     desc: string;
     coin: CoinInstance;
     signers: Signer[];
     stake: Long;
     choice: number;
     fillup: Buffer;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a pop party
  */
 interface ICreatePopParty {
-    [k: string]: any;
-
     coin: CoinInstance;
     signers: Signer[];
     orgs: CredentialInstance[];
     desc: PopDesc;
     reward: Long;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a calypso write instance
  */
 interface ISpawnCalyspoWrite {
-    [k: string]: any;
-
     coin: CoinInstance;
     signers: Signer[];
     write: Write;
     darcID: InstanceID;
     choice: number;
+
+    [k: string]: any;
 }
 
 SpawnerStruct.register();
