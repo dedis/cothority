@@ -174,6 +174,27 @@ type bcStorage struct {
 	sync.Mutex
 }
 
+// GetAllChainIDs returns the list of Byzcoin chains known by the server.
+func (s *Service) GetAllChainIDs(req *GetAllChainIDsRequest) (*GetAllChainIDsResponse, error) {
+	chains, err := s.skService().GetDB().GetSkipchains()
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]skipchain.SkipBlockID, len(chains))
+	index := 0
+	for k := range chains {
+		id := skipchain.SkipBlockID(k)
+
+		if s.hasByzCoinVerification(id) {
+			ids[index] = id
+			index++
+		}
+	}
+
+	return &GetAllChainIDsResponse{IDs: ids[:index]}, nil
+}
+
 // CreateGenesisBlock asks the service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
@@ -2365,6 +2386,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	err := s.RegisterHandlers(
+		s.GetAllChainIDs,
 		s.CreateGenesisBlock,
 		s.AddTransaction,
 		s.GetProof,
