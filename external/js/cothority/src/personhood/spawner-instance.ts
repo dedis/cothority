@@ -124,7 +124,7 @@ export default class SpawnerInstance extends Instance {
     }
 
     /**
-     * Create the instructions necessary to spawn one or mroe darcs. This is separated from the
+     * Create the instructions necessary to spawn one or more darcs. This is separated from the
      * spanDarcs method itself, so that a caller can create a bigger ClientTransaction with
      * multiple sets of instructions inside.
      *
@@ -140,15 +140,13 @@ export default class SpawnerInstance extends Instance {
                 CoinInstance.commandFetch,
                 [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(cost.toBytesLE())})],
             ),
-        ];
-        darcs.forEach((darc) => {
-            ret.push(
+            ...darcs.map((darc) =>
                 Instruction.createSpawn(
                     this.id,
                     DarcInstance.contractID,
                     [new Argument({name: SpawnerInstance.argumentDarc, value: darc.toBytes()})],
-                ));
-        });
+                )),
+        ];
         return ret;
     }
 
@@ -561,67 +559,67 @@ export class SpawnerStruct extends Message<SpawnerStruct> {
  * Fields of the costs of a spawner instance
  */
 interface ICreateCost {
-    [k: string]: Long;
-
     costCRead: Long;
     costCWrite: Long;
     costCoin: Long;
     costCredential: Long;
     costDarc: Long;
     costParty: Long;
+
+    [k: string]: Long;
 }
 
 /**
  * Parameters to create a spawner instance
  */
 interface ICreateSpawner {
-    [k: string]: any;
-
     bc: ByzCoinRPC;
     darcID: InstanceID;
     signers: Signer[];
     costs: ICreateCost;
     beneficiary: InstanceID;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a rock-paper-scissors game
  */
 interface ICreateRoPaSci {
-    [k: string]: any;
-
     desc: string;
     coin: CoinInstance;
     signers: Signer[];
     stake: Long;
     choice: number;
     fillup: Buffer;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a pop party
  */
 interface ICreatePopParty {
-    [k: string]: any;
-
     coin: CoinInstance;
     signers: Signer[];
     orgs: CredentialInstance[];
     desc: PopDesc;
     reward: Long;
+
+    [k: string]: any;
 }
 
 /**
  * Parameters to create a calypso write instance
  */
 interface ISpawnCalyspoWrite {
-    [k: string]: any;
-
     coin: CoinInstance;
     signers: Signer[];
     write: Write;
     darcID: InstanceID;
     choice: number;
+
+    [k: string]: any;
 }
 
 SpawnerStruct.register();
