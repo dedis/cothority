@@ -28,7 +28,8 @@ import (
 // option java_outer_classname = "ByzCoinProto";
 
 // GetAllChainIDsRequest is a request to get all the Byzcoin chains from a server.
-type GetAllChainIDsRequest struct{}
+type GetAllChainIDsRequest struct {
+}
 
 // GetAllChainIDsResponse contains the list of Byzcoin chains known by a server.
 type GetAllChainIDsResponse struct {

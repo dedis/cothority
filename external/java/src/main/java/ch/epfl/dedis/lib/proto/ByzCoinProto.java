@@ -14,6 +14,1003 @@ public final class ByzCoinProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface GetAllChainIDsRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.GetAllChainIDsRequest)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetAllChainIDsRequest is a request to get all the Byzcoin chains from a server.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.GetAllChainIDsRequest}
+   */
+  public  static final class GetAllChainIDsRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.GetAllChainIDsRequest)
+      GetAllChainIDsRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAllChainIDsRequest.newBuilder() to construct.
+    private GetAllChainIDsRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAllChainIDsRequest() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAllChainIDsRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsRequest_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAllChainIDsRequest is a request to get all the Byzcoin chains from a server.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.GetAllChainIDsRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.GetAllChainIDsRequest)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsRequest_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsRequest_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.GetAllChainIDsRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.GetAllChainIDsRequest)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAllChainIDsRequest>
+        PARSER = new com.google.protobuf.AbstractParser<GetAllChainIDsRequest>() {
+      @java.lang.Override
+      public GetAllChainIDsRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAllChainIDsRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAllChainIDsRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAllChainIDsRequest> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetAllChainIDsResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.GetAllChainIDsResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getIdsList();
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    int getIdsCount();
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    com.google.protobuf.ByteString getIds(int index);
+  }
+  /**
+   * <pre>
+   * GetAllChainIDsResponse contains the list of Byzcoin chains known by a server.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.GetAllChainIDsResponse}
+   */
+  public  static final class GetAllChainIDsResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.GetAllChainIDsResponse)
+      GetAllChainIDsResponseOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAllChainIDsResponse.newBuilder() to construct.
+    private GetAllChainIDsResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAllChainIDsResponse() {
+      ids_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAllChainIDsResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                ids_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              ids_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          ids_ = java.util.Collections.unmodifiableList(ids_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsResponse_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.Builder.class);
+    }
+
+    public static final int IDS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> ids_;
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getIdsList() {
+      return ids_;
+    }
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    public int getIdsCount() {
+      return ids_.size();
+    }
+    /**
+     * <code>repeated bytes ids = 1;</code>
+     */
+    public com.google.protobuf.ByteString getIds(int index) {
+      return ids_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < ids_.size(); i++) {
+        output.writeBytes(1, ids_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < ids_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(ids_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getIdsList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse) obj;
+
+      boolean result = true;
+      result = result && getIdsList()
+          .equals(other.getIdsList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getIdsCount() > 0) {
+        hash = (37 * hash) + IDS_FIELD_NUMBER;
+        hash = (53 * hash) + getIdsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAllChainIDsResponse contains the list of Byzcoin chains known by a server.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.GetAllChainIDsResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.GetAllChainIDsResponse)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsResponse_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        ids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_GetAllChainIDsResponse_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          ids_ = java.util.Collections.unmodifiableList(ids_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.ids_ = ids_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse.getDefaultInstance()) return this;
+        if (!other.ids_.isEmpty()) {
+          if (ids_.isEmpty()) {
+            ids_ = other.ids_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureIdsIsMutable();
+            ids_.addAll(other.ids_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> ids_ = java.util.Collections.emptyList();
+      private void ensureIdsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          ids_ = new java.util.ArrayList<com.google.protobuf.ByteString>(ids_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getIdsList() {
+        return java.util.Collections.unmodifiableList(ids_);
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public int getIdsCount() {
+        return ids_.size();
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public com.google.protobuf.ByteString getIds(int index) {
+        return ids_.get(index);
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public Builder setIds(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureIdsIsMutable();
+        ids_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public Builder addIds(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureIdsIsMutable();
+        ids_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public Builder addAllIds(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureIdsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, ids_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes ids = 1;</code>
+       */
+      public Builder clearIds() {
+        ids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.GetAllChainIDsResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.GetAllChainIDsResponse)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAllChainIDsResponse>
+        PARSER = new com.google.protobuf.AbstractParser<GetAllChainIDsResponse>() {
+      @java.lang.Override
+      public GetAllChainIDsResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAllChainIDsResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAllChainIDsResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAllChainIDsResponse> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.GetAllChainIDsResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface DataHeaderOrBuilder extends
       // @@protoc_insertion_point(interface_extends:byzcoin.DataHeader)
       com.google.protobuf.MessageOrBuilder {
@@ -36896,6 +37893,16 @@ public final class ByzCoinProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_GetAllChainIDsRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_GetAllChainIDsRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_GetAllChainIDsResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_GetAllChainIDsResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DataHeader_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -37110,91 +38117,93 @@ public final class ByzCoinProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\rbyzcoin.proto\022\007byzcoin\032\017skipchain.prot" +
-      "o\032\nonet.proto\032\ndarc.proto\032\ntrie.proto\"j\n" +
-      "\nDataHeader\022\020\n\010trieroot\030\001 \002(\014\022\035\n\025clientt" +
-      "ransactionhash\030\002 \002(\014\022\030\n\020statechangeshash" +
-      "\030\003 \002(\014\022\021\n\ttimestamp\030\004 \002(\022\"0\n\010DataBody\022$\n" +
-      "\ttxresults\030\001 \003(\0132\021.byzcoin.TxResult\"\252\001\n\022" +
-      "CreateGenesisBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006r" +
-      "oster\030\002 \002(\0132\014.onet.Roster\022\037\n\013genesisdarc" +
-      "\030\003 \002(\0132\n.darc.Darc\022\025\n\rblockinterval\030\004 \002(" +
-      "\022\022\024\n\014maxblocksize\030\005 \001(\021\022\027\n\017darccontracti" +
-      "ds\030\006 \003(\t\"V\n\032CreateGenesisBlockResponse\022\017" +
-      "\n\007version\030\001 \002(\021\022\'\n\tskipblock\030\002 \001(\0132\024.ski" +
-      "pchain.SkipBlock\"|\n\014AddTxRequest\022\017\n\007vers" +
-      "ion\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\022/\n\013transa" +
-      "ction\030\003 \002(\0132\032.byzcoin.ClientTransaction\022" +
-      "\025\n\rinclusionwait\030\004 \001(\021\" \n\rAddTxResponse\022" +
-      "\017\n\007version\030\001 \002(\021\"4\n\010GetProof\022\017\n\007version\030" +
-      "\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"B\n\020GetPro" +
-      "ofResponse\022\017\n\007version\030\001 \002(\021\022\035\n\005proof\030\002 \002" +
-      "(\0132\016.byzcoin.Proof\"l\n\022CheckAuthorization" +
-      "\022\017\n\007version\030\001 \002(\021\022\021\n\tbyzcoinid\030\002 \002(\014\022\016\n\006" +
-      "darcid\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.darc." +
-      "Identity\"-\n\032CheckAuthorizationResponse\022\017" +
-      "\n\007actions\030\001 \003(\t\"q\n\013ChainConfig\022\025\n\rblocki" +
-      "nterval\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Ros" +
-      "ter\022\024\n\014maxblocksize\030\003 \002(\021\022\027\n\017darccontrac" +
-      "tids\030\004 \003(\t\"y\n\005Proof\022#\n\016inclusionproof\030\001 " +
-      "\002(\0132\013.trie.Proof\022$\n\006latest\030\002 \002(\0132\024.skipc" +
-      "hain.SkipBlock\022%\n\005links\030\003 \003(\0132\026.skipchai" +
-      "n.ForwardLink\"\333\001\n\013Instruction\022\022\n\ninstanc" +
-      "eid\030\001 \002(\014\022\035\n\005spawn\030\002 \001(\0132\016.byzcoin.Spawn" +
-      "\022\037\n\006invoke\030\003 \001(\0132\017.byzcoin.Invoke\022\037\n\006del" +
-      "ete\030\004 \001(\0132\017.byzcoin.Delete\022\031\n\rsignercoun" +
-      "ter\030\005 \003(\004B\002\020\001\022(\n\020signeridentities\030\006 \003(\0132" +
-      "\016.darc.Identity\022\022\n\nsignatures\030\007 \003(\014\"<\n\005S" +
-      "pawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021" +
-      ".byzcoin.Argument\"N\n\006Invoke\022\022\n\ncontracti" +
-      "d\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022\037\n\004args\030\003 \003(\0132\021" +
-      ".byzcoin.Argument\"\034\n\006Delete\022\022\n\ncontracti" +
-      "d\030\001 \002(\t\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005val" +
-      "ue\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014instruc" +
-      "tions\030\001 \003(\0132\024.byzcoin.Instruction\"S\n\010TxR" +
-      "esult\0225\n\021clienttransaction\030\001 \002(\0132\032.byzco" +
-      "in.ClientTransaction\022\020\n\010accepted\030\002 \002(\010\"z" +
-      "\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\nin" +
-      "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\t\022\r\n\005va" +
-      "lue\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030\006 \002" +
-      "(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"" +
-      "\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021Strea" +
-      "mingResponse\022#\n\005block\030\001 \001(\0132\024.skipchain." +
-      "SkipBlock\"A\n\rDownloadState\022\021\n\tbyzcoinid\030" +
-      "\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"N\n\025" +
-      "DownloadStateResponse\022&\n\tkeyvalues\030\001 \003(\013" +
-      "2\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\"(\n\n" +
-      "DBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j" +
-      "\n\017StateChangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022" +
-      "\n\ncontractid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007ver" +
-      "sion\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerC" +
-      "ounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchaini" +
-      "d\030\002 \002(\014\"1\n\031GetSignerCountersResponse\022\024\n\010" +
-      "counters\030\001 \003(\004B\002\020\001\"N\n\022GetInstanceVersion" +
-      "\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(" +
-      "\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastInstanceVer" +
-      "sion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030" +
-      "\002 \002(\014\"[\n\032GetInstanceVersionResponse\022)\n\013s" +
-      "tatechange\030\001 \002(\0132\024.byzcoin.StateChange\022\022" +
-      "\n\nblockindex\030\002 \002(\021\"@\n\025GetAllInstanceVers" +
-      "ion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002" +
-      " \002(\014\"Z\n\035GetAllInstanceVersionResponse\0229\n" +
-      "\014statechanges\030\001 \003(\0132#.byzcoin.GetInstanc" +
-      "eVersionResponse\"T\n\030CheckStateChangeVali" +
-      "dity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030" +
-      "\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckStateChan" +
-      "geValidityResponse\022*\n\014statechanges\030\001 \003(\013" +
-      "2\024.byzcoin.StateChange\022\017\n\007blockid\030\002 \002(\014\"" +
-      "!\n\014DebugRequest\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDe" +
-      "bugResponse\022/\n\010byzcoins\030\001 \003(\0132\035.byzcoin." +
-      "DebugResponseByzcoin\022)\n\004dump\030\002 \003(\0132\033.byz" +
-      "coin.DebugResponseState\"v\n\024DebugResponse" +
-      "Byzcoin\022\021\n\tbyzcoinid\030\001 \002(\014\022%\n\007genesis\030\002 " +
-      "\001(\0132\024.skipchain.SkipBlock\022$\n\006latest\030\003 \001(" +
-      "\0132\024.skipchain.SkipBlock\"J\n\022DebugResponse" +
-      "State\022\013\n\003key\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzc" +
-      "oin.StateChangeBody\":\n\022DebugRemoveReques" +
-      "t\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B" +
-      "\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinProto"
+      "o\032\nonet.proto\032\ndarc.proto\032\ntrie.proto\"\027\n" +
+      "\025GetAllChainIDsRequest\"%\n\026GetAllChainIDs" +
+      "Response\022\013\n\003ids\030\001 \003(\014\"j\n\nDataHeader\022\020\n\010t" +
+      "rieroot\030\001 \002(\014\022\035\n\025clienttransactionhash\030\002" +
+      " \002(\014\022\030\n\020statechangeshash\030\003 \002(\014\022\021\n\ttimest" +
+      "amp\030\004 \002(\022\"0\n\010DataBody\022$\n\ttxresults\030\001 \003(\013" +
+      "2\021.byzcoin.TxResult\"\252\001\n\022CreateGenesisBlo" +
+      "ck\022\017\n\007version\030\001 \002(\021\022\034\n\006roster\030\002 \002(\0132\014.on" +
+      "et.Roster\022\037\n\013genesisdarc\030\003 \002(\0132\n.darc.Da" +
+      "rc\022\025\n\rblockinterval\030\004 \002(\022\022\024\n\014maxblocksiz" +
+      "e\030\005 \001(\021\022\027\n\017darccontractids\030\006 \003(\t\"V\n\032Crea" +
+      "teGenesisBlockResponse\022\017\n\007version\030\001 \002(\021\022" +
+      "\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipBlock" +
+      "\"|\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n\013ski" +
+      "pchainid\030\002 \002(\014\022/\n\013transaction\030\003 \002(\0132\032.by" +
+      "zcoin.ClientTransaction\022\025\n\rinclusionwait" +
+      "\030\004 \001(\021\" \n\rAddTxResponse\022\017\n\007version\030\001 \002(\021" +
+      "\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030\002 \002" +
+      "(\014\022\n\n\002id\030\003 \002(\014\"B\n\020GetProofResponse\022\017\n\007ve" +
+      "rsion\030\001 \002(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Pro" +
+      "of\"l\n\022CheckAuthorization\022\017\n\007version\030\001 \002(" +
+      "\021\022\021\n\tbyzcoinid\030\002 \002(\014\022\016\n\006darcid\030\003 \002(\014\022\"\n\n" +
+      "identities\030\004 \003(\0132\016.darc.Identity\"-\n\032Chec" +
+      "kAuthorizationResponse\022\017\n\007actions\030\001 \003(\t\"" +
+      "q\n\013ChainConfig\022\025\n\rblockinterval\030\001 \002(\022\022\034\n" +
+      "\006roster\030\002 \002(\0132\014.onet.Roster\022\024\n\014maxblocks" +
+      "ize\030\003 \002(\021\022\027\n\017darccontractids\030\004 \003(\t\"y\n\005Pr" +
+      "oof\022#\n\016inclusionproof\030\001 \002(\0132\013.trie.Proof" +
+      "\022$\n\006latest\030\002 \002(\0132\024.skipchain.SkipBlock\022%" +
+      "\n\005links\030\003 \003(\0132\026.skipchain.ForwardLink\"\333\001" +
+      "\n\013Instruction\022\022\n\ninstanceid\030\001 \002(\014\022\035\n\005spa" +
+      "wn\030\002 \001(\0132\016.byzcoin.Spawn\022\037\n\006invoke\030\003 \001(\013" +
+      "2\017.byzcoin.Invoke\022\037\n\006delete\030\004 \001(\0132\017.byzc" +
+      "oin.Delete\022\031\n\rsignercounter\030\005 \003(\004B\002\020\001\022(\n" +
+      "\020signeridentities\030\006 \003(\0132\016.darc.Identity\022" +
+      "\022\n\nsignatures\030\007 \003(\014\"<\n\005Spawn\022\022\n\ncontract" +
+      "id\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argumen" +
+      "t\"N\n\006Invoke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007comma" +
+      "nd\030\002 \002(\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argumen" +
+      "t\"\034\n\006Delete\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argum" +
+      "ent\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021Clie" +
+      "ntTransaction\022*\n\014instructions\030\001 \003(\0132\024.by" +
+      "zcoin.Instruction\"S\n\010TxResult\0225\n\021clientt" +
+      "ransaction\030\001 \002(\0132\032.byzcoin.ClientTransac" +
+      "tion\022\020\n\010accepted\030\002 \002(\010\"z\n\013StateChange\022\023\n" +
+      "\013stateaction\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022" +
+      "\n\ncontractid\030\003 \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006dar" +
+      "cid\030\005 \002(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004na" +
+      "me\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequ" +
+      "est\022\n\n\002id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005" +
+      "block\030\001 \001(\0132\024.skipchain.SkipBlock\"A\n\rDow" +
+      "nloadState\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002" +
+      " \002(\004\022\016\n\006length\030\003 \002(\021\"N\n\025DownloadStateRes" +
+      "ponse\022&\n\tkeyvalues\030\001 \003(\0132\023.byzcoin.DBKey" +
+      "Value\022\r\n\005nonce\030\002 \002(\004\"(\n\nDBKeyValue\022\013\n\003ke" +
+      "y\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBod" +
+      "y\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002" +
+      "(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006da" +
+      "rcid\030\005 \002(\014\";\n\021GetSignerCounters\022\021\n\tsigne" +
+      "rids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"1\n\031GetSi" +
+      "gnerCountersResponse\022\024\n\010counters\030\001 \003(\004B\002" +
+      "\020\001\"N\n\022GetInstanceVersion\022\023\n\013skipchainid\030" +
+      "\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002" +
+      "(\004\"A\n\026GetLastInstanceVersion\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetInst" +
+      "anceVersionResponse\022)\n\013statechange\030\001 \002(\013" +
+      "2\024.byzcoin.StateChange\022\022\n\nblockindex\030\002 \002" +
+      "(\021\"@\n\025GetAllInstanceVersion\022\023\n\013skipchain" +
+      "id\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllIn" +
+      "stanceVersionResponse\0229\n\014statechanges\030\001 " +
+      "\003(\0132#.byzcoin.GetInstanceVersionResponse" +
+      "\"T\n\030CheckStateChangeValidity\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version" +
+      "\030\003 \002(\004\"_\n CheckStateChangeValidityRespon" +
+      "se\022*\n\014statechanges\030\001 \003(\0132\024.byzcoin.State" +
+      "Change\022\017\n\007blockid\030\002 \002(\014\"!\n\014DebugRequest\022" +
+      "\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n\010b" +
+      "yzcoins\030\001 \003(\0132\035.byzcoin.DebugResponseByz" +
+      "coin\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugRespon" +
+      "seState\"v\n\024DebugResponseByzcoin\022\021\n\tbyzco" +
+      "inid\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchain." +
+      "SkipBlock\022$\n\006latest\030\003 \001(\0132\024.skipchain.Sk" +
+      "ipBlock\"J\n\022DebugResponseState\022\013\n\003key\030\001 \002" +
+      "(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateChangeB" +
+      "ody\":\n\022DebugRemoveRequest\022\021\n\tbyzcoinid\030\001" +
+      " \002(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.dedis" +
+      ".lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -37212,248 +38221,260 @@ public final class ByzCoinProto {
           ch.epfl.dedis.lib.proto.DarcProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.TrieProto.getDescriptor(),
         }, assigner);
-    internal_static_byzcoin_DataHeader_descriptor =
+    internal_static_byzcoin_GetAllChainIDsRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_byzcoin_GetAllChainIDsRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_GetAllChainIDsRequest_descriptor,
+        new java.lang.String[] { });
+    internal_static_byzcoin_GetAllChainIDsResponse_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_byzcoin_GetAllChainIDsResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_GetAllChainIDsResponse_descriptor,
+        new java.lang.String[] { "Ids", });
+    internal_static_byzcoin_DataHeader_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_byzcoin_DataHeader_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DataHeader_descriptor,
         new java.lang.String[] { "Trieroot", "Clienttransactionhash", "Statechangeshash", "Timestamp", });
     internal_static_byzcoin_DataBody_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_byzcoin_DataBody_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DataBody_descriptor,
         new java.lang.String[] { "Txresults", });
     internal_static_byzcoin_CreateGenesisBlock_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_byzcoin_CreateGenesisBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CreateGenesisBlock_descriptor,
         new java.lang.String[] { "Version", "Roster", "Genesisdarc", "Blockinterval", "Maxblocksize", "Darccontractids", });
     internal_static_byzcoin_CreateGenesisBlockResponse_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_byzcoin_CreateGenesisBlockResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CreateGenesisBlockResponse_descriptor,
         new java.lang.String[] { "Version", "Skipblock", });
     internal_static_byzcoin_AddTxRequest_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_byzcoin_AddTxRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_AddTxRequest_descriptor,
         new java.lang.String[] { "Version", "Skipchainid", "Transaction", "Inclusionwait", });
     internal_static_byzcoin_AddTxResponse_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_byzcoin_AddTxResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_AddTxResponse_descriptor,
         new java.lang.String[] { "Version", });
     internal_static_byzcoin_GetProof_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_byzcoin_GetProof_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetProof_descriptor,
         new java.lang.String[] { "Version", "Key", "Id", });
     internal_static_byzcoin_GetProofResponse_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_byzcoin_GetProofResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetProofResponse_descriptor,
         new java.lang.String[] { "Version", "Proof", });
     internal_static_byzcoin_CheckAuthorization_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_byzcoin_CheckAuthorization_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckAuthorization_descriptor,
         new java.lang.String[] { "Version", "Byzcoinid", "Darcid", "Identities", });
     internal_static_byzcoin_CheckAuthorizationResponse_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_byzcoin_CheckAuthorizationResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckAuthorizationResponse_descriptor,
         new java.lang.String[] { "Actions", });
     internal_static_byzcoin_ChainConfig_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_byzcoin_ChainConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ChainConfig_descriptor,
         new java.lang.String[] { "Blockinterval", "Roster", "Maxblocksize", "Darccontractids", });
     internal_static_byzcoin_Proof_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_byzcoin_Proof_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Proof_descriptor,
         new java.lang.String[] { "Inclusionproof", "Latest", "Links", });
     internal_static_byzcoin_Instruction_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_byzcoin_Instruction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Instruction_descriptor,
         new java.lang.String[] { "Instanceid", "Spawn", "Invoke", "Delete", "Signercounter", "Signeridentities", "Signatures", });
     internal_static_byzcoin_Spawn_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_byzcoin_Spawn_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Spawn_descriptor,
         new java.lang.String[] { "Contractid", "Args", });
     internal_static_byzcoin_Invoke_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_byzcoin_Invoke_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Invoke_descriptor,
         new java.lang.String[] { "Contractid", "Command", "Args", });
     internal_static_byzcoin_Delete_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_byzcoin_Delete_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Delete_descriptor,
         new java.lang.String[] { "Contractid", });
     internal_static_byzcoin_Argument_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_byzcoin_Argument_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Argument_descriptor,
         new java.lang.String[] { "Name", "Value", });
     internal_static_byzcoin_ClientTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_byzcoin_ClientTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ClientTransaction_descriptor,
         new java.lang.String[] { "Instructions", });
     internal_static_byzcoin_TxResult_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_byzcoin_TxResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_TxResult_descriptor,
         new java.lang.String[] { "Clienttransaction", "Accepted", });
     internal_static_byzcoin_StateChange_descriptor =
-      getDescriptor().getMessageTypes().get(19);
+      getDescriptor().getMessageTypes().get(21);
     internal_static_byzcoin_StateChange_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StateChange_descriptor,
         new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", "Darcid", "Version", });
     internal_static_byzcoin_Coin_descriptor =
-      getDescriptor().getMessageTypes().get(20);
+      getDescriptor().getMessageTypes().get(22);
     internal_static_byzcoin_Coin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_Coin_descriptor,
         new java.lang.String[] { "Name", "Value", });
     internal_static_byzcoin_StreamingRequest_descriptor =
-      getDescriptor().getMessageTypes().get(21);
+      getDescriptor().getMessageTypes().get(23);
     internal_static_byzcoin_StreamingRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StreamingRequest_descriptor,
         new java.lang.String[] { "Id", });
     internal_static_byzcoin_StreamingResponse_descriptor =
-      getDescriptor().getMessageTypes().get(22);
+      getDescriptor().getMessageTypes().get(24);
     internal_static_byzcoin_StreamingResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StreamingResponse_descriptor,
         new java.lang.String[] { "Block", });
     internal_static_byzcoin_DownloadState_descriptor =
-      getDescriptor().getMessageTypes().get(23);
+      getDescriptor().getMessageTypes().get(25);
     internal_static_byzcoin_DownloadState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DownloadState_descriptor,
         new java.lang.String[] { "Byzcoinid", "Nonce", "Length", });
     internal_static_byzcoin_DownloadStateResponse_descriptor =
-      getDescriptor().getMessageTypes().get(24);
+      getDescriptor().getMessageTypes().get(26);
     internal_static_byzcoin_DownloadStateResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DownloadStateResponse_descriptor,
         new java.lang.String[] { "Keyvalues", "Nonce", });
     internal_static_byzcoin_DBKeyValue_descriptor =
-      getDescriptor().getMessageTypes().get(25);
+      getDescriptor().getMessageTypes().get(27);
     internal_static_byzcoin_DBKeyValue_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DBKeyValue_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_byzcoin_StateChangeBody_descriptor =
-      getDescriptor().getMessageTypes().get(26);
+      getDescriptor().getMessageTypes().get(28);
     internal_static_byzcoin_StateChangeBody_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StateChangeBody_descriptor,
         new java.lang.String[] { "Stateaction", "Contractid", "Value", "Version", "Darcid", });
     internal_static_byzcoin_GetSignerCounters_descriptor =
-      getDescriptor().getMessageTypes().get(27);
+      getDescriptor().getMessageTypes().get(29);
     internal_static_byzcoin_GetSignerCounters_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetSignerCounters_descriptor,
         new java.lang.String[] { "Signerids", "Skipchainid", });
     internal_static_byzcoin_GetSignerCountersResponse_descriptor =
-      getDescriptor().getMessageTypes().get(28);
+      getDescriptor().getMessageTypes().get(30);
     internal_static_byzcoin_GetSignerCountersResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetSignerCountersResponse_descriptor,
         new java.lang.String[] { "Counters", });
     internal_static_byzcoin_GetInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(29);
+      getDescriptor().getMessageTypes().get(31);
     internal_static_byzcoin_GetInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", "Version", });
     internal_static_byzcoin_GetLastInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(30);
+      getDescriptor().getMessageTypes().get(32);
     internal_static_byzcoin_GetLastInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetLastInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", });
     internal_static_byzcoin_GetInstanceVersionResponse_descriptor =
-      getDescriptor().getMessageTypes().get(31);
+      getDescriptor().getMessageTypes().get(33);
     internal_static_byzcoin_GetInstanceVersionResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetInstanceVersionResponse_descriptor,
         new java.lang.String[] { "Statechange", "Blockindex", });
     internal_static_byzcoin_GetAllInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(32);
+      getDescriptor().getMessageTypes().get(34);
     internal_static_byzcoin_GetAllInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetAllInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", });
     internal_static_byzcoin_GetAllInstanceVersionResponse_descriptor =
-      getDescriptor().getMessageTypes().get(33);
+      getDescriptor().getMessageTypes().get(35);
     internal_static_byzcoin_GetAllInstanceVersionResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetAllInstanceVersionResponse_descriptor,
         new java.lang.String[] { "Statechanges", });
     internal_static_byzcoin_CheckStateChangeValidity_descriptor =
-      getDescriptor().getMessageTypes().get(34);
+      getDescriptor().getMessageTypes().get(36);
     internal_static_byzcoin_CheckStateChangeValidity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckStateChangeValidity_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", "Version", });
     internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor =
-      getDescriptor().getMessageTypes().get(35);
+      getDescriptor().getMessageTypes().get(37);
     internal_static_byzcoin_CheckStateChangeValidityResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor,
         new java.lang.String[] { "Statechanges", "Blockid", });
     internal_static_byzcoin_DebugRequest_descriptor =
-      getDescriptor().getMessageTypes().get(36);
+      getDescriptor().getMessageTypes().get(38);
     internal_static_byzcoin_DebugRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugRequest_descriptor,
         new java.lang.String[] { "Byzcoinid", });
     internal_static_byzcoin_DebugResponse_descriptor =
-      getDescriptor().getMessageTypes().get(37);
+      getDescriptor().getMessageTypes().get(39);
     internal_static_byzcoin_DebugResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponse_descriptor,
         new java.lang.String[] { "Byzcoins", "Dump", });
     internal_static_byzcoin_DebugResponseByzcoin_descriptor =
-      getDescriptor().getMessageTypes().get(38);
+      getDescriptor().getMessageTypes().get(40);
     internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponseByzcoin_descriptor,
         new java.lang.String[] { "Byzcoinid", "Genesis", "Latest", });
     internal_static_byzcoin_DebugResponseState_descriptor =
-      getDescriptor().getMessageTypes().get(39);
+      getDescriptor().getMessageTypes().get(41);
     internal_static_byzcoin_DebugResponseState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponseState_descriptor,
         new java.lang.String[] { "Key", "State", });
     internal_static_byzcoin_DebugRemoveRequest_descriptor =
-      getDescriptor().getMessageTypes().get(40);
+      getDescriptor().getMessageTypes().get(42);
     internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugRemoveRequest_descriptor,
