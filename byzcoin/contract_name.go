@@ -30,7 +30,9 @@ import (
 // is the one that "guards" the the instance.
 const ContractNamingID = "naming"
 
-// ContractNamingBody holds the latest pointer of a linked list of naming entries.
+// ContractNamingBody holds a reference of the latest naming entries. These
+// entries form a reversed linked list of. It is possible to traverse the
+// reversed linked list to find all the naming entries.
 type ContractNamingBody struct {
 	Latest InstanceID
 }
@@ -63,7 +65,9 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return err
 	}
 
-	// The naming contract does not exist yet, so we need to create a singleton.
+	// The naming contract does not exist yet, so we need to create a
+	// singleton. Just like the config contract, we do not return an error
+	// because there is no need/possibility to verify it.
 	if !ok {
 		return nil
 	}
@@ -160,8 +164,14 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 }
 
 type contractNamingEntry struct {
-	IID     InstanceID
-	Prev    InstanceID
+	// IID is the instance ID that is named.
+	IID InstanceID
+	// Prev is a reference to the previous entry. It is used to form a
+	// "reversed" linked list which enables us to track all the named
+	// instances.
+	Prev InstanceID
+	// Removed marks whether the name has been removed. A removed name
+	// cannot be used later.
 	Removed bool
 }
 
