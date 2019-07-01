@@ -876,7 +876,7 @@ func link(c *cli.Context) error {
 				cc, err = cl.GetChainConfig()
 				if err != nil {
 					cl = nil
-					fmt.Printf("Could not get chain config from %v: %v\n", si, err)
+					log.Warnf("Could not get chain config from %v: %v\n", si, err)
 					continue
 				}
 				cl.Roster = cc.Roster
