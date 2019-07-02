@@ -273,7 +273,7 @@ type corruptedService struct {
 func newTestService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor:       onet.NewServiceProcessor(c),
-		contracts:              make(map[string]ContractFn),
+		contracts:              newContractRegistry(),
 		txBuffer:               newTxBuffer(),
 		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),

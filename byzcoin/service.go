@@ -79,6 +79,23 @@ func init() {
 	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
 	network.SetTCPDialTimeout(2 * time.Second)
+
+	err = RegisterGlobalContract(ContractConfigID, contractConfigFromBytes)
+	if err != nil {
+		panic(err)
+	}
+	err = RegisterGlobalContract(ContractDarcID, contractSecureDarcFromBytes)
+	if err != nil {
+		panic(err)
+	}
+	err = RegisterGlobalContract(ContractDeferredID, contractDeferredFromBytes)
+	if err != nil {
+		panic(err)
+	}
+	err = RegisterGlobalContract(ContractNamingID, contractNamingFromBytes)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GenNonce returns a random nonce.
@@ -119,7 +136,7 @@ type Service struct {
 	closeLeaderMonitorChan chan bool
 
 	// contracts map kinds to kind specific verification functions
-	contracts map[string]ContractFn
+	contracts *contractRegistry
 
 	storage *bcStorage
 
@@ -1987,8 +2004,31 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 // GetContractConstructor gets the contract constructor of the contract
 // contractName.
 func (s *Service) GetContractConstructor(contractName string) (ContractFn, bool) {
-	fn, exists := s.contracts[contractName]
+	fn, exists := s.contracts.Search(contractName)
 	return fn, exists
+}
+
+// GetContractInstance creates a contract given the ID and the bytes input if the contract
+// exists or nil otherwise. It also sets the contract registry if needed.
+func (s *Service) GetContractInstance(contractName string, in []byte) (Contract, error) {
+	fn, exists := s.contracts.Search(contractName)
+	if !exists {
+		return nil, errors.New("contract does not exist")
+	}
+
+	c, err := fn(in)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate the contract registry in the case of special contracts
+	// that need the registry.
+	cwr, ok := c.(ContractWithRegistry)
+	if ok {
+		cwr.SetRegistry(s.contracts)
+	}
+
+	return c, nil
 }
 
 func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
@@ -2004,17 +2044,17 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 
-	contractFactory, exists := s.contracts[contractID]
+	contractFactory, exists := s.GetContractConstructor(contractID)
 	if !exists {
 		if ConfigInstanceID.Equal(instr.InstanceID) {
 			// Special case 1: first time call to
 			// genesis-configuration must return correct contract
 			// type.
-			contractFactory, exists = s.contracts[ContractConfigID]
+			contractFactory, exists = s.GetContractConstructor(ContractConfigID)
 		} else if NamingInstanceID.Equal(instr.InstanceID) {
 			// Special case 2: first time call to the naming
 			// contract must return the correct type too.
-			contractFactory, exists = s.contracts[ContractNamingID]
+			contractFactory, exists = s.GetContractConstructor(ContractNamingID)
 		} else {
 			// If the leader does not have a verifier for this
 			// contract, it drops the transaction.
@@ -2035,6 +2075,9 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	if c == nil {
 		err = errors.New("contract factory returned nil contract instance")
 		return
+	}
+	if sc, ok := c.(ContractWithRegistry); ok {
+		sc.SetRegistry(s.contracts)
 	}
 
 	err = c.VerifyInstruction(st, instr, ctxHash)
@@ -2238,13 +2281,6 @@ func (s *Service) monitorLeaderFailure() {
 	}
 }
 
-// registerContract stores the contract in a map and will
-// call it whenever a contract needs to be done.
-func (s *Service) registerContract(contractID string, c ContractFn) error {
-	s.contracts[contractID] = c
-	return nil
-}
-
 // startAllChains loads the configuration, updates the data in the service if
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
@@ -2426,7 +2462,7 @@ var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor:       onet.NewServiceProcessor(c),
-		contracts:              make(map[string]ContractFn),
+		contracts:              globalContractRegistry.clone(),
 		txBuffer:               newTxBuffer(),
 		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
@@ -2465,23 +2501,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
-
-	err = s.registerContract(ContractConfigID, contractConfigFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = s.registerContract(ContractNamingID, contractNamingFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = s.registerContract(ContractDarcID, s.contractSecureDarcFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = s.registerContract(ContractDeferredID, s.contractDeferredFromBytes)
-	if err != nil {
-		return nil, err
-	}
 
 	if err := skipchain.RegisterVerification(c, Verify, s.verifySkipBlock); err != nil {
 		log.ErrFatal(err)

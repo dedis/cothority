@@ -84,6 +84,19 @@ func init() {
 		log.Warn("COTHORITY_ALLOW_INSECURE_ADMIN is set; Calypso admin actions allowed from the public network.")
 		allowInsecureAdmin = true
 	}
+
+	err = byzcoin.RegisterGlobalContract(ContractWriteID, contractWriteFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractReadID, contractReadFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractLongTermSecretID, contractLTSFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
 }
 
 // Service is our calypso-service. It stores all created LTSs.
@@ -773,18 +786,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
 		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
 		return nil, errors.New("couldn't register messages")
-	}
-	err := byzcoin.RegisterContract(c, ContractWriteID, contractWriteFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = byzcoin.RegisterContract(c, ContractReadID, contractReadFromBytes)
-	if err != nil {
-		return nil, err
-	}
-	err = byzcoin.RegisterContract(c, ContractLongTermSecretID, contractLTSFromBytes)
-	if err != nil {
-		return nil, err
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
