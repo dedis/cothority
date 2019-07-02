@@ -89,6 +89,17 @@ func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBloc
 	return reply, nil
 }
 
+// GetAllByzCoinIDs returns the list of Byzcoin chains known by the server given in
+// parameter.
+func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDsResponse, error) {
+	reply := &GetAllByzCoinIDsResponse{}
+	if err := c.SendProtobuf(si, &GetAllByzCoinIDsRequest{}, reply); err != nil {
+		return nil, err
+	}
+
+	return reply, nil
+}
+
 // AddTransaction adds a transaction. It does not return any feedback
 // on the transaction. Use GetProof to find out if the transaction
 // was committed. The Client's Roster and ID should be initialized before

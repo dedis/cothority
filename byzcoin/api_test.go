@@ -119,6 +119,10 @@ func TestClient_GetProof(t *testing.T) {
 	c, csr, err := NewLedger(msg, false)
 	require.Nil(t, err)
 
+	gac, err := c.GetAllByzCoinIDs(roster.List[1])
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gac.IDs))
+
 	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}
 	kind := "dummy"
