@@ -178,7 +178,7 @@ export default class CoinInstance extends Instance {
      * @returns the updated instance
      */
     async update(): Promise<CoinInstance> {
-        const p = await this.rpc.getProof(this.id);
+        const p = await this.rpc.getProofFromLatest(this.id);
         if (!p.exists(this.id)) {
             throw new Error("fail to get a matching proof");
         }

@@ -23,6 +23,7 @@ const ContractDarcID = "darc"
 type contractSecureDarc struct {
 	BasicContract
 	darc.Darc
+	contracts ReadOnlyContractRegistry
 }
 
 var _ Contract = (*contractSecureDarc)(nil)
@@ -37,6 +38,11 @@ func contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	}
 	c := &contractSecureDarc{Darc: *d}
 	return c, nil
+}
+
+// SetRegistry keeps the reference of the contract registry.
+func (c *contractSecureDarc) SetRegistry(r ReadOnlyContractRegistry) {
+	c.contracts = r
 }
 
 // VerifyDeferredInstruction does the same as the standard VerifyInstruction
@@ -82,7 +88,11 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	// If we got here this is a spawn:xxx in order to spawn
 	// a new instance of contract xxx, so do that.
 
-	cfact, found := ContractsFn[inst.Spawn.ContractID]
+	if c.contracts == nil {
+		return nil, nil, errors.New("contracts registry is missing due to bad initialization")
+	}
+
+	cfact, found := c.contracts.Search(inst.Spawn.ContractID)
 	if !found {
 		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
 	}
@@ -95,6 +105,10 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	if err != nil {
 		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
 	}
+	if cwr, ok := c2.(ContractWithRegistry); ok {
+		cwr.SetRegistry(c.contracts)
+	}
+
 	return c2.Spawn(rst, inst, coins)
 }
 

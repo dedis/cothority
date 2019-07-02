@@ -345,17 +345,17 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 
 	election, err := lib.GetElection(s.skipchain, req.ID, false, req.User)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not cast ballot on election %x for user %v: %v", req.ID, req.User, err)
 	}
 	err = auth(req.User, req.Signature, election.Master, election.MasterKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not cast ballot on election %x for user %v: %v", req.ID, req.User, err)
 	}
 
 	transaction := lib.NewTransaction(req.Ballot, req.User)
 	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction, s.ServerIdentity().GetPrivate())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not cast ballot on election %x for user %v: %v", req.ID, req.User, err)
 	}
 	return &evoting.CastReply{ID: skipblockID}, nil
 }

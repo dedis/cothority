@@ -827,12 +827,13 @@ func link(c *cli.Context) error {
 		return err
 	}
 
-	scl := skipchain.NewClient()
+	genericClient := byzcoin.NewClient(nil, onet.Roster{})
+
 	if c.NArg() == 1 {
 		log.Info("Fetching all byzcoin-ids from the roster")
 		var scIDs []skipchain.SkipBlockID
 		for _, si := range r.List {
-			reply, err := scl.GetAllSkipChainIDs(si)
+			reply, err := genericClient.GetAllByzCoinIDs(si)
 			if err != nil {
 				log.Warn("Couldn't contact", si.Address, err)
 			} else {
@@ -860,9 +861,9 @@ func link(c *cli.Context) error {
 		var cl *byzcoin.Client
 		var cc *byzcoin.ChainConfig
 		for _, si := range r.List {
-			reply, err := scl.GetAllSkipChainIDs(si)
+			reply, err := genericClient.GetAllByzCoinIDs(si)
 			if err != nil {
-				log.Warn("Got error while asking", si.Address, "for skipchains")
+				log.Warn("Got error while asking", si.Address, "for skipchains:", err)
 			}
 			found := false
 			for _, idc := range reply.IDs {
@@ -876,6 +877,7 @@ func link(c *cli.Context) error {
 				cc, err = cl.GetChainConfig()
 				if err != nil {
 					cl = nil
+					log.Warnf("Could not get chain config from %v: %v\n", si, err)
 					continue
 				}
 				cl.Roster = cc.Roster
@@ -899,14 +901,9 @@ func link(c *cli.Context) error {
 				return errors.New("failed to parse darc: " + err.Error())
 			}
 
-			p, err := cl.GetProof(darcID)
+			p, err := cl.GetProofFromLatest(darcID)
 			if err != nil {
 				return errors.New("couldn't get proof for darc: " + err.Error())
-			}
-
-			err = p.Proof.Verify(id)
-			if err != nil {
-				return errors.New("proof for darc is wrong: " + err.Error())
 			}
 
 			_, darcBuf, cid, _, err := p.Proof.KeyValue()
@@ -1000,12 +997,7 @@ func latest(c *cli.Context) error {
 	}
 
 	// Find the latest block by asking for the Proof of the config instance.
-	p, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
-	if err != nil {
-		return err
-	}
-
-	err = p.Proof.Verify(cfg.ByzCoinID)
+	p, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return err
 	}
@@ -1071,7 +1063,7 @@ func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.
 	}
 
 	log.Lvl2("Getting latest chainConfig")
-	pr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	pr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		err = errors.New("couldn't get proof for chainConfig: " + err.Error())
 		return
@@ -1219,7 +1211,7 @@ func mint(c *cli.Context) error {
 	}
 	counters := cReply.Counters
 
-	p, err := cl.GetProof(account.Slice())
+	p, err := cl.GetProofFromLatest(account.Slice())
 	if err != nil {
 		return err
 	}

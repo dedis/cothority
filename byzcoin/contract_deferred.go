@@ -76,7 +76,7 @@ func (dd DeferredData) String() string {
 type contractDeferred struct {
 	BasicContract
 	DeferredData
-	s *Service
+	contracts ReadOnlyContractRegistry
 }
 
 func contractDeferredFromBytes(in []byte) (Contract, error) {
@@ -87,6 +87,11 @@ func contractDeferredFromBytes(in []byte) (Contract, error) {
 		return nil, errors.New("couldn't unmarshal instance data: " + err.Error())
 	}
 	return c, nil
+}
+
+// SetRegistry keeps the reference of the contract registry.
+func (c *contractDeferred) SetRegistry(r ReadOnlyContractRegistry) {
+	c.contracts = r
 }
 
 func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -259,7 +264,11 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 				return nil, nil, errors.New("couldn't get contract buf: " + err.Error())
 			}
 			// Get the contract's constructor (like "contractValueFromByte(...)")
-			fn, exists := ContractsFn[contractID]
+			if c.contracts == nil {
+				return nil, nil, errors.New("contracts registry is missing due to bad initialization")
+			}
+
+			fn, exists := c.contracts.Search(contractID)
 			if !exists {
 				return nil, nil, errors.New("couldn't get the root function")
 			}
@@ -267,6 +276,9 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			contract, err := fn(contractBuf)
 			if err != nil {
 				return nil, nil, errors.New("couldn't get the root contract: " + err.Error())
+			}
+			if cwr, ok := contract.(ContractWithRegistry); ok {
+				cwr.SetRegistry(c.contracts)
 			}
 
 			err = contract.VerifyDeferredInstruction(sst, proposedInstr, c.DeferredData.InstructionHashes[i])

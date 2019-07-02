@@ -155,7 +155,7 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 func (s *Service) sendNewView(proof []viewchange.InitReq) {
 
 	if len(proof) == 0 {
-		log.Error(s.ServerIdentity(), "not enough proofs")
+		log.Error(s.ServerIdentity(), "no proofs")
 	}
 	log.Lvl2(s.ServerIdentity(), "sending new-view request for view:", proof[0].View)
 
@@ -333,7 +333,7 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	}()
 	f := s.getFaultThreshold(sb.Hash)
 	if uniqueSigners <= 2*f {
-		log.Error(s.ServerIdentity(), "not enough proofs")
+		log.Error(s.ServerIdentity(), "not enough proofs: %v <= %v", uniqueSigners, 2*f)
 		return false
 	}
 	if uniqueViews != 1 {

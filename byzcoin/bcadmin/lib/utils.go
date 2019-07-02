@@ -49,16 +49,12 @@ func GetDarcByString(cl *byzcoin.Client, id string) (*darc.Darc, error) {
 
 // GetDarcByID returns a DARC given its ID as a byte array
 func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
-	pr, err := cl.GetProof(id)
+	pr, err := cl.GetProofFromLatest(id)
 	if err != nil {
 		return nil, err
 	}
 
 	p := &pr.Proof
-	err = p.Verify(cl.ID)
-	if err != nil {
-		return nil, err
-	}
 
 	vs, cid, _, err := p.Get(id)
 	if err != nil {

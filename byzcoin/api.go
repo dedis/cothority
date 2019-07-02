@@ -25,9 +25,15 @@ const ServiceName = "ByzCoin"
 // Client is a structure to communicate with the ByzCoin service.
 type Client struct {
 	*onet.Client
-	ID           skipchain.SkipBlockID
-	Roster       onet.Roster
-	ServerNumber int // Which server in the Roster to contact, -1 means random.
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
+	// Genesis is required when a full proof is sent by the server
+	// to verify the roster provided.
+	Genesis *skipchain.SkipBlock
+	// Latest keeps track of the most recent known block for the client.
+	Latest *skipchain.SkipBlock
+	// Which server in the Roster to contact, -1 means random.
+	ServerNumber int
 }
 
 // NewClient instantiates a new ByzCoin client.
@@ -64,6 +70,8 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	}
 
 	c.ID = reply.Skipblock.Hash
+	c.Genesis = reply.Skipblock
+	c.Latest = c.Genesis
 	return c, reply, nil
 }
 
@@ -75,6 +83,17 @@ func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBloc
 
 	// checks if the returned genesis block has the same parameters
 	if err := verifyGenesisBlock(reply.Skipblock, msg); err != nil {
+		return nil, err
+	}
+
+	return reply, nil
+}
+
+// GetAllByzCoinIDs returns the list of Byzcoin chains known by the server given in
+// parameter.
+func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDsResponse, error) {
+	reply := &GetAllByzCoinIDsResponse{}
+	if err := c.SendProtobuf(si, &GetAllByzCoinIDsRequest{}, reply); err != nil {
 		return nil, err
 	}
 
@@ -107,27 +126,60 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	return reply, nil
 }
 
-// GetProof returns a proof for the key stored in the skipchain by sending a
-// message to the node on index 0 of the roster. The proof can prove the existence
-// or the absence of the key. Note that the integrity of the proof is verified.
+// GetProof returns a proof for the key stored in the skipchain starting from
+// the genesis block. The proof can prove the existence or the absence of the
+// key. Note that the integrity of the proof is verified.
 // The Client's Roster and ID should be initialized before calling this method
 // (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
+	if c.Genesis == nil {
+		if err := c.fetchGenesis(); err != nil {
+			return nil, err
+		}
+	}
+
+	return c.GetProofFrom(key, c.Genesis)
+}
+
+// GetProofFromLatest returns a proof for the key stored in the skipchain
+// starting from the latest known block by this client. The proof
+// can prove the existence or the absence of the key. Note that the integrity
+// of the proof is verified.
+// Caution: the proof will be verifiable only by client/service that knows the
+// state of the chain up to the block. If you need to pass the Proof onwards to
+// another server, you must use GetProof in order to create a complete standalone
+// proof starting from the genesis block.
+func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
+	if c.Latest == nil {
+		return c.GetProof(key)
+	}
+
+	return c.GetProofFrom(key, c.Latest)
+}
+
+// GetProofFrom returns a proof for the key stored in the skipchain starting
+// from the block given in parameter. The proof can prove the existence or
+// the absence of the key. Note that the integrity of the proof is verified.
+// Caution: the proof will be verifiable only by client/service that know the
+// state of the chain up to the block. If you need to pass the Proof onwards to
+// another server, you must use GetProof in order to create a complete standalone
+// proof starting from the genesis block.
+func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.getServer(), &GetProof{
 		Version: CurrentVersion,
-		ID:      c.ID,
+		ID:      from.Hash,
 		Key:     key,
 	}, reply)
 	if err != nil {
 		return nil, err
 	}
 
-	// verify the integrity of the proof only
-	err = reply.Proof.Verify(c.ID)
-	if err != nil {
+	if err := reply.Proof.VerifyFromBlock(from); err != nil {
 		return nil, err
 	}
+
+	c.Latest = &reply.Proof.Latest
 
 	return reply, nil
 }
@@ -156,7 +208,7 @@ func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.A
 // Genesis Darc from ByzCoin and parses it.
 func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	// Get proof of the genesis darc.
-	p, err := c.GetProof(NewInstanceID(nil).Slice())
+	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +230,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 	}
 
 	// Find the actual darc.
-	p, err = c.GetProof(darcID)
+	p, err = c.GetProofFromLatest(darcID)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +260,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 // GetChainConfig uses the GetProof method to fetch the chain config
 // from ByzCoin.
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
-	p, err := c.GetProof(NewInstanceID(nil).Slice())
+	p, err := c.GetProofFromLatest(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -457,6 +509,20 @@ func (c *Client) getServer() *network.ServerIdentity {
 		n = int(rand.Int31n(int32(len(c.Roster.List))))
 	}
 	return c.Roster.List[n]
+}
+
+func (c *Client) fetchGenesis() error {
+	skClient := skipchain.NewClient()
+
+	// Integrity check is done by the request function.
+	sb, err := skClient.GetSingleBlock(&c.Roster, c.ID)
+	if err != nil {
+		return err
+	}
+
+	c.Genesis = sb
+	c.Latest = sb
+	return nil
 }
 
 func verifyGenesisBlock(actual *skipchain.SkipBlock, expected *CreateGenesisBlock) error {

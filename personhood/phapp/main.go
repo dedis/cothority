@@ -470,7 +470,7 @@ func show(c *cli.Context) error {
 	}
 	credIID := byzcoin.NewInstanceID(credBuf)
 
-	p, err := cl.GetProof(credIID.Slice())
+	p, err := cl.GetProofFromLatest(credIID.Slice())
 	if err != nil {
 		return err
 	}
@@ -516,7 +516,7 @@ func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzc
 
 func verifyAdminDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) error {
 	gdID := cfg.AdminDarc.GetBaseID()
-	p, err := cl.GetProof(gdID)
+	p, err := cl.GetProofFromLatest(gdID)
 	if err != nil {
 		return err
 	}

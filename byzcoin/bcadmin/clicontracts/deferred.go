@@ -117,15 +117,11 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err := cl.GetProof(instID)
+	pr, err := cl.GetProofFromLatest(instID)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -264,15 +260,11 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	// 4.
 	// ---
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -366,15 +358,11 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -414,15 +402,11 @@ func DeferredGet(c *cli.Context) error {
 		return errors.New("failed to decode the instid string")
 	}
 
-	pr, err := cl.GetProof(instIDBuf)
+	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof: " + err.Error())
 	}
 	proof := pr.Proof
-	err = proof.Verify(cl.ID)
-	if err != nil {
-		return errors.New("failed to verify proof: " + err.Error())
-	}
 
 	exist, err := proof.InclusionProof.Exists(instIDBuf)
 	if err != nil {
