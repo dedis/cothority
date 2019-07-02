@@ -254,6 +254,7 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 	n := msg.Count
 	result := make([]*SkipBlock, 0, n)
 	next := msg.SBID
+	lastIdx := -1
 	for n > 0 {
 		// TODO: see if this could be optimised by using multiple bucket.Get in a
 		// single transaction.
@@ -267,6 +268,7 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		}
 
 		result = append(result, s)
+		lastIdx = s.Index
 		n--
 
 		// Find the next one (or exit if we are at the latest)
@@ -280,6 +282,7 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		}
 		next = s.ForwardLink[linkNum].To
 	}
+	log.Lvlf2("%v: GetBlocks reply: %v blocks, last index %v", p.ServerIdentity(), len(result), lastIdx)
 	return p.SendToParent(&ProtoGetBlocksReply{SkipBlocks: result})
 }
 

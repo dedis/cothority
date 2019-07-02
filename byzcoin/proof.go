@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
@@ -71,36 +69,61 @@ var ErrorVerifyTrieRoot = errors.New("root of trie is not in skipblock")
 var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved from genesis block")
 
 // ErrorVerifyHash is returned if the latest block hash does not match
-// the target of the last forward link
+// the target of the last forward link.
 var ErrorVerifyHash = errors.New("last forward link does not point to the latest block")
+
+// ErrorMissingForwardLinks is returned if no forward-link is found
+// in the proof.
+var ErrorMissingForwardLinks = errors.New("missing forward-links")
+
+// ErrorMalformedForwardLink is returned when the new roster is not defined in the link
+// but is expected to be.
+var ErrorMalformedForwardLink = errors.New("missing new roster from the forward-link")
+
+// VerifyFromBlock takes a skipchain id and the first block of the proof. It
+// verifies that the proof is valid for this skipchain. It verifies the proof,
+// that the merkle-root is stored in the skipblock of the proof and the fact that
+// the skipblock is indeed part of the skipchain. It also uses the provided block
+// to insure the first roster is correct. If all verifications are correct, the error
+// will be nil. It does not verify wether a certain key/value pair exists in the proof.
+func (p Proof) VerifyFromBlock(verifiedBlock *skipchain.SkipBlock) error {
+	if len(p.Links) > 0 {
+		// Hash of the block has been verified previously so we can trust the roster
+		// coming from it which should be the same. If not, the proof won't verified.
+		p.Links[0].NewRoster = verifiedBlock.Roster
+	}
+
+	// The signature of the first link is not checked as we use it as
+	// a synthetic link to provide the initial roster.
+	return p.Verify(verifiedBlock.Hash)
+}
 
 // Verify takes a skipchain id and verifies that the proof is valid for this
 // skipchain. It verifies the proof, that the merkle-root is stored in the
 // skipblock of the proof and the fact that the skipblock is indeed part of the
 // skipchain. If all verifications are correct, the error will be nil. It does
 // not verify whether a certain key/value pair exists in the proof.
-func (p Proof) Verify(scID skipchain.SkipBlockID) error {
-	var header DataHeader
-	err := protobuf.DecodeWithConstructors(p.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+//
+// Notice: this verification alone is not sufficient. The roster of the first link
+// must be verified before. See Proof.VerifyFromBlock for example.
+func (p Proof) Verify(sbID skipchain.SkipBlockID) error {
+	err := p.VerifyInclusionProof(&p.Latest)
 	if err != nil {
 		return err
 	}
-	if !bytes.Equal(p.InclusionProof.GetRoot(), header.TrieRoot) {
-		return ErrorVerifyTrieRoot
+
+	if len(p.Links) == 0 {
+		return ErrorMissingForwardLinks
+	}
+	if p.Links[0].NewRoster == nil {
+		return ErrorMalformedForwardLink
 	}
 
-	sbID := scID
-	var publics []kyber.Point
-	for i, l := range p.Links {
-		if i == 0 {
-			// The first forward link is a pointer from []byte{} to the genesis
-			// block and holds the roster of the genesis block.
-			if !l.To.Equal(scID) {
-				return ErrorVerifySkipchain
-			}
-			publics = l.NewRoster.ServicePublics(skipchain.ServiceName)
-			continue
-		}
+	// Get the first from the synthetic link which is assumed to be verified
+	// before against the block with ID stored in the To field by the caller.
+	publics := p.Links[0].NewRoster.ServicePublics(skipchain.ServiceName)
+
+	for _, l := range p.Links[1:] {
 		if err = l.VerifyWithScheme(pairing.NewSuiteBn256(), publics, p.Latest.SignatureScheme); err != nil {
 			return ErrorVerifySkipchain
 		}
@@ -116,6 +139,21 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	// Check that the given latest block matches the last forward link target
 	if !p.Latest.CalculateHash().Equal(sbID) {
 		return ErrorVerifyHash
+	}
+
+	return nil
+}
+
+// VerifyInclusionProof verifies that the inclusion proof matches the skipblock
+// given in parameter.
+func (p Proof) VerifyInclusionProof(latest *skipchain.SkipBlock) error {
+	var header DataHeader
+	err := protobuf.Decode(latest.Data, &header)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(p.InclusionProof.GetRoot(), header.TrieRoot) {
+		return ErrorVerifyTrieRoot
 	}
 
 	return nil

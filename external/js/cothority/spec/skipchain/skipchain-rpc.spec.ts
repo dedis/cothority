@@ -52,13 +52,35 @@ describe("SkipchainRPC Tests", () => {
         expect(chain.length).toBe(7);
     });
 
+    /**
+     * Checks that the promise is rejected and that the error message contains str in it.
+     * This is useful for replies from 'IConnect.send', as the error message contains
+     * a concatenation of all errors from all nodes.
+     *
+     * @param p the promise that should fail
+     * @param str the string that should be available in the error message
+     */
+    function rejectContains(p: Promise<any>, str: string): Promise<any> {
+        return p.then(() => {
+            return Promise.reject("should've failed");
+        }).catch((e) => {
+            if (e.toString().indexOf(str) >= 0) {
+                return Promise.resolve();
+            }
+            return Promise.reject(e);
+        });
+    }
+
     it("should fail to get the block", async () => {
         const rpc = new SkipchainRPC(roster);
 
-        await expectAsync(rpc.getSkipBlock(Buffer.from([1, 2, 3])))
-            .toBeRejectedWith("No such block :: No such block :: No such block :: No such block");
-
-        await expectAsync(rpc.getLatestBlock(Buffer.from([1, 2, 3]))).toBeRejected("Couldn't find latest skipblock");
+        // Testing the tester
+        await expectAsync(rejectContains(rpc.getSkipBlock(Buffer.from([1, 2, 3])), "No such blocks"))
+            .toBeRejected();
+        await expectAsync(rejectContains(rpc.getSkipBlock(Buffer.from([1, 2, 3])), "No such block"))
+            .toBeResolved();
+        await expectAsync(rejectContains(rpc.getLatestBlock(Buffer.from([1, 2, 3])), "Couldn't find latest skipblock"))
+            .toBeResolved();
     });
 
     it("should verify the chain", async () => {

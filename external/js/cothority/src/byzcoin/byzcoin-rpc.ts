@@ -2,7 +2,7 @@ import Long from "long";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
-import { IIdentity } from "../darc/identity-wrapper";
+import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
@@ -12,6 +12,7 @@ import ChainConfig from "./config";
 import DarcInstance from "./contracts/darc-instance";
 import { InstanceID } from "./instance";
 import Proof from "./proof";
+import CheckAuthorization, { CheckAuthorizationResponse } from "./proto/check-auth";
 import {
     AddTxRequest,
     AddTxResponse,
@@ -72,6 +73,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const skipchain = new SkipchainRPC(roster);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
+        rpc.latest = rpc.genesis;
 
         const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID, waitMatch, interval);
         rpc.config = ChainConfig.fromProof(ccProof);
@@ -104,6 +106,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
         rpc.genesis = ret.skipblock;
+        rpc.latest = ret.skipblock;
         await rpc.updateConfig();
 
         return rpc;
@@ -112,10 +115,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
     private genesisDarc: Darc;
     private config: ChainConfig;
     private genesis: SkipBlock;
+    private latest: SkipBlock;
     private conn: IConnection;
 
-    protected constructor() {
-    }
+    protected constructor() {}
 
     /**
      * Getter for the genesis darc
@@ -168,7 +171,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * cache
      */
     async updateConfig(): Promise<void> {
-        const pr = await this.getProof(CONFIG_INSTANCE_ID);
+        const pr = await this.getProofFromLatest(CONFIG_INSTANCE_ID);
         this.config = ChainConfig.fromProof(pr);
 
         const darcIID = pr.stateChangeBody.darcID;
@@ -179,7 +182,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     /**
      * Gets a proof from byzcoin to show that a given instance is in the
-     * global state.
+     * global state. The proof always starts from the genesis block.
      *
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
@@ -187,8 +190,48 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @return a promise that resolves with the proof, rejecting otherwise
      */
     async getProof(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
+        if (!this.genesis) {
+            throw new Error("RPC not initialized with the genesis block");
+        }
+
+        return this.getProofFrom(this.genesis, id, waitMatch, interval);
+    }
+
+    /**
+     * Gets a proof from byzcoin to show that a given instance is in the
+     * global state. The proof starts from the latest known block.
+     * Caution: If you need to pass the Proof onwards to another server,
+     * you must use getProof in order to create a complete standalone
+     * proof starting from the genesis block.
+     *
+     * @param id the instance key
+     * @param waitMatch number of milliseconds to wait if the proof is false
+     * @param interval how long to wait before checking for a match again
+     * @return a promise that resolves with the proof, rejecting otherwise
+     */
+    async getProofFromLatest(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
+        if (!this.latest) {
+            throw new Error("no latest block found");
+        }
+
+        return this.getProofFrom(this.latest, id, waitMatch, interval);
+    }
+
+    /**
+     * Gets a proof from byzcoin to show that a given instance is in the
+     * global state. The proof starts from the block given in parameter.
+     * Caution: If you need to pass the Proof onwards to another server,
+     * you must use getProof in order to create a complete standalone
+     * proof starting from the genesis block.
+     *
+     * @param id the instance key
+     * @param waitMatch number of milliseconds to wait if the proof is false
+     * @param interval how long to wait before checking for a match again
+     * @return a promise that resolves with the proof, rejecting otherwise
+     */
+    async getProofFrom(from: SkipBlock, id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
         const req = new GetProof({
-            id: this.genesis.hash,
+            id: from.hash,
             key: id,
             version: currentVersion,
         });
@@ -197,18 +240,17 @@ export default class ByzCoinRPC implements ICounterUpdater {
         if (waitMatch > 0 && !reply.proof.exists(id)) {
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    this.getProof(id, waitMatch - interval, interval).then((pr) => {
-                        resolve(pr);
-                    }).catch((e) => {
-                        reject(e);
-                    });
+                    this.getProofFrom(from, id, waitMatch - interval, interval).then(resolve, reject);
                 }, interval);
             });
         }
-        const err = reply.proof.verify(this.genesis.hash);
+
+        const err = reply.proof.verifyFrom(from);
         if (err) {
             throw err;
         }
+
+        this.latest = reply.proof.latest;
 
         return reply.proof;
     }
@@ -228,5 +270,29 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const rep = await this.conn.send<GetSignerCountersResponse>(req, GetSignerCountersResponse);
         return rep.counters.map((c) => c.add(add));
+    }
+
+    /**
+     * checks the authorization of a set of identities with respect to a given darc. This calls
+     * an OmniLedger node and trusts it to return the name of the actions that a hypotethic set of
+     * signatures from the given identities can execute using the given darc.
+     *
+     * This is useful if a darc delegates one or more actions to other darc, who delegate also, so
+     * this call will test what actions are possible to be executed.
+     *
+     * @param darcID the base darc whose actions are verified
+     * @param identities the set of identities that are hypothetically signing
+     */
+    async checkAuthorization(byzCoinID: InstanceID, darcID: InstanceID, ...identities: IdentityWrapper[])
+        : Promise<string[]> {
+        const req = new CheckAuthorization({
+            byzcoinID: byzCoinID,
+            darcID,
+            identities,
+            version: currentVersion,
+        });
+
+        const reply = await this.conn.send<CheckAuthorizationResponse>(req, CheckAuthorizationResponse);
+        return reply.actions;
     }
 }

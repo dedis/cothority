@@ -2011,7 +2011,7 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	// ------------------------------------------------------------------------
 
 	// Get the latest chain config
-	prr, err := cl.GetProof(byzcoin.ConfigInstanceID.Slice())
+	prr, err := cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	require.Nil(t, err)
 	proof := prr.Proof
 
@@ -2679,7 +2679,7 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 
 	myID := ctx.Instructions[0].DeriveID("")
 
-	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
+	prr, err := cl.GetProofFromLatest(ctx.Instructions[0].DeriveID("").Slice())
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
@@ -2721,7 +2721,7 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err = cl.GetProof(myID.Slice())
+	prr, err = cl.GetProofFromLatest(myID.Slice())
 	require.Nil(t, err)
 	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
@@ -2809,7 +2809,7 @@ func TestDeferred_PublicDelete(t *testing.T) {
 
 	myID := ctx.Instructions[0].DeriveID("")
 
-	prr, err := cl.GetProof(ctx.Instructions[0].DeriveID("").Slice())
+	prr, err := cl.GetProofFromLatest(ctx.Instructions[0].DeriveID("").Slice())
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
@@ -2854,7 +2854,7 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err = cl.GetProof(myID.Slice())
+	prr, err = cl.GetProofFromLatest(myID.Slice())
 	require.Nil(t, err)
 	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)

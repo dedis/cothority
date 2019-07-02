@@ -44,7 +44,7 @@ export interface IConnection {
  * Single peer connection
  */
 export class WebSocketConnection implements IConnection {
-    protected url: string;
+    private url: string;
     private service: string;
     private timeout: number;
 
@@ -84,11 +84,9 @@ export class WebSocketConnection implements IConnection {
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
-            const timer = setTimeout(() => ws.close(4000, "timeout"), this.timeout);
+            const timer = setTimeout(() => ws.close(1002, "timeout"), this.timeout);
 
-            ws.onOpen(() => {
-                ws.send(bytes);
-            });
+            ws.onOpen(() => ws.send(bytes));
 
             ws.onMessage((data: Buffer) => {
                 clearTimeout(timer);
@@ -113,16 +111,15 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onClose((code: number, reason: string) => {
-                if (code === 1000) {
-                    Log.lvl3("Normal closing of connection");
-                    return;
+                if (code !== 1000) {
+                    Log.error("Got close:", code, reason);
+                    reject(new Error(reason));
                 }
-                Log.error("Got error close:", code, reason);
-                reject(new Error(reason));
             });
 
             ws.onError((err: Error) => {
                 clearTimeout(timer);
+
                 reject(new Error("error in websocket " + path + ": " + err));
             });
         });
@@ -130,44 +127,94 @@ export class WebSocketConnection implements IConnection {
 }
 
 /**
- * Multi peer connection that tries all nodes one after another
+ * Multi peer connection that tries all nodes one after another. It can send the command to more
+ * than one node in parallel and return the first success if 'parallel' i > 1.
  */
-export class RosterWSConnection extends WebSocketConnection {
-    addresses: string[];
+export class RosterWSConnection {
+    private addresses: string[];
+    private connectionsActive: WebSocketConnection[];
+    private connectionsPool: WebSocketConnection[];
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
-     * @param retry = 2 How many times to retry a failing connection with another node
+     * @param parallel how many nodes to contact in parallel
      */
-    constructor(r: Roster, service: string, private retry: number = 2) {
-        super("", service);
+    constructor(r: Roster, private service: string, parallel: number = 2) {
+        if (parallel < 1) {
+            throw new Error("parallel must be >= 1");
+        }
         this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
         shuffle(this.addresses);
+        // Initialize the pool of connections
+        this.connectionsPool = this.addresses.map((addr) => new WebSocketConnection(addr, service));
+        // And take the first 'parallel' connections
+        this.connectionsActive = this.connectionsPool.splice(0, parallel);
+        // Upon failure of a connection, it is pushed to the end of the connectionsPool, and a
+        // new connection is taken from the beginning of the connectionsPool.
     }
 
-    /** @inheritdoc */
+    /**
+     * Sends a message to conodes in parallel. As soon as one of the conodes returns
+     * success, the message is returned. If a conode returns an error (or times out),
+     * a next conode from this.addresses is contacted. If all conodes return an error,
+     * the promise is rejected.
+     *
+     * @param message the message to send
+     * @param reply the type of the message to return
+     */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         const errors: string[] = [];
-        for (let i = 0; i < this.addresses.length; i++) {
-            this.url = this.addresses[0];
-            Log.lvl3("sending", message.constructor.name, "to address", this.url);
+        let rotate = this.addresses.length - this.connectionsActive.length;
 
-            try {
-                // we need to await here to catch and try another conode
-                return await super.send(message, reply);
-            } catch (e) {
-                Log.lvl3(`failed to send on ${this.url} with error:`, e);
-                errors.push(e.message);
-                if (i > this.retry) {
-                    return Promise.reject(errors.join(" :: "));
-                }
-                Log.error("Error while sending - trying with next node");
-                this.addresses = [...this.addresses.slice(1), this.url];
-            }
-        }
+        // Get the first reply - need to take care not to return a reject too soon, else
+        // all other promises will be ignored.
+        // The promises that never 'resolve' or 'reject' will later be collected by GC:
+        // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
+        return Promise.race(this.connectionsActive.map((_, i) => {
+            return new Promise<T>(async (resolve, reject) => {
+                do {
+                    try {
+                        const sub = await this.connectionsActive[i].send(message, reply);
+                        // Signal to other connections that have an error that they don't need
+                        // to retry.
+                        rotate = -1;
+                        resolve(sub as T);
+                    } catch (e) {
+                        errors.push(e);
+                        if (errors.length === this.addresses.length) {
+                            // It's the last connection that also threw an error, so let's quit
+                            reject(errors);
+                        }
+                        rotate--;
+                        if (rotate >= 0) {
+                            // Take the oldest connection that hasn't been used yet
+                            this.connectionsPool.push(this.connectionsActive[i]);
+                            this.connectionsActive[i] = this.connectionsPool.shift();
+                        }
+                    }
+                } while (rotate >= 0);
+            });
+        }));
+    }
 
-        throw new Error(`send fails with errors: [${errors.join("; ")}]`);
+    /**
+     * To be conform with an IConnection
+     */
+    getURL(): string {
+        return this.connectionsActive[0].getURL();
+    }
+
+    /**
+     * To be conform with an IConnection - sets the timeout on all connections.
+     */
+    setTimeout(value: number) {
+        this.connectionsPool.forEach((conn) => {
+            conn.setTimeout(value);
+        });
+        this.connectionsActive.forEach((conn) => {
+            conn.setTimeout(value);
+        });
     }
 }
 

@@ -133,7 +133,7 @@ public class EventLogInstance {
      * @throws CothorityException if something goes wrong
      */
     public Event get(InstanceId key) throws CothorityException {
-        Proof p = bc.getProof(key);
+        Proof p = bc.getProofFromLatest(key);
         if (!p.exists(key.getId())) {
             throw new CothorityCryptoException("event does not exist");
         }

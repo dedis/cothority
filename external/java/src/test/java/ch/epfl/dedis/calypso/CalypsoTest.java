@@ -4,6 +4,7 @@ import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
+import ch.epfl.dedis.integration.DockerTestServerController;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;

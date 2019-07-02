@@ -31,7 +31,7 @@ export default class Instance {
      */
     static async fromByzcoin(rpc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
         Promise<Instance> {
-        const p = await rpc.getProof(iid, waitMatch, interval);
+        const p = await rpc.getProofFromLatest(iid, waitMatch, interval);
 
         return Instance.fromProof(iid, p);
     }
