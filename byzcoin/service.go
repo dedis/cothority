@@ -34,11 +34,6 @@ import (
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
-// ContractsFn maps a contract name to its constructor. Access to this map is
-// not threadsafe, so it must only be written to from a package's init()
-// function.
-var ContractsFn = make(map[string]ContractFn)
-
 var pairingSuite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
 
 // This is to boost the acceptable timestamp window when dealing with

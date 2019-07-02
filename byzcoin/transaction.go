@@ -239,7 +239,7 @@ func (instr Instruction) ContractID() string {
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
-	contractFn, ok := ContractsFn[instr.ContractID()]
+	contractFn, ok := GetContractRegistry().Search(instr.ContractID())
 	var methodStr string
 	if !ok {
 		methodStr = "error in getting constructor: " + instr.ContractID()
