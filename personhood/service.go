@@ -223,7 +223,7 @@ func (s *Service) getPopContract(bcID skipchain.SkipBlockID, phIID []byte) (*Con
 	if cid != ContractPopPartyID {
 		return nil, errors.New("this is not a personhood contract")
 	}
-	cpop, err := s.byzcoinService().GetContract(ContractPopPartyID, val)
+	cpop, err := s.byzcoinService().GetContractInstance(ContractPopPartyID, val)
 	return cpop.(*ContractPopParty), err
 }
 
@@ -256,7 +256,7 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 			if err != nil {
 				return err
 			}
-			cbc, err := s.byzcoinService().GetContract(ContractRoPaSciID, buf)
+			cbc, err := s.byzcoinService().GetContractInstance(ContractRoPaSciID, buf)
 			if err != nil {
 				return err
 			}

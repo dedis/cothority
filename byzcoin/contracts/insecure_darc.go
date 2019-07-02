@@ -28,6 +28,7 @@ func contractInsecureDarcFromBytes(in []byte) (byzcoin.Contract, error) {
 	return c, nil
 }
 
+// SetRegistry keeps the reference of the contract registry.
 func (c *contractInsecureDarc) SetRegistry(r byzcoin.ReadOnlyContractRegistry) {
 	c.contracts = r
 }
@@ -52,6 +53,10 @@ func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin
 
 	// If we got here this is a spawn:xxx in order to spawn
 	// a new instance of contract xxx, so do that.
+
+	if c.contracts == nil {
+		return nil, nil, errors.New("contracts registry is missing due to bad initialization")
+	}
 
 	cfact, found := c.contracts.Search(inst.Spawn.ContractID)
 	if !found {

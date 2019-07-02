@@ -88,6 +88,7 @@ func contractDeferredFromBytes(in []byte) (Contract, error) {
 	return c, nil
 }
 
+// SetRegistry keeps the reference of the contract registry.
 func (c *contractDeferred) SetRegistry(r ReadOnlyContractRegistry) {
 	c.contracts = r
 }
@@ -262,6 +263,10 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 				return nil, nil, errors.New("couldn't get contract buf: " + err.Error())
 			}
 			// Get the contract's constructor (like "contractValueFromByte(...)")
+			if c.contracts == nil {
+				return nil, nil, errors.New("contracts registry is missing due to bad initialization")
+			}
+
 			fn, exists := c.contracts.Search(contractID)
 			if !exists {
 				return nil, nil, errors.New("couldn't get the root function")
@@ -271,8 +276,8 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			if err != nil {
 				return nil, nil, errors.New("couldn't get the root contract: " + err.Error())
 			}
-			if cs, ok := contract.(SpawnerContract); ok {
-				cs.SetRegistry(c.contracts)
+			if cwr, ok := contract.(ContractWithRegistry); ok {
+				cwr.SetRegistry(c.contracts)
 			}
 
 			err = contract.VerifyDeferredInstruction(sst, proposedInstr, c.DeferredData.InstructionHashes[i])

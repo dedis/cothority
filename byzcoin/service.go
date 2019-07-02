@@ -1968,9 +1968,9 @@ func (s *Service) GetContractConstructor(contractName string) (ContractFn, bool)
 	return fn, exists
 }
 
-// GetContract creates a contract given the ID and the bytes input if the contract
-// exists or nil otherwise.
-func (s *Service) GetContract(contractName string, in []byte) (Contract, error) {
+// GetContractInstance creates a contract given the ID and the bytes input if the contract
+// exists or nil otherwise. It also sets the contract registry if needed.
+func (s *Service) GetContractInstance(contractName string, in []byte) (Contract, error) {
 	fn, exists := s.contracts.Search(contractName)
 	if !exists {
 		return nil, errors.New("contract does not exist")
@@ -1983,9 +1983,9 @@ func (s *Service) GetContract(contractName string, in []byte) (Contract, error) 
 
 	// Populate the contract registry in the case of special contracts
 	// that need the registry.
-	sc, ok := c.(SpawnerContract)
+	cwr, ok := c.(ContractWithRegistry)
 	if ok {
-		sc.SetRegistry(s.contracts)
+		cwr.SetRegistry(s.contracts)
 	}
 
 	return c, nil
@@ -2027,7 +2027,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	if c == nil {
 		return nil, nil, errors.New("contract factory returned nil contract instance")
 	}
-	if sc, ok := c.(SpawnerContract); ok {
+	if sc, ok := c.(ContractWithRegistry); ok {
 		sc.SetRegistry(s.contracts)
 	}
 

@@ -44,9 +44,9 @@ type ReadOnlyContractRegistry interface {
 	Search(contractID string) (ContractFn, bool)
 }
 
-// SpawnerContract is an interface to detect contracts that need a reference
+// ContractWithRegistry is an interface to detect contracts that need a reference
 // to the registry.
-type SpawnerContract interface {
+type ContractWithRegistry interface {
 	SetRegistry(ReadOnlyContractRegistry)
 }
 
@@ -63,6 +63,11 @@ type contractRegistry struct {
 	sync.Mutex
 }
 
+// register tries to store the contract inside the registry. It will fail if the
+// registry is locked and ignoreLock is set to false. It will also fail if the
+// contract already exists.
+// Because of backwards compatibility, the ignoreLock parameter can be set to
+// true to register a contract after module initialization.
 func (cr *contractRegistry) register(contractID string, f ContractFn, ignoreLock bool) error {
 	cr.Lock()
 	if cr.locked && !ignoreLock {
@@ -82,7 +87,7 @@ func (cr *contractRegistry) register(contractID string, f ContractFn, ignoreLock
 }
 
 // Search looks up the contract ID and returns the constructor function
-// it it exists and nil otherwise.
+// if it exists and nil otherwise.
 func (cr *contractRegistry) Search(contractID string) (ContractFn, bool) {
 	cr.Lock()
 	fn, exists := cr.registry[contractID]
