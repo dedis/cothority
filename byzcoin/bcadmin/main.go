@@ -833,7 +833,7 @@ func link(c *cli.Context) error {
 		log.Info("Fetching all byzcoin-ids from the roster")
 		var scIDs []skipchain.SkipBlockID
 		for _, si := range r.List {
-			reply, err := genericClient.GetAllChainIDs(si)
+			reply, err := genericClient.GetAllByzCoinIDs(si)
 			if err != nil {
 				log.Warn("Couldn't contact", si.Address, err)
 			} else {
@@ -861,7 +861,7 @@ func link(c *cli.Context) error {
 		var cl *byzcoin.Client
 		var cc *byzcoin.ChainConfig
 		for _, si := range r.List {
-			reply, err := genericClient.GetAllChainIDs(si)
+			reply, err := genericClient.GetAllByzCoinIDs(si)
 			if err != nil {
 				log.Warn("Got error while asking", si.Address, "for skipchains")
 			}

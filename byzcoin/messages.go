@@ -11,7 +11,7 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		&GetAllChainIDsRequest{}, &GetAllChainIDsResponse{},
+		&GetAllByzCoinIDsRequest{}, &GetAllByzCoinIDsResponse{},
 		&CreateGenesisBlock{}, &CreateGenesisBlockResponse{},
 		&AddTxRequest{}, &AddTxResponse{},
 		&GetSignerCounters{}, &GetSignerCountersResponse{},

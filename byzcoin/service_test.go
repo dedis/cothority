@@ -41,13 +41,13 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func TestService_GetAllChainIDs(t *testing.T) {
+func TestService_GetAllByzCoinIDs(t *testing.T) {
 	s := newSerN(t, 1, testInterval, 4, disableViewChange)
 	defer s.local.CloseAll()
 
 	service := s.services[0]
 
-	resp, err := service.GetAllChainIDs(&GetAllChainIDsRequest{})
+	resp, err := service.GetAllByzCoinIDs(&GetAllByzCoinIDsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resp.IDs))
 
@@ -58,7 +58,7 @@ func TestService_GetAllChainIDs(t *testing.T) {
 	_, err = service.skService().StoreSkipBlockInternal(&skipchain.StoreSkipBlock{NewBlock: nb})
 	require.NoError(t, err)
 
-	resp, err = service.GetAllChainIDs(&GetAllChainIDsRequest{})
+	resp, err = service.GetAllByzCoinIDs(&GetAllByzCoinIDsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resp.IDs))
 }

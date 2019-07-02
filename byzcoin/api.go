@@ -89,11 +89,11 @@ func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBloc
 	return reply, nil
 }
 
-// GetAllChainIDs returns the list of Byzcoin chains known by the server given in
+// GetAllByzCoinIDs returns the list of Byzcoin chains known by the server given in
 // parameter.
-func (c *Client) GetAllChainIDs(si *network.ServerIdentity) (*GetAllChainIDsResponse, error) {
-	reply := &GetAllChainIDsResponse{}
-	if err := c.SendProtobuf(si, &GetAllChainIDsRequest{}, reply); err != nil {
+func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDsResponse, error) {
+	reply := &GetAllByzCoinIDsResponse{}
+	if err := c.SendProtobuf(si, &GetAllByzCoinIDsRequest{}, reply); err != nil {
 		return nil, err
 	}
 

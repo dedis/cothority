@@ -119,7 +119,7 @@ func TestClient_GetProof(t *testing.T) {
 	c, csr, err := NewLedger(msg, false)
 	require.Nil(t, err)
 
-	gac, err := c.GetAllChainIDs(roster.List[1])
+	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gac.IDs))
 

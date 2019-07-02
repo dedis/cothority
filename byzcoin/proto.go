@@ -27,12 +27,12 @@ import (
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "ByzCoinProto";
 
-// GetAllChainIDsRequest is a request to get all the Byzcoin chains from a server.
-type GetAllChainIDsRequest struct {
+// GetAllByzCoinIDsRequest is a request to get all the Byzcoin chains from a server.
+type GetAllByzCoinIDsRequest struct {
 }
 
-// GetAllChainIDsResponse contains the list of Byzcoin chains known by a server.
-type GetAllChainIDsResponse struct {
+// GetAllByzCoinIDsResponse contains the list of Byzcoin chains known by a server.
+type GetAllByzCoinIDsResponse struct {
 	IDs []skipchain.SkipBlockID
 }
 
