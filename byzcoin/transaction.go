@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -19,6 +20,9 @@ import (
 
 // An InstanceID is a unique identifier for one instance of a contract.
 type InstanceID [32]byte
+
+// eachLine matches the content of non-empty lines
+var eachLine = regexp.MustCompile(`(?m)^(.+)$`)
 
 func (iID InstanceID) String() string {
 	return fmt.Sprintf("%x", iID.Slice())
@@ -206,38 +210,59 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 // Action returns the action that the user wants to do with this
 // instruction.
 func (instr Instruction) Action() string {
+	contractID := instr.ContractID()
 	a := "invalid"
 	switch instr.GetType() {
 	case SpawnType:
-		a = "spawn:" + instr.Spawn.ContractID
+		a = "spawn:" + contractID
 	case InvokeType:
-		a = "invoke:" + instr.Invoke.ContractID + "." + instr.Invoke.Command
+		a = "invoke:" + contractID + "." + instr.Invoke.Command
 	case DeleteType:
-		a = "delete:" + instr.Delete.ContractID
+		a = "delete:" + contractID
+	}
+	return a
+}
+
+// ContractID returns the ContractID that the user specified
+func (instr Instruction) ContractID() string {
+	a := "invalid"
+	switch instr.GetType() {
+	case SpawnType:
+		a = instr.Spawn.ContractID
+	case InvokeType:
+		a = instr.Invoke.ContractID
+	case DeleteType:
+		a = instr.Delete.ContractID
 	}
 	return a
 }
 
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
-	var out string
-	out += fmt.Sprintf("instr: %x\n", instr.Hash())
-	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
-	out += fmt.Sprintf("\taction: %s\n", instr.Action())
-	out += fmt.Sprintf("\tidentities: %v\n", instr.SignerIdentities)
-	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
-	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
-	switch instr.GetType() {
-	case SpawnType:
-		out += fmt.Sprintf("Spawn:\t%s\n\tArgs:%s\n", instr.Spawn.ContractID,
-			strings.Join(instr.Spawn.Args.Names(), " - "))
-	case InvokeType:
-		out += fmt.Sprintf("Invoke:\t%s\n\tArgs:%s\n", instr.Invoke.ContractID,
-			strings.Join(instr.Invoke.Args.Names(), " - "))
-	case DeleteType:
-		out += fmt.Sprintf("Delete:\t%s\n", instr.Delete.ContractID)
+	contractFn, ok := GetContractRegistry().Search(instr.ContractID())
+	var methodStr string
+	if !ok {
+		methodStr = "error in getting constructor: " + instr.ContractID()
+	} else {
+		contract, err := contractFn(nil)
+		if err != nil {
+			methodStr = "error in getting contract"
+		} else {
+			methodStr = contract.FormatMethod(instr)
+		}
 	}
-	return out
+
+	var out strings.Builder
+	out.WriteString("- instruction:\n")
+	fmt.Fprintf(&out, "-- hash: %x\n", instr.Hash())
+	fmt.Fprintf(&out, "-- instID: %v\n", instr.InstanceID)
+	fmt.Fprintf(&out, "-- action: %s\n", instr.Action())
+	fmt.Fprintf(&out, "-- identities: %v\n", instr.SignerIdentities)
+	fmt.Fprintf(&out, "-- counters: %v\n", instr.SignerCounter)
+	fmt.Fprintf(&out, "-- signatures: %d\n", len(instr.Signatures))
+	out.WriteString(eachLine.ReplaceAllString(methodStr, "-$1"))
+
+	return out.String()
 }
 
 // SignWith creates a signed version of the instruction. The signature is

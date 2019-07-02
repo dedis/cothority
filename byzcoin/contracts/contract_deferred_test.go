@@ -197,8 +197,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -329,11 +329,11 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
-	// 4. Invoke an "execRoot" command a second time. Since NumExecution should
+	// 4. Invoke an "execRoot" command a second time. Since MaxNumExecution should
 	//    be at 0, we expect it to fail.
 	//    NOTE: We are trying to spawn two times a contract with the sane id,
 	//          which is not likely to create two instances. Here we are only
-	//          testing if the check of the NumExecution works.
+	//          testing if the check of the MaxNumExecution works.
 	// ------------------------------------------------------------------------
 
 	ctx = byzcoin.ClientTransaction{
@@ -543,8 +543,8 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -861,8 +861,8 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -1780,8 +1780,8 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -1856,8 +1856,8 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[1].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[1].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -2163,8 +2163,8 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -2431,8 +2431,8 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[0].Signatures)
 	require.Equal(t, len(result.ProposedTransaction.Instructions[0].Signatures), 1)
 	require.Equal(t, result.ProposedTransaction.Instructions[0].Signatures[0], signature)
-	// Default NumExecution should be 1
-	require.Equal(t, result.NumExecution, uint64(1))
+	// Default MaxNumExecution should be 1
+	require.Equal(t, result.MaxNumExecution, uint64(1))
 
 	require.NotEmpty(t, result.InstructionHashes)
 
@@ -2577,7 +2577,7 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
-	// 7. Invoke an "execRoot" command a second time. Since NumExecution should
+	// 7. Invoke an "execRoot" command a second time. Since MaxNumExecution should
 	//    be at 0, we expect it to fail.
 	// ------------------------------------------------------------------------
 

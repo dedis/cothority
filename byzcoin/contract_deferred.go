@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
@@ -43,7 +44,7 @@ type DeferredData struct {
 	// The number of time the proposed transaction can be executed. This number
 	// decreases for each successful invocation of "executeProposedTx" and its
 	// default value is set to 1.
-	NumExecution uint64
+	MaxNumExecution uint64
 	// This array is filled with the instruction IDs of each executed
 	// instruction when a successful "executeProposedTx" happens.
 	ExecResult [][]byte
@@ -51,25 +52,25 @@ type DeferredData struct {
 
 // String returns a human readable string representation of the deferred data
 func (dd DeferredData) String() string {
-	var out string
-	out += fmt.Sprint("- Proposed Tx:\n")
+	out := new(strings.Builder)
+	out.WriteString("- Proposed Tx:\n")
 	for i, inst := range dd.ProposedTransaction.Instructions {
-		out += fmt.Sprintf("-- Tx %d:\n", i)
-		out += inst.String()
+		fmt.Fprintf(out, "-- Instruction %d:\n", i)
+		out.WriteString(eachLine.ReplaceAllString(inst.String(), "--$1"))
 	}
-	out += fmt.Sprintf("- Expire Block Index: %d\n", dd.ExpireBlockIndex)
-	out += fmt.Sprint("- Instruction hashes: \n")
+	fmt.Fprintf(out, "- Expire Block Index: %d\n", dd.ExpireBlockIndex)
+	fmt.Fprint(out, "- Instruction hashes: \n")
 	for i, hash := range dd.InstructionHashes {
-		out += fmt.Sprintf("-- hash %d:\n", i)
-		out += fmt.Sprintf("--- %x\n", hash)
+		fmt.Fprintf(out, "-- hash %d:\n", i)
+		fmt.Fprintf(out, "--- %x\n", hash)
 	}
-	out += fmt.Sprintf("- Num execution: %d\n", dd.NumExecution)
-	out += fmt.Sprintf("- Exec results: \n")
+	fmt.Fprintf(out, "- Max num execution: %d\n", dd.MaxNumExecution)
+	fmt.Fprintf(out, "- Exec results: \n")
 	for i, res := range dd.ExecResult {
-		out += fmt.Sprintf("-- res %d:\n", i)
-		out += fmt.Sprintf("--- %x\n", res)
+		fmt.Fprintf(out, "-- res %d:\n", i)
+		fmt.Fprintf(out, "--- %x\n", res)
 	}
-	return out
+	return out.String()
 }
 
 type contractDeferred struct {
@@ -142,7 +143,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 		ProposedTransaction: proposedTransaction,
 		ExpireBlockIndex:    expireBlockIndex,
 		InstructionHashes:   hash,
-		NumExecution:        numExecution,
+		MaxNumExecution:     numExecution,
 	}
 	var dataBuf []byte
 	dataBuf, err = protobuf.Encode(&data)
@@ -307,8 +308,8 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 		c.DeferredData.ExecResult = instructionIDs
 		// At this stage all verification passed. We can then decrease the
-		// NumExecution counter.
-		c.DeferredData.NumExecution = c.DeferredData.NumExecution - 1
+		// MaxNumExecution counter.
+		c.DeferredData.MaxNumExecution = c.DeferredData.MaxNumExecution - 1
 		resultBuf, err2 := protobuf.Encode(&c.DeferredData)
 		if err2 != nil {
 			return nil, nil, errors.New("couldn't encode the result")
@@ -341,12 +342,12 @@ func (c *contractDeferred) Delete(rst ReadOnlyStateTrie, inst Instruction, coins
 func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) error {
 
 	// Global check on the invoke method:
-	//   1. The NumExecution should be greater than 0
+	//   1. The MaxNumExecution should be greater than 0
 	//   2. the current skipblock index should be lower than the provided
 	//      "expireBlockIndex" argument.
 
 	// 1.
-	if c.DeferredData.NumExecution < uint64(1) {
+	if c.DeferredData.MaxNumExecution < uint64(1) {
 		return errors.New("maximum number of executions reached")
 	}
 
