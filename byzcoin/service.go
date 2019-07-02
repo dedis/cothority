@@ -255,10 +255,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		},
 	}
 
-	spawnNaming := &Spawn{
-		ContractID: ContractNamingID,
-	}
-
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
 	ctx := ClientTransaction{
@@ -266,10 +262,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 			{
 				InstanceID: ConfigInstanceID,
 				Spawn:      spawnGenesis,
-			},
-			{
-				InstanceID: NamingInstanceID,
-				Spawn:      spawnNaming,
 			},
 		},
 	}
@@ -2120,8 +2112,8 @@ func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
 		return nil, errors.New("no transactions")
 	}
 	instrs := txs[0].ClientTransaction.Instructions
-	if len(instrs) != 2 {
-		return nil, fmt.Errorf("expected 2 instruction, got %v", len(instrs))
+	if len(instrs) != 1 {
+		return nil, fmt.Errorf("expected 1 instruction, got %v", len(instrs))
 	}
 	if instrs[0].Spawn == nil {
 		return nil, errors.New("first instruction is not a Spawn")

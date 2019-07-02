@@ -66,18 +66,6 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	require.NoError(t, err)
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "genesis transaction should have exactly two instructions", err.Error())
-
-	data = &DataBody{
-		TxResults: []TxResult{
-			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}, Instruction{}}}},
-		},
-	}
-	sb.Payload, err = protobuf.Encode(data)
-	sb.Hash = sb.CalculateHash()
-	require.NoError(t, err)
-	_, err = newLedgerWithClient(msg, c)
-	require.Error(t, err)
 	require.Equal(t, "didn't get a spawn instruction", err.Error())
 
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{

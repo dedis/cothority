@@ -438,6 +438,9 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	if err := rs.AddRule("_sign", ownerExpr); err != nil {
 		return nil, err
 	}
+	if err := rs.AddRule("spawn:"+ContractNamingID, ownerExpr); err != nil {
+		return nil, err
+	}
 	d := darc.NewDarc(rs, []byte("genesis darc"))
 
 	// extra rules
@@ -512,8 +515,8 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 		return nil, errors.New("genesis block should only have one transaction")
 	}
 
-	if len(data.TxResults[0].ClientTransaction.Instructions) != 2 {
-		return nil, errors.New("genesis transaction should have exactly two instructions")
+	if len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
+		return nil, errors.New("genesis transaction should have exactly one instructions")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]

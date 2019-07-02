@@ -28,9 +28,30 @@ func TestService_Naming(t *testing.T) {
 	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
 
-	var namingTx ClientTransaction
+	// Spawn the naming instance
+	spawnNamingTx := ClientTransaction{
+		Instructions: Instructions{
+			{
+				InstanceID: NewInstanceID(gDarc.GetBaseID()),
+				Spawn: &Spawn{
+					ContractID: ContractNamingID,
+				},
+				SignerCounter: []uint64{1},
+			},
+		},
+	}
+	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
+	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
+	require.NoError(t, err)
+
+	// Trying to spawn again should fail
+	spawnNamingTx.Instructions[0].SignerCounter = []uint64{2}
+	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
+	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
+	require.Error(t, err)
 
 	// FAIL - use a bad signature
+	var namingTx ClientTransaction
 	namingTx = ClientTransaction{
 		Instructions: Instructions{
 			{
@@ -49,7 +70,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{1},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
@@ -77,7 +98,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{1},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
@@ -104,7 +125,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{1},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
@@ -132,7 +153,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{1},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
@@ -159,7 +180,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{1},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
@@ -186,7 +207,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{2},
+				SignerCounter: []uint64{3},
 			},
 		},
 	}
@@ -213,7 +234,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{2},
+				SignerCounter: []uint64{3},
 			},
 			{
 				InstanceID: NamingInstanceID,
@@ -231,7 +252,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{3},
+				SignerCounter: []uint64{4},
 			},
 		},
 	}
@@ -312,7 +333,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{4},
+				SignerCounter: []uint64{5},
 			},
 		},
 	}
@@ -339,7 +360,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{4},
+				SignerCounter: []uint64{5},
 			},
 		},
 	}
@@ -366,7 +387,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{5},
+				SignerCounter: []uint64{6},
 			},
 		},
 	}
