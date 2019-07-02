@@ -1384,7 +1384,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return errors.New("couldn't unmarshal body")
 	}
 
-	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
+	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
 	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())

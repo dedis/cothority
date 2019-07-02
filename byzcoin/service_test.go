@@ -396,6 +396,69 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	require.Nil(t, err)
 }
 
+// Sends the same transaction to two different nodes and makes sure that it shows up only once in a
+// block.
+func TestService_AddTransaction_Parallel(t *testing.T) {
+	defer log.SetShowTime(log.ShowTime())
+	log.SetShowTime(true)
+	s := newSerN(t, 1, testInterval, 4, disableViewChange)
+	defer s.local.CloseAll()
+
+	// add the first tx to create the instance
+	log.Lvl1("Adding a tx twice")
+	dcID := random.Bits(256, false, random.New())
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 1)
+	require.Nil(t, err)
+	atx := &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx1,
+		InclusionWait: 0,
+	}
+
+	// This is somewhat racy, as we could just fall between the creation of a block. So fingers crossed that
+	// both transactions are sent to the same block.
+	_, err = s.service().AddTransaction(atx)
+	require.Nil(t, err)
+	atx.InclusionWait = 5
+	_, err = s.services[1].AddTransaction(atx)
+	require.Nil(t, err)
+
+	// Get latest block and count the number of transactions
+	proof, err := s.service().GetProof(&GetProof{
+		Version: CurrentVersion,
+		Key:     tx1.Instructions[0].DeriveID("").Slice(),
+		ID:      s.genesis.Hash,
+	})
+	require.Nil(t, err)
+	var payload DataBody
+	require.NoError(t, protobuf.Decode(proof.Proof.Latest.Payload, &payload))
+	require.Equal(t, 1, len(payload.TxResults))
+
+	// Test if the same transaction is still rejected a block later - it should be rejected.
+	log.Lvl1("Adding same tx again")
+	atx.InclusionWait = 0
+	_, err = s.services[1].AddTransaction(atx)
+	require.Nil(t, err)
+	log.Lvl1("Adding another transaction to create block")
+	dcID = random.Bits(256, false, random.New())
+	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 2)
+	atx.InclusionWait = 5
+	_, err = s.services[1].AddTransaction(atx)
+	require.Nil(t, err)
+
+	// Get latest block and make sure that it didn't get added
+	proof, err = s.service().GetProof(&GetProof{
+		Version: CurrentVersion,
+		Key:     tx1.Instructions[0].DeriveID("").Slice(),
+		ID:      s.genesis.Hash,
+	})
+	// No idea why the payload needs to be reset here - probably an error in the protobuf library.
+	payload = DataBody{}
+	require.NoError(t, protobuf.Decode(proof.Proof.Latest.Payload, &payload))
+	require.Equal(t, 1, len(payload.TxResults))
+}
+
 func TestService_GetProof(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
