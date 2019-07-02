@@ -14,18 +14,23 @@ const ContractInsecureDarcID = "insecure_darc"
 type contractInsecureDarc struct {
 	byzcoin.BasicContract
 	darc.Darc
-	s *byzcoin.Service
+	contracts byzcoin.ReadOnlyContractRegistry
 }
 
 var _ byzcoin.Contract = (*contractInsecureDarc)(nil)
 
-func (s *Service) contractInsecureDarcFromBytes(in []byte) (byzcoin.Contract, error) {
+func contractInsecureDarcFromBytes(in []byte) (byzcoin.Contract, error) {
 	d, err := darc.NewFromProtobuf(in)
 	if err != nil {
 		return nil, err
 	}
-	c := &contractInsecureDarc{s: s.byzService(), Darc: *d}
+	c := &contractInsecureDarc{Darc: *d}
 	return c, nil
+}
+
+// SetRegistry keeps the reference of the contract registry.
+func (c *contractInsecureDarc) SetRegistry(r byzcoin.ReadOnlyContractRegistry) {
+	c.contracts = r
 }
 
 func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
@@ -49,7 +54,11 @@ func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin
 	// If we got here this is a spawn:xxx in order to spawn
 	// a new instance of contract xxx, so do that.
 
-	cfact, found := c.s.GetContractConstructor(inst.Spawn.ContractID)
+	if c.contracts == nil {
+		return nil, nil, errors.New("contracts registry is missing due to bad initialization")
+	}
+
+	cfact, found := c.contracts.Search(inst.Spawn.ContractID)
 	if !found {
 		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
 	}

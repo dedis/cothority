@@ -29,6 +29,23 @@ func init() {
 	var err error
 	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
+
+	err = byzcoin.RegisterGlobalContract(ContractPopPartyID, ContractPopPartyFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractSpawnerID, ContractSpawnerFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractCredentialID, ContractCredentialFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	err = byzcoin.RegisterGlobalContract(ContractRoPaSciID, ContractRoPaSciFromBytes)
+	if err != nil {
+		log.ErrFatal(err)
+	}
 }
 
 // Service is our template-service
@@ -206,7 +223,7 @@ func (s *Service) getPopContract(bcID skipchain.SkipBlockID, phIID []byte) (*Con
 	if cid != ContractPopPartyID {
 		return nil, errors.New("this is not a personhood contract")
 	}
-	cpop, err := ContractPopPartyFromBytes(val)
+	cpop, err := s.byzcoinService().GetContractInstance(ContractPopPartyID, val)
 	return cpop.(*ContractPopParty), err
 }
 
@@ -239,7 +256,7 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 			if err != nil {
 				return err
 			}
-			cbc, err := ContractRoPaSciFromBytes(buf)
+			cbc, err := s.byzcoinService().GetContractInstance(ContractRoPaSciID, buf)
 			if err != nil {
 				return err
 			}
@@ -290,6 +307,10 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 	return &PartyListResponse{Parties: parties}, nil
 }
 
+func (s *Service) byzcoinService() *byzcoin.Service {
+	return s.Service(byzcoin.ServiceName).(*byzcoin.Service)
+}
+
 func getParty(p *Party) (cpp *ContractPopParty, err error) {
 	cl := byzcoin.NewClient(p.ByzCoinID, p.Roster)
 	pr, err := cl.GetProofFromLatest(p.InstanceID.Slice())
@@ -315,10 +336,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll, s.RoPaSciList, s.PartyList); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
-	byzcoin.RegisterContract(c, ContractPopPartyID, ContractPopPartyFromBytes)
-	byzcoin.RegisterContract(c, ContractSpawnerID, ContractSpawnerFromBytes)
-	byzcoin.RegisterContract(c, ContractCredentialID, ContractCredentialFromBytes)
-	byzcoin.RegisterContract(c, ContractRoPaSciID, ContractRoPaSciFromBytes)
 
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
