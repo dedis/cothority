@@ -48,6 +48,8 @@ type DataHeader struct {
 	StateChangesHash []byte
 	// Timestamp is a Unix timestamp in nanoseconds.
 	Timestamp int64
+	// Version is the version of ByzCoin at the creation of the block.
+	Version int32 `protobuf:"opt"`
 }
 
 // DataBody is stored in the body of the skipblock, and it's hash is stored

@@ -29,6 +29,8 @@ message DataHeader {
   required bytes statechangeshash = 3;
   // Timestamp is a Unix timestamp in nanoseconds.
   required sint64 timestamp = 4;
+  // Version is the version of ByzCoin at the creation of the block.
+  optional sint32 version = 5;
 }
 
 // DataBody is stored in the body of the skipblock, and it's hash is stored

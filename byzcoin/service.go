@@ -962,6 +962,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
 		Timestamp:             time.Now().UnixNano(),
+		Version:               int32(CurrentVersion),
 	}
 	sb.Data, err = protobuf.Encode(header)
 	if err != nil {
@@ -1784,6 +1785,19 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 		if len(header.StateChangesHash) != sha256.Size {
 			return errors.New("state changes hash is wrong size")
+		}
+
+		prevBlock := s.skService().GetDB().GetByID(newSB.BackLinkIDs[0])
+		if prevBlock == nil {
+			return errors.New("missing previous block")
+		}
+		var prevHeader DataHeader
+		if err := protobuf.Decode(prevBlock.Data, &prevHeader); err != nil {
+			return err
+		}
+		if header.Version < prevHeader.Version {
+			log.Errorf("Got a block with version %d but previous is %d\n", header.Version, prevHeader.Version)
+			return errors.New("version cannot be lower than previous block")
 		}
 		return nil
 	}()

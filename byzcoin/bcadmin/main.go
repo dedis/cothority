@@ -109,6 +109,10 @@ var cmds = cli.Commands{
 				Name:  "roster",
 				Usage: "display the latest block's roster",
 			},
+			cli.BoolFlag{
+				Name:  "header",
+				Usage: "display the latest header",
+			},
 		},
 		Action: latest,
 	},
@@ -1066,6 +1070,15 @@ func latest(c *cli.Context) error {
 				return err
 			}
 		}
+	}
+
+	if c.Bool("header") {
+		var header byzcoin.DataHeader
+		if err = protobuf.Decode(sb.Data, &header); err != nil {
+			return err
+		}
+
+		fmt.Fprintf(c.App.Writer, "Header:\n\tTrieRoot: %x\n\tTimestamp: %d\n\tVersion: %d\n", header.TrieRoot, header.Timestamp, header.Version)
 	}
 
 	return err
