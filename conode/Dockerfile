@@ -16,4 +16,4 @@ COPY --from=builder /go/bin/bcadmin /go/bin/el /go/bin/scmgr /usr/local/bin/
 
 EXPOSE 7770 7771
 
-CMD ./conode -d 2 server
+CMD ["/root/conode", "-d", "2", "server"]
