@@ -2,6 +2,7 @@ package ch.epfl.dedis.byzcoin;
 
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
+import ch.epfl.dedis.byzcoin.contracts.NamingInstance;
 import ch.epfl.dedis.byzcoin.contracts.SecureDarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
@@ -679,6 +680,7 @@ public class ByzCoinRPC {
             }
         });
         d.addIdentity("spawn:" + SecureDarcInstance.ContractId, admin.getIdentity(), Rules.OR);
+        d.addIdentity("spawn:" + NamingInstance.ContractId, admin.getIdentity(), Rules.OR);
         d.addIdentity("invoke:" + ChainConfigInstance.ContractId + ".update_config", admin.getIdentity(), Rules.OR);
         d.addIdentity("invoke:" + SecureDarcInstance.ContractId + ".evolve_unrestricted", admin.getIdentity(), Rules.OR);
         return d;

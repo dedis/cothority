@@ -52,8 +52,12 @@ class EventLogTest {
 
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin), adminCtrs.getCounters());
 
-        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin), Collections.singletonList(adminCtrs.head()+1));
+        // Initialise the naming instance, we do not store this instance but we get it later using fromByzCoin
+        adminCtrs.increment();
+        new NamingInstance(bc, genesisDarc.getId(), Collections.singletonList(admin), adminCtrs.getCounters());
     }
 
     @Test
@@ -227,13 +231,13 @@ class EventLogTest {
         namingInstance.setAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
 
         // We use a fixed genesis ID so make sure there is no randomness in the genesis darc between test executions.
-        InstanceId iID = bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("D4A8BC3AAD344F8A1F9E5B5B49E77EEB60CF3B10044053AEC29DBF9B982F7340")), "my event log");
+        InstanceId iID = bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("DA74C7FBE9AB0ADCF9BBFF797AA8F2012BC624ABEBCAE9900CD9DE6A0679B19F")), "my event log");
         assertEquals(iID, el.getInstanceId());
 
         // Remove it and the resolution should fail.
         adminCtrs.increment();
         namingInstance.removeAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
         assertThrows(CothorityCommunicationException.class,
-                () -> bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("D4A8BC3AAD344F8A1F9E5B5B49E77EEB60CF3B10044053AEC29DBF9B982F7340")), "my event log"));
+                () -> bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("DA74C7FBE9AB0ADCF9BBFF797AA8F2012BC624ABEBCAE9900CD9DE6A0679B19F")), "my event log"));
     }
 }

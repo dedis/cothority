@@ -53,9 +53,12 @@ public class NamingTest {
         newGenesis.setRule("_name:darc", newGenesis.getExpression("spawn:darc"));
         bc.getGenesisDarcInstance().evolveDarcAndWait(newGenesis, admin, counters.head(), 10);
 
+        // create the naming instance
+        counters.increment();
+        NamingInstance namingInst = new NamingInstance(bc, genesisDarc.getId(), Collections.singletonList(admin), counters.getCounters());
+
         // set a name for the genesis darc
         counters.increment();
-        NamingInstance namingInst = NamingInstance.fromByzcoin(bc);
         namingInst.setAndWait("my genesis darc",
                 new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
                 Collections.singletonList(admin),

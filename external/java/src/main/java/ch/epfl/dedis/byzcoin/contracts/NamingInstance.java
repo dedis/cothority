@@ -3,10 +3,8 @@ package ch.epfl.dedis.byzcoin.contracts;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
-import ch.epfl.dedis.byzcoin.transaction.Argument;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
-import ch.epfl.dedis.byzcoin.transaction.Instruction;
-import ch.epfl.dedis.byzcoin.transaction.Invoke;
+import ch.epfl.dedis.byzcoin.transaction.*;
+import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -32,8 +30,24 @@ public class NamingInstance {
     private final static Logger logger = LoggerFactory.getLogger(NamingInstance.class);
 
     /**
-     * Loads the singleton naming instance from ByzCoin. A naming instance cannot be created from this class because it
-     * is a singleton on ByzCoin and it is created at start-up.
+     * Create a naming instance. Note that the naming instance is a singleton.
+     *
+     * @param bc         is a running byzcoin service
+     * @param darcID     is the darc that contains the "spawn:naming" rule, usually it is the genesis darc
+     * @param signers    is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param signerCtrs is the list of monotonically increasing counters that will go into the instruction,
+     *                   they must match the signers who will eventually sign the instruction
+     * @throws CothorityException if the instance cannot be created
+     */
+    public NamingInstance(ByzCoinRPC bc, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        bc.sendTransactionAndWait(makeSpawnTx(new InstanceId(darcID.getId()), signers, signerCtrs), 10);
+        NamingInstance instance = NamingInstance.fromByzcoin(bc);
+        this.bc = instance.bc;
+        this.instance = instance.instance;
+    }
+
+    /**
+     * Loads the singleton naming instance from ByzCoin.
      *
      * @param bc is a running ByzCoin service
      * @return a reference to the instance
@@ -56,13 +70,13 @@ public class NamingInstance {
      *
      * @param instanceName is the name given to the instance ID
      * @param iID          is the to-be-named instance ID
-     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
-     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     * @param signers      is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param signerCtrs   is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
      * @throws CothorityException if any error occurs
      */
-    public void set(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
-        bc.sendTransaction(makeAddTx(instanceName, iID, owners, ownerCtrs));
+    public void set(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        bc.sendTransaction(makeAddTx(instanceName, iID, signers, signerCtrs));
     }
 
     /**
@@ -72,14 +86,14 @@ public class NamingInstance {
      *
      * @param instanceName is the name given to the instance ID
      * @param iID          is the to-be-named instance ID
-     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
-     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     * @param signers      is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param signerCtrs   is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
      * @param wait         how many blocks to wait for inclusion of the transaction
      * @throws CothorityException if any error occurs
      */
-    public void setAndWait(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
-        bc.sendTransactionAndWait(makeAddTx(instanceName, iID, owners, ownerCtrs), wait);
+    public void setAndWait(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs, int wait) throws CothorityException {
+        bc.sendTransactionAndWait(makeAddTx(instanceName, iID, signers, signerCtrs), wait);
     }
 
     /**
@@ -87,13 +101,13 @@ public class NamingInstance {
      *
      * @param instanceName is the name of the instance to remove
      * @param iID          is instance ID which must have been named previously to instanceName
-     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
-     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     * @param signers      is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param signerCtrs   is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
      * @throws CothorityException
      */
-    public void remove(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
-        bc.sendTransaction(makeRemoveTx(instanceName, iID, owners, ownerCtrs));
+    public void remove(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        bc.sendTransaction(makeRemoveTx(instanceName, iID, signers, signerCtrs));
     }
 
     /**
@@ -102,14 +116,14 @@ public class NamingInstance {
      *
      * @param instanceName is the name of the instance to remove
      * @param iID          is instance ID which must have been named previously to instanceName
-     * @param owners       is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
-     * @param ownerCtrs    is the list of monotonically increasing counters that will go into the instruction,
+     * @param signers      is a list of signers that holds the keys to the "_name" rule in the Darc the guards iID
+     * @param signerCtrs   is the list of monotonically increasing counters that will go into the instruction,
      *                     they must match the signers who will eventually sign the instruction
      * @param wait         how many blocks to wait for inclusion of the transaction
      * @throws CothorityException
      */
-    public void removeAndWait(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
-        bc.sendTransactionAndWait(makeRemoveTx(instanceName, iID, owners, ownerCtrs), wait);
+    public void removeAndWait(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs, int wait) throws CothorityException {
+        bc.sendTransactionAndWait(makeRemoveTx(instanceName, iID, signers, signerCtrs), wait);
     }
 
     private NamingInstance(ByzCoinRPC bc, Instance instance) throws CothorityNotFoundException {
@@ -142,5 +156,17 @@ public class NamingInstance {
 
     private ClientTransaction makeAddTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
         return makeTx(instanceName, iID, owners, ownerCtrs, "add");
+    }
+
+    private ClientTransaction makeSpawnTx(InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
+        Spawn spawn = new Spawn(ContractId, new ArrayList<>());
+        Instruction inst = new Instruction(
+                iID,
+                owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
+                ownerCtrs,
+                spawn);
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst));
+        ct.signWith(owners);
+        return ct;
     }
 }
