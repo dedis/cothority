@@ -396,6 +396,19 @@ type CheckStateChangeValidityResponse struct {
 	BlockID      skipchain.SkipBlockID
 }
 
+// ResolveInstanceID is the request for resolving the instance ID based on the
+// Darc ID and the name.
+type ResolveInstanceID struct {
+	SkipChainID skipchain.SkipBlockID
+	DarcID      darc.ID
+	Name        string
+}
+
+// ResolvedInstanceID is the result of the instance ID resolution.
+type ResolvedInstanceID struct {
+	InstanceID InstanceID
+}
+
 // DebugRequest returns the list of all byzcoins if byzcoinid is empty, else it returns
 // a dump of all instances if byzcoinid is given and exists.
 type DebugRequest struct {

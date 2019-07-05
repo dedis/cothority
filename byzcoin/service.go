@@ -92,6 +92,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = RegisterGlobalContract(ContractNamingID, contractNamingFromBytes)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GenNonce returns a random nonce.
@@ -278,7 +282,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// TODO this nonce is picked by the root, how to make sure it's secure?
 	nonce := GenNonce()
 
-	spawn := &Spawn{
+	spawnGenesis := &Spawn{
 		ContractID: ContractConfigID,
 		Args: Arguments{
 			{Name: "darc", Value: darcBuf},
@@ -293,10 +297,12 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
 	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: ConfigInstanceID,
-			Spawn:      spawn,
-		}},
+		Instructions: []Instruction{
+			{
+				InstanceID: ConfigInstanceID,
+				Spawn:      spawnGenesis,
+			},
+		},
 	}
 
 	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
@@ -346,7 +352,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	}
 
 	for i, instr := range req.Transaction.Instructions {
-		log.Lvlf2("Instruction[%d]: %s", i, instr.Action())
+		log.Lvlf2("Instruction[%d]: %s on instance ID %s", i, instr.Action(), instr.InstanceID.String())
 	}
 
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
@@ -676,6 +682,40 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		StateChanges: scs,
 		BlockID:      sb.SkipBlock.Hash,
 	}, nil
+}
+
+// ResolveInstanceID resolves the instance ID using the given request. The name
+// must be already set by calling the naming contract.
+func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID, error) {
+	st, err := s.GetReadOnlyStateTrie(req.SkipChainID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.DarcID) == 0 {
+		return nil, errors.New("darc ID must be set")
+	}
+
+	h := sha256.New()
+	h.Write(req.DarcID)
+	h.Write([]byte{'/'})
+	h.Write([]byte(req.Name))
+	key := NewInstanceID(h.Sum(nil))
+	val, _, _, _, err := st.GetValues(key[:])
+	if err != nil {
+		return nil, err
+	}
+
+	valStruct := contractNamingEntry{}
+	if err := protobuf.Decode(val, &valStruct); err != nil {
+		return nil, err
+	}
+
+	if valStruct.Removed {
+		return nil, errKeyNotSet
+	}
+
+	return &ResolvedInstanceID{valStruct.IID}, nil
 }
 
 type leafNode struct {
@@ -2005,27 +2045,36 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 
 	contractFactory, exists := s.GetContractConstructor(contractID)
-	if !exists && ConfigInstanceID.Equal(instr.InstanceID) {
-		// Special case: first time call to genesis-configuration must return
-		// correct contract type.
-		contractFactory, exists = s.GetContractConstructor(ContractConfigID)
+	if !exists {
+		if ConfigInstanceID.Equal(instr.InstanceID) {
+			// Special case 1: first time call to
+			// genesis-configuration must return correct contract
+			// type.
+			contractFactory, exists = s.GetContractConstructor(ContractConfigID)
+		} else if NamingInstanceID.Equal(instr.InstanceID) {
+			// Special case 2: first time call to the naming
+			// contract must return the correct type too.
+			contractFactory, exists = s.GetContractConstructor(ContractNamingID)
+		} else {
+			// If the leader does not have a verifier for this
+			// contract, it drops the transaction.
+			err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"",
+				contractID, instr.InstanceID.Slice())
+			return
+		}
 	}
 
-	// If the leader does not have a verifier for this contract, it drops the
-	// transaction.
-	if !exists {
-		err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
-		return
-	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
 
-	c, err := contractFactory(contents)
+	var c Contract
+	c, err = contractFactory(contents)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 	if c == nil {
-		return nil, nil, errors.New("contract factory returned nil contract instance")
+		err = errors.New("contract factory returned nil contract instance")
+		return
 	}
 	if sc, ok := c.(ContractWithRegistry); ok {
 		sc.SetRegistry(s.contracts)
@@ -2033,7 +2082,8 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 	err = c.VerifyInstruction(st, instr, ctxHash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("instruction verification failed: %v", err)
+		err = fmt.Errorf("instruction verification failed: %v", err)
+		return
 	}
 
 	switch instr.GetType() {
@@ -2440,6 +2490,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.GetLastInstanceVersion,
 		s.GetAllInstanceVersion,
 		s.CheckStateChangeValidity,
+		s.ResolveInstanceID,
 		s.Debug,
 		s.DebugRemove)
 	if err != nil {

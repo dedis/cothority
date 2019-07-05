@@ -54,7 +54,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Hash = sb.CalculateHash()
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "genesis darc tx should only have one instruction", err.Error())
+	require.Equal(t, "genesis block should only have one transaction", err.Error())
 
 	data := &DataBody{
 		TxResults: []TxResult{

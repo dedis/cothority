@@ -196,10 +196,7 @@ func notImpl(what string) error { return fmt.Errorf("this contract does not impl
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
 func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	if err := inst.Verify(rst, ctxHash); err != nil {
-		return err
-	}
-	return nil
+	return inst.Verify(rst, ctxHash)
 }
 
 // VerifyDeferredInstruction is not implemented in a BasicContract. Types which

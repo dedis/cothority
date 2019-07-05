@@ -418,6 +418,22 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	return nil, errors.New("error while downloading state from nodes")
 }
 
+// ResolveInstanceID resolves the instance ID using the given darc ID and name.
+// The name must be already set by calling the naming contract.
+func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, error) {
+	req := ResolveInstanceID{
+		SkipChainID: c.ID,
+		DarcID:      darcID,
+		Name:        name,
+	}
+	reply := ResolvedInstanceID{}
+
+	if err := c.SendProtobuf(c.getServer(), &req, &reply); err != nil {
+		return InstanceID{}, err
+	}
+	return reply.InstanceID, nil
+}
+
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
 func Debug(url string, byzcoinID *skipchain.SkipBlockID) (reply *DebugResponse, err error) {
@@ -472,6 +488,9 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		return nil, err
 	}
 	if err := rs.AddRule("_sign", ownerExpr); err != nil {
+		return nil, err
+	}
+	if err := rs.AddRule("spawn:"+ContractNamingID, ownerExpr); err != nil {
 		return nil, err
 	}
 	d := darc.NewDarc(rs, []byte("genesis darc"))
@@ -558,8 +577,12 @@ func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {
 		return nil, fmt.Errorf("fail to decode data: %v", err)
 	}
 
-	if len(data.TxResults) != 1 || len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
-		return nil, errors.New("genesis darc tx should only have one instruction")
+	if len(data.TxResults) != 1 {
+		return nil, errors.New("genesis block should only have one transaction")
+	}
+
+	if len(data.TxResults[0].ClientTransaction.Instructions) != 1 {
+		return nil, errors.New("genesis transaction should have exactly one instructions")
 	}
 
 	instr := data.TxResults[0].ClientTransaction.Instructions[0]

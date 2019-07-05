@@ -82,6 +82,54 @@ func TestClient_Log(t *testing.T) {
 		_, err = c.GetEvent(key)
 		require.Nil(t, err)
 	}
+
+	// Test naming, this is just a sanity check for eventlogs, the main
+	// naming test is in the byzcoin package.
+	spawnNamingTx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{
+			{
+				InstanceID: byzcoin.NewInstanceID(s.gen.GetBaseID()),
+				Spawn: &byzcoin.Spawn{
+					ContractID: byzcoin.ContractNamingID,
+				},
+				SignerCounter: c.incrementCtrs(),
+			},
+		},
+	}
+	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(c.Signers...))
+	_, err = c.ByzCoin.AddTransactionAndWait(spawnNamingTx, 10)
+	require.NoError(t, err)
+
+	namingTx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{
+			{
+				InstanceID: byzcoin.NamingInstanceID,
+				Invoke: &byzcoin.Invoke{
+					ContractID: byzcoin.ContractNamingID,
+					Command:    "add",
+					Args: byzcoin.Arguments{
+						{
+							Name:  "instanceID",
+							Value: c.Instance.Slice(),
+						},
+						{
+							Name:  "name",
+							Value: []byte("myeventlog"),
+						},
+					},
+				},
+				SignerCounter: c.incrementCtrs(),
+			},
+		},
+	}
+	require.NoError(t, namingTx.FillSignersAndSignWith(c.Signers...))
+
+	_, err = c.ByzCoin.AddTransactionAndWait(namingTx, 10)
+	require.NoError(t, err)
+
+	replyID, err := c.ByzCoin.ResolveInstanceID(c.DarcID, "myeventlog")
+	require.NoError(t, err)
+	require.Equal(t, replyID, c.Instance)
 }
 
 func TestClient_Log200(t *testing.T) {
@@ -495,7 +543,7 @@ func newSer(t *testing.T) (*ser, *Client) {
 
 	var err error
 	s.req, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
-		[]string{"spawn:" + contractName, "invoke:" + contractName + "." + logCmd}, s.owner.Identity())
+		[]string{"spawn:" + contractName, "invoke:" + contractName + "." + logCmd, "_name:" + contractName}, s.owner.Identity())
 	if err != nil {
 		t.Fatal(err)
 	}
