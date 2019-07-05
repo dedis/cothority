@@ -2101,6 +2101,12 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// instruction, we need to get the version from the trie
 	vv := make(map[string]uint64)
 	for i, sc := range scs {
+		// Make sure that the contract either exists or is empty.
+		if _, ok := s.contracts.Search(sc.ContractID); !ok && sc.ContractID != "" {
+			log.Errorf("Found unknown contract ID \"%s\"", sc.ContractID)
+			return nil, nil, errors.New("unknown contract ID")
+		}
+
 		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
 		if !ok {
 			_, ver, _, _, err = st.GetValues(sc.InstanceID)
