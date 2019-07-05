@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"strings"
 	"testing"
 	"time"
@@ -2198,6 +2200,51 @@ func TestService_TestCatchUpHistory(t *testing.T) {
 	err = s.service().catchupFromID(s.roster, s.genesis.Hash, s.genesis.Hash)
 	require.True(t, s.service().catchingUpHistory[string(s.genesis.Hash)].Equal(ts))
 	require.Error(t, err)
+}
+
+func TestService_Repair(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	var intermediateStateTrie *stateTrie
+	var finalRoot []byte
+	n := 5
+	for i := 0; i < n; i++ {
+		ctx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i+1))
+		require.Nil(t, err)
+		s.sendTxAndWait(t, ctx, 10)
+
+		// take a copy of the state trie at the middle
+		if i == 2 {
+			tmpTrie, err := s.service().getStateTrie(s.genesis.SkipChainID())
+			require.NoError(t, err)
+			nonce, err := tmpTrie.GetNonce()
+			require.NoError(t, err)
+			intermediateTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
+			require.NoError(t, err)
+
+			err = intermediateTrie.DB().Update(func(b trie.Bucket) error {
+				return tmpTrie.CopyTo(b)
+			})
+			require.NoError(t, err)
+
+			intermediateStateTrie = &stateTrie{*intermediateTrie}
+		} else if i == n - 1 {
+			tmpTrie, err := s.service().getStateTrie(s.genesis.SkipChainID())
+			require.NoError(t, err)
+			finalRoot = tmpTrie.GetRoot()
+		}
+	}
+
+	// Introduce an artificial corruption and then try to repair it.
+	genesisHex := fmt.Sprintf("%x", s.genesis.SkipChainID())
+	s.service().stateTries[genesisHex] = intermediateStateTrie
+
+	err := s.service().fixInconsistencyIfAny(s.genesis.SkipChainID(), s.service().stateTries[genesisHex])
+	require.NoError(t, err)
+
+	newRoot := s.service().stateTries[genesisHex].GetRoot()
+	require.Equal(t, finalRoot, newRoot)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {

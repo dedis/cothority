@@ -850,7 +850,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, Verify}
 
-		nonce, err := s.loadNonceFromTxs(tx)
+		nonce, err := loadNonceFromTxs(tx)
 		if err != nil {
 			return nil, err
 		}
@@ -1287,7 +1287,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
 			return errors.New("couldn't unmarshal body for genesis block")
 		}
-		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		nonce, err := loadNonceFromTxs(body.TxResults)
 		if err != nil {
 			return err
 		}
@@ -1601,6 +1601,10 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	if err != nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
+	return loadBlockInfo(st)
+}
+
+func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
 	config, err := LoadConfigFromTrie(st)
 	if err != nil {
 		if err == errKeyNotSet {
@@ -1699,7 +1703,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	// compute the Merkle root.
 	var sst *stagingStateTrie
 	if newSB.Index == 0 {
-		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		nonce, err := loadNonceFromTxs(body.TxResults)
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 			return false
@@ -1813,6 +1817,8 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
+//
+// Any data from the trie should be read from sst and not the service.
 func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
@@ -1826,7 +1832,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	err = nil
 
 	var maxsz, blocksz int
-	_, maxsz, err = s.LoadBlockInfo(scID)
+	_, maxsz, err = loadBlockInfo(sst)
 	// no error or expected "no trie" err, so keep going with the
 	// maxsz we got.
 	err = nil
@@ -1892,7 +1898,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 }
 
 // processOneTx takes one transaction and creates a set of StateChanges. It also returns the temporary StateTrie
-// with the StateChanges applied.
+// with the StateChanges applied. Any data from the trie should be read from sst and not the service.
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
@@ -2132,7 +2138,7 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 }
 
 // loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
-func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
+func loadNonceFromTxs(txs TxResults) ([]byte, error) {
 	if len(txs) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -2305,6 +2311,16 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		return nil
 	}
 
+	// before doing anything, verify that byzcoin is consistent
+	st, err := s.getStateTrie(genesisID)
+	if err != nil {
+		return err
+	}
+	if err := s.fixInconsistencyIfAny(genesisID, st); err != nil {
+		return err
+	}
+
+	// load the metadata to prepare for starting the managers (heartbeat, viewchange)
 	interval, _, err := s.LoadBlockInfo(genesisID)
 	if err != nil {
 		return fmt.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s",
@@ -2401,6 +2417,103 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 	}
 
 	return body.TxResults, sb, nil
+}
+
+// fixInconsistencyIfAny will attempt to fix any inconsistent data between the
+// trie and the skipblock. An error is returned if the inconsistency cannot be
+// fixed.
+func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *stateTrie) error {
+	currSB, err := s.db().GetLatestByID(genesisID)
+	if err != nil {
+		return err
+	}
+
+	var header DataHeader
+	err = protobuf.Decode(currSB.Data, &header)
+	if err != nil {
+		return errors.New("couldn't unmarshal header: " + err.Error())
+	}
+
+	if bytes.Equal(header.TrieRoot, st.GetRoot()) {
+		return nil
+	}
+
+	// At the point we detected an inconsistency, so we try to fix it by
+	// walking back the skipblocks and try to find a match on the trie-root
+	// and then replay the state changes.
+
+	log.Warn(s.ServerIdentity(), "inconsistency detected, trying to fix it")
+	for {
+		var currHeader DataHeader
+		err = protobuf.Decode(currSB.Data, &currHeader)
+		if err != nil {
+			return errors.New("could not unmarshal header: " + err.Error())
+		}
+		if bytes.Equal(currHeader.TrieRoot, st.GetRoot()) {
+			return s.repairStateTrie(currSB, st)
+		}
+
+		if len(currSB.BackLinkIDs) == 0 {
+			return errors.New("could not find a consistent state")
+		}
+		prevID := currSB.BackLinkIDs[0]
+		currSB = s.db().GetByID(prevID)
+		if currSB == nil {
+			return errors.New("missing block")
+		}
+	}
+}
+
+// blockID is where we are consistent with trie root, so replay from the block
+// after blockID.
+func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) error {
+	// Verify that we are in the right state.
+	{
+		var header DataHeader
+		if err := protobuf.Decode(from.Data, &header); err != nil {
+			return errors.New("couldn't unmarshal header: " + err.Error())
+		}
+
+		if !bytes.Equal(header.TrieRoot, st.GetRoot()) {
+			return errors.New("repair must start from a consistent state")
+		}
+	}
+
+	// Try to do the repair until we have no more forward links.
+	log.Warn(s.ServerIdentity(), "repairing state trie from a known state")
+	var cnt int
+	for len(from.ForwardLink) > 0 {
+		from = s.db().GetByID(from.ForwardLink[0].To)
+		if from == nil {
+			return errors.New("missing skipblocks")
+		}
+
+		var header DataHeader
+		if err := protobuf.Decode(from.Data, &header); err != nil {
+			return errors.New("couldn't unmarshal header: " + err.Error())
+		}
+
+		var body DataBody
+		if err := protobuf.Decode(from.Payload, &body); err != nil {
+			return err
+		}
+
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout)
+
+		// Update our global state using all state changes.
+		if st.GetIndex() + 1 != from.Index {
+			return errors.New("unexpected index")
+		}
+		if err := st.VerifiedStoreAll(scs, from.Index, header.TrieRoot); err != nil {
+			return err
+		}
+		cnt++
+	}
+
+	if cnt == 0 {
+		return errors.New("repair failed")
+	}
+	return nil
 }
 
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
