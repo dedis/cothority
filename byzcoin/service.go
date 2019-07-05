@@ -30,7 +30,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-	bbolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -2501,7 +2501,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout)
 
 		// Update our global state using all state changes.
-		if st.GetIndex() + 1 != from.Index {
+		if st.GetIndex()+1 != from.Index {
 			return errors.New("unexpected index")
 		}
 		if err := st.VerifiedStoreAll(scs, from.Index, header.TrieRoot); err != nil {

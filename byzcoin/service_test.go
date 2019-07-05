@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"strings"
 	"testing"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -2229,7 +2229,7 @@ func TestService_Repair(t *testing.T) {
 			require.NoError(t, err)
 
 			intermediateStateTrie = &stateTrie{*intermediateTrie}
-		} else if i == n - 1 {
+		} else if i == n-1 {
 			tmpTrie, err := s.service().getStateTrie(s.genesis.SkipChainID())
 			require.NoError(t, err)
 			finalRoot = tmpTrie.GetRoot()
