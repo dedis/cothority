@@ -2102,14 +2102,13 @@ func darcRule(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
-				Invoke:        &invoke,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+		Invoke:        &invoke,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

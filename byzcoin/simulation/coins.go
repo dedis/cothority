@@ -96,25 +96,23 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)
 	coins[7] = byte(1)
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: contracts.ContractCoinID,
-				},
-				SignerIdentities: []darc.Identity{signer.Identity()},
-				SignerCounter:    []uint64{1},
-			},
-			{
-				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: contracts.ContractCoinID,
-				},
-				SignerIdentities: []darc.Identity{signer.Identity()},
-				SignerCounter:    []uint64{2},
-			},
+	tx, err := c.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: contracts.ContractCoinID,
 		},
+		SignerIdentities: []darc.Identity{signer.Identity()},
+		SignerCounter:    []uint64{1},
+	}, byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: contracts.ContractCoinID,
+		},
+		SignerIdentities: []darc.Identity{signer.Identity()},
+		SignerCounter:    []uint64{2},
+	})
+	if err != nil {
+		return err
 	}
 
 	// Now sign all the instructions
@@ -132,21 +130,20 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Because of issue #1379, we need to do this in a separate tx, once we know
 	// the spawn is done.
-	tx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID: coinAddr1,
-				Invoke: &byzcoin.Invoke{
-					ContractID: contracts.ContractCoinID,
-					Command:    "mint",
-					Args: byzcoin.Arguments{{
-						Name:  "coins",
-						Value: coins}},
-				},
-				SignerIdentities: []darc.Identity{signer.Identity()},
-				SignerCounter:    []uint64{3},
-			},
+	tx, err = c.CreateTransaction(byzcoin.Instruction{
+		InstanceID: coinAddr1,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contracts.ContractCoinID,
+			Command:    "mint",
+			Args: byzcoin.Arguments{{
+				Name:  "coins",
+				Value: coins}},
 		},
+		SignerIdentities: []darc.Identity{signer.Identity()},
+		SignerCounter:    []uint64{3},
+	})
+	if err != nil {
+		return err
 	}
 	if err = tx.FillSignersAndSignWith(signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
@@ -189,7 +186,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 			prepare := monitor.NewTimeMeasure("prepare")
 			for i := 0; i < insts; i++ {
-				tx.Instructions = append(tx.Instructions, byzcoin.Instruction{
+				instrs := append(tx.Instructions, byzcoin.Instruction{
 					InstanceID: coinAddr1,
 					Invoke: &byzcoin.Invoke{
 						ContractID: contracts.ContractCoinID,
@@ -207,6 +204,10 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 					SignerIdentities: []darc.Identity{signer.Identity()},
 					SignerCounter:    []uint64{signatureCtr},
 				})
+				tx, err = c.CreateTransaction(instrs...)
+				if err != nil {
+					return err
+				}
 				signatureCtr++
 				err = tx.FillSignersAndSignWith(signer)
 				if err != nil {

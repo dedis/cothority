@@ -410,6 +410,14 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 			SignerCounter:    []uint64{ctr + 1},
 		}},
 	}
+
+	var header DataHeader
+	if err := protobuf.Decode(sb.Data, &header); err != nil {
+		return err
+	}
+
+	ctx.Instructions.Upgrade(header.Version)
+
 	if err = ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), signer); err != nil {
 		return err
 	}

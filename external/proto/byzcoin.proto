@@ -180,6 +180,8 @@ message Instruction {
   // Signatures that are verified using the Darc controlling access to
   // the instance.
   repeated bytes signatures = 7;
+  // version is a private field that can allow a instruction to be passed
+  // around with the context of a block with a specific version.
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

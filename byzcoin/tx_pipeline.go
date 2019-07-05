@@ -173,6 +173,13 @@ collectTxLoop:
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
+	header, err := s.getBlockHeader(s.scID)
+	if err != nil {
+		return nil, err
+	}
+
+	tx.Instructions.Upgrade(header.Version)
+
 	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 
 	// try to create a new state

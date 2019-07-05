@@ -64,6 +64,8 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 				return nil, replayError(sb, err.Error())
 			}
 
+			dBody.TxResults.Upgrade(dHead.Version)
+
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
 				return nil, replayError(sb, "client transaction hash does not match")
 			}

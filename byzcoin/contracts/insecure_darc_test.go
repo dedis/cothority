@@ -34,20 +34,19 @@ func TestInsecureDarc(t *testing.T) {
 	newDarc.Rules.AddRule("invoke:insecure_darc.evolve", []byte(signer.Identity().String()))
 	newDarcBuf, err := newDarc.ToProto()
 	require.NoError(t, err)
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: ContractInsecureDarcID,
-				Args: []byzcoin.Argument{{
-					Name:  "darc",
-					Value: newDarcBuf,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractInsecureDarcID,
+			Args: []byzcoin.Argument{{
+				Name:  "darc",
+				Value: newDarcBuf,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
@@ -55,20 +54,19 @@ func TestInsecureDarc(t *testing.T) {
 	newDarc.Version = 1
 	newDarcBuf, err = newDarc.ToProto()
 	require.NoError(t, err)
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: ContractInsecureDarcID,
-				Args: []byzcoin.Argument{{
-					Name:  "darc",
-					Value: newDarcBuf,
-				}},
-			},
-			SignerIdentities: []darc.Identity{signer.Identity()},
-			SignerCounter:    []uint64{2},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractInsecureDarcID,
+			Args: []byzcoin.Argument{{
+				Name:  "darc",
+				Value: newDarcBuf,
+			}},
+		},
+		SignerIdentities: []darc.Identity{signer.Identity()},
+		SignerCounter:    []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err) // test for failure
@@ -79,21 +77,20 @@ func TestInsecureDarc(t *testing.T) {
 	require.NoError(t, newDarc2.EvolveFrom(newDarc))
 	newDarc2.Rules.AddRule("spawn:coin", []byte(signer.Identity().String()))
 	newDarc2Buf, err := newDarc2.ToProto()
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(newDarc2.GetBaseID()),
-			Invoke: &byzcoin.Invoke{
-				ContractID: ContractInsecureDarcID,
-				Command:    "evolve",
-				Args: []byzcoin.Argument{{
-					Name:  "darc",
-					Value: newDarc2Buf,
-				}},
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(newDarc2.GetBaseID()),
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractInsecureDarcID,
+			Command:    "evolve",
+			Args: []byzcoin.Argument{{
+				Name:  "darc",
+				Value: newDarc2Buf,
+			}},
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 }

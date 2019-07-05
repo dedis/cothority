@@ -389,11 +389,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	tx3 := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
 	}
-	h = tx3.Instructions.Hash()
-	for i := range tx3.Instructions {
-		err := tx3.Instructions[i].SignWith(h, s.signer)
-		require.NoError(t, err)
-	}
+	tx3.SignWith(s.signer)
 	atx = &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -1108,7 +1104,7 @@ func TestService_StateChange(t *testing.T) {
 	ct1 := ClientTransaction{Instructions: instrs}
 	ct2 := ClientTransaction{Instructions: instrs2}
 
-	_, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
+	_, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ct1, ct2), noTimeout, CurrentVersion)
 	require.Equal(t, 2, len(txOut))
 	require.True(t, txOut[0].Accepted)
 	require.False(t, txOut[1].Accepted)
@@ -1176,14 +1172,14 @@ func TestService_StateChangeVerification(t *testing.T) {
 	mkroot1, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Invoke:     &Invoke{},
-	}}}), noTimeout)
+	}}}), noTimeout, CurrentVersion)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
 	mkroot2, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Delete:     &Delete{},
-	}}}), noTimeout)
+	}}}), noTimeout, CurrentVersion)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
@@ -1194,14 +1190,14 @@ func TestService_StateChangeVerification(t *testing.T) {
 		InstanceID: iid,
 		Spawn:      &Spawn{ContractID: cid},
 	}}})
-	mkroot1, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
+	mkroot1, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout, CurrentVersion)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
 	require.Nil(t, cdb.StoreAll(scs, 0))
 	// Clear cache so that the transactions get re-evaluated
 	delete(s.service().stateChangeCache.cache, string(s.genesis.SkipChainID()))
-	mkroot2, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout)
+	mkroot2, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout, CurrentVersion)
 	require.Equal(t, 0, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, false, txOut[0].Accepted)
@@ -1211,14 +1207,14 @@ func TestService_StateChangeVerification(t *testing.T) {
 	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Invoke:     &Invoke{},
-	}}}), noTimeout)
+	}}}), noTimeout, CurrentVersion)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
 	_, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
 		InstanceID: iid,
 		Delete:     &Delete{},
-	}}}), noTimeout)
+	}}}), noTimeout, CurrentVersion)
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
@@ -2119,7 +2115,7 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
-	root, txOut, states, _ := s.service().createStateChanges(sst, scID, txs, noTimeout)
+	root, txOut, states, _ := s.service().createStateChanges(sst, scID, txs, noTimeout, CurrentVersion)
 	require.Equal(t, 2, len(txOut))
 	require.Equal(t, 1, ctr)
 	// we expect one state change to increment the signature counter
@@ -2132,7 +2128,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, txOut1, states1, _ := s.service().createStateChanges(sst, scID, txOut, noTimeout)
+	root1, txOut1, states1, _ := s.service().createStateChanges(sst, scID, txOut, noTimeout, CurrentVersion)
 	require.Equal(t, 1, ctr)
 	require.Equal(t, root, root1)
 	require.Equal(t, txOut, txOut1)
@@ -2142,7 +2138,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// again, i.e., ctr == 2.
 	s.service().stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, txOut2, states2, _ := s.service().createStateChanges(sst, scID, txs, noTimeout)
+	root2, txOut2, states2, _ := s.service().createStateChanges(sst, scID, txs, noTimeout, CurrentVersion)
 	require.Equal(t, root, root2)
 	require.Equal(t, txOut, txOut2)
 	require.Equal(t, states, states2)
@@ -2444,6 +2440,7 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 		},
 		SignerIdentities: []darc.Identity{s.signer.Identity()},
 		SignerCounter:    []uint64{uint64(counter)},
+		version:          CurrentVersion,
 	}
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 
@@ -2468,6 +2465,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) Client
 		InstanceID:    NewInstanceID(d2.GetBaseID()),
 		Invoke:        &invoke,
 		SignerCounter: []uint64{ctr},
+		version:       CurrentVersion,
 	}
 	ctx, err := combineInstrsAndSign(signer, instr)
 	require.NoError(t, err)

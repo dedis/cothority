@@ -55,22 +55,19 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -78,39 +75,31 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -139,30 +128,29 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -171,18 +159,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 	result.ProposedTransaction = proposedTransaction
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -223,30 +201,29 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.Nil(t, err)
 	// signature[1] = 0xf // Simulates a wrong signature
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -255,18 +232,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 	result.ProposedTransaction = proposedTransaction
-	resultBuf, err = protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -290,34 +257,26 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{4},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	require.NoError(t, protobuf.Decode(dataBuf, &result))
+	result, err = cl.GetDeferredData(myID)
 	require.Equal(t, 1, len(result.ExecResult))
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
+	time.Sleep(2 * genesisMsg.BlockInterval)
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(result.ExecResult[0]))
 
@@ -337,16 +296,15 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	//          testing if the check of the MaxNumExecution works.
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{5},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{5},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -391,34 +349,30 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	rootInstructionValue2 := []byte("1234aef")
 
 	// We spawn two value contracts
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue1,
-						},
-					},
-				},
-			},
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue2,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue1,
 				},
 			},
 		},
-	}
+	}, byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue2,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -426,39 +380,31 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -487,30 +433,29 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -518,19 +463,7 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
-
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -563,52 +496,41 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	indexBuf = make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
+	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
-	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
-
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.NotEmpty(t, result.ProposedTransaction.Instructions[1].SignerIdentities)
@@ -629,32 +551,24 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{4},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	require.NoError(t, protobuf.Decode(dataBuf, &result))
+	result, err = cl.GetDeferredData(myID)
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(result.ExecResult[0]))
 
@@ -709,34 +623,30 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	rootInstructionValue2 := []byte("1234aef")
 
 	// We spawn two value contracts
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue1,
-						},
-					},
-				},
-			},
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue2,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue1,
 				},
 			},
 		},
-	}
+	}, byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue2,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -744,39 +654,31 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -805,30 +707,29 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -836,19 +737,8 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -888,30 +778,29 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	indexBuf = make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -919,20 +808,8 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
 
-	require.NoError(t, local.WaitDone(time.Second))
-
-	prResp, err := cl.GetProofFromLatest(myID.Slice())
-	require.NoError(t, err)
-	pr = &prResp.Proof
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -957,17 +834,16 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	//    instruction is signed by an unauthorized signer.
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{4},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	myID = ctx.Instructions[0].DeriveID("")
 
@@ -1006,22 +882,19 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -1029,39 +902,31 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1090,31 +955,30 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
@@ -1151,22 +1015,19 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -1174,39 +1035,31 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1234,66 +1087,64 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 
 	// ------------------------------------------------------------------------
 	// 3 Invoke a second time the same "addProof"
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1330,22 +1181,19 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -1353,39 +1201,31 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1413,36 +1253,35 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
+	_, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Error(t, err)
 
 	local.WaitDone(genesisMsg.BlockInterval)
@@ -1477,22 +1316,19 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -1500,39 +1336,31 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1547,16 +1375,15 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	// 2. Invoke an "execProposedTx" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1603,19 +1430,18 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	// ------------------------------------------------------------------------
 
 	myvalue := []byte("1234")
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: ContractValueID,
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractValueID,
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1637,29 +1463,25 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: valueID,
-				Delete: &byzcoin.Delete{
-					ContractID: "value",
-				},
-			},
-			byzcoin.Instruction{
-				InstanceID: valueID,
-				Invoke: &byzcoin.Invoke{
-					ContractID: "value",
-					Command:    "update",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: valueID,
+		Delete: &byzcoin.Delete{
+			ContractID: "value",
+		},
+	}, byzcoin.Instruction{
+		InstanceID: valueID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: "value",
+			Command:    "update",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -1667,40 +1489,32 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
-	require.Nil(t, err)
+	result, err := cl.GetDeferredData(myID)
+	require.NoError(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 2)
@@ -1727,30 +1541,29 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1758,19 +1571,8 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -1803,30 +1605,29 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	indexBuf = make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{4},
-		}},
-	}
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1834,19 +1635,8 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err = protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -1872,16 +1662,15 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	// 4. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{5},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{5},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -1923,55 +1712,44 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2044,47 +1822,36 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 		},
 	}
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.ConfigInstanceID,
-				Invoke:     &invoke,
-			},
-		},
-	}
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.ConfigInstanceID,
+		Invoke:     &invoke,
+	})
+	require.NoError(t, err)
 
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2112,30 +1879,29 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -2143,19 +1909,8 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -2180,33 +1935,25 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	require.NoError(t, protobuf.Decode(dataBuf, &result))
+	result, err = cl.GetDeferredData(myID)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(byzcoin.ConfigInstanceID.Slice()), 2*genesisMsg.BlockInterval, nil)
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(byzcoin.ConfigInstanceID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(byzcoin.ConfigInstanceID.Slice()))
 
@@ -2269,19 +2016,18 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	// ------------------------------------------------------------------------
 
 	myvalue := []byte("1234")
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: ContractValueID,
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractValueID,
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	valueID := ctx.Instructions[0].DeriveID("")
@@ -2303,56 +2049,45 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	// ------------------------------------------------------------------------
 	updatedValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: valueID,
-				Invoke: &byzcoin.Invoke{
-					ContractID: "value",
-					Command:    "update",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: updatedValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: valueID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: "value",
+			Command:    "update",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: updatedValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
 				},
 			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2380,30 +2115,29 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	indexBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -2411,20 +2145,8 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
 
-	resultBuf, err := protobuf.Encode(&result)
-	require.Nil(t, err)
-
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -2450,16 +2172,15 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	//    signer has signed.
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{4},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -2479,30 +2200,29 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.Nil(t, err)
 	// signature[1] = 0xf // Simulates a wrong signature
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -2510,19 +2230,8 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result.ProposedTransaction = proposedTransaction
-	resultBuf, err = protobuf.Encode(&result)
-	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, resultBuf)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err = cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -2545,29 +2254,21 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	// 6. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{4},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-	dataBuf, _, _, err = pr.Get(myID.Slice())
-	require.Nil(t, err)
-
-	result = byzcoin.DeferredData{}
-	require.NoError(t, protobuf.Decode(dataBuf, &result))
+	result, err = cl.GetDeferredData(myID)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -2588,16 +2289,15 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	//    be at 0, we expect it to fail.
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{5},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{5},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -2638,22 +2338,19 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(6000)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -2661,46 +2358,31 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-
-	prr, err := cl.GetProofFromLatest(ctx.Instructions[0].DeriveID("").Slice())
-	require.Nil(t, err)
-	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
-	require.Nil(t, err)
-	require.True(t, exist)
-
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2715,23 +2397,22 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	// 2. Invoke a delete
 	// ------------------------------------------------------------------------
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Delete: &byzcoin.Delete{
-				ContractID: byzcoin.ContractDeferredID,
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Delete: &byzcoin.Delete{
+			ContractID: byzcoin.ContractDeferredID,
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err = cl.GetProofFromLatest(myID.Slice())
+	prr, err := cl.GetProofFromLatest(myID.Slice())
 	require.Nil(t, err)
-	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
+	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
 	require.False(t, exist)
 }
@@ -2769,22 +2450,19 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	// ------------------------------------------------------------------------
 	rootInstructionValue := []byte("aef123456789fab")
 
-	proposedTransaction := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			byzcoin.Instruction{
-				InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: "value",
-					Args: byzcoin.Arguments{
-						byzcoin.Argument{
-							Name:  "value",
-							Value: rootInstructionValue,
-						},
-					},
+	proposedTransaction, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: "value",
+			Args: byzcoin.Arguments{
+				byzcoin.Argument{
+					Name:  "value",
+					Value: rootInstructionValue,
 				},
 			},
 		},
-	}
+	})
+	require.NoError(t, err)
 
 	expireBlockIndexInt := uint64(0)
 	expireBlockIndexBuf := make([]byte, 8)
@@ -2792,46 +2470,31 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	proposedTransactionBuf, err := protobuf.Encode(&proposedTransaction)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: byzcoin.ContractDeferredID,
-				Args: []byzcoin.Argument{
-					{
-						Name:  "proposedTransaction",
-						Value: proposedTransactionBuf,
-					},
-					{
-						Name:  "expireBlockIndex",
-						Value: expireBlockIndexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDeferredID,
+			Args: []byzcoin.Argument{
+				{
+					Name:  "proposedTransaction",
+					Value: proposedTransactionBuf,
+				},
+				{
+					Name:  "expireBlockIndex",
+					Value: expireBlockIndexBuf,
 				},
 			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-
-	prr, err := cl.GetProofFromLatest(ctx.Instructions[0].DeriveID("").Slice())
-	require.Nil(t, err)
-	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
-	require.Nil(t, err)
-	require.True(t, exist)
-
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match(myID.Slice()))
-
-	dataBuf, _, _, err := pr.Get(myID.Slice())
-	require.Nil(t, err)
-	result := byzcoin.DeferredData{}
-	err = protobuf.Decode(dataBuf, &result)
+	result, err := cl.GetDeferredData(myID)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2849,23 +2512,22 @@ func TestDeferred_PublicDelete(t *testing.T) {
 
 	signer2 := darc.NewSignerEd25519(nil, nil)
 
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Delete: &byzcoin.Delete{
-				ContractID: byzcoin.ContractDeferredID,
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Delete: &byzcoin.Delete{
+			ContractID: byzcoin.ContractDeferredID,
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err = cl.GetProofFromLatest(myID.Slice())
+	prr, err := cl.GetProofFromLatest(myID.Slice())
 	require.Nil(t, err)
-	exist, err = prr.Proof.InclusionProof.Exists(myID.Slice())
+	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
 	require.False(t, exist)
 }
