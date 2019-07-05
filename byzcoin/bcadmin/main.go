@@ -38,6 +38,10 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
+type chainFetcher func(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error)
+
+const errUnregisteredMessage = "The requested message hasn't been registered"
+
 func init() {
 	network.RegisterMessages(&darc.Darc{}, &darc.Identity{}, &darc.Signer{})
 }
@@ -827,18 +831,16 @@ func link(c *cli.Context) error {
 		return err
 	}
 
-	genericClient := byzcoin.NewClient(nil, onet.Roster{})
-
 	if c.NArg() == 1 {
 		log.Info("Fetching all byzcoin-ids from the roster")
 		var scIDs []skipchain.SkipBlockID
 		for _, si := range r.List {
-			reply, err := genericClient.GetAllByzCoinIDs(si)
+			ids, err := fetchChains(si, byzcoinFetcher, skipchainFetcher)
 			if err != nil {
 				log.Warn("Couldn't contact", si.Address, err)
 			} else {
-				scIDs = append(scIDs, reply.IDs...)
-				log.Infof("Got %d id(s) from %s", len(reply.IDs), si.Address)
+				scIDs = append(scIDs, ids...)
+				log.Infof("Got %d id(s) from %s", len(ids), si.Address)
 			}
 		}
 		sort.Slice(scIDs, func(i, j int) bool {
@@ -861,12 +863,12 @@ func link(c *cli.Context) error {
 		var cl *byzcoin.Client
 		var cc *byzcoin.ChainConfig
 		for _, si := range r.List {
-			reply, err := genericClient.GetAllByzCoinIDs(si)
+			ids, err := fetchChains(si, byzcoinFetcher, skipchainFetcher)
 			if err != nil {
 				log.Warn("Got error while asking", si.Address, "for skipchains:", err)
 			}
 			found := false
-			for _, idc := range reply.IDs {
+			for _, idc := range ids {
 				if idc.Equal(id) {
 					found = true
 					break
@@ -957,6 +959,41 @@ func link(c *cli.Context) error {
 		log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
 	}
 	return nil
+}
+
+func byzcoinFetcher(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error) {
+	cl := byzcoin.NewClient(nil, onet.Roster{})
+	reply, err := cl.GetAllByzCoinIDs(si)
+	if err != nil {
+		return nil, err
+	}
+
+	return reply.IDs, nil
+}
+
+func skipchainFetcher(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error) {
+	cl := skipchain.NewClient()
+	reply, err := cl.GetAllSkipChainIDs(si)
+	if err != nil {
+		return nil, err
+	}
+
+	return reply.IDs, nil
+}
+
+func fetchChains(si *network.ServerIdentity, fns ...chainFetcher) ([]skipchain.SkipBlockID, error) {
+	for _, fn := range fns {
+		ids, err := fn(si)
+		if err != nil {
+			if !strings.Contains(err.Error(), errUnregisteredMessage) {
+				return nil, err
+			}
+		} else {
+			return ids, nil
+		}
+	}
+
+	return nil, errors.New("couldn't find registered handler")
 }
 
 func latest(c *cli.Context) error {
