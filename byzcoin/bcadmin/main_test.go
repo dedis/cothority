@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // This is required; without it onet/log/testuitl.go:interestingGoroutines will
@@ -98,4 +101,29 @@ func TestCli(t *testing.T) {
 	require.Contains(t, string(b.Bytes()), "-- Version: 1")
 	require.Contains(t, string(b.Bytes()), "--- spawn:xxx")
 
+}
+
+func TestCli_FetchChains(t *testing.T) {
+	_, err := fetchChains(nil)
+	require.Error(t, err)
+	require.Equal(t, "couldn't find registered handler", err.Error())
+
+	unregisteredFetcher := func(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error) {
+		return nil, errors.New(errUnregisteredMessage)
+	}
+
+	registeredFetcher := func(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error) {
+		return []skipchain.SkipBlockID{}, nil
+	}
+
+	_, err = fetchChains(nil, unregisteredFetcher, registeredFetcher)
+	require.NoError(t, err)
+
+	faultyFetcher := func(si *network.ServerIdentity) ([]skipchain.SkipBlockID, error) {
+		return nil, errors.New("abc")
+	}
+
+	_, err = fetchChains(nil, faultyFetcher, registeredFetcher)
+	require.Error(t, err)
+	require.Equal(t, "abc", err.Error())
 }
