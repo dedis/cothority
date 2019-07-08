@@ -2238,12 +2238,16 @@ func TestService_Repair(t *testing.T) {
 
 	// Introduce an artificial corruption and then try to repair it.
 	genesisHex := fmt.Sprintf("%x", s.genesis.SkipChainID())
+	s.service().stateTriesLock.Lock()
 	s.service().stateTries[genesisHex] = intermediateStateTrie
+	s.service().stateTriesLock.Unlock()
 
-	err := s.service().fixInconsistencyIfAny(s.genesis.SkipChainID(), s.service().stateTries[genesisHex])
+	err := s.service().fixInconsistencyIfAny(s.genesis.SkipChainID(), intermediateStateTrie)
 	require.NoError(t, err)
 
+	s.service().stateTriesLock.Lock()
 	newRoot := s.service().stateTries[genesisHex].GetRoot()
+	s.service().stateTriesLock.Unlock()
 	require.Equal(t, finalRoot, newRoot)
 }
 
