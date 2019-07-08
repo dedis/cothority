@@ -9,10 +9,7 @@ import ch.epfl.dedis.eventlog.SearchResponse;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.darc.Darc;
-import ch.epfl.dedis.lib.darc.Rules;
-import ch.epfl.dedis.lib.darc.Signer;
-import ch.epfl.dedis.lib.darc.SignerEd25519;
+import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,10 +37,13 @@ class EventLogTest {
     @BeforeEach
     void initAll() throws Exception {
         testInstanceController = TestServerInit.getInstance();
-        admin = new SignerEd25519();
+        // We use a fixed private key for the test to make sure there is no randomness in the genesis darc ID,
+        // which is a requirement to use name resolution later.
+        admin = new SignerEd25519(Hex.parseHexBinary("76F40BEA4681B898E49D9657682703C0C3AA5D677A1DD259BDC60A66376B9E00"));
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
         genesisDarc.addIdentity("spawn:eventlog", admin.getIdentity(), Rules.OR);
         genesisDarc.addIdentity("invoke:" + EventLogInstance.ContractId + "." + EventLogInstance.LogCmd, admin.getIdentity(), Rules.OR);
+        genesisDarc.addIdentity("_name:" + EventLogInstance.ContractId, admin.getIdentity(), Rules.OR);
 
         bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, BLOCK_INTERVAL);
         if (!bc.checkLiveness()) {
@@ -52,8 +52,12 @@ class EventLogTest {
 
         // Get the counter for the admin
         SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin), adminCtrs.getCounters());
 
-        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin), Collections.singletonList(adminCtrs.head()+1));
+        // Initialise the naming instance, we do not store this instance but we get it later using fromByzCoin
+        adminCtrs.increment();
+        new NamingInstance(bc, genesisDarc.getId(), Collections.singletonList(admin), adminCtrs.getCounters());
     }
 
     @Test
@@ -217,5 +221,23 @@ class EventLogTest {
 
         // remove tag that doesn't exist should not throw an error
         el.unsubscribeEvents(9999);
+    }
+
+    @Test
+    void nameResolution() throws Exception {
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+        NamingInstance namingInstance = NamingInstance.fromByzcoin(bc);
+        namingInstance.setAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
+
+        // We use a fixed genesis ID so make sure there is no randomness in the genesis darc between test executions.
+        InstanceId iID = bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("DA74C7FBE9AB0ADCF9BBFF797AA8F2012BC624ABEBCAE9900CD9DE6A0679B19F")), "my event log");
+        assertEquals(iID, el.getInstanceId());
+
+        // Remove it and the resolution should fail.
+        adminCtrs.increment();
+        namingInstance.removeAndWait("my event log", el.getInstanceId(), Arrays.asList(admin), adminCtrs.getCounters(), 10);
+        assertThrows(CothorityCommunicationException.class,
+                () -> bc.resolveInstanceID(new DarcId(Hex.parseHexBinary("DA74C7FBE9AB0ADCF9BBFF797AA8F2012BC624ABEBCAE9900CD9DE6A0679B19F")), "my event log"));
     }
 }

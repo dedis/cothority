@@ -1,9 +1,9 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 
 /**
  * A contract represents the data that can be interpreted by the

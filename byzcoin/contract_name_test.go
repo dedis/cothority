@@ -402,4 +402,13 @@ func TestService_Naming(t *testing.T) {
 
 	verifyNameResolution("your genesis darc")
 	verifyNameResolution("everyone's genesis darc")
+
+	// Try to get the proof of the naming instance.
+	pResp, err := cl.GetProof(NamingInstanceID.Slice())
+	require.NoError(t, err)
+	exists, err := pResp.Proof.InclusionProof.Exists(NamingInstanceID.Slice())
+	require.NoError(t, err)
+	require.True(t, exists)
+	_, _, _, _, err = pResp.Proof.KeyValue()
+	require.NoError(t, err)
 }

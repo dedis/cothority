@@ -2,8 +2,7 @@ package ch.epfl.dedis.byzcoin;
 
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
 import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
+import ch.epfl.dedis.byzcoin.transaction.*;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
