@@ -297,13 +297,16 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 			}
 
-			sst.StoreAll(stateChanges)
-
 			if err != nil {
 				return nil, nil, fmt.Errorf("error while executing an instruction: %s", err)
 			}
-			sc = append(sc, stateChanges...)
 
+			err = sst.StoreAll(stateChanges)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error while storing state changes: %s", err)
+			}
+
+			sc = append(sc, stateChanges...)
 		}
 
 		c.DeferredData.ExecResult = instructionIDs
