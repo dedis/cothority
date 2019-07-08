@@ -1,9 +1,13 @@
 package ch.epfl.dedis.byzcoin.transaction;
 
+import ch.epfl.dedis.byzcoin.Block;
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.Identity;
 import ch.epfl.dedis.lib.darc.Signer;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -19,16 +23,50 @@ public class ClientTransaction {
 
     /**
      * Constructor for the client transaction.
-     * @param instructions The list of instruction that should be executed atomically.
+     * @param instructions The list of instructions that should be executed atomically.
+     * @deprecated This function instantiates a deprecated list of instructions for latest
+     * versions of the byzcoin protocol.
      */
     public ClientTransaction(List<Instruction> instructions) {
         this.instructions = instructions;
     }
 
+    /**
+     * Constructor for the client transaction.
+     * @param instructions  The list of instructions that should be executed atomically.
+     * @param version       Version of the ByzCoin protocol usually stored in the block header.
+     */
+    public ClientTransaction(List<Instruction> instructions, int version) {
+        if (version >= 1) {
+            this.instructions = instructions.stream().map(InstructionV1::new).collect(Collectors.toList());
+        } else {
+            this.instructions = instructions;
+        }
+    }
+
+    /**
+     *
+     * @param proto Protobuf object
+     * @deprecated This function instantiates a deprecated list of instructions for latest
+     * versions of the byzcoin protocol.
+     */
     public ClientTransaction(ByzCoinProto.ClientTransaction proto) {
+        this(proto, 0);
+    }
+
+    /**
+     * Constructor for the client transaction from a received message.
+     * @param proto     Protobuf object
+     * @param version   Version of the ByzCoin protocol usually stored in the block header.
+     */
+    public ClientTransaction(ByzCoinProto.ClientTransaction proto, int version) {
         instructions = new ArrayList<>();
         for (ByzCoinProto.Instruction i : proto.getInstructionsList()) {
-            instructions.add(new Instruction(i));
+            if (version >= 1) {
+                instructions.add(new InstructionV1(i));
+            } else {
+                instructions.add(new Instruction(i));
+            }
         }
     }
 

@@ -22,8 +22,7 @@ import java.util.List;
 public class Block {
     private ByzCoinProto.DataHeader dataHeader;
     private DataBody dataBody;
-
-    private SkipblockId sbId;
+    SkipBlock sb;
 
     /**
      * Instantiates a new OmniBlock given a skipblock.
@@ -35,8 +34,8 @@ public class Block {
         try {
             // TODO: check that it is actually an OmniBlock by looking at the verifiers
             dataHeader = ByzCoinProto.DataHeader.parseFrom(sb.getData());
-            dataBody = new DataBody(ByzCoinProto.DataBody.parseFrom(sb.getPayload()));
-            sbId = sb.getId();
+            dataBody = new DataBody(ByzCoinProto.DataBody.parseFrom(sb.getPayload()), dataHeader.getVersion());
+            this.sb = sb;
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
@@ -49,15 +48,7 @@ public class Block {
      */
     public Block(Proof p) throws CothorityCryptoException {
         // TODO: How do we know that the block in the proof legitimately links back to the
-        // skipchain we think it does?
-        SkipBlock sb = p.getLatest();
-        try {
-            // TODO: check that it is actually an OmniBlock by looking at the verifiers
-            dataHeader = ByzCoinProto.DataHeader.parseFrom(sb.getData());
-            dataBody = new DataBody(ByzCoinProto.DataBody.parseFrom(sb.getPayload()));
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
+        this(p.getLatest());
     }
 
     /**
@@ -101,6 +92,21 @@ public class Block {
     }
 
     /**
+     * Getter for skipblock ID.
+     */
+    public SkipblockId getId() {
+        return sb.getId();
+    }
+
+    /**
+     * Getter for the byzcoin protocol version.
+     * @return the version as an integer
+     */
+    public int getVersion() {
+        return dataHeader.getVersion();
+    }
+
+    /**
      * @return the unix-timestamp in nanoseconds of the block creation time.
      */
     public long getTimestampNano() {
@@ -132,14 +138,6 @@ public class Block {
         }
         Block other = (Block) obj;
 
-        return other.sbId.equals(this.sbId);
+        return other.sb.equals(this.sb);
     }
-
-    /**
-     * Getter for skipblock ID.
-     */
-    public SkipblockId getId() {
-        return sbId;
-    }
-
 }

@@ -14,6 +14,7 @@ import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,13 +22,13 @@ import java.util.stream.Collectors;
  * An instruction is sent and executed by ByzCoin.
  */
 public class Instruction {
-    private InstanceId instId;
-    private Spawn spawn;
-    private Invoke invoke;
-    private Delete delete;
-    private List<Identity> signerIdentities;
-    private List<Long> signerCounters;
-    private List<byte[]> signatures;
+    InstanceId instId;
+    protected Spawn spawn;
+    protected Invoke invoke;
+    protected Delete delete;
+    List<Identity> signerIdentities;
+    List<Long> signerCounters;
+    protected List<byte[]> signatures;
 
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
@@ -42,6 +43,7 @@ public class Instruction {
         this.signerIdentities = ids;
         this.signerCounters = ctrs;
         this.spawn = spawn;
+        this.signatures = Collections.emptyList();
     }
 
     /**
@@ -57,6 +59,7 @@ public class Instruction {
         this.signerIdentities = ids;
         this.signerCounters = ctrs;
         this.invoke = invoke;
+        this.signatures = Collections.emptyList();
     }
 
     /**
@@ -72,6 +75,7 @@ public class Instruction {
         this.signerCounters = ctrs;
         this.signerIdentities = ids;
         this.delete = delete;
+        this.signatures = Collections.emptyList();
     }
 
     /**

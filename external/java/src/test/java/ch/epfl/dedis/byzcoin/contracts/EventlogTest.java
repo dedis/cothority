@@ -125,7 +125,7 @@ class EventLogTest {
 
         long now = System.currentTimeMillis() * 1000 * 1000;
         Event event = new Event(now, "login", "alice");
-        el.log(event, Arrays.asList(admin), adminCtrs.getCounters());
+        el.log(event, Collections.singletonList(admin), adminCtrs.getCounters());
 
         Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
 
@@ -133,13 +133,13 @@ class EventLogTest {
         SearchResponse resp = el.search("", now - 1000, now + 1000);
         assertEquals(1, resp.events.size());
         assertEquals(resp.events.get(0), event);
-        assertTrue(!resp.truncated);
+        assertFalse(resp.truncated);
 
         // finds the event under the right topic
         resp = el.search("login", now - 1000, now + 1000);
         assertEquals(1, resp.events.size());
         assertEquals(resp.events.get(0), event);
-        assertTrue(!resp.truncated);
+        assertFalse(resp.truncated);
 
         // event does not exist
         resp = el.search("", now - 2000, now - 1000);

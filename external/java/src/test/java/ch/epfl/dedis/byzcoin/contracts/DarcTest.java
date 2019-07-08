@@ -61,7 +61,7 @@ class DarcTest {
         Instruction instr = dc.evolveDarcInstruction(newDarc, admin.getIdentity(), counters.head()+1);
         logger.info("DC is: {}", dc.getId());
 
-        ClientTransaction ctx = new ClientTransaction(Arrays.asList(instr));
+        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(instr), bc.getProtocolVersion());
         ctx.signWith(Collections.singletonList(admin));
         bc.sendTransactionAndWait(ctx, 10);
 
