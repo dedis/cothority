@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
-	bbolt "go.etcd.io/bbolt"
+	"go.etcd.io/bbolt"
 )
 
 var errKeyNotSet = errors.New("key not set")

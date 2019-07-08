@@ -69,7 +69,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			}
 
 			if sb.Index == 0 {
-				nonce, err := s.loadNonceFromTxs(dBody.TxResults)
+				nonce, err := loadNonceFromTxs(dBody.TxResults)
 				if err != nil {
 					return nil, replayError(sb, err.Error())
 				}
