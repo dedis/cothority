@@ -339,13 +339,14 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					log.Lvl3("stopping txs processor")
 					return
 				}
+				txh := tx.Instructions.Hash()
 				for _, txHash := range txHashes {
-					if bytes.Compare(txHash, tx.Instructions.Hash()) == 0 {
+					if bytes.Compare(txHash, txh) == 0 {
 						log.Lvl2("Got a duplicate transaction, ignoring it")
 						continue leaderLoop
 					}
 				}
-				txHashes = append(txHashes, tx.Instructions.Hash())
+				txHashes = append(txHashes, txh)
 				if len(txHashes) > maxTxHashes {
 					txHashes = txHashes[len(txHashes)-maxTxHashes:]
 				}

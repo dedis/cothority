@@ -66,7 +66,7 @@ func TestService_Naming(t *testing.T) {
 						},
 						{
 							Name:  "name",
-							Value: []byte("my genesis darc"),
+							Value: []byte("my genesis darc with bad signature"),
 						},
 					},
 				},
@@ -79,7 +79,7 @@ func TestService_Naming(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
 
-	// FAIL - use a use an instance that does not exist
+	// FAIL - use an instance that does not exist
 	namingTx = ClientTransaction{
 		Instructions: Instructions{
 			{
