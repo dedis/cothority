@@ -54,12 +54,12 @@ export default class CoinInstance extends Instance {
         );
         await inst.updateCounters(bc, signers);
 
-        const ctx = new ClientTransaction({instructions: [inst]});
+        const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         ctx.signWith([signers]);
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CoinInstance.fromByzcoin(bc, inst.deriveId());
+        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
     }
 
     /**
@@ -144,7 +144,7 @@ export default class CoinInstance extends Instance {
         const inst = Instruction.createInvoke(this.id, CoinInstance.contractID, CoinInstance.commandTransfer, args);
         await inst.updateCounters(this.rpc, signers);
 
-        const ctx = new ClientTransaction({instructions: [inst]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), inst);
         ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, 10);
@@ -166,7 +166,7 @@ export default class CoinInstance extends Instance {
         );
         await inst.updateCounters(this.rpc, signers);
 
-        const ctx = new ClientTransaction({instructions: [inst]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), inst);
         ctx.signWith([signers]);
 
         await this.rpc.sendTransactionAndWait(ctx, wait);

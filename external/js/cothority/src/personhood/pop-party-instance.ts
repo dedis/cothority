@@ -67,8 +67,8 @@ export class PopPartyInstance extends Instance {
         Promise<PopPartyInstance> {
         return new PopPartyInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
-    popPartyStruct: PopPartyStruct;
 
+    popPartyStruct: PopPartyStruct;
     private tmpAttendees: Point[] = [];
 
     constructor(private rpc: ByzCoinRPC, inst: Instance) {
@@ -131,7 +131,7 @@ export class PopPartyInstance extends Instance {
             [],
         );
 
-        const ctx = new ClientTransaction({instructions: [instr]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCountersAndSign(this.rpc, [signers]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -160,7 +160,7 @@ export class PopPartyInstance extends Instance {
             [new Argument({name: "attendees", value: this.popPartyStruct.attendees.toBytes()})],
         );
 
-        const ctx = new ClientTransaction({instructions: [instr]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCountersAndSign(this.rpc, [signers]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -221,7 +221,7 @@ export class PopPartyInstance extends Instance {
 
         // the transaction is not signed but there is a counter-measure against
         // replay attacks server-side
-        const ctx = new ClientTransaction({instructions: [instr]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
 
         await this.rpc.sendTransactionAndWait(ctx);
         await this.update();

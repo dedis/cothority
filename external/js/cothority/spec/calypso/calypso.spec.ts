@@ -7,13 +7,12 @@ import { LongTermSecret, OnChainSecretRPC } from "../../src/calypso/calypso-rpc"
 import { SignerEd25519 } from "../../src/darc";
 import Darc from "../../src/darc/darc";
 import { Rule } from "../../src/darc/rules";
-import Log from "../../src/log";
 import SpawnerInstance from "../../src/personhood/spawner-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 const curve25519 = curve.newCurve("edwards25519");
 
-describe("keccak should be a sponge", () => {
+describe("Keccak Tests", () => {
     it("should return squeezed data", () => {
         /* Created from go with:
             k := keccak.New([]byte("keccak message"))
@@ -43,7 +42,7 @@ describe("keccak should be a sponge", () => {
     });
 });
 
-describe("Calypso.createWrite should", () => {
+describe("Offline Calypso Tests", () => {
     it("return the same as in go", async () => {
         /* Go-file:
         ltsid := byzcoin.NewInstanceID([]byte("LTS Instance ID"))
@@ -89,7 +88,7 @@ describe("Calypso.createWrite should", () => {
     });
 });
 
-describe("In a full byzcoin setting, it should", async () => {
+describe("Online Calypso Tests", async () => {
     let bc: ByzCoinRPC;
     let darc: Darc;
     let lts: LongTermSecret;
@@ -125,7 +124,7 @@ describe("In a full byzcoin setting, it should", async () => {
         });
     });
 
-    it("be able to create an LTS", async () => {
+    it("should be able to create an LTS", async () => {
         const key = Buffer.from("Very Secret Key");
 
         const wr = await Write.createWrite(lts.id, darc.getBaseID(), lts.X, key);
@@ -139,7 +138,7 @@ describe("In a full byzcoin setting, it should", async () => {
         expect(newKey).toEqual(key);
     });
 
-    it("create an LTS and a write using the spawner", async () => {
+    it("should create an LTS and a write using the spawner", async () => {
         const key = Buffer.from("Very Secret Key");
 
         const write = await Write.createWrite(lts.id, darc.id, lts.X, key);

@@ -6,7 +6,6 @@ import CoinInstance, { Coin } from "../../src/byzcoin/contracts/coin-instance";
 import Darc from "../../src/darc/darc";
 import { Rule } from "../../src/darc/rules";
 import Signer from "../../src/darc/signer";
-import Log from "../../src/log";
 import RoPaSciInstance, { RoPaSciStruct } from "../../src/personhood/ro-pa-sci-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
@@ -30,24 +29,23 @@ async function createInstance(
         stake: new Coin({name: stake.name, value: stake.value}),
     });
 
-    const ctx = new ClientTransaction({
-        instructions: [
-            Instruction.createInvoke(
-                stake.id,
-                CoinInstance.contractID,
-                CoinInstance.commandFetch,
-                [new Argument({
-                    name: CoinInstance.argumentCoins,
-                    value: Buffer.from(Long.fromNumber(100).toBytesLE()),
-                })],
-            ),
-            Instruction.createSpawn(
-                darc.getBaseID(),
-                RoPaSciInstance.contractID,
-                [new Argument({ name: "struct", value: rps.toBytes() })],
-            ),
-        ],
-    });
+    const ctx = ClientTransaction.make(
+        rpc.getProtocolVersion(),
+        Instruction.createInvoke(
+            stake.id,
+            CoinInstance.contractID,
+            CoinInstance.commandFetch,
+            [new Argument({
+                name: CoinInstance.argumentCoins,
+                value: Buffer.from(Long.fromNumber(100).toBytesLE()),
+            })],
+        ),
+        Instruction.createSpawn(
+            darc.getBaseID(),
+            RoPaSciInstance.contractID,
+            [new Argument({ name: "struct", value: rps.toBytes() })],
+        ),
+    );
 
     await ctx.updateCountersAndSign(rpc, [[signer], [signer]]);
 

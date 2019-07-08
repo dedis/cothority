@@ -8,18 +8,14 @@ import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/cononde
 
 async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cred: CredentialStruct):
     Promise<CredentialsInstance> {
-    const ctx = new ClientTransaction({
-        instructions: [
-            Instruction.createSpawn(
-                darc.getBaseID(),
-                CredentialsInstance.contractID,
-                [
-                    new Argument({ name: CredentialsInstance.argumentDarcID, value: darc.getBaseID() }),
-                    new Argument({ name: CredentialsInstance.argumentCredential, value: cred.toBytes() }),
-                ],
-            ),
+    const ctx = ClientTransaction.make(rpc.getProtocolVersion(), Instruction.createSpawn(
+        darc.getBaseID(),
+        CredentialsInstance.contractID,
+        [
+            new Argument({ name: CredentialsInstance.argumentDarcID, value: darc.getBaseID() }),
+            new Argument({ name: CredentialsInstance.argumentCredential, value: cred.toBytes() }),
         ],
-    });
+    ));
     await ctx.updateCounters(rpc, [signers]);
     ctx.signWith([signers]);
 

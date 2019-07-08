@@ -36,12 +36,12 @@ export class OnChainSecretInstance extends Instance {
         );
         await inst.updateCounters(bc, signers);
 
-        const ctx = new ClientTransaction({instructions: [inst]});
+        const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         ctx.signWith([signers]);
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return OnChainSecretInstance.fromByzcoin(bc, inst.deriveId());
+        return OnChainSecretInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
     }
 
     /**
@@ -87,16 +87,12 @@ export class CalypsoWriteInstance extends Instance {
         write: Write,
         signers: Signer[],
     ): Promise<CalypsoWriteInstance> {
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createSpawn(
-                    darcID,
-                    CalypsoWriteInstance.contractID,
-                    [new Argument({name: CalypsoWriteInstance.argumentWrite,
-                        value: Buffer.from(Write.encode(write).finish())})],
-                ),
-            ],
-        });
+        const ctx = ClientTransaction.make(bc.getProtocolVersion(), Instruction.createSpawn(
+            darcID,
+            CalypsoWriteInstance.contractID,
+            [new Argument({name: CalypsoWriteInstance.argumentWrite,
+                value: Buffer.from(Write.encode(write).finish())})],
+        ));
         await ctx.updateCountersAndSign(bc, [signers]);
         await bc.sendTransactionAndWait(ctx, 10);
 
@@ -146,14 +142,15 @@ export class CalypsoReadInstance extends Instance {
     static async spawn(bc: ByzCoinRPC, writeId: InstanceID, pub: Point, signers: Signer[], pay?: Instruction):
         Promise<CalypsoReadInstance> {
         const read = new Read({write: writeId, xc: pub.marshalBinary()});
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
-                    new Argument({name: CalypsoReadInstance.argumentRead,
-                        value: Buffer.from(Read.encode(read).finish())}),
-                ]),
-            ],
-        });
+        const ctx = ClientTransaction.make(
+            bc.getProtocolVersion(),
+            Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
+                new Argument({
+                    name: CalypsoReadInstance.argumentRead,
+                    value: Buffer.from(Read.encode(read).finish()),
+                }),
+            ]),
+        );
         const ctxSigners = [signers];
         if (pay) {
             ctx.instructions.unshift(pay);

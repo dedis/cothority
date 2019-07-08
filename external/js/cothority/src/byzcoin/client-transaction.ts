@@ -23,8 +23,25 @@ export default class ClientTransaction extends Message<ClientTransaction> {
         registerMessage("byzcoin.ClientTransaction", ClientTransaction, Instruction);
     }
 
+    /**
+     * Create a transaction from the list of instructions.
+     * @param version   Version of the ByzCoin protocol
+     * @param instrs    List of instructions
+     */
+    static make(version: number, ...instrs: Instruction[]): ClientTransaction {
+        if (version >= 1) {
+            instrs = instrs.map((i) => new InstructionV1(i));
+        }
+
+        return new ClientTransaction({ instructions: instrs });
+    }
+
     readonly instructions: Instruction[];
 
+    /**
+     * @deprecated Use the static function make to create transactions compatible with
+     * latest versions of the ByzCoin protocol.
+     */
     constructor(props?: Properties<ClientTransaction>) {
         super(props);
 
@@ -318,6 +335,51 @@ export class Instruction extends Message<Instruction> {
             h.update(sig);
         });
         h.update(Buffer.from(what));
+        return h.digest();
+    }
+}
+
+class InstructionV1 extends Instruction {
+    hash(): Buffer {
+        const h = createHash("sha256");
+        h.update(this.instanceID);
+        h.update(Buffer.from([this.type]));
+        let args: Argument[] = [];
+        switch (this.type) {
+            case Instruction.typeSpawn:
+                h.update(this.spawn.contractID);
+                args = this.spawn.args;
+                break;
+            case Instruction.typeInvoke:
+                h.update(this.invoke.contractID);
+                h.update(this.invoke.command);
+                args = this.invoke.args;
+                break;
+            case Instruction.typeDelete:
+                h.update(this.delete.contractID);
+                break;
+        }
+        args.forEach((arg) => {
+            const nameBuf = Buffer.from(arg.name);
+            const nameLenBuf = Buffer.from(Long.fromNumber(nameBuf.length).toBytesLE());
+
+            h.update(nameLenBuf);
+            h.update(arg.name);
+
+            const valueLenBuf = Buffer.from(Long.fromNumber(arg.value.length).toBytesLE());
+            h.update(valueLenBuf);
+            h.update(arg.value);
+        });
+        this.signerCounter.forEach((sc) => {
+            h.update(Buffer.from(sc.toBytesLE()));
+        });
+        this.signerIdentities.forEach((si) => {
+            const buf = si.toBytes();
+            const lenBuf = Buffer.from(Long.fromNumber(buf.length).toBytesLE());
+
+            h.update(lenBuf);
+            h.update(si.toBytes());
+        });
         return h.digest();
     }
 }
