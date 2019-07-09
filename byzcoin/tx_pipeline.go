@@ -88,6 +88,7 @@ type defaultTxProcessor struct {
 <<<<<<< HEAD
 =======
 	latest      *skipchain.SkipBlock
+	sync.Mutex
 	*Service
 >>>>>>> Transaction pipeline uses the latest block for the version
 }
@@ -113,7 +114,9 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 	}
 
 	// Keep track of the latest block for the processing
+	s.Lock()
 	s.latest = latest
+	s.Unlock()
 
 	log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, s.scID)
 	tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
@@ -182,11 +185,14 @@ collectTxLoop:
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
-	if s.latest == nil {
+	s.Lock()
+	latest := s.latest
+	s.Unlock()
+	if latest == nil {
 		return nil, errors.New("missing latest block in processor")
 	}
 
-	header, err := decodeBlockHeader(s.latest)
+	header, err := decodeBlockHeader(latest)
 	if err != nil {
 		return nil, err
 	}
