@@ -194,54 +194,7 @@ public class Instruction {
      * @return The digest.
      */
     public byte[] hash() {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(this.instId.getId());
-            List<Argument> args = new ArrayList<>();
-            if (this.spawn != null) {
-                digest.update((byte) (0));
-                digest.update(this.spawn.getContractID().getBytes());
-                args = this.spawn.getArguments();
-            } else if (this.invoke != null) {
-                digest.update((byte) (1));
-                digest.update(this.invoke.getContractID().getBytes());
-                args = this.invoke.getArguments();
-            } else if (this.delete != null) {
-                digest.update((byte) (2));
-                digest.update(this.delete.getContractId().getBytes());
-            }
-            for (Argument a : args) {
-                byte[] nameBuf = a.getName().getBytes();
-                ByteBuffer nameLenBuf = ByteBuffer.allocate(Long.BYTES);
-                nameLenBuf.order(ByteOrder.LITTLE_ENDIAN);
-                nameLenBuf.putLong(nameBuf.length);
-                digest.update(nameLenBuf.array());
-                digest.update(nameBuf);
-
-                ByteBuffer valueLenBuf = ByteBuffer.allocate(Long.BYTES);
-                valueLenBuf.order(ByteOrder.LITTLE_ENDIAN);
-                valueLenBuf.putLong(a.getValue().length);
-                digest.update(valueLenBuf.array());
-                digest.update(a.getValue());
-            }
-            for (Long ctr : this.signerCounters) {
-                ByteBuffer ctrBuf = ByteBuffer.allocate(Long.BYTES);
-                ctrBuf.order(ByteOrder.LITTLE_ENDIAN);
-                ctrBuf.putLong(ctr);
-                digest.update(ctrBuf.array());
-            }
-            for (Identity id : this.signerIdentities) {
-                byte[] buf = id.getPublicBytes();
-                ByteBuffer lenBuf = ByteBuffer.allocate(Long.BYTES);
-                lenBuf.order(ByteOrder.LITTLE_ENDIAN);
-                lenBuf.putLong(buf.length);
-                digest.update(lenBuf.array());
-                digest.update(buf);
-            }
-            return digest.digest();
-        } catch (NoSuchAlgorithmException  e) {
-            throw new RuntimeException(e);
-        }
+        return hash(0);
     }
 
     /**
@@ -347,6 +300,60 @@ public class Instruction {
         out.append(String.format("\tcounters: %d\n", this.signerCounters.size()));
         out.append(String.format("\tsignatures: %d\n", this.signatures.size()));
         return out.toString();
+    }
+
+    protected byte[] hash(int version) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(this.instId.getId());
+            List<Argument> args = new ArrayList<>();
+            if (this.spawn != null) {
+                digest.update((byte) (0));
+                digest.update(this.spawn.getContractID().getBytes());
+                args = this.spawn.getArguments();
+            } else if (this.invoke != null) {
+                digest.update((byte) (1));
+                digest.update(this.invoke.getContractID().getBytes());
+                if (version >= 1) {
+                    digest.update(this.invoke.getCommand().getBytes());
+                }
+                args = this.invoke.getArguments();
+            } else if (this.delete != null) {
+                digest.update((byte) (2));
+                digest.update(this.delete.getContractId().getBytes());
+            }
+            for (Argument a : args) {
+                byte[] nameBuf = a.getName().getBytes();
+                ByteBuffer nameLenBuf = ByteBuffer.allocate(Long.BYTES);
+                nameLenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                nameLenBuf.putLong(nameBuf.length);
+                digest.update(nameLenBuf.array());
+                digest.update(nameBuf);
+
+                ByteBuffer valueLenBuf = ByteBuffer.allocate(Long.BYTES);
+                valueLenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                valueLenBuf.putLong(a.getValue().length);
+                digest.update(valueLenBuf.array());
+                digest.update(a.getValue());
+            }
+            for (Long ctr : this.signerCounters) {
+                ByteBuffer ctrBuf = ByteBuffer.allocate(Long.BYTES);
+                ctrBuf.order(ByteOrder.LITTLE_ENDIAN);
+                ctrBuf.putLong(ctr);
+                digest.update(ctrBuf.array());
+            }
+            for (Identity id : this.signerIdentities) {
+                byte[] buf = id.getPublicBytes();
+                ByteBuffer lenBuf = ByteBuffer.allocate(Long.BYTES);
+                lenBuf.order(ByteOrder.LITTLE_ENDIAN);
+                lenBuf.putLong(buf.length);
+                digest.update(lenBuf.array());
+                digest.update(buf);
+            }
+            return digest.digest();
+        } catch (NoSuchAlgorithmException  e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static byte[] intToArr4(int x) {

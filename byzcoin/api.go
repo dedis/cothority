@@ -251,8 +251,8 @@ func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
 		return nil, err
 	}
 
-	var header DataHeader
-	if err = protobuf.Decode(c.Genesis.Data, &header); err != nil {
+	header, err := decodeBlockHeader(c.Latest)
+	if err != nil {
 		return nil, err
 	}
 

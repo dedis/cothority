@@ -278,45 +278,7 @@ export class Instruction extends Message<Instruction> {
      * @returns a buffer of the hash
      */
     hash(): Buffer {
-        const h = createHash("sha256");
-        h.update(this.instanceID);
-        h.update(Buffer.from([this.type]));
-        let args: Argument[] = [];
-        switch (this.type) {
-            case Instruction.typeSpawn:
-                h.update(this.spawn.contractID);
-                args = this.spawn.args;
-                break;
-            case Instruction.typeInvoke:
-                h.update(this.invoke.contractID);
-                args = this.invoke.args;
-                break;
-            case Instruction.typeDelete:
-                h.update(this.delete.contractID);
-                break;
-        }
-        args.forEach((arg) => {
-            const nameBuf = Buffer.from(arg.name);
-            const nameLenBuf = Buffer.from(Long.fromNumber(nameBuf.length).toBytesLE());
-
-            h.update(nameLenBuf);
-            h.update(arg.name);
-
-            const valueLenBuf = Buffer.from(Long.fromNumber(arg.value.length).toBytesLE());
-            h.update(valueLenBuf);
-            h.update(arg.value);
-        });
-        this.signerCounter.forEach((sc) => {
-            h.update(Buffer.from(sc.toBytesLE()));
-        });
-        this.signerIdentities.forEach((si) => {
-            const buf = si.toBytes();
-            const lenBuf = Buffer.from(Long.fromNumber(buf.length).toBytesLE());
-
-            h.update(lenBuf);
-            h.update(si.toBytes());
-        });
-        return h.digest();
+        return this.hashForVersion(0);
     }
 
     /**
@@ -337,10 +299,8 @@ export class Instruction extends Message<Instruction> {
         h.update(Buffer.from(what));
         return h.digest();
     }
-}
 
-class InstructionV1 extends Instruction {
-    hash(): Buffer {
+    protected hashForVersion(version: number): Buffer {
         const h = createHash("sha256");
         h.update(this.instanceID);
         h.update(Buffer.from([this.type]));
@@ -352,7 +312,9 @@ class InstructionV1 extends Instruction {
                 break;
             case Instruction.typeInvoke:
                 h.update(this.invoke.contractID);
-                h.update(this.invoke.command);
+                if (version >= 1) {
+                    h.update(this.invoke.command);
+                }
                 args = this.invoke.args;
                 break;
             case Instruction.typeDelete:
@@ -381,6 +343,17 @@ class InstructionV1 extends Instruction {
             h.update(si.toBytes());
         });
         return h.digest();
+    }
+}
+
+/**
+ * Extension of the initial version of an instruction to include the
+ * invoke command in the hash.
+ * Use ClientTransaction.make in order to create compatible transactions.
+ */
+class InstructionV1 extends Instruction {
+    hash(): Buffer {
+        return this.hashForVersion(1);
     }
 }
 

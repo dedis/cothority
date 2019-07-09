@@ -411,8 +411,8 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		}},
 	}
 
-	var header DataHeader
-	if err := protobuf.Decode(sb.Data, &header); err != nil {
+	header, err := decodeBlockHeader(sb)
+	if err != nil {
 		return err
 	}
 
