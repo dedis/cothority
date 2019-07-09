@@ -112,12 +112,6 @@ func (p *CollectTxProtocol) Start() error {
 
 // Dispatch runs the protocol.
 func (p *CollectTxProtocol) Dispatch() error {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Print(r)
-			log.Print(log.Stack())
-		}
-	}()
 	defer p.Done()
 
 	var req structCollectTxRequest
