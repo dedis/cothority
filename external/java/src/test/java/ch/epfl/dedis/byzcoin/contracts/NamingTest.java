@@ -51,14 +51,17 @@ public class NamingTest {
         // add the _name rule
         Darc newGenesis = bc.getGenesisDarc().partialCopy();
         newGenesis.setRule("_name:darc", newGenesis.getExpression("spawn:darc"));
+        logger.info("evolving darc");
         bc.getGenesisDarcInstance().evolveDarcAndWait(newGenesis, admin, counters.head(), 10);
 
         // create the naming instance
         counters.increment();
+        logger.info("new naming");
         NamingInstance namingInst = new NamingInstance(bc, genesisDarc.getId(), Collections.singletonList(admin), counters.getCounters());
 
         // set a name for the genesis darc
         counters.increment();
+        logger.info("name for genesis");
         namingInst.setAndWait("my genesis darc",
                 new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
                 Collections.singletonList(admin),
@@ -71,6 +74,7 @@ public class NamingTest {
 
         // set it again and it should fail
         counters.increment();
+        logger.info("name again");
         assertThrows(CothorityException.class,
                 () -> namingInst.setAndWait("my genesis darc",
                         new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
@@ -78,7 +82,21 @@ public class NamingTest {
                         counters.getCounters(),
                         10));
 
-        // remove the name (no need to increment because it failed previously)
+        // Because the current hashing of the ClientTransaction does not include the command,
+        // the removeAndWait will be interpreted as the same instruction as before and rejected.
+        // Insert a dummy instruction here.
+        //
+        // No need to increment because it failed previously)
+        logger.info("dummy name");
+        namingInst.setAndWait("my genesis darc 2",
+                new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
+                Collections.singletonList(admin),
+                counters.getCounters(),
+                10);
+
+        // remove the name
+        logger.info("remove name");
+        counters.increment();
         namingInst.removeAndWait("my genesis darc",
                 new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
                 Collections.singletonList(admin),
@@ -87,6 +105,7 @@ public class NamingTest {
 
         // remove the key again and it should fail
         counters.increment();
+        logger.info("remove key");
         assertThrows(CothorityException.class, () -> namingInst.removeAndWait("my genesis darc",
                 new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
                 Collections.singletonList(admin),
@@ -94,6 +113,7 @@ public class NamingTest {
                 10));
 
         // try to get the name and it should fail
+        logger.info("get name");
         assertThrows(CothorityCommunicationException.class,
                 () -> bc.resolveInstanceID(bc.getGenesisDarc().getBaseId(), "my genesis darc"));
     }

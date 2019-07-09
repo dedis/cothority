@@ -141,6 +141,7 @@ public class ByzCoinRPC {
      * @throws CothorityCommunicationException if the transaction has not been included within 'wait' blocks.
      */
     public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityCommunicationException {
+        logger.info("Sending transaction {} with hash {}", t.getInstructions().get(0).action(), t.getId());
         ByzCoinProto.AddTxRequest.Builder request =
                 ByzCoinProto.AddTxRequest.newBuilder();
         request.setVersion(currentVersion);
