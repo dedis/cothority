@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 	"time"
@@ -313,7 +314,9 @@ func (p *txPipeline) collectTx(stopChan chan bool) <-chan ClientTransaction {
 	return outChan
 }
 
-// processTxs consumes transactions and computes the
+var maxTxHashes = 1000
+
+// processTxs consumes transactions and computes the new txResults
 func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *txProcessorState) {
 	var proposing bool
 	// always use the latest one when adding new
@@ -327,6 +330,8 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 		p.wg.Add(1)
 		defer p.wg.Done()
 		intervalChan := getInterval()
+		var txHashes [][]byte
+	leaderLoop:
 		for {
 			select {
 			case tx, ok := <-txChan:
@@ -334,6 +339,18 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					log.Lvl3("stopping txs processor")
 					return
 				}
+				txh := tx.Instructions.Hash()
+				for _, txHash := range txHashes {
+					if bytes.Compare(txHash, txh) == 0 {
+						log.Lvl2("Got a duplicate transaction, ignoring it")
+						continue leaderLoop
+					}
+				}
+				txHashes = append(txHashes, txh)
+				if len(txHashes) > maxTxHashes {
+					txHashes = txHashes[len(txHashes)-maxTxHashes:]
+				}
+
 				// when processing, we take the latest state
 				// (the last one) and then apply the new transaction to it
 				newStates, err := p.processor.ProcessTx(tx, currentState[len(currentState)-1])

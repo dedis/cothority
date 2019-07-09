@@ -657,7 +657,7 @@ func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 		return errors.New("new leader must be in previous roster")
 	}
 
-	// Check we don't change more than one one
+	// Check we don't change more than one node
 	added := 0
 	oldList := onet.NewRoster(c.Roster.List)
 	for _, si := range newRoster.List {
