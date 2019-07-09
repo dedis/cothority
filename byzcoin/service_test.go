@@ -4,16 +4,20 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+
+	"go.etcd.io/bbolt"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -1689,6 +1693,9 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 }
 
 func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
+	return addDummyTxsTo(t, s, nbr, perCTx, count, 0)
+}
+func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int) int {
 	ids := []darc.Identity{s.signer.Identity()}
 	for i := 0; i < nbr; i++ {
 		var instrs Instructions
@@ -1706,7 +1713,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 		ctx, err := combineInstrsAndSign(s.signer, instrs...)
 		require.Nil(t, err)
 
-		s.sendTxAndWait(t, ctx, 10)
+		s.sendTxToAndWait(t, ctx, idx, 10)
 	}
 	return count
 }
@@ -1727,6 +1734,10 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	// Add other transaction so we're on a new border between forward links
 	ct := addDummyTxs(t, s, 4, 1, 2)
 
+	cda := catchupDownloadAll
+	defer func() {
+		catchupDownloadAll = cda
+	}()
 	catchupDownloadAll = 1
 	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
 
@@ -1755,10 +1766,18 @@ func TestService_DownloadState(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
+	log.Lvl1("Adding dummy transactions")
 	ct := addDummyTxs(t, s, 3, 3, 1)
 	ct = addDummyTxs(t, s, 1, 20, ct)
 
+	config, err := s.service().LoadConfig(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	stateTrie, err := s.service().getStateTrie(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	merkleRoot := stateTrie.GetRoot()
+
 	// Wrong parameters
+	log.Lvl1("Testing wrong parameters")
 	resp, err := s.service().DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 	})
@@ -1786,7 +1805,7 @@ func TestService_DownloadState(t *testing.T) {
 
 	// Start one download and check it is aborted
 	// if we start a second download.
-	log.Lvl1("Check aborting of download")
+	log.Lvl1("Check aborting of download and resuming")
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
@@ -1826,6 +1845,7 @@ func TestService_DownloadState(t *testing.T) {
 	require.Nil(t, err)
 
 	// Start downloading
+	log.Lvl1("Partial download")
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
@@ -1836,6 +1856,7 @@ func TestService_DownloadState(t *testing.T) {
 	require.Equal(t, 10, len(resp.KeyValues))
 
 	// Start a new download and go till the end
+	log.Lvl1("Full download")
 	length := 0
 	var nonce uint64
 	for {
@@ -1855,11 +1876,19 @@ func TestService_DownloadState(t *testing.T) {
 	// are copied, so we cannot know in advance how many
 	// entries we copy...
 	require.True(t, length > 40)
+	configDown, err := s.service().LoadConfig(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	require.Equal(t, config, configDown)
+	stateTrieDown, err := s.service().getStateTrie(s.genesis.SkipChainID())
+	require.NoError(t, err)
+	merkleRootDown := stateTrieDown.GetRoot()
+	require.Equal(t, merkleRoot, merkleRootDown)
 
 	time.Sleep(time.Second)
 	// Try to re-create the trie on a new service -
 	// do it twice
 	for i := 0; i < 2; i++ {
+		log.Lvl1("Full download on new node, try-#", i+1)
 		servers, _, _ := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
 		services := s.local.GetServices(servers, ByzCoinID)
 		service := services[0].(*Service)
@@ -1872,6 +1901,44 @@ func TestService_DownloadState(t *testing.T) {
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
 		err = protobuf.DecodeWithConstructors(val, &configCopy, network.DefaultConstructors(cothority.Suite))
+		require.Equal(t, config, &configCopy)
+		stateTrieDown, err := service.getStateTrie(s.genesis.SkipChainID())
+		require.NoError(t, err)
+		merkleRootDown := stateTrieDown.GetRoot()
+		require.Equal(t, merkleRoot, merkleRootDown)
+	}
+}
+
+// Download the state in a running Byzcoin, with a node sudeenly being caught by Amnesia.
+// This is different from the above tests, as a node needs to be able to catch up
+// while a full running byzcoin is in place.
+//
+// Two things are not tested here:
+//   1. what if a leader fails and wants to catch up
+//   2. if the catchupFetchDBEntries = 1, it fails
+func TestService_DownloadStateRunning(t *testing.T) {
+	cda := catchupDownloadAll
+	defer func() {
+		catchupDownloadAll = cda
+	}()
+	catchupDownloadAll = 3
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	log.Lvl1("Adding dummy transactions")
+	addDummyTxs(t, s, 3, 1, 1)
+
+	counter := 4
+	for i := range s.services {
+		if i == 0 {
+			log.Lvl1("Not deleting leader")
+			continue
+		}
+		log.Lvl1("Deleting node", i, "and adding new transaction")
+		s.deleteDBs(t, i)
+
+		addDummyTxsTo(t, s, 1, 1, counter, (i+1)%len(s.services))
+		counter++
 	}
 }
 
@@ -2134,6 +2201,10 @@ func TestService_StateChangeStorage(t *testing.T) {
 
 // Tests that the state change storage will be caught up by a new conode
 func TestService_StateChangeStorageCatchUp(t *testing.T) {
+	cda := catchupDownloadAll
+	defer func() {
+		catchupDownloadAll = cda
+	}()
 	// we don't want a db download
 	catchupDownloadAll = 100
 
@@ -2159,6 +2230,7 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 
 	newRoster = onet.NewRoster(append(s.roster.List, newRoster.List...))
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, 5)
+	log.Lvl1("Updating config to include new roster")
 	s.sendTxAndWait(t, ctx, 10)
 
 	for i := 0; i < 10; i++ {
@@ -2184,7 +2256,10 @@ func TestService_TestCatchUpHistory(t *testing.T) {
 
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
 
-	// unknown skipchain, we shouldn't try to catch up
+	sc := s.service().Service(skipchain.ServiceName).(*skipchain.Service)
+	sc.Storage.FollowIDs = []skipchain.SkipBlockID{s.genesis.Hash}
+
+	// unknown, unfriendly skipchain, we shouldn't try to catch up
 	err := s.service().catchupFromID(s.roster, skipchain.SkipBlockID{}, skipchain.SkipBlockID{})
 	require.Equal(t, 0, len(s.service().catchingUpHistory))
 	require.NoError(t, err)
@@ -2418,6 +2493,30 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 		t.Fatal("couldn't store new darc")
 	}
 	return
+}
+
+func (s *ser) deleteDBs(t *testing.T, index int) {
+	log.Lvl1("Deleting DB of node", index)
+	bc := s.services[index]
+	bc.TestClose()
+	for scid := range bc.stateTries {
+		require.NoError(t, deleteDB(bc.ServiceProcessor, []byte(scid)))
+		idStr := hex.EncodeToString([]byte(scid))
+		require.NoError(t, deleteDB(bc.ServiceProcessor, []byte(idStr)))
+	}
+	require.NoError(t, deleteDB(bc.ServiceProcessor, storageID))
+	sc := bc.Service(skipchain.ServiceName).(*skipchain.Service)
+	require.NoError(t, deleteDB(sc.ServiceProcessor, []byte("skipblocks")))
+	require.NoError(t, deleteDB(sc.ServiceProcessor, []byte("skipchainconfig")))
+	sc.TestRestart()
+	require.NoError(t, bc.startAllChains())
+}
+
+func deleteDB(s *onet.ServiceProcessor, key []byte) error {
+	db, stBucket := s.GetAdditionalBucket(key)
+	return db.Update(func(tx *bbolt.Tx) error {
+		return tx.DeleteBucket(stBucket)
+	})
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {

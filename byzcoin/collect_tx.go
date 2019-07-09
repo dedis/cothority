@@ -112,6 +112,12 @@ func (p *CollectTxProtocol) Start() error {
 
 // Dispatch runs the protocol.
 func (p *CollectTxProtocol) Dispatch() error {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Print(r)
+			log.Print(log.Stack())
+		}
+	}()
 	defer p.Done()
 
 	var req structCollectTxRequest
@@ -138,6 +144,7 @@ func (p *CollectTxProtocol) Dispatch() error {
 	resp := &CollectTxResponse{
 		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, maxOut),
 	}
+	log.Lvl2(p.ServerIdentity(), "sends back", len(resp.Txs), "transactions")
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
 			return err
