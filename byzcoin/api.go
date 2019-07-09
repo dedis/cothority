@@ -132,7 +132,7 @@ func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, er
 		}
 	}
 
-	h, err := extractHeader(c.Latest)
+	h, err := decodeBlockHeader(c.Latest)
 	if err != nil {
 		return ClientTransaction{}, err
 	}
@@ -651,16 +651,6 @@ func verifyGenesisBlock(actual *skipchain.SkipBlock, expected *CreateGenesisBloc
 	}
 
 	return nil
-}
-
-func extractHeader(sb *skipchain.SkipBlock) (*DataHeader, error) {
-	var header DataHeader
-
-	if err := protobuf.Decode(sb.Data, &header); err != nil {
-		return nil, err
-	}
-
-	return &header, nil
 }
 
 func extractDarcID(sb *skipchain.SkipBlock) (darc.ID, error) {

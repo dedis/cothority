@@ -348,8 +348,8 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("refusing to accept transaction for a chain we're not part of")
 	}
 
-	var header DataHeader
-	if err := protobuf.Decode(latest.Data, &header); err != nil {
+	header, err := decodeBlockHeader(latest)
+	if err != nil {
 		return nil, err
 	}
 
@@ -951,8 +951,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		sst = st.MakeStagingStateTrie()
 		// Preserve the same version of the byzcoin protocol for backwards
 		// compatibility.
-		var header DataHeader
-		if err := protobuf.Decode(sbLatest.Data, &header); err != nil {
+		header, err := decodeBlockHeader(sbLatest)
+		if err != nil {
 			return nil, err
 		}
 
@@ -1117,8 +1117,8 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			}
 			sb = search.SkipBlock
 		}
-		var header DataHeader
-		err = protobuf.Decode(sb.Data, &header)
+
+		header, err := decodeBlockHeader(sb)
 		if err != nil {
 			return errors.New("couldn't unmarshal header: " + err.Error())
 		}
@@ -1457,11 +1457,9 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Get the DataHeader and the DataBody of the block.
-	var header DataHeader
-	err = protobuf.Decode(sb.Data, &header)
+	header, err := decodeBlockHeader(sb)
 	if err != nil {
-		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
-		return errors.New("couldn't unmarshal header")
+		return err
 	}
 
 	var body DataBody
@@ -1787,10 +1785,9 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Lvlf3("%s Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
 	}()
 
-	var header DataHeader
-	err := protobuf.Decode(newSB.Data, &header)
+	header, err := decodeBlockHeader(newSB)
 	if err != nil {
-		log.Error(s.ServerIdentity(), "verifySkipblock: couldn't unmarshal header")
+		log.Error(err)
 		return false
 	}
 
@@ -1811,8 +1808,8 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		if prevBlock == nil {
 			return errors.New("missing previous block")
 		}
-		var prevHeader DataHeader
-		if err := protobuf.Decode(prevBlock.Data, &prevHeader); err != nil {
+		prevHeader, err := decodeBlockHeader(prevBlock)
+		if err != nil {
 			return err
 		}
 		if header.Version < prevHeader.Version {
@@ -2621,10 +2618,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 		return err
 	}
 
-	var header DataHeader
-	err = protobuf.Decode(currSB.Data, &header)
+	header, err := decodeBlockHeader(currSB)
 	if err != nil {
-		return errors.New("couldn't unmarshal header: " + err.Error())
+		return err
 	}
 
 	if bytes.Equal(header.TrieRoot, st.GetRoot()) {
@@ -2637,10 +2633,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 
 	log.Warn(s.ServerIdentity(), "inconsistency detected, trying to fix it")
 	for {
-		var currHeader DataHeader
-		err = protobuf.Decode(currSB.Data, &currHeader)
+		currHeader, err := decodeBlockHeader(currSB)
 		if err != nil {
-			return errors.New("could not unmarshal header: " + err.Error())
+			return err
 		}
 		if bytes.Equal(currHeader.TrieRoot, st.GetRoot()) {
 			return s.repairStateTrie(currSB, st)
@@ -2662,9 +2657,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) error {
 	// Verify that we are in the right state.
 	{
-		var header DataHeader
-		if err := protobuf.Decode(from.Data, &header); err != nil {
-			return errors.New("couldn't unmarshal header: " + err.Error())
+		header, err := decodeBlockHeader(from)
+		if err != nil {
+			return err
 		}
 
 		if !bytes.Equal(header.TrieRoot, st.GetRoot()) {
@@ -2681,9 +2676,9 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return errors.New("missing skipblocks")
 		}
 
-		var header DataHeader
-		if err := protobuf.Decode(from.Data, &header); err != nil {
-			return errors.New("couldn't unmarshal header: " + err.Error())
+		header, err := decodeBlockHeader(from)
+		if err != nil {
+			return err
 		}
 
 		var body DataBody
@@ -2709,15 +2704,10 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 	return nil
 }
 
-func (s *Service) getBlockHeader(id skipchain.SkipBlockID) (*DataHeader, error) {
-	sb := s.skService().GetDB().GetByID(id)
-	if sb == nil {
-		return nil, fmt.Errorf("unknown block with id %x", id)
-	}
-
+func decodeBlockHeader(sb *skipchain.SkipBlock) (*DataHeader, error) {
 	var header DataHeader
 	if err := protobuf.Decode(sb.Data, &header); err != nil {
-		return nil, err
+		return nil, errors.New("couldn't unmarshal header: " + err.Error())
 	}
 
 	return &header, nil
