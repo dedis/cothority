@@ -76,7 +76,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 		Version: 0,
 		Roster:  *s.roster,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// invalid: max block too small, big
 	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
@@ -84,13 +84,13 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 		Roster:       *s.roster,
 		MaxBlockSize: 3000,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version:      0,
 		Roster:       *s.roster,
 		MaxBlockSize: 30 * 1e6,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// invalid darc
 	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
@@ -98,18 +98,18 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 		Roster:      *s.roster,
 		GenesisDarc: darc.Darc{},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"spawn:dummy"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	genesisMsg.BlockInterval = 100 * time.Millisecond
 	genesisMsg.MaxBlockSize = 1 * 1e6
 
 	// finally passing
 	resp, err = service.CreateGenesisBlock(genesisMsg)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
 
@@ -118,10 +118,10 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 		Key:     genesisMsg.GenesisDarc.GetID(),
 		ID:      resp.Skipblock.SkipChainID(),
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, proof.Proof.Verify(resp.Skipblock.SkipChainID()))
 	k, _, _, _, err := proof.Proof.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.EqualValues(t, genesisMsg.GenesisDarc.GetID(), k)
 
 	interval, maxsz, err := service.LoadBlockInfo(resp.Skipblock.SkipChainID())
@@ -168,20 +168,20 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	akvresp, err := s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion + 1,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// missing skipchain
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// missing transaction
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.genesis.SkipChainID(),
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	if failure {
 		// kill a child conode and adding tx should still succeed
@@ -194,14 +194,14 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	// add the first tx
 	log.Lvl1("adding the first tx")
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
@@ -209,14 +209,14 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	log.Lvl1("adding the second tx")
 	value2 := []byte("value2")
 	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, value2, s.signer, 2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx2,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
@@ -234,7 +234,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
 			require.Nil(t, pr.Verify(s.genesis.SkipChainID()))
 			_, v0, _, _, err := pr.KeyValue()
-			require.Nil(t, err)
+			require.NoError(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 
 			// check that the database has this new block's index recorded
@@ -255,7 +255,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
 			require.Nil(t, pr.Verify(s.genesis.SkipChainID()))
 			_, v0, _, _, err := pr.KeyValue()
-			require.Nil(t, err)
+			require.NoError(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 			// check that the database has this new block's index recorded
 			st, err := s.services[len(s.hosts)-1].getStateTrie(pr.Latest.SkipChainID())
@@ -291,7 +291,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	// add the first tx to outside server
 	log.Lvl1("adding the first tx - this should fail")
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -299,7 +299,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 		InclusionWait: 5,
 	}
 	_, err = outside.AddTransaction(atx)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// Adding outside to roster
 	log.Lvl1("Adding new node to the roster")
@@ -317,7 +317,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = outside.AddTransaction(atx)
 	require.NoError(t, err)
 }
@@ -334,7 +334,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	log.Lvl1("Adding the first tx")
 	dcID := random.Bits(256, false, random.New())
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -342,7 +342,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		InclusionWait: 5,
 	}
 	_, err = s.service().AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
@@ -358,7 +358,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	h := tx2.Instructions.Hash()
 	for i := range tx2.Instructions {
 		err := tx2.Instructions[i].SignWith(h, s.signer)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 	atx = &AddTxRequest{
 		Version:       CurrentVersion,
@@ -367,7 +367,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		InclusionWait: 5,
 	}
 	_, err = s.service().AddTransaction(atx)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
@@ -384,7 +384,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	h = tx3.Instructions.Hash()
 	for i := range tx3.Instructions {
 		err := tx3.Instructions[i].SignWith(h, s.signer)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 	atx = &AddTxRequest{
 		Version:       CurrentVersion,
@@ -393,7 +393,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		InclusionWait: 5,
 	}
 	_, err = s.service().AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // Sends the same transaction to two different nodes and makes sure that it shows up only once in a
@@ -408,7 +408,7 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	log.Lvl1("Adding a tx twice")
 	dcID := random.Bits(256, false, random.New())
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atx := &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -419,10 +419,10 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	// This is somewhat racy, as we could just fall between the creation of a block. So fingers crossed that
 	// both transactions are sent to the same block.
 	_, err = s.service().AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atx.InclusionWait = 5
 	_, err = s.services[1].AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get latest block and count the number of transactions
 	proof, err := s.service().GetProof(&GetProof{
@@ -430,7 +430,7 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 		Key:     tx1.Instructions[0].DeriveID("").Slice(),
 		ID:      s.genesis.Hash,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	var payload DataBody
 	require.NoError(t, protobuf.Decode(proof.Proof.Latest.Payload, &payload))
 	require.Equal(t, 1, len(payload.TxResults))
@@ -439,13 +439,13 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	log.Lvl1("Adding same tx again")
 	atx.InclusionWait = 0
 	_, err = s.services[1].AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	log.Lvl1("Adding another transaction to create block")
 	dcID = random.Bits(256, false, random.New())
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 2)
 	atx.InclusionWait = 5
 	_, err = s.services[1].AddTransaction(atx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get latest block and make sure that it didn't get added
 	proof, err = s.service().GetProof(&GetProof{
@@ -475,7 +475,7 @@ func TestService_GetProof(t *testing.T) {
 			ID:      s.genesis.SkipChainID(),
 			Key:     serKey,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 		if rep.Proof.InclusionProof.Match(serKey) {
 			break
 		}
@@ -483,7 +483,7 @@ func TestService_GetProof(t *testing.T) {
 	require.NotEqual(t, 10, i, "didn't get proof in time")
 	key, v0, _, _, err := rep.Proof.KeyValue()
 	require.Equal(t, key, serKey)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, rep.Proof.Verify(s.genesis.SkipChainID()))
 	require.Equal(t, serKey, key)
 	require.Equal(t, s.value, v0)
@@ -551,7 +551,7 @@ func TestService_DarcProxy(t *testing.T) {
 	}
 
 	err = ctx.FillSignersAndSignWith(signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -559,7 +559,7 @@ func TestService_DarcProxy(t *testing.T) {
 		Transaction:   ctx,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestService_WrongSigner(t *testing.T) {
@@ -615,7 +615,7 @@ func TestService_Depending(t *testing.T) {
 		Transaction:   tx,
 		InclusionWait: 2,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -648,10 +648,10 @@ func TestService_LateBlock(t *testing.T) {
 		time.Sleep(2200 * time.Millisecond)
 		return ser.verifySkipBlock(newID, newSB)
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -680,10 +680,10 @@ func TestService_BadDataHeader(t *testing.T) {
 
 		return ser.verifySkipBlock(newID, newSB)
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -735,7 +735,7 @@ func waitInclusion(t *testing.T, client int) {
 	counter++
 	{
 		tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		ser := s.services[client]
 		_, err = ser.AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
@@ -892,7 +892,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 
 func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, error, error) {
 	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	ser := s.services[client]
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -930,25 +930,25 @@ func TestService_InvalidVerification(t *testing.T) {
 	// tx0 uses the panicing contract, so it should _not_ be stored.
 	value1 := []byte("a")
 	tx0, err := createOneClientTx(s.darc.GetBaseID(), "panic", value1, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	akvresp, err := s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: tx0,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// tx1 uses the invalid contract, so it should _not_ be stored.
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), invalidContract, value1, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: tx1,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
@@ -961,7 +961,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		Transaction:   tx2,
 		InclusionWait: 10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
@@ -971,7 +971,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		ID:      s.genesis.SkipChainID(),
 		Key:     tx1.Instructions[0].Hash(),
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	match := pr.Proof.InclusionProof.Match(tx1.Instructions[0].Hash())
 	require.False(t, match)
 
@@ -981,7 +981,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		ID:      s.genesis.SkipChainID(),
 		Key:     tx2.Instructions[0].Hash(),
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	match = pr.Proof.InclusionProof.Match(tx2.Instructions[0].Hash())
 	require.True(t, match)
 
@@ -996,7 +996,7 @@ func TestService_LoadBlockInfo(t *testing.T) {
 	defer s.local.CloseAll()
 
 	dur, sz, err := s.service().LoadBlockInfo(s.genesis.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, dur, interval)
 	require.True(t, sz == defaultMaxBlockSize)
 }
@@ -1069,7 +1069,7 @@ func TestService_StateChange(t *testing.T) {
 		ContractID:  "add",
 		Value:       make([]byte, 8),
 	}}, 0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	n := 5
 	instrs := make([]Instruction, n)
@@ -1160,7 +1160,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 		ContractID:  cid,
 		Value:       make([]byte, 8),
 	}}, 0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	log.Lvl1("Failing updating and removing non-existing instances")
 	mkroot1, txOut, scs, _ := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), NewTxResults(ClientTransaction{Instructions: Instructions{{
@@ -1229,7 +1229,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 		})
 
 		d2Buf, err := d2.ToProto()
-		require.Nil(t, err)
+		require.NoError(t, err)
 		invoke := Invoke{
 			// Because field ContractID is missing, this Invoke should fail.
 			Command: cmdDarcEvolve,
@@ -1265,9 +1265,9 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	// parse the darc
 	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
 	_, v0, _, _, err := pr.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	d22, err := darc.NewFromProtobuf(v0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.False(t, d22.Equal(d2))
 	require.True(t, d22.Equal(s.darc))
 
@@ -1287,9 +1287,9 @@ func TestService_DarcEvolution(t *testing.T) {
 	// parse the darc
 	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
 	_, v0, _, _, err := pr.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	d22, err := darc.NewFromProtobuf(v0)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, d22.Equal(d2))
 }
 
@@ -1302,9 +1302,9 @@ func TestService_DarcSpawn(t *testing.T) {
 		[]byte("next darc"))
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 
 	ctx := ClientTransaction{
@@ -1340,9 +1340,9 @@ func TestService_DarcDelegation(t *testing.T) {
 		[]byte("second darc"))
 	darc2.Rules.AddRule("spawn:"+ContractDarcID, expression.InitOrExpr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
@@ -1367,9 +1367,9 @@ func TestService_DarcDelegation(t *testing.T) {
 	darc3 := darc.NewDarc(darc.InitRules(id3, id3),
 		[]byte("third darc"))
 	darc3Buf, err := darc3.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	darc3Copy, err := darc.NewFromProtobuf(darc3Buf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, darc3.Equal(darc3Copy))
 	instr = Instruction{
 		InstanceID: NewInstanceID(darc2.GetBaseID()),
@@ -1401,9 +1401,9 @@ func TestService_CheckAuthorization(t *testing.T) {
 		[]byte("second darc"))
 	darc2.Rules.AddRule("spawn:"+ContractDarcID, expression.Expr(s.darc.GetIdentityString()))
 	darc2Buf, err := darc2.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 	instr := Instruction{
 		InstanceID: NewInstanceID(s.darc.GetBaseID()),
@@ -1429,36 +1429,36 @@ func TestService_CheckAuthorization(t *testing.T) {
 		Identities: []darc.Identity{s.signer.Identity()},
 	}
 	resp, err := s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("_sign"))
 
 	ca.Identities[0] = darc.NewIdentityEd25519(s.roster.List[0].Public)
 	resp, err = s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	ca.Identities = append(ca.Identities, darc.NewIdentityEd25519(s.roster.List[1].Public))
 	resp, err = s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("invoke:"+ContractConfigID+".view_change"))
 
 	log.Lvl1("Check delegation of darcs")
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewSignerEd25519(nil, nil).Identity()
 	resp, err = s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(resp.Actions))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = s.signer.Identity()
 	resp, err = s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 
 	ca.DarcID = darc2.GetID()
 	ca.Identities[0] = darc.NewIdentityDarc(s.darc.GetID())
 	resp, err = s.service().CheckAuthorization(ca)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Contains(t, resp.Actions, darc.Action("spawn:"+ContractDarcID))
 }
 
@@ -1502,7 +1502,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 	// Wait for a block completion to start the interval check
 	// to prevent the first one to be included in the setup block
 	ctx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.sendTxAndWait(t, ctx, 10)
 
 	intervals := []time.Duration{
@@ -1564,7 +1564,7 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 		s.sendTxAndWait(t, ctx, 10)
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 	}
 }
@@ -1583,7 +1583,7 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 		s.sendTxAndWait(t, ctx, 10)
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 	}
 }
@@ -1601,11 +1601,11 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.sendTxAndWait(t, ctx, 10)
 
 	log.Lvl1("Creating blocks to check rotation of the leader")
@@ -1637,15 +1637,15 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, latest.Roster.ID.Equal(rosterR.ID), "roster has not been updated")
 		// Get latest genesis darc and verify the 'view_change' rule is updated
 		st, err := s.service().GetReadOnlyStateTrie(s.genesis.Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		val, _, _, _, err := st.GetValues(s.darc.GetBaseID())
-		require.Nil(t, err)
+		require.NoError(t, err)
 		d, err := darc.NewFromProtobuf(val)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		vcIDs := strings.Split(string(d.Rules.Get("invoke:"+ContractConfigID+".view_change")), " | ")
 		require.Equal(t, len(rosterR.List), len(vcIDs))
 	}
@@ -1665,7 +1665,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 			if err == nil {
 				break
 			} else if i == 2 {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 			time.Sleep(testInterval)
 		}
@@ -1682,7 +1682,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 				Key:     testDarc.GetBaseID(),
 			}, reply)
 			if err == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 				require.True(t, reply.Proof.InclusionProof.Match(testDarc.GetBaseID()))
 				break
 			} else if i == 1 {
@@ -1709,7 +1709,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 		Transaction:   ctx,
 		InclusionWait: 10,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
@@ -1740,14 +1740,14 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
 		_, err := cl.AddTransactionAndWait(ctx, 10)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		log.Lvl1("Removing", goodRoster.List[0])
 		goodRoster = onet.NewRoster(goodRoster.List[1:])
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		_, err = cl.AddTransactionAndWait(ctx, 10)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 }
 
@@ -1759,7 +1759,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 			desc := random.Bits(256, true, random.New())
 			dummyDarc := darc.NewDarc(darc.InitRules(ids, ids), desc)
 			dummyDarcBuf, err := dummyDarc.ToProto()
-			require.Nil(t, err)
+			require.NoError(t, err)
 			instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID,
 				"darc", dummyDarcBuf)
 			instr.SignerCounter[0] = uint64(count)
@@ -1767,7 +1767,7 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 			instrs = append(instrs, instr)
 		}
 		ctx, err := combineInstrsAndSign(s.signer, instrs...)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		s.sendTxAndWait(t, ctx, 10)
 	}
@@ -1781,11 +1781,11 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
 	testDarcBuf, err := testDarc.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	instr := createSpawnInstr(s.darc.GetBaseID(), ContractDarcID, "darc", testDarcBuf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	ctx, err := combineInstrsAndSign(s.signer, instr)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.sendTxAndWait(t, ctx, 10)
 	// Add other transaction so we're on a new border between forward links
 	ct := addDummyTxs(t, s, 4, 1, 2)
@@ -1810,7 +1810,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 		ID:      s.genesis.Hash,
 		Key:     testDarc.GetBaseID(),
 	}, reply)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, reply.Proof.InclusionProof.Match(testDarc.GetBaseID()))
 }
 
@@ -1825,27 +1825,27 @@ func TestService_DownloadState(t *testing.T) {
 	resp, err := s.service().DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 		Nonce:     0,
 		Length:    1,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     1,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// Start one download and check it is aborted
 	// if we start a second download.
@@ -1855,7 +1855,7 @@ func TestService_DownloadState(t *testing.T) {
 		Nonce:     0,
 		Length:    1,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	nonce1 := resp.Nonce
 	// Continue 1st download
 	resp, err = s.service().DownloadState(&DownloadState{
@@ -1863,14 +1863,14 @@ func TestService_DownloadState(t *testing.T) {
 		Nonce:     nonce1,
 		Length:    1,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// Start 2nd download
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
 		Length:    1,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	nonce2 := resp.Nonce
 	require.NotEqual(t, nonce1, nonce2)
 	// Now 1st download should fail
@@ -1879,14 +1879,14 @@ func TestService_DownloadState(t *testing.T) {
 		Nonce:     nonce1,
 		Length:    1,
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 	// And 2nd download should still continue
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     nonce2,
 		Length:    1,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Start downloading
 	resp, err = s.service().DownloadState(&DownloadState{
@@ -1894,7 +1894,7 @@ func TestService_DownloadState(t *testing.T) {
 		Nonce:     0,
 		Length:    10,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 10, len(resp.KeyValues))
 
@@ -1907,7 +1907,7 @@ func TestService_DownloadState(t *testing.T) {
 			Nonce:     nonce,
 			Length:    10,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 		if len(resp.KeyValues) == 0 {
 			break
 		}
@@ -1927,11 +1927,11 @@ func TestService_DownloadState(t *testing.T) {
 		services := s.local.GetServices(servers, ByzCoinID)
 		service := services[0].(*Service)
 		err := service.downloadDB(s.genesis)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		st, err := service.getStateTrie(s.genesis.Hash)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		val, _, _, _, err := st.GetValues(make([]byte, 32))
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
 		err = protobuf.DecodeWithConstructors(val, &configCopy, network.DefaultConstructors(cothority.Suite))
@@ -2021,12 +2021,12 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.NoError(t, err)
 	sst := st.MakeStagingStateTrie()
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Add a second tx that is invalid because it is for an unknown contract.
 	log.Lvl1("Calling invalid invoke on contract")
 	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer, 2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
@@ -2068,7 +2068,7 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 	// already announced but it should exit silently
 	// as the trie index is different
 	err := s.service().updateTrieCallback(s.genesis.SkipChainID())
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // This tests that the state change storage will actually
@@ -2107,7 +2107,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, uint64(i*2+1))
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		// Queue all transactions, except for the last one
 		wait := 0
@@ -2120,7 +2120,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			Transaction:   tx,
 			InclusionWait: wait,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	scID := s.genesis.SkipChainID()
@@ -2134,7 +2134,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 				SkipChainID: scID,
 				InstanceID:  signerIID,
 			})
-			require.Nil(t, err)
+			require.NoError(t, err)
 			if len(res.StateChanges) == n*2 {
 				break
 			}
@@ -2147,7 +2147,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			SkipChainID: scID,
 			InstanceID:  iid,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.Equal(t, 2*n+1, len(res.StateChanges))
 
 		log.Lvlf1("Getting versions of iid %x and signer %x", iid[:], signerIID[:])
@@ -2158,7 +2158,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 				InstanceID:  iid,
 				Version:     uint64(i),
 			})
-			require.Nil(t, err)
+			require.NoError(t, err)
 			require.Equal(t, uint64(i), sc.StateChange.Version)
 			require.Equal(t, uint64(i), res.StateChanges[i].StateChange.Version)
 
@@ -2167,13 +2167,13 @@ func TestService_StateChangeStorage(t *testing.T) {
 				InstanceID:  iid,
 				Version:     uint64(i),
 			})
-			require.Nil(t, err)
+			require.NoError(t, err)
 
 			sb, err := service.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: res.BlockID})
-			require.Nil(t, err)
+			require.NoError(t, err)
 			var header DataHeader
 			err = protobuf.Decode(sb.Data, &header)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
 
@@ -2206,7 +2206,7 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	n := 2
 	for i := 0; i < n; i++ {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		_, err = s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
@@ -2214,7 +2214,7 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 			Transaction:   tx,
 			InclusionWait: 10,
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	newServer, newRoster, newService := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
@@ -2356,7 +2356,7 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer, ctr uint64) ClientTransaction {
 	d2Buf, err := d2.ToProto()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	invoke := Invoke{
 		ContractID: ContractDarcID,
 		Command:    cmdDarcEvolve,
@@ -2433,7 +2433,7 @@ func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: ctx,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
@@ -2447,7 +2447,7 @@ func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait
 		Transaction:   ctx,
 		InclusionWait: wait,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // caller gives us a darc, and we try to make an evolution request.
@@ -2466,12 +2466,12 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 			Key:     d2.GetBaseID(),
 			ID:      s.genesis.SkipChainID(),
 		})
-		require.Nil(t, err)
+		require.NoError(t, err)
 		pr = &resp.Proof
 		_, v0, _, _, err := pr.KeyValue()
-		require.Nil(t, err)
+		require.NoError(t, err)
 		d, err := darc.NewFromProtobuf(v0)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		if d.Equal(&d2) {
 			return
 		}
@@ -2510,7 +2510,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 			"spawn:" + stateChangeCacheContract,
 			"delete:" + dummyContract,
 		}, s.signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
 	genesisMsg.BlockInterval = interval
@@ -2520,11 +2520,11 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 		switch i {
 		case 0:
 			resp, err := s.service().CreateGenesisBlock(genesisMsg)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			s.genesis = resp.Skipblock
 		case 1:
 			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			s.tx = tx
 			_, err = s.service().AddTransaction(&AddTxRequest{
 				Version:       CurrentVersion,
@@ -2532,7 +2532,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 				Transaction:   tx,
 				InclusionWait: 10,
 			})
-			require.Nil(t, err)
+			require.NoError(t, err)
 		default:
 			require.Fail(t, "no such step")
 		}
