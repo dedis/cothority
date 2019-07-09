@@ -14,10 +14,16 @@ var errKeyNotSet = errors.New("key not set")
 // ReadOnlyStateTrie is the read-only interface for StagingStateTrie and
 // StateTrie.
 type ReadOnlyStateTrie interface {
+	// GetValues gets all the values associated with the given key.
 	GetValues(key []byte) (value []byte, version uint64, contractID string, darcID darc.ID, err error)
+	// GetProof produces an existance or absence proof for the given key.
 	GetProof(key []byte) (*trie.Proof, error)
+	// GetIndex returns the index metadata.
 	GetIndex() int
+	// GetNonce returns the nonce of the trie.
 	GetNonce() ([]byte, error)
+	// ForEach calls the callback function on every key/value pair in the
+	// trie, which does not include the metadata.
 	ForEach(func(k, v []byte) error) error
 }
 
