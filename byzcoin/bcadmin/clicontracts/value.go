@@ -65,14 +65,13 @@ func ValueSpawn(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID(d.GetBaseID()),
-				Spawn:         &spawn,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(d.GetBaseID()),
+		Spawn:         &spawn,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
@@ -152,14 +151,13 @@ func ValueInvokeUpdate(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
-				Invoke:        &invoke,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
+		Invoke:        &invoke,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
@@ -276,14 +274,13 @@ func ValueDelete(c *cli.Context) error {
 		ContractID: contracts.ContractValueID,
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
-				Delete:        &delete,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
+		Delete:        &delete,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

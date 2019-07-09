@@ -505,18 +505,24 @@ func show(c *cli.Context) error {
 	return err
 }
 
-func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzcoin.Instruction) (ctx byzcoin.ClientTransaction, err error) {
+func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzcoin.Instruction) (byzcoin.ClientTransaction, error) {
 	gscr, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return
+		return byzcoin.ClientTransaction{}, err
 	}
 	for i := range instrs {
 		gscr.Counters[0]++
 		instrs[i].SignerCounter = gscr.Counters
 	}
-	ctx.Instructions = instrs
+	ctx, err := cl.CreateTransaction(instrs...)
+	if err != nil {
+		return byzcoin.ClientTransaction{}, err
+	}
 	err = ctx.FillSignersAndSignWith(signer)
-	return
+	if err != nil {
+		return byzcoin.ClientTransaction{}, err
+	}
+	return ctx, nil
 }
 
 func verifyAdminDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) error {

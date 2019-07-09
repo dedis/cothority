@@ -126,13 +126,13 @@ func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDs
 
 // CreateTransaction creates a transaction from a list of instructions.
 func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, error) {
-	if c.Genesis == nil {
-		if err := c.fetchGenesis(); err != nil {
+	if c.Latest == nil {
+		if _, err := c.GetChainConfig(); err != nil {
 			return ClientTransaction{}, err
 		}
 	}
 
-	h, err := extractHeader(c.Genesis)
+	h, err := extractHeader(c.Latest)
 	if err != nil {
 		return ClientTransaction{}, err
 	}

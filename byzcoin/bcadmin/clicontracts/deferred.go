@@ -85,14 +85,13 @@ func DeferredSpawn(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID(d.GetBaseID()),
-				Spawn:         &spawn,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(d.GetBaseID()),
+		Spawn:         &spawn,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
@@ -214,29 +213,30 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(instIDBuf),
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "addProof",
-				Args: []byzcoin.Argument{
-					{
-						Name:  "identity",
-						Value: identityBuf,
-					},
-					{
-						Name:  "signature",
-						Value: signature,
-					},
-					{
-						Name:  "index",
-						Value: indexBuf,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(instIDBuf),
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "addProof",
+			Args: []byzcoin.Argument{
+				{
+					Name:  "identity",
+					Value: identityBuf,
+				},
+				{
+					Name:  "signature",
+					Value: signature,
+				},
+				{
+					Name:  "index",
+					Value: indexBuf,
 				},
 			},
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-		}},
+		},
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
@@ -328,16 +328,14 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(instIDBuf),
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractDeferredID,
-				Command:    "execProposedTx",
-			},
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(instIDBuf),
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractDeferredID,
+			Command:    "execProposedTx",
+		},
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
@@ -482,14 +480,13 @@ func DeferredDelete(c *cli.Context) error {
 		ContractID: byzcoin.ContractDeferredID,
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
-				Delete:        &delete,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID([]byte(instIDBuf)),
+		Delete:        &delete,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
