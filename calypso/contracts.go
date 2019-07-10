@@ -31,9 +31,9 @@ func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	return c, nil
 }
 
-// Spawn is used to create a new write- or read-contract. The read-contract is created by the
-// write-instance, because the creation of a new read-instance is protected by the write-contract's
-// darc.
+// Spawn is used to create a new write- or read-contract. The read-contract is
+// created by the write-instance, because the creation of a new read-instance is
+// protected by the write-contract's darc.
 func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 

@@ -1,30 +1,27 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"time"
 
+	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/app"
 
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
 	"gopkg.in/urfave/cli.v1"
 )
-
-var cmds = cli.Commands{
-	{
-		Name:      "authorize",
-		Usage:     "store the byzcoin-id that should be trusted to create new LTS",
-		Aliases:   []string{"a"},
-		ArgsUsage: "private.toml",
-		Action:    authorize,
-	},
-}
 
 var cliApp = cli.NewApp()
 
@@ -37,12 +34,18 @@ func init() {
 	cliApp.Name = "csadmin"
 	cliApp.Usage = "Handle the calypso service"
 	cliApp.Version = gitTag
-	cliApp.Commands = cmds
+	cliApp.Commands = cmds // stored in "commands.go"
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
 			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+		cli.StringFlag{
+			Name:   "config, c",
+			EnvVar: "BC_CONFIG",
+			Value:  getDataPath("bcadmin"),
+			Usage:  "path to configuration-directory",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
@@ -82,4 +85,237 @@ func authorize(c *cli.Context) error {
 	log.Infof("Contacting %s to authorize byzcoin %x", si.Address, bc)
 	cl := calypso.NewClient(nil)
 	return cl.Authorize(si, bc)
+}
+
+// Runs a Distributed Key Generation, which is based on an LTS instance. If the
+// --export option is provided, the hexadecimal string representation of the
+// public key X is redirected to STDOUT.
+func dkgStart(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	_, bcl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return errors.New("failed to load config: " + err.Error())
+	}
+
+	instidstr := c.String("instid")
+	if instidstr == "" {
+		return errors.New("please provide an LTS instance ID with --instid")
+	}
+
+	instid, err := hex.DecodeString(instidstr)
+	if err != nil {
+		return errors.New("failed to decode LTS instance id: " + err.Error())
+	}
+
+	cl := calypso.NewClient(bcl)
+
+	resp, err := cl.BcClient.GetProof(instid)
+	if err != nil {
+		return errors.New("failed to get proof: " + err.Error())
+	}
+	exist, err := resp.Proof.InclusionProof.Exists(instid)
+	if err != nil {
+		return errors.New("failed to get inclusion proof: " + err.Error())
+	}
+	if !exist {
+		return errors.New("proof for the given \"--instid\" not found")
+	}
+
+	reply := &calypso.CreateLTSReply{}
+	err = cl.C.SendProtobuf(cl.BcClient.Roster.List[0], &calypso.CreateLTS{
+		Proof: resp.Proof,
+	}, reply)
+	if err != nil {
+		return errors.New("failed to send create LTS protobof: " + err.Error())
+	}
+
+	// Get the public key (X) as a string
+	keyBuf, err := reply.X.MarshalBinary()
+	if err != nil {
+		return errors.New("failed to marshal X: " + err.Error())
+	}
+	keyStr := hex.EncodeToString(keyBuf)
+
+	if c.Bool("export") {
+		reader := bytes.NewReader([]byte(keyStr))
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return errors.New("failed to copy to stdout: " + err.Error())
+		}
+		return nil
+	}
+
+	fmt.Fprintf(c.App.Writer, "LTS created:\n"+
+		"- ByzcoinID: %x\n- InstanceID: %x\n- X: %s\n",
+		reply.ByzCoinID, reply.InstanceID.Slice(), keyStr)
+
+	return nil
+}
+
+// decrypt gets the encrypted data of a write instance. If the proofs of the
+// write and read instances are correct, it then outputs a DecryptKeyReply. With
+// the --export option, the reply is protobuf encoded and sent to STDOUT.
+func decrypt(c *cli.Context) error {
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	_, bcl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return errors.New("failed to load config: " + err.Error())
+	}
+
+	cl := calypso.NewClient(bcl)
+
+	// needed to get the block interval for WaitProof
+	chainConfig, err := cl.BcClient.GetChainConfig()
+	if err != nil {
+		return errors.New("failed to get chain config: " + err.Error())
+	}
+
+	// Get and check the proof of an instance given an argument's name that
+	// contains the instance id as hexadecimal string.
+	getProof := func(iidArgs string) (*byzcoin.Proof, error) {
+		iidStr := c.String(iidArgs)
+		if iidStr == "" {
+			return nil, fmt.Errorf("please provide the "+
+				"instance id with --%s", iidArgs)
+		}
+		iid, err := hex.DecodeString(iidStr)
+		if err != nil {
+			return nil, errors.New("failed to decode instance id: " + err.Error())
+		}
+		proof, err := cl.BcClient.WaitProof(byzcoin.NewInstanceID(iid),
+			chainConfig.BlockInterval*10, nil)
+		if err != nil {
+			return nil, errors.New("couldn't get proof: " + err.Error())
+		}
+		exist, err := proof.InclusionProof.Exists(iid)
+		if err != nil {
+			return nil, errors.New("error while checking if proof exist: " + err.Error())
+		}
+		if !exist {
+			return nil, errors.New("proof not found")
+		}
+		match := proof.InclusionProof.Match(iid)
+		if !match {
+			return nil, errors.New("proof does not match")
+		}
+
+		return proof, nil
+	}
+
+	writeProof, err := getProof("writeid")
+	if err != nil {
+		return errors.New("failed to get write proof: " + err.Error())
+	}
+	readProof, err := getProof("readid")
+	if err != nil {
+		return errors.New("failed to get read proof: " + err.Error())
+	}
+
+	decryptKey := &calypso.DecryptKey{Write: *writeProof, Read: *readProof}
+
+	reply := &calypso.DecryptKeyReply{}
+	err = cl.C.SendProtobuf(cl.BcClient.Roster.List[0], decryptKey, reply)
+	if err != nil {
+		return errors.New("failed to send protobuf decryptkey: " + err.Error())
+	}
+
+	if c.Bool("export") {
+		// In case the --export option is provided, the DecryptKeyReply is
+		// encoded and sent to STDOUT.
+		buf, err := protobuf.Encode(reply)
+		if err != nil {
+			return errors.New("failed to encode reply: " + err.Error())
+		}
+		reader := bytes.NewReader(buf)
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return errors.New("failed to copy to stdout: " + err.Error())
+		}
+		return nil
+	}
+
+	fmt.Fprintf(c.App.Writer, "Got decrypt reply:\n"+
+		"- C: %s\n"+
+		"- xHat: %s\n"+
+		"- X: %s\n", reply.C, reply.XhatEnc, reply.X)
+
+	return nil
+}
+
+// recover decrypts an encrypted key stored in a DecryptKeyReply. It expects the
+// DecryptKeyReply to be protobuf encoded and passed in STDIN.
+// With the --export option, the recovered data is sent to STDOUT.
+func recover(c *cli.Context) error {
+	decryptKeyReplyBuf, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return errors.New("failed to read from stding: " + err.Error())
+	}
+
+	dkr := calypso.DecryptKeyReply{}
+	err = protobuf.Decode(decryptKeyReplyBuf, &dkr)
+	if err != nil {
+		return errors.New("failed to decode decryptKeyReply: " + err.Error())
+	}
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	cfg, _, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	keyPath := c.String("key")
+	var signer *darc.Signer
+	if keyPath == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadSigner(keyPath)
+	}
+	if err != nil {
+		return errors.New("failed to load key file: " + err.Error())
+	}
+
+	xc, err := signer.GetPrivate()
+	if err != nil {
+		return errors.New("failed to get private key: " + err.Error())
+	}
+
+	xcInv := xc.Clone().Neg(xc)
+	XhatDec := dkr.X.Clone().Mul(xcInv, dkr.X)
+	Xhat := XhatDec.Clone().Add(dkr.XhatEnc, XhatDec)
+	XhatInv := Xhat.Clone().Neg(Xhat)
+
+	// Decrypt r.C to keyPointHat
+	XhatInv.Add(dkr.C, XhatInv)
+	// if the private key is invalid, this will return an error
+	key, err := XhatInv.Data()
+	if err != nil {
+		return errors.New("failed to get embeded data: " + err.Error())
+	}
+
+	dataStr := string(key)
+	if c.Bool("export") {
+		reader := bytes.NewReader([]byte(dataStr))
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return errors.New("failed to copy to stdout: " + err.Error())
+		}
+		return nil
+	}
+
+	fmt.Fprintf(c.App.Writer, "Key decrypted:\n%s\n", dataStr)
+
+	return nil
 }

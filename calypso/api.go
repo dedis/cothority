@@ -18,9 +18,9 @@ import (
 
 // Client is a class to communicate to the calypso service.
 type Client struct {
-	bcClient *byzcoin.Client
-	c        *onet.Client
-	ltsReply *CreateLTSReply
+	BcClient *byzcoin.Client
+	C        *onet.Client
+	LtsReply *CreateLTSReply
 }
 
 // WriteReply is returned upon successfully spawning a Write instance.
@@ -39,7 +39,7 @@ type ReadReply struct {
 // It takes as input an "initialized" byzcoin client
 // with an already created ledger
 func NewClient(byzcoin *byzcoin.Client) *Client {
-	return &Client{bcClient: byzcoin, c: onet.NewClient(
+	return &Client{BcClient: byzcoin, C: onet.NewClient(
 		cothority.Suite, ServiceName)}
 }
 
@@ -71,17 +71,17 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 	if err := tx.FillSignersAndSignWith(signers...); err != nil {
 		return nil, err
 	}
-	if _, err := c.bcClient.AddTransactionAndWait(tx, 10); err != nil {
+	if _, err := c.BcClient.AddTransactionAndWait(tx, 10); err != nil {
 		return nil, err
 	}
-	resp, err := c.bcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	resp, err := c.BcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
 	if err != nil {
 		return nil, err
 	}
 
 	// Start the DKG
 	reply = &CreateLTSReply{}
-	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], &CreateLTS{
+	err = c.C.SendProtobuf(c.BcClient.Roster.List[0], &CreateLTS{
 		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
@@ -94,7 +94,7 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 // from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
 // Deprecated: please use Authorize.
 func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
-	return c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil)
+	return c.C.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil)
 }
 
 // Authorize adds a ByzCoinID to the list of authorized IDs in the server. To
@@ -115,7 +115,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 	if err != nil {
 		return err
 	}
-	err = c.c.SendProtobuf(who, &Authorize{
+	err = c.C.SendProtobuf(who, &Authorize{
 		ByzCoinID: what,
 		Timestamp: ts,
 		Signature: sig,
@@ -131,7 +131,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 // given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
-	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
+	err = c.C.SendProtobuf(c.BcClient.Roster.List[0], dkr, reply)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error)
 // WaitProof calls the byzcoin client's wait proof
 func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 	value []byte) (*byzcoin.Proof, error) {
-	return c.bcClient.WaitProof(id, interval, value)
+	return c.BcClient.WaitProof(id, interval, value)
 }
 
 // AddWrite creates a Write Instance by adding a transaction on the byzcoin client.
@@ -156,8 +156,7 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 //   - reply - WriteReply containing the transaction response and instance id
 //   - err - Error if any, nil otherwise.
 func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
-	darc darc.Darc, wait int) (
-	reply *WriteReply, err error) {
+	darc darc.Darc, wait int) (reply *WriteReply, err error) {
 	reply = &WriteReply{}
 	if err != nil {
 		return nil, err
@@ -184,7 +183,7 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 	}
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	//Delegate the work to the byzcoin client
-	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
+	reply.AddTxResponse, err = c.BcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +232,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 	if err != nil {
 		return nil, err
 	}
-	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
+	reply.AddTxResponse, err = c.BcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +279,7 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	if err != nil {
 		return nil, err
 	}
-	return c.bcClient.AddTransactionAndWait(ctx, wait)
+	return c.BcClient.AddTransactionAndWait(ctx, wait)
 }
 
 // RecoverKey is used to recover the secret key once it has been

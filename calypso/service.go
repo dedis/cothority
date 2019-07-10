@@ -499,7 +499,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	tree := roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to create ocs-protocol: " + err.Error())
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = write.U
@@ -529,11 +529,11 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvl3("Starting reencryption protocol")
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to set config for ocs-protocol: " + err.Error())
 	}
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to start ocs-protocol: " + err.Error())
 	}
 	if !<-ocsProto.Reencrypted {
 		return nil, errors.New("reencryption got refused")
@@ -542,7 +542,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to recover commit: " + err.Error())
 	}
 	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")

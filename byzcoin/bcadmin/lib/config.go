@@ -50,7 +50,7 @@ func LoadKeyFromString(id string) (*darc.Signer, error) {
 func LoadSigner(fn string) (*darc.Signer, error) {
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read this path: %s", fn)
 	}
 
 	var signer darc.Signer

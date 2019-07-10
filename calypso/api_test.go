@@ -169,7 +169,7 @@ func TestClient_Calypso(t *testing.T) {
 	//Create a secret key
 	key1 := []byte("secret key 1")
 	//Create a Write instance
-	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
+	write1 := NewWrite(cothority.Suite, calypsoClient.LtsReply.InstanceID,
 		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
 	//Write it to calypso
 	wr1, err := calypsoClient.AddWrite(write1, provider1, 1, *darc1, 10)
