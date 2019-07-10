@@ -11,9 +11,11 @@ import (
 	"os"
 	"time"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/calypso"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -96,7 +98,7 @@ func dkgStart(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
-	_, bcl, err := lib.LoadConfig(bcArg)
+	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
 		return errors.New("failed to load config: " + err.Error())
 	}
@@ -111,9 +113,7 @@ func dkgStart(c *cli.Context) error {
 		return errors.New("failed to decode LTS instance id: " + err.Error())
 	}
 
-	cl := calypso.NewClient(bcl)
-
-	resp, err := cl.BcClient.GetProof(instid)
+	resp, err := cl.GetProof(instid)
 	if err != nil {
 		return errors.New("failed to get proof: " + err.Error())
 	}
@@ -126,7 +126,8 @@ func dkgStart(c *cli.Context) error {
 	}
 
 	reply := &calypso.CreateLTSReply{}
-	err = cl.C.SendProtobuf(cl.BcClient.Roster.List[0], &calypso.CreateLTS{
+	oc := onet.NewClient(cothority.Suite, calypso.ServiceName)
+	err = oc.SendProtobuf(cl.Roster.List[0], &calypso.CreateLTS{
 		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
@@ -166,15 +167,13 @@ func decrypt(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
-	_, bcl, err := lib.LoadConfig(bcArg)
+	_, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
 		return errors.New("failed to load config: " + err.Error())
 	}
 
-	cl := calypso.NewClient(bcl)
-
 	// needed to get the block interval for WaitProof
-	chainConfig, err := cl.BcClient.GetChainConfig()
+	chainConfig, err := cl.GetChainConfig()
 	if err != nil {
 		return errors.New("failed to get chain config: " + err.Error())
 	}
@@ -191,7 +190,7 @@ func decrypt(c *cli.Context) error {
 		if err != nil {
 			return nil, errors.New("failed to decode instance id: " + err.Error())
 		}
-		proof, err := cl.BcClient.WaitProof(byzcoin.NewInstanceID(iid),
+		proof, err := cl.WaitProof(byzcoin.NewInstanceID(iid),
 			chainConfig.BlockInterval*10, nil)
 		if err != nil {
 			return nil, errors.New("couldn't get proof: " + err.Error())
@@ -223,7 +222,8 @@ func decrypt(c *cli.Context) error {
 	decryptKey := &calypso.DecryptKey{Write: *writeProof, Read: *readProof}
 
 	reply := &calypso.DecryptKeyReply{}
-	err = cl.C.SendProtobuf(cl.BcClient.Roster.List[0], decryptKey, reply)
+	oc := onet.NewClient(cothority.Suite, calypso.ServiceName)
+	err = oc.SendProtobuf(cl.Roster.List[0], decryptKey, reply)
 	if err != nil {
 		return errors.New("failed to send protobuf decryptkey: " + err.Error())
 	}
