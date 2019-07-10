@@ -6,6 +6,7 @@ import ch.epfl.dedis.byzcoin.transaction.*;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
@@ -481,5 +482,14 @@ public class ByzCoinRPCTest {
             testInstanceController.killConode(6);
             testInstanceController.killConode(7);
         }
+    }
+
+    @Test
+    void getByzCoinIDs() throws Exception {
+        List<SkipblockId> ids = ByzCoinRPC.getAllByzCoinIDs(bc.getRoster());
+        // The number of ids is unknown because the tests creates a lot of byzcoins,
+        // so we check that it's more than 0 and the one we know about is in it.
+        assertTrue(ids.size() > 0);
+        assertTrue(ids.contains(bc.getSkipchain().getID()));
     }
 }
