@@ -39,6 +39,7 @@ const dummyContract = "dummy"
 const slowContract = "slow"
 const panicContract = "panic"
 const invalidContract = "invalid"
+const versionContract = "testVersionContract"
 const stateChangeCacheContract = "stateChangeCacheTest"
 
 func TestMain(m *testing.M) {
@@ -462,6 +463,53 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	payload = DataBody{}
 	require.NoError(t, protobuf.Decode(proof.Proof.Latest.Payload, &payload))
 	require.Equal(t, 1, len(payload.TxResults))
+}
+
+// Test that a contract have access to the ByzCoin protocol version.
+func TestService_AddTransactionVersion(t *testing.T) {
+	s := newSerWithVersion(t, 1, testInterval, 4, disableViewChange, 0)
+	defer s.local.CloseAll()
+
+	// Send the first tx with a version 0 of the ByzCoin protocol. The contract
+	// checks that the value is equal to the version.
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{0}, s.signer, 1)
+	require.NoError(t, err)
+	atx := &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx1,
+		InclusionWait: 10,
+	}
+	_, err = s.service().AddTransaction(atx)
+	require.NoError(t, err)
+
+	// Upgrade the chain with a special block.
+	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, s.roster, 1)
+	require.NoError(t, err)
+
+	// Send another tx this time for the version 1 of the ByzCoin protocol.
+	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{1}, s.signer, 2)
+	require.NoError(t, err)
+	atx = &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx2,
+		InclusionWait: 10,
+	}
+	_, err = s.service().AddTransaction(atx)
+	require.NoError(t, err)
+
+	// This one will fail as the version must be 1.
+	tx3, err := createOneClientTxWithCounter(s.darc.GetBaseID(), versionContract, []byte{0}, s.signer, 3)
+	require.NoError(t, err)
+	atx = &AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.genesis.SkipChainID(),
+		Transaction:   tx3,
+		InclusionWait: 10,
+	}
+	_, err = s.service().AddTransaction(atx)
+	require.Error(t, err)
 }
 
 func TestService_GetProof(t *testing.T) {
@@ -1074,7 +1122,7 @@ func TestService_StateChange(t *testing.T) {
 		InstanceID:  inst.Slice(),
 		ContractID:  "add",
 		Value:       make([]byte, 8),
-	}}, 0)
+	}}, 0, CurrentVersion)
 	require.NoError(t, err)
 
 	n := 5
@@ -1165,7 +1213,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 		InstanceID:  iid.Slice(),
 		ContractID:  cid,
 		Value:       make([]byte, 8),
-	}}, 0)
+	}}, 0, CurrentVersion)
 	require.NoError(t, err)
 
 	log.Lvl1("Failing updating and removing non-existing instances")
@@ -1194,7 +1242,7 @@ func TestService_StateChangeVerification(t *testing.T) {
 	require.Equal(t, 3, len(scs))
 	require.Equal(t, 1, len(txOut))
 	require.Equal(t, true, txOut[0].Accepted)
-	require.Nil(t, cdb.StoreAll(scs, 0))
+	require.Nil(t, cdb.StoreAll(scs, 0, CurrentVersion))
 	// Clear cache so that the transactions get re-evaluated
 	delete(s.service().stateChangeCache.cache, string(s.genesis.SkipChainID()))
 	mkroot2, txOut, scs, _ = s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.genesis.SkipChainID(), txs, noTimeout, CurrentVersion)
@@ -2607,6 +2655,10 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 }
 
 func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Duration) *ser {
+	return newSerWithVersion(t, step, interval, n, rw, CurrentVersion)
+}
+
+func newSerWithVersion(t *testing.T, step int, interval time.Duration, n int, rw time.Duration, v Version) *ser {
 	s := &ser{
 		local:  onet.NewLocalTestT(tSuite, t),
 		value:  []byte("anyvalue"),
@@ -2616,6 +2668,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 	for _, sv := range s.local.GetServices(s.hosts, ByzCoinID) {
 		service := sv.(*Service)
 		service.rotationWindow = rw
+		service.defaultVersion = v
 		s.services = append(s.services, service)
 	}
 	registerDummy(s.hosts)
@@ -2626,6 +2679,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 			"spawn:" + invalidContract,
 			"spawn:" + panicContract,
 			"spawn:" + slowContract,
+			"spawn:" + versionContract,
 			"spawn:" + stateChangeCacheContract,
 			"delete:" + dummyContract,
 		}, s.signer.Identity())
@@ -2759,6 +2813,21 @@ func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Stat
 	return dummyContractFunc(cdb, inst, c)
 }
 
+// Simple contract that verifies if the available version is equal to the value.
+func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if rst.GetVersion() != Version(inst.Spawn.Args[0].Value[0]) {
+		return nil, nil, errors.New("wrong byzcoin version")
+	}
+
+	sc := NewStateChange(Create, NewInstanceID(inst.Hash()), versionContract, inst.Spawn.Args[0].Value, darcID)
+	return []StateChange{sc}, c, nil
+}
+
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.Service in the method signature doesn't work :(
@@ -2771,6 +2840,7 @@ func registerDummy(servers []*onet.Server) {
 		log.ErrFatal(err)
 		err = service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
 		log.ErrFatal(err)
+		err = service.testRegisterContract(versionContract, adaptor(versionContractFunc))
 	}
 }
 

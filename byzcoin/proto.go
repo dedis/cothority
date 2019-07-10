@@ -200,7 +200,7 @@ type Instruction struct {
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
 	Signatures [][]byte
-	// version is a private field that can allow a instruction to be passed
+	// version is a private field that can allow an instruction to be passed
 	// around with the context of a block with a specific version.
 	version Version
 }

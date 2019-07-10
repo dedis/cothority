@@ -162,6 +162,9 @@ func (s *rstSimul) GetProof(key []byte) (*trie.Proof, error) {
 func (s *rstSimul) GetIndex() int {
 	return -1
 }
+func (s *rstSimul) GetVersion() byzcoin.Version {
+	return byzcoin.CurrentVersion
+}
 func (s *rstSimul) GetNonce() ([]byte, error) {
 	return nil, errors.New("not implemented")
 }
