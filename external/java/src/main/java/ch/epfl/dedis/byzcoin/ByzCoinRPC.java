@@ -688,6 +688,24 @@ public class ByzCoinRPC {
     }
 
     /**
+     * Asks the roster for all the existing ByzCoin IDs.
+     *
+     * @param roster list of all cothority servers with public keys
+     * @return a list of SkipblockIds which are have a ByzCoin service running
+     * @throws CothorityCommunicationException if the communication fails or the message is corrupted
+     */
+    public static List<SkipblockId> getAllByzCoinIDs(Roster roster) throws CothorityCommunicationException {
+        ByzCoinProto.GetAllByzCoinIDsRequest.Builder b = ByzCoinProto.GetAllByzCoinIDsRequest.newBuilder();
+        ByteString msg = roster.sendMessage("ByzCoin/GetAllByzCoinIDsRequest", b.build());
+        try {
+            ByzCoinProto.GetAllByzCoinIDsResponse reply = ByzCoinProto.GetAllByzCoinIDsResponse.parseFrom(msg);
+            return reply.getIdsList().stream().map(SkipblockId::new).collect(Collectors.toList());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
      * The returned proof is not verified. Please call Proof.verify.
      *

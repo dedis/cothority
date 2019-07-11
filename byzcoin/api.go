@@ -395,7 +395,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	reply = &DownloadStateResponse{}
 	l := len(c.Roster.List)
 	index := l - 1
-	if l > 2 {
+	if l > 3 {
 		// This is the leader plus the subleaders, don't contact them
 		index = 1 + int(math.Ceil(math.Pow(float64(l), 1./3.)))
 	}
@@ -404,6 +404,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	// Because the last elements of the roster might be a view-changed,
 	// defective old leader, we start from the first non-subleader.
 	for index < l {
+		log.Lvl2("downloading state from", c.Roster.List[index])
 		err = c.SendProtobuf(c.Roster.List[index], &DownloadState{
 			ByzCoinID: byzcoinID,
 			Nonce:     nonce,
