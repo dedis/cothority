@@ -38,8 +38,6 @@ import (
 const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
-const bdnNewBlock = "SkipchainBDNNew"
-const bdnFollowBlock = "SkipchainBDNFollow"
 
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
@@ -1850,17 +1848,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
-	if err != nil {
-		return nil, err
-	}
-	// Register ByzCoinX protocols for BDN
-	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
-		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bdnNewBlock)
-	if err != nil {
-		return nil, err
-	}
-	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
-		s.bftForwardLink, s.bftForwardLinkAck, bdnFollowBlock)
 	if err != nil {
 		return nil, err
 	}

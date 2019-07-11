@@ -12,7 +12,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/onet/v3"
@@ -120,21 +119,6 @@ func TestBftCoSi(t *testing.T) {
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
 		runProtocol(t, n, 0, 0, protoName, 0)
-	}
-}
-
-func TestBdnCoSi(t *testing.T) {
-	const protoName = "TestBDN"
-	nNodes := []int{1, 2, 4, 9, 20}
-	if testing.Short() {
-		nNodes = []int{1, 4}
-	}
-
-	err := GlobalInitBdnCoSiProtocol(testSuite, verify, ack, protoName)
-	require.Nil(t, err)
-
-	for _, n := range nNodes {
-		runProtocol(t, n, 0, 0, protoName, 1)
 	}
 }
 
@@ -246,7 +230,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 		case 1:
 			return bdnproto.BdnSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		default:
-			return protocol.BlsSignature(sig.Sig).Verify(testSuite, proposal, publics)
+			return bdnproto.BdnSignature(sig.Sig).Verify(testSuite, proposal, publics)
 		}
 	}()
 	if err != nil {

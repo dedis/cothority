@@ -157,7 +157,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	if failure {
 		s = newSerN(t, 1, blockInterval, 4, disableViewChange)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(blockInterval * 2)
+			service.SetPropagationTimeout(5 * time.Second)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)

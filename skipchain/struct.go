@@ -490,7 +490,7 @@ func (sb *SkipBlock) SignatureProtocol() (string, string) {
 	case BlsSignatureSchemeIndex:
 		return bftNewBlock, bftFollowBlock
 	case BdnSignatureSchemeIndex:
-		return bdnNewBlock, bdnFollowBlock
+		return bftNewBlock, bftFollowBlock
 	default:
 		return "", ""
 	}

@@ -2367,6 +2367,13 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 		return nil
 	}
 
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return nil
+	}
+	s.closedMutex.Unlock()
+
 	// before doing anything, verify that byzcoin is consistent
 	st, err := s.getStateTrie(genesisID)
 	if err != nil {

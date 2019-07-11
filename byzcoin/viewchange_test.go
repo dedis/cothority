@@ -57,7 +57,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(2 * interval)
+		service.SetPropagationTimeout(5 * time.Second)
 	}
 
 	// Wait for all the genesis config to be written on all nodes.
