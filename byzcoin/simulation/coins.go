@@ -223,6 +223,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return errors.New("while adding transaction and waiting: " + err.Error())
 		}
+
+		// The AddTransactionAndWait returns as soon as the transaction is sent to the leader, but
+		// it doesn't wait until the transaction is included in all nodes. Thus this wait for
+		// the new block to be propagated.
+		time.Sleep(time.Second)
 		proof, err := c.GetProof(coinAddr2.Slice())
 		if err != nil {
 			return errors.New("couldn't get proof for transaction: " + err.Error())
@@ -236,7 +241,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return errors.New("couldn't decode account: " + err.Error())
 		}
-		log.Lvlf1("Account has %d", account.Value)
+		log.Lvlf1("Account has %d - total should be: %d", account.Value, s.Transactions*(round+1))
 		if account.Value != uint64(s.Transactions*(round+1)) {
 			return errors.New("account has wrong amount")
 		}

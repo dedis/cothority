@@ -1039,6 +1039,22 @@ func (s *Service) TestClose() {
 	}
 }
 
+// TestRestart stops and starts the service, initializing the skipchain-service
+// structure.
+func (s *Service) TestRestart() error {
+	s.TestClose()
+	db, bucket := s.GetAdditionalBucket([]byte("skipblocks"))
+	s.db = NewSkipBlockDB(db, bucket)
+	s.Storage = &Storage{}
+	// Don't reset the verifiers, keep them
+	//s.verifiers = map[VerifierID]SkipBlockVerifier{}
+	s.propTimeout = defaultPropagateTimeout
+	s.blockBuffer = newSkipBlockBuffer()
+	s.closed = false
+	s.closing = make(chan bool)
+	return s.tryLoad()
+}
+
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
@@ -1153,6 +1169,8 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		log.Errorf("got unexpected type %T", fsInt)
 		return false
 	}
+	log.Lvlf2("%s asked to sign forward-link to block %d : %x from %x",
+		s.ServerIdentity(), fs.Newest.Index, fs.Newest.Hash, fs.Previous)
 	if fs.TargetHeight != 0 {
 		log.Errorf("got unexpected target height: %d", fs.TargetHeight)
 		return false
@@ -1166,7 +1184,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		}
 		log.Lvl2(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
 		if err := s.SyncChain(fs.Newest.Roster, fs.Previous); err != nil {
-			log.Error("failed to sync skipchain", err)
+			log.Error("failed to sync skipchain:", err)
 			return false
 		}
 		prevSB = s.db.GetByID(fs.Previous)
@@ -1201,7 +1219,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 		for _, ver := range fs.Newest.VerifierIDs {
 			f, exists := s.verifiers[ver]
 			if !exists {
-				log.Lvlf2("Found no user verification for %x", ver)
+				log.Lvlf2("Found no user verification for %s", ver)
 				return false
 			}
 			// Now we call the verification function. Wrap up f() inside of
@@ -1241,7 +1259,18 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 	if ok {
 		s.verifyNewBlockBuffer.Delete(arr)
 	} else {
-		log.Errorf("%s got asked to acknowledge for unknown block %x", s.ServerIdentity(), msg)
+		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
+		if err != nil {
+			log.Error(s.ServerIdentity().Address, "Couldn't unmarshal ForwardSignature", data)
+			return false
+		}
+		fs, ok := fsInt.(*ForwardSignature)
+		if !ok {
+			log.Errorf("got unexpected type %T", fsInt)
+			return false
+		}
+		log.Errorf("%s refuses to acknowledge unknown forward-link to block %d : %x from %x",
+			s.ServerIdentity(), fs.Newest.Index, fs.Newest.Hash, fs.Previous)
 	}
 	return ok
 }
@@ -1531,6 +1560,11 @@ func (s *Service) propagateGenesisHandler(msg network.Message) error {
 // propagateForwardLinkHandler will update the latest block with
 // the new forward link and the new block when given
 func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
+	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
+	if s.closed {
+		return errors.New("service is closed")
+	}
 	pfl, ok := msg.(*PropagateForwardLink)
 	if !ok {
 		return errors.New("Couldn't convert to a ForwardLink propagation")
