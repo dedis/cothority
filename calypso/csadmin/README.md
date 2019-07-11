@@ -9,30 +9,40 @@ provides the fastest and simplest way to use Calypso.
 This scenario shows a complete use path from the creation of the LTS to the
 recover of encrypted data.
 
-In this scenario, we are always using the default signer and the default darc,
-which are the admin ones. In most of the cases, those can (and should) be
-specified with the `--sign` and `--darc` options.
+In this scenario we assume the following:
+
+- A roster has been created and has a ByzcoinID \<byzcoin id>
+- There is a writer user, which has the key \<writer id>
+- There is a reader user, which has the key \<reader id>
+- There is a document darc \<doc darc>, which is has the following rules:  
+    `spawn:calypsoWrite - <writer id>`  
+    `spawn:calypsoRead - <reader id>`
+- The default admin darc has the rule:   
+`spawn:longTermSecret - <admin id>`
+
+Refer to `cothority/byzcoin/bcadmin` to learn how to set up this environment.
+For most of the commands presented it is also possible to not provide any
+`--sign` or `--darc`, which will use by default the admin darc and the admin
+identity.
 
 For testing purposes, we recommend running `go build && ./run_nodes.sh -d tmp -v
 2` from `cothority/conode` in order to launch a test setup with 3 conodes. Then
-a roster can be created with `bcadmin create tmp/public.toml`. The byzcoin id
+a roster can be created with `bcadmin create tmp/public.toml`. The \<byzcoin id>
 needed later will be printed.
 
-**1) Authorize nodes and add the Calypso rules**
+**1) Authorize nodes**
 
-Each node must be authorized in order to be able to participate in the DKG
-(Distributed Key Generation). The following command must be done for each
-"private.toml" file of the nodes: 
+Each node (sometimes called *conode*) must agree to process LTS (Long Term
+Secret) / DKG (Distributed Key Generation) transactions for a particular
+ByzcoinID. This must be done locally for each node, providing the ByzcoinID and
+the private key file of the node. A ByzcoinID that has not been authorized by (a
+majority of) the nodes won't be able to perform requests for the Calypso
+service.
+
+The following command must be executed from the localhost of each node: 
 
 ```bash
 $ csadmin authorize <private.toml> <byzcoin id>
-```
-
-Then add the rules for the specific Calypso contracts:
-
-```bash
-bcadmin darc rule -rule spawn:calypsoWrite --identity <identity>
-bcadmin darc rule -rule spawn:calypsoRead --identity <identity>
 ```
 
 **2) Create an instance of LTS**
@@ -40,7 +50,7 @@ bcadmin darc rule -rule spawn:calypsoRead --identity <identity>
 Spawn a new instance of the LTS contract:
 
 ```bash
-$ csadmin contract lts spawn
+$ csadmin contract lts spawn # uses the default admin darc and key
 > Spawned new LTS contract. Its instance id is: 
 > <lts instance id>
 ```
@@ -67,18 +77,20 @@ With the instance id of the previously spawned LTS contract and the public key,
 spawn the write instance:
 
 ```bash
-$ csadmin contract write spawn --instid <lts instance id> --data "Hello, world." -key <lts public key>
+$ csadmin contract write spawn --instid <lts instance id>\
+        --data "Hello, world." --key <lts public key>\
+        --darc <doc darc> --sign <writer id>
 > spawned a new write instance. Its instance id is:
 > <write instance id>
 ```
 
 **5) Spawn a read instance**
 
-With the instance id of previously spawned write instance, request a read on the
-encrypted data:
+With the instance id of the previously spawned write instance, request a read on
+the encrypted data:
 
 ```bash
-$ csadmin contract read spawn --instid <write instance id>
+$ csadmin contract read spawn --instid <write instance id> --sign <reader id>
 > Spawned a new read instance. Its instance id is:
 > <read instance id>
 ```
@@ -88,8 +100,12 @@ should be used to encrypt the data. But it is possible to provide a different
 public key as a hexadecimal string:
 
 ```bash
-$ csadmin contract read spawn --instid <write instance id> --key <hex pub key>
+$ csadmin contract read spawn --instid <write instance id>\
+          --key <hex pub key> --sign <reader id>
 ```
+
+Note: `--darc` is not needed because it will use the DARC associated with the
+write instance.
 
 **6) Send a decrypt request**
 
@@ -115,9 +131,8 @@ $ csadmin recover < reply.bin
 > Hello, world.
 ```
 
-alternatively, it is possible to specify the path of the private key that should
-be used to decrypt the re-encrypted data:
+Alternatively, the path to a private key file can be provided:
 
-```bash
-$ csadmin recover --key <private key path> < reply.bin
+```
+$ csadmin recover -key <private key path> < reply.bin
 ```
