@@ -22,8 +22,8 @@ docker: clean Dockerfile
 	docker tag $(IMAGE_NAME):$(BUILD_TAG) $(IMAGE_NAME):dev
 
 # Use this target to build from local source instead of from publish sources.
-docker_dev: clean Dockerfile-dev verify exe/conode.Linux.x86_64
-	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
+docker_dev: clean Dockerfile.dev verify exe/conode.Linux.x86_64
+	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile.dev .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):dev
 
 docker_push: docker

@@ -1,0 +1,12 @@
+FROM debian:stretch-slim
+WORKDIR /root/
+
+COPY ./docker-common.sh .
+RUN ./docker-common.sh
+
+COPY run_nodes.sh .
+COPY exe/conode.Linux.x86_64 ./conode
+
+EXPOSE 7770 7771
+
+CMD ["./run_nodes.sh", "-n", "1"]

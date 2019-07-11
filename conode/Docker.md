@@ -75,7 +75,7 @@ To create your own docker-image and use it, you can create it like this:
 ```bash
 go get github.com/dedis/cothority
 cd $(go env GOPATH)/src/github.com/dedis/cothority/conode
-make docker
+BUILD_TAG=v3.1.2 make docker # Use the latest build tag
 ```
 
 If you use `make docker_run` the first time, a directory called `conode_data` will be
