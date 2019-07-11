@@ -133,7 +133,7 @@ var cmds = cli.Commands{
 							},
 							cli.StringFlag{
 								Name:  "darc",
-								Usage: "DARC with the right to create an LTS (default is the admin DARC)",
+								Usage: "DARC with the right to create a Write instance (default is the admin DARC)",
 							},
 							cli.StringFlag{
 								Name:  "sign, s",
@@ -179,7 +179,7 @@ var cmds = cli.Commands{
 							},
 							cli.StringFlag{
 								Name:  "instid, i",
-								Usage: "the instance id of the spawned LTS contract",
+								Usage: "the instance id of the Write contract",
 							},
 							cli.StringFlag{
 								Name:  "key",

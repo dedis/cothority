@@ -295,17 +295,9 @@ func recover(c *cli.Context) error {
 		return errors.New("failed to get private key: " + err.Error())
 	}
 
-	xcInv := xc.Clone().Neg(xc)
-	XhatDec := dkr.X.Clone().Mul(xcInv, dkr.X)
-	Xhat := XhatDec.Clone().Add(dkr.XhatEnc, XhatDec)
-	XhatInv := Xhat.Clone().Neg(Xhat)
-
-	// Decrypt r.C to keyPointHat
-	XhatInv.Add(dkr.C, XhatInv)
-	// if the private key is invalid, this will return an error
-	key, err := XhatInv.Data()
+	key, err := dkr.RecoverKey(xc)
 	if err != nil {
-		return errors.New("failed to get embeded data: " + err.Error())
+		return errors.New("failed to recover the key: " + err.Error())
 	}
 
 	dataStr := string(key)

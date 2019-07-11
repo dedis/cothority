@@ -28,7 +28,7 @@ testContractLTSInvoke() {
 
     # Fail because this identity is not allowed in the default used admin darc
     #
-    # This test should be done, but we end up with a "Got a duplicate
+    # TODO: This test should be done, but we end up with a "Got a duplicate
     # transaction, ignoring it" later it we do. 
     #
     # testFail runCA contract lts spawn --sign "$KEY" Let's add the identity and

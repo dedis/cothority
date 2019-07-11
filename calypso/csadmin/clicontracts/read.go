@@ -77,6 +77,12 @@ func ReadSpawn(c *cli.Context) error {
 		return errors.New("proof does not match")
 	}
 
+	var write calypso.Write
+	err = proof.VerifyAndDecode(cothority.Suite, calypso.ContractWriteID, &write)
+	if err != nil {
+		return errors.New("didn't get a write instance: " + err.Error())
+	}
+
 	var xc kyber.Point
 	key := c.String("key")
 	if key == "" {
