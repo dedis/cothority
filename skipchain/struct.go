@@ -1275,7 +1275,11 @@ func (db *SkipBlockDB) storeToTx(tx *bbolt.Tx, sb *SkipBlock) error {
 // An error is thrown if marshalling fails.
 // The caller must ensure that this function is called from within a valid transaction.
 func (db *SkipBlockDB) getFromTx(tx *bbolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
-	val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
+	b := tx.Bucket([]byte(db.bucketName))
+	if b == nil {
+		return nil, errors.New("bucket does not exist")
+	}
+	val := b.Get(sbID)
 	if val == nil {
 		return nil, nil
 	}
