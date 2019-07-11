@@ -46,8 +46,11 @@ func init() {
 		cli.StringFlag{
 			Name:   "config, c",
 			EnvVar: "BC_CONFIG",
-			Value:  getDataPath("bcadmin"),
-			Usage:  "path to configuration-directory",
+			// We use the bcadmin config folder because the bcadmin utiliy is
+			// the prefered way to generate the config files. And this is where
+			// bcadmin will put them.
+			Value: getDataPath(lib.BcaName),
+			Usage: "path to configuration-directory",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
