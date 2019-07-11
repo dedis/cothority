@@ -126,6 +126,18 @@ public class NamingInstance {
         bc.sendTransactionAndWait(makeRemoveTx(instanceName, iID, signers, signerCtrs), wait);
     }
 
+    /**
+     * Resolves a previously named instance ID from a darc ID and a name.
+     *
+     * @param dID  is the darc ID that guards the instance.
+     * @param name is the name given to the instance when it was named.
+     * @return the instance ID.
+     * @throws CothorityCommunicationException if the name does not exist or other failures.
+     */
+    public InstanceId resolve(DarcId dID, String name) throws CothorityCommunicationException {
+        return bc.resolveInstanceID(dID, name);
+    }
+
     private NamingInstance(ByzCoinRPC bc, Instance instance) throws CothorityNotFoundException {
         if (!instance.getContractId().equals(ContractId)) {
             logger.error("wrong contractId: {}", instance.getContractId());
