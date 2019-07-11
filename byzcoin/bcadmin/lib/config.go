@@ -20,7 +20,7 @@ import (
 // ConfigPath points to where the files will be stored by default.
 var ConfigPath = "."
 
-// BCAName is used for cliApp.Name and the default config folder of bcadmin.
+// BcaName is used for cliApp.Name and the default config folder of bcadmin.
 const BcaName = "bcadmin"
 
 // Config is the structure used by ol to save its configuration. It holds
