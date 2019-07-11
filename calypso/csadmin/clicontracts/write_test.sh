@@ -35,7 +35,7 @@ testContractWriteInvoke() {
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
 
-    # Fail because the Calypso rule "pawn:calypsoWrite" has not been added
+    # Fail because the Calypso rule "spawn:calypsoWrite" has not been added
     testFail runCA contract write spawn --darc $ID --sign $KEY --instid $LTS_ID --data "Hello world." --key $PUB_KEY
 
     # Add the missing Calypso rule

@@ -35,7 +35,7 @@ testContractReadInvoke() {
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
 
-    # Add the Calypso rule "pawn:calypsoWrite"
+    # Add the Calypso rule "spawn:calypsoWrite"
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
     OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --data "Hello world." --key "$PUB_KEY"`
