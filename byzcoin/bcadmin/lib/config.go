@@ -20,9 +20,9 @@ import (
 // ConfigPath points to where the files will be stored by default.
 var ConfigPath = "."
 
-// Config is the structure used by ol to save its configuration. It holds everything
-// necessary to talk to a ByzCoin instance. The AdminDarc and AdminIdentity
-// can change over the lifetime of a ledger.
+// Config is the structure used by ol to save its configuration. It holds
+// everything necessary to talk to a ByzCoin instance. The AdminDarc and
+// AdminIdentity can change over the lifetime of a ledger.
 type Config struct {
 	Roster        onet.Roster
 	ByzCoinID     skipchain.SkipBlockID
@@ -30,7 +30,8 @@ type Config struct {
 	AdminIdentity darc.Identity
 }
 
-// LoadKey returns the signer of a given identity. It searches it in the ConfigPath.
+// LoadKey returns the signer of a given identity. It searches it in the
+// ConfigPath.
 func LoadKey(id darc.Identity) (*darc.Signer, error) {
 	// Find private key file.
 	fn := fmt.Sprintf("key-%s.cfg", id)
@@ -38,7 +39,8 @@ func LoadKey(id darc.Identity) (*darc.Signer, error) {
 	return LoadSigner(fn)
 }
 
-// LoadKeyFromString returns a signer based on a string representing the public identity of the signer
+// LoadKeyFromString returns a signer based on a string representing the public
+// identity of the signer
 func LoadKeyFromString(id string) (*darc.Signer, error) {
 	// Find private key file.
 	fn := fmt.Sprintf("key-%s.cfg", id)
@@ -50,7 +52,8 @@ func LoadKeyFromString(id string) (*darc.Signer, error) {
 func LoadSigner(fn string) (*darc.Signer, error) {
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read this path: %s", fn)
+		return nil, fmt.Errorf("failed to read this path: '%s': "+
+			"%s", fn, err.Error())
 	}
 
 	var signer darc.Signer

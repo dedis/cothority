@@ -48,7 +48,7 @@ $ csadmin contract lts spawn
 **3) Start a new DKG**
 
 With the instance id of the previously spawned LTS contract, start the new DKG.
-X is the collective publi key:
+X is the collective public key:
 
 ```bash
 $ csadmin dkg start --instid <lts instance id>
