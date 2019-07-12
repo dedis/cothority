@@ -30,8 +30,8 @@ main(){
     run testDkgStart
     run testContractWrite
     run testContractRead
+    run testReencrypt
     run testDecrypt
-    run testRecover
     stopTest
 }
 
@@ -111,7 +111,7 @@ testDkgStart(){
 # - csadmin authorize
 # - csadmin contract write spawn
 # - csadmin contract read spawn
-testDecrypt(){
+testReencrypt(){
     rm -f config/*
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -159,8 +159,8 @@ testDecrypt(){
     # a wrong writeid
     testFail runCA decrypt --writeid aef123 --readid $READ_ID
 
-    # Run a decrypt and check the output
-    OUTRES=`runCA decrypt --writeid $WRITE_ID --readid $READ_ID`
+    # Run a reencrypt and check the output
+    OUTRES=`runCA reencrypt --writeid $WRITE_ID --readid $READ_ID`
     # OUTRES=`echo "$OUTRES" | tr -d '\n'`
     matchOK "$OUTRES" "Got decrypt reply:
 - C: [0-9a-f]{64}
@@ -169,7 +169,7 @@ testDecrypt(){
 
     # Check if the --export option is okay. We will check the exported content
     # while using `csadmin recover`.
-    testOK runCA decrypt --writeid $WRITE_ID --readid $READ_ID -x
+    testOK runCA reencrypt --writeid $WRITE_ID --readid $READ_ID -x
 }
 
 # rely on:
@@ -179,7 +179,7 @@ testDecrypt(){
 # - csadmin contract read spawn
 # - csadmin decrypt
 # - bcadmin key
-testRecover(){
+testDecrypt(){
     rm -f config/*
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -221,21 +221,21 @@ testRecover(){
     READ_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $READ_ID ^[0-9a-f]{64}$
 
-    # run the decrypt and save the reply
-    runCA decrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
+    # run the reencrypt and save the reply
+    runCA reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
 
     # should fail since it will use the default key, the admin one, and this is
     # not the key that was set for the read request
-    OUTRES=`runCA recover < reply.bin`
+    OUTRES=`runCA decrypt < reply.bin`
     testNGrep "Hello world" echo "$OUTRES"
 
     # should pass with the correct --key
-    OUTRES=`runCA recover --key config/key-$KEY.cfg < reply.bin`
+    OUTRES=`runCA decrypt --key config/key-$KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
 Hello world."
 
     # Check the export option
-    runCA recover --key config/key-$KEY.cfg -x < reply.bin > data.txt
+    runCA decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
     matchOK "`cat data.txt`" "Hello world."
 
     # Not lets try to generate a new key and use this one to encrypt the data:
@@ -258,19 +258,19 @@ Hello world."
     matchOK $READ_ID ^[0-9a-f]{64}$
 
     # 3:
-    runCA decrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
+    runCA reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
 
     # 4:
 
     # should fail with the default key
-    OUTRES=`runCA recover < reply.bin`
+    OUTRES=`runCA decrypt < reply.bin`
     testNGrep "Hello world" echo "$OUTRES"
     # should fail with the key used to sign
-    OUTRES=`runCA recover --key config/key-$KEY.cfg < reply.bin`
+    OUTRES=`runCA decrypt --key config/key-$KEY.cfg < reply.bin`
     testNGrep "Hello world" echo "$OUTRES"
     
     # should now work with the newly created key
-    OUTRES=`runCA recover --key config/key-$NEW_KEY.cfg < reply.bin`
+    OUTRES=`runCA decrypt --key config/key-$NEW_KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
 Hello world."
 }

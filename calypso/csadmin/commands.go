@@ -40,9 +40,9 @@ var cmds = cli.Commands{
 		},
 	},
 	{
-		Name:   "decrypt",
-		Usage:  "decrypts a symmetric key given the proofs of write and read instances",
-		Action: decrypt,
+		Name:   "reencrypt",
+		Usage:  "decrypt and reencrypt a symmetric key given the proofs of write and read instances",
+		Action: reencrypt,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:   "bc",
@@ -64,9 +64,9 @@ var cmds = cli.Commands{
 		},
 	},
 	{
-		Name:   "recover",
-		Usage:  "recover an encrypted key given in STDIN the DecryptKeyReply struct",
-		Action: recover,
+		Name:   "decrypt",
+		Usage:  "decrypt a re-encrypted key given in STDIN the DecryptKeyReply struct",
+		Action: decrypt,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:   "bc",
@@ -85,7 +85,7 @@ var cmds = cli.Commands{
 	},
 	{
 		Name:  "contract",
-		Usage: "use contracts",
+		Usage: "Provides cli interface for contracts",
 		Subcommands: cli.Commands{
 			{
 				Name:  "lts",

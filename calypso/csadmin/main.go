@@ -160,10 +160,11 @@ func dkgStart(c *cli.Context) error {
 	return nil
 }
 
-// decrypt gets the encrypted data of a write instance. If the proofs of the
-// write and read instances are correct, it then outputs a DecryptKeyReply. With
-// the --export option, the reply is protobuf encoded and sent to STDOUT.
-func decrypt(c *cli.Context) error {
+// reencrypt decrypts the encrypted data of a write instance and re-encrypts it
+// under the specified key of the write instance. If the proofs of the write and
+// read instances are correct, it then outputs a DecryptKeyReply. With the
+// --export option, the reply is protobuf encoded and sent to STDOUT.
+func reencrypt(c *cli.Context) error {
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
@@ -254,10 +255,10 @@ func decrypt(c *cli.Context) error {
 	return nil
 }
 
-// recover decrypts an encrypted key stored in a DecryptKeyReply. It expects the
-// DecryptKeyReply to be protobuf encoded and passed in STDIN.
-// With the --export option, the recovered data is sent to STDOUT.
-func recover(c *cli.Context) error {
+// decrypt decrypts a re-encrypted key stored in a DecryptKeyReply. It expects
+// the DecryptKeyReply to be protobuf encoded and passed in STDIN. With the
+// --export option, the recovered data is sent to STDOUT.
+func decrypt(c *cli.Context) error {
 	decryptKeyReplyBuf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return errors.New("failed to read from stding: " + err.Error())
