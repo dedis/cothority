@@ -172,6 +172,7 @@ type downloadState struct {
 	nonce uint64
 	read  chan DBKeyValue
 	stop  chan bool
+	total int
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -570,11 +571,13 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 		s.downloadState.stop = make(chan bool)
 		nonce := binary.LittleEndian.Uint64(random.Bits(64, true, random.New()))
 		s.downloadState.nonce = nonce
+		total := make(chan int)
 		go func(ds downloadState) {
 			idStr := fmt.Sprintf("%x", ds.id)
 			db, bucketName := s.GetAdditionalBucket([]byte(idStr))
 			err := db.View(func(tx *bbolt.Tx) error {
 				bucket := tx.Bucket(bucketName)
+				total <- bucket.Stats().KeyN
 				return bucket.ForEach(func(k []byte, v []byte) error {
 					key := make([]byte, len(k))
 					copy(key, k)
@@ -595,12 +598,14 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 			}
 			close(ds.read)
 		}(s.downloadState)
+		s.downloadState.total = <-total
 	} else if !s.downloadState.id.Equal(req.ByzCoinID) || req.Nonce != s.downloadState.nonce {
 		return nil, errors.New("download has been aborted in favor of another download")
 	}
 
 	resp = &DownloadStateResponse{
 		Nonce: s.downloadState.nonce,
+		Total: s.downloadState.total,
 	}
 query:
 	for i := 0; i < req.Length; i++ {
@@ -1041,6 +1046,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		var db *bbolt.DB
 		var bucketName []byte
 		var nonce uint64
+		var cursor int
 		for {
 			// Note: we trust the chain therefore even if the reply is corrupted,
 			// it will be detected by difference in the root hash
@@ -1048,6 +1054,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			if err != nil {
 				return errors.New("cannot download trie: " + err.Error())
 			}
+			log.Lvlf1("Downloaded key/values %d..%d of %d from %s", cursor, cursor+len(resp.KeyValues), resp.Total,
+				cl.NoncesSI[resp.Nonce])
+			cursor += len(resp.KeyValues)
 			if db == nil {
 				db, bucketName = s.GetAdditionalBucket([]byte(idStr))
 				nonce = resp.Nonce
