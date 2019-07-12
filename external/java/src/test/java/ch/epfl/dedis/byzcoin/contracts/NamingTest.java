@@ -82,21 +82,9 @@ public class NamingTest {
                         counters.getCounters(),
                         10));
 
-        // Because the current hashing of the ClientTransaction does not include the command,
-        // the removeAndWait will be interpreted as the same instruction as before and rejected.
-        // Insert a dummy instruction here.
-        //
-        // No need to increment because it failed previously)
-        logger.info("dummy name");
-        namingInst.setAndWait("my genesis darc 2",
-                new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
-                Collections.singletonList(admin),
-                counters.getCounters(),
-                10);
-
         // remove the name
+        // No need to increment because it failed previously)
         logger.info("remove name");
-        counters.increment();
         namingInst.removeAndWait("my genesis darc",
                 new InstanceId(bc.getGenesisDarc().getBaseId().getId()),
                 Collections.singletonList(admin),

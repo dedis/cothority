@@ -66,7 +66,7 @@ func TestService_Naming(t *testing.T) {
 						},
 						{
 							Name:  "name",
-							Value: []byte("my genesis darc with bad signature"),
+							Value: []byte("my genesis darc"),
 						},
 					},
 				},
