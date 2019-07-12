@@ -144,8 +144,16 @@ var cmds = cli.Commands{
 								Usage: "the instance id of the spawned LTS contract",
 							},
 							cli.StringFlag{
+								Name:  "secret",
+								Usage: "data to be encrypted, has limited space regarding the kyber.Suite used (29 bits for ed25519)",
+							},
+							cli.StringFlag{
 								Name:  "data",
-								Usage: "data to be encrypted",
+								Usage: "cleartext data that can be stored in the Write contract (optional). Is not used if --readin is provided.",
+							},
+							cli.BoolFlag{
+								Name:  "readin",
+								Usage: "if provided, the --data flag is not used and the data is read from STDIN",
 							},
 							cli.StringFlag{
 								Name:  "key",
@@ -154,6 +162,22 @@ var cmds = cli.Commands{
 							cli.BoolFlag{
 								Name:  "export, x",
 								Usage: "the instance id is exported to stdout",
+							},
+						},
+					},
+					{
+						Name:   "get",
+						Usage:  "if the proof matches, prints the content of the given Write instance ID",
+						Action: clicontracts.WriteGet,
+						Flags: []cli.Flag{
+							cli.StringFlag{
+								Name:   "bc",
+								EnvVar: "BC",
+								Usage:  "the ByzCoin config to use (required)",
+							},
+							cli.StringFlag{
+								Name:  "instid, i",
+								Usage: "the instance id (required)",
 							},
 						},
 					},

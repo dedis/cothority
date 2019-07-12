@@ -78,7 +78,7 @@ spawn the write instance:
 
 ```bash
 $ csadmin contract write spawn --instid <lts instance id>\
-        --data "Hello, world." --key <lts public key>\
+        --secret "Hello, world." --key <lts public key>\
         --darc <doc darc> --sign <writer id>
 > spawned a new write instance. Its instance id is:
 > <write instance id>

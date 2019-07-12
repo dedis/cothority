@@ -261,7 +261,7 @@ func reencrypt(c *cli.Context) error {
 func decrypt(c *cli.Context) error {
 	decryptKeyReplyBuf, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return errors.New("failed to read from stding: " + err.Error())
+		return errors.New("failed to read from stdin: " + err.Error())
 	}
 
 	dkr := calypso.DecryptKeyReply{}

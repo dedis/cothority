@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"go.dedis.ch/cothority/v3"
@@ -43,9 +44,21 @@ func WriteSpawn(c *cli.Context) error {
 		return err
 	}
 
-	data := c.String("data")
-	if data == "" {
-		return errors.New("please provide data with --data")
+	var dataBuf []byte
+	if c.Bool("readin") {
+		dataBuf, err = ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return errors.New("failed to read from stdin: " + err.Error())
+		}
+		// We found out that a newline is automatically added when using pipes
+		dataBuf = bytes.TrimRight(dataBuf, "\n")
+	} else {
+		dataBuf = []byte(c.String("data"))
+	}
+
+	secret := c.String("secret")
+	if secret == "" {
+		return errors.New("please provide secret with --secret")
 	}
 
 	instidstr := c.String("instid")
@@ -76,11 +89,12 @@ func WriteSpawn(c *cli.Context) error {
 	reply := &calypso.WriteReply{}
 
 	write := calypso.NewWrite(cothority.Suite, instid, d.GetBaseID(), p,
-		[]byte(data))
+		[]byte(secret))
 	if write == nil {
 		return errors.New("got a nil write, this is due to a key that is " +
 			"too long to be embeded")
 	}
+	write.Data = dataBuf
 	writeBuf, err := protobuf.Encode(write)
 	if err != nil {
 		return errors.New("failed to encode Write struct: " + err.Error())
@@ -135,6 +149,58 @@ func WriteSpawn(c *cli.Context) error {
 
 	fmt.Fprintf(c.App.Writer, "Spawned a new write instance. "+
 		"Its instance id is:\n%s\n", iidStr)
+
+	return nil
+}
+
+// WriteGet checks the proof and retrieves the value of a Write contract.
+func WriteGet(c *cli.Context) error {
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	_, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	instID := c.String("instid")
+	if instID == "" {
+		return errors.New("--instid flag is required")
+	}
+	instIDBuf, err := hex.DecodeString(instID)
+	if err != nil {
+		return errors.New("failed to decode the instID string")
+	}
+
+	pr, err := cl.GetProofFromLatest(instIDBuf)
+	if err != nil {
+		return errors.New("couldn't get proof: " + err.Error())
+	}
+	proof := pr.Proof
+
+	exist, err := proof.InclusionProof.Exists(instIDBuf)
+	if err != nil {
+		return errors.New("error while checking if proof exist: " + err.Error())
+	}
+	if !exist {
+		return errors.New("proof not found")
+	}
+
+	match := proof.InclusionProof.Match(instIDBuf)
+	if !match {
+		return errors.New("proof does not match")
+	}
+
+	var write calypso.Write
+	err = proof.VerifyAndDecode(cothority.Suite, calypso.ContractWriteID, &write)
+	if err != nil {
+		return errors.New("didn't get a write instance: " + err.Error())
+	}
+
+	fmt.Fprintf(c.App.Writer, "%s\n", write)
 
 	return nil
 }

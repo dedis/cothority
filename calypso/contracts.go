@@ -2,6 +2,8 @@ package calypso
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -19,6 +21,23 @@ const ContractWriteID = "calypsoWrite"
 type ContractWrite struct {
 	byzcoin.BasicContract
 	Write
+}
+
+// String returns a human readable string representation of the Write data
+func (w Write) String() string {
+	out := new(strings.Builder)
+	out.WriteString("- Write:\n")
+	fmt.Fprintf(out, "-- Data: %s\n", w.Data)
+	fmt.Fprintf(out, "-- U: %s\n", w.U)
+	fmt.Fprintf(out, "-- Ubar: %s\n", w.Ubar)
+	fmt.Fprintf(out, "-- E: %s\n", w.E)
+	fmt.Fprintf(out, "-- F: %s\n", w.F)
+	fmt.Fprintf(out, "-- C: %s\n", w.C)
+	fmt.Fprintf(out, "-- ExtraData: %s\n", w.ExtraData)
+	fmt.Fprintf(out, "-- LTSID: %s\n", w.LTSID)
+	fmt.Fprintf(out, "-- Cost: %x\n", w.Cost)
+
+	return out.String()
 }
 
 func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {

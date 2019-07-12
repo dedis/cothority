@@ -144,7 +144,7 @@ testReencrypt(){
     
     # Spawn write
     OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY"\
-                    --instid "$LTS_ID" --data "Hello world." --key "$PUB_KEY"`
+                    --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -212,7 +212,7 @@ testDecrypt(){
     
     # Spawn write
     OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" \
-                    --instid "$LTS_ID" --data "Hello world." --key "$PUB_KEY"`
+                    --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -238,7 +238,9 @@ Hello world."
     runCA decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
     matchOK "`cat data.txt`" "Hello world."
 
-    # Not lets try to generate a new key and use this one to encrypt the data:
+    #
+    # Now lets try to generate a new key and use this one to encrypt the data:
+    #
     #  1: generate a new key
     #  2: create a new read request
     #  3: get re-encrypted data based on the read and write requests

@@ -38,7 +38,7 @@ testContractReadInvoke() {
     # Add the Calypso rule "spawn:calypsoWrite"
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
-    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --data "Hello world." --key "$PUB_KEY"`
+    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
 
     # Should fail because we miss the "spawn:calypsoRead" rule
