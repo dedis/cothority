@@ -64,8 +64,9 @@ testAuth(){
     bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
     testOK runCA authorize private_wrong.toml $bcID
 
-    # It is important to unset it because when its true a message log is printed
-    # each time and that invalidates some of our test that checks the output.
+    # It is important to unset it because when it's true a message log is
+    # printed each time and that invalidates some of our tests that checks the
+    # output.
     unset COTHORITY_ALLOW_INSECURE_ADMIN
 }
 

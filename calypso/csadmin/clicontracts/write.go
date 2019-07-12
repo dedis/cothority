@@ -20,10 +20,14 @@ import (
 
 // WriteSpawn creates a new instance of a write contract. It expects a public
 // key point in hex string format, which is the collective public key generated
-// by the DKG. The data that will be encrypted under the collective public key
-// is provided as a string and then converted as a slice of bytes. If everything
-// goes well, it prints the instance id of the newly spawned Write instance.
-// With the --export option, the instance id is sent to STDOUT.
+// by the DKG. The secret that will be encrypted under the collective public key
+// is provided as a string with --secret and then converted as a slice of bytes.
+// This secret has a maximum size depending on the suite used (29 bits for
+// ed25519). Another field, filled with --data or from STDIN with the --readin
+// option, can contain unlimited sized data. The data however won't be
+// automatically encrypted. If everything goes well, it prints the instance id
+// of the newly spawned Write instance. With the --export option, the instance
+// id is sent to STDOUT.
 func WriteSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
@@ -153,7 +157,7 @@ func WriteSpawn(c *cli.Context) error {
 	return nil
 }
 
-// WriteGet checks the proof and retrieves the value of a Write contract.
+// WriteGet checks the proof and prints the content of the Write contract.
 func WriteGet(c *cli.Context) error {
 
 	bcArg := c.String("bc")

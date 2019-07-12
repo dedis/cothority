@@ -33,7 +33,7 @@ var cmds = cli.Commands{
 					},
 					cli.BoolFlag{
 						Name:  "export, x",
-						Usage: "the public key is exported to stdout",
+						Usage: "exports the public key to STDOUT",
 					},
 				},
 			},
@@ -41,7 +41,7 @@ var cmds = cli.Commands{
 	},
 	{
 		Name:   "reencrypt",
-		Usage:  "decrypt and reencrypt a symmetric key given the proofs of write and read instances",
+		Usage:  "decrypt and reencrypt the secret of a write instance given the proofs of write and read instances",
 		Action: reencrypt,
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -59,13 +59,13 @@ var cmds = cli.Commands{
 			},
 			cli.BoolFlag{
 				Name:  "export, x",
-				Usage: "the DecryptReply is exported to stdout",
+				Usage: "exports the DecryptReply to STDOUT",
 			},
 		},
 	},
 	{
 		Name:   "decrypt",
-		Usage:  "decrypt a re-encrypted key given in STDIN the DecryptKeyReply struct",
+		Usage:  "decrypt a re-encrypted key given a DecryptKeyReply struct read from STDIN ",
 		Action: decrypt,
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -79,7 +79,7 @@ var cmds = cli.Commands{
 			},
 			cli.BoolFlag{
 				Name:  "export, x",
-				Usage: "the decrypted data is exported to stdout",
+				Usage: "exports the decrypted data to STDOUT",
 			},
 		},
 	},
@@ -111,7 +111,7 @@ var cmds = cli.Commands{
 							},
 							cli.BoolFlag{
 								Name:  "export, x",
-								Usage: "the instance id is exported to stdout",
+								Usage: "export the instance id to STDOUT",
 							},
 						},
 					},
@@ -161,7 +161,7 @@ var cmds = cli.Commands{
 							},
 							cli.BoolFlag{
 								Name:  "export, x",
-								Usage: "the instance id is exported to stdout",
+								Usage: "export the instance id to STDOUT",
 							},
 						},
 					},
@@ -211,7 +211,7 @@ var cmds = cli.Commands{
 							},
 							cli.BoolFlag{
 								Name:  "export, x",
-								Usage: "the instance id is exported to stdout",
+								Usage: "export the instance id to STDOUT",
 							},
 						},
 					},
