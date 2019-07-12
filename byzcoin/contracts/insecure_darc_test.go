@@ -26,6 +26,7 @@ func TestInsecureDarc(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// spawn new darc
 	newDarc := gDarc.Copy()

@@ -85,6 +85,7 @@ func newS(t *testing.T) (s *sStruct) {
 	require.Nil(t, err)
 	s.olID = resp.Skipblock.SkipChainID()
 	s.cl = byzcoin.NewClient(s.olID, *s.roster)
+	s.cl.UseNode(0)
 	return
 }
 

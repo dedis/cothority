@@ -99,7 +99,7 @@ var cmds = cli.Commands{
 			cli.IntFlag{
 				Name:  "server",
 				Usage: "which server number from the roster to contact (default: 0)",
-				Value: 0,
+				Value: -1,
 			},
 			cli.BoolFlag{
 				Name:  "update",
@@ -1011,9 +1011,12 @@ func latest(c *cli.Context) error {
 	}
 
 	// Allow the user to set the server number; useful when testing leader rotation.
-	cl.ServerNumber = c.Int("server")
-	if cl.ServerNumber > len(cl.Roster.List)-1 {
-		return errors.New("server index out of range")
+	sn := c.Int("server")
+	if sn >= 0 {
+		err := cl.UseNode(sn)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "ByzCoinID: %x\n", cfg.ByzCoinID)
@@ -1028,9 +1031,11 @@ func latest(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
-	if err != nil {
-		return err
+	if sn >= 0 {
+		_, err = fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[sn])
+		if err != nil {
+			return err
+		}
 	}
 
 	// Find the latest block by asking for the Proof of the config instance.

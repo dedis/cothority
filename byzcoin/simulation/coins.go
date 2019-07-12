@@ -89,6 +89,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return errors.New("couldn't create genesis block: " + err.Error())
 	}
+	if err = c.UseNode(0); err != nil {
+		return err
+	}
 
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)

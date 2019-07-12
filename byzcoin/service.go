@@ -1020,18 +1020,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			s.stateTriesLock.Unlock()
 		}
 
-		// Create a roster with all nodes other than us
-		// TODO: remove this and use the future parallel client
-		newRoster := onet.NewRoster(sb.Roster.List)
-		for i, l := range newRoster.List {
-			if l.Equal(s.ServerIdentity()) {
-				newRoster.List = append(newRoster.List[:i], newRoster.List[i+1:]...)
-				break
-			}
-		}
-
 		// Then start downloading the stateTrie over the network.
-		cl := NewClient(sb.SkipChainID(), *newRoster)
+		cl := NewClient(sb.SkipChainID(), *sb.Roster)
+		cl.DontContact(s.ServerIdentity())
 		var db *bbolt.DB
 		var bucketName []byte
 		var nonce uint64
@@ -1071,11 +1062,11 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			return errors.New("couldn't load state trie: " + err.Error())
 		}
 		skCl := skipchain.NewClient()
-		// TODO: avoid contacting ourselves
+		skCl.DontContact(s.ServerIdentity())
 		if sb.Index != st.GetIndex() {
 			log.Lvl2("Downloading corresponding block", sb.Index, st.GetIndex())
 			// TODO: add a client API to fetch a specific block and its proof
-			search, err := skCl.GetSingleBlockByIndex(newRoster, sb.SkipChainID(), st.GetIndex())
+			search, err := skCl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), st.GetIndex())
 			if err != nil {
 				return errors.New("couldn't get correct block for verification: " + err.Error())
 			}
@@ -1094,7 +1085,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		s.stateTriesLock.Lock()
 		s.stateTries[idStr] = st
 		s.stateTriesLock.Unlock()
-		chain, err := skCl.GetUpdateChain(newRoster, sb.SkipChainID())
+		chain, err := skCl.GetUpdateChain(sb.Roster, sb.SkipChainID())
 		if err != nil {
 			return err
 		}
@@ -1214,7 +1205,7 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
 
 	cl := skipchain.NewClient()
-	// TODO: avoid contacting ourselves
+	cl.DontContact(s.ServerIdentity())
 	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
 		return err
@@ -1236,6 +1227,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	download := false
 	st, err := s.getStateTrie(sb.SkipChainID())
 	cl := skipchain.NewClient()
+	cl.DontContact(s.ServerIdentity())
 	if err != nil {
 		if sb.Index < catchupDownloadAll {
 			// Asked to catch up on an unknown chain, but don't want to download, instead only replay
@@ -1313,7 +1305,6 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	latest := reply.SkipBlock
 
 	// Fetch all missing blocks to fill the hole
-	// TODO: avoid contacting ourselves
 	for trieIndex < sb.Index {
 		log.Lvlf2("%s: our index: %d - latest known index: %d", s.ServerIdentity(), trieIndex, sb.Index)
 		updates, err := cl.GetUpdateChainLevel(sb.Roster, latest.Hash, 1, catchupFetchBlocks)
@@ -1450,12 +1441,6 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			"mean that the db is broken. Error: " + err.Error())
 	}
 
-	// Notify all waiting channels for processed ClientTransactions.
-	for _, t := range body.TxResults {
-		s.notifications.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
-	}
-	s.notifications.informBlock(sb.SkipChainID())
-
 	// If we are adding a genesis block, then look into it for the darc ID
 	// and add it to the darcToSc hash map.
 	if sb.Index == 0 {
@@ -1548,6 +1533,12 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		log.Lvlf2("%s not in roster, but viewChangeMonitor started - stopping now for %x", s.ServerIdentity(), sb.SkipChainID())
 		s.viewChangeMan.stop(sb.SkipChainID())
 	}
+
+	// Notify all waiting channels for processed ClientTransactions.
+	for _, t := range body.TxResults {
+		s.notifications.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
+	}
+	s.notifications.informBlock(sb.SkipChainID())
 
 	// At this point everything should be stored.
 	s.streamingMan.notify(string(sb.SkipChainID()), sb)
