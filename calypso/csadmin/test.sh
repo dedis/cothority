@@ -5,9 +5,9 @@
 # Options:
 #   -b   re-builds bcadmin package
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=2
-DBG_APP=1
+DBG_APP=2
 
 NBR_SERVERS=4
 NBR_SERVERS_GROUP=3
@@ -15,6 +15,7 @@ NBR_SERVERS_GROUP=3
 # Clears some env. variables
 export -n BC_CONFIG
 export -n BC
+export BC_WAIT=true
 
 . "../../libtest.sh"
 . "../clicontracts/lts_test.sh"
@@ -78,9 +79,9 @@ testDkgStart(){
     eval $SED
     [ -z "$BC" ] && exit 1
 
-    OUTRES=`runCA contract lts spawn`
+    OUTRES=`runCA0 contract lts spawn`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'`
-    matchOK $LTS_ID ^[0-9a-f]{64}$
+    matchOK $LTS_ID "^[0-9a-f]{64}$"
 
     # no --instid
     testFail runCA dkg start
@@ -96,15 +97,13 @@ testDkgStart(){
     testOK runCA authorize co3/private.toml $bcID
     testOK runCA dkg start --instid "$LTS_ID"
 
-    OUTRES=`runCA dkg start --instid "$LTS_ID"`
-    matchOK "$OUTRES" "^LTS created:
+    testGrep "LTS created:
 - ByzcoinID: [0-9a-f]{64}
 - InstanceID: [0-9a-f]{64}
-- X: [0-9a-f]{64}$"
+- X: [0-9a-f]{64}$" runCA dkg start --instid "$LTS_ID"
 
     # Check the --export option
-    runCA dkg start --instid "$LTS_ID" -x > x.pub
-    matchOK `cat x.pub` ^[0-9a-f]{64}$
+    testGrep "[0-9a-f]{64}$" runCA dkg start --instid "$LTS_ID" -x
 }
 
 # rely on:
@@ -128,7 +127,7 @@ testReencrypt(){
     testOK runBA darc rule -rule "spawn:calypsoRead" -darc $ID -sign $KEY -identity $KEY
 
     # Spawn LTS
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $LTS_ID ^[0-9a-f]{64}$
     
@@ -139,18 +138,18 @@ testReencrypt(){
     testOK runCA authorize co3/private.toml $bcID
     
     # Creat LTS and save the public key
-    runCA dkg start --instid "$LTS_ID" -x > key.pub
+    runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
     
     # Spawn write
-    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY"\
+    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY"\
                     --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Spawn read
-    OUTRES=`runCA contract read spawn --sign $KEY --instid $WRITE_ID`
+    OUTRES=`runCA0 contract read spawn --sign $KEY --instid $WRITE_ID`
     READ_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $READ_ID ^[0-9a-f]{64}$
 
@@ -161,7 +160,7 @@ testReencrypt(){
     testFail runCA decrypt --writeid aef123 --readid $READ_ID
 
     # Run a reencrypt and check the output
-    OUTRES=`runCA reencrypt --writeid $WRITE_ID --readid $READ_ID`
+    OUTRES=`runCA0 reencrypt --writeid $WRITE_ID --readid $READ_ID`
     # OUTRES=`echo "$OUTRES" | tr -d '\n'`
     matchOK "$OUTRES" "Got decrypt reply:
 - C: [0-9a-f]{64}
@@ -196,7 +195,7 @@ testDecrypt(){
     testOK runBA darc rule -rule "spawn:calypsoRead" -darc $ID -sign $KEY -identity $KEY
 
     # Spawn LTS
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $LTS_ID ^[0-9a-f]{64}$
     
@@ -207,23 +206,23 @@ testDecrypt(){
     testOK runCA authorize co3/private.toml $bcID
     
     # Creat LTS and save the public key
-    runCA dkg start --instid "$LTS_ID" -x > key.pub
+    runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
     
     # Spawn write
-    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" \
+    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" \
                     --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Spawn read
-    OUTRES=`runCA contract read spawn --sign $KEY --instid $WRITE_ID`
+    OUTRES=`runCA0 contract read spawn --sign $KEY --instid $WRITE_ID`
     READ_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $READ_ID ^[0-9a-f]{64}$
 
     # run the reencrypt and save the reply
-    runCA reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
+    runCA0 reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
 
     # should fail since it will use the default key, the admin one, and this is
     # not the key that was set for the read request
@@ -231,12 +230,12 @@ testDecrypt(){
     testNGrep "Hello world" echo "$OUTRES"
 
     # should pass with the correct --key
-    OUTRES=`runCA decrypt --key config/key-$KEY.cfg < reply.bin`
+    OUTRES=`runCA0 decrypt --key config/key-$KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
 Hello world."
 
     # Check the export option
-    runCA decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
+    runCA0 decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
     matchOK "`cat data.txt`" "Hello world."
 
     #
@@ -256,12 +255,12 @@ Hello world."
     matchOK $PUB_KEY "[0-9a-f]{64}"
 
     # 2:
-    OUTRES=`runCA contract read spawn --sign $KEY --instid $WRITE_ID --key $PUB_KEY`
+    OUTRES=`runCA0 contract read spawn --sign $KEY --instid $WRITE_ID --key $PUB_KEY`
     READ_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $READ_ID ^[0-9a-f]{64}$
 
     # 3:
-    runCA reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
+    runCA0 reencrypt --writeid $WRITE_ID --readid $READ_ID -x > reply.bin
 
     # 4:
 
@@ -273,13 +272,17 @@ Hello world."
     testNGrep "Hello world" echo "$OUTRES"
     
     # should now work with the newly created key
-    OUTRES=`runCA decrypt --key config/key-$NEW_KEY.cfg < reply.bin`
+    OUTRES=`runCA0 decrypt --key config/key-$NEW_KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
 Hello world."
 }
 
 runCA(){
     ./csadmin -c config/ --debug $DBG_APP "$@"
+}
+
+runCA0(){
+    ./csadmin -c config/ --debug 0 "$@"
 }
 
 runBA(){

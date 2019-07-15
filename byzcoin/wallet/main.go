@@ -94,6 +94,11 @@ func init() {
 			Value: getDataPath(cliApp.Name),
 			Usage: "path to configuration-directory",
 		},
+		cli.BoolFlag{
+			Name:   "wait, w",
+			EnvVar: "BC_WAIT",
+			Usage:  "wait for transaction available in all nodes",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
@@ -220,6 +225,10 @@ func transfer(c *cli.Context) error {
 		log.Warn("Only allowing 200 transactions at a time")
 		multi = 200
 	}
+	err = cl.UseNode(0)
+	if err != nil {
+		return err
+	}
 	for tx := 0; tx < multi; tx++ {
 		counters.Counters[0]++
 		amountBuf := make([]byte, 8)
@@ -246,7 +255,10 @@ func transfer(c *cli.Context) error {
 				},
 			},
 		}
-		ctx.FillSignersAndSignWith(signer)
+		err = ctx.FillSignersAndSignWith(signer)
+		if err != nil {
+			return err
+		}
 
 		log.Info("Sending transaction of", amount, "coins to address", c.Args().Get(1))
 		wait := 0
@@ -261,7 +273,7 @@ func transfer(c *cli.Context) error {
 
 	log.Info("Transaction succeeded")
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 func coinHashPub(pub kyber.Point) (iid byzcoin.InstanceID, err error) {

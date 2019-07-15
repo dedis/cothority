@@ -33,9 +33,9 @@ type Client struct {
 	// Latest keeps track of the most recent known block for the client.
 	Latest *skipchain.SkipBlock
 	// Keeps the server identities that replied first to a DownloadState request
-	NoncesSI map[uint64]*network.ServerIdentity
+	noncesSI map[uint64]*network.ServerIdentity
 	// Used for SendProtobufParallel. If it is nil, default values will be used.
-	Options *onet.ParallelOptions
+	options *onet.ParallelOptions
 }
 
 // NewClient instantiates a new ByzCoin client.
@@ -44,7 +44,7 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 		Client:   onet.NewClient(cothority.Suite, ServiceName),
 		ID:       ID,
 		Roster:   Roster,
-		NoncesSI: make(map[uint64]*network.ServerIdentity),
+		noncesSI: make(map[uint64]*network.ServerIdentity),
 	}
 }
 
@@ -81,10 +81,11 @@ func (c *Client) UseNode(n int) error {
 	if n < 0 || n >= len(c.Roster.List) {
 		return errors.New("index of node points past roster-list")
 	}
-	c.Options = &onet.ParallelOptions{
+	c.options = &onet.ParallelOptions{
 		DontShuffle: true,
 		StartNode:   n,
 		AskNodes:    1,
+		Parallel:    1,
 	}
 	return nil
 }
@@ -92,10 +93,10 @@ func (c *Client) UseNode(n int) error {
 // DontContact adds the given serverIdentity to the list of nodes that will
 // not be contacted.
 func (c *Client) DontContact(si *network.ServerIdentity) {
-	if c.Options == nil {
-		c.Options = &onet.ParallelOptions{}
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
 	}
-	c.Options.IgnoreNodes = []*network.ServerIdentity{si}
+	c.options.IgnoreNodes = []*network.ServerIdentity{si}
 }
 
 func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBlockResponse, error) {
@@ -142,7 +143,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 		SkipchainID:   c.ID,
 		Transaction:   tx,
 		InclusionWait: wait,
-	}, reply, c.Options)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofR
 		Version: CurrentVersion,
 		ID:      from.Hash,
 		Key:     key,
-	}, reply, c.Options)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.A
 		ByzCoinID:  c.ID,
 		DarcID:     dID,
 		Identities: ids,
-	}, reply, c.Options)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -353,17 +354,15 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 // service stops. Only the integrity of the new block is verified.
 //
 // It contacts any random node by default. A specific node can be chosen by
-// setting c.Options as follows:
-//   DontShuffle = true
-//   StartNode = nodeIndex
+// using `c.UseNode`.
 func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) error {
 	req := StreamingRequest{
 		ID: c.ID,
 	}
 	n := int(rand.Int31n(int32(len(c.Roster.List))))
-	if c.Options != nil {
-		if c.Options.DontShuffle {
-			n = c.Options.StartNode
+	if c.options != nil {
+		if c.options.DontShuffle {
+			n = c.options.StartNode
 		}
 	}
 
@@ -402,7 +401,7 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 	}
 	var reply GetSignerCountersResponse
 	_, err := c.SendProtobufParallel(c.Roster.List, &req, &reply,
-		c.Options)
+		c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -441,19 +440,19 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 		Nonce:     nonce,
 		Length:    length,
 	}
-	si, ok := c.NoncesSI[nonce]
+	si, ok := c.noncesSI[nonce]
 	if ok {
 		err = c.SendProtobuf(si, msg, reply)
 	} else {
 		var si *network.ServerIdentity
 		var po onet.ParallelOptions
-		if c.Options != nil {
-			po = *c.Options
+		if c.options != nil {
+			po = *c.options
 		}
 		po.Parallel = 1
 		po.StartNode = indexStart
 		si, err = c.SendProtobufParallel(c.Roster.List, msg, reply, &po)
-		c.NoncesSI[reply.Nonce] = si
+		c.noncesSI[reply.Nonce] = si
 	}
 	return
 }
@@ -468,7 +467,7 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 	}
 	reply := ResolvedInstanceID{}
 
-	if _, err := c.SendProtobufParallel(c.Roster.List, &req, &reply, c.Options); err != nil {
+	if _, err := c.SendProtobufParallel(c.Roster.List, &req, &reply, c.options); err != nil {
 		return InstanceID{}, err
 	}
 	return reply.InstanceID, nil

@@ -19,7 +19,7 @@ import (
 type Client struct {
 	*onet.Client
 	// Used for SendProtobufParallel. If it is nil, default values will be used.
-	Options *onet.ParallelOptions
+	options *onet.ParallelOptions
 }
 
 // NewClient instantiates a new client with name 'n'
@@ -29,21 +29,21 @@ func NewClient() *Client {
 
 // UseNode sets the options so that only the given node will be contacted
 func (c *Client) UseNode(n int) {
-	if c.Options == nil {
-		c.Options = &onet.ParallelOptions{}
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
 	}
-	c.Options.DontShuffle = true
-	c.Options.StartNode = n
-	c.Options.AskNodes = 1
+	c.options.DontShuffle = true
+	c.options.StartNode = n
+	c.options.AskNodes = 1
 }
 
 // DontContact adds the given serverIdentity to the list of nodes that will
 // not be contacted.
 func (c *Client) DontContact(si *network.ServerIdentity) {
-	if c.Options == nil {
-		c.Options = &onet.ParallelOptions{}
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
 	}
-	c.Options.IgnoreNodes = []*network.ServerIdentity{si}
+	c.options.IgnoreNodes = []*network.ServerIdentity{si}
 }
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and
@@ -273,7 +273,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 			LatestID:  latest,
 			MaxHeight: maxLevel,
 			MaxBlocks: maxBlocks,
-		}, r2, c.Options)
+		}, r2, c.options)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
 		}
@@ -368,7 +368,7 @@ func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSk
 // or an error if that block is not found.
 func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, error) {
 	var reply = &SkipBlock{}
-	_, err := c.SendProtobufParallel(roster.List, &GetSingleBlock{id}, reply, c.Options)
+	_, err := c.SendProtobufParallel(roster.List, &GetSingleBlock{id}, reply, c.options)
 	if err != nil {
 		return nil, errors.New("all nodes failed to return block: " + err.Error())
 	}
@@ -389,7 +389,7 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 	reply = &GetSingleBlockByIndexReply{}
 
 	_, err = c.SendProtobufParallel(roster.List, &GetSingleBlockByIndex{genesis, index}, reply,
-		c.Options)
+		c.options)
 	if err != nil {
 		return
 	}

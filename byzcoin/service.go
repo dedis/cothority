@@ -430,7 +430,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return nil, errors.New("version mismatch")
 	}
 
-	log.Lvlf2("Returning proof for %x from chain '%x'", req.Key, req.ID)
+	log.Lvlf2("%s: Returning proof for %x from chain '%x'", s.ServerIdentity(), req.Key, req.ID)
 
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
@@ -443,7 +443,6 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	}
 	proof, err := NewProof(st, s.db(), req.ID, req.Key)
 	if err != nil {
-		log.Error(s.ServerIdentity(), err)
 		return
 	}
 

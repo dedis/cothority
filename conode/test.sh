@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=5
+DBG_TEST=1
 DBG_SRV=0
 
 . ../libtest.sh

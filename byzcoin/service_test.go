@@ -1777,6 +1777,7 @@ func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int
 		require.NoError(t, err)
 
 		s.sendTxToAndWait(t, ctx, idx, 10)
+		s.local.WaitDone(time.Second)
 	}
 	return count
 }

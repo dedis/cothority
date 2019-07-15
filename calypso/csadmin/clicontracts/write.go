@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -141,6 +142,11 @@ func WriteSpawn(c *cli.Context) error {
 		return errors.New("failed to send transaction: " + err.Error())
 	}
 
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
+
 	iidStr := hex.EncodeToString(reply.InstanceID.Slice())
 	if c.Bool("export") {
 		reader := bytes.NewReader([]byte(iidStr))
@@ -151,8 +157,8 @@ func WriteSpawn(c *cli.Context) error {
 		return nil
 	}
 
-	fmt.Fprintf(c.App.Writer, "Spawned a new write instance. "+
-		"Its instance id is:\n%s\n", iidStr)
+	log.Infof("Spawned a new write instance. "+
+		"Its instance id is:\n%s", iidStr)
 
 	return nil
 }
@@ -204,7 +210,7 @@ func WriteGet(c *cli.Context) error {
 		return errors.New("didn't get a write instance: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "%s\n", write)
+	log.Infof("%s", write)
 
 	return nil
 }

@@ -6,6 +6,8 @@ rm -f ~/.local/share/conode/*
 rm -f *cfg
 sleep 2
 
+export BC_WAIT=true
+
 rm -f ./*.png
 cd /home/esteban/.local/share/bcadmin/
 rm -f *.cfg

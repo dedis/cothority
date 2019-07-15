@@ -316,8 +316,8 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintf(c.App.Writer, "export EL=%x\n", cl.Instance.Slice())
-	return nil
+	log.Infof("export EL=%x", cl.Instance.Slice())
+	return bcadminlib.WaitPropagation(c, cl.ByzCoin)
 }
 
 func doLog(c *cli.Context) error {
@@ -353,7 +353,7 @@ func doLog(c *cli.Context) error {
 			return err
 		}
 	}
-	return nil
+	return bcadminlib.WaitPropagation(c, cl.ByzCoin)
 }
 
 var none = time.Unix(0, 0)
@@ -428,7 +428,7 @@ func search(c *cli.Context) error {
 
 	for _, x := range resp.Events {
 		const tsFormat = "2006-01-02 15:04:05"
-		fmt.Fprintf(c.App.Writer, "%v\t%v\t%v\n", time.Unix(0, x.When).Format(tsFormat), x.Topic, x.Content)
+		log.Infof("%v\t%v\t%v", time.Unix(0, x.When).Format(tsFormat), x.Topic, x.Content)
 
 		if ct != 0 {
 			ct--
@@ -483,7 +483,7 @@ func login(c *cli.Context) error {
 		return fmt.Errorf("failed to parse provider scopes_supported: %v", err)
 	}
 
-	fmt.Println("scopes supported", s.ScopesSupported)
+	log.Info("scopes supported", s.ScopesSupported)
 
 	hasOffline := func() bool {
 		for _, scope := range s.ScopesSupported {
@@ -516,11 +516,11 @@ func login(c *cli.Context) error {
 	// to verify it.
 	url := cfg.AuthCodeURL("none", oauth2.AccessTypeOffline)
 
-	fmt.Fprintln(c.App.Writer, "Opening this URL in your browser:")
-	fmt.Fprintln(c.App.Writer, "\t", url)
+	log.Info("Opening this URL in your browser:")
+	log.Info("\t", url)
 	browser.OpenURL(url)
 
-	fmt.Fprint(c.App.Writer, "Enter the access code now: ")
+	fmt.Print("Enter the access code now: ")
 
 	r := bufio.NewReader(os.Stdin)
 	code, err := r.ReadString('\n')
@@ -570,7 +570,7 @@ func login(c *cli.Context) error {
 	if fn, err = ocfg.save(); err != nil {
 		return err
 	}
-	fmt.Fprintln(c.App.Writer, "Login information saved into", fn)
+	log.Info("Login information saved into", fn)
 	return nil
 }
 

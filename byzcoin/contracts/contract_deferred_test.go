@@ -304,8 +304,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
-	time.Sleep(time.Second)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
@@ -313,10 +313,10 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.Nil(t, err)
 
 	result = byzcoin.DeferredData{}
-	protobuf.Decode(dataBuf, &result)
+	require.NoError(t, protobuf.Decode(dataBuf, &result))
 	require.Equal(t, 1, len(result.ExecResult))
 
-	time.Sleep(2 * genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(result.ExecResult[0]))
@@ -327,7 +327,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	// Such a miracle to retrieve this value that was set at the begining
 	require.Equal(t, valueRes, rootInstructionValue)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 4. Invoke an "execRoot" command a second time. Since MaxNumExecution should
@@ -651,7 +651,7 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.Nil(t, err)
 
 	result = byzcoin.DeferredData{}
-	protobuf.Decode(dataBuf, &result)
+	require.NoError(t, protobuf.Decode(dataBuf, &result))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
@@ -675,7 +675,7 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	// Such a miracle to retrieve this value that was set at the begining
 	require.Equal(t, valueRes, rootInstructionValue2)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
@@ -785,7 +785,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	rootHash := result.InstructionHashes
 
@@ -868,7 +868,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 2.2 Invoke a second "addProof" on the second instruction, but with a
@@ -921,8 +921,11 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
 	result.ProposedTransaction = proposedTransaction
 
-	pr, err = cl.WaitProof(byzcoin.NewInstanceID(myID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+	require.NoError(t, local.WaitDone(time.Second))
+
+	prResp, err := cl.GetProofFromLatest(myID.Slice())
+	require.NoError(t, err)
+	pr = &prResp.Proof
 	require.True(t, pr.InclusionProof.Match(myID.Slice()))
 
 	dataBuf, _, _, err = pr.Get(myID.Slice())
@@ -947,7 +950,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 3. Invoke an "execRoot" command. This one will fail since one of the
@@ -971,7 +974,7 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_WrongSignature(t *testing.T) {
