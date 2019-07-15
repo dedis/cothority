@@ -90,20 +90,6 @@ func (args Arguments) Names() []string {
 	return names
 }
 
-// Hash calculates the hash over all instructions and their signatures.
-// This creates a unique hash with regard to two sets of instructions
-// that only differ with their signature.
-func (ctx *ClientTransaction) Hash() []byte {
-	h := sha256.New()
-	for _, inst := range ctx.Instructions {
-		h.Write(inst.Hash())
-		for _, sig := range inst.Signatures {
-			h.Write(sig)
-		}
-	}
-	return h.Sum(nil)
-}
-
 // FillSignersAndSignWith fills the SignerIdentities field with the identities of the signers and then signs all the
 // instructions using the same set of  signers. If some instructions need to be signed by different sets of signers,
 // then use the SignWith method of Instruction.
@@ -419,6 +405,20 @@ func (instrs Instructions) Hash() []byte {
 	h := sha256.New()
 	for _, instr := range instrs {
 		h.Write(instr.Hash())
+	}
+	return h.Sum(nil)
+}
+
+// HashWithSignatures calculates the hash over all instructions and their signatures.
+// This creates a unique hash with regard to two sets of instructions
+// that only differ with their signature.
+func (instrs Instructions) HashWithSignatures() []byte {
+	h := sha256.New()
+	for _, inst := range instrs {
+		h.Write(inst.Hash())
+		for _, sig := range inst.Signatures {
+			h.Write(sig)
+		}
 	}
 	return h.Sum(nil)
 }
