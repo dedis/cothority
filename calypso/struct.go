@@ -2,7 +2,7 @@ package calypso
 
 import (
 	"crypto/sha256"
-	"errors"
+	"fmt"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
@@ -93,7 +93,8 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 		return nil
 	}
 
-	return errors.New("recreated proof is not equal to stored proof")
+	return fmt.Errorf("recreated proof is not equal to stored proof:\n"+
+		"%s\n%s", e.String(), wr.E.String())
 }
 
 type newLtsConfig struct {

@@ -729,7 +729,7 @@ var getDataPath = cfgpath.GetDataPath
 var gitTag = "dev"
 
 func init() {
-	cliApp.Name = "bcadmin"
+	cliApp.Name = lib.BcaName
 	cliApp.Usage = "Create ByzCoin ledgers and grant access to them."
 	cliApp.Version = gitTag
 	cliApp.Commands = cmds
@@ -742,7 +742,7 @@ func init() {
 		cli.StringFlag{
 			Name:   "config, c",
 			EnvVar: "BC_CONFIG",
-			Value:  getDataPath(cliApp.Name),
+			Value:  getDataPath(lib.BcaName),
 			Usage:  "path to configuration-directory",
 		},
 	}

@@ -110,6 +110,28 @@ testFileGrep(){
   fi
 }
 
+# Asserts that `String` matches `Target`.
+# Arguments:
+#   `String` - element to compare
+#   `Target` - what should match
+matchOK(){
+  testOut "Match OK between '$1' and '$2'"
+  if ! [[ $1 =~ $2 ]]; then
+    fail "'$1' does not match '$2'"
+  fi
+}
+
+# Asserts that `String` does NOT match `Target`.
+# Arguments:
+#   `String` - element to compare
+#   `Target` - what should not match
+matchNOK(){
+  testOut "Match NOT OK between '$1' and '$2'"
+  if [[ $1 =~ $2 ]]; then
+    fail "'$1' does match '$2'"
+  fi
+}
+
 # Asserts that `String` is in the output of the command being run by `dbgRun`
 # and all but the first input argument. Ignores the exit-code of the command.
 # Arguments:

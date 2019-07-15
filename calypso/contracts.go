@@ -2,6 +2,8 @@ package calypso
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -21,6 +23,23 @@ type ContractWrite struct {
 	Write
 }
 
+// String returns a human readable string representation of the Write data
+func (w Write) String() string {
+	out := new(strings.Builder)
+	out.WriteString("- Write:\n")
+	fmt.Fprintf(out, "-- Data: %s\n", w.Data)
+	fmt.Fprintf(out, "-- U: %s\n", w.U)
+	fmt.Fprintf(out, "-- Ubar: %s\n", w.Ubar)
+	fmt.Fprintf(out, "-- E: %s\n", w.E)
+	fmt.Fprintf(out, "-- F: %s\n", w.F)
+	fmt.Fprintf(out, "-- C: %s\n", w.C)
+	fmt.Fprintf(out, "-- ExtraData: %s\n", w.ExtraData)
+	fmt.Fprintf(out, "-- LTSID: %s\n", w.LTSID)
+	fmt.Fprintf(out, "-- Cost: %x\n", w.Cost)
+
+	return out.String()
+}
+
 func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &ContractWrite{}
 
@@ -31,9 +50,9 @@ func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	return c, nil
 }
 
-// Spawn is used to create a new write- or read-contract. The read-contract is created by the
-// write-instance, because the creation of a new read-instance is protected by the write-contract's
-// darc.
+// Spawn is used to create a new write- or read-contract. The read-contract is
+// created by the write-instance, because the creation of a new read-instance is
+// protected by the write-contract's darc.
 func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 

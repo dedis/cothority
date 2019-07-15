@@ -156,8 +156,7 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 //   - reply - WriteReply containing the transaction response and instance id
 //   - err - Error if any, nil otherwise.
 func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
-	darc darc.Darc, wait int) (
-	reply *WriteReply, err error) {
+	darc darc.Darc, wait int) (reply *WriteReply, err error) {
 	reply = &WriteReply{}
 	if err != nil {
 		return nil, err
