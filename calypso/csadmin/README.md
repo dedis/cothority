@@ -84,10 +84,16 @@ $ csadmin contract write spawn --instid <lts instance id>\
 > <write instance id>
 ```
 
+Note: Data stored with `--secret` will be encrypted using a `kyber.Point`.
+Depending on the suite used, this has a limitation on the size. For the default
+suite used (ed25519), this limitation is 29 bits. Therefore, it is possible to
+store additional but unencrypted data with the `--data` option, or directly from
+STDIN using the `--readin` option.
+
 **5) Spawn a read instance**
 
 With the instance id of the previously spawned write instance, request a read on
-the encrypted data:
+the encrypted secret:
 
 ```bash
 $ csadmin contract read spawn --instid <write instance id> --sign <reader id>
@@ -95,9 +101,11 @@ $ csadmin contract read spawn --instid <write instance id> --sign <reader id>
 > <read instance id>
 ```
 
-By default, it uses the public key of the signer to specify what public key
-should be used to encrypt the data. But it is possible to provide a different
-public key as a hexadecimal string:
+Note: Calypso never return a secret without first re-encrypting it. This is why
+a public key must be specified for a read request. By default, it uses the
+public key of the signer to specify what public key should be used to re-encrypt
+the data. But it is possible to provide a different public key as a hexadecimal
+string:
 
 ```bash
 $ csadmin contract read spawn --instid <write instance id>\
@@ -107,26 +115,27 @@ $ csadmin contract read spawn --instid <write instance id>\
 Note: `--darc` is not needed because it will use the DARC associated with the
 write instance.
 
-**6) Send a decrypt request**
+**6) Send a re-encrpyt request**
 
 With the read and write instances, it is now possible to request the encrypted
-data. The response, `DecryptKeyReply`, is exported and saved to a file:
+ secret, which comes re-encrypted with the public key given in the read
+ instance. The response, `DecryptKeyReply`, is exported and saved to a file:
 
 ```bash
-$ csadmin decrypt --writeid <write instance id> --readid <read instance id> -x > reply.bin
+$ csadmin reencryt --writeid <write instance id> --readid <read instance id> -x > reply.bin
 ```
 
 Note that the data has been re-ecrypted under the public key specified in the
-read instance. This is why the final step - recover - is needed.
+read instance. This is why the final step - decrypt - is needed.
 
-**7) Recover decrypted secret**
+**7) Decrypt a re-encrypted secret**
 
-With the re-encrypted data saved previously in the `reply.bin`, the content can
-now be recovered. By default, it uses the private key of the signer to decrypt
-the re-encrypted data:
+With the re-encrypted secret saved previously in the `reply.bin`, the secret can
+now be decrypted. By default, it uses the private key of the signer to decrypt
+the re-encrypted secret:
 
 ```bash
-$ csadmin recover < reply.bin
+$ csadmin decrypt < reply.bin
 > key decrypted:
 > Hello, world.
 ```
@@ -134,5 +143,5 @@ $ csadmin recover < reply.bin
 Alternatively, the path to a private key file can be provided:
 
 ```
-$ csadmin recover -key <private key path> < reply.bin
+$ csadmin recover --key <private key path> < reply.bin
 ```
