@@ -426,7 +426,8 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 }
 
 func trimErrorMsg(errMsg string) string {
-	if len(errMsg) <= 105 {
+	const limit = 105
+	if len(errMsg) <= limit {
 		return errMsg
 	}
 
@@ -435,24 +436,23 @@ func trimErrorMsg(errMsg string) string {
 	tokens := strings.Split(errMsg, ":")
 	if len(tokens) == 1 {
 		// this is one, long error message, so we cannot do anything except to return as many bytes as we can
-		return "..." + errMsg[len(errMsg)-105+3:]
+		return "..." + errMsg[len(errMsg)-limit+3:]
 	}
 
 	newMsg := tokens[len(tokens)-1]
-	if len(newMsg) > 105 {
+	if len(newMsg) > limit {
 		// final token is also long, we cannot do anything except to return as many bytes as we can
-		return "..." + newMsg[len(errMsg)-105+3:]
+		return "..." + newMsg[len(newMsg)-limit+3:]
 	}
 
-	// take as many messages as we can as long as it's under 105 characters
-	var allMsgs string
-	for i := len(tokens) - 1; i >= 0; i-- {
-		if len(allMsgs)+len(tokens[i])+1 > 105 {
+	// take as many messages as we can as long as it's under "limit" characters
+	for i := len(tokens) - 2; i >= 0; i-- {
+		if len(newMsg)+len(tokens[i])+1 > limit {
 			break
 		}
-		allMsgs = tokens[i] + ":" + allMsgs
+		newMsg = tokens[i] + ":" + newMsg
 	}
-	return allMsgs
+	return newMsg
 }
 
 // GetProof searches for a key and returns a proof of the
@@ -2718,7 +2718,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closed:                 true,
 		catchingUpHistory:      make(map[string]time.Time),
 		rotationWindow:         defaultRotationWindow,
-		txErrorBuf:             ringBuf{size: 10, items: make([]ringBufElem, 0)},
+		txErrorBuf:             newRingBuf(10),
 	}
 
 	err := s.RegisterHandlers(

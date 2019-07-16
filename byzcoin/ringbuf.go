@@ -4,36 +4,39 @@ import (
 	"sync"
 )
 
+func newRingBuf(size int) ringBuf {
+	return ringBuf{
+		current: 0,
+		size:    size,
+		items:   make([]ringBufElem, size),
+	}
+}
+
 type ringBufElem struct {
 	key   string
 	value string
 }
 
-// TODO pre-allocate size elements and track the latest one
-
 type ringBuf struct {
-	sync.Mutex
-	size  int
-	items []ringBufElem
+	sync.RWMutex
+	current int
+	size    int
+	items   []ringBufElem
 }
 
 func (b *ringBuf) add(key, value string) {
 	b.Lock()
 	defer b.Unlock()
 
-	if len(b.items) == b.size {
-		b.items = append(b.items[1:], ringBufElem{key, value})
-	} else {
-		b.items = append(b.items, ringBufElem{key, value})
-	}
+	b.items[b.current] = ringBufElem{key, value}
+	b.current = (b.current + 1) % b.size
 }
 
 func (b *ringBuf) get(key string) (string, bool) {
-	b.Lock()
-	defer b.Unlock()
-	for i, item := range b.items {
+	b.RLock()
+	defer b.RUnlock()
+	for _, item := range b.items {
 		if item.key == key {
-			b.items = append(b.items[:i], b.items[i+1:]...)
 			return item.value, true
 		}
 	}

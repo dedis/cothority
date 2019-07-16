@@ -2389,6 +2389,47 @@ func TestService_Repair(t *testing.T) {
 	require.Equal(t, finalRoot, newRoot)
 }
 
+func TestService_trimError(t *testing.T) {
+
+	genString := func(n int) string {
+		b := make([]byte, n)
+		for i := range b {
+			b[i] = 'x'
+		}
+		return string(b)
+	}
+
+	// smaller than 105 chars
+	require.Equal(t, len(trimErrorMsg("my error")), 8)
+
+	// 105 characters
+	msg105 := trimErrorMsg(genString(105))
+	require.Equal(t, len(msg105), 105)
+	require.NotContains(t, msg105, ".")
+
+	// more than 105 chars, expect ... to be append at the front
+	msg106 := trimErrorMsg(genString(106))
+	require.Equal(t, len(msg106), 105)
+	require.Equal(t, msg106[:3], "...")
+
+	// error msg separated by ":" - only use the concatination of the
+	// tokens when the total length is under 105
+	msgSep := trimErrorMsg(genString(10) + ":" + genString(100))
+	require.Equal(t, len(msgSep), 100)
+	require.NotContains(t, msgSep, ":")
+
+	// take the final two tokens
+	msgSep2 := trimErrorMsg(genString(10) + ":" + genString(10) + ":" + genString(90))
+	require.Equal(t, len(msgSep2), 101)
+	require.Contains(t, msgSep2, ":")
+
+	// if the final token is too large, we'll take it and truncate it
+	msgSep3 := trimErrorMsg(genString(10) + ":" + genString(106))
+	require.Equal(t, len(msgSep3), 105)
+	require.NotContains(t, msgSep3, ":")
+	require.Contains(t, msgSep3, "...")
+}
+
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
