@@ -2449,9 +2449,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 			Invoke: &byzcoin.Invoke{
 				ContractID: byzcoin.ContractDeferredID,
 				Command:    "execProposedTx",
-				// As the same transaction will be done again later, need to make sure that the
-				// double-transaction-remover accepts the correct transaction later.
-				Args: byzcoin.Arguments{{Name: "dummy", Value: nil}},
 			},
 			SignerCounter: []uint64{4},
 		}},

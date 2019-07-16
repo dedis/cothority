@@ -340,7 +340,7 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 					log.Lvl3("stopping txs processor")
 					return
 				}
-				txh := tx.Instructions.Hash()
+				txh := tx.Instructions.HashWithSignatures()
 				for _, txHash := range txHashes {
 					if bytes.Compare(txHash, txh) == 0 {
 						log.Lvl2("Got a duplicate transaction, ignoring it")

@@ -409,6 +409,20 @@ func (instrs Instructions) Hash() []byte {
 	return h.Sum(nil)
 }
 
+// HashWithSignatures calculates the hash over all instructions and their signatures.
+// This creates a unique hash with regard to two sets of instructions
+// that only differ with their signature.
+func (instrs Instructions) HashWithSignatures() []byte {
+	h := sha256.New()
+	for _, inst := range instrs {
+		h.Write(inst.Hash())
+		for _, sig := range inst.Signatures {
+			h.Write(sig)
+		}
+	}
+	return h.Sum(nil)
+}
+
 // TxResults is a list of results from executed transactions.
 type TxResults []TxResult
 

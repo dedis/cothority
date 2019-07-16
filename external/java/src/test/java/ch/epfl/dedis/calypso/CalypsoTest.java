@@ -336,9 +336,6 @@ class CalypsoTest {
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
         rd.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
-        // Create a new ephemeral pair, so that the instruction will be different and not caught by
-        // the duplicate instruction handler.
-        ephemeralPair = new Ed25519Pair();
         ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L), ephemeralPair.point);
         byte[] keyMaterial = ri.decryptKeyMaterial(ephemeralPair.scalar);
         assertArrayEquals(doc.getKeyMaterial(), keyMaterial);
