@@ -765,7 +765,7 @@ func waitInclusion(t *testing.T, client int) {
 	log.Lvl1("Create wrong transaction and wait")
 	counter++
 	pr, _, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
-	require.Contains(t, err.Error(), "transaction is in block, but got refused")
+	require.Contains(t, err.Error(), "this invalid contract always returns an error")
 	require.NoError(t, err2)
 
 	// We expect to see only the refused transaction in the block in pr.

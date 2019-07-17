@@ -393,7 +393,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		for found := false; !found; {
 			select {
 			case success := <-ch:
-				errMsg, exists := s.txErrorBuf.get(ctxHash)
+				errMsg, exists := s.txErrorBuf.get(req.Transaction.Instructions.HashWithSignatures())
 				if !success {
 					if !exists {
 						return nil, errors.New("transaction is in block, but got refused for unknown error")
@@ -2020,7 +2020,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
 	defer func() {
 		if err != nil {
-			s.txErrorBuf.add(tx.Instructions.Hash(), err.Error())
+			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
 		}
 	}()
 
