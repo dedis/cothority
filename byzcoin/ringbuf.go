@@ -1,6 +1,7 @@
 package byzcoin
 
 import (
+	"bytes"
 	"sync"
 )
 
@@ -13,7 +14,7 @@ func newRingBuf(size int) ringBuf {
 }
 
 type ringBufElem struct {
-	key   string
+	key   []byte
 	value string
 }
 
@@ -24,7 +25,7 @@ type ringBuf struct {
 	items   []ringBufElem
 }
 
-func (b *ringBuf) add(key, value string) {
+func (b *ringBuf) add(key []byte, value string) {
 	b.Lock()
 	defer b.Unlock()
 
@@ -32,11 +33,11 @@ func (b *ringBuf) add(key, value string) {
 	b.current = (b.current + 1) % b.size
 }
 
-func (b *ringBuf) get(key string) (string, bool) {
+func (b *ringBuf) get(key []byte) (string, bool) {
 	b.RLock()
 	defer b.RUnlock()
 	for _, item := range b.items {
-		if item.key == key {
+		if bytes.Equal(item.key, key) {
 			return item.value, true
 		}
 	}
