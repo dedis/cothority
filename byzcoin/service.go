@@ -430,29 +430,7 @@ func trimErrorMsg(errMsg string) string {
 	if len(errMsg) <= limit {
 		return errMsg
 	}
-
-	// try to get the most specific error
-	// we use the convention where we add a : for every layer of errors
-	tokens := strings.Split(errMsg, ":")
-	if len(tokens) == 1 {
-		// this is one, long error message, so we cannot do anything except to return as many bytes as we can
-		return "..." + errMsg[len(errMsg)-limit+3:]
-	}
-
-	newMsg := tokens[len(tokens)-1]
-	if len(newMsg) > limit {
-		// final token is also long, we cannot do anything except to return as many bytes as we can
-		return "..." + newMsg[len(newMsg)-limit+3:]
-	}
-
-	// take as many messages as we can as long as it's under "limit" characters
-	for i := len(tokens) - 2; i >= 0; i-- {
-		if len(newMsg)+len(tokens[i])+1 > limit {
-			break
-		}
-		newMsg = tokens[i] + ":" + newMsg
-	}
-	return newMsg
+	return "<truncated>" + strings.TrimSpace(errMsg[len(errMsg)-limit+11:])
 }
 
 // GetProof searches for a key and returns a proof of the

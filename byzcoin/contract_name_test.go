@@ -49,6 +49,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "tried to create existing instanceID")
 
 	// FAIL - use a bad signature
 	var namingTx ClientTransaction
