@@ -2402,10 +2402,10 @@ func TestService_trimError(t *testing.T) {
 	// smaller than 105 chars
 	require.Equal(t, len(trimErrorMsg("my error")), 8)
 
-	// 105 characters
+	// 105 characters, should not have <truncated>
 	msg105 := trimErrorMsg(genString(105))
 	require.Equal(t, len(msg105), 105)
-	require.NotContains(t, msg105, ".")
+	require.NotContains(t, msg105, "<truncated>")
 
 	// more than 105 chars, expect <truncated> to be append at the front
 	msg106 := trimErrorMsg(genString(106))

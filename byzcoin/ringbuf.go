@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+// newRingBuf initializes a ring buffer. It's used in byzcoin for recording
+// transaction errors. But it is general enough to be used for other purposes.
 func newRingBuf(size int) ringBuf {
 	return ringBuf{
 		current: 0,

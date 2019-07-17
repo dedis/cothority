@@ -426,6 +426,16 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 }
 
 func trimErrorMsg(errMsg string) string {
+	// The limit is set to 105 because websocket control messages have a
+	// size limit (maxControlFramePayloadSize = 125 in gorilla). If a
+	// string that is longer than 125 goes into the control message then
+	// the far side will fail with an unexpected EOF error. Suppose our
+	// error message is of length 105, it will becomes 125 because:
+	// 1. 18 characters ("unexpected error: ") gets appended in onet
+	// 2. 2 byte header from websocket.FormatCloseMessage is appended
+	// 3. The final message that goes into ws.WriteControl is 105 + 18 + 2 = 125
+	// Thus the original message must be no more than 105 characters, any
+	// more will exceed the limit.
 	const limit = 105
 	if len(errMsg) <= limit {
 		return errMsg
