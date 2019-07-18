@@ -103,6 +103,8 @@ type AddTxRequest struct {
 type AddTxResponse struct {
 	// Version of the protocol
 	Version Version
+	// Error message describes why the transaction failed.
+	Error string
 }
 
 // GetProof returns the proof that the given key is in the trie.

@@ -156,6 +156,12 @@ func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 	testAddTransaction(t, testInterval, 1, true)
 }
 
+func transactionOK(t *testing.T, resp *AddTxResponse, err error) {
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Empty(t, resp.Error)
+}
+
 func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
@@ -205,8 +211,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		Transaction:   tx1,
 		InclusionWait: 10,
 	})
-	require.NoError(t, err)
-	require.NotNil(t, akvresp)
+	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// add the second tx
@@ -220,8 +225,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		Transaction:   tx2,
 		InclusionWait: 10,
 	})
-	require.NoError(t, err)
-	require.NotNil(t, akvresp)
+	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// try to read the transaction back again
@@ -271,8 +275,8 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
 		log.Lvl1("making a last transaction")
-		pr, k, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
-		require.NoError(t, err)
+		pr, k, resp, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		transactionOK(t, resp, err)
 		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match(k))
 
@@ -322,8 +326,8 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 	log.Lvl1("adding tx to now included node")
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
 	require.NoError(t, err)
-	_, err = outside.AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err := outside.AddTransaction(atx)
+	transactionOK(t, resp, err)
 }
 
 // Tests what happens if a transaction with two instructions is sent: one valid
@@ -345,8 +349,8 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx1,
 		InclusionWait: 5,
 	}
-	_, err = s.service().AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err := s.service().AddTransaction(atx)
+	transactionOK(t, resp, err)
 
 	// add a second tx that holds two instructions: one valid and one invalid (creates the same contract)
 	log.Lvl1("Adding the second tx")
@@ -370,8 +374,9 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx2,
 		InclusionWait: 5,
 	}
-	_, err = s.service().AddTransaction(atx)
-	require.Error(t, err)
+	resp, err = s.service().AddTransaction(atx)
+	require.NoError(t, err)
+	require.Contains(t, resp.Error, "contract darc tried to create existing instanceID")
 
 	// add a third tx that holds two valid instructions
 	log.Lvl1("Adding a third, valid tx")
@@ -396,8 +401,8 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 		Transaction:   tx3,
 		InclusionWait: 5,
 	}
-	_, err = s.service().AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err = s.service().AddTransaction(atx)
+	transactionOK(t, resp, err)
 }
 
 // Sends the same transaction to two different nodes and makes sure that it shows up only once in a
@@ -422,11 +427,11 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 
 	// This is somewhat racy, as we could just fall between the creation of a block. So fingers crossed that
 	// both transactions are sent to the same block.
-	_, err = s.service().AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err := s.service().AddTransaction(atx)
+	transactionOK(t, resp, err)
 	atx.InclusionWait = 5
-	_, err = s.services[1].AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err = s.services[1].AddTransaction(atx)
+	transactionOK(t, resp, err)
 
 	// Get latest block and count the number of transactions
 	proof, err := s.service().GetProof(&GetProof{
@@ -442,14 +447,15 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	// Test if the same transaction is still rejected a block later - it should be rejected.
 	log.Lvl1("Adding same tx again")
 	atx.InclusionWait = 0
-	_, err = s.services[1].AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err = s.services[1].AddTransaction(atx)
+	transactionOK(t, resp, err)
+
 	log.Lvl1("Adding another transaction to create block")
 	dcID = random.Bits(256, false, random.New())
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 2)
 	atx.InclusionWait = 5
-	_, err = s.services[1].AddTransaction(atx)
-	require.NoError(t, err)
+	resp, err = s.services[1].AddTransaction(atx)
+	transactionOK(t, resp, err)
 
 	// Get latest block and make sure that it didn't get added
 	proof, err = s.service().GetProof(&GetProof{
@@ -557,12 +563,13 @@ func TestService_DarcProxy(t *testing.T) {
 	err = ctx.FillSignersAndSignWith(signer)
 	require.NoError(t, err)
 
-	_, err = s.service().AddTransaction(&AddTxRequest{
+	resp, err := s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   ctx,
 		InclusionWait: 10,
 	})
+	transactionOK(t, resp, err)
 	require.NoError(t, err)
 }
 
@@ -577,14 +584,15 @@ func TestService_WrongSigner(t *testing.T) {
 	tx, err := combineInstrsAndSign(signer, in1)
 	require.NoError(t, err)
 
-	_, err = s.services[0].AddTransaction(&AddTxRequest{
+	resp, err := s.services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx,
 		InclusionWait: 2,
 	})
 	// Expect it to not be accepted, because only s.signer is in the Darc
-	require.Error(t, err)
+	require.NoError(t, err)
+	require.Contains(t, resp.Error, "instruction verification failed: expression evaluated to false")
 }
 
 // Test that inter-instruction dependencies are correctly handled.
@@ -613,13 +621,13 @@ func TestService_Depending(t *testing.T) {
 	tx, err := combineInstrsAndSign(s.signer, in1, in2)
 	require.NoError(t, err)
 
-	_, err = s.services[0].AddTransaction(&AddTxRequest{
+	resp, err := s.services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx,
 		InclusionWait: 2,
 	})
-	require.NoError(t, err)
+	transactionOK(t, resp, err)
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -741,19 +749,19 @@ func waitInclusion(t *testing.T, client int) {
 		tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, counter)
 		require.NoError(t, err)
 		ser := s.services[client]
-		_, err = ser.AddTransaction(&AddTxRequest{
+		resp, err := ser.AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   tx,
 			InclusionWait: 0,
 		})
-		require.NoError(t, err)
+		transactionOK(t, resp, err)
 	}
 
 	log.Lvl1("Create correct transaction and wait")
 	counter++
-	pr, k, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
-	require.NoError(t, err)
+	pr, k, resp, err, err2 := sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
+	transactionOK(t, resp, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
 
@@ -764,8 +772,9 @@ func waitInclusion(t *testing.T, client int) {
 
 	log.Lvl1("Create wrong transaction and wait")
 	counter++
-	pr, _, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
-	require.Contains(t, err.Error(), "this invalid contract always returns an error")
+	pr, _, resp, err, err2 = sendTransactionWithCounter(t, s, client, invalidContract, 10, counter)
+	require.NoError(t, err)
+	require.Contains(t, resp.Error, "this invalid contract always returns an error")
 	require.NoError(t, err2)
 
 	// We expect to see only the refused transaction in the block in pr.
@@ -778,8 +787,8 @@ func waitInclusion(t *testing.T, client int) {
 	log.Lvl1("Create wrong transaction, no wait")
 	sendTransactionWithCounter(t, s, client, invalidContract, 0, counter)
 	log.Lvl1("Create second correct transaction and wait")
-	pr, k, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
-	require.NoError(t, err)
+	pr, k, resp, err, err2 = sendTransactionWithCounter(t, s, client, dummyContract, 10, counter)
+	transactionOK(t, resp, err)
 	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match(k))
 
@@ -824,13 +833,13 @@ func TestService_FloodLedger(t *testing.T) {
 	log.Lvl1("Create 10 transactions and don't wait")
 	n := 10
 	for i := 0; i < n; i++ {
-		_, _, err, err2 := sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
-		require.NoError(t, err)
+		_, _, resp, err, err2 := sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+2)
+		transactionOK(t, resp, err)
 		require.NoError(t, err2)
 	}
 	// Send a last transaction and wait for it to be included
-	_, _, err, err2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, uint64(n)+2)
-	require.NoError(t, err)
+	_, _, resp, err, err2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, uint64(n)+2)
+	transactionOK(t, resp, err)
 	require.NoError(t, err2)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval
@@ -854,7 +863,7 @@ func TestService_BigTx(t *testing.T) {
 
 	// Try to send a value so big it will be refused.
 	s.value = make([]byte, defaultMaxBlockSize+1)
-	_, _, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, resp, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
 	require.Error(t, e1)
 	require.Contains(t, "transaction too large", e1.Error())
 	require.NoError(t, e2)
@@ -863,17 +872,17 @@ func TestService_BigTx(t *testing.T) {
 	s.value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, _, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 1)
-	require.NoError(t, e1)
+	_, _, resp, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 1)
+	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
-	_, _, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 2)
-	require.NoError(t, e1)
+	_, _, resp, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 2)
+	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
 	s.value = smallVal
-	p, k, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, 3)
-	require.NoError(t, e1)
+	p, k, resp, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, 3)
+	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
 	require.True(t, p.InclusionProof.Match(k))
 
@@ -885,7 +894,7 @@ func TestService_BigTx(t *testing.T) {
 	require.Equal(t, 2, len(txr))
 }
 
-func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, []byte, error, error) {
+func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, []byte, *AddTxResponse, error, error) {
 	counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
 		SignerIDs:   []string{s.signer.Identity().String()},
 		SkipchainID: s.genesis.SkipChainID(),
@@ -894,11 +903,12 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 	return sendTransactionWithCounter(t, s, client, kind, wait, counterResponse.Counters[0]+1)
 }
 
-func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, error, error) {
+func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, *AddTxResponse, error, error) {
 	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
 	require.NoError(t, err)
 	ser := s.services[client]
-	_, err = ser.AddTransaction(&AddTxRequest{
+	var resp *AddTxResponse
+	resp, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx,
@@ -920,7 +930,7 @@ func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, w
 		proof = rep.Proof
 	}
 
-	return proof, tx.Instructions[0].Hash(), err, err2
+	return proof, tx.Instructions[0].Hash(), resp, err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
@@ -940,8 +950,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: tx0,
 	})
-	require.NoError(t, err)
-	require.NotNil(t, akvresp)
+	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// tx1 uses the invalid contract, so it should _not_ be stored.
@@ -952,8 +961,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: tx1,
 	})
-	require.NoError(t, err)
-	require.NotNil(t, akvresp)
+	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// tx2 uses the dummy kind, its value should be stored.
@@ -965,8 +973,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		Transaction:   tx2,
 		InclusionWait: 10,
 	})
-	require.NoError(t, err)
-	require.NotNil(t, akvresp)
+	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// Check that tx1 is _not_ stored.
@@ -1253,13 +1260,14 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 		require.NoError(t, err)
 
 		// send it
-		_, err = s.service().AddTransaction(&AddTxRequest{
+		resp, err := s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   ctx,
 			InclusionWait: 10,
 		})
-		require.Error(t, err)
+		require.NoError(t, err)
+		require.Contains(t, resp.Error, "instruction verification failed")
 	}
 
 	// then we create a bad request, i.e., with an invalid version number
@@ -1660,16 +1668,16 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
 		counter++
 		for i := 0; i < 2; i++ {
-			_, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
+			resp, err := ser.Service(ServiceName).(*Service).AddTransaction(&AddTxRequest{
 				Version:       CurrentVersion,
 				SkipchainID:   s.genesis.SkipChainID(),
 				Transaction:   ctx,
 				InclusionWait: 10,
 			})
-			if err == nil {
+			if err == nil && resp.Error == "" {
 				break
 			} else if i == 2 {
-				require.NoError(t, err)
+				transactionOK(t, resp, err)
 			}
 			time.Sleep(testInterval)
 		}
@@ -1707,13 +1715,14 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 	log.Lvl1("Don't allow new nodes as new leader")
 	wrongRoster := onet.NewRoster(append(newRoster.List, s.roster.List...))
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *wrongRoster, defaultMaxBlockSize, s, 1)
-	_, err := s.services[0].AddTransaction(&AddTxRequest{
+	resp, err := s.services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   ctx,
 		InclusionWait: 10,
 	})
-	require.Error(t, err)
+	require.NoError(t, err)
+	require.Contains(t, resp.Error, "new leader must be in previous roster")
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
@@ -1743,15 +1752,15 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
-		_, err := cl.AddTransactionAndWait(ctx, 10)
-		require.NoError(t, err)
+		resp, err := cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
 
 		log.Lvl1("Removing", goodRoster.List[0])
 		goodRoster = onet.NewRoster(goodRoster.List[1:])
 		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
-		_, err = cl.AddTransactionAndWait(ctx, 10)
-		require.NoError(t, err)
+		resp, err = cl.AddTransactionAndWait(ctx, 10)
+		transactionOK(t, resp, err)
 	}
 }
 
@@ -2181,13 +2190,13 @@ func TestService_StateChangeStorage(t *testing.T) {
 		if i == n-1 {
 			wait = 10
 		}
-		_, err = s.service().AddTransaction(&AddTxRequest{
+		resp, err := s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   tx,
 			InclusionWait: wait,
 		})
-		require.NoError(t, err)
+		transactionOK(t, resp, err)
 	}
 
 	scID := s.genesis.SkipChainID()
@@ -2279,13 +2288,13 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i*2+1))
 		require.NoError(t, err)
 
-		_, err = s.service().AddTransaction(&AddTxRequest{
+		resp, err := s.service().AddTransaction(&AddTxRequest{
 			Version:       CurrentVersion,
 			SkipchainID:   s.genesis.SkipChainID(),
 			Transaction:   tx,
 			InclusionWait: 10,
 		})
-		require.NoError(t, err)
+		transactionOK(t, resp, err)
 	}
 
 	newServer, newRoster, newService := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
@@ -2387,30 +2396,6 @@ func TestService_Repair(t *testing.T) {
 	newRoot := s.service().stateTries[genesisHex].GetRoot()
 	s.service().stateTriesLock.Unlock()
 	require.Equal(t, finalRoot, newRoot)
-}
-
-func TestService_trimError(t *testing.T) {
-
-	genString := func(n int) string {
-		b := make([]byte, n)
-		for i := range b {
-			b[i] = 'x'
-		}
-		return string(b)
-	}
-
-	// smaller than 105 chars
-	require.Equal(t, len(trimErrorMsg("my error")), 8)
-
-	// 105 characters, should not have <truncated>
-	msg105 := trimErrorMsg(genString(105))
-	require.Equal(t, len(msg105), 105)
-	require.NotContains(t, msg105, "<truncated>")
-
-	// more than 105 chars, expect <truncated> to be append at the front
-	msg106 := trimErrorMsg(genString(106))
-	require.Equal(t, len(msg106), 105)
-	require.Equal(t, msg106[:11], "<truncated>")
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
@@ -2527,12 +2512,12 @@ func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
 }
 
 func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
-	_, err := s.services[idx].AddTransaction(&AddTxRequest{
+	resp, err := s.services[idx].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: ctx,
 	})
-	require.NoError(t, err)
+	transactionOK(t, resp, err)
 }
 
 func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
@@ -2540,13 +2525,13 @@ func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
 }
 
 func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait int) {
-	_, err := s.services[idx].AddTransaction(&AddTxRequest{
+	resp, err := s.services[idx].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   ctx,
 		InclusionWait: wait,
 	})
-	require.NoError(t, err)
+	transactionOK(t, resp, err)
 }
 
 // caller gives us a darc, and we try to make an evolution request.
@@ -2649,13 +2634,13 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, rw time.Dura
 			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 			require.NoError(t, err)
 			s.tx = tx
-			_, err = s.service().AddTransaction(&AddTxRequest{
+			resp, err := s.service().AddTransaction(&AddTxRequest{
 				Version:       CurrentVersion,
 				SkipchainID:   s.genesis.SkipChainID(),
 				Transaction:   tx,
 				InclusionWait: 10,
 			})
-			require.NoError(t, err)
+			transactionOK(t, resp, err)
 		default:
 			require.Fail(t, "no such step")
 		}

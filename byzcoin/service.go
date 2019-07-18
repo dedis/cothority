@@ -318,7 +318,10 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
-// AddTransaction requests to apply a new transaction to the ledger.
+// AddTransaction requests to apply a new transaction to the ledger. Note is
+// that unlike other service APIs, it is *not* enough to only check for the
+// error value to find out if an error has occured. The caller must also check
+// AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
@@ -398,7 +401,10 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 					if !exists {
 						return nil, errors.New("transaction is in block, but got refused for unknown error")
 					}
-					return nil, errors.New(trimErrorMsg(errMsg))
+					// We cannot return an error here because onet will ignore the response if an error occurs.
+					// The length of the error message is limited if we return an error, so we have to return the
+					// error message in the response.
+					return &AddTxResponse{Version: CurrentVersion, Error: errMsg}, nil
 				}
 
 				if exists {
@@ -423,24 +429,6 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	return &AddTxResponse{
 		Version: CurrentVersion,
 	}, nil
-}
-
-func trimErrorMsg(errMsg string) string {
-	// The limit is set to 105 because websocket control messages have a
-	// size limit (maxControlFramePayloadSize = 125 in gorilla). If a
-	// string that is longer than 125 goes into the control message then
-	// the far side will fail with an unexpected EOF error. Suppose our
-	// error message is of length 105, it will becomes 125 because:
-	// 1. 18 characters ("unexpected error: ") gets appended in onet
-	// 2. 2 byte header from websocket.FormatCloseMessage is appended
-	// 3. The final message that goes into ws.WriteControl is 105 + 18 + 2 = 125
-	// Thus the original message must be no more than 105 characters, any
-	// more will exceed the limit.
-	const limit = 105
-	if len(errMsg) <= limit {
-		return errMsg
-	}
-	return "<truncated>" + strings.TrimSpace(errMsg[len(errMsg)-limit+11:])
 }
 
 // GetProof searches for a key and returns a proof of the
