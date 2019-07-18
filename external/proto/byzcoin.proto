@@ -83,6 +83,8 @@ message AddTxRequest {
 message AddTxResponse {
   // Version of the protocol
   required sint32 version = 1;
+  // Error message describes why the transaction failed.
+  optional string error = 2;
 }
 
 // GetProof returns the proof that the given key is in the trie.
