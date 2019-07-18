@@ -155,7 +155,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * transaction to be included
      * @returns a promise that gets resolved if the block has been included
      */
-    sendTransactionAndWait(transaction: ClientTransaction, wait: number = 10): Promise<AddTxResponse> {
+    async sendTransactionAndWait(transaction: ClientTransaction, wait: number = 10): Promise<AddTxResponse> {
         const req = new AddTxRequest({
             inclusionwait: wait,
             skipchainID: this.genesis.hash,
@@ -163,7 +163,12 @@ export default class ByzCoinRPC implements ICounterUpdater {
             version: currentVersion,
         });
 
-        return this.conn.send(req, AddTxResponse);
+        // The error might be in the response, so we look for it and then reject the promise.
+        const resp = await this.conn.send(req, AddTxResponse) as AddTxResponse;
+        if (resp.error.length === 0) {
+            return Promise.resolve(resp);
+        }
+        return Promise.reject(new Error(resp.error));
     }
 
     /**
