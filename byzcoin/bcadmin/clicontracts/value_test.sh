@@ -1,14 +1,14 @@
 # This method should be called from the byzcoin/bcadmin/test.sh script
 
 testContractValue() {
-    run testSpawn
-    run testSpawnRedirect
-    run testInvokeUpdateRedirect
-    run testGet
-    run testDel
+    run testValueSpawn
+    run testValueSpawnRedirect
+    run testValueInvokeUpdateRedirect
+    run testValueGet
+    run testValueDel
 }
 
-testSpawn() {
+testValueSpawn() {
    # In this test we spawn a value contract and then update its value
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -22,21 +22,20 @@ testSpawn() {
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
     testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" cat res.txt
+    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=`sed -n 2p res.txt`
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
 
     # Update the value instance based on the instance ID
     testOK runBA contract value invoke update --value "newValue" --instid $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
 }
 
-testSpawnRedirect() {
+testValueSpawnRedirect() {
    # In this test we spawn a value with the --export flag
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -49,16 +48,15 @@ testSpawnRedirect() {
     KEY=`cat ./darc_key.txt`
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract --export value spawn --value "myValue" --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract --export value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "value" cat res.txt
-    testGrep "myValue" cat res.txt
+    testGrep "value" echo "$OUTRES"
+    testGrep "myValue" echo "$OUTRES"
 }
 
-testInvokeUpdateRedirect() {
+testValueInvokeUpdateRedirect() {
    # In this test we update a fake instance with exported output
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -71,16 +69,15 @@ testInvokeUpdateRedirect() {
     KEY=`cat ./darc_key.txt`
     testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "value" cat res.txt
-    testGrep "newValue" cat res.txt
+    testGrep "value" echo "$OUTRES"
+    testGrep "newValue" echo "$OUTRES"
 }
 
-testDeleteRedirect() {
+testValueDeleteRedirect() {
    # In this test we delete a fake instance with exported output
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -93,16 +90,15 @@ testDeleteRedirect() {
     KEY=`cat ./darc_key.txt`
     testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract --export value invoke update --value "newValue" -i aef123 --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "value" cat res.txt
-    testGrep "newValue" cat res.txt
+    testGrep "value" echo "$OUTRES"
+    testGrep "newValue" echo "$OUTRES"
 }
 
-testGet() {
+testValueGet() {
     # In this test we spawn a value contract and then retrieve the value stored
     # with the "get" function. We then perform an update and test if we can get
     # the updated value. We partially use the same code as the spawn function.
@@ -119,38 +115,33 @@ testGet() {
     testOK runBA darc rule -rule "invoke:value.update" --identity "$KEY" --darc "$ID" --sign "$KEY"
     testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" cat res.txt
+    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=`sed -n 2p res.txt`
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
 
-    # Use the "get" function and save the output to the res.txt file. This file
-    # should contain the saved value.
-    OUTFILE=res.txt && testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"
-    OUTFILE=""
+    # Use the "get" function and save the output to the OUTPUT variable
+    OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
 
-    testGrep "myValue" cat res.txt
+    testGrep "myValue" echo "$OUTRES"
 
     # Update the value instance based on the instance ID
     testOK runBA contract value invoke update --value "newValue" --instid $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
 
-    # Use the "get" function and save the output to the res.txt file. This file
-    # should contain the newly updated value.
-    OUTFILE=res.txt && testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"
-    OUTFILE=""
+    # Use the "get" function and save the output to the OUTPUT variable
+    OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
 
-    testGrep "newValue" cat res.txt
+    testGrep "newValue" echo "$OUTRES"
 
     # Try to get a wrong instance ID
     testFail runBA contract value get --instid deadbeef
 }
 
-testDel() {
+testValueDel() {
     # In this test we spawn a value contract, delete it and check if we can get
     # it. Uses partially the code of the spawn test.
     runCoBG 1 2 3
@@ -165,15 +156,14 @@ testDel() {
     testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
     testOK runBA darc rule -rule "delete:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
-    # Spawn a new value contract, we save the output to the res.txt file
-    OUTFILE=res.txt && testOK runBA contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"
-    OUTFILE=""
+    # Spawn a new value contract, we save the output to the OUTRES variable
+    OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" cat res.txt
+    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=`sed -n 2p res.txt`
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
 
     # Use the "get" function to retrieve the contract. It should pass.
     testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"

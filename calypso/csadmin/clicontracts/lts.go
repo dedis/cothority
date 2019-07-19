@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"os"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -94,6 +95,11 @@ func LTSSpawn(c *cli.Context) error {
 
 	newInstID := tx.Instructions[0].DeriveID("").Slice()
 
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
+
 	iidStr := hex.EncodeToString(newInstID)
 	if c.Bool("export") {
 		reader := bytes.NewReader([]byte(iidStr))
@@ -104,8 +110,8 @@ func LTSSpawn(c *cli.Context) error {
 		return nil
 	}
 
-	fmt.Fprintf(c.App.Writer, "Spawned a new LTS contract. Its instance id is:\n"+
-		"%s\n", iidStr)
+	log.Infof("Spawned a new LTS contract. Its instance id is:\n"+
+		"%s", iidStr)
 
 	return nil
 }

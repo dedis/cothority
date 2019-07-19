@@ -25,6 +25,7 @@ func TestSecureDarc(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)

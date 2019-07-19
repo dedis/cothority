@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=0
 
 # Use 3 servers, use all of them, don't leave one down.
 NBR=3
 NBR_SERVERS_GROUP=$NBR
 . ../../libtest.sh
+
+export BC_WAIT=true
 
 main(){
 	build $APPDIR/../../byzcoin/bcadmin

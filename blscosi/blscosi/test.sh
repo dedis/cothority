@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
 CLEANBUILD=1

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=2
+export DEBUG_LVL=2
+export BC_WAIT=true
 
 # Use 3 servers, use all of them, don't leave one down.
 NBR=3
@@ -19,12 +21,13 @@ main(){
 
 	# This must succeed before any others will work.
 	run testEventLog
-	
+
 	stopTest
 }
 
 testEventLog(){
 	##### setup phase
+	rm -f *.cfg
 	runCoBG 1 2 3
 	runGrepSed "export BC=" "" ./bcadmin -c . create --roster public.toml --interval .5s
 	eval "$SED"
@@ -32,7 +35,9 @@ testEventLog(){
 	
 	KEY=$(./el -c . key)
 
+	./bcadmin debug counters bc*cfg key*cfg
 	testOK ./bcadmin -c . darc rule -rule spawn:eventlog -identity "$KEY"
+	./bcadmin debug counters bc*cfg key*cfg
 	testOK ./bcadmin -c . darc rule -rule invoke:eventlog.log -identity "$KEY"
 
 	runGrepSed "export EL=" "" $el create -sign "$KEY"

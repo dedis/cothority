@@ -22,7 +22,7 @@ testContractReadInvoke() {
     testOK runBA darc rule -rule "spawn:longTermSecret" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn LTS
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $LTS_ID ^[0-9a-f]{64}$
     # Authorize nodes
@@ -31,14 +31,14 @@ testContractReadInvoke() {
     testOK runCA authorize co2/private.toml $bcID
     testOK runCA authorize co3/private.toml $bcID
     # Creat LTS and save the public key
-    runCA dkg start --instid "$LTS_ID" -x > key.pub
+    runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
 
     # Add the Calypso rule "spawn:calypsoWrite"
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
-    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
+    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
 
     # Should fail because we miss the "spawn:calypsoRead" rule
@@ -47,12 +47,12 @@ testContractReadInvoke() {
     # Add the Calypso rule
     testOK runBA darc rule -rule spawn:calypsoRead -darc $ID -sign $KEY -identity $KEY
 
-    OUTRES=`runCA contract read spawn --sign $KEY --instid $WRITE_ID`
+    OUTRES=`runCA0 contract read spawn --sign $KEY --instid $WRITE_ID`
 
     matchOK "$OUTRES" "Spawned a new read instance. Its instance id is:
 [0-9a-f]{32}"
 
     # Check the export option
-    runCA contract read spawn --sign $KEY --instid $WRITE_ID -x > iid.txt
+    runCA0 contract read spawn --sign $KEY --instid $WRITE_ID -x > iid.txt
     matchOK "`cat iid.txt`" ^[0-9a-f]{64}$
 }

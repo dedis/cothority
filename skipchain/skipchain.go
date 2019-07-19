@@ -613,7 +613,7 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 		Skipping: true,
 	}
 	if err := pi.Start(); err != nil {
-		log.ErrFatal(err)
+		return nil, err
 	}
 	select {
 	case result := <-pisc.GetBlocksReply:

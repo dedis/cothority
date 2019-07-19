@@ -22,7 +22,7 @@ testContractWriteInvoke() {
     testOK runBA darc rule -rule "spawn:longTermSecret" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn LTS
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'`
     matchOK $LTS_ID ^[0-9a-f]{64}$
     # Authorize nodes
@@ -31,7 +31,7 @@ testContractWriteInvoke() {
     testOK runCA authorize co2/private.toml $bcID
     testOK runCA authorize co3/private.toml $bcID
     # Creat LTS and save the public key
-    runCA dkg start --instid "$LTS_ID" -x > key.pub
+    runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
@@ -42,7 +42,7 @@ testContractWriteInvoke() {
     # Add the missing Calypso rule
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
-    OUTRES=`runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
+    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
 
     matchOK "$OUTRES" "Spawned a new write instance. Its instance id is:
 [0-9a-f]{32}"
@@ -51,7 +51,7 @@ testContractWriteInvoke() {
     # by a `csadmin contract write get` function.
 
     # Check the export option
-    runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" -x > iid.txt
+    runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" -x > iid.txt
     matchOK "`cat iid.txt`" ^[0-9a-f]{64}$
 
     # Check the --data option
@@ -81,7 +81,7 @@ testContractWriteGet() {
     testOK runBA darc rule -rule "spawn:longTermSecret" --identity "$KEY" --darc "$ID" --sign "$KEY"
 
     # Spawn LTS
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runCA0 contract lts spawn --darc "$ID" --sign "$KEY"`
     LTS_ID=`echo "$OUTRES" | sed -n '2p'`
     matchOK $LTS_ID ^[0-9a-f]{64}$
     # Authorize nodes
@@ -90,7 +90,7 @@ testContractWriteGet() {
     testOK runCA authorize co2/private.toml $bcID
     testOK runCA authorize co3/private.toml $bcID
     # Creat LTS and save the public key
-    runCA dkg start --instid "$LTS_ID" -x > key.pub
+    runCA0 dkg start --instid "$LTS_ID" -x > key.pub
     
     PUB_KEY=`cat key.pub`
     matchOK $PUB_KEY ^[0-9a-f]{64}$
@@ -98,14 +98,14 @@ testContractWriteGet() {
     # Add the missing Calypso rule
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
-    runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+    runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --data "Not secret" -x > writeid.txt
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Lets now check the result
-    OUTRES=`runCA contract write get --instid $WRITE_ID`
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
 -- Data: Not secret
@@ -119,7 +119,7 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Use the --readin option
-    echo "No secret from STDIN" | runCA contract write spawn\
+    echo "No secret from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readin -x > writeid.txt
@@ -127,7 +127,7 @@ testContractWriteGet() {
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Lets now check the result
-    OUTRES=`runCA contract write get --instid $WRITE_ID`
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
 -- Data: No secret from STDIN
@@ -141,13 +141,13 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide no data
-    runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+    runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY" -x > writeid.txt
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Lets now check the result
-    OUTRES=`runCA contract write get --instid $WRITE_ID`
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
 -- Data: 
@@ -161,7 +161,7 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide both --data and --readin. --readin should be used.
-    echo "No secret from STDIN" | runCA contract write spawn\
+    echo "No secret from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readin --data "Hello there." -x > writeid.txt
@@ -169,7 +169,7 @@ testContractWriteGet() {
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
     # Lets now check the result
-    OUTRES=`runCA contract write get --instid $WRITE_ID`
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
 -- Data: No secret from STDIN

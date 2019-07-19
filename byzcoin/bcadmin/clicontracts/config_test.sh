@@ -16,7 +16,7 @@ testContractConfigInvoke() {
 
     # Run an update with no argument, we should have in return the current
     # config.
-    OUTRES=`runBA contract config invoke updateConfig`
+    OUTRES=`runBA0 contract config invoke updateConfig`
 
     testGrep "Config contract updated! \(instance ID is [a-f0-9]+\)" echo "$OUTRES"
     testGrep "Here is the config data:" echo "$OUTRES"
@@ -28,7 +28,7 @@ testContractConfigInvoke() {
     testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
 
     # Update all the arguments. We check if the return corresponds.
-    OUTRES=`runBA contract config invoke updateConfig\
+    OUTRES=`runBA0 contract config invoke updateConfig\
                 --blockInterval 7s\
                 --maxBlockSize 5000000\
                 --darcContractIDs darc,darc2,darc3`
@@ -53,7 +53,7 @@ testContractConfigGet() {
     [ -z "$BC" ] && exit 1
 
     # Get the config instance
-    OUTRES=`runBA contract config get`
+    OUTRES=`runBA0 contract config get`
 
     # Check the result
     testGrep "Here is the config data:" echo "$OUTRES"

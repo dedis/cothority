@@ -4,9 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -99,8 +101,7 @@ func DeferredSpawn(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -109,19 +110,15 @@ func DeferredSpawn(c *cli.Context) error {
 	}
 
 	instID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Spawned new deferred contract, its instance id is: \n%x\n", instID)
-	if err != nil {
-		return err
-	}
+	log.Infof("Spawned new deferred contract, its instance id is: \n%x", instID)
 
 	// ---
 	// 3.
 	// ---
-	pr, err := cl.GetProofFromLatest(instID)
+	proof, err := cl.WaitProof(byzcoin.NewInstanceID(instID), time.Second, nil)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
-	proof := pr.Proof
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
@@ -134,9 +131,9 @@ func DeferredSpawn(c *cli.Context) error {
 		return errors.New("couldn't decode the result: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the deferred data: \n%s\n", result)
+	log.Infof("Here is the deferred data: \n%s", result)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 // DeferredInvokeAddProof is used to add the proof of a proposed transaction's
@@ -248,8 +245,7 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -260,13 +256,16 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// ---
 	// 4.
 	// ---
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
-	proof := pr.Proof
 
-	_, resultBuf, _, _, err := proof.KeyValue()
+	_, resultBuf, _, _, err := pr.Proof.KeyValue()
 	if err != nil {
 		return errors.New("couldn't get value out of proof: " + err.Error())
 	}
@@ -277,9 +276,9 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 		return errors.New("couldn't decode the result: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the deferred data: \n%s\n", result)
+	log.Infof("Here is the deferred data: \n%s", result)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 // ExecProposedTx is used to execute the proposed transaction if all the
@@ -346,8 +345,7 @@ func ExecProposedTx(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -358,13 +356,16 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
 		return errors.New("couldn't get proof for admin-darc: " + err.Error())
 	}
-	proof := pr.Proof
 
-	_, resultBuf, _, _, err := proof.KeyValue()
+	_, resultBuf, _, _, err := pr.Proof.KeyValue()
 	if err != nil {
 		return errors.New("couldn't get value out of proof: " + err.Error())
 	}
@@ -375,7 +376,7 @@ func ExecProposedTx(c *cli.Context) error {
 		return errors.New("couldn't decode the result: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the deferred data: \n%s\n", result)
+	log.Infof("Here is the deferred data: \n%s", result)
 
 	return nil
 }
@@ -432,7 +433,7 @@ func DeferredGet(c *cli.Context) error {
 		return errors.New("Failed to decode the result: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "%s\n", result)
+	log.Infof("%s", result)
 
 	return nil
 }
@@ -496,8 +497,7 @@ func DeferredDelete(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -506,10 +506,7 @@ func DeferredDelete(c *cli.Context) error {
 	}
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Deferred contract deleted! (instance ID is %x)\n", newInstID)
-	if err != nil {
-		return err
-	}
+	log.Infof("Deferred contract deleted! (instance ID is %x)", newInstID)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }

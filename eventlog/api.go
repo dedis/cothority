@@ -31,8 +31,11 @@ type Client struct {
 // NewClient creates a new client to talk to the eventlog service.
 // Fields DarcID, Instance, and Signers must be filled in before use.
 func NewClient(ol *byzcoin.Client) *Client {
+	var bc byzcoin.Client
+	bc = *ol
+	bc.UseNode(0)
 	return &Client{
-		ByzCoin:    ol,
+		ByzCoin:    &bc,
 		c:          onet.NewClient(cothority.Suite, ServiceName),
 		sc:         skipchain.NewClient(),
 		signerCtrs: nil,
