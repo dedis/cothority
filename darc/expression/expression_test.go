@@ -188,6 +188,50 @@ func TestParsing_RealIDs(t *testing.T) {
 	}
 }
 
+func TestParsing_Xattr(t *testing.T) {
+	expr := []byte("xattr:xyz_-:zys=123&sdy=234")
+	_, err := Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("xattr:xyz_-:zys=123&sdy=234 & ed25519:abc")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("xattr:xyz:")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("xattr:xyz*:zys=123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("xattr name cannot have an *")
+	}
+
+	expr = []byte("xattr::zys=123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("xattr name cannot be empty")
+	}
+
+	expr = []byte("xattr:abc")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("xattr value cannot be empty")
+	}
+
+	expr = []byte("xattr:abc:zys = 123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("xattr value cannot have spaces")
+	}
+}
+
 func TestParsing_Empty(t *testing.T) {
 	expr := []byte{}
 	_, err := Evaluate(InitParser(trueFn), expr)
