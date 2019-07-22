@@ -12,6 +12,7 @@ matrix:
 
       install:
         - go get github.com/dedis/Coding || true
+        - ( cd ..; git clone --single-branch --branch fix_race https://github.com/c4dt/onet )
 
       script:
         - set -e
