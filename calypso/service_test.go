@@ -236,12 +236,14 @@ func TestContract_Write_Benchmark(t *testing.T) {
 
 	s := newTS(t, 5)
 	defer s.closeAll(t)
+	require.NoError(t, s.cl.UseNode(0))
 
-	totalTrans := 10
+	totalTrans := 50
 	var times []time.Duration
 
 	var ctr uint64 = 2
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 10; i++ {
+		log.Lvl1("Creating transaction", i)
 		iids := make([]byzcoin.InstanceID, totalTrans)
 		start := time.Now()
 		for i := 0; i < totalTrans; i++ {
