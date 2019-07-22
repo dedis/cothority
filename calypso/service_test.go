@@ -45,6 +45,7 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 	nodes := 4
 	s := newTSWithExtras(t, nodes, nodes)
 	defer s.closeAll(t)
+	require.NoError(t, s.cl.UseNode(0))
 	require.NotNil(t, s.ltsReply.ByzCoinID)
 	require.NotNil(t, s.ltsReply.InstanceID)
 	require.NotNil(t, s.ltsReply.X)
@@ -155,6 +156,7 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			}
 			s := newTSWithExtras(t, nodes, 1)
 			defer s.closeAll(t)
+			require.NoError(t, s.cl.UseNode(0))
 			require.NotNil(t, s.ltsReply.ByzCoinID)
 			require.NotNil(t, s.ltsReply.InstanceID)
 			require.NotNil(t, s.ltsReply.X)
@@ -422,14 +424,14 @@ func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 	require.NoError(t, err)
 
 	// Get the proof
-	resp, err := s.cl.GetProof(tx.Instructions[0].DeriveID("").Slice())
+	proof, err := s.cl.WaitProof(tx.Instructions[0].DeriveID(""), s.genesisMsg.BlockInterval, nil)
 	require.NoError(t, err)
 
 	// Start DKG
 	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{
-		Proof: resp.Proof,
+		Proof: *proof,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	reply2 := CreateLTSReply{
 		ByzCoinID:  s.gbReply.Skipblock.SkipChainID(),

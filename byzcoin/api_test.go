@@ -118,6 +118,7 @@ func TestClient_GetProof(t *testing.T) {
 
 	c, csr, err := NewLedger(msg, false)
 	require.Nil(t, err)
+	require.NoError(t, c.UseNode(0))
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
@@ -163,6 +164,8 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	gen.Hash = gen.CalculateHash()
 	c.ID = gen.Hash
 	c.Genesis = gen
+	// Fix on using only the leader
+	require.NoError(t, c.UseNode(0))
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}

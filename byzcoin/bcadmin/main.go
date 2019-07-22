@@ -98,8 +98,8 @@ var cmds = cli.Commands{
 			},
 			cli.IntFlag{
 				Name:  "server",
-				Usage: "which server number from the roster to contact (default: 0)",
-				Value: 0,
+				Usage: "which server number from the roster to contact (default: -1 = random)",
+				Value: -1,
 			},
 			cli.BoolFlag{
 				Name:  "update",
@@ -153,6 +153,12 @@ var cmds = cli.Commands{
 				Usage:     "removes a given byzcoin instance",
 				Action:    debugRemove,
 				ArgsUsage: "private.toml byzcoin-id",
+			},
+			{
+				Name:      "counters",
+				Usage:     "shows the counter-state in all nodes",
+				Action:    debugCounters,
+				ArgsUsage: "bc.cfg key-file",
 			},
 		},
 	},
@@ -745,6 +751,11 @@ func init() {
 			Value:  getDataPath(lib.BcaName),
 			Usage:  "path to configuration-directory",
 		},
+		cli.BoolFlag{
+			Name:   "wait, w",
+			EnvVar: "BC_WAIT",
+			Usage:  "wait for transaction available in all nodes",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
@@ -786,7 +797,7 @@ func create(c *cli.Context) error {
 	}
 	req.BlockInterval = interval
 
-	_, resp, err := byzcoin.NewLedger(req, false)
+	cl, resp, err := byzcoin.NewLedger(req, false)
 	if err != nil {
 		return err
 	}
@@ -807,19 +818,13 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(c.App.Writer, "Created ByzCoin with ID %x.\n", cfg.ByzCoinID)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(c.App.Writer, "export BC=\"%v\"\n", fn)
-	if err != nil {
-		return err
-	}
+	log.Infof("Created ByzCoin with ID %x.\n", cfg.ByzCoinID)
+	fmt.Printf("\nexport BC=\"%s\"\n", fn)
 
 	// For the tests to use.
 	c.App.Metadata["BC"] = fn
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 func link(c *cli.Context) error {
@@ -1011,26 +1016,25 @@ func latest(c *cli.Context) error {
 	}
 
 	// Allow the user to set the server number; useful when testing leader rotation.
-	cl.ServerNumber = c.Int("server")
-	if cl.ServerNumber > len(cl.Roster.List)-1 {
-		return errors.New("server index out of range")
+	sn := c.Int("server")
+	if sn >= 0 {
+		err := cl.UseNode(sn)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = fmt.Fprintf(c.App.Writer, "ByzCoinID: %x\n", cfg.ByzCoinID)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(c.App.Writer, "Admin DARC: %x\n", cfg.AdminDarc.GetBaseID())
-	if err != nil {
-		return err
-	}
+	log.Infof("ByzCoinID: %x\n", cfg.ByzCoinID)
+	log.Infof("Admin DARC: %x\n", cfg.AdminDarc.GetBaseID())
 	_, err = fmt.Fprintln(c.App.Writer, "local roster:", fmtRoster(&cfg.Roster))
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[cl.ServerNumber])
-	if err != nil {
-		return err
+	if sn >= 0 {
+		_, err = fmt.Fprintln(c.App.Writer, "contacting server:", cl.Roster.List[sn])
+		if err != nil {
+			return err
+		}
 	}
 
 	// Find the latest block by asking for the Proof of the config instance.
@@ -1040,11 +1044,8 @@ func latest(c *cli.Context) error {
 	}
 
 	sb := p.Proof.Latest
-	_, err = fmt.Fprintf(c.App.Writer, "Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n\tBackLinks: %d\n\tRoster: %s\n\n",
+	log.Infof("Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n\tBackLinks: %d\n\tRoster: %s\n\n",
 		sb.Index, sb.Height, len(sb.BackLinkIDs), fmtRoster(sb.Roster))
-	if err != nil {
-		return err
-	}
 
 	if c.Bool("roster") {
 		g := &app.Group{Roster: sb.Roster}
@@ -1213,7 +1214,7 @@ func config(c *cli.Context) error {
 
 	log.Lvl1("Updated configuration")
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 func mint(c *cli.Context) error {
@@ -1360,7 +1361,8 @@ func mint(c *cli.Context) error {
 	}
 
 	log.Infof("Account %x created and filled with %d coins", account[:], coins)
-	return nil
+
+	return lib.WaitPropagation(c, cl)
 }
 
 func rosterAdd(c *cli.Context) error {
@@ -1385,7 +1387,8 @@ func rosterAdd(c *cli.Context) error {
 		return err
 	}
 	log.Lvl1("New roster is now active")
-	return nil
+
+	return lib.WaitPropagation(c, cl)
 }
 
 func rosterDel(c *cli.Context) error {
@@ -1415,7 +1418,8 @@ func rosterDel(c *cli.Context) error {
 		return err
 	}
 	log.Lvl1("New roster is now active")
-	return nil
+
+	return lib.WaitPropagation(c, cl)
 }
 
 func rosterLeader(c *cli.Context) error {
@@ -1446,12 +1450,9 @@ func rosterLeader(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = updateConfig(cl, signer, chainConfig)
-	if err != nil {
-		return err
-	}
 	log.Lvl1("New roster is now active")
-	return nil
+
+	return lib.WaitPropagation(c, cl)
 }
 
 func key(c *cli.Context) error {
@@ -1672,7 +1673,7 @@ func darcCdesc(c *cli.Context) error {
 		return err
 	}
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 func debugList(c *cli.Context) error {
@@ -1819,6 +1820,27 @@ func debugRemove(c *cli.Context) error {
 	return nil
 }
 
+func debugCounters(c *cli.Context) error {
+	if c.NArg() < 2 {
+		return errors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg")
+	}
+	cfg, cl, signer, _, _, err := getBcKey(c)
+	if err != nil {
+		return err
+	}
+	for i, node := range cfg.Roster.List {
+		if err := cl.UseNode(i); err != nil {
+			return err
+		}
+		resp, err := cl.GetSignerCounters(signer.Identity().String())
+		if err != nil {
+			return err
+		}
+		log.Infof("node %s has counter %d", node.Address, resp.Counters[0])
+	}
+	return nil
+}
+
 func darcAdd(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
@@ -1883,7 +1905,6 @@ func darcAdd(c *cli.Context) error {
 	}
 
 	deferredExpr := expression.InitOrExpr(identities...)
-
 	adminExpr := expression.InitAndExpr(identities...)
 
 	rules := darc.NewRules()
@@ -1964,7 +1985,7 @@ func darcAdd(c *cli.Context) error {
 		}
 	}
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 func darcRule(c *cli.Context) error {
@@ -2087,7 +2108,7 @@ func darcRule(c *cli.Context) error {
 		return err
 	}
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 // print a rule based on the identities and the minimum given.
@@ -2120,7 +2141,7 @@ func darcPrintRule(c *cli.Context) error {
 		groupExpr = expression.InitOrExpr(andGroups...)
 	}
 
-	fmt.Fprintf(c.App.Writer, "%s\n", groupExpr)
+	log.Infof("%s\n", groupExpr)
 
 	return nil
 }

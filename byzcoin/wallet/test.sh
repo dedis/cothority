@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=2
 DBG_BA=2
 
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=3
 
+export BC_WAIT=true
+
 . "../../libtest.sh"
 
 main(){
   startTest
-  buildConode github.com/dedis/cothority/byzcoin github.com/dedis/cothority/byzcoin/contracts
+  buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
   build $APPDIR/../bcadmin
   run testMulti
   run testLoadSave

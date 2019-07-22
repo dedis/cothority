@@ -89,6 +89,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return errors.New("couldn't create genesis block: " + err.Error())
 	}
+	if err = c.UseNode(0); err != nil {
+		return err
+	}
 
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)
@@ -224,7 +227,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 			return errors.New("while adding transaction and waiting: " + err.Error())
 		}
 
-		// The AddTransactionAndWait returns as soon as the transaction is sent to the leader, but
+		// The AddTransactionAndWait returns as soon as the transaction is included in the node, but
 		// it doesn't wait until the transaction is included in all nodes. Thus this wait for
 		// the new block to be propagated.
 		time.Sleep(time.Second)

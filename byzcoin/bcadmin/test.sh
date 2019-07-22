@@ -6,8 +6,8 @@
 #   -b   re-builds bcadmin package
 
 DBG_TEST=1
-DBG_SRV=1
-DBG_BCADMIN=1
+DBG_SRV=2
+DBG_BCADMIN=2
 
 NBR_SERVERS=4
 NBR_SERVERS_GROUP=3
@@ -15,6 +15,7 @@ NBR_SERVERS_GROUP=3
 # Clears some env. variables
 export -n BC_CONFIG
 export -n BC
+export BC_WAIT=true
 
 . "../../libtest.sh"
 . "../clicontracts/config_test.sh"
@@ -50,7 +51,7 @@ main(){
 testReplay(){
   rm -f config/*
   runCoBG 1 2 3
-  runBA create public.toml --interval .5s
+  testOK runBA create public.toml --interval .5s
   bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   bc=config/bc*cfg
   key=config/key*cfg
@@ -61,7 +62,7 @@ testReplay(){
   testOK runBA debug replay http://localhost:2003 $bcID
 
   for i in $( seq 10 ); do
-    runBA mint $bc $key $keyPub 1000
+    testOK runBA mint $bc $key $keyPub 1000
   done
   # replay with more than 1 block
   testOK runBA debug replay http://localhost:2003 $bcID
@@ -147,8 +148,7 @@ testRoster(){
   # Adding an already added roster should raise an error
   testFail runBA roster add $bc $key co1/public.toml
   testOK runBA roster add $bc $key co4/public.toml
-
-  # Change the block size to create a new block before verifying the roster
+  runBA debug counters $bc $key
   testOK runBA config --blockSize 1000000 $bc $key
   testGrep 2008 runBA latest $bc
 
@@ -157,11 +157,8 @@ testRoster(){
   testFail runBA roster del $bc $key co1/public.toml
   # ... but deleting someone else works
   testOK runBA roster del $bc $key co2/public.toml
-  # Change the block size to create a new block before verifying the roster
-  testOK runBA config --blockSize 1000000 $bc $key
-  sleep 10
-
   testNGrep "Roster:.*tls://localhost:2004" runBA latest $bc
+
   # Need at least 3 nodes to have a majority
   testFail runBA roster del $bc $key co3/public.toml
   # Adding a leader not in the roster raises an error
@@ -169,8 +166,6 @@ testRoster(){
   # Setting a conode that is a leader as a leader raises an error
   testFail runBA roster leader $bc $key co1/public.toml
   testOK runBA roster leader $bc $key co3/public.toml
-  # Change the block size to create a new block before verifying the roster
-  testOK runBA config --blockSize 1000000 $bc $key
   testGrep "Roster: tls://localhost:2006" runBA latest -server 2 $bc
 }
 
@@ -362,6 +357,10 @@ testExpression(){
 
 runBA(){
   ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
+}
+
+runBA0(){
+  ./bcadmin -c config/ --debug 0 "$@"
 }
 
 testQR() {

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"go.dedis.ch/onet/v3/log"
+
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
@@ -79,8 +81,7 @@ func ValueSpawn(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -89,12 +90,9 @@ func ValueSpawn(c *cli.Context) error {
 	}
 
 	instID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Spawned new value contract. Instance id is: \n%x\n", instID)
-	if err != nil {
-		return err
-	}
+	log.Infof("Spawned new value contract. Instance id is:\n%x", instID)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 // ValueInvokeUpdate is able to update the value of a value contract
@@ -169,8 +167,7 @@ func ValueInvokeUpdate(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -179,12 +176,9 @@ func ValueInvokeUpdate(c *cli.Context) error {
 	}
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Value contract updated! (instance ID is %x)\n", newInstID)
-	if err != nil {
-		return err
-	}
+	fmt.Printf("Value contract updated! (instance ID is %x)\n", newInstID)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }
 
 // ValueGet checks the proof and retrieves the value of a value contract.
@@ -206,7 +200,7 @@ func ValueGet(c *cli.Context) error {
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string")
+		return errors.New("failed to decode the instID string" + instID)
 	}
 
 	pr, err := cl.GetProofFromLatest(instIDBuf)
@@ -233,7 +227,7 @@ func ValueGet(c *cli.Context) error {
 		return errors.New("couldn't get value out of proof: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "%s\n", resultBuf)
+	log.Infof("%s", resultBuf)
 
 	return nil
 }
@@ -297,8 +291,7 @@ func ValueDelete(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -307,10 +300,7 @@ func ValueDelete(c *cli.Context) error {
 	}
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Value contract deleted! (instance ID is %x)\n", newInstID)
-	if err != nil {
-		return err
-	}
+	log.Infof("Value contract deleted! (instance ID is %x)", newInstID)
 
-	return nil
+	return lib.WaitPropagation(c, cl)
 }

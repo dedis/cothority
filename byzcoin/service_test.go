@@ -11,13 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/cothority/v3/byzcoin/trie"
-
 	"go.etcd.io/bbolt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -1752,6 +1751,7 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
+		require.NoError(t, cl.UseNode(0))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 
@@ -1786,6 +1786,7 @@ func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int
 		require.NoError(t, err)
 
 		s.sendTxToAndWait(t, ctx, idx, 10)
+		s.local.WaitDone(time.Second)
 	}
 	return count
 }
@@ -1793,6 +1794,12 @@ func addDummyTxsTo(t *testing.T, s *ser, nbr int, perCTx int, count int, idx int
 func TestService_SetConfigRosterDownload(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
+
+	cfdb := catchupFetchDBEntries
+	defer func() {
+		catchupFetchDBEntries = cfdb
+	}()
+	catchupFetchDBEntries = 10
 
 	ids := []darc.Identity{s.signer.Identity()}
 	testDarc := darc.NewDarc(darc.InitRules(ids, ids), []byte("testDarc"))
@@ -1837,6 +1844,12 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 func TestService_DownloadState(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
+
+	cfdb := catchupFetchDBEntries
+	defer func() {
+		catchupFetchDBEntries = cfdb
+	}()
+	catchupFetchDBEntries = 10
 
 	log.Lvl1("Adding dummy transactions")
 	ct := addDummyTxs(t, s, 3, 3, 1)

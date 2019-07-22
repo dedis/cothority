@@ -333,17 +333,18 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	blocks := make([]*SkipBlock, nbrBlocks)
 	var err error
 	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil)
-	// hand-calculated links table
-	// This should be the number of forward links for every block:
-	//   4, 1, 2, 1, 3, 1, 2, 1, 2, 1, 1
-	// and then do the links in your head ;)
-	links := []int{1, 2, 2, 3, 2, 3, 3, 4, 2, 3}
 	log.ErrFatal(err)
 	for i := 1; i < nbrBlocks; i++ {
 		reply, err := c.StoreSkipBlock(blocks[0], roster, nil)
 		log.ErrFatal(err)
 		blocks[i] = reply.Latest
 	}
+
+	// hand-calculated links table
+	// This should be the number of forward links for every block:
+	//   4, 1, 2, 1, 3, 1, 2, 1, 4, 1, 2
+	// and then do the links in your head ;)
+	links := []int{1, 2, 2, 3, 2, 3, 3, 4, 2, 3}
 
 	// 0
 	sb1 := blocks[0]
@@ -356,6 +357,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 
 	// 1..nbrBlocks
 	for i := 1; i < nbrBlocks; i++ {
+		log.Lvl1("Creating new block", i)
 		search, err = c.GetSingleBlockByIndex(roster, sb1.SkipChainID(), i)
 		log.ErrFatal(err)
 		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
@@ -366,8 +368,9 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	}
 
 	// non existing
-	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, nbrBlocks+1)
-	require.NotNil(t, err)
+	log.Lvl1("Checking last link")
+	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, nbrBlocks)
+	require.Error(t, err)
 }
 
 func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
@@ -385,7 +388,7 @@ func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
 	service.GetSingleBlockByIndexReply = &GetSingleBlockByIndexReply{}
 	_, err := c.GetSingleBlockByIndex(roster, genesis.Hash, 0)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Got an empty reply")
+	require.Contains(t, err.Error(), "got an empty reply")
 
 	sb := NewSkipBlock()
 	service.GetSingleBlockByIndexReply.SkipBlock = sb
@@ -398,13 +401,13 @@ func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
 	sb.updateHash()
 	_, err = c.GetSingleBlockByIndex(roster, genesis.Hash, 0)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Got the wrong block in reply")
+	require.Contains(t, err.Error(), "got the wrong block in reply")
 
 	sb.Index = 0
 	sb.updateHash()
 	_, err = c.GetSingleBlockByIndex(roster, SkipBlockID{}, 0)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Got a block of a different chain")
+	require.Contains(t, err.Error(), "got a block of a different chain")
 }
 
 func TestClient_CreateLinkPrivate(t *testing.T) {

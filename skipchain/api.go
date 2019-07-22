@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math/rand"
-	"strings"
-	"time"
 
 	"go.dedis.ch/cothority/v3"
 	status "go.dedis.ch/cothority/v3/status/service"
@@ -21,11 +18,32 @@ import (
 // service from the outside
 type Client struct {
 	*onet.Client
+	// Used for SendProtobufParallel. If it is nil, default values will be used.
+	options *onet.ParallelOptions
 }
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, "Skipchain")}
+}
+
+// UseNode sets the options so that only the given node will be contacted
+func (c *Client) UseNode(n int) {
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
+	}
+	c.options.DontShuffle = true
+	c.options.StartNode = n
+	c.options.AskNodes = 1
+}
+
+// DontContact adds the given serverIdentity to the list of nodes that will
+// not be contacted.
+func (c *Client) DontContact(si *network.ServerIdentity) {
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
+	}
+	c.options.IgnoreNodes = []*network.ServerIdentity{si}
 }
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and
@@ -248,36 +266,16 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 //   - maxBlocks: how many blocks to return at maximum.
 func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 	maxLevel int, maxBlocks int) (update []*SkipBlock, err error) {
-	const retries = 3
-	delay := 1 * time.Second
-
 	for {
 		r2 := &GetUpdateChainReply{}
 
-		// Try up to retries random servers from the given roster.
-		i := 0
-		// TODO: not random until the seed is set up
-		perm := rand.Perm(len(roster.List))
-		for ; i < retries; i++ {
-			// To handle the case where len(perm) < retries.
-			which := i % len(perm)
-			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{
-				LatestID:  latest,
-				MaxHeight: maxLevel,
-				MaxBlocks: maxBlocks,
-			}, r2)
-			if err == nil && len(r2.Update) != 0 {
-				break
-			}
-			// Don't want to sleep on the last time thru this loop.
-			if i < retries-1 {
-				time.Sleep(delay)
-				// exponential backoff
-				delay *= 2
-			}
-		}
-		if i == retries {
-			return nil, fmt.Errorf("too many retries; last error: %v", err)
+		_, err = c.SendProtobufParallel(roster.List, &GetUpdateChain{
+			LatestID:  latest,
+			MaxHeight: maxLevel,
+			MaxBlocks: maxBlocks,
+		}, r2, c.options)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
 		}
 
 		// Does this chain start where we expect it to?
@@ -370,54 +368,34 @@ func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSk
 // or an error if that block is not found.
 func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, error) {
 	var reply = &SkipBlock{}
-	perms := rand.Perm(len(roster.List))
-	var errs []string
-	for _, ind := range perms {
-		err := c.SendProtobuf(roster.List[ind], &GetSingleBlock{id}, reply)
-		if err == nil {
-			if err := reply.VerifyForwardSignatures(); err != nil {
-				return nil, err
-			}
-
-			if !reply.Hash.Equal(id) {
-				return nil, errors.New("Got the wrong block in return")
-			}
-
-			return reply, nil
-		}
-
-		errs = append(errs, err.Error())
+	_, err := c.SendProtobufParallel(roster.List, &GetSingleBlock{id}, reply, c.options)
+	if err != nil {
+		return nil, errors.New("all nodes failed to return block: " + err.Error())
+	}
+	if err := reply.VerifyForwardSignatures(); err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New("all nodes failed to return block: " + strings.Join(errs, " :: "))
+	if !reply.Hash.Equal(id) {
+		return nil, errors.New("Got the wrong block in return")
+	}
+
+	return reply, nil
 }
 
 // GetSingleBlockByIndex searches for a block with the given index following the genesis-block.
 // It returns that block, or an error if that block is not found.
 func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
 	reply = &GetSingleBlockByIndexReply{}
-	perms := rand.Perm(len(roster.List))
-	var errs []string
-	for _, ind := range perms {
-		reply, err = c.getBlockByIndex(roster.List[ind], genesis, index)
-		if err == nil {
-			return
-		}
-		errs = append(errs, err.Error())
-	}
-	return nil, errors.New("all nodes failed to return block: " + strings.Join(errs, " :: "))
-}
 
-func (c *Client) getBlockByIndex(si *network.ServerIdentity, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
-	reply = &GetSingleBlockByIndexReply{}
-
-	err = c.SendProtobuf(si, &GetSingleBlockByIndex{genesis, index}, reply)
+	_, err = c.SendProtobufParallel(roster.List, &GetSingleBlockByIndex{genesis, index}, reply,
+		c.options)
 	if err != nil {
 		return
 	}
 
 	if reply.SkipBlock == nil {
-		err = errors.New("Got an empty reply")
+		err = errors.New("got an empty reply")
 		return
 	}
 
@@ -426,12 +404,12 @@ func (c *Client) getBlockByIndex(si *network.ServerIdentity, genesis SkipBlockID
 	}
 
 	if reply.SkipBlock.Index != index {
-		err = errors.New("Got the wrong block in reply")
+		err = errors.New("got the wrong block in reply")
 		return
 	}
 
 	if !reply.SkipBlock.SkipChainID().Equal(genesis) {
-		err = errors.New("Got a block of a different chain")
+		err = errors.New("got a block of a different chain")
 		return
 	}
 

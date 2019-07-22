@@ -119,6 +119,11 @@ func init() {
 			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
+		cli.BoolFlag{
+			Name:   "wait, w",
+			EnvVar: "BC_WAIT",
+			Usage:  "wait for transaction available in all nodes",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))

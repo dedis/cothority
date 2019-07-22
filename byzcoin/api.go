@@ -32,27 +32,28 @@ type Client struct {
 	Genesis *skipchain.SkipBlock
 	// Latest keeps track of the most recent known block for the client.
 	Latest *skipchain.SkipBlock
-	// Which server in the Roster to contact, -1 means random.
-	ServerNumber int
+	// Keeps the server identities that replied first to a DownloadState request
+	noncesSI map[uint64]*network.ServerIdentity
+	// Used for SendProtobufParallel. If it is nil, default values will be used.
+	options *onet.ParallelOptions
 }
 
 // NewClient instantiates a new ByzCoin client.
 func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client: onet.NewClient(cothority.Suite, ServiceName),
-		ID:     ID,
-		Roster: Roster,
+		Client:   onet.NewClient(cothority.Suite, ServiceName),
+		ID:       ID,
+		Roster:   Roster,
+		noncesSI: make(map[uint64]*network.ServerIdentity),
 	}
 }
 
 // NewClientKeep is like NewClient, but does not close the connection when
 // sending requests to the same conode.
 func NewClientKeep(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
-	return &Client{
-		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
-		ID:     ID,
-		Roster: Roster,
-	}
+	c := NewClient(ID, Roster)
+	c.Client = onet.NewClientKeep(cothority.Suite, ServiceName)
+	return c
 }
 
 // NewLedger sets up a new ByzCoin ledger.
@@ -73,6 +74,29 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	c.Genesis = reply.Skipblock
 	c.Latest = c.Genesis
 	return c, reply, nil
+}
+
+// UseNode sets the options so that only the given node will be contacted
+func (c *Client) UseNode(n int) error {
+	if n < 0 || n >= len(c.Roster.List) {
+		return errors.New("index of node points past roster-list")
+	}
+	c.options = &onet.ParallelOptions{
+		DontShuffle: true,
+		StartNode:   n,
+		AskNodes:    1,
+		Parallel:    1,
+	}
+	return nil
+}
+
+// DontContact adds the given serverIdentity to the list of nodes that will
+// not be contacted.
+func (c *Client) DontContact(si *network.ServerIdentity) {
+	if c.options == nil {
+		c.options = &onet.ParallelOptions{}
+	}
+	c.options.IgnoreNodes = []*network.ServerIdentity{si}
 }
 
 func newLedgerWithClient(msg *CreateGenesisBlock, c *Client) (*CreateGenesisBlockResponse, error) {
@@ -114,12 +138,12 @@ func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 // initialized before calling this method (see NewClientFromConfig).
 func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
 	reply := &AddTxResponse{}
-	err := c.SendProtobuf(c.getServer(), &AddTxRequest{
+	_, err := c.SendProtobufParallel(c.Roster.List, &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   c.ID,
 		Transaction:   tx,
 		InclusionWait: wait,
-	}, reply)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -170,11 +194,11 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // proof starting from the genesis block.
 func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
-	err := c.SendProtobuf(c.getServer(), &GetProof{
+	_, err := c.SendProtobufParallel(c.Roster.List, &GetProof{
 		Version: CurrentVersion,
 		ID:      from.Hash,
 		Key:     key,
-	}, reply)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +216,12 @@ func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofR
 // execute in the given darc.
 func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.Action, error) {
 	reply := &CheckAuthorizationResponse{}
-	err := c.SendProtobuf(c.getServer(), &CheckAuthorization{
+	_, err := c.SendProtobufParallel(c.Roster.List, &CheckAuthorization{
 		Version:    CurrentVersion,
 		ByzCoinID:  c.ID,
 		DarcID:     dID,
 		Identities: ids,
-	}, reply)
+	}, reply, c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -332,11 +356,21 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 // the handler will be called whenever a new response (a new block) is
 // available. This function blocks, the streaming stops if the client or the
 // service stops. Only the integrity of the new block is verified.
+//
+// It contacts any random node by default. A specific node can be chosen by
+// using `c.UseNode`.
 func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) error {
 	req := StreamingRequest{
 		ID: c.ID,
 	}
-	conn, err := c.Stream(c.getServer(), &req)
+	n := int(rand.Int31n(int32(len(c.Roster.List))))
+	if c.options != nil {
+		if c.options.DontShuffle {
+			n = c.options.StartNode
+		}
+	}
+
+	conn, err := c.Stream(c.Roster.List[n], &req)
 	if err != nil {
 		handler(StreamingResponse{}, err)
 		return err
@@ -370,7 +404,8 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 		SignerIDs:   ids,
 	}
 	var reply GetSignerCountersResponse
-	err := c.SendProtobuf(c.getServer(), &req, &reply)
+	_, err := c.SendProtobufParallel(c.Roster.List, &req, &reply,
+		c.options)
 	if err != nil {
 		return nil, err
 	}
@@ -398,29 +433,32 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 
 	reply = &DownloadStateResponse{}
 	l := len(c.Roster.List)
-	index := l - 1
+	indexStart := 0
 	if l > 3 {
 		// This is the leader plus the subleaders, don't contact them
-		index = 1 + int(math.Ceil(math.Pow(float64(l), 1./3.)))
+		indexStart = 1 + int(math.Ceil(math.Pow(float64(l), 1./3.)))
 	}
 
-	// Try to download from the nodes, starting with the first non-subleader.
-	// Because the last elements of the roster might be a view-changed,
-	// defective old leader, we start from the first non-subleader.
-	for index < l {
-		log.Lvl2("downloading state from", c.Roster.List[index])
-		err = c.SendProtobuf(c.Roster.List[index], &DownloadState{
-			ByzCoinID: byzcoinID,
-			Nonce:     nonce,
-			Length:    length,
-		}, reply)
-		if err == nil {
-			return reply, nil
-		}
-		log.Error("Couldn't download from", c.Roster.List[index], ":", err)
-		index++
+	msg := &DownloadState{
+		ByzCoinID: byzcoinID,
+		Nonce:     nonce,
+		Length:    length,
 	}
-	return nil, errors.New("error while downloading state from nodes")
+	si, ok := c.noncesSI[nonce]
+	if ok {
+		err = c.SendProtobuf(si, msg, reply)
+	} else {
+		var si *network.ServerIdentity
+		var po onet.ParallelOptions
+		if c.options != nil {
+			po = *c.options
+		}
+		po.Parallel = 1
+		po.StartNode = indexStart
+		si, err = c.SendProtobufParallel(c.Roster.List, msg, reply, &po)
+		c.noncesSI[reply.Nonce] = si
+	}
+	return
 }
 
 // ResolveInstanceID resolves the instance ID using the given darc ID and name.
@@ -433,7 +471,7 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 	}
 	reply := ResolvedInstanceID{}
 
-	if err := c.SendProtobuf(c.getServer(), &req, &reply); err != nil {
+	if _, err := c.SendProtobufParallel(c.Roster.List, &req, &reply, c.options); err != nil {
 		return InstanceID{}, err
 	}
 	return reply.InstanceID, nil
@@ -524,15 +562,6 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		DarcContractIDs: []string{ContractDarcID},
 	}
 	return &m, nil
-}
-
-// getServer returns a server from the roster, observing the ServerNumber selection.
-func (c *Client) getServer() *network.ServerIdentity {
-	n := c.ServerNumber
-	if n == -1 {
-		n = int(rand.Int31n(int32(len(c.Roster.List))))
-	}
-	return c.Roster.List[n]
 }
 
 func (c *Client) fetchGenesis() error {

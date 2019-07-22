@@ -1,16 +1,16 @@
 # This method should be called from the byzcoin/bcadmin/test.sh script
 
 testContractDeferred() {
-    run testContractDeferredSpawn
-    run testContractDeferredInvoke
-    run testGet
-    run testDel
+    run testDeferredSpawn
+    run testDeferredInvoke
+    run testDeferredGet
+    run testDeferredDel
     # This test do not work yet due to an error with rst.GetIndex(), see #1938
-    # run testContractDeferredInvokeDeferred
+    # run testDeferredInvokeDeferred
 }
 
 # We rely on the value contract to make our tests.
-testContractDeferredSpawn() {
+testDeferredSpawn() {
     # In this test we spawn a value with the --export (-x) flag and then pipe it
     # to the deferred spawn. We then check the output and see if the proposed
     # transaction is there.
@@ -28,7 +28,7 @@ testContractDeferredSpawn() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract. We save the output to the OUTRES variable.
-    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
     testGrep "Here is the deferred data:" echo "$OUTRES"
@@ -44,10 +44,10 @@ testContractDeferredSpawn() {
     testGrep "Spawned new deferred contract, its instance id is:" echo "$OUTRES"
 }
 
-# This method relies on testContractDeferredSpawn() and performs an addProof
+# This method relies on testDeferredSpawn() and performs an addProof
 # on the proposed transaction and an execProposedTx.
-testContractDeferredInvoke() {
-    # In this test we do the same as testContractDeferredSpawn() but we then
+testDeferredInvoke() {
+    # In this test we do the same as testDeferredSpawn() but we then
     # perform an addProof followed by an execProposedTx.
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -66,7 +66,7 @@ testContractDeferredInvoke() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -92,7 +92,7 @@ testContractDeferredInvoke() {
     testOK runBA contract deferred invoke execProposedTx --instid "$DEFERRED_INSTANCE_ID" --sign "$KEY"
 }
 
-testGet() {
+testDeferredGet() {
     # In this test we spawn a deferred contract and then retrieve the value
     # stored with the "get" function. We then perform an addProof and test if we
     # can get the updated value, ie. the identity added. We partially use the
@@ -112,7 +112,7 @@ testGet() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -134,19 +134,19 @@ testGet() {
     echo -e "Here is the hash:\t\t$HASH"
 
     # We now use the get function to check if we have the right informations:
-    OUTRES=`runBA contract deferred get --instid $DEFERRED_INSTANCE_ID`
+    OUTRES=`runBA0 contract deferred get --instid $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
     testGrep "identities: \[\]" echo "$OUTRES"
     testGrep "counters: \[\]" echo "$OUTRES"
     testGrep "signatures: 0" echo "$OUTRES"
-    testGrep "Spawn:	value" echo "$OUTRES"
-    testGrep "Args:value" echo "$OUTRES"
+    testGrep "ContractID: value" echo "$OUTRES"
+    testGrep "myValue" echo "$OUTRES"
     
     testOK runBA contract deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH" --instrIdx 0 --sign "$KEY" --darc "$ID"
 
     # Since we performed an addProof, the result should now contrain a new
     # identity and the field signature set to 1.
-    OUTRES=`runBA contract deferred get --instid $DEFERRED_INSTANCE_ID`
+    OUTRES=`runBA0 contract deferred get --instid $DEFERRED_INSTANCE_ID`
     testGrep "action: spawn:value" echo "$OUTRES"
     # Note on the regex used in grep. We want to be sure an identity of form
     # [ed25519:aef123] is added.
@@ -160,14 +160,14 @@ testGet() {
     testGrep "identities: \[$KEY\]" echo "$OUTRES"
     testGrep "counters: \[\]" echo "$OUTRES"
     testGrep "signatures: 1" echo "$OUTRES"
-    testGrep "Spawn:	value" echo "$OUTRES"
-    testGrep "Args:value" echo "$OUTRES"
+    testGrep "ContractID: value" echo "$OUTRES"
+    testGrep "myValue" echo "$OUTRES"
 
     # Try to get a wrong instance ID
     testFail runBA contract deferred get --instid deadbeef
 }
 
-testDel() {
+testDeferredDel() {
     # In this test we spawn a deferred contract, delete it and check if we can
     # get it. Uses partially the code of the spawn test.
     runCoBG 1 2 3
@@ -185,7 +185,7 @@ testDel() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 
@@ -208,9 +208,9 @@ testDel() {
     testFail runBA contract deferred delete --instid "$VALUE_INSTANCE_ID" --darc "$ID" --sign "$KEY"
 }
 
-# This method relies on testContractDeferredSpawn() and performs an addProof
+# This method relies on testDeferredSpawn() and performs an addProof
 # on the proposed transaction and an execProposedTx.
-testContractDeferredInvokeDeferred() {
+testDeferredInvokeDeferred() {
     # In this test we normally create a deferred spawn:value but then we
     # invoke a deferred deferred:invoke.addProof. So the addProof operation
     # will be made with a deferred contract. Crazy hu?
@@ -231,7 +231,7 @@ testContractDeferredInvokeDeferred() {
 
     # Spawn a new value contract that is piped to the spawn of a deferred
     # contract.
-    OUTRES=`runBA contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+    OUTRES=`runBA0 contract -x value spawn --value "myValue" --darc "$ID" --sign "$KEY" | runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID=`echo "$OUTRES" | sed -n ' 

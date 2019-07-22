@@ -76,6 +76,11 @@ func init() {
 			Value: "",
 			Usage: "path to configuration-directory",
 		},
+		cli.BoolFlag{
+			Name:   "wait, w",
+			EnvVar: "BC_WAIT",
+			Usage:  "wait for transaction available in all nodes",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))

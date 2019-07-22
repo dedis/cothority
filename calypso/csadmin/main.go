@@ -52,6 +52,11 @@ func init() {
 			Value: getDataPath(lib.BcaName),
 			Usage: "path to configuration-directory",
 		},
+		cli.BoolFlag{
+			Name:   "wait, w",
+			EnvVar: "BC_WAIT",
+			Usage:  "wait for transaction available in all nodes",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
@@ -144,6 +149,11 @@ func dkgStart(c *cli.Context) error {
 	}
 	keyStr := hex.EncodeToString(keyBuf)
 
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
+
 	if c.Bool("export") {
 		reader := bytes.NewReader([]byte(keyStr))
 		_, err = io.Copy(os.Stdout, reader)
@@ -153,8 +163,8 @@ func dkgStart(c *cli.Context) error {
 		return nil
 	}
 
-	fmt.Fprintf(c.App.Writer, "LTS created:\n"+
-		"- ByzcoinID: %x\n- InstanceID: %x\n- X: %s\n",
+	log.Infof("LTS created:\n"+
+		"- ByzcoinID: %x\n- InstanceID: %x\n- X: %s",
 		reply.ByzCoinID, reply.InstanceID.Slice(), keyStr)
 
 	return nil
@@ -247,10 +257,10 @@ func reencrypt(c *cli.Context) error {
 		return nil
 	}
 
-	fmt.Fprintf(c.App.Writer, "Got decrypt reply:\n"+
+	log.Infof("Got decrypt reply:\n"+
 		"- C: %s\n"+
 		"- xHat: %s\n"+
-		"- X: %s\n", reply.C, reply.XhatEnc, reply.X)
+		"- X: %s", reply.C, reply.XhatEnc, reply.X)
 
 	return nil
 }
@@ -311,7 +321,7 @@ func decrypt(c *cli.Context) error {
 		return nil
 	}
 
-	fmt.Fprintf(c.App.Writer, "Key decrypted:\n%s\n", dataStr)
+	log.Infof("Key decrypted:\n%s", dataStr)
 
 	return nil
 }

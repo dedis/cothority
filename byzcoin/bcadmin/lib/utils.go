@@ -8,6 +8,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
+
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
@@ -72,9 +76,9 @@ func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 	return d, nil
 }
 
-// ExportTransactionAndExit will redirect the transaction to stdout. If no errors are
-// raised, this method exits the program with code 0.
-func ExportTransactionAndExit(tx byzcoin.ClientTransaction) error {
+// ExportTransaction will redirect the transaction to stdout. It must be made
+// sure that no other print is done, else the stdout is not usable.
+func ExportTransaction(tx byzcoin.ClientTransaction) error {
 	// When exporting, we must not pass SignerCounter, SignerIdentities and
 	// Signatures. Hence, we build a new list of instructions by ommiting
 	// those parameters. We can't edit current ones because those are not
@@ -98,8 +102,6 @@ func ExportTransactionAndExit(tx byzcoin.ClientTransaction) error {
 	if err != nil {
 		return errors.New("failed to copy to stdout: " + err.Error())
 	}
-	os.Exit(0)
-	// Never reached...
 	return nil
 }
 
@@ -140,6 +142,56 @@ func CombinationAnds(list []string, m int) []string {
 		list[i] = "(" + list[i] + ")"
 	}
 	return list
+}
+
+// WaitPropagation contacts all nodes in the cl.Roster until they all
+// have the same latest block. If there is an error when calling
+// `GetProof`, the error will be ignored. This helps when waiting
+// for the propagation, but only a subset of the nodes are actually
+// participating in the consensus.
+func WaitPropagation(c *cli.Context, cl *byzcoin.Client) error {
+	if !c.GlobalBool("wait") {
+		return nil
+	}
+
+	var sb skipchain.SkipBlock
+	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
+searchLatest:
+	for i := 0; i < 100; i++ {
+		log.Lvl2("Starting search")
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		for node := range cl.Roster.List {
+			log.Lvl2("Searching node", node)
+			if err := cl.UseNode(node); err != nil {
+				return err
+			}
+			_, err := cl.GetProof(make([]byte, 32))
+			if err != nil {
+				log.Warn("error while searching for node - ignoring")
+				//continue searchLatest
+			}
+			if cl.Latest.Index > sb.Index {
+				sb = *cl.Latest
+				log.Lvl2("Found new block:", sb.Index)
+				cc, err := cl.GetChainConfig()
+				if err != nil {
+					return err
+				}
+				cl.Roster = cc.Roster
+				if node > 0 {
+					continue searchLatest
+				}
+			} else if cl.Latest.Index < sb.Index {
+				log.Lvlf2("Node %d returned earlier block: %d", node, cl.Latest.Index)
+				continue searchLatest
+			}
+			log.Lvl2("Node", node, "returned same block as other nodes")
+		}
+		return nil
+	}
+	return errors.New("didn't get the same blocks from everybody within 10 seconds")
 }
 
 // We are recursively building the leaves of a tree that contains every

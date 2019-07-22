@@ -2,9 +2,10 @@ package clicontracts
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
+
+	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -130,8 +131,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	}
 
 	if lib.FindRecursivefBool("export", c) {
-		err = lib.ExportTransactionAndExit(ctx)
-		return errors.New("failed to export transaction: " + err.Error())
+		return lib.ExportTransaction(ctx)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -142,12 +142,15 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	// 3.
 	// ---
+	err = lib.WaitPropagation(c, cl)
+	if err != nil {
+		return err
+	}
 	pr, err = cl.GetProofFromLatest(byzcoin.ConfigInstanceID.Slice())
 	if err != nil {
 		return errors.New("couldn't get proof for config: " + err.Error())
 	}
 	proof = pr.Proof
-
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
 		return errors.New("couldn't get value out of proof: " + err.Error())
@@ -160,12 +163,8 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	}
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
-	_, err = fmt.Fprintf(c.App.Writer, "Config contract updated! (instance ID is %x)\n", newInstID)
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(c.App.Writer, "Here is the config data: \n%s", contractConfig)
+	log.Infof("Config contract updated! (instance ID is %x)", newInstID)
+	log.Infof("Here is the config data: \n%s", contractConfig)
 
 	return nil
 }
@@ -199,7 +198,7 @@ func ConfigGet(c *cli.Context) error {
 		return errors.New("couldn't decode chainConfig: " + err.Error())
 	}
 
-	fmt.Fprintf(c.App.Writer, "Here is the config data: \n%s", config)
+	log.Infof("Here is the config data: \n%s", config)
 
 	return nil
 }

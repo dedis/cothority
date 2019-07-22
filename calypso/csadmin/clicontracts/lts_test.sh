@@ -14,9 +14,8 @@ testContractLTSInvoke() {
     eval $SED
     [ -z "$BC" ] && exit 1
 
-    OUTRES=`runCA contract lts spawn`
-    matchOK "$OUTRES" "^Spawned a new LTS contract. Its instance id is:
-[0-9a-f]{64}$"
+    testGrep "Spawned a new LTS contract. Its instance id is:
+[0-9a-f]{64}$" runCA contract lts spawn
 
     # Create a DARC
     testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
@@ -40,11 +39,9 @@ testContractLTSInvoke() {
     testOK runBA darc rule -rule "spawn:longTermSecret" --identity "$KEY" --darc "$ID" --sign "$KEY"
     testOK runCA contract lts spawn --darc "$ID" --sign "$KEY"
 
-    OUTRES=`runCA contract lts spawn --darc "$ID" --sign "$KEY"`
-    matchOK "$OUTRES" "^Spawned a new LTS contract. Its instance id is:
-[0-9a-f]{64}$"
+    testGrep "Spawned a new LTS contract. Its instance id is:
+[0-9a-f]{64}$" runCA contract lts spawn --darc "$ID" --sign "$KEY"
 
     # Check the export option
-    runCA contract lts spawn --darc "$ID" --sign "$KEY" -x > iid.txt
-    matchOK "`cat iid.txt`" ^[0-9a-f]{64}$
+    testGrep "[0-9a-f]{64}" runCA contract lts spawn --darc "$ID" --sign "$KEY" -x
 }
