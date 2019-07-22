@@ -297,7 +297,7 @@ func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst I
 		return nil
 	}
 
-	return inst.VerifyWithOption(rst, msg, false)
+	return inst.VerifyWithOption(rst, msg, &VerificationOptions{IgnoreCounters: true})
 }
 
 // FormatMethod overrides the implementation from the BasicContract in order to

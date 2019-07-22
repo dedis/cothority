@@ -50,10 +50,7 @@ func (c *contractSecureDarc) SetRegistry(r ReadOnlyContractRegistry) {
 // need the Darc contract to opt in for deferred transaction because it is used
 // by default when spawning new contracts.
 func (c *contractSecureDarc) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
-		return err
-	}
-	return nil
+	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true})
 }
 
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
