@@ -2,6 +2,11 @@
 
 echo "Running tests with tag $1"
 
+(
+  cd ..
+  git clone --single-branch --branch fix_race https://github.com/c4dt/onet
+)
+
 for d in $( find . -name "*go" | xargs -n 1 dirname | sort -u ); do
 	# Do each directory on its own, but exclude if 'experimental' is found in
 	# the first line.
