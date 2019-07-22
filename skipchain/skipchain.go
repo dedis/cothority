@@ -199,8 +199,6 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 	}
 
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
-		log.Print("Wrong leader:", s.ServerIdentity(), "instead of",
-			prop.Roster.Get(0))
 		return nil, errors.New(
 			"only leader is allowed to add blocks")
 	}
