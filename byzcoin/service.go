@@ -318,7 +318,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
-// AddTransaction requests to apply a new transaction to the ledger. Note is
+// AddTransaction requests to apply a new transaction to the ledger. Note
 // that unlike other service APIs, it is *not* enough to only check for the
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
