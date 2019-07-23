@@ -301,8 +301,8 @@ func (instr Instruction) GetIdentityStrings() []string {
 	return res
 }
 
-// VerificationOptions is given to VerifyWithOption if additional options need
-// to be providied.
+// VerificationOptions is given to VerifyWithOption if the verification needs
+// to be customized.
 type VerificationOptions struct {
 	IgnoreCounters bool
 	EvalXattr      darc.EvalXattr

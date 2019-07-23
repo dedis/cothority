@@ -113,9 +113,9 @@ func (c contractXattrValue) FormatMethod(inst byzcoin.Instruction) string {
 	return "not implemented"
 }
 
-// This test uses the same code as the Spawn one but then performs an update
-// on the value contract.
-// Use the value contract but verify the xattr on the DARCs
+// Use the value contract but verify the xattr on the DARCs. The xattr says the
+// user is only allowed to modify the value if the existing value has a prefix
+// of "abc" and a suffix of "xyz".
 func TestXattrValue(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()

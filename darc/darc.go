@@ -76,10 +76,11 @@ type GetDarc func(s string, latest bool) *Darc
 // attribute is an extra rule that may be in the DARCs. It is up to the
 // developer to specify how the extended attributes are written and verified.
 // To implement verification, the developer must give EvalDarcXattr an
-// implementation of this callback. The name is the name of the extended
-// attribute and xattr is the actual extended attribute. The callback should
-// return an error when the verification fails with a descriptive error
-// message.
+// implementation of this callback. In the callback, name is the name of the
+// extended attribute and xattr is the actual extended attribute. If other
+// information is needed for the verification then the callback should be
+// created as a closure. The callback should return an error when the
+// verification fails with a descriptive error message.
 type EvalXattr func(name, xattr string) error
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
