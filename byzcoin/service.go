@@ -1055,7 +1055,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 				return errors.New("cannot download trie: " + err.Error())
 			}
 			log.Lvlf1("Downloaded key/values %d..%d of %d from %s", cursor, cursor+len(resp.KeyValues), resp.Total,
-				cl.NoncesSI[resp.Nonce])
+				cl.noncesSI[resp.Nonce])
 			cursor += len(resp.KeyValues)
 			if db == nil {
 				db, bucketName = s.GetAdditionalBucket([]byte(idStr))

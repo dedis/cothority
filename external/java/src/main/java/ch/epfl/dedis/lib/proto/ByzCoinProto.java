@@ -25051,7 +25051,7 @@ public final class ByzCoinProto {
      * Total key/value pairs.
      * </pre>
      *
-     * <code>required sint32 total = 3;</code>
+     * <code>optional sint32 total = 3;</code>
      */
     boolean hasTotal();
     /**
@@ -25059,7 +25059,7 @@ public final class ByzCoinProto {
      * Total key/value pairs.
      * </pre>
      *
-     * <code>required sint32 total = 3;</code>
+     * <code>optional sint32 total = 3;</code>
      */
     int getTotal();
   }
@@ -25259,7 +25259,7 @@ public final class ByzCoinProto {
      * Total key/value pairs.
      * </pre>
      *
-     * <code>required sint32 total = 3;</code>
+     * <code>optional sint32 total = 3;</code>
      */
     public boolean hasTotal() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
@@ -25269,7 +25269,7 @@ public final class ByzCoinProto {
      * Total key/value pairs.
      * </pre>
      *
-     * <code>required sint32 total = 3;</code>
+     * <code>optional sint32 total = 3;</code>
      */
     public int getTotal() {
       return total_;
@@ -25283,10 +25283,6 @@ public final class ByzCoinProto {
       if (isInitialized == 0) return false;
 
       if (!hasNonce()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasTotal()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -25668,9 +25664,6 @@ public final class ByzCoinProto {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasNonce()) {
-          return false;
-        }
-        if (!hasTotal()) {
           return false;
         }
         for (int i = 0; i < getKeyvaluesCount(); i++) {
@@ -26093,7 +26086,7 @@ public final class ByzCoinProto {
        * Total key/value pairs.
        * </pre>
        *
-       * <code>required sint32 total = 3;</code>
+       * <code>optional sint32 total = 3;</code>
        */
       public boolean hasTotal() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -26103,7 +26096,7 @@ public final class ByzCoinProto {
        * Total key/value pairs.
        * </pre>
        *
-       * <code>required sint32 total = 3;</code>
+       * <code>optional sint32 total = 3;</code>
        */
       public int getTotal() {
         return total_;
@@ -26113,7 +26106,7 @@ public final class ByzCoinProto {
        * Total key/value pairs.
        * </pre>
        *
-       * <code>required sint32 total = 3;</code>
+       * <code>optional sint32 total = 3;</code>
        */
       public Builder setTotal(int value) {
         bitField0_ |= 0x00000004;
@@ -26126,7 +26119,7 @@ public final class ByzCoinProto {
        * Total key/value pairs.
        * </pre>
        *
-       * <code>required sint32 total = 3;</code>
+       * <code>optional sint32 total = 3;</code>
        */
       public Builder clearTotal() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -39838,7 +39831,7 @@ public final class ByzCoinProto {
       "id\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"" +
       "]\n\025DownloadStateResponse\022&\n\tkeyvalues\030\001 " +
       "\003(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022" +
-      "\r\n\005total\030\003 \002(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(" +
+      "\r\n\005total\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(" +
       "\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013s" +
       "tateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005" +
       "value\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005" +

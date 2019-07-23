@@ -314,7 +314,7 @@ type DownloadStateResponse struct {
 	// for every subsequent reply, too.
 	Nonce uint64
 	// Total key/value pairs.
-	Total int
+	Total int `protobuf:"opt"`
 }
 
 // DBKeyValue represents one element in bboltdb
