@@ -50,6 +50,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "tried to create existing instanceID")
 
 	// FAIL - use a bad signature
 	var namingTx ClientTransaction
@@ -79,6 +80,7 @@ func TestService_Naming(t *testing.T) {
 	namingTx.Instructions[0].Signatures[0] = append(namingTx.Instructions[0].Signatures[0][1:], 0) // tamper the signature
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "all signatures failed to verify")
 
 	// FAIL - use an instance that does not exist
 	namingTx = ClientTransaction{
@@ -106,6 +108,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "key not set")
 
 	// FAIL - use a signer that is not authorized by the instance to spawn
 	namingTx = ClientTransaction{
@@ -126,7 +129,7 @@ func TestService_Naming(t *testing.T) {
 						},
 					},
 				},
-				SignerCounter: []uint64{2},
+				SignerCounter: []uint64{1}, // use 1 because we never used this signer before
 			},
 		},
 	}
@@ -134,6 +137,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer2))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "expression evaluated to false")
 
 	// FAIL - missing instance name
 	namingTx = ClientTransaction{
@@ -161,6 +165,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "the name cannot be empty")
 
 	// SUCCEED - Make one name and it should succeed.
 	namingTx = ClientTransaction{
@@ -215,6 +220,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "this name already exists")
 
 	// SUCCEED - Making multiple names is allowed.
 	namingTx = ClientTransaction{
@@ -341,6 +347,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(removalTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "key not set")
 
 	// SUCCESS - try to remove an entry.
 	removalTx = ClientTransaction{
@@ -395,6 +402,7 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(removalTx, 10)
 	require.Error(t, err)
+	require.Contains(t, err.Error(), "this entry is already removed")
 
 	// Try to resolve the deleted entry should fail, but the others should
 	// exist.

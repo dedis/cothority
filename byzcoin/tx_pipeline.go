@@ -81,9 +81,9 @@ func (s *txProcessorState) copy() *txProcessorState {
 }
 
 type defaultTxProcessor struct {
+	*Service
 	stopCollect chan bool
 	scID        skipchain.SkipBlockID
-	*Service
 }
 
 func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {

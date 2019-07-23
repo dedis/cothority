@@ -160,6 +160,7 @@ export class AddTxResponse extends Message<AddTxResponse> {
     }
 
     readonly version: number;
+    readonly error: string;
 }
 
 /**

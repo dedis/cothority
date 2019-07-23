@@ -152,7 +152,9 @@ public class ByzCoinRPC {
         try {
             ByzCoinProto.AddTxResponse reply =
                     ByzCoinProto.AddTxResponse.parseFrom(msg);
-            // TODO do something with the reply?
+            if (reply.hasError() && !reply.getError().isEmpty()) {
+                throw new CothorityCommunicationException(reply.getError());
+            }
             logger.info("Successfully stored request - waiting for inclusion");
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);

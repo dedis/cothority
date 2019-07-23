@@ -163,6 +163,8 @@ type Service struct {
 	downloadState downloadState
 
 	rotationWindow time.Duration
+
+	txErrorBuf ringBuf
 }
 
 type downloadState struct {
@@ -316,7 +318,10 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
-// AddTransaction requests to apply a new transaction to the ledger.
+// AddTransaction requests to apply a new transaction to the ledger. Note
+// that unlike other service APIs, it is *not* enough to only check for the
+// error value to find out if an error has occured. The caller must also check
+// AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
@@ -391,8 +396,19 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		for found := false; !found; {
 			select {
 			case success := <-ch:
+				errMsg, exists := s.txErrorBuf.get(req.Transaction.Instructions.HashWithSignatures())
 				if !success {
-					return nil, errors.New("transaction is in block, but got refused")
+					if !exists {
+						return nil, errors.New("transaction is in block, but got refused for unknown error")
+					}
+					// We cannot return an error here because onet will ignore the response if an error occurs.
+					// The length of the error message is limited if we return an error, so we have to return the
+					// error message in the response.
+					return &AddTxResponse{Version: CurrentVersion, Error: errMsg}, nil
+				}
+
+				if exists {
+					log.Warn(s.ServerIdentity(), "transaction is accepted but there are errors: ", errMsg)
 				}
 				found = true
 			case id := <-blockCh:
@@ -1986,9 +2002,16 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
-// processOneTx takes one transaction and creates a set of StateChanges. It also returns the temporary StateTrie
-// with the StateChanges applied. Any data from the trie should be read from sst and not the service.
-func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (StateChanges, *stagingStateTrie, error) {
+// processOneTx takes one transaction and creates a set of StateChanges. It
+// also returns the temporary StateTrie with the StateChanges applied. Any data
+// from the trie should be read from sst and not the service.
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
+	defer func() {
+		if err != nil {
+			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
+		}
+	}()
+
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
 	// otherwise dump it.
@@ -1997,17 +2020,21 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 	var statesTemp StateChanges
 	var cin []Coin
 	for _, instr := range tx.Instructions {
-		scs, cout, err := s.executeInstruction(sst, cin, instr, h)
+		var scs StateChanges
+		var cout []Coin
+		scs, cout, err = s.executeInstruction(sst, cin, instr, h)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
 				err = fmt.Errorf("%s - while getting value: %s", err, err2)
 			}
-			return nil, nil, fmt.Errorf("%s Contract %s got Instruction %x and returned error: %s", s.ServerIdentity(), cid, instr.Hash(), err)
+			err = fmt.Errorf("%s Contract %s got Instruction %x and returned error: %s", s.ServerIdentity(), cid, instr.Hash(), err)
+			return
 		}
 		var counterScs StateChanges
 		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
-			return nil, nil, fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+			err = fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+			return
 		}
 
 		// Verify the validity of the state-changes:
@@ -2031,20 +2058,25 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 				}
 			}
 			if reason != "" {
-				_, _, contractID, _, err := sst.GetValues(instr.InstanceID.Slice())
+				var contractID string
+				_, _, contractID, _, err = sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
-					return nil, nil, fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
+					err = fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
+					return
 				}
-				return nil, nil, fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+				err = fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+				return
 			}
 			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction, sc.InstanceID, sc.ContractID)
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
-				return nil, nil, fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				err = fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				return
 			}
 		}
 		if err = sst.StoreAll(counterScs); err != nil {
-			return nil, nil, fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
+			err = fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
+			return
 		}
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
@@ -2053,7 +2085,13 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (Sta
 	if len(cin) != 0 {
 		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
 	}
-	return statesTemp, sst, nil
+
+	newStateChanges = statesTemp
+	newStateTrie = sst
+	if err != nil {
+		panic("programmer error: error should be nil if we get to this point")
+	}
+	return
 }
 
 // GetContractConstructor gets the contract constructor of the contract
@@ -2646,6 +2684,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closed:                 true,
 		catchingUpHistory:      make(map[string]time.Time),
 		rotationWindow:         defaultRotationWindow,
+		// We need a large enough buffer for all errors in 2 blocks
+		// where each block might be 1 MB in size and each tx is 1 KB.
+		txErrorBuf: newRingBuf(2048),
 	}
 
 	err := s.RegisterHandlers(

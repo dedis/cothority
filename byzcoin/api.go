@@ -147,6 +147,10 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	if err != nil {
 		return nil, err
 	}
+
+	if reply.Error != "" {
+		return reply, errors.New(reply.Error)
+	}
 	return reply, nil
 }
 
