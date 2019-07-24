@@ -321,6 +321,10 @@ func (ct cvTest) GetNonce() ([]byte, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (ct cvTest) setSignatureCounter(id string, v uint64) {
 	key := sha256.Sum256([]byte("signercounter_" + id))
 	verBuf := make([]byte, 8)
