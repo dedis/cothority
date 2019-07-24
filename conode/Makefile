@@ -92,6 +92,7 @@ tooldist: clean verify
 	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/status ../status
 	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/scmgr ../scmgr
 	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/evoting-admin ../evoting/evoting-admin
+	GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="$(ldflags)" -o conode-tools-$(TAG)/csadmin ../calypso/csadmin
 	LANG=C tar zcf conode-tools-$(TAG).tar.gz conode-tools-$(TAG)
 	rm -rf conode-tools-$(TAG)
 	ls -l conode-tools-$(TAG).tar.gz
