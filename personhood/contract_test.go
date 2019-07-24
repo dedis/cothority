@@ -168,3 +168,6 @@ func (s *rstSimul) GetNonce() ([]byte, error) {
 func (s *rstSimul) ForEach(func(k, v []byte) error) error {
 	return errors.New("not implemented")
 }
+func (s *rstSimul) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
+	return nil, errors.New("not implemented")
+}
