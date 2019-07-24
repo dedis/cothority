@@ -6,7 +6,7 @@ matrix:
       name: "Go Tests"
 
       go_import_path: go.dedis.ch/cothority/v3
- 
+
       go:
         - "1.12.x"
 
@@ -24,9 +24,21 @@ matrix:
       name: "Go v1.10.x build"
 
       go_import_path: go.dedis.ch/cothority/v3
- 
+
       go:
         - "1.10.x"
+
+      script:
+        - go get ./...
+        - go build ./...
+
+    - language: go
+      name: "Go v1.11.x build"
+
+      go_import_path: go.dedis.ch/cothority/v3
+
+      go:
+        - "1.11.x"
 
       script:
         - go get ./...
@@ -48,10 +60,10 @@ matrix:
 
     - language: node_js
       name: "kyber-js Tests"
- 
+
       node_js: "lts/*"
       cache: npm
-  
+
       before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
       script:
         - cd $TRAVIS_BUILD_DIR/external/js/kyber
