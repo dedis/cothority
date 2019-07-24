@@ -49,8 +49,8 @@ testContractReadInvoke() {
 
     OUTRES=`runCA0 contract read spawn --sign $KEY --instid $WRITE_ID`
 
-    matchOK "$OUTRES" "Spawned a new read instance. Its instance id is:
-[0-9a-f]{32}"
+    matchOK "$OUTRES" "^Spawned a new read instance. Its instance id is:
+[0-9a-f]{64}$"
 
     # Check the export option
     runCA0 contract read spawn --sign $KEY --instid $WRITE_ID -x > iid.txt

@@ -18,14 +18,14 @@ testContractConfigInvoke() {
     # config.
     OUTRES=`runBA0 contract config invoke updateConfig`
 
-    testGrep "Config contract updated! \(instance ID is [a-f0-9]+\)" echo "$OUTRES"
-    testGrep "Here is the config data:" echo "$OUTRES"
-    testGrep "ChainConfig" echo "$OUTRES"
-    testGrep "\- BlockInterval: [a-z0-9]+" echo "$OUTRES"
-    testGrep "\- Roster: \{.*\}" echo "$OUTRES"
-    testGrep "\- MaxBlockSize: [0-9]+" echo "$OUTRES"
-    testGrep "\- DarcContractIDs:" echo "$OUTRES"
-    testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
+    matchOK "$OUTRES" "^Config contract updated! \(instance ID is [a-f0-9]{64}\)
+Here is the config data:
+- ChainConfig:
+-- BlockInterval: [a-z0-9]+
+-- Roster: \{.*\}
+-- MaxBlockSize: [0-9]+
+-- DarcContractIDs:
+--- darc contract ID 0: darc$"
 
     # Update all the arguments. We check if the return corresponds.
     OUTRES=`runBA0 contract config invoke updateConfig\
@@ -33,16 +33,17 @@ testContractConfigInvoke() {
                 --maxBlockSize 5000000\
                 --darcContractIDs darc,darc2,darc3`
     
-    testGrep "Config contract updated! \(instance ID is [a-f0-9]+\)" echo "$OUTRES"
-    testGrep "Here is the config data:" echo "$OUTRES"
-    testGrep "ChainConfig" echo "$OUTRES"
-    testGrep "\- BlockInterval: 7s" echo "$OUTRES"
-    testGrep "\- Roster: \{.*\}" echo "$OUTRES"
-    testGrep "\- MaxBlockSize: 5000000" echo "$OUTRES"
-    testGrep "\- DarcContractIDs:" echo "$OUTRES"
-    testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
-    testGrep "\-\- darc contract ID 1: darc2" echo "$OUTRES"
-    testGrep "\-\- darc contract ID 2: darc3" echo "$OUTRES"
+    matchOK "$OUTRES" "^Config contract updated! \(instance ID is [a-f0-9]{64}\)
+Here is the config data:
+- ChainConfig:
+-- BlockInterval: 7s
+-- Roster: \{.*\}
+-- MaxBlockSize: 5000000
+-- DarcContractIDs:
+--- darc contract ID 0: darc
+--- darc contract ID 1: darc2
+--- darc contract ID 2: darc3$"
+
 }
 
 # In this test we simply get the config contract and check the result.
@@ -55,12 +56,11 @@ testContractConfigGet() {
     # Get the config instance
     OUTRES=`runBA0 contract config get`
 
-    # Check the result
-    testGrep "Here is the config data:" echo "$OUTRES"
-    testGrep "ChainConfig" echo "$OUTRES"
-    testGrep "\- BlockInterval: [a-z0-9]+" echo "$OUTRES"
-    testGrep "\- Roster: \{.*\}" echo "$OUTRES"
-    testGrep "\- MaxBlockSize: [0-9]+" echo "$OUTRES"
-    testGrep "\- DarcContractIDs:" echo "$OUTRES"
-    testGrep "\-\- darc contract ID 0: darc" echo "$OUTRES"
+    matchOK "$OUTRES" "^Here is the config data:
+- ChainConfig:
+-- BlockInterval: [a-z0-9]+
+-- Roster: \{.*\}
+-- MaxBlockSize: [0-9]+
+-- DarcContractIDs:
+--- darc contract ID 0: darc$"
 }

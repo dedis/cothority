@@ -90,7 +90,7 @@ func ValueSpawn(c *cli.Context) error {
 	}
 
 	instID := ctx.Instructions[0].DeriveID("").Slice()
-	log.Infof("Spawned new value contract. Instance id is:\n%x", instID)
+	log.Infof("Spawned a new value contract. Its instance id is:\n%x", instID)
 
 	return lib.WaitPropagation(c, cl)
 }
