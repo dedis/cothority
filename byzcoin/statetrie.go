@@ -95,10 +95,12 @@ func (t *stagingStateTrie) GetIndex() int {
 	return int(index)
 }
 
+// StoreAllToReplica creates a copy of the read-only trie and applies the state
+// changes to the copy.
 func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
 	newTrie := t.Clone()
 	if err := newTrie.StoreAll(scs); err != nil {
-		return nil, err
+		return nil, errors.New("replica failed to store state changes: " + err.Error())
 	}
 	return newTrie, nil
 }
@@ -217,6 +219,10 @@ func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
 	}
 }
 
+// StoreAllToReplica is not supported. It cannot be implemented in an immutable
+// way because writing state changes to the replica will change the underlying
+// trie since the receiver is not a stagingStateTrie. Convert it to a
+// stagingStateTrie and then use StoreAllToReplica.
 func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
 	return nil, errors.New("unsupported operation")
 }
