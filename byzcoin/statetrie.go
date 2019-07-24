@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.etcd.io/bbolt"
@@ -25,6 +26,10 @@ type ReadOnlyStateTrie interface {
 	// ForEach calls the callback function on every key/value pair in the
 	// trie, which does not include the metadata.
 	ForEach(func(k, v []byte) error) error
+	// StoreAllToReplica creates a copy of the read-only trie and applies
+	// the state changes to the copy. The implementation should make sure
+	// that the original read-only trie is not be modified.
+	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
 }
 
 // stagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
@@ -88,6 +93,16 @@ func (t *stagingStateTrie) Commit() error {
 func (t *stagingStateTrie) GetIndex() int {
 	index := binary.LittleEndian.Uint32(t.StagingTrie.GetMetadata([]byte(trieIndexKey)))
 	return int(index)
+}
+
+// StoreAllToReplica creates a copy of the read-only trie and applies the state
+// changes to the copy.
+func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
+	newTrie := t.Clone()
+	if err := newTrie.StoreAll(scs); err != nil {
+		return nil, errors.New("replica failed to store state changes: " + err.Error())
+	}
+	return newTrie, nil
 }
 
 const trieIndexKey = "trieIndexKey"
@@ -202,6 +217,14 @@ func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
 	return &stagingStateTrie{
 		StagingTrie: *t.MakeStagingTrie(),
 	}
+}
+
+// StoreAllToReplica is not supported. It cannot be implemented in an immutable
+// way because writing state changes to the replica will change the underlying
+// trie since the receiver is not a stagingStateTrie. Convert it to a
+// stagingStateTrie and then use StoreAllToReplica.
+func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
+	return nil, errors.New("unsupported operation")
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.
