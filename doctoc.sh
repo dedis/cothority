@@ -1,34 +1,51 @@
 #!/bin/bash
-
-############
 #
-# Motivation to rewrite a simple alternative to doctoc: How Much Do You Trust That Package? Understanding The Software Supply Chain https://www.youtube.com/watch?v=fnELtqE6mMM
+# Takes a mardown file in argument, checks if a table of content is already
+# present, create a new one if there is none or update the current one.
 #
-# Attribution: this include includes prework [done by meleu](https://gist.github.com/meleu/57867f4a01ede1bd730f14b2f018ae89) and I developed the way doctoc interacts with markdown files
+# The script uses the $start_toc and $end_doc as delimiters for the table of
+# content. It won't work if there is not only one pair of opening/closing
+# delimiters. If it finds a correct pair, the content inside maybe entirely
+# updated.
 #
-# Generates a Table of Contents getting a markdown file as input.
+# Attributions:
+# Updated from https://gitlab.com/pedrolab/doctoc.sh/tree/master, which comes
+# from https://gist.github.com/meleu/57867f4a01ede1bd730f14b2f018ae89.
 #
-# Inspiration for this script:
-# https://medium.com/@acrodriguez/one-liner-to-generate-a-markdown-toc-f5292112fd14
-#
-# The list of invalid chars is probably incomplete, but is good enough for my
-# current needs.
-# Got the list from:
-# https://github.com/thlorenz/anchor-markdown-header/blob/56f77a232ab1915106ad1746b99333bf83ee32a2/anchor-markdown-header.js#L25
+# The list of invalid chars come from https://github.com/thlorenz/anchor-\
+# markdown-header/blob/56f77a232ab1915106ad1746b99333bf83ee32a2/anchor-\
+# markdown-header.js#L25
 #
 
 INVALID_CHARS="'[]/?!:\`.,()*\";{}+=<>~$|#@&–—"
 
-check() {
+# For Mac user, we need to use 'gsed'
+SED=sed
 
-    # src https://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
+appname='doctoc.sh'
+start_toc='<!-- START '$appname' generated TOC please keep comment here to allow auto update -->'
+info_toc='<!-- DO NOT EDIT THIS SECTION, INSTEAD RE-RUN '$appname' TO UPDATE -->'
+end_toc='<!-- END '$appname' generated TOC please keep comment here to allow auto update -->'
+
+check() {
+    # Check if argument found
     if [ -z "$1" ]; then
         echo "Error. No argument found. Put as argument a file.md"
         exit 1
     fi
-
+    # Check if file found
     [[ ! -f "$1" ]] && echo "Error. File not found" && exit
-
+    # Check if used from MacOS
+    if [[ "${OSTYPE//[0-9.]/}" == "darwin" ]]; then
+        if type gsed >/dev/null 2>&1; then
+            SED=gsed
+        else
+            warn="WARNING: Detecting you are on mac but didn't find the 'gsed' "
+            warn+="utility. Default 'sed' version of mac is not likely to work " 
+            warn+="here. You can install 'gsed' with 'brew install gnu-sed'."
+            echo $warn
+        fi
+    fi
 }
 
 toc() {
@@ -40,12 +57,12 @@ toc() {
     local output
 
     while IFS='' read -r line || [[ -n "$line" ]]; do
-        level="$(echo "$line" | sed -E 's/^#(#+).*/\1/; s/#/  /g; s/^  //')"
-        title="$(echo "$line" | sed -E 's/^#+ //')"
+        level="$(echo "$line" | $SED -E 's/^(#+).*/\1/; s/#/  /g; s/^  //')"
+        title="$(echo "$line" | $SED -E 's/^#+ //')"
         anchor="$(echo "$title" | tr '[:upper:] ' '[:lower:]-' | tr -d "$INVALID_CHARS")"
 
-        # check new line introduced is not duplicated, if is duplicated, introduce a number at the end
-        #   copying doctoc behavior
+        # Check that new linea introduced are not duplicated. If so, introduce a
+        # number at the end copying doctoc behavior.
         temp_output=$output"$level- [$title](#$anchor)\n"
         counter=1
         while true; do
@@ -60,50 +77,72 @@ toc() {
 
         output="$temp_output"
 
-    done <<< "$(grep -E '^#{2,10} ' "$1" | tr -d '\r')"
+    done <<< "$(awk -v code='^```' ' BEGIN { in_code=0 }
+    {
+        if ($0 ~ code && in_code == 0) { in_code=1 }
+        else if ($0 ~ code && in_code == 1) { in_code=0 }
+        if ($0 ~ /^#{1,10}/ && in_code == 0) { print }
+    }' $1 | tr -d '\r')"
 
     echo "$output"
-
 }
 
 insert() {
 
     local toc_text="$2"
     local appname='doctoc.sh'
-    # inspired in doctoc lines
-    local start_toc='<!-- START '$appname' generated TOC please keep comment here to allow auto update -->'
-    local info_toc='<!-- DO NOT EDIT THIS SECTION, INSTEAD RE-RUN '$appname' TO UPDATE -->'
-    local end_toc='<!-- END '$appname' generated TOC please keep comment here to allow auto update -->'
 
     toc_block="$start_toc\n$info_toc\n**Table of Contents**\n\n$toc_text\n$end_toc"
 
-    # temporary replace of '/' (confused with separator of substitutions) and '&' (confused with match regex symbol) to run the special sed command
-    toc_block="$(echo "$toc_block" | sed 's,&,id9992384923423gzz,g')"
-    toc_block="$(echo "$toc_block" | sed 's,/,id8239230090230gzz,g')"
+    # temporary replace of '/' (confused with separator of substitutions) and
+    # '&' (confused with match regex symbol) to run the special sed command
+    toc_block="$(echo "$toc_block" | $SED 's,&,id9992384923423gzz,g')"
+    toc_block="$(echo "$toc_block" | $SED 's,/,id8239230090230gzz,g')"
 
-    # search multiline toc block -> https://stackoverflow.com/questions/2686147/how-to-find-patterns-across-multiple-lines-using-grep/2686705
-    # grep color for debugging -> https://superuser.com/questions/914856/grep-display-all-output-but-highlight-search-matches
-    if grep --color=always -Pzl "(?s)$start_toc.*\n.*$end_toc" $1 &>/dev/null; then
+    # Check if there is a block that begins with $start_toc and ends with
+    # $end_toc. We ensure there is a correct and single pair of opening/closinfg
+    # delimiters.
+    awk -v start="^$start_toc$" -v end="^$end_toc$" 'BEGIN { status=1; start_c=0; end_c=0 }
+        { if ($0 ~ start && start_c > 0) { 
+            print "ERROR: found more than 1 opening toc block. Please fix that"; 
+            status=2; exit
+          }
+          if ($0 ~ start) {
+              start_c+=1
+          }
+          if (start_c == 1 && $0 ~ end) { 
+              end_c+=1; status=0 
+          }
+          if (start_c == 0 && $0 ~ end) {
+              print "ERROR: found a closing block before an opening one. Please fix that"; 
+              status=2; exit
+          }
+          if (end_c > 1 ) {
+              print "ERROR: found more than 1 closing block. Please fix that"; 
+              status=2; exit
+          }
+        } END {exit status }' $1
+    check_status=$?
+    # If the exit status is 2, that means something went bad and we must abort.
+    [ $check_status -eq 2 ] && exit 1
+    if [ $check_status -eq 0 ]; then
         echo -e "\n  Updated content of $appname block in $1 succesfully\n"
-        # src https://askubuntu.com/questions/533221/how-do-i-replace-multiple-lines-with-single-word-in-fileinplace-replace
-        sed -i ":a;N;\$!ba;s/$start_toc.*$end_toc/$toc_block/g" $1
+        $SED -i ":a;N;\$!ba;s/$start_toc.*$end_toc/$toc_block/g" $1
     else
         echo -e "\n  Created $appname block in $1 succesfully\n"
-        sed -i '.bcp' -e 1i"$toc_block" "$1"
+        $SED -i 1i"$toc_block" "$1"
     fi
 
     # undo symbol replacements
-    # sed -i 's,id9992384923423gzz,&,g' $1
-    # sed -i 's,id8234923000230gzz,/,g' $1
+    $SED -i 's,id9992384923423gzz,&,g' $1
+    $SED -i 's,id8234923000230gzz,/,g' $1
 
 }
 
 main() {
-
     check "$1"
     toc_text=$(toc "$1")
     insert "$1" "$toc_text"
-
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main "$@"
