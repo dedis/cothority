@@ -26,10 +26,12 @@ testValueSpawn() {
     OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
+    matchOK "$OUTRES" "^Spawned a new value contract. Its instance id is:
+[0-9a-f]{64}$"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "instance id" | sed -n 2p )
+    matchOK "$VALUE_INSTANCE_ID" ^[0-9a-f]{64}$
 
     # Update the value instance based on the instance ID
     testOK runBA contract value invoke update --value "newValue" --instid $VALUE_INSTANCE_ID --darc "$ID" --sign "$KEY"
@@ -119,10 +121,12 @@ testValueGet() {
     OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
+    matchOK "$OUTRES" "^Spawned a new value contract. Its instance id is:
+[0-9a-f]{64}$"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "instance id" | sed -n 2p )
+    matchOK "$VALUE_INSTANCE_ID" ^[0-9a-f]{64}$
 
     # Use the "get" function and save the output to the OUTPUT variable
     OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
@@ -160,10 +164,12 @@ testValueDel() {
     OUTRES=`runBA0 contract value spawn --value "myValue" --darc "$ID" --sign "$KEY"`
 
     # Check if we got the expected output
-    testGrep "Spawned new value contract. Instance id is:" echo "$OUTRES"
+    matchOK "$OUTRES" "^Spawned a new value contract. Its instance id is:
+[0-9a-f]{64}$"
 
     # Extract the instance ID of the newly created value instance
-    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "Instance id" | sed -n 2p )
+    VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "instance id" | sed -n 2p )
+    matchOK "$VALUE_INSTANCE_ID" ^[0-9a-f]{64}$
 
     # Use the "get" function to retrieve the contract. It should pass.
     testOK runBA contract value get --instid "$VALUE_INSTANCE_ID"

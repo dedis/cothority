@@ -110,7 +110,7 @@ func DeferredSpawn(c *cli.Context) error {
 	}
 
 	instID := ctx.Instructions[0].DeriveID("").Slice()
-	log.Infof("Spawned new deferred contract, its instance id is: \n%x", instID)
+	log.Infof("Spawned a new deferred contract. Its instance id is:\n%x", instID)
 
 	// ---
 	// 3.
@@ -131,7 +131,7 @@ func DeferredSpawn(c *cli.Context) error {
 		return errors.New("couldn't decode the result: " + err.Error())
 	}
 
-	log.Infof("Here is the deferred data: \n%s", result)
+	log.Infof("Here is the deferred data:\n%s", result)
 
 	return lib.WaitPropagation(c, cl)
 }

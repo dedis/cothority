@@ -164,7 +164,7 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 
 	newInstID := ctx.Instructions[0].DeriveID("").Slice()
 	log.Infof("Config contract updated! (instance ID is %x)", newInstID)
-	log.Infof("Here is the config data: \n%s", contractConfig)
+	log.Infof("Here is the config data:\n%s", contractConfig)
 
 	return nil
 }
@@ -198,7 +198,7 @@ func ConfigGet(c *cli.Context) error {
 		return errors.New("couldn't decode chainConfig: " + err.Error())
 	}
 
-	log.Infof("Here is the config data: \n%s", config)
+	log.Infof("Here is the config data:\n%s", config)
 
 	return nil
 }

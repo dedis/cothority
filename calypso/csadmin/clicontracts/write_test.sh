@@ -44,8 +44,8 @@ testContractWriteInvoke() {
     
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
 
-    matchOK "$OUTRES" "Spawned a new write instance. Its instance id is:
-[0-9a-f]{32}"
+    matchOK "$OUTRES" "^Spawned a new write instance. Its instance id is:
+[0-9a-f]{64}$"
 
     # We check only that commands exits correctly. The content should be checked
     # by a `csadmin contract write get` function.

@@ -59,7 +59,7 @@ func (dd DeferredData) String() string {
 		out.WriteString(eachLine.ReplaceAllString(inst.String(), "--$1"))
 	}
 	fmt.Fprintf(out, "- Expire Block Index: %d\n", dd.ExpireBlockIndex)
-	fmt.Fprint(out, "- Instruction hashes: \n")
+	fmt.Fprint(out, "- Instruction hashes:\n")
 	for i, hash := range dd.InstructionHashes {
 		fmt.Fprintf(out, "-- hash %d:\n", i)
 		fmt.Fprintf(out, "--- %x\n", hash)
