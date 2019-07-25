@@ -395,7 +395,7 @@ func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruc
 		return nil
 	}
 	if err := inst.Verify(rst, ctxHash); err != nil {
-		return err
+		return errors.New("failed to verify instruction: " + err.Error())
 	}
 	return nil
 }
@@ -409,7 +409,7 @@ func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst
 		return nil
 	}
 	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
-		return err
+		return errors.New("failed to verify deferred instruction: " + err.Error())
 	}
 	return nil
 }
