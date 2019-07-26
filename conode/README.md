@@ -1,37 +1,32 @@
-
 <!-- START doctoc.sh generated TOC please keep comment here to allow auto update -->
 <!-- DO NOT EDIT THIS SECTION, INSTEAD RE-RUN doctoc.sh TO UPDATE -->
-**Table of Contents**
+**:book: Table of Contents**
 
 - [Introduction](#introduction)
-- [Operating a Conode](#operating-a-conode)
   - [Server requirements](#server-requirements)
   - [Network communication ](#network-communication-)
-  - [TLS configuration](#tls-configuration)
-  - [Built-in TLS: specifying certificate files](#built-in-tls-specifying-certificate-files)
-  - [Built-in TLS: Using Let's Encrypt certificates](#built-in-tls-using-lets-encrypt-certificates)
+- [Running a conode](#running-a-conode)
+  - [Environment setup](#environment-setup)
+  - [Configuration setup](#configuration-setup)
+    - [Option 1: configuration setup with the command line](#option-1-configuration-setup-with-the-command-line)
+    - [Option 2: configuration setup with docker](#option-2-configuration-setup-with-docker)
+    - [Post setup instructions](#post-setup-instructions)
+  - [Run your conode](#run-your-conode)
+    - [Option 1: Run with the command line](#option-1-run-with-the-command-line)
+    - [Option 2: Run with docker](#option-2-run-with-docker)
+    - [Option 3: `run_nodes.sh`](#option-3-run_nodessh)
+- [Operating a conode](#operating-a-conode)
   - [Backups](#backups)
   - [Recovery from a crash](#recovery-from-a-crash)
   - [Roster IPs should be movable](#roster-ips-should-be-movable)
-- [Running a conode](#running-a-conode)
-  - [Option 1: The command line](#option-1-the-command-line)
-    - [Installation](#installation)
-    - [Configuration](#configuration)
-    - [Running the conode](#running-the-conode)
-    - [Using screen](#using-screen)
-    - [Verifying your server](#verifying-your-server)
-    - [Conode Help](#conode-help)
-  - [Option 2: Using docker](#option-2-using-docker)
-    - [Starting Conode](#starting-conode)
-    - [Using systemd](#using-systemd)
-    - [Setting up more than one node](#setting-up-more-than-one-node)
-    - [Joining the dedis-cothority](#joining-the-dedis-cothority)
-    - [Compiling your own docker file](#compiling-your-own-docker-file)
-    - [Apps](#apps)
-    - [Development version](#development-version)
-  - [Option 3: `run_nodes.sh`](#option-3-run_nodessh)
-- [Creating Your own Cothority](#creating-your-own-cothority)
-- [Docker creation](#docker-creation)
+  - [Verifying your server](#verifying-your-server)
+  - [Setting up more than one node](#setting-up-more-than-one-node)
+  - [Joining the dedis-cothority](#joining-the-dedis-cothority)
+  - [Compiling your own docker file](#compiling-your-own-docker-file)
+  - [Apps](#apps)
+  - [Development version with docker](#development-version-with-docker)
+  - [Creating Your own Cothority](#creating-your-own-cothority)
+  - [Docker creation](#docker-creation)
 - [For the lazy ones: Survival guide to install your server with Ubuntu 18.04](#for-the-lazy-ones-survival-guide-to-install-your-server-with-ubuntu-1804)
 
 <!-- END doctoc.sh generated TOC please keep comment here to allow auto update -->
@@ -47,11 +42,10 @@ The conode in this repository includes all protocols and services and can
 be run either for local tests or on a public server. The currently running
 conodes are available under http://status.dedis.ch.
 
-# Operating a Conode
-
 To operate a Conode, one need to correctly set up a host and run the Conode
 program. The following chapters describe the requirements and needed
-environement to correctly run the conode program.
+environement to correctly run the conode program, as well as general instruction
+on how to operate it.
 
 Once you have a conode up and running, you can inform us on dedis@epfl.ch and
 we will include your conode in the DEDIS-cothority.
@@ -77,40 +71,23 @@ something from the outside of cothority performs a query. It happens when
 someone wants to store a value on the skip-chain. In this case, the client will
 contact the cothority via the client-conode communication scheme.
 
-## TLS configuration
+# Running a conode
 
-Conode-conode communication is automatically secured via TLS when you use
-the configuration from `conode setup` unchanged.
+## Environment setup
 
-However, conode-client communication happens on the next port up from the
-conode-conode port, and it defaults to WebSockets inside of HTTP. It is
+As we will discover later, conode-conode communication is automatically secured
+via TLS when you use the configuration from `conode setup` unchanged. However,
+conode-client communication happens on the next port up from the conode-conode
+port, and it defaults to WebSockets inside of HTTP. Therefore, it is highly
 recommended to arrange for this port to be wrapped in TLS as well.
 
-When this port is using TLS, you must explicitly advertise this fact
-when you add your server to a cothority. You do this by setting the
-Url field in the toml file:
-
-```
-[[servers]]
-  Address = "tls://excellent.example.com:7770"
-  Url = "https://excellent.example.com:7771"
-  Suite = "Ed25519"
-  Public = "ad91a87dd89d31e4fc77ee04f1fc684bb6697bcef96720b84422437ff00b79e3"
-  Description = "My excellent example server."
-  [servers.Services]
-    [servers.Services.ByzCoin]
-      ...etc...
-```
-
-Conode should only be run as a non-root user.
-
 The current recommended way to add HTTPS to the websocket port is to use a web
-server like Apache or nginx in reverse proxy mode to forward connections from
+server like Apache or Nginx in reverse proxy mode to forward connections from
 port 443 to the websocket port, which is the conode's port plus 1.
 
-An example config, for Apache using a Let's Encrypt certificate:
+Here is an example config for Apache using a Let's Encrypt certificate:
 
-```
+```apache
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
         ServerName excellent.example.com
@@ -126,13 +103,118 @@ An example config, for Apache using a Let's Encrypt certificate:
 </IfModule>
 ```
 
-In this case, the Url in the TOML file would be `https://excellent.example.com`
-(no port number because 443 is the default for HTTPS).
+And here is a version with Nginx:
 
-## Built-in TLS: specifying certificate files
+```nginx
+location / {
+   server_name example.com
+   # ...
+   ssl_certificate /etc/nginx/ssl/example.com.certificate.pem;
+	ssl_certificate_key /etc/nginx/ssl/example.com.key.pem;
+   # ...
+   location /conode/ {
+      proxy_http_version 1.1;
 
-If you would like the conode to run TLS on the WebSocket interface, you can tell
-it where to find the private key and a certificate for that key in the
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";		
+
+      proxy_pass "http://localhost:7771/";
+   }
+}
+```
+
+As we will see later during the configuration phase, we will have to advertise
+this configuration in the `public.toml` configuration file with the `Url` field.
+In this case, the configuration would be `Url ="https://excellent.example.com"`
+for Apache and `Url = "example.com/conode"` for Nginx. More on that later.
+
+## Configuration setup
+
+During the setup phase, the conode program creates its public/private key and
+promts the user with some informations:
+
+- PORT: the indicated port and port+1 will be used for communication.
+- IP-address: if it cannot detect your IP-address, it will ask for it. This
+usually means that something is wrong. Perhaps you didn't allow your firewall
+to accept incoming connections.
+- Description: any description you want to share with the world
+- Folder: press <enter> for the default folder
+
+Once the interactive setup is done, the program has created two configuration
+files:
+
+- The *public configuration file* (public.toml), which holds the public key,
+  network informations, and a description. This file is the one that should be
+  sent to other cothority operators to request access to the cothority.
+- The *private configuration file* (private.toml), which holds the server
+  config, including the private key and network configuration, like the server's
+  public address on the network. The server will listen to this port, as well as
+  to this port + 1 (for conode-client connections).
+
+**Warning:** Never (!!!) share the file `private.toml` with anybody, as it
+contains the private key of your conode.
+
+There is two options for the next configuration and runing setups: using the
+command line or using docker.
+
+### Option 1: configuration setup with the command line
+
+First we need to get the conode program. The recommended way for getting the
+conode program is to dowload it from the official releases on
+[Github](https://github.com/dedis/cothority/releases) (replace with the latest
+version):
+
+```bash
+$ wget https://github.com/dedis/cothority/releases/download/v3.1.3/conode-v3.1.3.tar.gz
+$ tar -xvf conode-v3.1.3.tar.gz
+```
+
+Otherwise, you can build it from the sources if you have the latest version of
+go:
+
+```
+$ git clone https://github.com/dedis/cothority.git
+$ cd conode
+$ go install ./conode
+```
+
+Then, you can launch the interactive setup configuration by runing 
+
+```bash
+$ conode setup
+``` 
+
+Once done, the configuration files (the public.toml and private.toml) are save
+in the default location or in the one specified during the interactive setup.
+
+The default locations are the following depending on the operating system:
+
+- Linux: `$HOME/.config/conode`
+- MacOS: `$HOME/Library/Application Support/conode`
+- Windows:`%AppData%\Conode`
+
+### Option 2: configuration setup with docker
+
+If you have docker installed and running on your host, you can fire the
+interactive setup with the following command:
+
+```
+$ mkdir ~/conode_data
+$ docker run -it --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
+```
+
+This will promt the interactive setup and set the 2 configuration files in the
+`~/conode_data` directory.
+
+### Post setup instructions
+
+There are few things you can do now that you have your configuration files. This
+first one it to update the `Url` field in the public.toml file in case you setup
+a websocket over TLS connection for the conode-client communication.
+
+Another option concerns the conode-conode communication that runs on TLS. If you
+would like the conode to run TLS on the WebSocket interface, you can tell it
+where to find the private key and a certificate for that key in the
 `private.toml` file:
 
 ```
@@ -143,8 +225,6 @@ WebSocketTLSCertificateKey = "/etc/privkey.pem"
 In this case, it is up to you to get get a certificate from a certificate
 authority, and to update `fullchain.pem` when needed in order to renew the
 certificate.
-
-## Built-in TLS: Using Let's Encrypt certificates
 
 Using the Let's Encrypt CA, and the `certbot` client program, you can get free
 certificates for domains which you control. `certbot` writes the files it
@@ -161,6 +241,81 @@ WebSocketTLSCertificateKey = "/etc/letsencrypt/live/conode.example.com/privkey.p
 
 Let's Encrypt certificates expire every 90 days, so you will need
 to restart your conode when the `fullchain.pem` file is refreshed.
+
+## Run your conode
+
+Once the setup is done with one of the two options, you can finally run your
+conode depending on the previously choosen option.
+
+### Option 1: Run with the command line
+
+Simply launch the following:
+
+```bash
+$ conode server
+```
+
+It is recommanded to use a more verbose logging, this can be done with the `-d`
+option. It is also possible to specify a different location than the default one
+for the private.toml file with the `-c` option. If you used docker to setup
+your conode, then the private.toml file is not in the default location. You can
+then use:
+
+```bash
+$ conode -d 2 -c ~/conode_data/private.toml server
+```
+
+You can use the `-h` for a description of the availble commands.
+
+If you want to run the server in the background, you can use the `screen`
+program:
+
+```bash
+screen -S conode -d -m conode server
+```
+
+To enter the screen, type `screen -r conode`. You can detach from it with
+`<ctrl-a> d`.
+
+
+### Option 2: Run with docker
+
+Type the following to start the docker program with docker:
+
+```bash
+$ docker run --restart always -d -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+```
+
+Because it will run detached, you can use `docker logs -f conode` to see the
+logs. It will be restarted on the next boot as well. To stop it, you can use
+`docker stop` then you must remove it with `docker rm <id>` (the id is found
+with `docker ps -a`).
+
+If you have systemd, you can simply copy the `conode.service` file and add it to
+your systemd-startup. Of course you should do this as a non-root user:
+
+```
+$ wget https://raw.githubusercontent.com/dedis/cothority/conode/conode.service
+$ systemctl --user enable conode.service
+$ systemctl --user start conode
+```
+
+Unfortunately systemd doesn't allow a user to run a service at system startup,
+and all user services get stopped once the user logs out!
+
+### Option 3: `run_nodes.sh`
+
+For developpment purposes, the `run_nodes.sh` script can be used to launch
+multiple conodes. For example, the following command:
+
+```bash
+$ ./run_nodes -d tmp -v 2 -n 5
+```
+
+will run 5 conodes on the tmp directory with a verbosity of 2. The file
+containing all the public configurations will be in "tmp/public.toml".
+
+# Operating a conode
 
 ## Backups
 
@@ -206,178 +361,27 @@ identity like "tcp://conode-master.example.com:6979" and then change the
 definition of conode-master.example.com in DNS in order to change the IP address
 of the master.
 
+## Verifying your server
 
-# Running a conode
-
-## Option 1: The command line
-
-Runing the conode program from the command line is the fastest way to get your
-conode runing. 
-
-### Installation
-
-The recommended way for getting the conode program is to dowload
-it from the official releases on
-[Github](https://github.com/dedis/cothority/releases) (replace with the latest
-version):
-
-```bash
-$ wget https://github.com/dedis/cothority/releases/download/v3.1.3/conode-v3.1.3.tar.gz
-$ tar -xvf conode-v3.1.3.tar.gz
-```
-
-Otherwise, you can build it from the sources if you have the latest version of
-go:
-
-```
-$ git clone https://github.com/dedis/cothority.git
-$ cd conode
-$ go install ./conode
-```
-
-### Configuration
-
-To configure your conode, you need to *open two consecutive ports* (e.g., 7770 and 7771) on your machine, then execute
-
-```
-conode setup
-```
-
-and follow the instructions of the dialog. After a successful setup, there
-should be two configuration files:
-
-- The *public configuration file* holds the public key and a description.
-Adapt the `description` variable to your liking and send the file to other cothority operators to request
-access to the cothority.
-- The *private configuration file* of your cothoriy holds the server config, including the private key. It
-also includes the server's public address on the network. The server will listen
-to this port, as well as to this port + 1 (for websocket connections).
-
-The setup routine writes the config files into a directory depending on the
-operating system:
-- Linux: `$HOME/.config/conode`
-- MacOS: `$HOME/Library/Application Support/conode`
-- Windows:`%AppData%\Conode`
-
-**Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of
-your conode.
-
-### Running the conode
-
-To start your conode with the default configuration file, execute:
-
-```bash
-conode server
-```
-
-### Using screen
-
-Or if you want to run the server in the background, you can use the `screen`-program:
-```
-screen -S conode -d -m conode -d 2 server
-```
-
-To enter the screen, type `screen -r conode`, you can detach from it with
-`<ctrl-a> d`.
-
-### Verifying your server
-
-If everything runs correctly, you can check the configuration with:
+You can check if the configuration file is correct with:
 
 ```bash
 conode -d 3 check ~/.config/conode/public.toml
 ```
 
-### Conode Help
-
-```bash
-NAME:
-   conode - run a cothority server
-
-USAGE:
-   conode [global options] command [command options] [arguments...]
-
-VERSION:
-   3.0.0
-
-COMMANDS:
-     setup, s  Setup server configuration (interactive)
-     server    Start cothority server
-     check, c  Check if the servers in the group definition are up and running
-     help, h   Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --debug value, -d value   debug-level: 1 for terse, 5 for maximal (default: 0)
-   --config value, -c value  Configuration file (private.toml) of the server (default: os-specific)
-   --help, -h                show help
-   --version, -v             print the version
-```
-
-## Option 2: Using docker
-
-You need to have docker installed. Then use the following command to setup your
-conode in the `~/conode_data`-directory:
-
-```
-$ docker run -it --rm -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
-```
-
-This will create a `conode_data` directory and ask you for the configuration details:
-- PORT: the indicated port and port+1 will be used for communication. If you
-change this port, also update the ports in the docker-command.
-- IP-address: if it cannot detect your IP-address, it will ask for it. This
-usually means that something is wrong. Perhaps you didn't allow your firewall
-to accept incoming connections
-- Description: any description you want to share with the world
-- Folder: press <enter> for the default folder - it will be redirected to `conode_data`
-
-There are two important files in there:
-- `private.toml` - do not give this away - it's your private key!
-- `public.toml` - the description of your conode that you can send to dedis@epfl.ch
-and ask us to include it
-
-If you change the port-number, you will have to adjust the numbers
-used in the `docker run`-command.
-
-### Starting Conode
-
-Once a conode is setup, you can start it like that:
-
-```bash
-$ docker run --restart always -d -p 7770-7771:7770-7771 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
-```
-
-Because it will run detached, you can use `docker logs -f conode` to see the logs.
-
-It will be restarted on the next boot as well.
-
-### Using systemd
-
-If you have systemd, you can simply copy the `conode.service` file and add it to
-your systemd-startup. Of course you should do this as a non-root user:
-
-```
-$ wget https://raw.githubusercontent.com/dedis/cothority/conode/conode.service
-$ systemctl --user enable conode.service
-$ systemctl --user start conode
-```
-
-Unfortunately systemd doesn't allow a user to run a service at system startup,
-and all user services get stopped once the user logs out!
-
-### Setting up more than one node
+## Setting up more than one node
 
 You can start multiple nodes on the same server by using one user per node and
 set up the nodes as described above. Be sure to change the port-numbers and
 remember that two ports are used.
 
-### Joining the dedis-cothority
+## Joining the dedis-cothority
 
 The only existing cothority for the moment is available at
 http://status.dedis.ch. You can send us an email at dedis@epfl.ch to be added to
 this list.
 
-### Compiling your own docker file
+## Compiling your own docker file
 
 To create your own docker-image and use it, you can create it like this:
 
@@ -396,7 +400,7 @@ be used.
 To stop the docker, simply run `make docker_stop` or kill the docker-container. All
 configuration is stored in `conode_data`
 
-### Apps
+## Apps
 
 For most of the apps you need at least 3 running nodes. Once you have them up
 and running, you will need a `roster.toml` that includes all the
@@ -409,18 +413,14 @@ $ cat ../*/conode_data/public.toml > roster.toml
 You will find more details about the available apps on
 [Applications](https://github.com/dedis/cothority/tree/master/doc/Applications.md).
 
-### Development version
+## Development version with docker
 
 For the latest and greatest version of the conode, you can replace `conode:latest`
 with `conode:dev` and you should get a stable, but changing conode. This means, that
 to use all the functionalities you need to update the apps and follow the latest
 `conode:dev` container regularly.
 
-## Option 3: `run_nodes.sh`
-
-blabla...
-
-# Creating Your own Cothority
+## Creating Your own Cothority
 
 For most of the apps you need at least 3 running nodes. Once you have them up
 and running, you will need a `roster.toml` that includes all the
@@ -433,7 +433,7 @@ cat ../*/conode_data/public.toml > roster.toml
 You will find more details about the available apps on
 [Applications](https://github.com/dedis/cothority/tree/master/doc/Applications.md).
 
-# Docker creation
+## Docker creation
 
 For creating a new docker image, there are two commands:
 

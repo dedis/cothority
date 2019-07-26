@@ -4,13 +4,12 @@
 # present, create a new one if there is none or update the current one.
 #
 # The script uses the $start_toc and $end_doc as delimiters for the table of
-# content. It won't work if there is not only one pair of opening/closing
-# delimiters. If it finds a correct pair, the content inside maybe entirely
-# updated.
+# content. It works only if there is one pair of opening/closing delimiters. If
+# it finds a correct single pair, the content inside is updated.
 #
-# Attributions:
-# Updated from https://gitlab.com/pedrolab/doctoc.sh/tree/master, which comes
-# from https://gist.github.com/meleu/57867f4a01ede1bd730f14b2f018ae89.
+# Attributions: Updated from https://gitlab.com/pedrolab/doctoc.sh/tree/master,
+# which comes from
+# https://gist.github.com/meleu/57867f4a01ede1bd730f14b2f018ae89.
 #
 # The list of invalid chars come from https://github.com/thlorenz/anchor-\
 # markdown-header/blob/56f77a232ab1915106ad1746b99333bf83ee32a2/anchor-\
@@ -92,7 +91,7 @@ insert() {
     local toc_text="$2"
     local appname='doctoc.sh'
 
-    toc_block="$start_toc\n$info_toc\n**Table of Contents**\n\n$toc_text\n$end_toc"
+    toc_block="$start_toc\n$info_toc\n**:book: Table of Contents**\n\n$toc_text\n$end_toc"
 
     # temporary replace of '/' (confused with separator of substitutions) and
     # '&' (confused with match regex symbol) to run the special sed command
@@ -134,8 +133,8 @@ insert() {
     fi
 
     # undo symbol replacements
-    $SED -i 's,id9992384923423gzz,&,g' $1
-    $SED -i 's,id8234923000230gzz,/,g' $1
+    $SED -i 's,id9992384923423gzz,\&,g' $1
+    $SED -i 's,id8239230090230gzz,/,g' $1
 
 }
 
