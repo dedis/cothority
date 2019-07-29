@@ -31,7 +31,7 @@
   "license": "LGPL-3.0-or-later",
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@dedis/kyber": "^3.0.7",
+    "@dedis/kyber": "^3.0.8",
     "@stablelib/blake2xs": "^0.10.4",
     "@types/crypto-js": "^3.1.43",
     "@types/node": "^10.12.18",
@@ -41,7 +41,7 @@
     "file": "^0.2.2",
     "isomorphic-ws": "^4.0.1",
     "keccak": "^2.0.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.15",
     "long": "^4.0.0",
     "moment": "^2.24.0",
     "os": "^0.1.1",
