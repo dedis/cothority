@@ -60,7 +60,7 @@ toc() {
         title="$(echo "$line" | $SED -E 's/^#+ //')"
         anchor="$(echo "$title" | tr '[:upper:] ' '[:lower:]-' | tr -d "$INVALID_CHARS")"
 
-        # Check that new linea introduced are not duplicated. If so, introduce a
+        # Check that new lines introduced are not duplicated. If so, introduce a
         # number at the end copying doctoc behavior.
         temp_output=$output"$level- [$title](#$anchor)\n"
         counter=1
@@ -93,13 +93,13 @@ insert() {
 
     toc_block="$start_toc\n$info_toc\n**:book: Table of Contents**\n\n$toc_text\n$end_toc"
 
-    # temporary replace of '/' (confused with separator of substitutions) and
-    # '&' (confused with match regex symbol) to run the special sed command
+    # temporary replace '/' (confused with separator of substitutions) and '&'
+    # (confused with match regex symbol) to run the special sed command
     toc_block="$(echo "$toc_block" | $SED 's,&,id9992384923423gzz,g')"
     toc_block="$(echo "$toc_block" | $SED 's,/,id8239230090230gzz,g')"
 
     # Check if there is a block that begins with $start_toc and ends with
-    # $end_toc. We ensure there is a correct and single pair of opening/closinfg
+    # $end_toc. We ensure there is a correct and single pair of opening/closing
     # delimiters.
     awk -v start="^$start_toc$" -v end="^$end_toc$" 'BEGIN { status=1; start_c=0; end_c=0 }
         { if ($0 ~ start && start_c > 0) { 
