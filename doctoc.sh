@@ -47,6 +47,30 @@ check() {
     fi
 }
 
+# This function parses each line of the file given in input. Each line is first
+# parsed by awk in order to get only the ones concerning a title (ie. starting
+# with a '#') and not in a code block (ie. inside a block defined by '```').
+# Then, in the while loop, we extract the "level": number of '#' minus one
+# converted to spaces, the "title": the line without the '#', and then the
+# "anchor": the title without invalid chars and uppercase and with spaces
+# converted to dashes. In the case there is duplicated titles, a "-n" token is
+# finally appended to the anchor, where "n" is a counter. Here is an example
+# with two titles and the content of the corresponding variables:
+#
+# # Sample title!
+# ## Sample title!
+#
+# This yields for each title:
+#
+# level=""
+# title="Sample title!"
+# anchor="sample-title"
+# output="- [Sample title!](sample-title)"
+#
+# level=" "
+# title="Sample title!"
+# anchor="sample-title"
+# output=" - [Sample title!](sample-title-2)"
 toc() {
 
     local line
@@ -86,6 +110,9 @@ toc() {
     echo "$output"
 }
 
+# This function takes the file path and the table of content in argument. It
+# adds the toc title, checks if there is already a toc present and either
+# updates or inserts a toc.
 insert() {
 
     local toc_text="$2"
@@ -125,11 +152,17 @@ insert() {
     # If the exit status is 2, that means something went bad and we must abort.
     [ $check_status -eq 2 ] && exit 1
     if [ $check_status -eq 0 ]; then
-        echo -e "\n  Updated content of $appname block in $1 succesfully\n"
+        # ":a" creates label 'a'
+        # "N" append the next line to the pattern space
+        # "$!" if not the last line
+        # "ba" branch (goto) label a
+        # In short, this loops throught the entire file until the last line and
+        # then performs the substitution.
         $SED -i ":a;N;\$!ba;s/$start_toc.*$end_toc/$toc_block/g" $1
+        echo -e "\n  Updated content of $appname block in $1 succesfully\n"
     else
-        echo -e "\n  Created $appname block in $1 succesfully\n"
         $SED -i 1i"$toc_block" "$1"
+        echo -e "\n  Created $appname block in $1 succesfully\n"
     fi
 
     # undo symbol replacements
