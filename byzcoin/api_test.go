@@ -263,6 +263,39 @@ func TestClient_Streaming(t *testing.T) {
 	require.NoError(t, c1.Close())
 }
 
+func TestClient_NoPhantomSkipchain(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(3, true)
+	registerDummy(servers)
+	defer l.CloseAll()
+
+	// Initialise the genesis message and send it to the service.
+	signer := darc.NewSignerEd25519(nil, nil)
+	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
+	msg.BlockInterval = 100 * time.Millisecond
+	require.NoError(t, err)
+
+	d := msg.GenesisDarc
+
+	c, _, err := NewLedger(msg, false)
+	require.NoError(t, err)
+	require.NoError(t, c.UseNode(0))
+
+	gac, err := c.GetAllByzCoinIDs(roster.List[0])
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gac.IDs))
+
+	// Create a new transaction.
+	tx, err := createOneClientTx(d.GetBaseID(), "dummy", []byte{}, signer)
+	require.NoError(t, err)
+	_, err = c.AddTransactionAndWait(tx, 10)
+	require.NoError(t, err)
+
+	gac, err = c.GetAllByzCoinIDs(roster.List[0])
+	require.NoError(t, err)
+	require.Equal(t, 1, len(gac.IDs))
+}
+
 const testServiceName = "TestByzCoin"
 
 type corruptedService struct {

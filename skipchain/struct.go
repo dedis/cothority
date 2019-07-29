@@ -1219,7 +1219,7 @@ func (db *SkipBlockDB) GetProofForID(bid SkipBlockID) (sbs Proof, err error) {
 
 // GetSkipchains returns all latest skipblocks from all skipchains.
 func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
-	return db.getAll()
+	return db.getAllSkipchains()
 }
 
 // RemoveSkipchain removes all block from a given skipchain from the database.
