@@ -395,7 +395,21 @@ func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruc
 		return nil
 	}
 	if err := inst.Verify(rst, ctxHash); err != nil {
-		return err
+		return errors.New("failed to verify instruction: " + err.Error())
+	}
+	return nil
+}
+
+// This function is used in the case we do a deferred transaction on a deferred
+// transaction.
+func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	// We make a special case for the delete instruction. Anyone should be able
+	// to delete a deferred contract that has expired.
+	if inst.GetType() == DeleteType && uint64(rst.GetIndex()) >= c.DeferredData.ExpireBlockIndex {
+		return nil
+	}
+	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
+		return errors.New("failed to verify deferred instruction: " + err.Error())
 	}
 	return nil
 }

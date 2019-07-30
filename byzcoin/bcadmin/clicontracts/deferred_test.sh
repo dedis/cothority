@@ -5,8 +5,7 @@ testContractDeferred() {
     run testDeferredInvoke
     run testDeferredGet
     run testDeferredDel
-    # This test do not work yet due to an error with rst.GetIndex(), see #1938
-    # run testDeferredInvokeDeferred
+    run testDeferredInvokeDeferred
 }
 
 # We rely on the value contract to make our tests.
@@ -287,9 +286,9 @@ testDeferredInvokeDeferred() {
     
     # Now we create a new deferred contract that performs an addProof on the
     # first deferred contract
-    OUTRES2=`runBA contract -x deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH"\
+    OUTRES2=`runBA0 contract -x deferred invoke addProof --instid "$DEFERRED_INSTANCE_ID" --hash "$HASH"\
                                                    --instrIdx 0 --sign "$KEY" --darc "$ID" |\
-                                                   runBA contract deferred spawn --darc "$ID" --sign "$KEY"`
+                                                   runBA0 contract deferred spawn --darc "$ID" --sign "$KEY"`
 
     # We know the instance ID is the next line after "Spawned new deferred contract..."
     DEFERRED_INSTANCE_ID_2=`echo "$OUTRES2" | sed -n ' 
