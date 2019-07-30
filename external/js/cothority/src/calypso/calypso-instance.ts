@@ -189,8 +189,8 @@ export class CalypsoReadInstance extends Instance {
         // Note that we send the full proof in that case to insure the conodes
         // can easily verify the proof.
         const xhatenc = await ocs.reencryptKey(
-            await this.rpc.getProof(this.read.write),
-            await this.rpc.getProof(this.id),
+            await this.rpc.getProofFromLatest(this.read.write),
+            await this.rpc.getProofFromLatest(this.id),
         );
         return xhatenc.decrypt(priv);
     }
