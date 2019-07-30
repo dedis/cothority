@@ -178,6 +178,8 @@ message Instruction {
   // Signatures that are verified using the Darc controlling access to
   // the instance.
   repeated bytes signatures = 7;
+  // Attributes TODO use darc.IdentityAttr??
+  repeated darc.Identity attributes = 8;
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

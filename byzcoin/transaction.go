@@ -104,6 +104,13 @@ func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) err
 	return ctx.SignWith(signers...)
 }
 
+// SetAttributes TODO
+func (ctx *ClientTransaction) SetAttributes(attrs ...darc.Identity) {
+	for i := range ctx.Instructions {
+		ctx.Instructions[i].Attributes = attrs
+	}
+}
+
 // SignWith signs all the instructions with the same signers. If some instructions need to be signed by different sets
 // of signers, then use the SignWith method of Instruction.
 func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
@@ -305,7 +312,7 @@ func (instr Instruction) GetIdentityStrings() []string {
 // to be customized.
 type VerificationOptions struct {
 	IgnoreCounters bool
-	EvalXattr      darc.EvalXattr
+	AttrEvaluators map[string]func(body string, st ReadOnlyStateTrie) error
 }
 
 // Verify will look up the darc of the instance pointed to by the instruction
@@ -361,6 +368,25 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	for i := range instr.Signatures {
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
 			goodIdentities = append(goodIdentities, instr.SignerIdentities[i].String())
+		} else {
+			log.Warn("signature verification failed for identity", instr.SignerIdentities[i].String())
+		}
+	}
+
+	for i := range instr.Attributes {
+		if instr.Attributes[i].Type() == darc.TypeAttr {
+			evalFunc, ok := ops.AttrEvaluators[instr.Attributes[i].Attr.Name]
+			if !ok {
+				log.Warn("no evaluation function for attribute", instr.Attributes[i].String())
+			} else {
+				if err := evalFunc(instr.Attributes[i].Attr.Body, st); err != nil {
+					log.Warnf("evaluation failed for %s with error %s", instr.Attributes[i].String(), err.Error())
+				} else {
+					goodIdentities = append(goodIdentities, instr.Attributes[i].String())
+				}
+			}
+		} else {
+			log.Warn("expected a DARC attribute but it is", instr.Attributes[i].String())
 		}
 	}
 
@@ -378,10 +404,6 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 			return nil
 		}
 		return d
-	}
-
-	if ops.EvalXattr != nil {
-		return darc.EvalExprXattr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalXattr, goodIdentities...)
 	}
 	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
 }

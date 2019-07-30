@@ -46,6 +46,8 @@ message Identity {
   optional IdentityX509EC x509ec = 3;
   // A claim which has been signed by a proxy or proxies.
   optional IdentityProxy proxy = 4;
+  // Attr
+  optional IdentityAttr attr = 5;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -68,7 +70,6 @@ message IdentityProxy {
 // IdentityDarc is a structure that points to a Darc with a given ID on a
 // skipchain. The signer should belong to the Darc.
 message IdentityDarc {
-  // Signer SignerEd25519
   required bytes id = 1;
 }
 

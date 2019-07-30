@@ -8,14 +8,14 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 	factor = '(', expr, ')' | id | openid
 	identity = (darc|ed25519|x509ec):[0-9a-fA-F]+
 	proxy = proxy:[0-9a-fA-F]+:[^ \n\t]*
-	xattr = xattr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
+	attr = attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
 
 Examples:
 
 	ed25519:deadbeef // every id evaluates to a boolean
 	(ed25519:a & x509ec:b) | (darc:c & ed25519:d)
 	proxy:deadbeef:me@example.com // where deadbeef is a ed25519 public key
-	xattr:time_interval:before=5pm&after=9am & ed25519:deadbeef
+	attr:time_interval:before=5pm&after=9am & ed25519:deadbeef
 
 In the simplest case, the evaluation of an expression is performed against a
 set of valid ids.  Suppose we have the expression (a:a & b:b) | (c:c & d:d),
@@ -76,7 +76,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
-	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(), xattr(), groupExpr)
+	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(), attr(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -142,11 +142,11 @@ func proxy() parsec.Parser {
 	}
 }
 
-// Accepts tokens of the form that begins with "xattr:"
-func xattr() parsec.Parser {
+// Accepts tokens of the form that begins with "attr:"
+func attr() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
-		p := parsec.Token(`xattr:[0-9a-zA-Z\-\_]+:[^ \n\t]*`, "XATTR")
+		p := parsec.Token(`attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*`, "XATTR")
 		return p(s)
 	}
 }

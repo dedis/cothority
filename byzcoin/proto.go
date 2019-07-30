@@ -198,6 +198,8 @@ type Instruction struct {
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
 	Signatures [][]byte
+	// Attributes TODO use darc.IdentityAttr??
+	Attributes []darc.Identity
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

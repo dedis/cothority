@@ -72,17 +72,6 @@ const sign = "_sign"
 // nil if no match is found.
 type GetDarc func(s string, latest bool) *Darc
 
-// EvalXattr is a callback for evaluating an extended attribute. An extended
-// attribute is an extra rule that may be in the DARCs. It is up to the
-// developer to specify how the extended attributes are written and verified.
-// To implement verification, the developer must give EvalDarcXattr an
-// implementation of this callback. In the callback, name is the name of the
-// extended attribute and xattr is the actual extended attribute. If other
-// information is needed for the verification then the callback should be
-// created as a closure. The callback should return an error when the
-// verification fails with a descriptive error message.
-type EvalXattr func(name, xattr string) error
-
 // InitRules initialise a set of rules with the default actions "_evolve" and
 // "_sign".  Owners are joined with logical-AND under "_evolve" and signers are
 // joined with logical-Or under "_sign". If other expressions are needed,
@@ -630,28 +619,10 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 
 // evalExprDarc takes an extra visited parameter to track the visited nodes and
 // avoid infinite recursion.
-func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc,
-	evalXattr EvalXattr, acceptDarc bool, ids ...string) error {
+func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
 
 	var issue error
 	Y := expression.InitParser(func(s string) bool {
-		if strings.HasPrefix(s, "xattr") {
-			tokens := strings.SplitN(s, ":", 3)
-			if len(tokens) != 3 {
-				issue = errors.New("xattr has an invalid format")
-				return false
-			}
-			if tokens[0] != "xattr" {
-				issue = errors.New("first token should be xattr")
-				return false
-			}
-			if err := evalXattr(tokens[1], tokens[2]); err != nil {
-				issue = err
-				return false
-			}
-			return true
-		}
-
 		found := false
 		for _, id := range ids {
 			if id == s {
@@ -691,7 +662,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			signExpr := d.Rules.GetSignExpr()
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
-			if err := evalExprDarc(newVisited, signExpr, getDarc, evalXattr, acceptDarc, ids...); err != nil {
+			if err := evalExprDarc(newVisited, signExpr, getDarc, acceptDarc, ids...); err != nil {
 				issue = err
 				return false
 			}
@@ -719,30 +690,37 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 // identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
 // darcs that fit one of the ids.
 func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
-	f := func(name, xattr string) error {
-		return errors.New("extended attributes not supported")
-	}
-	return evalExprDarc(make(map[string]bool), expr, getDarc, f, acceptDarc, ids...)
+	return evalExprDarc(make(map[string]bool), expr, getDarc, acceptDarc, ids...)
 }
 
-// EvalExprXattr checks whether the expression evaluates to true given a list
-// of identities ids. It takes a GetDarc callback which retrieves additional
-// DARCs when necessary. It also needs a EvalXattr callback for evaluating
-// extended attributes.
-func EvalExprXattr(expr expression.Expr, getDarc GetDarc, evalXattr EvalXattr, ids ...string) error {
-	return evalExprDarc(make(map[string]bool), expr, getDarc, evalXattr, false, ids...)
-}
+// IdentityType is the type of the identity.
+type IdentityType int
+
+const (
+	// TypeUnknown is an identity that does not exist.
+	TypeUnknown IdentityType = iota
+	// TypeDarc is a type for a DARC identity.
+	TypeDarc
+	// TypeEd25519 is a type for an ed25519 identity.
+	TypeEd25519
+	// TypeX509EC is a type for an X509EC identity.
+	TypeX509EC
+	// TypeProxy is a type for a Proxy identity.
+	TypeProxy
+	// TypeAttr is a type for an attribute identity.
+	TypeAttr
+)
 
 // Type returns an integer representing the type of key held in the signer. It
 // is compatible with Identity.Type. For an empty signer, -1 is returned.
-func (s Signer) Type() int {
+func (s Signer) Type() IdentityType {
 	switch {
 	case s.Ed25519 != nil:
-		return 1
+		return TypeEd25519
 	case s.X509EC != nil:
-		return 2
+		return TypeX509EC
 	case s.Proxy != nil:
-		return 3
+		return TypeProxy
 	default:
 		return -1
 	}
@@ -752,11 +730,11 @@ func (s Signer) Type() int {
 // appropriate signer.
 func (s Signer) Identity() Identity {
 	switch s.Type() {
-	case 1:
+	case TypeEd25519:
 		return NewIdentityEd25519(s.Ed25519.Point)
-	case 2:
+	case TypeX509EC:
 		return NewIdentityX509EC(s.X509EC.Point)
-	case 3:
+	case TypeProxy:
 		return NewIdentityProxy(s.Proxy)
 	default:
 		return Identity{}
@@ -769,13 +747,11 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return nil, errors.New("nothing to sign, message is empty")
 	}
 	switch s.Type() {
-	case 0:
-		return nil, errors.New("cannot sign with a darc")
-	case 1:
+	case TypeEd25519:
 		return s.Ed25519.Sign(msg)
-	case 2:
+	case TypeX509EC:
 		return s.X509EC.Sign(msg)
-	case 3:
+	case TypeProxy:
 		return s.Proxy.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
@@ -785,9 +761,9 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 // GetPrivate returns the private key, if one exists.
 func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	switch s.Type() {
-	case 1:
+	case TypeEd25519:
 		return s.Ed25519.Secret, nil
-	case 0, 2, 3:
+	case TypeX509EC, TypeProxy:
 		return nil, errors.New("signer lacks a private key")
 	default:
 		return nil, errors.New("signer is of unknown type")
@@ -801,61 +777,70 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return false
 	}
 	switch id.Type() {
-	case 0:
+	case TypeDarc:
 		return id.Darc.Equal(id2.Darc)
-	case 1:
+	case TypeEd25519:
 		return id.Ed25519.Equal(id2.Ed25519)
-	case 2:
+	case TypeX509EC:
 		return id.X509EC.Equal(id2.X509EC)
-	case 3:
+	case TypeProxy:
 		return id.Proxy.Equal(id2.Proxy)
+	case TypeAttr:
+		return id.Attr.Equal(id2.Attr)
 	}
 	return false
 }
 
 // Type returns an int indicating what type of identity this is. If all
 // identities are nil, it returns -1.
-func (id Identity) Type() int {
+func (id Identity) Type() IdentityType {
 	switch {
 	case id.Darc != nil:
-		return 0
+		return TypeDarc
 	case id.Ed25519 != nil:
-		return 1
+		return TypeEd25519
 	case id.X509EC != nil:
-		return 2
+		return TypeX509EC
 	case id.Proxy != nil:
-		return 3
+		return TypeProxy
+	case id.Attr != nil:
+		return TypeAttr
 	}
-	return -1
+	return TypeUnknown
 }
 
 // PrimaryIdentity returns true if the identity is a primary identity, which is
 // an identity that is associated with a concrete public/private key.
 func (id Identity) PrimaryIdentity() bool {
-	switch {
-	case id.Darc != nil:
+	switch id.Type() {
+	case TypeDarc:
 		return false
-	case id.Ed25519 != nil:
+	case TypeEd25519:
 		return true
-	case id.X509EC != nil:
+	case TypeX509EC:
 		return true
-	case id.Proxy != nil:
+	case TypeProxy:
 		return true
+	case TypeAttr:
+		return false
+	default:
+		return false
 	}
-	return false
 }
 
 // TypeString returns the string of the type of the identity.
 func (id Identity) TypeString() string {
 	switch id.Type() {
-	case 0:
+	case TypeDarc:
 		return "darc"
-	case 1:
+	case TypeEd25519:
 		return "ed25519"
-	case 2:
+	case TypeX509EC:
 		return "x509ec"
-	case 3:
+	case TypeProxy:
 		return "proxy"
+	case TypeAttr:
+		return "attr"
 	default:
 		return "No identity"
 	}
@@ -864,14 +849,16 @@ func (id Identity) TypeString() string {
 // String returns the string representation of the identity.
 func (id Identity) String() string {
 	switch id.Type() {
-	case 0:
+	case TypeDarc:
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.Darc.ID)
-	case 1:
+	case TypeEd25519:
 		return fmt.Sprintf("%s:%s", id.TypeString(), id.Ed25519.Point.String())
-	case 2:
+	case TypeX509EC:
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.X509EC.Public)
-	case 3:
+	case TypeProxy:
 		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.Proxy.Public, id.Proxy.Data)
+	case TypeAttr:
+		return fmt.Sprintf("%s:%s:%s", id.TypeString(), id.Attr.Name, id.Attr.Body)
 	default:
 		return "No identity"
 	}
@@ -881,14 +868,16 @@ func (id Identity) String() string {
 // went wrong.
 func (id Identity) Verify(msg, sig []byte) error {
 	switch id.Type() {
-	case 0:
+	case TypeDarc:
 		return errors.New("cannot verify a darc-signature")
-	case 1:
+	case TypeEd25519:
 		return id.Ed25519.Verify(msg, sig)
-	case 2:
+	case TypeX509EC:
 		return id.X509EC.Verify(msg, sig)
-	case 3:
+	case TypeProxy:
 		return id.Proxy.Verify(msg, sig)
+	case TypeAttr:
+		return errors.New("cannot verify an attribute")
 	default:
 		return errors.New("unknown identity")
 	}
@@ -898,22 +887,24 @@ func (id Identity) Verify(msg, sig []byte) error {
 // not a serialisation of the identity.
 func (id Identity) GetPublicBytes() []byte {
 	switch id.Type() {
-	case 0:
+	case TypeDarc:
 		return id.Darc.ID
-	case 1:
+	case TypeEd25519:
 		buf, err := id.Ed25519.Point.MarshalBinary()
 		if err != nil {
 			return nil
 		}
 		return buf
-	case 2:
+	case TypeX509EC:
 		return id.X509EC.Public
-	case 3:
+	case TypeProxy:
 		buf, err := id.Proxy.Public.MarshalBinary()
 		if err != nil {
 			return nil
 		}
 		return buf
+	case TypeAttr:
+		return []byte(id.String())
 	default:
 		return nil
 	}
@@ -972,6 +963,19 @@ func NewIdentityProxy(s *SignerProxy) Identity {
 	}
 }
 
+// IdentityAttr represents an attribute used for authorization.
+type IdentityAttr struct {
+	Name string
+	Body string
+}
+
+// NewIdentityAttr creates an extended attribute identity.
+func NewIdentityAttr(name, attr string) Identity {
+	return Identity{
+		Attr: &IdentityAttr{Name: name, Body: attr},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
@@ -980,6 +984,11 @@ func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 // Equal returns true if both IdentityProxy are the same.
 func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 	return idp.Data == i2.Data && idp.Public.Equal(i2.Public)
+}
+
+// Equal returns true if both IdentityAttr are the same.
+func (idat IdentityAttr) Equal(idat2 *IdentityAttr) bool {
+	return idat.Name == idat2.Name && idat.Body == idat2.Body
 }
 
 type sigRS struct {
@@ -1037,6 +1046,7 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDX509ec(fields[1])
 	case "proxy":
 		return parseIDProxy(fields[1])
+	// TODO parse Attr
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}

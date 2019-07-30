@@ -64,6 +64,8 @@ type Identity struct {
 	X509EC *IdentityX509EC
 	// A claim which has been signed by a proxy or proxies.
 	Proxy *IdentityProxy
+	// Attr
+	Attr *IdentityAttr
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -86,7 +88,6 @@ type IdentityProxy struct {
 // IdentityDarc is a structure that points to a Darc with a given ID on a
 // skipchain. The signer should belong to the Darc.
 type IdentityDarc struct {
-	// Signer SignerEd25519
 	ID ID
 }
 

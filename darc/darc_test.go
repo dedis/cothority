@@ -1,9 +1,7 @@
 package darc
 
 import (
-	"errors"
 	"fmt"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -473,53 +471,6 @@ func TestDarc_IsSubset(t *testing.T) {
 	require.True(t, properSubsetRules.IsSubset(supersetRules))
 	require.True(t, strictSubsetRules.IsSubset(supersetRules))
 	require.False(t, wrongSubsetRules.IsSubset(supersetRules))
-}
-
-func TestDarc_Xattr(t *testing.T) {
-	evalXattr := func(name, xattr string) error {
-		if name != "test" {
-			return errors.New("unknown xattr name")
-		}
-		vals, err := url.ParseQuery(xattr)
-		if err != nil {
-			return err
-		}
-		if vals.Get("pass") == "true" {
-			return nil
-		} else if vals.Get("pass") == "false" {
-			return errors.New("fail")
-		}
-		return errors.New("invalid xattr value")
-	}
-
-	getDarc := func(id string, latest bool) *Darc {
-		return nil
-	}
-
-	id := createIdentity()
-	expr := []byte(id.String() + " & xattr:test:pass=true")
-	require.NoError(t, EvalExprXattr(expr, getDarc, evalXattr, id.String()))
-
-	expr = []byte(id.String() + " | xattr:test:pass=true")
-	require.NoError(t, EvalExprXattr(expr, getDarc, evalXattr, "wrong_id"))
-
-	// fail because the callback evaluates to false
-	expr = []byte(id.String() + " & xattr:test:pass=false")
-	err := EvalExprXattr(expr, getDarc, evalXattr, id.String())
-	require.Error(t, err)
-	require.Equal(t, err.Error(), "fail")
-
-	// fail because the extended attribute has a wrong format
-	expr = []byte("xattr::pass=true")
-	err = EvalExprXattr(expr, getDarc, evalXattr, id.String())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "scanner is not empty")
-
-	// fail because the extended attribute has a wrong format
-	expr = []byte("xattr:|:pass=true")
-	err = EvalExprXattr(expr, getDarc, evalXattr, id.String())
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "scanner is not empty")
 }
 
 type testDarc struct {
