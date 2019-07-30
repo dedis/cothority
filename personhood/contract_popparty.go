@@ -48,7 +48,7 @@ func ContractPopPartyFromBytes(in []byte) (byzcoin.Contract, error) {
 
 // VerifyInstruction overrides the basic VerifyInstruction in case of a "mine" command, because this command
 // is not protected by a darc, but by a linkable ring signature.
-func (c ContractPopParty) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c ContractPopParty) VerifyInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	if inst.GetType() == byzcoin.InvokeType && inst.Invoke.Command == "mine" {
 		log.Lvl2("not verifying darc for mining")
 		return nil
@@ -60,7 +60,7 @@ func (c ContractPopParty) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst 
 //  - description holds a protobuf encoded 'Description'
 //  - darcID holds the id of the darc responsible for the pop party
 //  - miningReward defines how much the 'mine' command will put into a coin-account
-func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c ContractPopParty) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	descBuf := inst.Spawn.Args.Search("description")
@@ -123,7 +123,7 @@ func (sb suiteBlake2s) XOF(key []byte) kyber.XOF {
 //  - mine to collect the reward. 'lrs' must hold a correct, unique linkable ring signature. If
 //    'coinIID' is set, this coin will be filled. Else 'newDarc' will be used to create a darc,
 //    derive a coin, and fill this coin.
-func (c *ContractPopParty) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractPopParty) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID

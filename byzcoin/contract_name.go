@@ -55,7 +55,7 @@ func contractNamingFromBytes(in []byte) (Contract, error) {
 	return c, nil
 }
 
-func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
+func (c *contractNaming) VerifyInstruction(rst GlobalState, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(NamingInstanceID.Slice())
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	return darc.EvalExpr(ex, getDarc, goodIdentities...)
 }
 
-func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractNaming) Spawn(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 	var buf []byte
 	// For the very first pointer, we use the default InstanceID value.
@@ -175,7 +175,7 @@ type contractNamingEntry struct {
 	Removed bool
 }
 
-func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractNaming) Invoke(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
 	switch inst.Invoke.Command {

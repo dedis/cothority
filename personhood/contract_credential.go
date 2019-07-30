@@ -38,7 +38,7 @@ type ContractCredential struct {
 }
 
 // VerifyInstruction allows for an unsigned "recover" command that will be verified later.
-func (c ContractCredential) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c ContractCredential) VerifyInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	// Because doing a threshold-definition using AND and OR in a darc can get very complex, this contract
 	// does its own threshold verification and thus cannot rely on the darc to verify that the "recover" command
 	// is valid.
@@ -51,7 +51,7 @@ func (c ContractCredential) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, ins
 // Spawn creates a new credential contract and takes the following arguments:
 //  - darcIDBuf to set which darc is responsible for the contract
 //  - credential for the credential to be spawned.
-func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractCredential) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -100,7 +100,7 @@ func (c *ContractCredential) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 
 // Invoke has the following command:
 //  - update to change the credential
-func (c *ContractCredential) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractCredential) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -230,7 +230,7 @@ func (c *ContractCredential) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.
 }
 
 // Delete removes a credential instance.
-func (c *ContractCredential) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractCredential) Delete(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID

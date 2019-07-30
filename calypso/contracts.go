@@ -27,6 +27,7 @@ type ContractWrite struct {
 func (w Write) String() string {
 	out := new(strings.Builder)
 	out.WriteString("- Write:\n")
+	// TODO handle error
 	fmt.Fprintf(out, "-- Data: %s\n", w.Data)
 	fmt.Fprintf(out, "-- U: %s\n", w.U)
 	fmt.Fprintf(out, "-- Ubar: %s\n", w.Ubar)
@@ -53,7 +54,7 @@ func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 // Spawn is used to create a new write- or read-contract. The read-contract is
 // created by the write-instance, because the creation of a new read-instance is
 // protected by the write-contract's darc.
-func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c ContractWrite) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -147,7 +148,7 @@ func contractLTSFromBytes(in []byte) (byzcoin.Contract, error) {
 	return c, nil
 }
 
-func (c *contractLTS) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (c *contractLTS) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	var darcID darc.ID
 	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
@@ -169,7 +170,7 @@ func (c *contractLTS) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruct
 	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
 }
 
-func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (c *contractLTS) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	var darcID darc.ID
 	curBuf, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {

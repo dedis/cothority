@@ -169,7 +169,7 @@ func decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Even
 }
 
 // invoke will add an event and update the corresponding indices.
-func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contract) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	_, _, cid, darcID, err := rst.GetValues(inst.InstanceID.Slice())
@@ -291,7 +291,7 @@ func (c *contract) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instructio
 	return
 }
 
-func (c *contract) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contract) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())

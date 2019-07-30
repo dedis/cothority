@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -323,6 +324,26 @@ func (ct cvTest) GetNonce() ([]byte, error) {
 
 func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) GetLatest() (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) GetGenesisBlock() (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) GetBlock(skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (cv cvTest) NewStateFromTrie(rst byzcoin.ReadOnlyStateTrie) byzcoin.GlobalState {
+	return nil
 }
 
 func (ct cvTest) setSignatureCounter(id string, v uint64) {

@@ -1959,7 +1959,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -2013,7 +2013,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 // processOneTx takes one transaction and creates a set of StateChanges. It
 // also returns the temporary StateTrie with the StateChanges applied. Any data
 // from the trie should be read from sst and not the service.
-func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID skipchain.SkipBlockID) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
 	defer func() {
 		if err != nil {
 			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
@@ -2030,7 +2030,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (new
 	for _, instr := range tx.Instructions {
 		var scs StateChanges
 		var cout []Coin
-		scs, cout, err = s.executeInstruction(sst, cin, instr, h)
+		scs, cout, err = s.executeInstruction(sst, cin, instr, h, scID)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2132,14 +2132,17 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 	return c, nil
 }
 
-func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = fmt.Errorf("%s", re)
 		}
 	}()
+	// TODO convert ReadOnlyStateTrie to a GlobalState
+	roSC := newROSkipChain(s.skService(), scID)
+	gs := globalState{st, roSC}
 
-	contents, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
@@ -2181,7 +2184,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		sc.SetRegistry(s.contracts)
 	}
 
-	err = c.VerifyInstruction(st, instr, ctxHash)
+	err = c.VerifyInstruction(gs, instr, ctxHash)
 	if err != nil {
 		err = fmt.Errorf("instruction verification failed: %v", err)
 		return
@@ -2189,11 +2192,11 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 	switch instr.GetType() {
 	case SpawnType:
-		scs, cout, err = c.Spawn(st, instr, cin)
+		scs, cout, err = c.Spawn(gs, instr, cin)
 	case InvokeType:
-		scs, cout, err = c.Invoke(st, instr, cin)
+		scs, cout, err = c.Invoke(gs, instr, cin)
 	case DeleteType:
-		scs, cout, err = c.Delete(st, instr, cin)
+		scs, cout, err = c.Delete(gs, instr, cin)
 	default:
 		return nil, nil, errors.New("unexpected contract type")
 	}
@@ -2210,7 +2213,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
 		if !ok {
-			_, ver, _, _, err = st.GetValues(sc.InstanceID)
+			_, ver, _, _, err = gs.GetValues(sc.InstanceID)
 		}
 
 		// this is done at this scope because we must increase

@@ -35,7 +35,7 @@ type contractXattrValue struct {
 
 func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
 
-func (c contractXattrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c contractXattrValue) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -52,7 +52,7 @@ func (c contractXattrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 	return
 }
 
-func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c contractXattrValue) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -75,7 +75,7 @@ func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	}
 }
 
-func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c contractXattrValue) VerifyInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	evalXattr := func(name, xattr string) error {
 		if name != xattrValueID {
 			return errors.New("invalid xattr " + name)
@@ -100,11 +100,11 @@ func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, ins
 	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalXattr: evalXattr})
 }
 
-func (c contractXattrValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c contractXattrValue) VerifyDeferredInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	return notImpl("VerifyDeferredInstruction")
 }
 
-func (c contractXattrValue) Delete(byzcoin.ReadOnlyStateTrie, byzcoin.Instruction, []byzcoin.Coin) (sc []byzcoin.StateChange, cs []byzcoin.Coin, err error) {
+func (c contractXattrValue) Delete(byzcoin.GlobalState, byzcoin.Instruction, []byzcoin.Coin) (sc []byzcoin.StateChange, cs []byzcoin.Coin, err error) {
 	err = notImpl("Delete")
 	return
 }
@@ -129,7 +129,7 @@ func TestXattrValue(t *testing.T) {
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
-	gDarc.Rules.AddRule("invoke:"+xattrValueID+".update", []byte(signer.Identity().String()+" & xattr:"+xattrValueID+":prefix=abc&suffix=xyz"))
+	require.NoError(t, gDarc.Rules.AddRule("invoke:"+xattrValueID+".update", []byte(signer.Identity().String()+" & xattr:"+xattrValueID+":prefix=abc&suffix=xyz")))
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
@@ -155,7 +155,7 @@ func TestXattrValue(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the existing value matches the xattr requirement
 	myvalue = []byte("abcd5678")

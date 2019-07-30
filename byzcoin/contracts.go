@@ -26,19 +26,19 @@ import (
 // contract.
 type Contract interface {
 	// Verify returns nil if the instruction is valid with regard to the signature.
-	VerifyInstruction(ReadOnlyStateTrie, Instruction, []byte) error
+	VerifyInstruction(GlobalState, Instruction, []byte) error
 	// VerifyDeferredInstruction should be implemented if one wants to support
 	// the deferred execution of the contract. It should do the same verify
 	// process as the VerifyInstruction method but, instead of calling
 	// inst.Verify(), it should use inst.VerifyWithOption() with the
 	// "checkCounters" parameter set to false. See the value contract.
-	VerifyDeferredInstruction(ReadOnlyStateTrie, Instruction, []byte) error
+	VerifyDeferredInstruction(GlobalState, Instruction, []byte) error
 	// Spawn is used to spawn new instances
-	Spawn(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	Spawn(GlobalState, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Invoke only modifies existing instances
-	Invoke(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	Invoke(GlobalState, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Delete removes the current instance
-	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	Delete(GlobalState, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Print ...
 	FormatMethod(Instruction) string
 }
@@ -195,34 +195,34 @@ func notImpl(what string) error { return fmt.Errorf("this contract does not impl
 
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
-func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	return inst.Verify(rst, ctxHash)
+func (b BasicContract) VerifyInstruction(gs GlobalState, inst Instruction, ctxHash []byte) error {
+	return inst.Verify(gs, ctxHash)
 }
 
 // VerifyDeferredInstruction is not implemented in a BasicContract. Types which
 // embed BasicContract must override this method if they want to support
 // deferred executions (using the Deferred contract).
-func (b BasicContract) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+func (b BasicContract) VerifyDeferredInstruction(gs GlobalState, inst Instruction, ctxHash []byte) error {
 	return notImpl("VerifyDeferredInstruction")
 }
 
 // Spawn is not implmented in a BasicContract. Types which embed BasicContract
 // must override this method if they support spawning.
-func (b BasicContract) Spawn(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+func (b BasicContract) Spawn(GlobalState, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
 	err = notImpl("Spawn")
 	return
 }
 
 // Invoke is not implmented in a BasicContract. Types which embed BasicContract
 // must override this method if they support invoking.
-func (b BasicContract) Invoke(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+func (b BasicContract) Invoke(GlobalState, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
 	err = notImpl("Invoke")
 	return
 }
 
 // Delete is not implmented in a BasicContract. Types which embed BasicContract
 // must override this method if they support deleting.
-func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+func (b BasicContract) Delete(GlobalState, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
 	err = notImpl("Delete")
 	return
 }
@@ -261,7 +261,7 @@ type darcContractIDs struct {
 }
 
 // We need to override BasicContract.Verify because of the genesis config special case.
-func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+func (c *contractConfig) VerifyInstruction(rst GlobalState, inst Instruction, msg []byte) (err error) {
 	pr, err := rst.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
 		return
@@ -282,7 +282,7 @@ func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 // This is the same as the VerifyInstruction function, but it uses
 // VerifyWithOption() instead of Verify(). We need to implement it in order to
 // use deferred config contract.
-func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+func (c *contractConfig) VerifyDeferredInstruction(rst GlobalState, inst Instruction, msg []byte) (err error) {
 	pr, err := rst.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
 		return
@@ -329,7 +329,7 @@ func (c *contractConfig) FormatMethod(instr Instruction) string {
 //   - max_block_size int64
 //   - roster         onet.Roster
 //   - darc_contracts darcContractID
-func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractConfig) Spawn(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -397,7 +397,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 // Invoke:view_change sould have the following input arguments:
 //   - newview viewchange.NewViewReq
 //   - multisig []byte
-func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractConfig) Invoke(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.

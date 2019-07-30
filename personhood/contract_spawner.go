@@ -39,7 +39,7 @@ type ContractSpawner struct {
 }
 
 // VerifyInstruction allows non-darc-verified calls for instructions that send coins.
-func (c ContractSpawner) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c ContractSpawner) VerifyInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	if inst.GetType() != byzcoin.SpawnType {
 		if err := inst.Verify(rst, ctxHash); err != nil {
 			return err
@@ -63,7 +63,7 @@ func (c ContractSpawner) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst b
 //     with the content of 'credential', protected by 'darcID' and at IID of sha256( "credential" | darcID )
 //   - ContractPopPartyID directly calls ContractPopParty.Spawn
 //   - ContractRoPaSciID directly calls ContractRoPaSci.Spawn
-func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractSpawner) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -207,7 +207,7 @@ func (c ContractSpawner) getCoins(coins []byzcoin.Coin, cost byzcoin.Coin) error
 
 // Invoke can be used to update the prices of the coins. The following command is supported:
 //  - update to update the coin values.
-func (c *ContractSpawner) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractSpawner) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -237,7 +237,7 @@ func (c *ContractSpawner) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 }
 
 // Delete removes the SpawnerInstance
-func (c *ContractSpawner) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractSpawner) Delete(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID

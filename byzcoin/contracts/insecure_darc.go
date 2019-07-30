@@ -33,7 +33,7 @@ func (c *contractInsecureDarc) SetRegistry(r byzcoin.ReadOnlyContractRegistry) {
 	c.contracts = r
 }
 
-func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractInsecureDarc) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	if inst.Spawn.ContractID == ContractInsecureDarcID {
@@ -74,7 +74,7 @@ func (c *contractInsecureDarc) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin
 	return c2.Spawn(rst, inst, coins)
 }
 
-func (c *contractInsecureDarc) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractInsecureDarc) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	switch inst.Invoke.Command {
 	case "evolve":
 		var darcID darc.ID

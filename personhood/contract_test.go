@@ -2,6 +2,7 @@ package personhood
 
 import (
 	"errors"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"testing"
 	"time"
 
@@ -170,4 +171,19 @@ func (s *rstSimul) ForEach(func(k, v []byte) error) error {
 }
 func (s *rstSimul) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
 	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) GetLatest() (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) GetGenesisBlock() (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) GetBlock(skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *rstSimul) NewStateFromTrie(rst byzcoin.ReadOnlyStateTrie) byzcoin.GlobalState {
+	return nil
 }

@@ -94,7 +94,7 @@ func (c *contractDeferred) SetRegistry(r ReadOnlyContractRegistry) {
 	c.contracts = r
 }
 
-func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractDeferred) Spawn(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	// This method should do the following:
 	//   1. Parse the input buffer
 	//   2. Compute and store the instruction hashes
@@ -156,7 +156,7 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	return
 }
 
-func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractDeferred) Invoke(gs GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	// This method should do the following:
 	//   - Handle the "addProof" invocation
 	//   - Handle the "execProposedTx" invocation
@@ -165,7 +165,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	//   - identity darc.Identity
 	//   - signature []byte
 	//   - index uint32 (index of the instruction wrt the transaction)
-	err = c.checkInvoke(rst, inst.Invoke)
+	err = c.checkInvoke(gs, inst.Invoke)
 	if err != nil {
 		return nil, nil, errors.New("checks of invoke failed: " + err.Error())
 	}
@@ -175,7 +175,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	// Find the darcID for this instance.
 	var darcID darc.ID
 
-	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = gs.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
@@ -244,7 +244,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 
 			// Here we instantiate the contract from the state trie by getting
 			// its buferred data and then calling its constructor.
-			contractBuf, _, contractID, _, err := rst.GetValues(proposedInstr.InstanceID.Slice())
+			contractBuf, _, contractID, _, err := gs.GetValues(proposedInstr.InstanceID.Slice())
 			if err != nil {
 				return nil, nil, errors.New("couldn't get contract buf: " + err.Error())
 			}
@@ -266,7 +266,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 				cwr.SetRegistry(c.contracts)
 			}
 
-			err = contract.VerifyDeferredInstruction(rst, proposedInstr, c.DeferredData.InstructionHashes[i])
+			err = contract.VerifyDeferredInstruction(gs, proposedInstr, c.DeferredData.InstructionHashes[i])
 			if err != nil {
 				return nil, nil, fmt.Errorf("verifying the instruction failed: %s", err)
 			}
@@ -274,11 +274,11 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 			var stateChanges []StateChange
 			switch instructionType {
 			case SpawnType:
-				stateChanges, _, err = contract.Spawn(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Spawn(gs, proposedInstr, coins)
 			case InvokeType:
-				stateChanges, _, err = contract.Invoke(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Invoke(gs, proposedInstr, coins)
 			case DeleteType:
-				stateChanges, _, err = contract.Delete(rst, proposedInstr, coins)
+				stateChanges, _, err = contract.Delete(gs, proposedInstr, coins)
 
 			}
 
@@ -286,10 +286,11 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 				return nil, nil, fmt.Errorf("error while executing an instruction: %s", err)
 			}
 
-			rst, err = rst.StoreAllToReplica(stateChanges)
+			rst, err := gs.StoreAllToReplica(stateChanges)
 			if err != nil {
 				return nil, nil, fmt.Errorf("error while storing state changes: %s", err)
 			}
+			gs = gs.NewStateFromTrie(rst)
 
 			sc = append(sc, stateChanges...)
 		}
@@ -311,7 +312,7 @@ func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins
 	}
 }
 
-func (c *contractDeferred) Delete(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractDeferred) Delete(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -388,7 +389,7 @@ func (c *contractDeferred) checkInvoke(rst ReadOnlyStateTrie, invoke *Invoke) er
 	return nil
 }
 
-func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+func (c *contractDeferred) VerifyInstruction(rst GlobalState, inst Instruction, ctxHash []byte) error {
 	// We make a special case for the delete instruction. Anyone should be able
 	// to delete a deferred contract that has expired.
 	if inst.GetType() == DeleteType && uint64(rst.GetIndex()) >= c.DeferredData.ExpireBlockIndex {
@@ -402,13 +403,13 @@ func (c *contractDeferred) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruc
 
 // This function is used in the case we do a deferred transaction on a deferred
 // transaction.
-func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+func (c *contractDeferred) VerifyDeferredInstruction(rst GlobalState, inst Instruction, ctxHash []byte) error {
 	// We make a special case for the delete instruction. Anyone should be able
 	// to delete a deferred contract that has expired.
 	if inst.GetType() == DeleteType && uint64(rst.GetIndex()) >= c.DeferredData.ExpireBlockIndex {
 		return nil
 	}
-	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
+	if err := inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true}); err != nil {
 		return errors.New("failed to verify deferred instruction: " + err.Error())
 	}
 	return nil

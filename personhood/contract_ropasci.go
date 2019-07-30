@@ -34,7 +34,7 @@ type ContractRoPaSci struct {
 
 // VerifyInstruction overrides the definition in BasicContract and is used to allow the second player to
 // add a move without appearing in the darc.
-func (c *ContractRoPaSci) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+func (c *ContractRoPaSci) VerifyInstruction(rst byzcoin.GlobalState, inst byzcoin.Instruction, ctxHash []byte) error {
 	if c.FirstPlayer >= 0 {
 		return errors.New("this instance has already finished")
 	}
@@ -48,7 +48,7 @@ func (c *ContractRoPaSci) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst 
 
 // Spawn creates a new RoPaSci contract. The following arguments must be set:
 //  - struct that holds a protobuf-encoded byte slice of RoPaSciStruct
-func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c ContractRoPaSci) Spawn(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -97,7 +97,7 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 //
 //  TODO:
 //   - add a 'recover' for the second player, in case the first player doesn't confirm
-func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractRoPaSci) Invoke(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID
@@ -215,7 +215,7 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 }
 
 // Delete removes an existing RoPaSci instance
-func (c *ContractRoPaSci) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *ContractRoPaSci) Delete(rst byzcoin.GlobalState, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	var darcID darc.ID

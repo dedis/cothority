@@ -49,11 +49,11 @@ func (c *contractSecureDarc) SetRegistry(r ReadOnlyContractRegistry) {
 // method in the diferrence that it does not take into account the counters. We
 // need the Darc contract to opt in for deferred transaction because it is used
 // by default when spawning new contracts.
-func (c *contractSecureDarc) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+func (c *contractSecureDarc) VerifyDeferredInstruction(rst GlobalState, inst Instruction, ctxHash []byte) error {
 	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true})
 }
 
-func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractSecureDarc) Spawn(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	cout = coins
 
 	if inst.Spawn.ContractID == ContractDarcID {
@@ -109,7 +109,7 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	return c2.Spawn(rst, inst, coins)
 }
 
-func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractSecureDarc) Invoke(rst GlobalState, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
 	switch inst.Invoke.Command {
 	case cmdDarcEvolve:
 		var darcID darc.ID
