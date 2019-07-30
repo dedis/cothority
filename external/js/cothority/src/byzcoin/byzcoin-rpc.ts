@@ -75,7 +75,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
         rpc.latest = rpc.genesis;
 
-        const ccProof = await rpc.getProofFromLatest(CONFIG_INSTANCE_ID, waitMatch, interval);
+        const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID, waitMatch, interval);
         rpc.config = ChainConfig.fromProof(ccProof);
 
         const di = await DarcInstance.fromByzcoin(rpc, ccProof.stateChangeBody.darcID, waitMatch, interval);
