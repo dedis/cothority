@@ -16,12 +16,16 @@
 # markdown-header.js#L25
 #
 
+# Exits early in case of errors
+set -e
+set -u
+
 INVALID_CHARS="'[]/?!:\`.,()*\";{}+=<>~$|#@&–—"
 
 # For Mac user, we need to use 'gsed'
 SED=sed
 
-appname='doctoc.sh'
+appname=`basename $0`
 start_toc='<!-- START '$appname' generated TOC please keep comment here to allow auto update -->'
 info_toc='<!-- DO NOT EDIT THIS SECTION, INSTEAD RE-RUN '$appname' TO UPDATE -->'
 end_toc='<!-- END '$appname' generated TOC please keep comment here to allow auto update -->'

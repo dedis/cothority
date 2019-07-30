@@ -15,16 +15,16 @@
     - [Option 1: :computer: Run with the command line](#option-1-computer-run-with-the-command-line)
     - [Option 2: :whale: Run with docker](#option-2-whale-run-with-docker)
     - [Option 3: `run_nodes.sh`](#option-3-run_nodessh)
-- [Operating a conode](#operating-a-conode)
+- [Maintaining a conode](#maintaining-a-conode)
   - [Backups](#backups)
   - [Recovery from a crash](#recovery-from-a-crash)
   - [Roster IPs should be movable](#roster-ips-should-be-movable)
   - [Verifying your server](#verifying-your-server)
   - [Setting up more than one node](#setting-up-more-than-one-node)
+  - [Creating Your Cothority](#creating-your-cothority)
   - [Joining the dedis-cothority](#joining-the-dedis-cothority)
   - [Compiling your docker file](#compiling-your-docker-file)
   - [Development version with docker](#development-version-with-docker)
-  - [Creating Your Cothority](#creating-your-cothority)
   - [Docker creation](#docker-creation)
 - [For the lazy ones: A survival guide to install your server with Ubuntu 18.04](#for-the-lazy-ones-a-survival-guide-to-install-your-server-with-ubuntu-1804)
 
@@ -271,12 +271,18 @@ If you want to run the server in the background, you can use the `screen`
 program:
 
 ```bash
-screen -S conode -d -m conode server
+$ screen -S conode -d -m conode server
 ```
 
 To enter the screen, type `screen -r conode`. You can detach from it with
 `<ctrl-a> d`.
 
+Note: The logs are not saved by default. If you want to keep a trace of the
+logs, it is recommended to use `tee`:
+
+```bash
+$ conode server | tee logfile.txt
+```
 
 ### Option 2: :whale: Run with docker
 
@@ -320,15 +326,22 @@ will run 5 conodes and save their files in the tmp directory with verbosity of
 2. The file containing all the public configurations will be in
 "tmp/public.toml".
 
-# Operating a conode
+# Maintaining a conode
 
 ## Backups
 
-On Linux, the following files need to be backed up:
-1. `$HOME/.config/conode/private.toml`
-2. `$HOME/.local/share/conode/$PUBLIC_KEY.db`
+There are two important files to backup: 
 
-If using the command line, or the `$HOME/conode_data` folder if using docker.
+- The `private.toml` file containing the
+conode's configuration along with its private key, and
+- the `<id>.db` file
+containing the database, where `<id>` is in fact the sha256 of the public keys.
+
+On linux, the `private.toml` file is located in
+`$HOME/.config/conode/private.toml`, and the database file is in
+`$HOME/.local/share/conode/<id>.db`.
+
+When using docker, everything is stored in `$HOME/conode_data`.
 
 The DB file is a [BoltDB](https://github.com/etcd-io/bbolt) file, and more
 information about considerations while backing them up is in [Database
@@ -382,6 +395,16 @@ You can start multiple nodes on the same server by using one user per node and
 set up the nodes as described above. Be sure to change the port-numbers and
 remember that two ports are used.
 
+## Creating Your Cothority
+
+For most of the apps, you need at least 3 running nodes. Once you have them up
+and running, you will need a `roster.toml` that includes all the
+`public.toml`-files from your conodes:
+
+```
+cat ../*/conode_data/public.toml > roster.toml
+```
+
 ## Joining the dedis-cothority
 
 The only existing cothority for the moment is available at
@@ -413,16 +436,6 @@ For the latest and greatest version of the conode, you can replace
 `conode:latest` with `conode:dev` and you should get a stable, but changing
 conode. This means, that to use all the functionalities you need to update the
 apps and follow the latest `conode:dev` container regularly.
-
-## Creating Your Cothority
-
-For most of the apps, you need at least 3 running nodes. Once you have them up
-and running, you will need a `roster.toml` that includes all the
-`public.toml`-files from your conodes:
-
-```
-cat ../*/conode_data/public.toml > roster.toml
-```
 
 ## Docker creation
 
