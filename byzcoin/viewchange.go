@@ -416,7 +416,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return err
 	}
 
-	ctx.Instructions.Upgrade(header.Version)
+	ctx.Instructions.SetVersion(header.Version)
 
 	if err = ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), signer); err != nil {
 		return err

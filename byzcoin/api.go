@@ -138,7 +138,7 @@ func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, er
 	}
 
 	tx := ClientTransaction{Instructions: instrs}
-	tx.Instructions.Upgrade(h.Version)
+	tx.Instructions.SetVersion(h.Version)
 	return tx, nil
 }
 
@@ -256,7 +256,7 @@ func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
 		return nil, err
 	}
 
-	result.ProposedTransaction.Instructions.Upgrade(header.Version)
+	result.ProposedTransaction.Instructions.SetVersion(header.Version)
 
 	return &result, nil
 }

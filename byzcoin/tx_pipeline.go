@@ -193,7 +193,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 		return nil, err
 	}
 
-	tx.Instructions.Upgrade(header.Version)
+	tx.Instructions.SetVersion(header.Version)
 
 	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 

@@ -359,7 +359,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 	// Upgrade the instructions with the byzcoin protocol version
 	// to use the correct hash function.
-	req.Transaction.Instructions.Upgrade(header.Version)
+	req.Transaction.Instructions.SetVersion(header.Version)
 
 	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
 	if err != nil {
@@ -2044,7 +2044,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// Make sure that we're using the correct implementation for the
 	// version of the byzcoin protocol.
-	txIn.Upgrade(version)
+	txIn.SetVersion(version)
 
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
@@ -2115,7 +2115,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 		}
 	}
 
-	txOut.Upgrade(version)
+	txOut.SetVersion(version)
 
 	// Store the result in the cache before returning.
 	merkleRoot = sstTemp.GetRoot()

@@ -435,9 +435,9 @@ func (instrs Instructions) HashWithSignatures() []byte {
 	return h.Sum(nil)
 }
 
-// Upgrade makes sure the underlying data will use the implementation
+// SetVersion makes sure the underlying data will use the implementation
 // of the given version.
-func (instrs Instructions) Upgrade(version Version) {
+func (instrs Instructions) SetVersion(version Version) {
 	for i := range instrs {
 		instrs[i].version = version
 	}
@@ -473,11 +473,11 @@ func (txr TxResults) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// Upgrade makes sure the underlying data will use the implementation
+// SetVersion makes sure the underlying data will use the implementation
 // of the given version.
-func (txr TxResults) Upgrade(version Version) {
+func (txr TxResults) SetVersion(version Version) {
 	for _, tx := range txr {
-		tx.ClientTransaction.Instructions.Upgrade(version)
+		tx.ClientTransaction.Instructions.SetVersion(version)
 	}
 }
 
