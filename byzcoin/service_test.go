@@ -484,7 +484,7 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Upgrade the chain with a special block.
-	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, s.roster, 1)
+	_, err = s.service().createUpgradeVersionBlock(s.genesis.Hash, 1)
 	require.NoError(t, err)
 
 	// Send another tx this time for the version 1 of the ByzCoin protocol.

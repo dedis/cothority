@@ -1037,76 +1037,53 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	return ssbReply.Latest, nil
 }
 
-// createUpgradeVersionBlock has the sole purpose of creating an empty block with the
-// version field of the DataHeader updated so that new blocks will use the new version.
-// TODO: improve locking / reset transaction pipeline / etc ... to force the next block
-// to be on the right version.
-func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, r *onet.Roster, version Version) (*skipchain.SkipBlock, error) {
-	var sb *skipchain.SkipBlock
-
-	// For all other blocks, we try to verify the signature using
-	// the darcs and remove those that do not have a valid
-	// signature before continuing.
+// createUpgradeVersionBlock has the sole purpose of proposing an empty block with the
+// version field of the DataHeader updated so that new blocks will use the new version,
+func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version Version) (*skipchain.SkipBlock, error) {
 	sbLatest, err := s.db().GetLatestByID(scID)
 	if err != nil {
 		return nil, errors.New(
 			"Could not get latest block from the skipchain: " + err.Error())
 	}
-	sb = sbLatest.Copy()
+	sb := sbLatest.Copy()
+
+	if !sb.Roster.List[0].Equal(s.ServerIdentity()) {
+		return nil, errors.New("only the leader can upgrade the chain version")
+	}
 
 	st, err := s.getStateTrie(scID)
 	if err != nil {
 		return nil, err
 	}
-	sst := st.MakeStagingStateTrie()
 
+	sst := st.MakeStagingStateTrie()
 	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version)
 
-	// Store transactions in the body
-	body := &DataBody{TxResults: TxResults{}}
-	sb.Payload, err = protobuf.Encode(body)
+	sb.Payload, err = protobuf.Encode(&DataBody{TxResults: TxResults{}})
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
-	header := &DataHeader{
+	sb.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
 		Timestamp:             time.Now().UnixNano(),
 		Version:               version,
-	}
-	sb.Data, err = protobuf.Encode(header)
+	})
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
-	if r != nil {
-		sb.Roster = r
-	}
-	var ssb = skipchain.StoreSkipBlock{
+	ssbReply, err := s.skService().StoreSkipBlockInternal(&skipchain.StoreSkipBlock{
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	var ssbReply *skipchain.StoreSkipBlockReply
-
-	if sb.Roster.List[0].Equal(s.ServerIdentity()) {
-		ssbReply, err = s.skService().StoreSkipBlockInternal(&ssb)
-	} else {
-		log.Lvl2("Sending new block to other node", sb.Roster.List[0])
-		ssbReply = &skipchain.StoreSkipBlockReply{}
-		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
-		if err != nil {
-			return nil, err
-		}
-
-		if ssbReply.Latest == nil {
-			return nil, errors.New("got an empty reply")
-		}
-	}
-
-	return ssbReply.Latest, err
+	return ssbReply.Latest, nil
 }
 
 // downloadDB downloads the full database over the network from a remote block.
