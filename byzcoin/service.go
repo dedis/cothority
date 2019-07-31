@@ -1888,9 +1888,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		if err != nil {
 			return err
 		}
-		if header.Version < prevHeader.Version {
-			log.Errorf("Got a block with version %d but previous is %d\n", header.Version, prevHeader.Version)
-			return errors.New("version cannot be lower than previous block")
+		if header.Version < prevHeader.Version || header.Version > CurrentVersion {
+			log.Errorf("Got a block with version %d but previous is %d and the conode version is %d\n",
+				header.Version, prevHeader.Version, CurrentVersion)
+
+			return errors.New("version cannot be lower than previous block or higher than the conode version")
 		}
 		return nil
 	}()

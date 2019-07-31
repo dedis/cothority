@@ -118,14 +118,14 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 }
 
 // Hash computes the digest of the hash function
-func (instr *Instruction) Hash() []byte {
+func (instr Instruction) Hash() []byte {
 	h := sha256.New()
 	instr.hashType(h)
 	instr.hashSigners(h)
 	return h.Sum(nil)
 }
 
-func (instr *Instruction) hashType(h hash.Hash) {
+func (instr Instruction) hashType(h hash.Hash) {
 	h.Write(instr.InstanceID[:])
 	var args []Argument
 	switch instr.GetType() {
@@ -158,7 +158,7 @@ func (instr *Instruction) hashType(h hash.Hash) {
 	}
 }
 
-func (instr *Instruction) hashSigners(h hash.Hash) {
+func (instr Instruction) hashSigners(h hash.Hash) {
 	for _, ctr := range instr.SignerCounter {
 		ctrBuf := make([]byte, 8)
 		binary.LittleEndian.PutUint64(ctrBuf, ctr)

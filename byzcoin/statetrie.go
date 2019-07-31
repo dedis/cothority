@@ -150,8 +150,8 @@ func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error
 	return t.VerifiedStoreAll(scs, index, version, nil)
 }
 
-// VerifiedStoreAll stores the state changes, the index as metadata. It checks
-// whether the expectedRoot hash matches the computed root hash and returns an
+// VerifiedStoreAll stores the state changes, the index and the version as metadata. It
+// checks whether the expectedRoot hash matches the computed root hash and returns an
 // error if it doesn't.
 func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Version, expectedRoot []byte) error {
 	pairs := make([]trie.KVPair, len(scs))
@@ -268,7 +268,7 @@ type metadataReader interface {
 func readVersion(t metadataReader) Version {
 	buf := t.GetMetadata([]byte(trieVersionKey))
 	if buf == nil {
-		// Early version didn't have the protocol version stored in the
+		// Early versions didn't have the protocol version stored in the
 		// metadata.
 		return 0
 	}
