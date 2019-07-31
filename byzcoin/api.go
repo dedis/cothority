@@ -137,8 +137,7 @@ func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, er
 		return ClientTransaction{}, err
 	}
 
-	tx := ClientTransaction{Instructions: instrs}
-	tx.Instructions.SetVersion(h.Version)
+	tx := NewClientTransaction(h.Version, instrs...)
 	return tx, nil
 }
 

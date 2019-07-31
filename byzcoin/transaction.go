@@ -117,6 +117,15 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 	return nil
 }
 
+// NewClientTransaction creates a transaction compatible with the version passed
+// in arguments. Depending on the version, the hash will have a different value.
+func NewClientTransaction(v Version, instrs ...Instruction) ClientTransaction {
+	ctx := ClientTransaction{Instructions: instrs}
+	ctx.Instructions.SetVersion(v)
+
+	return ctx
+}
+
 // Hash computes the digest of the hash function
 func (instr Instruction) Hash() []byte {
 	h := sha256.New()
