@@ -115,13 +115,9 @@ func TestService_Naming(t *testing.T) {
 					Name:  "name",
 					Value: []byte("my genesis darc"),
 				},
-<<<<<<< HEAD
-				SignerCounter: []uint64{1}, // use 1 because we never used this signer before
-=======
->>>>>>> Fix naming contract after rebasing
 			},
 		},
-		SignerCounter: []uint64{2},
+		SignerCounter: []uint64{1},
 	})
 	require.NoError(t, err)
 	signer2 := darc.NewSignerEd25519(nil, nil) // bad signer

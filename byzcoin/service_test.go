@@ -508,8 +508,9 @@ func TestService_AddTransactionVersion(t *testing.T) {
 		Transaction:   tx3,
 		InclusionWait: 10,
 	}
-	_, err = s.service().AddTransaction(atx)
-	require.Error(t, err)
+	reply, err := s.service().AddTransaction(atx)
+	require.NoError(t, err)
+	require.Contains(t, reply.Error, "wrong byzcoin version")
 }
 
 func TestService_GetProof(t *testing.T) {

@@ -97,7 +97,6 @@ func (t *stagingStateTrie) GetIndex() int {
 	return int(index)
 }
 
-<<<<<<< HEAD
 // StoreAllToReplica creates a copy of the read-only trie and applies the state
 // changes to the copy.
 func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
@@ -106,11 +105,11 @@ func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTri
 		return nil, errors.New("replica failed to store state changes: " + err.Error())
 	}
 	return newTrie, nil
-=======
+}
+
 // GetVersion returns the version of the ByzCoin protocol.
 func (t *stagingStateTrie) GetVersion() Version {
 	return readVersion(t)
->>>>>>> Version stored in the state trie
 }
 
 const trieIndexKey = "trieIndexKey"

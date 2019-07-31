@@ -85,12 +85,8 @@ type defaultTxProcessor struct {
 	*Service
 	stopCollect chan bool
 	scID        skipchain.SkipBlockID
-<<<<<<< HEAD
-=======
 	latest      *skipchain.SkipBlock
 	sync.Mutex
-	*Service
->>>>>>> Transaction pipeline uses the latest block for the version
 }
 
 func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {

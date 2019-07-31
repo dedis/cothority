@@ -48,7 +48,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -339,8 +340,8 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.NoError(t, err)
 	require.NoError(t, cl.UseNode(0))
-	require.Nil(t, err)
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -614,7 +615,8 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -875,7 +877,8 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1009,6 +1012,7 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1174,7 +1178,8 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1309,7 +1314,8 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1423,7 +1429,8 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 0.2. Spawn a value contract
@@ -1703,7 +1710,8 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, cl.UseNode(0))
 
 	expectedBlockIdx := uint64(50)
 
