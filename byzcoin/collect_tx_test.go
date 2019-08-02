@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -89,4 +90,28 @@ outer:
 	}
 
 	return txs, nil
+}
+
+func newSI() *network.ServerIdentity {
+	id, _ := uuid.NewV1()
+	return &network.ServerIdentity{
+		ID: network.ServerIdentityID(id),
+	}
+}
+
+// Check the version buffer features.
+func TestCollectTx_VersionBuffer(t *testing.T) {
+	vb := newVersionBuffer(4)
+	require.Equal(t, vb.threshold, 3)
+
+	vb.add(newSI(), 1)
+	vb.add(newSI(), 2)
+	si1 := newSI()
+	vb.add(si1, 3)
+	vb.add(si1, 3)
+	vb.add(si1, 3)
+
+	require.False(t, vb.hasThresholdFor(3))
+	require.False(t, vb.hasThresholdFor(2))
+	require.True(t, vb.hasThresholdFor(1))
 }

@@ -168,7 +168,8 @@ type Service struct {
 
 	// defaultVersion is the new version to use for new
 	// ByzCoin chains.
-	defaultVersion Version
+	defaultVersion     Version
+	defaultVersionLock sync.Mutex
 }
 
 type downloadState struct {
@@ -197,6 +198,15 @@ type bcStorage struct {
 	PropTimeout time.Duration
 
 	sync.Mutex
+}
+
+// GetProtocolVersion returns the version of the Byzcoin protocol for the current
+// conode.
+func (s *Service) GetProtocolVersion() Version {
+	s.defaultVersionLock.Lock()
+	v := s.defaultVersion
+	s.defaultVersionLock.Unlock()
+	return v
 }
 
 // GetAllByzCoinIDs returns the list of Byzcoin chains known by the server.
@@ -934,7 +944,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		}
 		sst = et
 		// Use the latest version of the byzcoin protocol.
+		s.defaultVersionLock.Lock()
 		version = s.defaultVersion
+		s.defaultVersionLock.Unlock()
 	} else {
 		// For all other blocks, we try to verify the signature using
 		// the darcs and remove those that do not have a valid
