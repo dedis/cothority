@@ -447,8 +447,6 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return nil, errors.New("version mismatch")
 	}
 
-	log.Lvlf2("%s: Returning proof for %x from chain '%x'", s.ServerIdentity(), req.Key, req.ID)
-
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
 		err = errors.New("cannot find skipblock while getting proof")
@@ -464,6 +462,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	}
 
 	_, v := proof.InclusionProof.KeyValue()
+	log.Lvlf2("%s: Returning proof for %x from chain %x at index %v", s.ServerIdentity(), req.Key, sb.SkipChainID(), sb.Index)
 	log.Lvlf3("value is %x", v)
 	resp = &GetProofResponse{
 		Version: CurrentVersion,
