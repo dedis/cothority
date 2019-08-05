@@ -30,6 +30,7 @@ func contractXattrValueFromBytes(in []byte) (byzcoin.Contract, error) {
 }
 
 type contractXattrValue struct {
+	byzcoin.BasicContract
 	value []byte
 }
 
@@ -93,28 +94,15 @@ func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, ins
 		}
 		return nil
 	}
-	xattrFuncs := make(map[string]func(string) error)
+	xattrFuncs := c.BasicContract.XattrInterpreters(rst, inst)
 	xattrFuncs[xattrValueID] = f
 	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalXattr: xattrFuncs})
-}
-
-func (c contractXattrValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	return notImpl("VerifyDeferredInstruction")
-}
-
-func (c contractXattrValue) Delete(byzcoin.ReadOnlyStateTrie, byzcoin.Instruction, []byzcoin.Coin) (sc []byzcoin.StateChange, cs []byzcoin.Coin, err error) {
-	err = notImpl("Delete")
-	return
-}
-
-func (c contractXattrValue) FormatMethod(inst byzcoin.Instruction) string {
-	return "not implemented"
 }
 
 // Use the value contract but verify the xattr on the DARCs. The xattr says the
 // user is only allowed to modify the value if the existing value has a prefix
 // of "abc" and a suffix of "xyz".
-func TestXattrValue(t *testing.T) {
+func TestXattrCustomRule(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -198,5 +186,92 @@ func TestXattrValue(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "wrong suffix")
+	local.WaitDone(genesisMsg.BlockInterval)
+}
+
+func TestXattrBlockIndex(t *testing.T) {
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	signer := darc.NewSignerEd25519(nil, nil)
+	_, roster, _ := local.GenTree(3, true)
+
+	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
+		[]string{"spawn:" + xattrValueID}, signer.Identity())
+	require.Nil(t, err)
+
+	gDarc := &genesisMsg.GenesisDarc
+	// We are only allowed to invoke when the value contains a certain prefix and suffix
+	gDarc.Rules.AddRule("invoke:"+xattrValueID+".update", []byte(signer.Identity().String()+" & xattr:block:after=0&before=2"))
+	genesisMsg.BlockInterval = time.Second
+
+	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
+	require.Nil(t, err)
+
+	myvalue := []byte("abcdefgxyz")
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: xattrValueID,
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		}},
+	}
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.NoError(t, err)
+
+	myID := ctx.Instructions[0].DeriveID("")
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	// Invoke ok - we're within the block interval
+	myvalue = []byte("abcde888fgxyz")
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: xattrValueID,
+				Command:    "update",
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+			SignerCounter: []uint64{2},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.NoError(t, err)
+	local.WaitDone(genesisMsg.BlockInterval)
+
+	// Invoke fail - we are outside the block interval
+	myvalue = []byte("abcde8888fxzy")
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: xattrValueID,
+				Command:    "update",
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+			SignerCounter: []uint64{3},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	resp, err := cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err)
+	require.Contains(t, resp.Error, "bad block interval")
 	local.WaitDone(genesisMsg.BlockInterval)
 }
