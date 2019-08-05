@@ -72,16 +72,16 @@ const sign = "_sign"
 // nil if no match is found.
 type GetDarc func(s string, latest bool) *Darc
 
-// EvalXattr is a callback for evaluating an extended attribute. An extended
-// attribute is an extra rule that may be in the DARCs. It is up to the
-// developer to specify how the extended attributes are written and verified.
-// To implement verification, the developer must give EvalDarcXattr an
-// implementation of this callback. In the callback, name is the name of the
-// extended attribute and xattr is the actual extended attribute. If other
-// information is needed for the verification then the callback should be
-// created as a closure. The callback should return an error when the
-// verification fails with a descriptive error message.
-type EvalXattr func(name, xattr string) error
+// XattrInterpreters is a map of callbacks for evaluating an extended
+// attribute. An extended attribute is an extra rule that may be in the DARCs.
+// It is up to the developer to specify how the extended attributes are written
+// and verified. To implement verification, the developer must give
+// darc.EvalDarcXattr an implementations of this callback. The key is the name
+// of the extended attribute, the value is the actual callback that performs
+// the verification. If other information is needed for the verification then
+// the callback should be created as a closure. The callback should return an
+// error when the verification fails with a descriptive error message.
+type XattrInterpreters map[string]func(string) error
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
 // "_sign".  Owners are joined with logical-AND under "_evolve" and signers are
@@ -631,7 +631,7 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 // evalExprDarc takes an extra visited parameter to track the visited nodes and
 // avoid infinite recursion.
 func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc,
-	evalXattr EvalXattr, acceptDarc bool, ids ...string) error {
+	xattrFuncs XattrInterpreters, acceptDarc bool, ids ...string) error {
 
 	var issue error
 	Y := expression.InitParser(func(s string) bool {
@@ -645,7 +645,14 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 				issue = errors.New("first token should be xattr")
 				return false
 			}
-			if err := evalXattr(tokens[1], tokens[2]); err != nil {
+
+			var ok bool
+			var xattrFunc func(string) error
+			if xattrFunc, ok = xattrFuncs[tokens[1]]; !ok {
+				issue = errors.New("no such xattr interpreter: " + tokens[1])
+				return false
+			}
+			if err := xattrFunc(tokens[2]); err != nil {
 				issue = err
 				return false
 			}
@@ -691,7 +698,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			signExpr := d.Rules.GetSignExpr()
 			// Recursively evaluate the sign expression until we
 			// find the final signer.
-			if err := evalExprDarc(newVisited, signExpr, getDarc, evalXattr, acceptDarc, ids...); err != nil {
+			if err := evalExprDarc(newVisited, signExpr, getDarc, xattrFuncs, acceptDarc, ids...); err != nil {
 				issue = err
 				return false
 			}
@@ -719,18 +726,15 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 // identities. It takes 'acceptDarc', and, if it is true, doesn't recurse into
 // darcs that fit one of the ids.
 func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ...string) error {
-	f := func(name, xattr string) error {
-		return errors.New("extended attributes not supported")
-	}
-	return evalExprDarc(make(map[string]bool), expr, getDarc, f, acceptDarc, ids...)
+	return evalExprDarc(make(map[string]bool), expr, getDarc, make(map[string]func(string) error), acceptDarc, ids...)
 }
 
 // EvalExprXattr checks whether the expression evaluates to true given a list
 // of identities ids. It takes a GetDarc callback which retrieves additional
 // DARCs when necessary. It also needs a EvalXattr callback for evaluating
 // extended attributes.
-func EvalExprXattr(expr expression.Expr, getDarc GetDarc, evalXattr EvalXattr, ids ...string) error {
-	return evalExprDarc(make(map[string]bool), expr, getDarc, evalXattr, false, ids...)
+func EvalExprXattr(expr expression.Expr, getDarc GetDarc, xattrFuncs XattrInterpreters, ids ...string) error {
+	return evalExprDarc(make(map[string]bool), expr, getDarc, xattrFuncs, false, ids...)
 }
 
 // Type returns an integer representing the type of key held in the signer. It

@@ -305,7 +305,7 @@ func (instr Instruction) GetIdentityStrings() []string {
 // to be customized.
 type VerificationOptions struct {
 	IgnoreCounters bool
-	EvalXattr      darc.EvalXattr
+	EvalXattr      darc.XattrInterpreters
 }
 
 // Verify will look up the darc of the instance pointed to by the instruction

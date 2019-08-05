@@ -408,7 +408,7 @@ func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst
 	if inst.GetType() == DeleteType && uint64(rst.GetIndex()) >= c.DeferredData.ExpireBlockIndex {
 		return nil
 	}
-	if err := inst.VerifyWithOption(rst, ctxHash, false); err != nil {
+	if err := inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true}); err != nil {
 		return errors.New("failed to verify deferred instruction: " + err.Error())
 	}
 	return nil

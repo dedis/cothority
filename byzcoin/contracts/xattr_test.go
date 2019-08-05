@@ -76,11 +76,7 @@ func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 }
 
 func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	evalXattr := func(name, xattr string) error {
-		if name != xattrValueID {
-			return errors.New("invalid xattr " + name)
-		}
-
+	f := func(xattr string) error {
 		vals, err := url.ParseQuery(xattr)
 		if err != nil {
 			return err
@@ -97,7 +93,9 @@ func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, ins
 		}
 		return nil
 	}
-	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalXattr: evalXattr})
+	xattrFuncs := make(map[string]func(string) error)
+	xattrFuncs[xattrValueID] = f
+	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalXattr: xattrFuncs})
 }
 
 func (c contractXattrValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
