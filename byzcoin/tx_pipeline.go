@@ -173,7 +173,7 @@ collectTxLoop:
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
-	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
+	scsOut, sstOut, err := s.processOneTx(inState.sst, tx, s.scID)
 
 	// try to create a new state
 	newState := func() *txProcessorState {

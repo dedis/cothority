@@ -944,7 +944,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
+	mr, txRes, scs, _ = s.createStateChanges(sst, tx, noTimeout, scID)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -1450,7 +1450,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
-	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), body.TxResults, noTimeout, sb.SkipChainID())
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
@@ -1834,7 +1834,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
+	mtr, txOut, scs, _ := s.createStateChanges(sst, body.TxResults, noTimeout, newSB.SkipChainID())
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -1932,7 +1932,7 @@ func txSize(txr ...TxResult) (out int) {
 // followers by 1/2.
 //
 // Any data from the trie should be read from sst and not the service.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, txIn TxResults, timeout time.Duration, scID skipchain.SkipBlockID) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1959,7 +1959,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 
 		var sstTempC *stagingStateTrie
 		var statesTemp StateChanges
-		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction)
+		statesTemp, sstTempC, err = s.processOneTx(sstTemp, tx.ClientTransaction, scID)
 		if err != nil {
 			tx.Accepted = false
 			txOut = append(txOut, tx)
@@ -2013,7 +2013,7 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 // processOneTx takes one transaction and creates a set of StateChanges. It
 // also returns the temporary StateTrie with the StateChanges applied. Any data
 // from the trie should be read from sst and not the service.
-func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID skipchain.SkipBlockID) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
 	defer func() {
 		if err != nil {
 			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
@@ -2030,7 +2030,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction) (new
 	for _, instr := range tx.Instructions {
 		var scs StateChanges
 		var cout []Coin
-		scs, cout, err = s.executeInstruction(sst, cin, instr, h)
+		scs, cout, err = s.executeInstruction(sst, cin, instr, h, scID)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2132,14 +2132,18 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 	return c, nil
 }
 
-func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = fmt.Errorf("%s", re)
 		}
 	}()
 
-	contents, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	// convert ReadOnlyStateTrie to a GlobalState so that contracts may cast it if they wish
+	roSC := newROSkipChain(s.skService(), scID)
+	gs := globalState{st, roSC}
+
+	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
@@ -2181,7 +2185,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		sc.SetRegistry(s.contracts)
 	}
 
-	err = c.VerifyInstruction(st, instr, ctxHash)
+	err = c.VerifyInstruction(gs, instr, ctxHash)
 	if err != nil {
 		err = fmt.Errorf("instruction verification failed: %v", err)
 		return
@@ -2189,11 +2193,11 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 	switch instr.GetType() {
 	case SpawnType:
-		scs, cout, err = c.Spawn(st, instr, cin)
+		scs, cout, err = c.Spawn(gs, instr, cin)
 	case InvokeType:
-		scs, cout, err = c.Invoke(st, instr, cin)
+		scs, cout, err = c.Invoke(gs, instr, cin)
 	case DeleteType:
-		scs, cout, err = c.Delete(st, instr, cin)
+		scs, cout, err = c.Delete(gs, instr, cin)
 	default:
 		return nil, nil, errors.New("unexpected contract type")
 	}
@@ -2210,7 +2214,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
 		if !ok {
-			_, ver, _, _, err = st.GetValues(sc.InstanceID)
+			_, ver, _, _, err = gs.GetValues(sc.InstanceID)
 		}
 
 		// this is done at this scope because we must increase
@@ -2651,7 +2655,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return err
 		}
 
-		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout)
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), body.TxResults, noTimeout, from.SkipChainID())
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {

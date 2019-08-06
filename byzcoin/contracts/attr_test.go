@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -17,13 +18,15 @@ import (
 )
 
 func init() {
-	err := byzcoin.RegisterGlobalContract(attrValueID, contractAttrValueFromBytes)
+	err := byzcoin.RegisterGlobalContract(contractAttrValueID, contractAttrValueFromBytes)
 	if err != nil {
 		log.ErrFatal(err)
 	}
 }
 
-const attrValueID = "attr_value"
+const contractAttrValueID = "attr_value"
+const attrAffixID = "affix"
+const attrSigSchemeID = "sigscheme"
 
 func contractAttrValueFromBytes(in []byte) (byzcoin.Contract, error) {
 	return contractAttrValue{value: in}, nil
@@ -48,7 +51,7 @@ func (c contractAttrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 
 	sc = []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
-			attrValueID, inst.Spawn.Args.Search("value"), darcID),
+			contractAttrValueID, inst.Spawn.Args.Search("value"), darcID),
 	}
 	return
 }
@@ -68,7 +71,13 @@ func (c contractAttrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 	case "update":
 		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				attrValueID, inst.Invoke.Args.Search("value"), darcID),
+				contractAttrValueID, inst.Invoke.Args.Search("value"), darcID),
+		}
+		return
+	case "update-v2":
+		sc = []byzcoin.StateChange{
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+				contractAttrValueID, inst.Invoke.Args.Search("value"), darcID),
 		}
 		return
 	default:
@@ -77,7 +86,7 @@ func (c contractAttrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 }
 
 func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	f := func(attr string) error {
+	cbAffix := func(attr string) error {
 		vals, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
@@ -94,14 +103,63 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 		}
 		return nil
 	}
+	cbSigScheme := func(attr string) error {
+		roSC, ok := rst.(byzcoin.ReadOnlySkipChain)
+		if !ok {
+			return errors.New("cannot access read only skipchain")
+		}
+		sb, err := roSC.GetLatest()
+		if err != nil {
+			return err
+		}
+
+		// do some sanity check
+		{
+			sb0, err := roSC.GetBlockByIndex(0)
+			if err != nil {
+				return err
+			}
+			gen, err := roSC.GetGenesisBlock()
+			if err != nil {
+				return err
+			}
+			if !sb0.Equal(gen) {
+				return errors.New("genesis block is not at index 0")
+			}
+			sb2, err := roSC.GetBlock(sb.Hash)
+			if err != nil {
+				return err
+			}
+			if !sb2.Equal(sb) {
+				return errors.New("sb and sb2 should be the same")
+			}
+		}
+
+		sigSchemeBuf := inst.Invoke.Args.Search("sigscheme")
+		if len(sigSchemeBuf) == 0 {
+			return errors.New("cannot find sigscheme argument")
+		}
+		sigScheme, err := strconv.Atoi(string(sigSchemeBuf))
+		if err != nil {
+			return err
+		}
+		if int(sb.SignatureScheme) != sigScheme {
+			return errors.New("signature scheme did not match")
+		}
+		return nil
+	}
 	attrFuncs := c.BasicContract.AttrInterpreters(rst, inst)
-	attrFuncs[attrValueID] = f
+	attrFuncs[attrAffixID] = cbAffix
+	attrFuncs[attrSigSchemeID] = cbSigScheme
 	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: attrFuncs})
 }
 
-// Use the value contract but verify the attr on the DARCs. The attr says the
-// user is only allowed to modify the value if the existing value has a prefix
-// of "abc" and a suffix of "xyz".
+// Use the new contract and verify the attr on the DARCs. The first attr says
+// the user is only allowed to modify the value if the existing value has a
+// prefix of "abc" and a suffix of "xyz". It demonstrates how to access data in
+// the new instance to do the verification. The second attr says the given
+// sigscheme must match the SignatureScheme in the block. It demonstrates how
+// to use the skipchain data to do the verification.
 func TestAttrCustomRule(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
@@ -110,12 +168,13 @@ func TestAttrCustomRule(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:" + attrValueID}, signer.Identity())
+		[]string{"spawn:" + contractAttrValueID}, signer.Identity())
 	require.Nil(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
-	gDarc.Rules.AddRule("invoke:"+attrValueID+".update", []byte(signer.Identity().String()+" & attr:"+attrValueID+":prefix=abc&suffix=xyz"))
+	require.NoError(t, gDarc.Rules.AddRule("invoke:"+contractAttrValueID+".update", []byte(signer.Identity().String()+" & attr:"+attrAffixID+":prefix=abc&suffix=xyz")))
+	require.NoError(t, gDarc.Rules.AddRule("invoke:"+contractAttrValueID+".update-v2", []byte(signer.Identity().String()+" & attr:"+attrSigSchemeID+":dummy")))
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
@@ -126,7 +185,7 @@ func TestAttrCustomRule(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Args: []byzcoin.Argument{{
 					Name:  "value",
 					Value: myvalue,
@@ -141,7 +200,7 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the existing value matches the attr requirement
 	myvalue = []byte("abcd5678")
@@ -149,7 +208,7 @@ func TestAttrCustomRule(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -163,7 +222,7 @@ func TestAttrCustomRule(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - the new value does not match the attr requirement
 	myvalue = []byte("abcdefxzy")
@@ -171,7 +230,7 @@ func TestAttrCustomRule(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -186,7 +245,80 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "wrong suffix")
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
+
+	// Invoke fail - submitting empty sigscheme
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: contractAttrValueID,
+				Command:    "update-v2",
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+			SignerCounter: []uint64{3},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	resp, err = cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err)
+	require.Contains(t, resp.Error, "cannot find sigscheme argument")
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
+
+	// Invoke fail - submit a wrong sigscheme
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: contractAttrValueID,
+				Command:    "update-v2",
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				},
+					{
+						Name:  "sigscheme",
+						Value: []byte("999"),
+					}},
+			},
+			SignerCounter: []uint64{3},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	resp, err = cl.AddTransactionAndWait(ctx, 10)
+	require.Error(t, err)
+	require.Contains(t, resp.Error, "signature scheme did not match")
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
+
+	// Invoke ok - the correct sigscheme is used
+	ctx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: myID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: contractAttrValueID,
+				Command:    "update-v2",
+				Args: []byzcoin.Argument{{
+					Name:  "value",
+					Value: myvalue,
+				},
+					{
+						Name:  "sigscheme",
+						Value: []byte("1"),
+					}},
+			},
+			SignerCounter: []uint64{3},
+		}},
+	}
+	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+
+	_, err = cl.AddTransactionAndWait(ctx, 10)
+	require.NoError(t, err)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestAttrBlockIndex(t *testing.T) {
@@ -197,12 +329,12 @@ func TestAttrBlockIndex(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:" + attrValueID}, signer.Identity())
+		[]string{"spawn:" + contractAttrValueID}, signer.Identity())
 	require.Nil(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
-	gDarc.Rules.AddRule("invoke:"+attrValueID+".update", []byte(signer.Identity().String()+" & attr:block:after=0&before=2"))
+	require.NoError(t, gDarc.Rules.AddRule("invoke:"+contractAttrValueID+".update", []byte(signer.Identity().String()+" & attr:block:after=0&before=2")))
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
@@ -213,7 +345,7 @@ func TestAttrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Args: []byzcoin.Argument{{
 					Name:  "value",
 					Value: myvalue,
@@ -228,7 +360,7 @@ func TestAttrBlockIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - we're within the block interval
 	myvalue = []byte("abcde888fgxyz")
@@ -236,7 +368,7 @@ func TestAttrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -250,7 +382,7 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - we are outside the block interval
 	myvalue = []byte("abcde8888fxzy")
@@ -258,7 +390,7 @@ func TestAttrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: attrValueID,
+				ContractID: contractAttrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -273,5 +405,5 @@ func TestAttrBlockIndex(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "bad block interval")
-	local.WaitDone(genesisMsg.BlockInterval)
+	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
