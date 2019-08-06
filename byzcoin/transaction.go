@@ -305,7 +305,7 @@ func (instr Instruction) GetIdentityStrings() []string {
 // to be customized.
 type VerificationOptions struct {
 	IgnoreCounters bool
-	EvalXattr      darc.XattrInterpreters
+	EvalAttr       darc.AttrInterpreters
 }
 
 // Verify will look up the darc of the instance pointed to by the instruction
@@ -380,8 +380,8 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 		return d
 	}
 
-	if ops.EvalXattr != nil {
-		return darc.EvalExprXattr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalXattr, goodIdentities...)
+	if ops.EvalAttr != nil {
+		return darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
 	}
 	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
 }

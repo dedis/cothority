@@ -475,9 +475,9 @@ func TestDarc_IsSubset(t *testing.T) {
 	require.False(t, wrongSubsetRules.IsSubset(supersetRules))
 }
 
-func TestDarc_Xattr(t *testing.T) {
-	cb := func(xattr string) error {
-		vals, err := url.ParseQuery(xattr)
+func TestDarc_Attr(t *testing.T) {
+	cb := func(attr string) error {
+		vals, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
 		}
@@ -486,37 +486,37 @@ func TestDarc_Xattr(t *testing.T) {
 		} else if vals.Get("pass") == "false" {
 			return errors.New("fail")
 		}
-		return errors.New("invalid xattr value")
+		return errors.New("invalid attr value")
 	}
-	xattrFuncs := make(map[string]func(string) error)
-	xattrFuncs["test"] = cb
+	attrFuncs := make(map[string]func(string) error)
+	attrFuncs["test"] = cb
 
 	getDarc := func(id string, latest bool) *Darc {
 		return nil
 	}
 
 	id := createIdentity()
-	expr := []byte(id.String() + " & xattr:test:pass=true")
-	require.NoError(t, EvalExprXattr(expr, getDarc, xattrFuncs, id.String()))
+	expr := []byte(id.String() + " & attr:test:pass=true")
+	require.NoError(t, EvalExprAttr(expr, getDarc, attrFuncs, id.String()))
 
-	expr = []byte(id.String() + " | xattr:test:pass=true")
-	require.NoError(t, EvalExprXattr(expr, getDarc, xattrFuncs, "wrong_id"))
+	expr = []byte(id.String() + " | attr:test:pass=true")
+	require.NoError(t, EvalExprAttr(expr, getDarc, attrFuncs, "wrong_id"))
 
 	// fail because the callback evaluates to false
-	expr = []byte(id.String() + " & xattr:test:pass=false")
-	err := EvalExprXattr(expr, getDarc, xattrFuncs, id.String())
+	expr = []byte(id.String() + " & attr:test:pass=false")
+	err := EvalExprAttr(expr, getDarc, attrFuncs, id.String())
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "fail")
 
-	// fail because the extended attribute has a wrong format
-	expr = []byte("xattr::pass=true")
-	err = EvalExprXattr(expr, getDarc, xattrFuncs, id.String())
+	// fail because the attribute has a wrong format
+	expr = []byte("attr::pass=true")
+	err = EvalExprAttr(expr, getDarc, attrFuncs, id.String())
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scanner is not empty")
 
-	// fail because the extended attribute has a wrong format
-	expr = []byte("xattr:|:pass=true")
-	err = EvalExprXattr(expr, getDarc, xattrFuncs, id.String())
+	// fail because the attribute has a wrong format
+	expr = []byte("attr:|:pass=true")
+	err = EvalExprAttr(expr, getDarc, attrFuncs, id.String())
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scanner is not empty")
 }

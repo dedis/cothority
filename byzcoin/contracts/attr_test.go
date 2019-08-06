@@ -17,26 +17,26 @@ import (
 )
 
 func init() {
-	err := byzcoin.RegisterGlobalContract(xattrValueID, contractXattrValueFromBytes)
+	err := byzcoin.RegisterGlobalContract(attrValueID, contractAttrValueFromBytes)
 	if err != nil {
 		log.ErrFatal(err)
 	}
 }
 
-const xattrValueID = "xattr_value"
+const attrValueID = "attr_value"
 
-func contractXattrValueFromBytes(in []byte) (byzcoin.Contract, error) {
-	return contractXattrValue{value: in}, nil
+func contractAttrValueFromBytes(in []byte) (byzcoin.Contract, error) {
+	return contractAttrValue{value: in}, nil
 }
 
-type contractXattrValue struct {
+type contractAttrValue struct {
 	byzcoin.BasicContract
 	value []byte
 }
 
 func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
 
-func (c contractXattrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c contractAttrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -48,12 +48,12 @@ func (c contractXattrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 
 	sc = []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
-			xattrValueID, inst.Spawn.Args.Search("value"), darcID),
+			attrValueID, inst.Spawn.Args.Search("value"), darcID),
 	}
 	return
 }
 
-func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c contractAttrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -68,7 +68,7 @@ func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	case "update":
 		sc = []byzcoin.StateChange{
 			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-				xattrValueID, inst.Invoke.Args.Search("value"), darcID),
+				attrValueID, inst.Invoke.Args.Search("value"), darcID),
 		}
 		return
 	default:
@@ -76,9 +76,9 @@ func (c contractXattrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.I
 	}
 }
 
-func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	f := func(xattr string) error {
-		vals, err := url.ParseQuery(xattr)
+func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+	f := func(attr string) error {
+		vals, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
 		}
@@ -94,15 +94,15 @@ func (c contractXattrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, ins
 		}
 		return nil
 	}
-	xattrFuncs := c.BasicContract.XattrInterpreters(rst, inst)
-	xattrFuncs[xattrValueID] = f
-	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalXattr: xattrFuncs})
+	attrFuncs := c.BasicContract.AttrInterpreters(rst, inst)
+	attrFuncs[attrValueID] = f
+	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: attrFuncs})
 }
 
-// Use the value contract but verify the xattr on the DARCs. The xattr says the
+// Use the value contract but verify the attr on the DARCs. The attr says the
 // user is only allowed to modify the value if the existing value has a prefix
 // of "abc" and a suffix of "xyz".
-func TestXattrCustomRule(t *testing.T) {
+func TestAttrCustomRule(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -110,12 +110,12 @@ func TestXattrCustomRule(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:" + xattrValueID}, signer.Identity())
+		[]string{"spawn:" + attrValueID}, signer.Identity())
 	require.Nil(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
-	gDarc.Rules.AddRule("invoke:"+xattrValueID+".update", []byte(signer.Identity().String()+" & xattr:"+xattrValueID+":prefix=abc&suffix=xyz"))
+	gDarc.Rules.AddRule("invoke:"+attrValueID+".update", []byte(signer.Identity().String()+" & attr:"+attrValueID+":prefix=abc&suffix=xyz"))
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
@@ -126,7 +126,7 @@ func TestXattrCustomRule(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Args: []byzcoin.Argument{{
 					Name:  "value",
 					Value: myvalue,
@@ -143,13 +143,13 @@ func TestXattrCustomRule(t *testing.T) {
 	myID := ctx.Instructions[0].DeriveID("")
 	local.WaitDone(genesisMsg.BlockInterval)
 
-	// Invoke ok - the existing value matches the xattr requirement
+	// Invoke ok - the existing value matches the attr requirement
 	myvalue = []byte("abcd5678")
 	ctx = byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -165,13 +165,13 @@ func TestXattrCustomRule(t *testing.T) {
 	require.NoError(t, err)
 	local.WaitDone(genesisMsg.BlockInterval)
 
-	// Invoke fail - the new value does not match the xattr requirement
+	// Invoke fail - the new value does not match the attr requirement
 	myvalue = []byte("abcdefxzy")
 	ctx = byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -189,7 +189,7 @@ func TestXattrCustomRule(t *testing.T) {
 	local.WaitDone(genesisMsg.BlockInterval)
 }
 
-func TestXattrBlockIndex(t *testing.T) {
+func TestAttrBlockIndex(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -197,12 +197,12 @@ func TestXattrBlockIndex(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
-		[]string{"spawn:" + xattrValueID}, signer.Identity())
+		[]string{"spawn:" + attrValueID}, signer.Identity())
 	require.Nil(t, err)
 
 	gDarc := &genesisMsg.GenesisDarc
 	// We are only allowed to invoke when the value contains a certain prefix and suffix
-	gDarc.Rules.AddRule("invoke:"+xattrValueID+".update", []byte(signer.Identity().String()+" & xattr:block:after=0&before=2"))
+	gDarc.Rules.AddRule("invoke:"+attrValueID+".update", []byte(signer.Identity().String()+" & attr:block:after=0&before=2"))
 	genesisMsg.BlockInterval = time.Second
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
@@ -213,7 +213,7 @@ func TestXattrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Args: []byzcoin.Argument{{
 					Name:  "value",
 					Value: myvalue,
@@ -236,7 +236,7 @@ func TestXattrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",
@@ -258,7 +258,7 @@ func TestXattrBlockIndex(t *testing.T) {
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: myID,
 			Invoke: &byzcoin.Invoke{
-				ContractID: xattrValueID,
+				ContractID: attrValueID,
 				Command:    "update",
 				Args: []byzcoin.Argument{{
 					Name:  "value",

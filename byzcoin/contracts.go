@@ -197,7 +197,7 @@ func notImpl(what string) error { return fmt.Errorf("this contract does not impl
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
 func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{EvalXattr: b.XattrInterpreters(rst, inst)})
+	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{EvalAttr: b.AttrInterpreters(rst, inst)})
 }
 
 // VerifyDeferredInstruction is not implemented in a BasicContract. Types which
@@ -207,12 +207,12 @@ func (b BasicContract) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Ins
 	return notImpl("VerifyDeferredInstruction")
 }
 
-// XattrInterpreters provides one default attribute verification which check
+// AttrInterpreters provides one default attribute verification which check
 // whether the transaction is sent after a certain block index and before
 // another block index.
-func (b BasicContract) XattrInterpreters(rst ReadOnlyStateTrie, inst Instruction) map[string]func(string) error {
-	cb := func(xattr string) error {
-		vals, err := url.ParseQuery(xattr)
+func (b BasicContract) AttrInterpreters(rst ReadOnlyStateTrie, inst Instruction) map[string]func(string) error {
+	cb := func(attr string) error {
+		vals, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
 		}
