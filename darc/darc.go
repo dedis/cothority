@@ -72,15 +72,15 @@ const sign = "_sign"
 // nil if no match is found.
 type GetDarc func(s string, latest bool) *Darc
 
-// AttrInterpreters is a map of callbacks for evaluating an
-// attribute. An attribute is an extra rule that may be in the DARCs.
-// It is up to the developer to specify how the attributes are written
-// and verified. To implement verification, the developer must give
-// darc.EvalDarcAttr an implementations of this callback. The key is the name
-// of the attribute, the value is the actual callback that performs
-// the verification. If other information is needed for the verification then
-// the callback should be created as a closure. The callback should return an
-// error when the verification fails with a descriptive error message.
+// AttrInterpreters is a map of callbacks for evaluating an attribute. An
+// attribute is an extra rule that may be in the DARCs. It is up to the
+// developer to specify how the attributes are written and verified. To
+// implement verification, the developer must give darc.EvalDarcAttr an
+// implementations of this callback. The key is the name of the attribute, the
+// value is the actual callback that performs the verification. If other
+// information is needed for the verification then the callback should be
+// created as a closure. The callback should return an error when the
+// verification fails with a descriptive error message.
 type AttrInterpreters map[string]func(string) error
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
@@ -628,6 +628,23 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	return EvalExprDarc(expr, getDarc, false, ids...)
 }
 
+func evalAttr(s string, attrFuncs AttrInterpreters) error {
+	tokens := strings.SplitN(s, ":", 3)
+	if len(tokens) != 3 {
+		return errors.New("attr has an invalid format")
+	}
+	if tokens[0] != "attr" {
+		return errors.New("first token should be attr")
+	}
+
+	var ok bool
+	var attrFunc func(string) error
+	if attrFunc, ok = attrFuncs[tokens[1]]; !ok {
+		return errors.New("no such attr interpreter: " + tokens[1])
+	}
+	return attrFunc(tokens[2])
+}
+
 // evalExprDarc takes an extra visited parameter to track the visited nodes and
 // avoid infinite recursion.
 func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc,
@@ -636,23 +653,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 	var issue error
 	Y := expression.InitParser(func(s string) bool {
 		if strings.HasPrefix(s, "attr") {
-			tokens := strings.SplitN(s, ":", 3)
-			if len(tokens) != 3 {
-				issue = errors.New("attr has an invalid format")
-				return false
-			}
-			if tokens[0] != "attr" {
-				issue = errors.New("first token should be attr")
-				return false
-			}
-
-			var ok bool
-			var attrFunc func(string) error
-			if attrFunc, ok = attrFuncs[tokens[1]]; !ok {
-				issue = errors.New("no such attr interpreter: " + tokens[1])
-				return false
-			}
-			if err := attrFunc(tokens[2]); err != nil {
+			if err := evalAttr(s, attrFuncs); err != nil {
 				issue = err
 				return false
 			}

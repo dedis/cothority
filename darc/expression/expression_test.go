@@ -230,6 +230,12 @@ func TestParsing_Attr(t *testing.T) {
 	if err == nil {
 		t.Fatal("attr value cannot have spaces")
 	}
+
+	expr = []byte(`attr:myattr:{"purpose":"work","age":10} & attr:abc:efg`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestParsing_Empty(t *testing.T) {

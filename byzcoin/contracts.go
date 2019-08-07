@@ -197,7 +197,7 @@ func notImpl(what string) error { return fmt.Errorf("this contract does not impl
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
 func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{EvalAttr: b.AttrInterpreters(rst, inst)})
+	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{EvalAttr: b.MakeAttrInterpreters(rst, inst)})
 }
 
 // VerifyDeferredInstruction is not implemented in a BasicContract. Types which
@@ -207,10 +207,10 @@ func (b BasicContract) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Ins
 	return notImpl("VerifyDeferredInstruction")
 }
 
-// AttrInterpreters provides one default attribute verification which check
+// MakeAttrInterpreters provides one default attribute verification which check
 // whether the transaction is sent after a certain block index and before
 // another block index.
-func (b BasicContract) AttrInterpreters(rst ReadOnlyStateTrie, inst Instruction) map[string]func(string) error {
+func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruction) darc.AttrInterpreters {
 	cb := func(attr string) error {
 		vals, err := url.ParseQuery(attr)
 		if err != nil {
@@ -246,11 +246,9 @@ func (b BasicContract) AttrInterpreters(rst ReadOnlyStateTrie, inst Instruction)
 		if after < rst.GetIndex() && rst.GetIndex() < before {
 			return nil
 		}
-		return errors.New("bad block interval")
+		return fmt.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
 	}
-	cbs := make(map[string]func(string) error)
-	cbs["block"] = cb
-	return cbs
+	return darc.AttrInterpreters{"block": cb}
 }
 
 // Spawn is not implmented in a BasicContract. Types which embed BasicContract

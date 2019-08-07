@@ -148,7 +148,7 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 		}
 		return nil
 	}
-	attrFuncs := c.BasicContract.AttrInterpreters(rst, inst)
+	attrFuncs := c.BasicContract.MakeAttrInterpreters(rst, inst)
 	attrFuncs[attrAffixID] = cbAffix
 	attrFuncs[attrSigSchemeID] = cbSigScheme
 	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: attrFuncs})
@@ -404,6 +404,6 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-	require.Contains(t, resp.Error, "bad block interval")
+	require.Contains(t, resp.Error, "does not fit in the interval")
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
