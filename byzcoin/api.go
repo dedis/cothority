@@ -124,6 +124,23 @@ func (c *Client) GetAllByzCoinIDs(si *network.ServerIdentity) (*GetAllByzCoinIDs
 	return reply, nil
 }
 
+// CreateTransaction creates a transaction from a list of instructions.
+func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, error) {
+	if c.Latest == nil {
+		if _, err := c.GetChainConfig(); err != nil {
+			return ClientTransaction{}, err
+		}
+	}
+
+	h, err := decodeBlockHeader(c.Latest)
+	if err != nil {
+		return ClientTransaction{}, err
+	}
+
+	tx := NewClientTransaction(h.Version, instrs...)
+	return tx, nil
+}
+
 // AddTransaction adds a transaction. It does not return any feedback
 // on the transaction. Use GetProof to find out if the transaction
 // was committed. The Client's Roster and ID should be initialized before
@@ -210,6 +227,37 @@ func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofR
 	c.Latest = &reply.Proof.Latest
 
 	return reply, nil
+}
+
+// GetDeferredData makes a request to retrieve the deferred instruction data
+// and return the reply if the proof can be verified.
+func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
+	pr, err := c.GetProofFromLatest(instrID.Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	if !pr.Proof.InclusionProof.Match(instrID.Slice()) {
+		return nil, errors.New("key not set")
+	}
+
+	dataBuf, _, _, err := pr.Proof.Get(instrID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	var result DeferredData
+	if err = protobuf.Decode(dataBuf, &result); err != nil {
+		return nil, err
+	}
+
+	header, err := decodeBlockHeader(c.Latest)
+	if err != nil {
+		return nil, err
+	}
+
+	result.ProposedTransaction.Instructions.SetVersion(header.Version)
+
+	return &result, nil
 }
 
 // CheckAuthorization verifies which actions the given set of identities can

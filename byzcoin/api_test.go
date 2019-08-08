@@ -100,6 +100,23 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	require.Equal(t, "wrong darc spawned", err.Error())
 }
 
+func TestClient_CreateTransaction(t *testing.T) {
+	c := Client{}
+
+	header := DataHeader{Version: 5}
+	bHeader, err := protobuf.Encode(&header)
+	require.NoError(t, err)
+
+	latest := skipchain.NewSkipBlock()
+	latest.Data = bHeader
+	c.Latest = latest
+
+	instr := Instruction{}
+	ctx, err := c.CreateTransaction(instr)
+	require.NoError(t, err)
+	require.Equal(t, Version(5), ctx.Instructions[0].version)
+}
+
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)

@@ -46,8 +46,8 @@ public class ByzCoinRPC {
     private Config config;
     private Roster roster;
     private Darc genesisDarc;
-    private SkipBlock genesis;
-    private SkipBlock latest;
+    private Block genesis;
+    private Block latest;
     private SkipchainRPC skipchain;
 
     private Subscription subscription;
@@ -84,7 +84,7 @@ public class ByzCoinRPC {
         try {
             ByzCoinProto.CreateGenesisBlockResponse reply =
                     ByzCoinProto.CreateGenesisBlockResponse.parseFrom(msg);
-            genesis = new SkipBlock(reply.getSkipblock());
+            genesis = new Block(new SkipBlock(reply.getSkipblock()));
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -172,7 +172,7 @@ public class ByzCoinRPC {
      * @throws CothorityCryptoException        if the verification fails
      */
     public Proof getProof(InstanceId id) throws CothorityCommunicationException, CothorityCryptoException {
-        return getProofFrom(id, genesis);
+        return getProofFrom(id, genesis.sb);
     }
 
     /**
@@ -188,7 +188,7 @@ public class ByzCoinRPC {
      * @throws CothorityCryptoException if the verification fails
      */
     public Proof getProofFromLatest(InstanceId id) throws CothorityCommunicationException, CothorityCryptoException {
-        return getProofFrom(id, latest);
+        return getProofFrom(id, latest.sb);
     }
 
     /**
@@ -258,7 +258,7 @@ public class ByzCoinRPC {
     public void update() throws CothorityException {
         List<SkipBlock> sbs = skipchain.getUpdateChain();
         if (sbs != null && sbs.size() > 0) {
-            latest = sbs.get(sbs.size() - 1);
+            latest = new Block(sbs.get(sbs.size() - 1));
         }
     }
 
@@ -313,7 +313,7 @@ public class ByzCoinRPC {
      * @return the genesis block of the ledger.
      */
     public SkipBlock getGenesisBlock() {
-        return genesis;
+        return genesis.sb;
     }
 
     /**
@@ -344,7 +344,16 @@ public class ByzCoinRPC {
      */
     public Block getLatestBlock() throws CothorityException {
         this.update();
-        return new Block(latest);
+        return latest;
+    }
+
+    /**
+     * Returns the latest known version for the RPC client. An update might be necessary
+     * to insure it will return the latest version for the overall network.
+     * @return The version for the latest block known by the RPC client.
+     */
+    public int getProtocolVersion() {
+        return latest.getVersion();
     }
 
     /**
@@ -656,11 +665,11 @@ public class ByzCoinRPC {
         }
 
         bc.skipchain = skipchain;
-        bc.genesis = genesis;
+        bc.genesis = new Block(genesis);
         bc.roster = roster;
         bc.subscription = new Subscription(bc);
         List<SkipBlock> sbs = bc.skipchain.getUpdateChain();
-        bc.latest = sbs.get(sbs.size() - 1);
+        bc.latest = new Block(sbs.get(sbs.size() - 1));
         return bc;
     }
 

@@ -163,7 +163,7 @@ public class SecureDarcInstance {
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, owner.getIdentity(), ownerCtr);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);
     }
@@ -183,7 +183,7 @@ public class SecureDarcInstance {
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait, boolean unrestricted) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, owner.getIdentity(), ownerCtr, unrestricted);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);
     }
@@ -219,7 +219,7 @@ public class SecureDarcInstance {
      */
     public ClientTransactionId spawnInstance(String contractID, Signer s, Long signerCtr, List<Argument> args) throws CothorityException {
         Instruction inst = spawnInstanceInstruction(contractID, s.getIdentity(), signerCtr, args);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(Collections.singletonList(s));
         return bc.sendTransaction(ct);
     }
@@ -237,11 +237,11 @@ public class SecureDarcInstance {
      */
     public Proof spawnInstanceAndWait(String contractID, Signer s, Long signerCtr, List<Argument> args, int wait) throws CothorityException {
         Instruction inst = spawnInstanceInstruction(contractID, s.getIdentity(), signerCtr, args);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(Collections.singletonList(s));
 
         bc.sendTransactionAndWait(ct, wait);
-        InstanceId iid = inst.deriveId("");
+        InstanceId iid = ct.getInstructions().get(0).deriveId("");
         if (contractID.equals(ContractId)) {
             // Special case for a darc, then the resulting instanceId is based
             // on the darc itself.

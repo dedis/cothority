@@ -71,6 +71,40 @@ existing skipchains will continue to operate normally. In summary, if you need t
 create skipchains after updating to v3.1.0, make sure every conode is at least using
 v3.0.1 aswell.
 
+### Release v3.2.0
+
+A new field has been added to the *DataHeader*, *Version*, so that new features or
+upgrades can be coordinated between the conodes to only start using it when enough
+of them are up to date. The leader will propose a change of version when it detects
+that enough of the participants can reach a consensus. A successful increase of
+version is announced by an empty block that will act as a barrier between the
+previous and the new version. Its *DataHeader* data will contain the new version.
+
+When creating a ledger, the default version is the most recent one and blocks are
+continously created with the previous block version until the leader proposes an
+upgrade. Note that the initial version is zero for backwards compatibility.
+
+Another important change for this version is about how transactions are created as
+they need to include the ByzCoin version to use the correct hash function. The
+initial version of the hash was not taking the invoke command into account and it
+has been fixed for version one and higher. See below examples:
+
+Go
+```go
+client := byzcoin.NewClient(id, roster)
+tx := client.CreateTransaction(instr1, instr2)
+```
+
+Java
+```java
+ClientTransaction tx = new ClientTransaction(instrs, rpc.getProtocolVersion());
+```
+
+Javascript/Typescript
+```javascript
+const tx = ClientTransaction.make(rpc.getProtocolVersion(), instr1, instr2);
+```
+
 # Documentation
 
 The goal of the cothority is to collect projects that

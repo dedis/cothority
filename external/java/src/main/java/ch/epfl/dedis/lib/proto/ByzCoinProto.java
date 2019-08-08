@@ -1086,6 +1086,23 @@ public final class ByzCoinProto {
      * <code>required sint64 timestamp = 4;</code>
      */
     long getTimestamp();
+
+    /**
+     * <pre>
+     * Version is the version of ByzCoin at the creation of the block.
+     * </pre>
+     *
+     * <code>optional sint32 version = 5;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <pre>
+     * Version is the version of ByzCoin at the creation of the block.
+     * </pre>
+     *
+     * <code>optional sint32 version = 5;</code>
+     */
+    int getVersion();
   }
   /**
    * <pre>
@@ -1108,6 +1125,7 @@ public final class ByzCoinProto {
       clienttransactionhash_ = com.google.protobuf.ByteString.EMPTY;
       statechangeshash_ = com.google.protobuf.ByteString.EMPTY;
       timestamp_ = 0L;
+      version_ = 0;
     }
 
     @java.lang.Override
@@ -1152,6 +1170,11 @@ public final class ByzCoinProto {
             case 32: {
               bitField0_ |= 0x00000008;
               timestamp_ = input.readSInt64();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              version_ = input.readSInt32();
               break;
             }
             default: {
@@ -1283,6 +1306,29 @@ public final class ByzCoinProto {
       return timestamp_;
     }
 
+    public static final int VERSION_FIELD_NUMBER = 5;
+    private int version_;
+    /**
+     * <pre>
+     * Version is the version of ByzCoin at the creation of the block.
+     * </pre>
+     *
+     * <code>optional sint32 version = 5;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * Version is the version of ByzCoin at the creation of the block.
+     * </pre>
+     *
+     * <code>optional sint32 version = 5;</code>
+     */
+    public int getVersion() {
+      return version_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1325,6 +1371,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeSInt64(4, timestamp_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeSInt32(5, version_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1349,6 +1398,10 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(4, timestamp_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(5, version_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1386,6 +1439,11 @@ public final class ByzCoinProto {
         result = result && (getTimestamp()
             == other.getTimestamp());
       }
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -1413,6 +1471,10 @@ public final class ByzCoinProto {
         hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getTimestamp());
+      }
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + getVersion();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1559,6 +1621,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         timestamp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
+        version_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -1603,6 +1667,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000008;
         }
         result.timestamp_ = timestamp_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1663,6 +1731,9 @@ public final class ByzCoinProto {
         }
         if (other.hasTimestamp()) {
           setTimestamp(other.getTimestamp());
+        }
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1911,6 +1982,54 @@ public final class ByzCoinProto {
       public Builder clearTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000008);
         timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private int version_ ;
+      /**
+       * <pre>
+       * Version is the version of ByzCoin at the creation of the block.
+       * </pre>
+       *
+       * <code>optional sint32 version = 5;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * Version is the version of ByzCoin at the creation of the block.
+       * </pre>
+       *
+       * <code>optional sint32 version = 5;</code>
+       */
+      public int getVersion() {
+        return version_;
+      }
+      /**
+       * <pre>
+       * Version is the version of ByzCoin at the creation of the block.
+       * </pre>
+       *
+       * <code>optional sint32 version = 5;</code>
+       */
+      public Builder setVersion(int value) {
+        bitField0_ |= 0x00000010;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Version is the version of ByzCoin at the creation of the block.
+       * </pre>
+       *
+       * <code>optional sint32 version = 5;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        version_ = 0;
         onChanged();
         return this;
       }
@@ -39778,95 +39897,95 @@ public final class ByzCoinProto {
       "\n\rbyzcoin.proto\022\007byzcoin\032\017skipchain.prot" +
       "o\032\nonet.proto\032\ndarc.proto\032\ntrie.proto\"\031\n" +
       "\027GetAllByzCoinIDsRequest\"\'\n\030GetAllByzCoi" +
-      "nIDsResponse\022\013\n\003ids\030\001 \003(\014\"j\n\nDataHeader\022" +
+      "nIDsResponse\022\013\n\003ids\030\001 \003(\014\"{\n\nDataHeader\022" +
       "\020\n\010trieroot\030\001 \002(\014\022\035\n\025clienttransactionha" +
       "sh\030\002 \002(\014\022\030\n\020statechangeshash\030\003 \002(\014\022\021\n\tti" +
-      "mestamp\030\004 \002(\022\"0\n\010DataBody\022$\n\ttxresults\030\001" +
-      " \003(\0132\021.byzcoin.TxResult\"\252\001\n\022CreateGenesi" +
-      "sBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006roster\030\002 \002(\0132" +
-      "\014.onet.Roster\022\037\n\013genesisdarc\030\003 \002(\0132\n.dar" +
-      "c.Darc\022\025\n\rblockinterval\030\004 \002(\022\022\024\n\014maxbloc" +
-      "ksize\030\005 \001(\021\022\027\n\017darccontractids\030\006 \003(\t\"V\n\032" +
-      "CreateGenesisBlockResponse\022\017\n\007version\030\001 " +
-      "\002(\021\022\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipB" +
-      "lock\"|\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n" +
-      "\013skipchainid\030\002 \002(\014\022/\n\013transaction\030\003 \002(\0132" +
-      "\032.byzcoin.ClientTransaction\022\025\n\rinclusion" +
-      "wait\030\004 \001(\021\"/\n\rAddTxResponse\022\017\n\007version\030\001" +
-      " \002(\021\022\r\n\005error\030\002 \001(\t\"4\n\010GetProof\022\017\n\007versi" +
-      "on\030\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"B\n\020Get" +
-      "ProofResponse\022\017\n\007version\030\001 \002(\021\022\035\n\005proof\030" +
-      "\002 \002(\0132\016.byzcoin.Proof\"l\n\022CheckAuthorizat" +
-      "ion\022\017\n\007version\030\001 \002(\021\022\021\n\tbyzcoinid\030\002 \002(\014\022" +
-      "\016\n\006darcid\030\003 \002(\014\022\"\n\nidentities\030\004 \003(\0132\016.da" +
-      "rc.Identity\"-\n\032CheckAuthorizationRespons" +
-      "e\022\017\n\007actions\030\001 \003(\t\"q\n\013ChainConfig\022\025\n\rblo" +
-      "ckinterval\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet." +
-      "Roster\022\024\n\014maxblocksize\030\003 \002(\021\022\027\n\017darccont" +
-      "ractids\030\004 \003(\t\"y\n\005Proof\022#\n\016inclusionproof" +
-      "\030\001 \002(\0132\013.trie.Proof\022$\n\006latest\030\002 \002(\0132\024.sk" +
-      "ipchain.SkipBlock\022%\n\005links\030\003 \003(\0132\026.skipc" +
-      "hain.ForwardLink\"\333\001\n\013Instruction\022\022\n\ninst" +
-      "anceid\030\001 \002(\014\022\035\n\005spawn\030\002 \001(\0132\016.byzcoin.Sp" +
-      "awn\022\037\n\006invoke\030\003 \001(\0132\017.byzcoin.Invoke\022\037\n\006" +
-      "delete\030\004 \001(\0132\017.byzcoin.Delete\022\031\n\rsignerc" +
-      "ounter\030\005 \003(\004B\002\020\001\022(\n\020signeridentities\030\006 \003" +
-      "(\0132\016.darc.Identity\022\022\n\nsignatures\030\007 \003(\014\"<" +
-      "\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 \003(" +
-      "\0132\021.byzcoin.Argument\"N\n\006Invoke\022\022\n\ncontra" +
-      "ctid\030\001 \002(\t\022\017\n\007command\030\002 \002(\t\022\037\n\004args\030\003 \003(" +
-      "\0132\021.byzcoin.Argument\"\034\n\006Delete\022\022\n\ncontra" +
-      "ctid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005" +
-      "value\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014inst" +
-      "ructions\030\001 \003(\0132\024.byzcoin.Instruction\"S\n\010" +
-      "TxResult\0225\n\021clienttransaction\030\001 \002(\0132\032.by" +
-      "zcoin.ClientTransaction\022\020\n\010accepted\030\002 \002(" +
-      "\010\"z\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n" +
-      "\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\t\022\r\n" +
-      "\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030" +
-      "\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002" +
-      "(\004\"\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021St" +
-      "reamingResponse\022#\n\005block\030\001 \001(\0132\024.skipcha" +
-      "in.SkipBlock\"A\n\rDownloadState\022\021\n\tbyzcoin" +
-      "id\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"" +
-      "]\n\025DownloadStateResponse\022&\n\tkeyvalues\030\001 " +
-      "\003(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022" +
-      "\r\n\005total\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(" +
-      "\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013s" +
-      "tateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005" +
-      "value\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005" +
-      " \002(\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001" +
-      " \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"1\n\031GetSignerCo" +
-      "untersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\"N\n\022" +
-      "GetInstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022" +
-      "\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026" +
-      "GetLastInstanceVersion\022\023\n\013skipchainid\030\001 " +
-      "\002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetInstanceVe" +
-      "rsionResponse\022)\n\013statechange\030\001 \002(\0132\024.byz" +
-      "coin.StateChange\022\022\n\nblockindex\030\002 \002(\021\"@\n\025" +
-      "GetAllInstanceVersion\022\023\n\013skipchainid\030\001 \002" +
-      "(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllInstance" +
-      "VersionResponse\0229\n\014statechanges\030\001 \003(\0132#." +
-      "byzcoin.GetInstanceVersionResponse\"T\n\030Ch" +
-      "eckStateChangeValidity\022\023\n\013skipchainid\030\001 " +
-      "\002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004" +
-      "\"_\n CheckStateChangeValidityResponse\022*\n\014" +
-      "statechanges\030\001 \003(\0132\024.byzcoin.StateChange" +
-      "\022\017\n\007blockid\030\002 \002(\014\"F\n\021ResolveInstanceID\022\023" +
-      "\n\013skipchainid\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\022\014\n\004n" +
-      "ame\030\003 \002(\t\"(\n\022ResolvedInstanceID\022\022\n\ninsta" +
-      "nceid\030\001 \002(\014\"!\n\014DebugRequest\022\021\n\tbyzcoinid" +
-      "\030\001 \001(\014\"k\n\rDebugResponse\022/\n\010byzcoins\030\001 \003(" +
-      "\0132\035.byzcoin.DebugResponseByzcoin\022)\n\004dump" +
-      "\030\002 \003(\0132\033.byzcoin.DebugResponseState\"v\n\024D" +
-      "ebugResponseByzcoin\022\021\n\tbyzcoinid\030\001 \002(\014\022%" +
-      "\n\007genesis\030\002 \001(\0132\024.skipchain.SkipBlock\022$\n" +
-      "\006latest\030\003 \001(\0132\024.skipchain.SkipBlock\"J\n\022D" +
-      "ebugResponseState\022\013\n\003key\030\001 \002(\014\022\'\n\005state\030" +
-      "\002 \002(\0132\030.byzcoin.StateChangeBody\":\n\022Debug" +
-      "RemoveRequest\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tsign" +
-      "ature\030\002 \002(\014B\'\n\027ch.epfl.dedis.lib.protoB\014" +
-      "ByzCoinProto"
+      "mestamp\030\004 \002(\022\022\017\n\007version\030\005 \001(\021\"0\n\010DataBo" +
+      "dy\022$\n\ttxresults\030\001 \003(\0132\021.byzcoin.TxResult" +
+      "\"\252\001\n\022CreateGenesisBlock\022\017\n\007version\030\001 \002(\021" +
+      "\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\022\037\n\013genesi" +
+      "sdarc\030\003 \002(\0132\n.darc.Darc\022\025\n\rblockinterval" +
+      "\030\004 \002(\022\022\024\n\014maxblocksize\030\005 \001(\021\022\027\n\017darccont" +
+      "ractids\030\006 \003(\t\"V\n\032CreateGenesisBlockRespo" +
+      "nse\022\017\n\007version\030\001 \002(\021\022\'\n\tskipblock\030\002 \001(\0132" +
+      "\024.skipchain.SkipBlock\"|\n\014AddTxRequest\022\017\n" +
+      "\007version\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\022/\n\013t" +
+      "ransaction\030\003 \002(\0132\032.byzcoin.ClientTransac" +
+      "tion\022\025\n\rinclusionwait\030\004 \001(\021\"/\n\rAddTxResp" +
+      "onse\022\017\n\007version\030\001 \002(\021\022\r\n\005error\030\002 \001(\t\"4\n\010" +
+      "GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n" +
+      "\n\002id\030\003 \002(\014\"B\n\020GetProofResponse\022\017\n\007versio" +
+      "n\030\001 \002(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"l" +
+      "\n\022CheckAuthorization\022\017\n\007version\030\001 \002(\021\022\021\n" +
+      "\tbyzcoinid\030\002 \002(\014\022\016\n\006darcid\030\003 \002(\014\022\"\n\niden" +
+      "tities\030\004 \003(\0132\016.darc.Identity\"-\n\032CheckAut" +
+      "horizationResponse\022\017\n\007actions\030\001 \003(\t\"q\n\013C" +
+      "hainConfig\022\025\n\rblockinterval\030\001 \002(\022\022\034\n\006ros" +
+      "ter\030\002 \002(\0132\014.onet.Roster\022\024\n\014maxblocksize\030" +
+      "\003 \002(\021\022\027\n\017darccontractids\030\004 \003(\t\"y\n\005Proof\022" +
+      "#\n\016inclusionproof\030\001 \002(\0132\013.trie.Proof\022$\n\006" +
+      "latest\030\002 \002(\0132\024.skipchain.SkipBlock\022%\n\005li" +
+      "nks\030\003 \003(\0132\026.skipchain.ForwardLink\"\333\001\n\013In" +
+      "struction\022\022\n\ninstanceid\030\001 \002(\014\022\035\n\005spawn\030\002" +
+      " \001(\0132\016.byzcoin.Spawn\022\037\n\006invoke\030\003 \001(\0132\017.b" +
+      "yzcoin.Invoke\022\037\n\006delete\030\004 \001(\0132\017.byzcoin." +
+      "Delete\022\031\n\rsignercounter\030\005 \003(\004B\002\020\001\022(\n\020sig" +
+      "neridentities\030\006 \003(\0132\016.darc.Identity\022\022\n\ns" +
+      "ignatures\030\007 \003(\014\"<\n\005Spawn\022\022\n\ncontractid\030\001" +
+      " \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n" +
+      "\006Invoke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002" +
+      " \002(\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n" +
+      "\006Delete\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022" +
+      "\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTr" +
+      "ansaction\022*\n\014instructions\030\001 \003(\0132\024.byzcoi" +
+      "n.Instruction\"S\n\010TxResult\0225\n\021clienttrans" +
+      "action\030\001 \002(\0132\032.byzcoin.ClientTransaction" +
+      "\022\020\n\010accepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013sta" +
+      "teaction\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\nco" +
+      "ntractid\030\003 \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030" +
+      "\005 \002(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001" +
+      " \002(\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022" +
+      "\n\n\002id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005bloc" +
+      "k\030\001 \001(\0132\024.skipchain.SkipBlock\"A\n\rDownloa" +
+      "dState\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004" +
+      "\022\016\n\006length\030\003 \002(\021\"]\n\025DownloadStateRespons" +
+      "e\022&\n\tkeyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValu" +
+      "e\022\r\n\005nonce\030\002 \002(\004\022\r\n\005total\030\003 \001(\021\"(\n\nDBKey" +
+      "Value\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017Sta" +
+      "teChangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncon" +
+      "tractid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030" +
+      "\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounte" +
+      "rs\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002" +
+      "(\014\"1\n\031GetSignerCountersResponse\022\024\n\010count" +
+      "ers\030\001 \003(\004B\002\020\001\"N\n\022GetInstanceVersion\022\023\n\013s" +
+      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007" +
+      "version\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022" +
+      "\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014" +
+      "\"[\n\032GetInstanceVersionResponse\022)\n\013statec" +
+      "hange\030\001 \002(\0132\024.byzcoin.StateChange\022\022\n\nblo" +
+      "ckindex\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023" +
+      "\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"" +
+      "Z\n\035GetAllInstanceVersionResponse\0229\n\014stat" +
+      "echanges\030\001 \003(\0132#.byzcoin.GetInstanceVers" +
+      "ionResponse\"T\n\030CheckStateChangeValidity\022" +
+      "\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014" +
+      "\022\017\n\007version\030\003 \002(\004\"_\n CheckStateChangeVal" +
+      "idityResponse\022*\n\014statechanges\030\001 \003(\0132\024.by" +
+      "zcoin.StateChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021Re" +
+      "solveInstanceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006" +
+      "darcid\030\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedIn" +
+      "stanceID\022\022\n\ninstanceid\030\001 \002(\014\"!\n\014DebugReq" +
+      "uest\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse" +
+      "\022/\n\010byzcoins\030\001 \003(\0132\035.byzcoin.DebugRespon" +
+      "seByzcoin\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugR" +
+      "esponseState\"v\n\024DebugResponseByzcoin\022\021\n\t" +
+      "byzcoinid\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipc" +
+      "hain.SkipBlock\022$\n\006latest\030\003 \001(\0132\024.skipcha" +
+      "in.SkipBlock\"J\n\022DebugResponseState\022\013\n\003ke" +
+      "y\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateCh" +
+      "angeBody\":\n\022DebugRemoveRequest\022\021\n\tbyzcoi" +
+      "nid\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl." +
+      "dedis.lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -39901,7 +40020,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_DataHeader_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DataHeader_descriptor,
-        new java.lang.String[] { "Trieroot", "Clienttransactionhash", "Statechangeshash", "Timestamp", });
+        new java.lang.String[] { "Trieroot", "Clienttransactionhash", "Statechangeshash", "Timestamp", "Version", });
     internal_static_byzcoin_DataBody_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_byzcoin_DataBody_fieldAccessorTable = new

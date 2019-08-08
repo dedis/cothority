@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,7 +90,7 @@ public class ChainConfigInstance {
         Instruction inst = evolveChainConfigInstruction(newConfig,
                 owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 ownerCtrs);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(owners);
         bc.sendTransaction(ct);
     }
@@ -108,7 +109,7 @@ public class ChainConfigInstance {
         Instruction inst = evolveChainConfigInstruction(newConfig,
                 owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 ownerCtrs);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(owners);
         bc.sendTransactionAndWait(ct, wait);
         chainConfig = newConfig;

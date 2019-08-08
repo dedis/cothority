@@ -12,6 +12,7 @@ import ChainConfig from "./config";
 import DarcInstance from "./contracts/darc-instance";
 import { InstanceID } from "./instance";
 import Proof from "./proof";
+import { DataHeader } from "./proto";
 import CheckAuthorization, { CheckAuthorizationResponse } from "./proto/check-auth";
 import {
     AddTxRequest,
@@ -29,11 +30,6 @@ export const currentVersion = 1;
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
-
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
-    }
-
     /**
      * Helper to create a genesis darc
      * @param signers       Authorized signers
@@ -120,6 +116,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     protected constructor() {}
 
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
+
     /**
      * Getter for the genesis darc
      * @returns the genesis darc
@@ -142,6 +142,16 @@ export default class ByzCoinRPC implements ICounterUpdater {
      */
     getGenesis(): SkipBlock {
         return this.genesis;
+    }
+
+    /**
+     * Getter for the ByzCoin protocol version of the
+     * latest block known by the RPC client.
+     */
+    getProtocolVersion(): number {
+        const header = DataHeader.decode(this.latest.data);
+
+        return header.version;
     }
 
     /**

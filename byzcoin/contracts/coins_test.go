@@ -313,6 +313,10 @@ func (ct cvTest) GetIndex() int {
 	return ct.index
 }
 
+func (ct cvTest) GetVersion() byzcoin.Version {
+	return byzcoin.CurrentVersion
+}
+
 func (ct cvTest) ForEach(f func(k, v []byte) error) error {
 	return errors.New("not implemented")
 }

@@ -37,20 +37,19 @@ func TestSecureDarc(t *testing.T) {
 	require.NoError(t, secDarc.Rules.AddRule("spawn:insecure_darc", []byte(restrictedSigner.Identity().String())))
 	secDarcBuf, err := secDarc.ToProto()
 	require.NoError(t, err)
-	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: secDarcBuf,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err := cl.CreateTransaction(Instruction{
+		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: secDarcBuf,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
@@ -60,40 +59,38 @@ func TestSecureDarc(t *testing.T) {
 	require.NoError(t, secDarc.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(unrestrictedSigner.Identity().String())))
 	secDarcBuf, err = secDarc.ToProto()
 	require.NoError(t, err)
-	ctx = ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: secDarcBuf,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: secDarcBuf,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
 	log.Info("spawn a darc with a version > 0 - fail")
 	secDarc.Version = 1
 	secDarcBuf, err = secDarc.ToProto()
-	ctx = ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: secDarcBuf,
-				}},
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
-	require.Nil(t, ctx.FillSignersAndSignWith(signer))
+	ctx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: secDarcBuf,
+			}},
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
+	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
@@ -104,21 +101,20 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		require.NoError(t, secDarc2.Rules.AddRule("spawn:coin", secDarc.Rules.Get(invokeEvolveUnrestricted)))
 		secDarc2Buf, err := secDarc2.ToProto()
-		ctx2 := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(secDarc.GetBaseID()),
-				Invoke: &Invoke{
-					ContractID: ContractDarcID,
-					Command:    cmdDarcEvolve,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: secDarc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
+		ctx2, err := cl.CreateTransaction(Instruction{
+			InstanceID: NewInstanceID(secDarc.GetBaseID()),
+			Invoke: &Invoke{
+				ContractID: ContractDarcID,
+				Command:    cmdDarcEvolve,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: secDarc2Buf,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		})
+		require.NoError(t, err)
+		require.NoError(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -130,21 +126,20 @@ func TestSecureDarc(t *testing.T) {
 		// changing the signer to something else, then it should fail
 		require.NoError(t, secDarc2.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(restrictedSigner.Identity().String())))
 		secDarc2Buf, err := secDarc2.ToProto()
-		ctx2 := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(secDarc.GetBaseID()),
-				Invoke: &Invoke{
-					ContractID: ContractDarcID,
-					Command:    cmdDarcEvolve,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: secDarc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
+		ctx2, err := cl.CreateTransaction(Instruction{
+			InstanceID: NewInstanceID(secDarc.GetBaseID()),
+			Invoke: &Invoke{
+				ContractID: ContractDarcID,
+				Command:    cmdDarcEvolve,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: secDarc2Buf,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		})
+		require.NoError(t, err)
+		require.NoError(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -154,21 +149,20 @@ func TestSecureDarc(t *testing.T) {
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
 		secDarc2Buf, err := secDarc2.ToProto()
-		ctx2 := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(secDarc.GetBaseID()),
-				Invoke: &Invoke{
-					ContractID: ContractDarcID,
-					Command:    cmdDarcEvolve,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: secDarc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner))
+		ctx2, err := cl.CreateTransaction(Instruction{
+			InstanceID: NewInstanceID(secDarc.GetBaseID()),
+			Invoke: &Invoke{
+				ContractID: ContractDarcID,
+				Command:    cmdDarcEvolve,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: secDarc2Buf,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		})
+		require.NoError(t, err)
+		require.NoError(t, ctx2.FillSignersAndSignWith(restrictedSigner))
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
 	}
@@ -188,21 +182,20 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
-		ctx2 := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(myDarc.GetBaseID()),
-				Invoke: &Invoke{
-					ContractID: ContractDarcID,
-					Command:    cmdDarcEvolveUnrestriction,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: myDarc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx2.FillSignersAndSignWith(restrictedSigner)) // here we use the wrong signer
+		ctx2, err := cl.CreateTransaction(Instruction{
+			InstanceID: NewInstanceID(myDarc.GetBaseID()),
+			Invoke: &Invoke{
+				ContractID: ContractDarcID,
+				Command:    cmdDarcEvolveUnrestriction,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: myDarc2Buf,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		})
+		require.NoError(t, err)
+		require.NoError(t, ctx2.FillSignersAndSignWith(restrictedSigner)) // here we use the wrong signer
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.Error(t, err)
 	}
@@ -213,21 +206,20 @@ func TestSecureDarc(t *testing.T) {
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
 		require.NoError(t, myDarc2.Rules.AddRule("spawn:coin", myDarc2.Rules.Get(invokeEvolveUnrestricted)))
 		myDarc2Buf, err := myDarc2.ToProto()
-		ctx2 := ClientTransaction{
-			Instructions: []Instruction{{
-				InstanceID: NewInstanceID(myDarc.GetBaseID()),
-				Invoke: &Invoke{
-					ContractID: ContractDarcID,
-					Command:    cmdDarcEvolveUnrestriction,
-					Args: []Argument{{
-						Name:  "darc",
-						Value: myDarc2Buf,
-					}},
-				},
-				SignerCounter: []uint64{1},
-			}},
-		}
-		require.Nil(t, ctx2.FillSignersAndSignWith(unrestrictedSigner)) // here we use the correct signer
+		ctx2, err := cl.CreateTransaction(Instruction{
+			InstanceID: NewInstanceID(myDarc.GetBaseID()),
+			Invoke: &Invoke{
+				ContractID: ContractDarcID,
+				Command:    cmdDarcEvolveUnrestriction,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: myDarc2Buf,
+				}},
+			},
+			SignerCounter: []uint64{1},
+		})
+		require.NoError(t, err)
+		require.NoError(t, ctx2.FillSignersAndSignWith(unrestrictedSigner)) // here we use the correct signer
 		_, err = cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
 	}

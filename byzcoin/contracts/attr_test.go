@@ -181,19 +181,18 @@ func TestAttrCustomRule(t *testing.T) {
 	require.Nil(t, err)
 
 	myvalue := []byte("abcdefgxyz")
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: contractAttrValueID,
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: contractAttrValueID,
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -204,20 +203,19 @@ func TestAttrCustomRule(t *testing.T) {
 
 	// Invoke ok - the existing value matches the attr requirement
 	myvalue = []byte("abcd5678")
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -226,20 +224,19 @@ func TestAttrCustomRule(t *testing.T) {
 
 	// Invoke fail - the new value does not match the attr requirement
 	myvalue = []byte("abcdefxzy")
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
@@ -248,20 +245,19 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submitting empty sigscheme
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update-v2",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update-v2",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
@@ -270,24 +266,23 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submit a wrong sigscheme
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update-v2",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				},
-					{
-						Name:  "sigscheme",
-						Value: []byte("999"),
-					}},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update-v2",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+				{
+					Name:  "sigscheme",
+					Value: []byte("999"),
+				}},
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
@@ -296,24 +291,23 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the correct sigscheme is used
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update-v2",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				},
-					{
-						Name:  "sigscheme",
-						Value: []byte("1"),
-					}},
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update-v2",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
 			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+				{
+					Name:  "sigscheme",
+					Value: []byte("1"),
+				}},
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -341,19 +335,18 @@ func TestAttrBlockIndex(t *testing.T) {
 	require.Nil(t, err)
 
 	myvalue := []byte("abcdefgxyz")
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Spawn: &byzcoin.Spawn{
-				ContractID: contractAttrValueID,
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{1},
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
+			ContractID: contractAttrValueID,
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	require.NoError(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -364,20 +357,19 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	// Invoke ok - we're within the block interval
 	myvalue = []byte("abcde888fgxyz")
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{2},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
@@ -386,20 +378,19 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	// Invoke fail - we are outside the block interval
 	myvalue = []byte("abcde8888fxzy")
-	ctx = byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID: myID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contractAttrValueID,
-				Command:    "update",
-				Args: []byzcoin.Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-			SignerCounter: []uint64{3},
-		}},
-	}
+	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: myID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contractAttrValueID,
+			Command:    "update",
+			Args: []byzcoin.Argument{{
+				Name:  "value",
+				Value: myvalue,
+			}},
+		},
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	resp, err := cl.AddTransactionAndWait(ctx, 10)

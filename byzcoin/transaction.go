@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"regexp"
 	"strings"
 	"sync"
@@ -116,9 +117,24 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 	return nil
 }
 
+// NewClientTransaction creates a transaction compatible with the version passed
+// in arguments. Depending on the version, the hash will have a different value.
+func NewClientTransaction(v Version, instrs ...Instruction) ClientTransaction {
+	ctx := ClientTransaction{Instructions: instrs}
+	ctx.Instructions.SetVersion(v)
+
+	return ctx
+}
+
 // Hash computes the digest of the hash function
 func (instr Instruction) Hash() []byte {
 	h := sha256.New()
+	instr.hashType(h)
+	instr.hashSigners(h)
+	return h.Sum(nil)
+}
+
+func (instr Instruction) hashType(h hash.Hash) {
 	h.Write(instr.InstanceID[:])
 	var args []Argument
 	switch instr.GetType() {
@@ -129,6 +145,9 @@ func (instr Instruction) Hash() []byte {
 	case InvokeType:
 		h.Write([]byte{1})
 		h.Write([]byte(instr.Invoke.ContractID))
+		if instr.version >= 1 {
+			h.Write([]byte(instr.Invoke.Command))
+		}
 		args = instr.Invoke.Args
 	case DeleteType:
 		h.Write([]byte{2})
@@ -146,6 +165,9 @@ func (instr Instruction) Hash() []byte {
 		h.Write(valueLenBuf)
 		h.Write(a.Value)
 	}
+}
+
+func (instr Instruction) hashSigners(h hash.Hash) {
 	for _, ctr := range instr.SignerCounter {
 		ctrBuf := make([]byte, 8)
 		binary.LittleEndian.PutUint64(ctrBuf, ctr)
@@ -158,7 +180,6 @@ func (instr Instruction) Hash() []byte {
 		h.Write(lenBuf)
 		h.Write(buf)
 	}
-	return h.Sum(nil)
 }
 
 // DeriveID derives a new InstanceID from the hash of the instruction, its signatures,
@@ -438,6 +459,14 @@ func (instrs Instructions) HashWithSignatures() []byte {
 	return h.Sum(nil)
 }
 
+// SetVersion makes sure the underlying data will use the implementation
+// of the given version.
+func (instrs Instructions) SetVersion(version Version) {
+	for i := range instrs {
+		instrs[i].version = version
+	}
+}
+
 // TxResults is a list of results from executed transactions.
 type TxResults []TxResult
 
@@ -466,6 +495,14 @@ func (txr TxResults) Hash() []byte {
 		}
 	}
 	return h.Sum(nil)
+}
+
+// SetVersion makes sure the underlying data will use the implementation
+// of the given version.
+func (txr TxResults) SetVersion(version Version) {
+	for _, tx := range txr {
+		tx.ClientTransaction.Instructions.SetVersion(version)
+	}
 }
 
 // NewStateChange is a convenience function that fills out a StateChange

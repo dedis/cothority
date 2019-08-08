@@ -96,25 +96,22 @@ func TestService_ReshareLTS_Same(t *testing.T) {
 			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
 			require.NoError(t, err)
 
-			ctx := byzcoin.ClientTransaction{
-				Instructions: []byzcoin.Instruction{
-					{
-						InstanceID: s.ltsReply.InstanceID,
-						Invoke: &byzcoin.Invoke{
-							ContractID: ContractLongTermSecretID,
-							Command:    "reshare",
-							Args: []byzcoin.Argument{
-								{
-									Name:  "lts_instance_info",
-									Value: ltsInstInfoBuf,
-								},
-							},
+			ctx, err := s.cl.CreateTransaction(byzcoin.Instruction{
+				InstanceID: s.ltsReply.InstanceID,
+				Invoke: &byzcoin.Invoke{
+					ContractID: ContractLongTermSecretID,
+					Command:    "reshare",
+					Args: []byzcoin.Argument{
+						{
+							Name:  "lts_instance_info",
+							Value: ltsInstInfoBuf,
 						},
-						SignerCounter: []uint64{2},
 					},
 				},
-			}
-			require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
+				SignerCounter: []uint64{2},
+			})
+			require.NoError(t, err)
+			require.NoError(t, ctx.FillSignersAndSignWith(s.signer))
 			_, err = s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
@@ -168,25 +165,22 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*s.ltsRoster})
 			require.NoError(t, err)
 
-			ctx := byzcoin.ClientTransaction{
-				Instructions: []byzcoin.Instruction{
-					{
-						InstanceID: s.ltsReply.InstanceID,
-						Invoke: &byzcoin.Invoke{
-							ContractID: ContractLongTermSecretID,
-							Command:    "reshare",
-							Args: []byzcoin.Argument{
-								{
-									Name:  "lts_instance_info",
-									Value: ltsInstInfoBuf,
-								},
-							},
+			ctx, err := s.cl.CreateTransaction(byzcoin.Instruction{
+				InstanceID: s.ltsReply.InstanceID,
+				Invoke: &byzcoin.Invoke{
+					ContractID: ContractLongTermSecretID,
+					Command:    "reshare",
+					Args: []byzcoin.Argument{
+						{
+							Name:  "lts_instance_info",
+							Value: ltsInstInfoBuf,
 						},
-						SignerCounter: []uint64{2},
 					},
 				},
-			}
-			require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
+				SignerCounter: []uint64{2},
+			})
+			require.NoError(t, err)
+			require.NoError(t, ctx.FillSignersAndSignWith(s.signer))
 			_, err = s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
@@ -418,9 +412,8 @@ func newTSWithExtras(t *testing.T, nodes int, extras int) ts {
 		},
 		SignerCounter: []uint64{1},
 	}
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{inst},
-	}
+	tx, err := s.cl.CreateTransaction(inst)
+	require.NoError(t, err)
 	require.NoError(t, tx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransactionAndWait(tx, 4)
 	require.NoError(t, err)

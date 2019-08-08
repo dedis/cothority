@@ -149,7 +149,7 @@ export default class DarcInstance extends Instance {
         const instr = Instruction.createInvoke(this._darc.getBaseID(),
             DarcInstance.contractID, cmd, args);
 
-        const ctx = new ClientTransaction({instructions: [instr]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCounters(this.rpc, [signers]);
         ctx.signWith([signers]);
 
@@ -167,11 +167,14 @@ export default class DarcInstance extends Instance {
      * @returns a promise that resolves with the new darc instance
      */
     async spawnDarcAndWait(d: Darc, signers: Signer[], wait: number = 0): Promise<DarcInstance> {
-        await this.spawnInstanceAndWait(DarcInstance.contractID,
-            [new Argument({
+        const args = [
+            new Argument({
                 name: DarcInstance.argumentDarc,
                 value: Buffer.from(Darc.encode(d).finish()),
-            })], signers, wait);
+            }),
+        ];
+
+        await this.spawnInstanceAndWait(DarcInstance.contractID, args, signers, wait);
         return DarcInstance.fromByzcoin(this.rpc, d.getBaseID());
     }
 
@@ -188,7 +191,7 @@ export default class DarcInstance extends Instance {
         Promise<InstanceID> {
         const instr = Instruction.createSpawn(this._darc.getBaseID(), DarcInstance.contractID, args);
 
-        const ctx = new ClientTransaction({instructions: [instr]});
+        const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), instr);
         await ctx.updateCounters(this.rpc, [signers]);
         ctx.signWith([signers]);
 

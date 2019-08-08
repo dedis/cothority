@@ -15,7 +15,7 @@ import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -120,19 +120,20 @@ public class WriteInstance {
     /**
      * Create a spawn instruction with a spawnCalypsoWrite request and send it to the ledger.
      */
-    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs)
+            throws CothorityException {
         Argument arg = new Argument("write", req.toProto().toByteArray());
-        Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
+        Spawn spawn = new Spawn(ContractId, Collections.singletonList(arg));
         Instruction instr = new Instruction(new InstanceId(darcBaseID.getId()),
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 spawn);
 
-        ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), calypso.getProtocolVersion());
         tx.signWith(signers);
         calypso.sendTransactionAndWait(tx, 5);
 
-        return instr.deriveId("");
+        return tx.getInstructions().get(0).deriveId("");
     }
 
     // TODO same as what's in EventLogInstance, make a super class?

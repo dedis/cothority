@@ -55,8 +55,9 @@ func (c *Client) Create() error {
 		Spawn:         &byzcoin.Spawn{ContractID: contractName},
 		SignerCounter: c.nextCtrs(),
 	}
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{instr},
+	tx, err := c.ByzCoin.CreateTransaction(instr)
+	if err != nil {
+		return err
 	}
 	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return err
@@ -166,9 +167,7 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 
 	keys := make([]LogID, len(events))
 
-	tx := byzcoin.ClientTransaction{
-		Instructions: make([]byzcoin.Instruction, len(events)),
-	}
+	instrs := make([]byzcoin.Instruction, len(events))
 	for i, msg := range events {
 		eventBuf, err := protobuf.Encode(&msg)
 		if err != nil {
@@ -178,7 +177,7 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 			Name:  "event",
 			Value: eventBuf,
 		}
-		tx.Instructions[i] = byzcoin.Instruction{
+		instrs[i] = byzcoin.Instruction{
 			InstanceID: c.Instance,
 			Invoke: &byzcoin.Invoke{
 				ContractID: contractName,
@@ -187,6 +186,10 @@ func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID,
 			},
 			SignerCounter: c.incrementCtrs(),
 		}
+	}
+	tx, err := c.ByzCoin.CreateTransaction(instrs...)
+	if err != nil {
+		return nil, nil, err
 	}
 	if err := tx.FillSignersAndSignWith(c.Signers...); err != nil {
 		return nil, nil, err

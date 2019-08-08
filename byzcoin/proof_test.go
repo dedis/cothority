@@ -99,7 +99,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.key = []byte("key")
 	s.value = []byte("value")
-	s.c.StoreAll([]StateChange{{StateAction: Create, InstanceID: s.key, Value: s.value}}, 1)
+	s.c.StoreAll([]StateChange{{StateAction: Create, InstanceID: s.key, Value: s.value}}, 1, CurrentVersion)
 
 	s.genesis = skipchain.NewSkipBlock()
 	s.genesis.Height = 1

@@ -48,6 +48,8 @@ type DataHeader struct {
 	StateChangesHash []byte
 	// Timestamp is a Unix timestamp in nanoseconds.
 	Timestamp int64
+	// Version is the version of ByzCoin at the creation of the block.
+	Version Version `protobuf:"opt"`
 }
 
 // DataBody is stored in the body of the skipblock, and it's hash is stored
@@ -198,6 +200,11 @@ type Instruction struct {
 	// Signatures that are verified using the Darc controlling access to
 	// the instance.
 	Signatures [][]byte
+	// version is a private field that can allow an instruction to be passed
+	// around with the context of a block with a specific version.
+	// This field must be the last field of the struct, so that the
+	// protobuf-library enumerates the fields correctly.
+	version Version
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.

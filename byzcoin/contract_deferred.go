@@ -419,33 +419,7 @@ func (c *contractDeferred) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst
 // also add to the hash the instanceID of the deferred contract.
 func hashDeferred(instr Instruction, instanceID []byte) []byte {
 	h := sha256.New()
-	h.Write(instr.InstanceID[:])
-	var args []Argument
-	switch instr.GetType() {
-	case SpawnType:
-		h.Write([]byte{0})
-		h.Write([]byte(instr.Spawn.ContractID))
-		args = instr.Spawn.Args
-	case InvokeType:
-		h.Write([]byte{1})
-		h.Write([]byte(instr.Invoke.ContractID))
-		args = instr.Invoke.Args
-	case DeleteType:
-		h.Write([]byte{2})
-		h.Write([]byte(instr.Delete.ContractID))
-	}
-	for _, a := range args {
-		nameBuf := []byte(a.Name)
-		nameLenBuf := make([]byte, 8)
-		binary.LittleEndian.PutUint64(nameLenBuf, uint64(len(nameBuf)))
-		h.Write(nameLenBuf)
-		h.Write(nameBuf)
-
-		valueLenBuf := make([]byte, 8)
-		binary.LittleEndian.PutUint64(valueLenBuf, uint64(len(a.Value)))
-		h.Write(valueLenBuf)
-		h.Write(a.Value)
-	}
+	instr.hashType(h)
 	h.Write(instanceID)
 
 	return h.Sum(nil)

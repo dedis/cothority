@@ -100,28 +100,25 @@ func TestClient_Log(t *testing.T) {
 	_, err = c.ByzCoin.AddTransactionAndWait(spawnNamingTx, 10)
 	require.NoError(t, err)
 
-	namingTx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{
-			{
-				InstanceID: byzcoin.NamingInstanceID,
-				Invoke: &byzcoin.Invoke{
-					ContractID: byzcoin.ContractNamingID,
-					Command:    "add",
-					Args: byzcoin.Arguments{
-						{
-							Name:  "instanceID",
-							Value: c.Instance.Slice(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("myeventlog"),
-						},
-					},
+	namingTx, err := c.ByzCoin.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.NamingInstanceID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractNamingID,
+			Command:    "add",
+			Args: byzcoin.Arguments{
+				{
+					Name:  "instanceID",
+					Value: c.Instance.Slice(),
 				},
-				SignerCounter: c.incrementCtrs(),
+				{
+					Name:  "name",
+					Value: []byte("myeventlog"),
+				},
 			},
 		},
-	}
+		SignerCounter: c.incrementCtrs(),
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(c.Signers...))
 
 	_, err = c.ByzCoin.AddTransactionAndWait(namingTx, 10)
