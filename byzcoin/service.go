@@ -944,7 +944,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs, _ = s.createStateChanges(sst, tx, noTimeout, scID)
+	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -1450,7 +1450,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
-	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), body.TxResults, noTimeout, sb.SkipChainID())
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
@@ -1834,7 +1834,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	mtr, txOut, scs, _ := s.createStateChanges(sst, body.TxResults, noTimeout, newSB.SkipChainID())
+	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -1932,7 +1932,7 @@ func txSize(txr ...TxResult) (out int) {
 // followers by 1/2.
 //
 // Any data from the trie should be read from sst and not the service.
-func (s *Service) createStateChanges(sst *stagingStateTrie, txIn TxResults, timeout time.Duration, scID skipchain.SkipBlockID) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -2655,7 +2655,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return err
 		}
 
-		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), body.TxResults, noTimeout, from.SkipChainID())
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout)
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {
