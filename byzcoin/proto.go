@@ -202,6 +202,8 @@ type Instruction struct {
 	Signatures [][]byte
 	// version is a private field that can allow an instruction to be passed
 	// around with the context of a block with a specific version.
+	// This field must be the last field of the struct, so that the
+	// protobuf-library enumerates the fields correctly.
 	version Version
 }
 

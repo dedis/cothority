@@ -75,12 +75,12 @@ v3.0.1 aswell.
 
 A new field has been added to the *DataHeader*, *Version*, so that new features or
 upgrades can be coordinated between the conodes to only start using it when enough
-of them are up to date. The leader will propose an change of version when it detects
+of them are up to date. The leader will propose a change of version when it detects
 that enough of the participants can reach a consensus. A successful increase of
-version is announced by an empty block that will have act as a barrier between the
+version is announced by an empty block that will act as a barrier between the
 previous and the new version. Its *DataHeader* data will contain the new version.
 
-When creating a ledger, the default version is the most recent one and block are
+When creating a ledger, the default version is the most recent one and blocks are
 continously created with the previous block version until the leader proposes an
 upgrade. Note that the initial version is zero for backwards compatibility.
 

@@ -2675,7 +2675,7 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 
 	header, err := decodeBlockHeader(currSB)
 	if err != nil {
-		return err
+		return errors.New("couldn't decode header: " + err.Error())
 	}
 
 	if bytes.Equal(header.TrieRoot, st.GetRoot()) {
