@@ -554,7 +554,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 
 	time.Sleep(testInterval)
 
-	// Simulate a upgrade of the conodes.
+	// Simulate an upgrade of the conodes.
 	for _, srv := range s.services {
 		srv.defaultVersionLock.Lock()
 		srv.defaultVersion = CurrentVersion

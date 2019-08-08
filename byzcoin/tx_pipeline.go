@@ -12,9 +12,9 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
-// CollectTxResult contains the aggregated response of the conodes to the
+// collectTxResult contains the aggregated response of the conodes to the
 // collectTx protocol.
-type CollectTxResult struct {
+type collectTxResult struct {
 	Txs           []ClientTransaction
 	CommonVersion Version
 }
@@ -24,7 +24,7 @@ type CollectTxResult struct {
 type txProcessor interface {
 	// CollectTx implements a blocking function that returns transactions
 	// that should go into new blocks. These transactions are not verified.
-	CollectTx() (*CollectTxResult, error)
+	CollectTx() (*collectTxResult, error)
 	// ProcessTx attempts to apply the given tx to the input state and then
 	// produce new state(s). If the new tx is too big to fit inside a new
 	// state, the function will return more states. Where the older states
@@ -38,7 +38,7 @@ type txProcessor interface {
 	// the proposal.
 	ProposeBlock(*txProcessorState) error
 	// ProposeUpgradeBlock should create a barrier block between two Byzcoin
-	// version so that next blocks will use the version in parameter.
+	// version so that future blocks will use the new version.
 	ProposeUpgradeBlock(Version) error
 	// GetLatestGoodState should return the latest state that the processor
 	// trusts.
@@ -99,7 +99,7 @@ type defaultTxProcessor struct {
 	sync.Mutex
 }
 
-func (s *defaultTxProcessor) CollectTx() (*CollectTxResult, error) {
+func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	// Need to update the config, as in the meantime a new block should have
 	// arrived with a possible new configuration.
 	bcConfig, err := s.LoadConfig(s.scID)
@@ -166,8 +166,9 @@ collectTxLoop:
 	for {
 		select {
 		case commonVersion = <-root.CommonVersionChan:
-			// At this point, we only know if other conodes are running the same
-			// version as the leader, but it can be the current one.
+			// The value gives a version that is the same for a threshold of conodes but it
+			// can be the latest version available so it needs to check that to not create a
+			// block to upgrade from version x to x (which is not an upgrade per se).
 		case newTxs, more := <-root.TxsChan:
 			if more {
 				for _, ct := range newTxs {
@@ -192,7 +193,7 @@ collectTxLoop:
 		}
 	}
 
-	return &CollectTxResult{Txs: txs, CommonVersion: commonVersion}, nil
+	return &collectTxResult{Txs: txs, CommonVersion: commonVersion}, nil
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
