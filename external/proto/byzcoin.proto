@@ -182,6 +182,8 @@ message Instruction {
   repeated bytes signatures = 7;
   // version is a private field that can allow an instruction to be passed
   // around with the context of a block with a specific version.
+  // This field must be the last field of the struct, so that the
+  // protobuf-library enumerates the fields correctly.
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.
