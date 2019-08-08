@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
+	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
 var testSuite = cothority.Suite
@@ -93,7 +93,7 @@ outer:
 }
 
 func newSI() *network.ServerIdentity {
-	id, _ := uuid.NewV1()
+	id := uuid.NewV1()
 	return &network.ServerIdentity{
 		ID: network.ServerIdentityID(id),
 	}
