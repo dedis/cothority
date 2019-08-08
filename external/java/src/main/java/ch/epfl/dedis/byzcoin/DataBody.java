@@ -13,12 +13,20 @@ public class DataBody {
     /**
      * Constructor for DataBody from protobuf.
      * @param proto the protobuf form of the DataBody
-     * @throws CothorityCryptoException if there is a problem with the encoding
      */
-    public DataBody(ByzCoinProto.DataBody proto) throws CothorityCryptoException  {
+    public DataBody(ByzCoinProto.DataBody proto)  {
+        this(proto, 0);
+    }
+
+    /**
+     * Create a body from the protobuf-encoded data.
+     * @param proto     The data
+     * @param version   The version of the protocol to use
+     */
+    public DataBody(ByzCoinProto.DataBody proto, int version) {
         txResults = new ArrayList<>(proto.getTxresultsCount());
         for (ByzCoinProto.TxResult t : proto.getTxresultsList()) {
-            txResults.add(new TxResult(t));
+            txResults.add(new TxResult(t, version));
         }
     }
 

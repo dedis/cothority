@@ -30,17 +30,13 @@ func TestService_Naming(t *testing.T) {
 	require.NoError(t, cl.UseNode(0))
 
 	// Spawn the naming instance
-	spawnNamingTx := ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NewInstanceID(gDarc.GetBaseID()),
-				Spawn: &Spawn{
-					ContractID: ContractNamingID,
-				},
-				SignerCounter: []uint64{1},
-			},
+	spawnNamingTx, err := cl.CreateTransaction(Instruction{
+		InstanceID: NewInstanceID(gDarc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractNamingID,
 		},
-	}
+		SignerCounter: []uint64{1},
+	})
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(spawnNamingTx, 10)
 	require.NoError(t, err)
@@ -54,85 +50,76 @@ func TestService_Naming(t *testing.T) {
 
 	// FAIL - use a bad signature
 	var namingTx ClientTransaction
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{2},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	namingTx.Instructions[0].Signatures[0] = append(namingTx.Instructions[0].Signatures[0][1:], 0) // tamper the signature
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "all signatures failed to verify")
 
-	// FAIL - use an instance that does not exist
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: append(gDarc.GetBaseID()[1:], 0), // does not exist
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	// FAIL - use a use an instance that does not exist
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: append(gDarc.GetBaseID()[1:], 0), // does not exist
 				},
-				SignerCounter: []uint64{2},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "key not set")
 
 	// FAIL - use a signer that is not authorized by the instance to spawn
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{1}, // use 1 because we never used this signer before
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{1},
+	})
+	require.NoError(t, err)
 	signer2 := darc.NewSignerEd25519(nil, nil) // bad signer
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer2))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
@@ -140,129 +127,116 @@ func TestService_Naming(t *testing.T) {
 	require.Contains(t, err.Error(), "expression evaluated to false")
 
 	// FAIL - missing instance name
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte{}, // missing name
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{2},
+				{
+					Name:  "name",
+					Value: []byte{}, // missing name
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "the name cannot be empty")
 
 	// SUCCEED - Make one name and it should succeed.
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{2},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{2},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.NoError(t, err)
 
 	// FAIL - Overwriting the name is not allowed (it must be deleted first).
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{3},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{3},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "this name already exists")
 
 	// SUCCEED - Making multiple names is allowed.
-	namingTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("your genesis darc"),
-						},
-					},
+	namingTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{3},
-			},
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "add",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("everyone's genesis darc"),
-						},
-					},
+				{
+					Name:  "name",
+					Value: []byte("your genesis darc"),
 				},
-				SignerCounter: []uint64{4},
 			},
 		},
-	}
+		SignerCounter: []uint64{3},
+	}, Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "add",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
+				},
+				{
+					Name:  "name",
+					Value: []byte("everyone's genesis darc"),
+				},
+			},
+		},
+		SignerCounter: []uint64{4},
+	})
+	require.NoError(t, err)
 	require.NoError(t, namingTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(namingTx, 10)
 	require.NoError(t, err)
@@ -322,83 +296,74 @@ func TestService_Naming(t *testing.T) {
 	// Tests below are for removal.
 
 	// FAIL - do not allow removal for what does not exist.
-	removalTx := ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "remove",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("not exists"),
-						},
-					},
+	removalTx, err := cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "remove",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{5},
+				{
+					Name:  "name",
+					Value: []byte("not exists"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{5},
+	})
+	require.NoError(t, err)
 	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(removalTx, 10)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "key not set")
 
 	// SUCCESS - try to remove an entry.
-	removalTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "remove",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	removalTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "remove",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{5},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{5},
+	})
+	require.NoError(t, err)
 	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(removalTx, 10)
 	require.NoError(t, err)
 
 	// FAIL - the removed entry cannot be "removed" again.
-	removalTx = ClientTransaction{
-		Instructions: Instructions{
-			{
-				InstanceID: NamingInstanceID,
-				Invoke: &Invoke{
-					ContractID: ContractNamingID,
-					Command:    "remove",
-					Args: Arguments{
-						{
-							Name:  "instanceID",
-							Value: gDarc.GetBaseID(),
-						},
-						{
-							Name:  "name",
-							Value: []byte("my genesis darc"),
-						},
-					},
+	removalTx, err = cl.CreateTransaction(Instruction{
+		InstanceID: NamingInstanceID,
+		Invoke: &Invoke{
+			ContractID: ContractNamingID,
+			Command:    "remove",
+			Args: Arguments{
+				{
+					Name:  "instanceID",
+					Value: gDarc.GetBaseID(),
 				},
-				SignerCounter: []uint64{6},
+				{
+					Name:  "name",
+					Value: []byte("my genesis darc"),
+				},
 			},
 		},
-	}
+		SignerCounter: []uint64{6},
+	})
+	require.NoError(t, err)
 	require.NoError(t, removalTx.FillSignersAndSignWith(signer))
 	_, err = cl.AddTransactionAndWait(removalTx, 10)
 	require.Error(t, err)

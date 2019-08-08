@@ -165,6 +165,10 @@ type Service struct {
 	rotationWindow time.Duration
 
 	txErrorBuf ringBuf
+
+	// defaultVersion is the new version to use for new
+	// ByzCoin chains.
+	defaultVersion Version
 }
 
 type downloadState struct {
@@ -229,7 +233,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	s.createSkipChainMut.Lock()
 	defer s.createSkipChainMut.Unlock()
 
-	if req.Version != CurrentVersion {
+	if req.Version < CurrentVersion {
 		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
 	}
 	if req.Roster.List == nil {
@@ -324,7 +328,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
-	if req.Version != CurrentVersion {
+	if req.Version < CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
 
@@ -347,6 +351,15 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	if i, _ := latest.Roster.Search(s.ServerIdentity().ID); i < 0 {
 		return nil, errors.New("refusing to accept transaction for a chain we're not part of")
 	}
+
+	header, err := decodeBlockHeader(latest)
+	if err != nil {
+		return nil, err
+	}
+
+	// Upgrade the instructions with the byzcoin protocol version
+	// to use the correct hash function.
+	req.Transaction.Instructions.SetVersion(header.Version)
 
 	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
 	if err != nil {
@@ -443,7 +456,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		s.catchingLock.Unlock()
 	}()
 
-	if req.Version != CurrentVersion {
+	if req.Version < CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
 
@@ -475,7 +488,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 // fulfill a given rule of a given darc. Because all darcs are now used in
 // an online fashion, we need to offer this check.
 func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
-	if req.Version != CurrentVersion {
+	if req.Version < CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
 	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
@@ -895,6 +908,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var sb *skipchain.SkipBlock
 	var mr []byte
 	var sst *stagingStateTrie
+	var version Version
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway staging trie.
@@ -918,6 +932,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			return nil, err
 		}
 		sst = et
+		// Use the latest version of the byzcoin protocol.
+		version = s.defaultVersion
 	} else {
 		// For all other blocks, we try to verify the signature using
 		// the darcs and remove those that do not have a valid
@@ -936,6 +952,14 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			return nil, err
 		}
 		sst = st.MakeStagingStateTrie()
+		// Preserve the same version of the byzcoin protocol for backwards
+		// compatibility.
+		header, err := decodeBlockHeader(sbLatest)
+		if err != nil {
+			return nil, err
+		}
+
+		version = header.Version
 	}
 
 	// Create header of skipblock containing only hashes
@@ -944,7 +968,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout)
+	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -961,6 +985,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
 		Timestamp:             time.Now().UnixNano(),
+		Version:               version,
 	}
 	sb.Data, err = protobuf.Encode(header)
 	if err != nil {
@@ -1006,6 +1031,55 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	err = s.stateChangeStorage.append(scs, ssbReply.Latest)
 	if err != nil {
 		log.Error(err)
+	}
+
+	return ssbReply.Latest, nil
+}
+
+// createUpgradeVersionBlock has the sole purpose of proposing an empty block with the
+// version field of the DataHeader updated so that new blocks will use the new version,
+func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version Version) (*skipchain.SkipBlock, error) {
+	sbLatest, err := s.db().GetLatestByID(scID)
+	if err != nil {
+		return nil, errors.New(
+			"Could not get latest block from the skipchain: " + err.Error())
+	}
+	sb := sbLatest.Copy()
+
+	if !sb.Roster.List[0].Equal(s.ServerIdentity()) {
+		return nil, errors.New("only the leader can upgrade the chain version")
+	}
+
+	st, err := s.getStateTrie(scID)
+	if err != nil {
+		return nil, err
+	}
+
+	sst := st.MakeStagingStateTrie()
+	mr, txRes, scs, _ := s.createStateChanges(sst, scID, []TxResult{}, noTimeout, version)
+
+	sb.Payload, err = protobuf.Encode(&DataBody{TxResults: TxResults{}})
+	if err != nil {
+		return nil, errors.New("Couldn't marshal data: " + err.Error())
+	}
+
+	sb.Data, err = protobuf.Encode(&DataHeader{
+		TrieRoot:              mr,
+		ClientTransactionHash: txRes.Hash(),
+		StateChangesHash:      scs.Hash(),
+		Timestamp:             time.Now().UnixNano(),
+		Version:               version,
+	})
+	if err != nil {
+		return nil, errors.New("Couldn't marshal data: " + err.Error())
+	}
+
+	ssbReply, err := s.skService().StoreSkipBlockInternal(&skipchain.StoreSkipBlock{
+		NewBlock:          sb,
+		TargetSkipChainID: scID,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return ssbReply.Latest, nil
@@ -1095,8 +1169,8 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			}
 			sb = search.SkipBlock
 		}
-		var header DataHeader
-		err = protobuf.Decode(sb.Data, &header)
+
+		header, err := decodeBlockHeader(sb)
 		if err != nil {
 			return errors.New("couldn't unmarshal header: " + err.Error())
 		}
@@ -1435,11 +1509,9 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Get the DataHeader and the DataBody of the block.
-	var header DataHeader
-	err = protobuf.Decode(sb.Data, &header)
+	header, err := decodeBlockHeader(sb)
 	if err != nil {
-		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
-		return errors.New("couldn't unmarshal header")
+		return err
 	}
 
 	var body DataBody
@@ -1450,11 +1522,11 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
-	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
+	_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout, header.Version)
 
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
-	if err = st.VerifiedStoreAll(scs, sb.Index, header.TrieRoot); err != nil {
+	if err = st.VerifiedStoreAll(scs, sb.Index, header.Version, header.TrieRoot); err != nil {
 		return err
 	}
 
@@ -1765,10 +1837,9 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Lvlf3("%s Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
 	}()
 
-	var header DataHeader
-	err := protobuf.Decode(newSB.Data, &header)
+	header, err := decodeBlockHeader(newSB)
 	if err != nil {
-		log.Error(s.ServerIdentity(), "verifySkipblock: couldn't unmarshal header")
+		log.Error(err)
 		return false
 	}
 
@@ -1783,6 +1854,21 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 		if len(header.StateChangesHash) != sha256.Size {
 			return errors.New("state changes hash is wrong size")
+		}
+
+		prevBlock := s.skService().GetDB().GetByID(newSB.BackLinkIDs[0])
+		if prevBlock == nil {
+			return errors.New("missing previous block")
+		}
+		prevHeader, err := decodeBlockHeader(prevBlock)
+		if err != nil {
+			return err
+		}
+		if header.Version < prevHeader.Version || header.Version > CurrentVersion {
+			log.Errorf("Got a block with version %d but previous is %d and the conode version is %d\n",
+				header.Version, prevHeader.Version, CurrentVersion)
+
+			return errors.New("version cannot be lower than previous block or higher than the conode version")
 		}
 		return nil
 	}()
@@ -1834,7 +1920,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
+	mtr, txOut, scs, _ := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout, header.Version)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -1930,9 +2016,12 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-//
-// Any data from the trie should be read from sst and not the service.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration, version Version) (
+	merkleRoot []byte, txOut TxResults, states StateChanges, sstTemp *stagingStateTrie) {
+	// Make sure that we're using the correct implementation for the
+	// version of the byzcoin protocol.
+	txIn.SetVersion(version)
+
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -2001,6 +2090,8 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 			txOut = append(txOut, tx)
 		}
 	}
+
+	txOut.SetVersion(version)
 
 	// Store the result in the cache before returning.
 	merkleRoot = sstTemp.GetRoot()
@@ -2581,10 +2672,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 		return err
 	}
 
-	var header DataHeader
-	err = protobuf.Decode(currSB.Data, &header)
+	header, err := decodeBlockHeader(currSB)
 	if err != nil {
-		return errors.New("couldn't unmarshal header: " + err.Error())
+		return errors.New("couldn't decode header: " + err.Error())
 	}
 
 	if bytes.Equal(header.TrieRoot, st.GetRoot()) {
@@ -2597,10 +2687,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 
 	log.Warn(s.ServerIdentity(), "inconsistency detected, trying to fix it")
 	for {
-		var currHeader DataHeader
-		err = protobuf.Decode(currSB.Data, &currHeader)
+		currHeader, err := decodeBlockHeader(currSB)
 		if err != nil {
-			return errors.New("could not unmarshal header: " + err.Error())
+			return err
 		}
 		if bytes.Equal(currHeader.TrieRoot, st.GetRoot()) {
 			return s.repairStateTrie(currSB, st)
@@ -2622,9 +2711,9 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) error {
 	// Verify that we are in the right state.
 	{
-		var header DataHeader
-		if err := protobuf.Decode(from.Data, &header); err != nil {
-			return errors.New("couldn't unmarshal header: " + err.Error())
+		header, err := decodeBlockHeader(from)
+		if err != nil {
+			return err
 		}
 
 		if !bytes.Equal(header.TrieRoot, st.GetRoot()) {
@@ -2641,9 +2730,9 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return errors.New("missing skipblocks")
 		}
 
-		var header DataHeader
-		if err := protobuf.Decode(from.Data, &header); err != nil {
-			return errors.New("couldn't unmarshal header: " + err.Error())
+		header, err := decodeBlockHeader(from)
+		if err != nil {
+			return err
 		}
 
 		var body DataBody
@@ -2651,13 +2740,13 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 			return err
 		}
 
-		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout)
+		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version)
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {
 			return errors.New("unexpected index")
 		}
-		if err := st.VerifiedStoreAll(scs, from.Index, header.TrieRoot); err != nil {
+		if err := st.VerifiedStoreAll(scs, from.Index, header.Version, header.TrieRoot); err != nil {
 			return err
 		}
 		cnt++
@@ -2667,6 +2756,15 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 		return errors.New("repair failed")
 	}
 	return nil
+}
+
+func decodeBlockHeader(sb *skipchain.SkipBlock) (*DataHeader, error) {
+	var header DataHeader
+	if err := protobuf.Decode(sb.Data, &header); err != nil {
+		return nil, errors.New("couldn't unmarshal header: " + err.Error())
+	}
+
+	return &header, nil
 }
 
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
@@ -2692,6 +2790,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closed:                 true,
 		catchingUpHistory:      make(map[string]time.Time),
 		rotationWindow:         defaultRotationWindow,
+		defaultVersion:         CurrentVersion,
 		// We need a large enough buffer for all errors in 2 blocks
 		// where each block might be 1 MB in size and each tx is 1 KB.
 		txErrorBuf: newRingBuf(2048),

@@ -23,8 +23,25 @@ export default class ClientTransaction extends Message<ClientTransaction> {
         registerMessage("byzcoin.ClientTransaction", ClientTransaction, Instruction);
     }
 
+    /**
+     * Create a transaction from the list of instructions.
+     * @param version   Version of the ByzCoin protocol
+     * @param instrs    List of instructions
+     */
+    static make(version: number, ...instrs: Instruction[]): ClientTransaction {
+        if (version >= 1) {
+            instrs = instrs.map((i) => new InstructionV1(i));
+        }
+
+        return new ClientTransaction({ instructions: instrs });
+    }
+
     readonly instructions: Instruction[];
 
+    /**
+     * @deprecated Use the static function make to create transactions compatible with
+     * latest versions of the ByzCoin protocol.
+     */
     constructor(props?: Properties<ClientTransaction>) {
         super(props);
 
@@ -261,6 +278,29 @@ export class Instruction extends Message<Instruction> {
      * @returns a buffer of the hash
      */
     hash(): Buffer {
+        return this.hashForVersion(0);
+    }
+
+    /**
+     * Get the unique identifier of the instruction
+     * @returns the id as a buffer
+     */
+    deriveId(what: string = ""): Buffer {
+        const h = createHash("sha256");
+        h.update(this.hash());
+        const b = Buffer.alloc(4);
+        b.writeUInt32LE(this.signatures.length, 0);
+        h.update(b);
+        this.signatures.forEach((sig) => {
+            b.writeUInt32LE(sig.length, 0);
+            h.update(b);
+            h.update(sig);
+        });
+        h.update(Buffer.from(what));
+        return h.digest();
+    }
+
+    protected hashForVersion(version: number): Buffer {
         const h = createHash("sha256");
         h.update(this.instanceID);
         h.update(Buffer.from([this.type]));
@@ -272,6 +312,9 @@ export class Instruction extends Message<Instruction> {
                 break;
             case Instruction.typeInvoke:
                 h.update(this.invoke.contractID);
+                if (version >= 1) {
+                    h.update(this.invoke.command);
+                }
                 args = this.invoke.args;
                 break;
             case Instruction.typeDelete:
@@ -301,24 +344,16 @@ export class Instruction extends Message<Instruction> {
         });
         return h.digest();
     }
+}
 
-    /**
-     * Get the unique identifier of the instruction
-     * @returns the id as a buffer
-     */
-    deriveId(what: string = ""): Buffer {
-        const h = createHash("sha256");
-        h.update(this.hash());
-        const b = Buffer.alloc(4);
-        b.writeUInt32LE(this.signatures.length, 0);
-        h.update(b);
-        this.signatures.forEach((sig) => {
-            b.writeUInt32LE(sig.length, 0);
-            h.update(b);
-            h.update(sig);
-        });
-        h.update(Buffer.from(what));
-        return h.digest();
+/**
+ * Extension of the initial version of an instruction to include the
+ * invoke command in the hash.
+ * Use ClientTransaction.make in order to create compatible transactions.
+ */
+class InstructionV1 extends Instruction {
+    hash(): Buffer {
+        return this.hashForVersion(1);
     }
 }
 

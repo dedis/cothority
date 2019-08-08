@@ -188,6 +188,7 @@ func createSpawnInstr(dID darc.ID, contractID string, argName string, value []by
 			Args:       Arguments{{Name: argName, Value: value}},
 		},
 		SignerCounter: []uint64{1},
+		version:       CurrentVersion,
 	}
 }
 
@@ -199,6 +200,7 @@ func createInvokeInstr(dID InstanceID, contractID, cmd, argName string, value []
 			Command:    cmd,
 			Args:       Arguments{{Name: argName, Value: value}},
 		},
+		version: CurrentVersion,
 	}
 }
 

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -121,7 +122,8 @@ public class ReadInstance {
      * @param Xc           is the public key the dataEnc will be re-encrypted to
      * @return the ClientTransaction ready to be sent to ByzCoin.
      */
-    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers, List<Long> consumerCtrs, Point Xc) throws CothorityCryptoException {
+    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers, List<Long> consumerCtrs, Point Xc)
+            throws CothorityException {
         Instance writeInstance = write.getInstance();
 
         // Create the Calypso.Read structure
@@ -133,7 +135,7 @@ public class ReadInstance {
                 consumers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 consumerCtrs,
                 sp);
-        ClientTransaction ctx = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst), calypso.getProtocolVersion());
         ctx.signWith(consumers);
         return ctx;
     }
@@ -141,20 +143,21 @@ public class ReadInstance {
     /**
      * Create a spawn instruction with a read request and send it to the ledger.
      */
-    private InstanceId read(ReadData rr, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+    private InstanceId read(ReadData rr, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs)
+            throws CothorityException {
         Argument arg = new Argument("read", rr.toProto().toByteArray());
 
-        Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
+        Spawn spawn = new Spawn(ContractId, Collections.singletonList(arg));
         Instruction instr = new Instruction(new InstanceId(darcBaseID.getId()),
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 spawn);
 
-        ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), calypso.getProtocolVersion());
         tx.signWith(signers);
         calypso.sendTransactionAndWait(tx, 5);
 
-        return instr.deriveId("");
+        return tx.getInstructions().get(0).deriveId("");
     }
 
     /**

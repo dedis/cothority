@@ -107,10 +107,7 @@ public class ValueInstance {
      * @throws CothorityException if something goes wrong
      */
     public void evolveValue(byte[] newValue, Signer owner, Long ownerCtr) throws CothorityException {
-        Instruction inst = evolveValueInstruction(newValue, owner.getIdentity(), ownerCtr);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ct.signWith(Collections.singletonList(owner));
-        bc.sendTransaction(ct);
+        evolveValueAndWait(newValue, owner, ownerCtr, 0);
     }
 
     /**
@@ -126,7 +123,7 @@ public class ValueInstance {
      */
     public void evolveValueAndWait(byte[] newValue, Signer owner, Long ownerCtr, int wait) throws CothorityException {
         Instruction inst = evolveValueInstruction(newValue, owner.getIdentity(), ownerCtr);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst), bc.getProtocolVersion());
         ct.signWith(Collections.singletonList(owner));
         bc.sendTransactionAndWait(ct, wait);
         value = newValue;

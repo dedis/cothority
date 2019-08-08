@@ -326,71 +326,73 @@ func PopPartySpawn(cl *byzcoin.Client, desc PopDesc, dID darc.ID, reward uint64,
 }
 
 // PopPartyBarrier activates the barrier in the pop-party.
-func PopPartyBarrier(cl *byzcoin.Client, popIID byzcoin.InstanceID, signers ...darc.Signer) (err error) {
+func PopPartyBarrier(cl *byzcoin.Client, popIID byzcoin.InstanceID, signers ...darc.Signer) error {
 	var sigStrs []string
 	for _, sig := range signers {
 		sigStrs = append(sigStrs, sig.Identity().String())
 	}
 	signerCtrs, err := cl.GetSignerCounters(sigStrs...)
 	if err != nil {
-		return
+		return err
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{byzcoin.Instruction{
-			InstanceID: popIID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: ContractPopPartyID,
-				Command:    "barrier",
-			},
-			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
-		}},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: popIID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractPopPartyID,
+			Command:    "barrier",
+		},
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(signers...)
 	if err != nil {
-		return
+		return err
 	}
 	_, err = cl.AddTransactionAndWait(ctx, 5)
-	return
+	return err
 }
 
 // PopPartyFinalize sends the list of attendees to the party for finalization.
-func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attendees, signers ...darc.Signer) (err error) {
+func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attendees, signers ...darc.Signer) error {
 	var sigStrs []string
 	for _, sig := range signers {
 		sigStrs = append(sigStrs, sig.Identity().String())
 	}
 	signerCtrs, err := cl.GetSignerCounters(sigStrs...)
 	if err != nil {
-		return
+		return err
 	}
 
 	attBuff, err := protobuf.Encode(&atts)
 	if err != nil {
-		return
+		return err
 	}
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{byzcoin.Instruction{
-			InstanceID: popIID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: ContractPopPartyID,
-				Command:    "finalize",
-				Args: byzcoin.Arguments{
-					{
-						Name:  "attendees",
-						Value: attBuff,
-					},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: popIID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractPopPartyID,
+			Command:    "finalize",
+			Args: byzcoin.Arguments{
+				{
+					Name:  "attendees",
+					Value: attBuff,
 				},
 			},
-			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
-		}},
+		},
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(signers...)
 	if err != nil {
-		return
+		return err
 	}
 	_, err = cl.AddTransactionAndWait(ctx, 5)
-	return
+	return err
 }
 
 // PopPartyMine is a method to be called by an outside client. It collects the reward for a given
@@ -401,7 +403,7 @@ func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attend
 //   - coinIID - if set, 'd' must be nil. coinIID points to the coin InstanceID where the reward will be stored.
 //   - d - if set, 'coinIID' must be nil. d is the darc that will be used to create a new coinInstance.
 func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
-	atts *Attendees, coinIID *byzcoin.InstanceID, d *darc.Darc) (err error) {
+	atts *Attendees, coinIID *byzcoin.InstanceID, d *darc.Darc) error {
 	if (coinIID == nil && d == nil) ||
 		(coinIID != nil && d != nil) {
 		return errors.New("either set coinIID or d, but not both")
@@ -458,18 +460,19 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		})
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{byzcoin.Instruction{
-			InstanceID: popIID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: ContractPopPartyID,
-				Command:    "mine",
-				Args:       args,
-			},
-		}},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: popIID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractPopPartyID,
+			Command:    "mine",
+			Args:       args,
+		},
+	})
+	if err != nil {
+		return err
 	}
 	_, err = cl.AddTransactionAndWait(ctx, 5)
-	return
+	return err
 }
 
 // PopPartyMineDarcToCoin calculates the coin given a darc and returns the coin instance.

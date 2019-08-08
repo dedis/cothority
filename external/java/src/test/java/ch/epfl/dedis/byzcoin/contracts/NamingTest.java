@@ -24,8 +24,8 @@ public class NamingTest {
     private static ByzCoinRPC bc;
     private static Signer admin;
     private static Darc genesisDarc;
-
     private final static Logger logger = LoggerFactory.getLogger(NamingTest.class);
+
     private TestServerController testInstanceController;
 
     @BeforeEach

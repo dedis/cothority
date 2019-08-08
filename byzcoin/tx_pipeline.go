@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -84,6 +85,8 @@ type defaultTxProcessor struct {
 	*Service
 	stopCollect chan bool
 	scID        skipchain.SkipBlockID
+	latest      *skipchain.SkipBlock
+	sync.Mutex
 }
 
 func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
@@ -105,6 +108,11 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 			" This function should never be called on a skipchain that does not exist.")
 		return nil, err
 	}
+
+	// Keep track of the latest block for the processing
+	s.Lock()
+	s.latest = latest
+	s.Unlock()
 
 	log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, s.scID)
 	tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
@@ -173,6 +181,20 @@ collectTxLoop:
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
+	s.Lock()
+	latest := s.latest
+	s.Unlock()
+	if latest == nil {
+		return nil, errors.New("missing latest block in processor")
+	}
+
+	header, err := decodeBlockHeader(latest)
+	if err != nil {
+		return nil, err
+	}
+
+	tx.Instructions.SetVersion(header.Version)
+
 	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
 
 	// try to create a new state

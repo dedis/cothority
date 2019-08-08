@@ -75,12 +75,12 @@ export default class SpawnerInstance extends Instance {
         ];
 
         const inst = Instruction.createSpawn(darcID, this.contractID, args);
-        const ctx = new ClientTransaction({instructions: [inst]});
+        const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         await ctx.updateCountersAndSign(bc, [signers]);
 
         await bc.sendTransactionAndWait(ctx);
 
-        return this.fromByzcoin(bc, inst.deriveId());
+        return this.fromByzcoin(bc, ctx.instructions[0].deriveId());
     }
 
     /**
@@ -160,7 +160,10 @@ export default class SpawnerInstance extends Instance {
      * @returns a promise that resolves with the new array of the instantiated darc instances
      */
     async spawnDarcs(coin: CoinInstance, signers: Signer[], ...darcs: Darc[]): Promise<DarcInstance[]> {
-        const ctx = new ClientTransaction({instructions: this.spawnDarcInstructions(coin, ...darcs)});
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            ...this.spawnDarcInstructions(coin, ...darcs),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -222,10 +225,10 @@ export default class SpawnerInstance extends Instance {
      */
     async spawnCoin(coin: CoinInstance, signers: Signer[], darcID: InstanceID, coinID: Buffer, balance?: Long):
         Promise<CoinInstance> {
-
-        const ctx = new ClientTransaction({
-            instructions: this.spawnCoinInstructions(coin, darcID, coinID, balance),
-        });
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            ...this.spawnCoinInstructions(coin, darcID, coinID, balance),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
@@ -284,9 +287,10 @@ export default class SpawnerInstance extends Instance {
         cred: CredentialStruct,
         credID: Buffer = null,
     ): Promise<CredentialsInstance> {
-        const ctx = new ClientTransaction({
-            instructions: this.spawnCredentialInstruction(coin, darcID, cred, credID),
-        });
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            ...this.spawnCredentialInstruction(coin, darcID, cred, credID),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 
@@ -317,30 +321,29 @@ export default class SpawnerInstance extends Instance {
         const orgDarcIDs = orgs.map((org) => org.darcID);
         const valueBuf = this.struct.costDarc.value.add(this.struct.costParty.value).toBytesLE();
         const orgDarc = PopPartyInstance.preparePartyDarc(orgDarcIDs, "party-darc " + desc.name);
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(
-                    coin.id,
-                    CoinInstance.contractID,
-                    CoinInstance.commandFetch,
-                    [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
-                ),
-                Instruction.createSpawn(
-                    this.id,
-                    DarcInstance.contractID,
-                    [new Argument({name: SpawnerInstance.argumentDarc, value: orgDarc.toBytes()})],
-                ),
-                Instruction.createSpawn(
-                    this.id,
-                    PopPartyInstance.contractID,
-                    [
-                        new Argument({name: "darcID", value: orgDarc.getBaseID()}),
-                        new Argument({name: "description", value: desc.toBytes()}),
-                        new Argument({name: "miningReward", value: Buffer.from(reward.toBytesLE())}),
-                    ],
-                ),
-            ],
-        });
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                DarcInstance.contractID,
+                [new Argument({name: SpawnerInstance.argumentDarc, value: orgDarc.toBytes()})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                PopPartyInstance.contractID,
+                [
+                    new Argument({name: "darcID", value: orgDarc.getBaseID()}),
+                    new Argument({name: "description", value: desc.toBytes()}),
+                    new Argument({name: "miningReward", value: Buffer.from(reward.toBytesLE())}),
+                ],
+            ),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers, [], []]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -383,21 +386,20 @@ export default class SpawnerInstance extends Instance {
             stake: c,
         });
 
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(
-                    coin.id,
-                    CoinInstance.contractID,
-                    CoinInstance.commandFetch,
-                    [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(c.value.toBytesLE())})],
-                ),
-                Instruction.createSpawn(
-                    this.id,
-                    RoPaSciInstance.contractID,
-                    [new Argument({name: "struct", value: rps.toBytes()})],
-                ),
-            ],
-        });
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(c.value.toBytesLE())})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                RoPaSciInstance.contractID,
+                [new Argument({name: "struct", value: rps.toBytes()})],
+            ),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
 
         await this.rpc.sendTransactionAndWait(ctx);
@@ -441,23 +443,22 @@ export default class SpawnerInstance extends Instance {
             write.data = data;
         }
 
-        const ctx = new ClientTransaction({
-            instructions: [
-                Instruction.createInvoke(coinInst.id, CoinInstance.contractID, CoinInstance.commandFetch, [
-                    new Argument({
-                        name: CoinInstance.argumentCoins,
-                        value: Buffer.from(this.struct.costCWrite.value.toBytesLE()),
-                    }),
-                ]),
-                Instruction.createSpawn(this.id, CalypsoWriteInstance.contractID, [
-                    new Argument({
-                        name: CalypsoWriteInstance.argumentWrite,
-                        value: Buffer.from(Write.encode(write).finish()),
-                    }),
-                    new Argument({name: "darcID", value: d[0].id}),
-                ]),
-            ],
-        });
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            Instruction.createInvoke(coinInst.id, CoinInstance.contractID, CoinInstance.commandFetch, [
+                new Argument({
+                    name: CoinInstance.argumentCoins,
+                    value: Buffer.from(this.struct.costCWrite.value.toBytesLE()),
+                }),
+            ]),
+            Instruction.createSpawn(this.id, CalypsoWriteInstance.contractID, [
+                new Argument({
+                    name: CalypsoWriteInstance.argumentWrite,
+                    value: Buffer.from(Write.encode(write).finish()),
+                }),
+                new Argument({name: "darcID", value: d[0].id}),
+            ]),
+        );
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
         await this.rpc.sendTransactionAndWait(ctx);
 

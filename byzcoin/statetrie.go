@@ -23,6 +23,8 @@ type ReadOnlyStateTrie interface {
 	GetIndex() int
 	// GetNonce returns the nonce of the trie.
 	GetNonce() ([]byte, error)
+	// GetVersion returns the version of the ByzCoin protocol.
+	GetVersion() Version
 	// ForEach calls the callback function on every key/value pair in the
 	// trie, which does not include the metadata.
 	ForEach(func(k, v []byte) error) error
@@ -105,7 +107,13 @@ func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTri
 	return newTrie, nil
 }
 
+// GetVersion returns the version of the ByzCoin protocol.
+func (t *stagingStateTrie) GetVersion() Version {
+	return readVersion(t)
+}
+
 const trieIndexKey = "trieIndexKey"
+const trieVersionKey = "trieVersionKey"
 
 // stateTrie is a wrapper around trie.Trie that support the storage of an
 // index.
@@ -138,25 +146,14 @@ func newStateTrie(db *bbolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 }
 
 // StoreAll stores the state changes in the Trie.
-func (t *stateTrie) StoreAll(scs StateChanges, index int) error {
-	pairs := make([]trie.KVPair, len(scs))
-	for i := range pairs {
-		pairs[i] = &scs[i]
-	}
-	return t.DB().Update(func(b trie.Bucket) error {
-		if err := t.BatchWithBucket(pairs, b); err != nil {
-			return err
-		}
-		indexBuf := make([]byte, 4)
-		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
-		return t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b)
-	})
+func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error {
+	return t.VerifiedStoreAll(scs, index, version, nil)
 }
 
-// VerifiedStoreAll stores the state changes, the index as metadata. It checks
-// whether the expectedRoot hash matches the computed root hash and returns an
+// VerifiedStoreAll stores the state changes, the index and the version as metadata. It
+// checks whether the expectedRoot hash matches the computed root hash and returns an
 // error if it doesn't.
-func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, expectedRoot []byte) error {
+func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Version, expectedRoot []byte) error {
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -165,12 +162,20 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, expectedRoot [
 		if err := t.BatchWithBucket(pairs, b); err != nil {
 			return err
 		}
+
 		indexBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 		if err := t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b); err != nil {
 			return err
 		}
-		if !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
+
+		versionBuf := make([]byte, 4)
+		binary.LittleEndian.PutUint32(versionBuf, uint32(version))
+		if err := t.SetMetadataWithBucket([]byte(trieVersionKey), versionBuf, b); err != nil {
+			return err
+		}
+
+		if expectedRoot != nil && !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
 			return errors.New("root verfication failed")
 		}
 		return nil
@@ -212,6 +217,11 @@ func (t *stateTrie) GetIndex() int {
 	return int(binary.LittleEndian.Uint32(indexBuf))
 }
 
+// GetVersion returns the version of the ByzCoin proocol.
+func (t *stateTrie) GetVersion() Version {
+	return readVersion(t)
+}
+
 // MakeStagingStateTrie creates a StagingStateTrie from the StateTrie.
 func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
 	return &stagingStateTrie{
@@ -249,4 +259,19 @@ func newMemStateTrie(nonce []byte) (*stateTrie, error) {
 		Trie: *memTrie,
 	}
 	return &st, nil
+}
+
+type metadataReader interface {
+	GetMetadata([]byte) []byte
+}
+
+func readVersion(t metadataReader) Version {
+	buf := t.GetMetadata([]byte(trieVersionKey))
+	if buf == nil {
+		// Early versions didn't have the protocol version stored in the
+		// metadata.
+		return 0
+	}
+
+	return Version(binary.LittleEndian.Uint32(buf))
 }

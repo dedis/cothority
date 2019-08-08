@@ -109,6 +109,10 @@ var cmds = cli.Commands{
 				Name:  "roster",
 				Usage: "display the latest block's roster",
 			},
+			cli.BoolFlag{
+				Name:  "header",
+				Usage: "display the latest header",
+			},
 		},
 		Action: latest,
 	},
@@ -1068,6 +1072,15 @@ func latest(c *cli.Context) error {
 		}
 	}
 
+	if c.Bool("header") {
+		var header byzcoin.DataHeader
+		if err = protobuf.Decode(sb.Data, &header); err != nil {
+			return err
+		}
+
+		fmt.Fprintf(c.App.Writer, "Header:\n\tTrieRoot: %x\n\tTimestamp: %d\n\tVersion: %d\n", header.TrieRoot, header.Timestamp, header.Version)
+	}
+
 	return err
 }
 
@@ -1162,16 +1175,17 @@ func updateConfig(cl *byzcoin.Client, signer *darc.Signer, chainConfig byzcoin.C
 	if err != nil {
 		return errors.New("couldn't encode chainConfig: " + err.Error())
 	}
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.ConfigInstanceID,
-			Invoke: &byzcoin.Invoke{
-				ContractID: byzcoin.ContractConfigID,
-				Command:    "update_config",
-				Args:       byzcoin.Arguments{{Name: "config", Value: ccBuf}},
-			},
-			SignerCounter: counters.Counters,
-		}},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: byzcoin.ConfigInstanceID,
+		Invoke: &byzcoin.Invoke{
+			ContractID: byzcoin.ContractConfigID,
+			Command:    "update_config",
+			Args:       byzcoin.Arguments{{Name: "config", Value: ccBuf}},
+		},
+		SignerCounter: counters.Counters,
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
@@ -1282,18 +1296,19 @@ func mint(c *cli.Context) error {
 
 		log.Info("Creating darc for coin")
 		counters[0]++
-		ctx := byzcoin.ClientTransaction{
-			Instructions: byzcoin.Instructions{{
-				InstanceID: byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: byzcoin.ContractDarcID,
-					Args: byzcoin.Arguments{{
-						Name:  "darc",
-						Value: dBuf,
-					}},
-				},
-				SignerCounter: counters,
-			}},
+		ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractDarcID,
+				Args: byzcoin.Arguments{{
+					Name:  "darc",
+					Value: dBuf,
+				}},
+			},
+			SignerCounter: counters,
+		})
+		if err != nil {
+			return err
 		}
 		err = ctx.FillSignersAndSignWith(*signer)
 		if err != nil {
@@ -1306,24 +1321,25 @@ func mint(c *cli.Context) error {
 
 		log.Info("Creating coin")
 		counters[0]++
-		ctx = byzcoin.ClientTransaction{
-			Instructions: byzcoin.Instructions{{
-				InstanceID: byzcoin.NewInstanceID(d.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: contracts.ContractCoinID,
-					Args: byzcoin.Arguments{
-						{
-							Name:  "type",
-							Value: contracts.CoinName.Slice(),
-						},
-						{
-							Name:  "coinID",
-							Value: pubBuf,
-						},
+		ctx, err = cl.CreateTransaction(byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(d.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: contracts.ContractCoinID,
+				Args: byzcoin.Arguments{
+					{
+						Name:  "type",
+						Value: contracts.CoinName.Slice(),
+					},
+					{
+						Name:  "coinID",
+						Value: pubBuf,
 					},
 				},
-				SignerCounter: counters,
-			}},
+			},
+			SignerCounter: counters,
+		})
+		if err != nil {
+			return err
 		}
 		err = ctx.FillSignersAndSignWith(*signer)
 		if err != nil {
@@ -1337,20 +1353,18 @@ func mint(c *cli.Context) error {
 
 	log.Info("Minting coin")
 	counters[0]++
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
-			InstanceID: account,
-			Invoke: &byzcoin.Invoke{
-				ContractID: contracts.ContractCoinID,
-				Command:    "mint",
-				Args: byzcoin.Arguments{{
-					Name:  "coins",
-					Value: coinsBuf,
-				}},
-			},
-			SignerCounter: counters,
-		}},
-	}
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID: account,
+		Invoke: &byzcoin.Invoke{
+			ContractID: contracts.ContractCoinID,
+			Command:    "mint",
+			Args: byzcoin.Arguments{{
+				Name:  "coins",
+				Value: coinsBuf,
+			}},
+		},
+		SignerCounter: counters,
+	})
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
 		return err
@@ -1654,14 +1668,13 @@ func darcCdesc(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
-				Invoke:        &invoke,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+		Invoke:        &invoke,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
@@ -1943,14 +1956,13 @@ func darcAdd(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    instID,
-				Spawn:         &spawn,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    instID,
+		Spawn:         &spawn,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
@@ -2089,14 +2101,13 @@ func darcRule(c *cli.Context) error {
 		},
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
-				Invoke:        &invoke,
-				SignerCounter: []uint64{counters.Counters[0] + 1},
-			},
-		},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(d2.GetBaseID()),
+		Invoke:        &invoke,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

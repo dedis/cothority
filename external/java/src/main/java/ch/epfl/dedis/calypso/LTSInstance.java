@@ -36,16 +36,15 @@ public class LTSInstance {
      * @throws CothorityException
      */
     public LTSInstance(CalypsoRPC calypso, DarcId darcBaseID, Roster roster, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        this.calypso = calypso;
         ClientTransaction ctx = createSpawnTx(new LTSInstanceInfo(roster), darcBaseID, signers, signerCtrs);
         calypso.sendTransactionAndWait(ctx, 10);
         this.instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
-        this.calypso = calypso;
     }
 
     private LTSInstance(CalypsoRPC calypso, InstanceId instanceId) throws CothorityException  {
-        Instance inst = getInstance(calypso, instanceId);
         this.calypso = calypso;
-        this.instance = inst;
+        this.instance = getInstance(calypso, instanceId);
     }
 
     /**
@@ -98,7 +97,8 @@ public class LTSInstance {
         return p;
     }
 
-    private static ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+    private ClientTransaction createSpawnTx(LTSInstanceInfo info, DarcId darcBaseID, List<Signer> signers, List<Long> signerCtrs)
+            throws CothorityException {
         byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
@@ -107,12 +107,13 @@ public class LTSInstance {
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 sp);
-        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
+        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst), calypso.getProtocolVersion());
         ctx.signWith(signers);
         return ctx;
     }
 
-    private static ClientTransaction createInvokeTx(LTSInstanceInfo info, InstanceId instanceId, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+    private ClientTransaction createInvokeTx(LTSInstanceInfo info, InstanceId instanceId, List<Signer> signers, List<Long> signerCtrs)
+            throws CothorityException {
         byte[] infoBuf = info.toProto().toByteArray();
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("lts_instance_info", infoBuf));
@@ -121,7 +122,7 @@ public class LTSInstance {
                 signers.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 signerCtrs,
                 invoke);
-        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst));
+        ClientTransaction ctx = new ClientTransaction(Collections.singletonList(inst), calypso.getProtocolVersion());
         ctx.signWith(signers);
         return ctx;
     }

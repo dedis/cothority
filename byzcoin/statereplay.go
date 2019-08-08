@@ -64,6 +64,8 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 				return nil, replayError(sb, err.Error())
 			}
 
+			dBody.TxResults.SetVersion(dHead.Version)
+
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
 				return nil, replayError(sb, "client transaction hash does not match")
 			}
@@ -89,7 +91,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 						return nil, replayError(sb, err.Error())
 					}
 
-					err = st.StoreAll(scs, sb.Index)
+					err = st.StoreAll(scs, sb.Index, dHead.Version)
 					if err != nil {
 						return nil, replayError(sb, err.Error())
 					}

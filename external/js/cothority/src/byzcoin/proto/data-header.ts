@@ -18,6 +18,7 @@ export default class DataHeader extends Message<DataHeader> {
     readonly clientTransactionHash: Buffer;
     readonly stateChangeHash: Buffer;
     readonly timestamp: Long;
+    readonly version: number;
 
     constructor(props?: Properties<DataHeader>) {
         super(props);

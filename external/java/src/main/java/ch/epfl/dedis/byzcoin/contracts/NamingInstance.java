@@ -40,7 +40,11 @@ public class NamingInstance {
      * @throws CothorityException if the instance cannot be created
      */
     public NamingInstance(ByzCoinRPC bc, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        bc.sendTransactionAndWait(makeSpawnTx(new InstanceId(darcID.getId()), signers, signerCtrs), 10);
+        Instruction instr = makeSpawnInstruction(new InstanceId(darcID.getId()), signers, signerCtrs);
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), bc.getProtocolVersion());
+        tx.signWith(signers);
+
+        bc.sendTransactionAndWait(tx, 10);
         NamingInstance instance = NamingInstance.fromByzcoin(bc);
         this.bc = instance.bc;
         this.instance = instance.instance;
@@ -76,7 +80,7 @@ public class NamingInstance {
      * @throws CothorityException if any error occurs
      */
     public void set(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        bc.sendTransaction(makeAddTx(instanceName, iID, signers, signerCtrs));
+        setAndWait(instanceName, iID, signers, signerCtrs, 0);
     }
 
     /**
@@ -93,7 +97,11 @@ public class NamingInstance {
      * @throws CothorityException if any error occurs
      */
     public void setAndWait(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs, int wait) throws CothorityException {
-        bc.sendTransactionAndWait(makeAddTx(instanceName, iID, signers, signerCtrs), wait);
+        Instruction instr = makeAddInstruction(instanceName, iID, signers, signerCtrs);
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), bc.getProtocolVersion());
+        tx.signWith(signers);
+
+        bc.sendTransactionAndWait(tx, wait);
     }
 
     /**
@@ -107,7 +115,7 @@ public class NamingInstance {
      * @throws CothorityException
      */
     public void remove(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        bc.sendTransaction(makeRemoveTx(instanceName, iID, signers, signerCtrs));
+        removeAndWait(instanceName, iID, signers, signerCtrs, 0);
     }
 
     /**
@@ -123,7 +131,11 @@ public class NamingInstance {
      * @throws CothorityException
      */
     public void removeAndWait(String instanceName, InstanceId iID, List<Signer> signers, List<Long> signerCtrs, int wait) throws CothorityException {
-        bc.sendTransactionAndWait(makeRemoveTx(instanceName, iID, signers, signerCtrs), wait);
+        Instruction instr = makeRemoveInstruction(instanceName, iID, signers, signerCtrs);
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), bc.getProtocolVersion());
+        tx.signWith(signers);
+
+        bc.sendTransactionAndWait(tx, wait);
     }
 
     /**
@@ -147,38 +159,34 @@ public class NamingInstance {
         this.instance = instance;
     }
 
-    private ClientTransaction makeTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, String cmd) throws CothorityCryptoException {
+    private Instruction makeInstruction(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs, String cmd) {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("name", instanceName.getBytes()));
         args.add(new Argument("instanceID", iID.getId()));
         Invoke inv = new Invoke(ContractId, cmd, args);
-        Instruction namingInst = new Instruction(
+
+        return new Instruction(
                 this.instance.getId(),
                 owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 ownerCtrs,
                 inv);
-        ClientTransaction ct = new ClientTransaction(Collections.singletonList(namingInst));
-        ct.signWith(owners);
-        return ct;
     }
 
-    private ClientTransaction makeRemoveTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
-        return makeTx(instanceName, iID, owners, ownerCtrs, "remove");
+    private Instruction makeRemoveInstruction(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) {
+        return makeInstruction(instanceName, iID, owners, ownerCtrs, "remove");
     }
 
-    private ClientTransaction makeAddTx(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
-        return makeTx(instanceName, iID, owners, ownerCtrs, "add");
+    private Instruction makeAddInstruction(String instanceName, InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) {
+        return makeInstruction(instanceName, iID, owners, ownerCtrs, "add");
     }
 
-    private ClientTransaction makeSpawnTx(InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) throws CothorityCryptoException {
+    private Instruction makeSpawnInstruction(InstanceId iID, List<Signer> owners, List<Long> ownerCtrs) {
         Spawn spawn = new Spawn(ContractId, new ArrayList<>());
-        Instruction inst = new Instruction(
+
+        return new Instruction(
                 iID,
                 owners.stream().map(Signer::getIdentity).collect(Collectors.toList()),
                 ownerCtrs,
                 spawn);
-        ClientTransaction ct = new ClientTransaction(Collections.singletonList(inst));
-        ct.signWith(owners);
-        return ct;
     }
 }

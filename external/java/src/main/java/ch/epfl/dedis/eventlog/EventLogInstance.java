@@ -122,7 +122,7 @@ public class EventLogInstance {
      * @throws CothorityException if something goes wrong
      */
     public InstanceId log(Event event, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
-        return this.log(Arrays.asList(event), signers, signerCtrs).get(0);
+        return this.log(Collections.singletonList(event), signers, signerCtrs).get(0);
     }
 
     /**
@@ -204,7 +204,7 @@ public class EventLogInstance {
             DataBody body;
             try {
                 body = new DataBody(ByzCoinProto.DataBody.parseFrom(block.getPayload()));
-            } catch (InvalidProtocolBufferException | CothorityCryptoException e) {
+            } catch (InvalidProtocolBufferException e) {
                 handler.error(e.getMessage());
                 return;
             }
@@ -396,11 +396,11 @@ public class EventLogInstance {
                 signerCtrs,
                 spawn);
 
-        ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        ClientTransaction tx = new ClientTransaction(Collections.singletonList(instr), bc.getProtocolVersion());
         tx.signWith(signers);
         bc.sendTransaction(tx);
 
-        return instr.deriveId("");
+        return tx.getInstructions().get(0).deriveId("");
     }
 
     private void setInstance(InstanceId id) throws CothorityException {
@@ -423,7 +423,8 @@ public class EventLogInstance {
         }
     }
 
-    private Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
+    private Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, List<Signer> signers, List<Long> signerCtrs)
+            throws CothorityException {
         List<Instruction> instrs = new ArrayList<>();
         List<InstanceId> keys = new ArrayList<>();
         for (Event e : events) {
@@ -437,11 +438,9 @@ public class EventLogInstance {
             instrs.add(instr);
             signerCtrs = incrementCtrs(signerCtrs);
         }
-        ClientTransaction tx = new ClientTransaction(instrs);
+        ClientTransaction tx = new ClientTransaction(instrs, bc.getProtocolVersion());
         tx.signWith(signers);
-        for (Instruction instr : tx.getInstructions()) {
-            keys.add(instr.deriveId(""));
-        }
+        tx.getInstructions().forEach(instr -> keys.add(instr.deriveId("")));
         return new Pair<>(tx, keys);
     }
 

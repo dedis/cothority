@@ -117,12 +117,13 @@ func ConfigInvokeUpdateConfig(c *cli.Context) error {
 	// ---
 	// 2.
 	// ---
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    byzcoin.ConfigInstanceID,
-			Invoke:        &invoke,
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-		}},
+	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.ConfigInstanceID,
+		Invoke:        &invoke,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(*signer)

@@ -410,6 +410,14 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 			SignerCounter:    []uint64{ctr + 1},
 		}},
 	}
+
+	header, err := decodeBlockHeader(sb)
+	if err != nil {
+		return err
+	}
+
+	ctx.Instructions.SetVersion(header.Version)
+
 	if err = ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), signer); err != nil {
 		return err
 	}
