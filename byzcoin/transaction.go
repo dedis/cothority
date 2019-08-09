@@ -322,24 +322,35 @@ func (instr Instruction) GetIdentityStrings() []string {
 	return res
 }
 
+// VerificationOptions is given to VerifyWithOption if the verification needs
+// to be customized.
+type VerificationOptions struct {
+	IgnoreCounters bool
+	EvalAttr       darc.AttrInterpreters
+}
+
 // Verify will look up the darc of the instance pointed to by the instruction
 // and then verify if the signature on the instruction can satisfy the rules of
 // the darc. An error is returned if any of the verification fails.
 func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
-	return instr.VerifyWithOption(st, msg, true)
+	return instr.VerifyWithOption(st, msg, nil)
 }
 
 // VerifyWithOption adds the ability to the Verify(...) method to specify if
 // the counters should be checked. This is used with the "defered" contract
 // where the clients sign the root instruction without the counters.
-func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, checkCounters bool) error {
+func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops *VerificationOptions) error {
+	if ops == nil {
+		ops = &VerificationOptions{}
+	}
+
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
 		return errors.New("lengh of identities does not match the length of signatures")
 	}
 
 	// check the signature counters
-	if checkCounters {
+	if !ops.IgnoreCounters {
 		if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
 			return err
 		}
@@ -388,6 +399,10 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, chec
 			return nil
 		}
 		return d
+	}
+
+	if ops.EvalAttr != nil {
+		return darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
 	}
 	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
 }

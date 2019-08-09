@@ -86,7 +86,7 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 			for _, tx := range dBody.TxResults {
 				if tx.Accepted {
 					var scs StateChanges
-					scs, sst, err = s.processOneTx(sst, tx.ClientTransaction)
+					scs, sst, err = s.processOneTx(sst, tx.ClientTransaction, id)
 					if err != nil {
 						return nil, replayError(sb, err.Error())
 					}

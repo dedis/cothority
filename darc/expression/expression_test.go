@@ -188,6 +188,56 @@ func TestParsing_RealIDs(t *testing.T) {
 	}
 }
 
+func TestParsing_Attr(t *testing.T) {
+	expr := []byte("attr:xyz_-:zys=123&sdy=234")
+	_, err := Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("attr:xyz_-:zys=123&sdy=234 & ed25519:abc")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("attr:xyz:")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expr = []byte("attr:xyz*:zys=123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("attr name cannot have an *")
+	}
+
+	expr = []byte("attr::zys=123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("attr name cannot be empty")
+	}
+
+	expr = []byte("attr:abc")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("attr value cannot be empty")
+	}
+
+	expr = []byte("attr:abc:zys = 123")
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err == nil {
+		t.Fatal("attr value cannot have spaces")
+	}
+
+	expr = []byte(`attr:myattr:{"purpose":"work","age":10} & attr:abc:efg`)
+	_, err = Evaluate(InitParser(trueFn), expr)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParsing_Empty(t *testing.T) {
 	expr := []byte{}
 	_, err := Evaluate(InitParser(trueFn), expr)

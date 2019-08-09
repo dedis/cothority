@@ -1,7 +1,9 @@
 package darc
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -471,6 +473,52 @@ func TestDarc_IsSubset(t *testing.T) {
 	require.True(t, properSubsetRules.IsSubset(supersetRules))
 	require.True(t, strictSubsetRules.IsSubset(supersetRules))
 	require.False(t, wrongSubsetRules.IsSubset(supersetRules))
+}
+
+func TestDarc_Attr(t *testing.T) {
+	cb := func(attr string) error {
+		vals, err := url.ParseQuery(attr)
+		if err != nil {
+			return err
+		}
+		if vals.Get("pass") == "true" {
+			return nil
+		} else if vals.Get("pass") == "false" {
+			return errors.New("fail")
+		}
+		return errors.New("invalid attr value")
+	}
+	attrFuncs := make(map[string]func(string) error)
+	attrFuncs["test"] = cb
+
+	getDarc := func(id string, latest bool) *Darc {
+		return nil
+	}
+
+	id := createIdentity()
+	expr := []byte(id.String() + " & attr:test:pass=true")
+	require.NoError(t, EvalExprAttr(expr, getDarc, attrFuncs, id.String()))
+
+	expr = []byte(id.String() + " | attr:test:pass=true")
+	require.NoError(t, EvalExprAttr(expr, getDarc, attrFuncs, "wrong_id"))
+
+	// fail because the callback evaluates to false
+	expr = []byte(id.String() + " & attr:test:pass=false")
+	err := EvalExprAttr(expr, getDarc, attrFuncs, id.String())
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "fail")
+
+	// fail because the attribute has a wrong format
+	expr = []byte("attr::pass=true")
+	err = EvalExprAttr(expr, getDarc, attrFuncs, id.String())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scanner is not empty")
+
+	// fail because the attribute has a wrong format
+	expr = []byte("attr:|:pass=true")
+	err = EvalExprAttr(expr, getDarc, attrFuncs, id.String())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scanner is not empty")
 }
 
 type testDarc struct {

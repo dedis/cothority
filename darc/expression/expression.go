@@ -6,13 +6,16 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 	expr = term, [ '&', term ]*
 	term = factor, [ '|', factor ]*
 	factor = '(', expr, ')' | id | openid
-	typeHex = (darc|ed25519|x509ec):[0-9a-fA-F]
-    proxy = proxy:ed25519-pubkey:associated_data
+	identity = (darc|ed25519|x509ec):[0-9a-fA-F]+
+	proxy = proxy:[0-9a-fA-F]+:[^ \n\t]*
+	attr = attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*
 
 Examples:
 
-    ed25519:deadbeef // every id evaluates to a boolean
+	ed25519:deadbeef // every id evaluates to a boolean
 	(ed25519:a & x509ec:b) | (darc:c & ed25519:d)
+	proxy:deadbeef:me@example.com // where deadbeef is a ed25519 public key
+	attr:time_interval:before=5pm&after=9am & ed25519:deadbeef
 
 In the simplest case, the evaluation of an expression is performed against a
 set of valid ids.  Suppose we have the expression (a:a & b:b) | (c:c & d:d),
@@ -60,7 +63,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	var orop = parsec.Token(`\|`, "OR")
 
 	// NonTerminal rats
-	// andop -> "&" |  "|"
+	// sumOp -> "&" |  "|"
 	var sumOp = parsec.OrdChoice(one2one, andop, orop)
 
 	// value -> "(" expr ")"
@@ -73,7 +76,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
-	value = parsec.OrdChoice(exprValueNode(fn), typeHex(), proxy(), groupExpr)
+	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(), attr(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -121,8 +124,8 @@ func InitOrExpr(ids ...string) Expr {
 	return Expr(strings.Join(ids, " | "))
 }
 
-// Accepts tokens of the form "type:HEX"
-func typeHex() parsec.Parser {
+// Accepts tokens of the form "identity_type:HEX"
+func identity() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
 		p := parsec.Token(`(darc|ed25519|x509ec):[0-9a-fA-F]+`, "HEX")
@@ -135,6 +138,15 @@ func proxy() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
 		p := parsec.Token(`proxy:[0-9a-fA-F]+:[^ \n\t]*`, "PROXY")
+		return p(s)
+	}
+}
+
+// Accepts tokens of the form that begins with "attr:"
+func attr() parsec.Parser {
+	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		p := parsec.Token(`attr:[0-9a-zA-Z\-\_]+:[^ \n\t]*`, "ATTR")
 		return p(s)
 	}
 }

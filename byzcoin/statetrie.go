@@ -7,10 +7,17 @@ import (
 
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.etcd.io/bbolt"
 )
 
 var errKeyNotSet = errors.New("key not set")
+
+// GlobalState is used to query for any data in byzcoin.
+type GlobalState interface {
+	ReadOnlyStateTrie
+	ReadOnlySkipChain
+}
 
 // ReadOnlyStateTrie is the read-only interface for StagingStateTrie and
 // StateTrie.
@@ -33,6 +40,21 @@ type ReadOnlyStateTrie interface {
 	// that the original read-only trie is not be modified.
 	StoreAllToReplica(StateChanges) (ReadOnlyStateTrie, error)
 }
+
+// ReadOnlySkipChain holds the skipchain data.
+type ReadOnlySkipChain interface {
+	GetLatest() (*skipchain.SkipBlock, error)
+	GetGenesisBlock() (*skipchain.SkipBlock, error)
+	GetBlock(skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
+	GetBlockByIndex(idx int) (*skipchain.SkipBlock, error)
+}
+
+type globalState struct {
+	ReadOnlyStateTrie
+	ReadOnlySkipChain
+}
+
+var _ GlobalState = (*globalState)(nil)
 
 // stagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
 // byzcoin.
@@ -259,6 +281,57 @@ func newMemStateTrie(nonce []byte) (*stateTrie, error) {
 		Trie: *memTrie,
 	}
 	return &st, nil
+}
+
+type roSkipChain struct {
+	inner      *skipchain.Service
+	genesisID  skipchain.SkipBlockID
+	currLatest skipchain.SkipBlockID
+}
+
+func newROSkipChain(s *skipchain.Service, genesisID skipchain.SkipBlockID) *roSkipChain {
+	return &roSkipChain{inner: s, genesisID: genesisID, currLatest: genesisID}
+}
+
+func (s *roSkipChain) GetLatest() (*skipchain.SkipBlock, error) {
+	sb, err := s.inner.GetDB().GetLatestByID(s.currLatest)
+	if err != nil {
+		return nil, err
+	}
+	s.currLatest = sb.CalculateHash()
+	return sb, nil
+}
+
+func (s *roSkipChain) GetGenesisBlock() (*skipchain.SkipBlock, error) {
+	reply, err := s.inner.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{
+			Genesis: s.genesisID,
+			Index:   0,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return reply.SkipBlock, nil
+}
+
+func (s *roSkipChain) GetBlock(id skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	sb := s.inner.GetDB().GetByID(id)
+	if sb == nil {
+		return nil, errors.New("block not found")
+	}
+	return sb, nil
+}
+
+func (s *roSkipChain) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
+	reply, err := s.inner.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{
+			Genesis: s.genesisID,
+			Index:   idx,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return reply.SkipBlock, nil
 }
 
 type metadataReader interface {

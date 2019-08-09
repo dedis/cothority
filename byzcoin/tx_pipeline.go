@@ -195,7 +195,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 
 	tx.Instructions.SetVersion(header.Version)
 
-	scsOut, sstOut, err := s.processOneTx(inState.sst, tx)
+	scsOut, sstOut, err := s.processOneTx(inState.sst, tx, s.scID)
 
 	// try to create a new state
 	newState := func() *txProcessorState {

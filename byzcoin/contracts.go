@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -196,7 +197,7 @@ func notImpl(what string) error { return fmt.Errorf("this contract does not impl
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
 func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	return inst.Verify(rst, ctxHash)
+	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{EvalAttr: b.MakeAttrInterpreters(rst, inst)})
 }
 
 // VerifyDeferredInstruction is not implemented in a BasicContract. Types which
@@ -204,6 +205,50 @@ func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction
 // deferred executions (using the Deferred contract).
 func (b BasicContract) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
 	return notImpl("VerifyDeferredInstruction")
+}
+
+// MakeAttrInterpreters provides one default attribute verification which check
+// whether the transaction is sent after a certain block index and before
+// another block index.
+func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruction) darc.AttrInterpreters {
+	cb := func(attr string) error {
+		vals, err := url.ParseQuery(attr)
+		if err != nil {
+			return err
+		}
+		beforeStr := vals.Get("before")
+		afterStr := vals.Get("after")
+
+		var before, after int
+
+		if len(beforeStr) == 0 {
+			// Set before to something higher than the current
+			// index so that it always passes.
+			before = rst.GetIndex() + 1
+		} else {
+			var err error
+			before, err = strconv.Atoi(beforeStr)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(afterStr) == 0 {
+			after = -1
+		} else {
+			var err error
+			after, err = strconv.Atoi(afterStr)
+			if err != nil {
+				return err
+			}
+		}
+
+		if after < rst.GetIndex() && rst.GetIndex() < before {
+			return nil
+		}
+		return fmt.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
+	}
+	return darc.AttrInterpreters{"block": cb}
 }
 
 // Spawn is not implmented in a BasicContract. Types which embed BasicContract
@@ -297,7 +342,7 @@ func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst I
 		return nil
 	}
 
-	return inst.VerifyWithOption(rst, msg, false)
+	return inst.VerifyWithOption(rst, msg, &VerificationOptions{IgnoreCounters: true})
 }
 
 // FormatMethod overrides the implementation from the BasicContract in order to
