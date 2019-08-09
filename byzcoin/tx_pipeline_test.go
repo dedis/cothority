@@ -201,20 +201,6 @@ func newSlowCollectMockTxProc(t *testing.T, batch int, txs []ClientTransaction, 
 	return proc
 }
 
-func newDefaultMockTxVersion(t *testing.T, batch int, txs []ClientTransaction, failAt int) mockTxProc {
-	return &defaultMockTxProc{
-		batch:            batch,
-		txs:              txs,
-		done:             make(chan bool, 1),
-		t:                t,
-		failAt:           failAt,
-		proposeDelay:     10 * time.Microsecond,
-		collectDelay:     10 * time.Microsecond,
-		commonVersion:    1,
-		stateTrieVersion: 0,
-	}
-}
-
 func TestTxPipeline(t *testing.T) {
 	testTxPipeline(t, 1, 1, 1, newDefaultMockTxProc)
 	testTxPipeline(t, 4, 1, 4, newDefaultMockTxProc)

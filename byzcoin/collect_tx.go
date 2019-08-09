@@ -162,7 +162,9 @@ func (p *CollectTxProtocol) Dispatch() error {
 		leaderVersion := p.getByzcoinVersion()
 		vb.add(p.ServerIdentity(), leaderVersion)
 
-		for range p.List() {
+		finish := false
+
+		for i := 0; i < len(p.List()) && !finish; i++ {
 			select {
 			case resp := <-p.responseChan:
 				vb.add(resp.ServerIdentity, resp.ByzcoinVersion)
@@ -173,14 +175,14 @@ func (p *CollectTxProtocol) Dispatch() error {
 					p.TxsChan <- resp.Txs
 				}
 			case <-p.Finish:
-				return nil
+				finish = true
 			case <-p.closing:
-				return nil
+				finish = true
 			}
+		}
 
-			if vb.hasThresholdFor(leaderVersion) {
-				p.CommonVersionChan <- leaderVersion
-			}
+		if vb.hasThresholdFor(leaderVersion) {
+			p.CommonVersionChan <- leaderVersion
 		}
 	}
 	return nil
