@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"sync"
 
@@ -20,30 +21,35 @@ type mockTxProc interface {
 
 type defaultMockTxProc struct {
 	sync.Mutex
-	batch        int
-	txCtr        int
-	proposed     TxResults
-	failAt       int                 // instructs ProposeBlock to return an error when processing the tx at the failAt index
-	txs          []ClientTransaction // we assume these are unique
-	done         chan bool
-	proposeDelay time.Duration
-	collectDelay time.Duration
-	goodState    *stagingStateTrie
-	t            *testing.T
+	batch            int
+	txCtr            int
+	proposed         TxResults
+	failAt           int                 // instructs ProposeBlock to return an error when processing the tx at the failAt index
+	txs              []ClientTransaction // we assume these are unique
+	commonVersion    Version
+	stateTrieVersion Version
+	done             chan bool
+	proposeDelay     time.Duration
+	collectDelay     time.Duration
+	goodState        *stagingStateTrie
+	t                *testing.T
 }
 
 func txEqual(a, b ClientTransaction) bool {
 	return bytes.Equal(a.Instructions.Hash(), b.Instructions.Hash())
 }
 
-func (p *defaultMockTxProc) CollectTx() ([]ClientTransaction, error) {
+func (p *defaultMockTxProc) CollectTx() (*collectTxResult, error) {
+	p.Lock()
+	defer p.Unlock()
+
 	time.Sleep(p.collectDelay) // simulate slow network/protocol
 	if p.txCtr+p.batch > len(p.txs) {
-		return nil, nil
+		return &collectTxResult{}, nil
 	}
 	out := p.txs[p.txCtr : p.txCtr+p.batch]
 	p.txCtr += p.batch
-	return out, nil
+	return &collectTxResult{Txs: out, CommonVersion: p.commonVersion}, nil
 }
 
 func (p *defaultMockTxProc) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
@@ -97,6 +103,16 @@ func (p *defaultMockTxProc) ProposeBlock(state *txProcessorState) error {
 	return nil
 }
 
+func (p *defaultMockTxProc) ProposeUpgradeBlock(version Version) error {
+	p.Lock()
+	defer p.Unlock()
+
+	require.True(p.t, p.commonVersion > p.stateTrieVersion)
+	p.stateTrieVersion = p.commonVersion
+	p.goodState = nil
+	return nil
+}
+
 func (p *defaultMockTxProc) GetInterval() time.Duration {
 	return 100 * time.Millisecond
 }
@@ -107,8 +123,15 @@ func (p *defaultMockTxProc) Stop() {
 func (p *defaultMockTxProc) GetLatestGoodState() *txProcessorState {
 	goodState := p.goodState
 	if goodState == nil {
+		p.Lock()
+		defer p.Unlock()
+
 		sst, err := newMemStagingStateTrie([]byte(""))
 		require.NoError(p.t, err)
+
+		versionBuf := make([]byte, 4)
+		binary.LittleEndian.PutUint32(versionBuf, uint32(p.stateTrieVersion))
+		sst.Set([]byte(trieVersionKey), versionBuf)
 		goodState = sst
 	}
 	return &txProcessorState{
@@ -245,6 +268,14 @@ func testTxPipeline(t *testing.T, n, batch, failAt int, mock newMockTxProcFunc) 
 		close(pipelineDone)
 	}()
 
+	mockproc, ok := processor.(*defaultMockTxProc)
+	if ok {
+		<-time.After(mockproc.collectDelay)
+		mockproc.Lock()
+		mockproc.commonVersion = 3
+		mockproc.Unlock()
+	}
+
 	interval := processor.GetInterval()
 
 	if failAt < n {
@@ -264,6 +295,11 @@ func testTxPipeline(t *testing.T, n, batch, failAt int, mock newMockTxProcFunc) 
 		case <-time.After(5 * time.Duration(n/batch) * interval):
 			require.Fail(t, "tx processor did not finish in time")
 		}
+	}
+
+	// Check if the version is up-to-date with the latest.
+	if ok {
+		require.Equal(t, mockproc.commonVersion, mockproc.stateTrieVersion)
 	}
 
 	close(stopChan)

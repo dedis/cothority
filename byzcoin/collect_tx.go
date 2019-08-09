@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -21,16 +22,17 @@ func init() {
 // CollectTxProtocol is a protocol for collecting pending transactions.
 type CollectTxProtocol struct {
 	*onet.TreeNodeInstance
-	TxsChan      chan []ClientTransaction
-	SkipchainID  skipchain.SkipBlockID
-	LatestID     skipchain.SkipBlockID
-	MaxNumTxs    int
-	requestChan  chan structCollectTxRequest
-	responseChan chan structCollectTxResponse
-	getTxs       getTxsCallback
-	Finish       chan bool
-	closing      chan bool
-	version      int
+	TxsChan           chan []ClientTransaction
+	CommonVersionChan chan Version
+	SkipchainID       skipchain.SkipBlockID
+	LatestID          skipchain.SkipBlockID
+	MaxNumTxs         int
+	requestChan       chan structCollectTxRequest
+	responseChan      chan structCollectTxResponse
+	getTxs            getTxsCallback
+	Finish            chan bool
+	closing           chan bool
+	version           int
 }
 
 // CollectTxRequest is the request message that asks the receiver to send their
@@ -45,7 +47,8 @@ type CollectTxRequest struct {
 // CollectTxResponse is the response message that contains all the pending
 // transactions on the node.
 type CollectTxResponse struct {
-	Txs []ClientTransaction
+	Txs            []ClientTransaction
+	ByzcoinVersion Version
 }
 
 type structCollectTxRequest struct {
@@ -66,12 +69,13 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			// If we do not buffer this channel then the protocol
 			// might be blocked from stopping when the receiver
 			// stops reading from this channel.
-			TxsChan:   make(chan []ClientTransaction, len(node.List())),
-			MaxNumTxs: defaultMaxNumTxs,
-			getTxs:    getTxs,
-			Finish:    make(chan bool),
-			closing:   make(chan bool),
-			version:   1,
+			TxsChan:           make(chan []ClientTransaction, len(node.List())),
+			CommonVersionChan: make(chan Version, len(node.List())),
+			MaxNumTxs:         defaultMaxNumTxs,
+			getTxs:            getTxs,
+			Finish:            make(chan bool),
+			closing:           make(chan bool),
+			version:           1,
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -136,7 +140,8 @@ func (p *CollectTxProtocol) Dispatch() error {
 
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{
-		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, maxOut),
+		Txs:            p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID, maxOut),
+		ByzcoinVersion: p.getByzcoinVersion(),
 	}
 	log.Lvl3(p.ServerIdentity(), "sends back", len(resp.Txs), "transactions")
 	if p.IsRoot() {
@@ -152,19 +157,32 @@ func (p *CollectTxProtocol) Dispatch() error {
 	// wait for the results to come back and write to the channel
 	defer close(p.TxsChan)
 	if p.IsRoot() {
-		for range p.List() {
+		vb := newVersionBuffer(len(p.Children()) + 1)
+
+		leaderVersion := p.getByzcoinVersion()
+		vb.add(p.ServerIdentity(), leaderVersion)
+
+		finish := false
+
+		for i := 0; i < len(p.List()) && !finish; i++ {
 			select {
 			case resp := <-p.responseChan:
+				vb.add(resp.ServerIdentity, resp.ByzcoinVersion)
+
 				// If more than the limit is sent, we simply drop all of them
 				// as the conode is not behaving correctly.
 				if p.version == 0 || len(resp.Txs) <= p.MaxNumTxs {
 					p.TxsChan <- resp.Txs
 				}
 			case <-p.Finish:
-				return nil
+				finish = true
 			case <-p.closing:
-				return nil
+				finish = true
 			}
+		}
+
+		if vb.hasThresholdFor(leaderVersion) {
+			p.CommonVersionChan <- leaderVersion
 		}
 	}
 	return nil
@@ -174,4 +192,48 @@ func (p *CollectTxProtocol) Dispatch() error {
 func (p *CollectTxProtocol) Shutdown() error {
 	close(p.closing)
 	return nil
+}
+
+func (p *CollectTxProtocol) getByzcoinVersion() Version {
+	srv := p.Host().Service(ServiceName)
+	if srv == nil {
+		panic("Byzcoin should always be available as a service for this protocol")
+	}
+
+	return srv.(*Service).GetProtocolVersion()
+}
+
+type versionBuffer struct {
+	versions   map[Version]int
+	identities map[network.ServerIdentityID]bool
+	threshold  int
+}
+
+func newVersionBuffer(n int) versionBuffer {
+	return versionBuffer{
+		versions:   make(map[Version]int),
+		identities: make(map[network.ServerIdentityID]bool),
+		threshold:  byzcoinx.Threshold(n),
+	}
+}
+
+func (vb versionBuffer) add(si *network.ServerIdentity, v Version) {
+	if vb.identities[si.ID] {
+		// Make sure a malicious conode cannot send multiple version
+		// upgrade request.
+		return
+	}
+	vb.identities[si.ID] = true
+	vb.versions[v]++
+}
+
+func (vb versionBuffer) hasThresholdFor(version Version) bool {
+	sum := 0
+	for k, v := range vb.versions {
+		if k >= version {
+			sum += v
+		}
+	}
+
+	return sum >= vb.threshold
 }

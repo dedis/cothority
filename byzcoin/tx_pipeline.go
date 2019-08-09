@@ -12,12 +12,19 @@ import (
 	"go.dedis.ch/protobuf"
 )
 
+// collectTxResult contains the aggregated response of the conodes to the
+// collectTx protocol.
+type collectTxResult struct {
+	Txs           []ClientTransaction
+	CommonVersion Version
+}
+
 // txProcessor is the interface that must be implemented. It is used in the
 // stateful pipeline txPipeline that takes transactions and creates blocks.
 type txProcessor interface {
 	// CollectTx implements a blocking function that returns transactions
 	// that should go into new blocks. These transactions are not verified.
-	CollectTx() ([]ClientTransaction, error)
+	CollectTx() (*collectTxResult, error)
 	// ProcessTx attempts to apply the given tx to the input state and then
 	// produce new state(s). If the new tx is too big to fit inside a new
 	// state, the function will return more states. Where the older states
@@ -30,6 +37,9 @@ type txProcessor interface {
 	// function should only return when a decision has been made regarding
 	// the proposal.
 	ProposeBlock(*txProcessorState) error
+	// ProposeUpgradeBlock should create a barrier block between two Byzcoin
+	// version so that future blocks will use the new version.
+	ProposeUpgradeBlock(Version) error
 	// GetLatestGoodState should return the latest state that the processor
 	// trusts.
 	GetLatestGoodState() *txProcessorState
@@ -89,7 +99,7 @@ type defaultTxProcessor struct {
 	sync.Mutex
 }
 
-func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
+func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	// Need to update the config, as in the meantime a new block should have
 	// arrived with a possible new configuration.
 	bcConfig, err := s.LoadConfig(s.scID)
@@ -150,9 +160,15 @@ func (s *defaultTxProcessor) CollectTx() ([]ClientTransaction, error) {
 	protocolTimeout := time.After(bcConfig.BlockInterval / 2)
 
 	var txs []ClientTransaction
+	commonVersion := Version(0)
+
 collectTxLoop:
 	for {
 		select {
+		case commonVersion = <-root.CommonVersionChan:
+			// The value gives a version that is the same for a threshold of conodes but it
+			// can be the latest version available so it needs to check that to not create a
+			// block to upgrade from version x to x (which is not an upgrade per se).
 		case newTxs, more := <-root.TxsChan:
 			if more {
 				for _, ct := range newTxs {
@@ -173,11 +189,11 @@ collectTxLoop:
 		case <-s.stopCollect:
 			log.Lvl2(s.ServerIdentity(), "abort collection of transactions")
 			close(root.Finish)
-			return txs, nil
+			break collectTxLoop
 		}
 	}
 
-	return txs, nil
+	return &collectTxResult{Txs: txs, CommonVersion: commonVersion}, nil
 }
 
 func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcessorState) ([]*txProcessorState, error) {
@@ -251,6 +267,11 @@ func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
 	return err
 }
 
+func (s *defaultTxProcessor) ProposeUpgradeBlock(version Version) error {
+	_, err := s.createUpgradeVersionBlock(s.scID, version)
+	return err
+}
+
 func (s *defaultTxProcessor) GetInterval() time.Duration {
 	bcConfig, err := s.LoadConfig(s.scID)
 	if err != nil {
@@ -290,23 +311,28 @@ func (s *defaultTxProcessor) Stop() {
 }
 
 type txPipeline struct {
-	wg        sync.WaitGroup
-	processor txProcessor
+	ctxChan     chan ClientTransaction
+	needUpgrade chan Version
+	stopCollect chan bool
+	wg          sync.WaitGroup
+	processor   txProcessor
 }
 
 func (p *txPipeline) start(initialState *txProcessorState, stopSignal chan bool) {
-	stopCollect := make(chan bool)
-	ctxChan := p.collectTx(stopCollect)
-	p.processTxs(ctxChan, initialState)
+	p.stopCollect = make(chan bool)
+	p.ctxChan = make(chan ClientTransaction, 200)
+	p.needUpgrade = make(chan Version, 1)
+
+	p.collectTx()
+	p.processTxs(initialState)
 
 	<-stopSignal
-	close(stopCollect)
+	close(p.stopCollect)
 	p.processor.Stop()
 	p.wg.Wait()
 }
 
-func (p *txPipeline) collectTx(stopChan chan bool) <-chan ClientTransaction {
-	outChan := make(chan ClientTransaction, 200)
+func (p *txPipeline) collectTx() {
 	// set the polling interval to half of the block interval
 	go func() {
 		p.wg.Add(1)
@@ -314,18 +340,23 @@ func (p *txPipeline) collectTx(stopChan chan bool) <-chan ClientTransaction {
 		for {
 			interval := p.processor.GetInterval()
 			select {
-			case <-stopChan:
+			case <-p.stopCollect:
 				log.Lvl3("stopping tx collector")
-				close(outChan)
+				close(p.ctxChan)
 				return
 			case <-time.After(interval / 2):
-				txs, err := p.processor.CollectTx()
+				res, err := p.processor.CollectTx()
 				if err != nil {
-					log.Error("failed to collect transactions")
+					log.Error("failed to collect transactions", err)
 				}
-				for _, tx := range txs {
+
+				// If a common version is found, it is sent anyway and the processing
+				// will check if it is necessary to upgrade.
+				p.needUpgrade <- res.CommonVersion
+
+				for _, tx := range res.Txs {
 					select {
-					case outChan <- tx:
+					case p.ctxChan <- tx:
 						// channel not full, do nothing
 					default:
 						log.Warn("dropping transactions because there are too many")
@@ -334,16 +365,16 @@ func (p *txPipeline) collectTx(stopChan chan bool) <-chan ClientTransaction {
 			}
 		}
 	}()
-	return outChan
 }
 
 var maxTxHashes = 1000
 
 // processTxs consumes transactions and computes the new txResults
-func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *txProcessorState) {
+func (p *txPipeline) processTxs(initialState *txProcessorState) {
 	var proposing bool
 	// always use the latest one when adding new
 	currentState := []*txProcessorState{initialState}
+	currentVersion := p.processor.GetLatestGoodState().sst.GetVersion()
 	proposalResult := make(chan error, 1)
 	getInterval := func() <-chan time.Time {
 		interval := p.processor.GetInterval()
@@ -357,7 +388,33 @@ func (p *txPipeline) processTxs(txChan <-chan ClientTransaction, initialState *t
 	leaderLoop:
 		for {
 			select {
-			case tx, ok := <-txChan:
+			case version := <-p.needUpgrade:
+				if version <= currentVersion {
+					// Prevent multiple upgrade blocks for the same version.
+					break
+				}
+
+				// An upgrade is done synchronously so that other operations
+				// are not performed until the upgrade is done.
+
+				if proposing {
+					// If a block is currently created, it will wait for the
+					// end of the process.
+					select {
+					case err := <-proposalResult:
+						proposalResult <- err
+					}
+				}
+
+				err := p.processor.ProposeUpgradeBlock(version)
+				if err != nil {
+					// Only log the error as it won't prevent normal blocks
+					// to be created.
+					log.Error("failed to upgrade", err)
+				}
+
+				currentVersion = version
+			case tx, ok := <-p.ctxChan:
 				if !ok {
 					log.Lvl3("stopping txs processor")
 					return

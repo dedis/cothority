@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -511,6 +512,76 @@ func TestService_AddTransactionVersion(t *testing.T) {
 	reply, err := s.service().AddTransaction(atx)
 	require.NoError(t, err)
 	require.Contains(t, reply.Error, "wrong byzcoin version")
+}
+
+func TestService_AutomaticVersionUpgrade(t *testing.T) {
+	// Creates a chain starting with version 0.
+	s := newSerWithVersion(t, 1, testInterval, 4, disableViewChange, 0)
+	defer s.local.CloseAll()
+
+	closing := make(chan bool)
+	wg := sync.WaitGroup{}
+	go func(closeChan chan bool) {
+		wg.Add(1)
+		defer wg.Done()
+
+		c := uint64(1)
+		shutdown := false
+		wait := 0
+		for !shutdown {
+			select {
+			case <-closing:
+				shutdown = true
+				wait = 10
+			default:
+			}
+
+			tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, c)
+			require.NoError(t, err)
+			atx := &AddTxRequest{
+				Version:       CurrentVersion,
+				SkipchainID:   s.genesis.SkipChainID(),
+				Transaction:   tx,
+				InclusionWait: wait,
+			}
+			_, err = s.service().AddTransaction(atx)
+			require.NoError(t, err)
+
+			c++
+			time.Sleep(50 * time.Millisecond)
+		}
+	}(closing)
+
+	time.Sleep(testInterval)
+
+	// Simulate an upgrade of the conodes.
+	for _, srv := range s.services {
+		srv.defaultVersionLock.Lock()
+		srv.defaultVersion = CurrentVersion
+		srv.defaultVersionLock.Unlock()
+	}
+
+	for i := 0; i < 10; i++ {
+		time.Sleep(testInterval)
+
+		proof, err := s.service().GetProof(&GetProof{
+			Version: CurrentVersion,
+			Key:     NewInstanceID([]byte{}).Slice(),
+			ID:      s.genesis.Hash,
+		})
+		require.NoError(t, err)
+
+		header, err := decodeBlockHeader(&proof.Proof.Latest)
+		if header.Version == CurrentVersion {
+			close(closing)
+			wg.Wait()
+			return
+		}
+	}
+
+	close(closing)
+	wg.Wait()
+	t.Fail()
 }
 
 func TestService_GetProof(t *testing.T) {
