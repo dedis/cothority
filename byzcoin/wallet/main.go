@@ -233,27 +233,26 @@ func transfer(c *cli.Context) error {
 		counters.Counters[0]++
 		amountBuf := make([]byte, 8)
 		binary.LittleEndian.PutUint64(amountBuf, amount)
-		ctx := byzcoin.ClientTransaction{
-			Instructions: byzcoin.Instructions{
-				{
-					InstanceID: iid,
-					Invoke: &byzcoin.Invoke{
-						ContractID: contracts.ContractCoinID,
-						Command:    "transfer",
-						Args: byzcoin.Arguments{
-							{
-								Name:  "coins",
-								Value: amountBuf,
-							},
-							{
-								Name:  "destination",
-								Value: target.Slice(),
-							},
-						},
+		ctx, err := cl.CreateTransaction(byzcoin.Instruction{
+			InstanceID: iid,
+			Invoke: &byzcoin.Invoke{
+				ContractID: contracts.ContractCoinID,
+				Command:    "transfer",
+				Args: byzcoin.Arguments{
+					{
+						Name:  "coins",
+						Value: amountBuf,
 					},
-					SignerCounter: counters.Counters,
+					{
+						Name:  "destination",
+						Value: target.Slice(),
+					},
 				},
 			},
+			SignerCounter: counters.Counters,
+		})
+		if err != nil {
+			return err
 		}
 		err = ctx.FillSignersAndSignWith(signer)
 		if err != nil {
