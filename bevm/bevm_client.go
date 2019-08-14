@@ -142,15 +142,16 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (by
 		return instanceID, err
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-			Spawn: &byzcoin.Spawn{
-				ContractID: ContractBEvmID,
-				Args:       byzcoin.Arguments{},
-			},
-		}},
+	ctx, err := bcClient.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(gDarc.GetBaseID()),
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+		Spawn: &byzcoin.Spawn{
+			ContractID: ContractBEvmID,
+			Args:       byzcoin.Arguments{},
+		},
+	})
+	if err != nil {
+		return instanceID, err
 	}
 
 	err = ctx.FillSignersAndSignWith(signer)
@@ -186,14 +187,15 @@ func (client *Client) Delete() error {
 		return err
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    client.instanceID,
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-			Delete: &byzcoin.Delete{
-				ContractID: ContractBEvmID,
-			},
-		}},
+	ctx, err := client.bcClient.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    client.instanceID,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+		Delete: &byzcoin.Delete{
+			ContractID: ContractBEvmID,
+		},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(client.signer)
@@ -378,16 +380,17 @@ func (client *Client) invoke(command string, args byzcoin.Arguments) error {
 		return err
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
-			InstanceID:    client.instanceID,
-			SignerCounter: []uint64{counters.Counters[0] + 1},
-			Invoke: &byzcoin.Invoke{
-				ContractID: ContractBEvmID,
-				Command:    command,
-				Args:       args,
-			},
-		}},
+	ctx, err := client.bcClient.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    client.instanceID,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractBEvmID,
+			Command:    command,
+			Args:       args,
+		},
+	})
+	if err != nil {
+		return err
 	}
 
 	err = ctx.FillSignersAndSignWith(client.signer)
