@@ -10,6 +10,7 @@ export type InstanceID = Buffer;
 export default class Instance {
     /**
      * Create an instance from a proof
+     * @param id the instance-id to extract
      * @param p The proof
      * @returns the instance
      */
@@ -24,7 +25,7 @@ export default class Instance {
     /**
      * Create an instance after requesting its proof to byzcoin
      * @param rpc   The RPC to use
-     * @param id    The ID of the instance
+     * @param iid    The ID of the instance
      * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
      * @param interval how long to wait between two attempts in waitMatch.
      * @returns the instance if it exists
@@ -66,6 +67,6 @@ export default class Instance {
      * Returns a byte representation of the Instance.
      */
     toBytes(): Buffer {
-        return Buffer.from(JSON.stringify(this));
+        return Buffer.from(JSON.stringify(new Instance(this)));
     }
 }

@@ -92,13 +92,10 @@ describe("SpawnerInstance Tests", () => {
         const popParams = {
             coin: ci,
             desc,
-            orgs: [orgCred, orgCred2],
+            orgs: [darcOrg.id],
             reward: Long.fromNumber(10000),
             signers: [SIGNER],
         };
-        await expectAsync(si.spawnPopParty(popParams)).toBeRejected();
-
-        popParams.orgs = [orgCred];
         const party = await si.spawnPopParty(popParams);
         expect(party).toBeDefined();
 
@@ -111,6 +108,7 @@ describe("SpawnerInstance Tests", () => {
         // already activated
         await expectAsync(party.activateBarrier([org])).toBeRejected();
 
+        party.addAttendee(org.public);
         party.addAttendee(ed25519.point().pick());
         party.addAttendee(ed25519.point().pick());
         party.addAttendee(attendee.public);
