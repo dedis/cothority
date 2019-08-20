@@ -470,6 +470,7 @@ $ sudo vim /etc/ssh/sshd_config
 > PasswordAuthentication no
 > UsePAM no
 # SSH is only allowed with pub/priv key. We must then allow us to use our key:
+$ mkdir ~/.ssh # if this is a fresh account, the folder might not exist yet
 $ vim ~/.ssh/authorized_keys
 > *add pub key*
 # Allow connecting with the new SSH port
