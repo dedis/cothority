@@ -32,7 +32,7 @@ describe('BDN signatures Test', () => {
         expect(() => aggregateSignatures(mask, [])).toThrow();
     });
 
-    function testAggregateSignature(msk) {
+    function testAggregateSignature(msk: Buffer) {
         const sk1 = new BN256Scalar().pick();
         const pk1 = new BN256G2Point(sk1.getValue());
         const sk2 = new BN256Scalar().pick();
