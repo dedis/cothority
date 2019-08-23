@@ -238,7 +238,7 @@ export class PopPartyInstance extends Instance {
             const orgCred = CredentialInstance.credentialIID(Buffer.from(orgDarc, "hex"));
             const cred = await CredentialInstance.fromByzcoin(this.rpc, orgCred);
             const credPers = cred.getAttribute("personhood", "ed25519");
-            if (!credPers) {
+            if (credPers === undefined) {
                 throw new Error("found organizer without personhood credential");
             }
 

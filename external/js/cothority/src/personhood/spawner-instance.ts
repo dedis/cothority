@@ -313,7 +313,7 @@ export default class SpawnerInstance extends Instance {
 
         // Verify that all organizers have published their personhood public key
         for (const org of orgs) {
-            if (!org.getAttribute("personhood", "ed25519")) {
+            if (org.getAttribute("personhood", "ed25519") === undefined) {
                 throw new Error(`One of the organisers didn't publish his personhood key`);
             }
         }

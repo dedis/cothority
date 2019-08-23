@@ -63,14 +63,14 @@ describe("CredentialsInstance Tests", () => {
         expect(ci.getAttribute("personhood", "ed25519")).toEqual(SIGNER.toBytes());
         expect(ci.getAttribute("personhood", "abc")).toEqual(Buffer.from("def"));
 
-        expect(ci.getAttribute("personhood", "a")).toBeNull();
-        expect(ci.getAttribute("a", "")).toBeNull();
+        expect(ci.getAttribute("personhood", "a")).toBeUndefined();
+        expect(ci.getAttribute("a", "")).toBeUndefined();
     });
 
     it("allow to set the credential", async () => {
         const cs = new CredentialStruct();
         cs.setAttribute("one", "two", Buffer.from("three"));
-        cs.setAttribute("one", "four", null);
+        cs.setAttribute("one", "four", undefined);
         cs.setAttribute("one", "five", Buffer.from("six"));
         const cred = cs.copy().getCredential("one");
         expect(cred.attributes.length).toBe(3);
