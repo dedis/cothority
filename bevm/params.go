@@ -3,9 +3,9 @@ package bevm
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/c4dt/go-ethereum/common"
+	"github.com/c4dt/go-ethereum/core/vm"
+	"github.com/c4dt/go-ethereum/params"
 )
 
 func getChainConfig() *params.ChainConfig {

@@ -22,7 +22,7 @@ import (
 
 	"go.dedis.ch/onet/v3/log"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/c4dt/go-ethereum/common"
 )
 
 // Batch of database update operations, adapted from Ethereum code.

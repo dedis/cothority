@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/c4dt/go-ethereum/common"
+	"github.com/c4dt/go-ethereum/core/state"
+	"github.com/c4dt/go-ethereum/core/vm"
 	"go.dedis.ch/onet/v3/log"
 )
 

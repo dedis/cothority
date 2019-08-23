@@ -25,8 +25,8 @@ import (
 
 	"go.dedis.ch/onet/v3/log"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/c4dt/go-ethereum/common"
+	"github.com/c4dt/go-ethereum/ethdb"
 	"go.dedis.ch/protobuf"
 )
 

@@ -4,7 +4,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/bford/golang-x-crypto v0.0.0-20160518072526-27db609c9d03
 	github.com/coreos/go-oidc v2.1.0+incompatible
-	github.com/ethereum/go-ethereum v1.8.27
+	github.com/c4dt/go-ethereum v1.8.27-c4dt
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410

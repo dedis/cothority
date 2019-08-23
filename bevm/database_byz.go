@@ -10,7 +10,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3/log"
 
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/c4dt/go-ethereum/ethdb"
 )
 
 // ByzDatabase is the Ethereum state database distributed among ByzCoin value instances.
