@@ -27,17 +27,6 @@ SPAWNER_COIN.write("SpawnerCoin");
 
 export default class SpawnerInstance extends Instance {
 
-    /**
-     * Get the total cost required to sign up
-     *
-     * @returns the cost
-     */
-    get signupCost(): Long {
-        return this.struct.costCoin.value
-            .add(this.struct.costDarc.value)
-            .add(this.struct.costCredential.value);
-    }
-
     get costs(): SpawnerStruct {
         return new SpawnerStruct(this.struct);
     }

@@ -43,7 +43,6 @@ describe("SpawnerInstance Tests", () => {
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
         const si = await SpawnerInstance.spawn(params);
 
-        expect(si.signupCost.toNumber()).toBe(3000);
         await expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from("deadbeef"))).toBeRejected();
         await SpawnerInstance.fromByzcoin(rpc, si.id);
 
