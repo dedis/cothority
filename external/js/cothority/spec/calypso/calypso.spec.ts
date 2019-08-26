@@ -106,6 +106,9 @@ describe("Online Calypso Tests", async () => {
         const ocs = new OnChainSecretRPC(bc);
         await ocs.authorizeRoster();
         lts = await LongTermSecret.spawn(bc, darc.id, [SIGNER], roster);
+        // A second authorisation-request should return an error from the conode
+        // which should be handled by the `spawn` method.
+        await LongTermSecret.spawn(bc, darc.id, [SIGNER], roster);
         const costs = {
             costCRead: Long.fromNumber(100),
             costCWrite: Long.fromNumber(1000),

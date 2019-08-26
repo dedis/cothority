@@ -203,6 +203,8 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 	bcID := string(req.ByzCoinID)
 	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
 		s.storage.Unlock()
+		// This error string is tested against in `external/js/cothority/src/calypso/calypso-rpc.ts, so
+		// if you change the error-message here, all apps depending on the @dedis/cothority npm-package will fail.
 		return nil, errors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[bcID] = true

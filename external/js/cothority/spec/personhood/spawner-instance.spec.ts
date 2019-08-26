@@ -43,7 +43,6 @@ describe("SpawnerInstance Tests", () => {
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
         const si = await SpawnerInstance.spawn(params);
 
-        expect(si.signupCost.toNumber()).toBe(3000);
         await expectAsync(SpawnerInstance.fromByzcoin(rpc, Buffer.from("deadbeef"))).toBeRejected();
         await SpawnerInstance.fromByzcoin(rpc, si.id);
 
@@ -92,13 +91,10 @@ describe("SpawnerInstance Tests", () => {
         const popParams = {
             coin: ci,
             desc,
-            orgs: [orgCred, orgCred2],
+            orgs: [darcOrg.id],
             reward: Long.fromNumber(10000),
             signers: [SIGNER],
         };
-        await expectAsync(si.spawnPopParty(popParams)).toBeRejected();
-
-        popParams.orgs = [orgCred];
         const party = await si.spawnPopParty(popParams);
         expect(party).toBeDefined();
 
@@ -111,6 +107,7 @@ describe("SpawnerInstance Tests", () => {
         // already activated
         await expectAsync(party.activateBarrier([org])).toBeRejected();
 
+        party.addAttendee(org.public);
         party.addAttendee(ed25519.point().pick());
         party.addAttendee(ed25519.point().pick());
         party.addAttendee(attendee.public);

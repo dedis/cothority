@@ -111,7 +111,9 @@ export class WebSocketConnection implements IConnection {
             });
 
             ws.onClose((code: number, reason: string) => {
-                if (code !== 1000) {
+                // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
+                // to non-null in case of error.
+                if (code !== 1000 || reason) {
                     Log.error("Got close:", code, reason);
                     reject(new Error(reason));
                 }

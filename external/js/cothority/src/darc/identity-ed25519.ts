@@ -35,6 +35,7 @@ export default class IdentityEd25519 extends Message<IdentityEd25519> implements
         return new IdentityEd25519({point: p.toProto()});
     }
 
+    // Protobuf-encoded point
     readonly point: Buffer;
 
     private _public: Point;

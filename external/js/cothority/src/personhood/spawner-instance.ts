@@ -27,15 +27,8 @@ SPAWNER_COIN.write("SpawnerCoin");
 
 export default class SpawnerInstance extends Instance {
 
-    /**
-     * Get the total cost required to sign up
-     *
-     * @returns the cost
-     */
-    get signupCost(): Long {
-        return this.struct.costCoin.value
-            .add(this.struct.costDarc.value)
-            .add(this.struct.costCredential.value);
+    get costs(): SpawnerStruct {
+        return new SpawnerStruct(this.struct);
     }
 
     static readonly contractID = "spawner";
@@ -99,9 +92,8 @@ export default class SpawnerInstance extends Instance {
 
     /**
      * Creates a new SpawnerInstance
-     * @param bc        The ByzCoinRPC instance
-     * @param iid       The instance ID
-     * @param spawner   Parameters for the spawner: costs and names
+     * @param rpc        The ByzCoinRPC instance
+     * @param inst   A valid spawner instance
      */
     constructor(private rpc: ByzCoinRPC, inst: Instance) {
         super(inst);
@@ -301,26 +293,14 @@ export default class SpawnerInstance extends Instance {
     /**
      * Create a PoP party
      *
-     * @param coin The coin instance to take coins from
-     * @param signers The signers for the transaction
-     * @param orgs The list fo organisers
-     * @param descr The data for the PoP party
-     * @param reward The reward of an attendee
+     * @param params structure of {coin, signers, orgs, desc, reward}
      * @returns a promise tha resolves with the new pop party instance
      */
     async spawnPopParty(params: ICreatePopParty): Promise<PopPartyInstance> {
         const {coin, signers, orgs, desc, reward} = params;
 
-        // Verify that all organizers have published their personhood public key
-        for (const org of orgs) {
-            if (!org.getAttribute("personhood", "ed25519")) {
-                throw new Error(`One of the organisers didn't publish his personhood key`);
-            }
-        }
-
-        const orgDarcIDs = orgs.map((org) => org.darcID);
         const valueBuf = this.struct.costDarc.value.add(this.struct.costParty.value).toBytesLE();
-        const orgDarc = PopPartyInstance.preparePartyDarc(orgDarcIDs, "party-darc " + desc.name);
+        const orgDarc = PopPartyInstance.preparePartyDarc(orgs, "party-darc " + desc.name);
         const ctx = ClientTransaction.make(
             this.rpc.getProtocolVersion(),
             Instruction.createInvoke(
@@ -354,12 +334,7 @@ export default class SpawnerInstance extends Instance {
     /**
      * Create a Rock-Paper-scissors game instance
      *
-     * @param desc      The description of the game
-     * @param coin      The coin instance to take coins from
-     * @param signers   The list of signers
-     * @param stake     The reward for the winner
-     * @param choice    The choice of the first player
-     * @param fillup    Data that will be hash with the choice
+     * @param params structure of {desc, coin, signers, stake, choice, fillup}
      * @returns a promise that resolves with the new instance
      */
     async spawnRoPaSci(params: ICreateRoPaSci): Promise<RoPaSciInstance> {
@@ -603,7 +578,7 @@ interface ICreateRoPaSci {
 interface ICreatePopParty {
     coin: CoinInstance;
     signers: Signer[];
-    orgs: CredentialInstance[];
+    orgs: InstanceID[];
     desc: PopDesc;
     reward: Long;
 
