@@ -21,6 +21,7 @@ export BC_WAIT=true
 . "../clicontracts/config_test.sh"
 . "../clicontracts/deferred_test.sh"
 . "../clicontracts/value_test.sh"
+. "../clicontracts/name_test.sh"
 
 main(){
     startTest
@@ -42,9 +43,11 @@ main(){
     run testLinkPermission
     run testQR
     run testUpdateDarcDesc
+    run testResolveiid
     run testContractValue
     run testContractDeferred
     run testContractConfig
+    run testContractName
     stopTest
 }
 
@@ -389,6 +392,50 @@ testUpdateDarcDesc() {
   KEY=`cat ./darc_key.txt`
   testOK runBA darc cdesc --desc "New description" --darc "$ID"
   testGrep "New description" runBA darc show
+}
+
+# Rely on:
+# - bcadmin contract name spawn
+# - bcadmin contract value spawn
+# - bcadmin contract name add
+testResolveiid() {
+  # We are spawning a value instance, saving its name and see if we can retrieve
+  # it and get back the value stored within the value instance.
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK runBA0 contract name spawn 
+
+  # Add the rules
+  testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -unrestricted
+  ID=`cat ./darc_id.txt`
+  KEY=`cat ./darc_key.txt`
+  testOK runBA darc rule -rule "spawn:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
+  testOK runBA darc rule -rule "_name:value" --identity "$KEY" --darc "$ID" --sign "$KEY"
+
+  # Spawn the value instance
+  OUTRES=`runBA0 contract value spawn --value "Hello world" --darc "$ID" --sign "$KEY"`
+  VALUE_INSTANCE_ID=$( echo "$OUTRES" | grep -A 1 "instance id" | sed -n 2p )
+  matchOK "$VALUE_INSTANCE_ID" ^[0-9a-f]{64}$
+
+  # Save the name with the name contract
+  testOK runBA0 contract name invoke add -i $VALUE_INSTANCE_ID -name "myValue" --sign "$KEY"
+
+  # Let's get a wrong name, it should fail
+  testFail runBA0 resolveiid --name "do not exist"
+  # Let's get it right now
+  OUTRES=`runBA0 resolveiid --name "myValue" --namingDarc "$ID"`
+  matchOK "$OUTRES" "Here is the resolved instance id:
+$VALUE_INSTANCE_ID"
+
+  # Let's try with a wrong darc (the default one), it should fail
+  testFail runBA0 resolveiid --name "myValue"
+
+  # Let's get the content of the value contract
+  OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
+  testGrep "Hello world" echo "$OUTRES"
 }
 
 main
