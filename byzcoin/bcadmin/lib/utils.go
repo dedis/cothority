@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"os"
 	"strings"
 	"time"
 
 	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3/log"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -252,4 +254,17 @@ func unique(stringSlice []string) []string {
 		}
 	}
 	return list
+}
+
+// RandString return a random string of length n
+func RandString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	bigN := big.NewInt(int64(len(letters)))
+	b := make([]byte, n)
+	r := random.New()
+	for i := range b {
+		x := int(random.Int(bigN, r).Int64())
+		b[i] = letters[x]
+	}
+	return string(b)
 }
