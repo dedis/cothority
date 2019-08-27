@@ -104,7 +104,7 @@ testContractWriteGet() {
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
-    # Lets now check the result
+    # Let's now check the result
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
@@ -126,7 +126,7 @@ testContractWriteGet() {
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
-    # Lets now check the result
+    # Let's now check the result
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
@@ -146,7 +146,7 @@ testContractWriteGet() {
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
-    # Lets now check the result
+    # Let's now check the result
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
@@ -168,7 +168,7 @@ testContractWriteGet() {
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
-    # Lets now check the result
+    # Let's now check the result
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
