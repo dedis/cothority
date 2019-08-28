@@ -1,103 +1,142 @@
+_: &language_go_1_11
+  name: "go 1.11"
+  language: go
+  go: "1.11.x"
+_: &language_go_1_12
+  name: "go 1.12"
+  language: go
+  go: "1.12.x"
+_: &language_js
+  language: node_js
+  node_js: "lts/*"
+
+_: &get_coding
+  b=github.com/dedis/Coding; git clone https://$b.git $GOPATH/src/$b
+_: &gen_link_kyber
+  pushd external/js/kyber && npm ci && npm run link && popd
+_: &get_go
+  - gimme 1.12.4
+  - . $HOME/.gimme/envs/go1.12.4.env
+
+_: &stage_lint_go
+  before_script: *get_coding
+  script:
+    - make -C conode verify
+    - GO111MODULE=on make test_{fmt,lint}
+_: &stage_build_go
+  script:
+    - make -C conode bindist
+    - GO111MODULE=on go get ./...
+    - GO111MODULE=on go build ./...
+_: &stage_test_go
+  before_script: *get_coding
+  script: GO111MODULE=on make test_goveralls
+_: &stage_deploy_npm
+  <<: *language_js
+  script: 
+    - CHANGED_FILES=$(git diff --name-only $TRAVIS_COMMIT_RANGE)
+    - JS_COTHORITY_N=`echo "$CHANGED_FILES" | grep -E -c "^external/js/cothority/" || true`
+    - JS_KYBER_N=`echo "$CHANGED_FILES" | grep -E -c "^external/js/kyber/" || true`
+  before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
+
+
 dist: trusty
 
-matrix:
+stages:
+  - lint
+  - build
+  - test
+  - deploy
+
+jobs:
   include:
-    - language: go
-      name: "Go Tests"
+    - stage: lint
+      name: "protobuf"
+      language: minimal
+      before_script: *get_coding
+      script: make test_proto
+    - <<: *stage_lint_go
+      <<: *language_go_1_11
+    - <<: *stage_lint_go
+      <<: *language_go_1_12
 
-      go_import_path: go.dedis.ch/cothority/v3
+    - stage: build
+      <<: *stage_build_go
+      <<: *language_go_1_11
+    - <<: *stage_build_go
+      <<: *language_go_1_12
 
-      go:
-        - "1.12.x"
-
-      install:
-        - go get github.com/dedis/Coding || true
-
+    - name: "js > kyber"
+      <<: *language_js
       script:
-        - set -e
-        - make test_proto
-        - make -C conode verify
-        - make -C conode bindist
-        - env GO111MODULE=on make test
-
-    - language: go
-      name: "Go v1.10.x build"
-
-      go_import_path: go.dedis.ch/cothority/v3
-
-      go:
-        - "1.10.x"
-
-      script:
-        - go get ./...
-        - go build ./...
-
-    - language: go
-      name: "Go v1.11.x build"
-
-      go_import_path: go.dedis.ch/cothority/v3
-
-      go:
-        - "1.11.x"
-
-      script:
-        - go get ./...
-        - go build ./...
-
-    - language: java
-      name: "Java Tests"
-
-      # This is needed because the "language: java" builder
-      # defaults to Go 1.8 and does not respect the go version
-      # specifier.
-      install:
-        - gimme 1.12.4
-        - . $HOME/.gimme/envs/go1.12.4.env
-        - env GO111MODULE=off go get github.com/dedis/Coding || true
-
-      script:
-        - make test_java
-
-    - language: node_js
-      name: "kyber-js Tests"
-
-      node_js: "lts/*"
-      cache: npm
-
-      before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
-      script:
-        - cd $TRAVIS_BUILD_DIR/external/js/kyber
+        - cd external/js/kyber
         - npm ci
-        - npm run test
+        - npm run build
+    - name: "js > cothority"
+      <<: *language_js
+      script:
+        - *gen_link_kyber
+        - cd external/js/cothority
+        - npm ci
+        - npm link @dedis/kyber
         - npm run build
 
-    - language: node_js
-      name: "cothority-js Tests"
-
-      node_js: "lts/*"
-      cache: npm
-
-      before_install: dpkg --compare-versions `npm -v` ge 6.7 || npm i -g npm@^6.7.0
-      install:
-        - gimme 1.12.4
-        - . $HOME/.gimme/envs/go1.12.4.env
-        - env GO111MODULE=off go get github.com/dedis/Coding || true
-
+    - stage: test
+      <<: *stage_test_go
+      <<: *language_go_1_11
+    - <<: *stage_test_go
+      <<: *language_go_1_12
+    - name: "java"
+      language: java
+      install: *get_go
+      before_script: *get_coding
+      script: make test_java
+    - name: "js > kyber"
+      <<: *language_js
       script:
-        # build the docker image dedis/conode-test that will be used to run conodes
-        - cd $TRAVIS_BUILD_DIR
+        - cd external/js/kyber
+        - npm ci
+        - npm run test
+    - name: "js > cothority"
+      <<: *language_js
+      install: *get_go
+      before_script:
+        - *get_coding
         - make docker
-
-        # build the kyber library to use the local version
-        - cd $TRAVIS_BUILD_DIR/external/js/kyber
+        - *gen_link_kyber
+      script:
+        - cd external/js/cothority
         - npm ci
-        - npm run link
-
-        - cd $TRAVIS_BUILD_DIR/external/js/cothority
-        - npm ci
-        # use the local library
         - npm link @dedis/kyber
         - npm run test
+
+    - stage: deploy
+      name: "NPM: js > kyber"
+      <<: *stage_deploy_npm
+      deploy:
+        on:
+          branch: master
+          condition: $JS_KYBER_N != 0
+        provider: script
+        script: >-
+          cd external/js/kyber &&
+          npm ci &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
+    - name: "NPM: js > cothority"
+      <<: *stage_deploy_npm
+      deploy:
+        on:
+          branch: master
+          condition: $JS_COTHORITY_N != 0
+        provider: script
+        script: >-
+          cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
+          cd external/js/cothority &&
+          npm ci &&
+          npm link @dedis/kyber &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
 
 notifications:
   email: false
