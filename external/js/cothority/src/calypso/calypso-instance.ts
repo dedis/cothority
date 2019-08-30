@@ -142,20 +142,21 @@ export class CalypsoReadInstance extends Instance {
     static async spawn(bc: ByzCoinRPC, writeId: InstanceID, pub: Point, signers: Signer[], pay?: Instruction):
         Promise<CalypsoReadInstance> {
         const read = new Read({write: writeId, xc: pub.marshalBinary()});
-        const ctx = ClientTransaction.make(
-            bc.getProtocolVersion(),
-            Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
-                new Argument({
-                    name: CalypsoReadInstance.argumentRead,
-                    value: Buffer.from(Read.encode(read).finish()),
-                }),
-            ]),
-        );
+        const instrs = [Instruction.createSpawn(writeId, CalypsoReadInstance.contractID, [
+            new Argument({
+                name: CalypsoReadInstance.argumentRead,
+                value: Buffer.from(Read.encode(read).finish()),
+            }),
+        ])];
         const ctxSigners = [signers];
         if (pay) {
-            ctx.instructions.unshift(pay);
+            instrs.unshift(pay);
             ctxSigners.unshift(signers);
         }
+        const ctx = ClientTransaction.make(
+            bc.getProtocolVersion(),
+            ...instrs,
+        );
         await ctx.updateCountersAndSign(bc, ctxSigners);
         await bc.sendTransactionAndWait(ctx);
 
