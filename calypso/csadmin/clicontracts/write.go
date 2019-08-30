@@ -210,6 +210,19 @@ func WriteGet(c *cli.Context) error {
 		return errors.New("didn't get a write instance: " + err.Error())
 	}
 
+	if c.Bool("export") {
+		_, buf, _, _, err := proof.KeyValue()
+		if err != nil {
+			return errors.New("failed to get value from proof: " + err.Error())
+		}
+		reader := bytes.NewReader(buf)
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return errors.New("failed to copy to stdout: " + err.Error())
+		}
+		return nil
+	}
+
 	log.Infof("%s", write)
 
 	return nil
