@@ -131,8 +131,8 @@ testContractWriteGet() {
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
-    # Use the --readData option
-    echo "Should be encrypted - from STDIN" | runCA0 contract write spawn\
+    # Use the --readin option
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readData -x > writeid.txt
@@ -173,8 +173,8 @@ testContractWriteGet() {
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 
-    # Provide both --data and --readData. --readData should be used.
-    echo "Should be encrypted - from STDIN" | runCA0 contract write spawn\
+    # Provide both --data and --readin. --readin should be used.
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readData --data "Hello there." -x > writeid.txt
@@ -218,7 +218,7 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide both --extraData and --readExtra. --readExtra should be used.
-    echo "Extra data - from STDIN" | runCA0 contract write spawn\
+    echo -n "Extra data - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readExtra --extraData "Hello there." -x > writeid.txt
@@ -240,7 +240,7 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide both --data and --readExtra.
-    echo "Extra data - from STDIN" | runCA0 contract write spawn\
+    echo -n "Extra data - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readExtra --data "Hello there." -x > writeid.txt
@@ -262,7 +262,7 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide both --extraData and --readData.
-    echo "Should be encrypted - from STDIN" | runCA0 contract write spawn\
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
                     --readData --extraData "Hello there." -x > writeid.txt

@@ -61,8 +61,6 @@ func WriteSpawn(c *cli.Context) error {
 		if err != nil {
 			return errors.New("failed to read from stdin: " + err.Error())
 		}
-		// We found out that a newline is automatically added when using pipes
-		dataBuf = bytes.TrimRight(dataBuf, "\n")
 	} else {
 		dataBuf = []byte(c.String("data"))
 	}
