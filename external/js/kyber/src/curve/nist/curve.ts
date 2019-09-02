@@ -14,18 +14,18 @@ export default class Weierstrass implements Group {
     name: string;
     
     constructor(config: { name: string, bitSize: number, gx: BNType, gy: BNType, p: BNType, a: BNType, b: BNType, n: BN}) {
-        let { name, bitSize, gx, gy, ...options } = config;
+        let { name, bitSize, gx, gy, p, a, b, n } = config;
         this.name = name;
-        options["g"] = [new BN(gx, 16, "le"), new BN(gy, 16, "le")];
-        for (let k in options) {
-            if (k === "g") {
-                continue;
-            }
-            options[k] = new BN(options[k], 16, "le");
-        }
-        this.curve = new elliptic.curve.short(options);
+        const toBN = (b: BNType) => new BN(b, 16, "le");
+        this.curve = new elliptic.curve.short({
+            g: (<any>[new BN(gx, 16, "le"), new BN(gy, 16, "le")]),
+            a: toBN(a),
+            b: toBN(b),
+            p: toBN(p),
+            n: n,
+        });
         this.bitSize = bitSize;
-        this.redN = BN.red(options.n);
+        this.redN = BN.red(n);
     }
     
     coordLen(): number {

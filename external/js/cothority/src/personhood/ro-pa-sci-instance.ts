@@ -73,6 +73,13 @@ export default class RoPaSciInstance extends Instance {
     }
 
     /**
+     * Returns the firstMove and the fillUp values.
+     */
+    getChoice(): [number, Buffer] {
+        return [this.firstMove, this.fillUp ? Buffer.from(this.fillUp) : undefined];
+    }
+
+    /**
      * Check if both players have played their moves
      *
      * @returns true when both have played, false otherwise

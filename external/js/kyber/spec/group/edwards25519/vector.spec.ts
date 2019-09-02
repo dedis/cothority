@@ -10,7 +10,7 @@ import { unhexlify, hexToBuffer } from "../../helpers/utils";
 describe("Ed25519 Test Vector", () => {
     const curve = new Curve();
 
-    let lines;
+    let lines: string[];
     beforeAll(done => {
         fs.readFile(__dirname + "/sign.input", "utf-8", (err, data) => {
             lines = data.split("\n");
@@ -18,7 +18,7 @@ describe("Ed25519 Test Vector", () => {
         });
     });
 
-    function testFactory(i) {
+    function testFactory(i: number) {
         it("vector " + i, () => {
             const parts = lines[i].split(":");
             const hash = crypto.createHash("sha512");

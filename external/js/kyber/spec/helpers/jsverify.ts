@@ -1,17 +1,17 @@
 // https://github.com/jsverify/jsverify/blob/master/helpers/jasmineHelpers2.js
-import jsc from 'jsverify';
+import * as jsc from 'jsverify';
 
 beforeEach(function () {
   "use strict";
 
-  function message(r) {
-    return "Expected property to hold. Counterexample found: " + r.counterexamplestr;
+  function message(r: jsc.Result<any>) {
+    return `Expected property to hold. Counterexample found: ${r.counterexample}`;
   }
 
   jasmine.addMatchers({
     toHold: function () {
       return {
-        compare: function (actual, done) {
+        compare: function (actual: any, done: any) {
           var r = jsc.check(actual, { tests: 100 });
           if (done) {
             Promise.resolve().then(function () { return r; }).then(function (v) {

@@ -40,14 +40,15 @@ type Contract interface {
 	Invoke(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
 	// Delete removes the current instance
 	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
-	// Print ...
+	// FormatMethod returns the string representation of an instruction's method
 	FormatMethod(Instruction) string
 }
 
-// FormatMethod prints the method of a given instruction (ie. "Spawn", "Invoke",
-// or "Delete"). This basic function simply calls "strconv.Quote" on the args of
-// the method. It should be overrided by contracts that have more complex
-// arguments. See the config contract for an example.
+// FormatMethod returns the string representation of an instruction's method
+// (ie. "Spawn", "Invoke", or "Delete"). This basic function simply calls
+// "strconv.Quote" on the args of the method. It should be overrided by
+// contracts that have more complex arguments. See the config contract for an
+// example.
 func (b BasicContract) FormatMethod(instr Instruction) string {
 	out := new(strings.Builder)
 	var instArgs Arguments

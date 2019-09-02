@@ -171,26 +171,10 @@ export class ServerIdentity extends Message<ServerIdentity> {
      * @returns a websocket url
      */
     static urlToWebsocket(url: string): string {
-        const urlParser = new URL(url);
-        switch (urlParser.protocol) {
-            case "http:": {
-                urlParser.protocol = "ws:";
-                break;
-            }
-            case "https:": {
-                urlParser.protocol = "wss:";
-                break;
-            }
-            default : {
-                throw new Error("The url field should use either 'http:' or 'https:', but we found "
-                    + urlParser.protocol);
-            }
+        if (url.match(/^https?:\/\//) == null) {
+            throw new Error("The url field should use either 'http:' or 'https:'");
         }
-        let result = urlParser.toString();
-        if (result.slice(-1) === "/") {
-            result = result.slice(0, -1);
-        }
-        return result;
+        return url.replace(/^http(.*?)\/?$/, "ws$1");
     }
 
     /**

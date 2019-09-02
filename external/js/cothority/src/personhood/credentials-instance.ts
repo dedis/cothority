@@ -16,9 +16,9 @@ export default class CredentialsInstance extends Instance {
     static readonly argumentDarcID = "darcIDBuf";
 
     /**
-     * Generate the credential instance ID for a given darc ID
+     * Generate the credential instance ID for a given public key
      *
-     * @param buf The base ID of the darc
+     * @param buf the public key in marshalBinary form
      * @returns the id as a buffer
      */
     static credentialIID(buf: Buffer): InstanceID {

@@ -105,6 +105,13 @@ export class LongTermSecret extends OnChainSecretRPC {
             roster = bc.getConfig().roster;
         }
         const ocs = new OnChainSecretRPC(bc);
+        try {
+            await ocs.authorizeRoster(roster);
+        } catch (e) {
+            if (e.toString().indexOf("already authorised") < 0) {
+                throw new Error(e);
+            }
+        }
         const lr = await ocs.createLTS(roster, darcID, signers);
         return new LongTermSecret(bc, lr.instanceid, lr.X, roster);
     }
