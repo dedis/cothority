@@ -4,9 +4,19 @@ import Ed25519 from "./curve";
 import { int } from "../../random"
 import { Scalar } from "../../index";
 
+// based on DefinitelyTyped:types/bn.js/index.d.ts
+declare class RedBN extends BN {
+    fromRed(): BN
+    redAdd(_: BN): RedBN
+    redSub(_: BN): RedBN
+    redMul(_: BN): RedBN
+    redInvm(): RedBN
+    redNeg(): RedBN
+}
+
 export default class Ed25519Scalar implements Scalar {
     ref: {
-        arr: any,
+        arr: RedBN,
         curve: Ed25519
         red: any
     }

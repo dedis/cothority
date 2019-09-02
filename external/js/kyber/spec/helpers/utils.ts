@@ -14,7 +14,7 @@ export class PRNG {
         return this.seed;
     }
 
-    setSeed(seed) {
+    setSeed(seed: number) {
         this.seed = seed;
     }
 
@@ -25,7 +25,7 @@ export class PRNG {
         return Math.floor(rnd * 255);
     }
 
-    pseudoRandomBytes(n) {
+    pseudoRandomBytes(n: number) {
         const arr = Buffer.alloc(n, 0);
         for (let i = 0; i < n; i++) {
             arr[i] = this.genByte();

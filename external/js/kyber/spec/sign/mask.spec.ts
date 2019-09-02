@@ -4,7 +4,7 @@ import Mask from '../../src/sign/mask';
 describe('Mask Tests', () => {
     it('should create the correct aggregation', () => {
         const mask = Buffer.from([0b01010101, 0b00000001]);
-        const publics = [];
+        const publics: BN256G2Point[] = [];
 
         expect(() => new Mask(publics, mask)).toThrow();
 
