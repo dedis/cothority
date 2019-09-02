@@ -171,10 +171,10 @@ export class ServerIdentity extends Message<ServerIdentity> {
      * @returns a websocket url
      */
     static urlToWebsocket(url: string): string {
-        if (url.match(/^https?:\/\//)) {
+        if (url.match(/^https?:\/\//) == null) {
             throw new Error("The url field should use either 'http:' or 'https:'");
         }
-        return url.replace(/^http(.*?)\/?$/, "ws\1");
+        return url.replace(/^http(.*?)\/?$/, "ws$1");
     }
 
     /**
