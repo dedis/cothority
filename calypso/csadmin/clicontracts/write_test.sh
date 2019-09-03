@@ -55,13 +55,26 @@ testContractWriteInvoke() {
     matchOK "`cat iid.txt`" ^[0-9a-f]{64}$
 
     # Check the --data option
-    testOK runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --data "This is some cleartext data"
+    testOK runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --data "This should be encrypted data"
 
-    # Check the --readin option
-    testOK echo "This is some cleartext data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readin
+    # Check the --readData option
+    testOK echo "This should be encrypted data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readData
 
-    # Check the --readin option with --data
-    testOK echo "This is some cleartext data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readin --data "not used"
+    # Check the --readData option with --data
+    testOK echo "This should be encrypted data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readData --data "not used"
+
+    # Check the --extraData option
+    testOK runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --extraData "This is some cleartext data"
+
+    # Check the --readExtra option
+    testOK echo "This is some cleartext data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readExtra
+
+    # Check the --readExtra option with --extraData
+    testOK echo "This is some cleartext data" | runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readExtra --extraData "not used"
+
+    # Using --readData and --readExtra should not be permitted
+    testFail runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readExtra --readData
+    testFail runCA contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY" --readExtra --readData --extraData "extra" --data "data"
 }
 
 # rely on:
@@ -100,7 +113,7 @@ testContractWriteGet() {
     
     runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
-                    --data "Not secret" -x > writeid.txt
+                    --data "Should be encrypted" -x > writeid.txt
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -108,7 +121,7 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
--- Data: Not secret
+-- Data: Should be encrypted
 -- U: [0-9a-f]{64}
 -- Ubar: [0-9a-f]{64}
 -- E: [0-9a-f]{64}
@@ -119,10 +132,10 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Use the --readin option
-    echo "No secret from STDIN" | runCA0 contract write spawn\
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
-                    --readin -x > writeid.txt
+                    --readData -x > writeid.txt
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -130,7 +143,7 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
--- Data: No secret from STDIN
+-- Data: Should be encrypted - from STDIN
 -- U: [0-9a-f]{64}
 -- Ubar: [0-9a-f]{64}
 -- E: [0-9a-f]{64}
@@ -161,10 +174,10 @@ testContractWriteGet() {
 -- Cost: .*$"
 
     # Provide both --data and --readin. --readin should be used.
-    echo "No secret from STDIN" | runCA0 contract write spawn\
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
                     --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
                     --secret "Hello world." --key "$PUB_KEY"\
-                    --readin --data "Hello there." -x > writeid.txt
+                    --readData --data "Hello there." -x > writeid.txt
     WRITE_ID=`cat writeid.txt`
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -172,13 +185,101 @@ testContractWriteGet() {
     OUTRES=`runCA0 contract write get --instid $WRITE_ID`
 
     matchOK "$OUTRES" "^- Write:
--- Data: No secret from STDIN
+-- Data: Should be encrypted - from STDIN
 -- U: [0-9a-f]{64}
 -- Ubar: [0-9a-f]{64}
 -- E: [0-9a-f]{64}
 -- F: [0-9a-f]{64}
 -- C: [0-9a-f]{64}
 -- ExtraData: 
+-- LTSID: [0-9a-f]{64}
+-- Cost: .*$"
+
+    # Provide both --data and --extraData.
+    runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+                    --secret "Hello world." --key "$PUB_KEY"\
+                    --data "Should be encrypted"\
+                    --extraData "Public infos" -x > writeid.txt
+    WRITE_ID=`cat writeid.txt`
+    matchOK $WRITE_ID ^[0-9a-f]{64}$
+
+    # Lets now check the result
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
+
+    matchOK "$OUTRES" "^- Write:
+-- Data: Should be encrypted
+-- U: [0-9a-f]{64}
+-- Ubar: [0-9a-f]{64}
+-- E: [0-9a-f]{64}
+-- F: [0-9a-f]{64}
+-- C: [0-9a-f]{64}
+-- ExtraData: Public infos
+-- LTSID: [0-9a-f]{64}
+-- Cost: .*$"
+
+    # Provide both --extraData and --readExtra. --readExtra should be used.
+    echo -n "Extra data - from STDIN" | runCA0 contract write spawn\
+                    --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+                    --secret "Hello world." --key "$PUB_KEY"\
+                    --readExtra --extraData "Hello there." -x > writeid.txt
+    WRITE_ID=`cat writeid.txt`
+    matchOK $WRITE_ID ^[0-9a-f]{64}$
+
+    # Lets now check the result
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
+
+    matchOK "$OUTRES" "^- Write:
+-- Data: 
+-- U: [0-9a-f]{64}
+-- Ubar: [0-9a-f]{64}
+-- E: [0-9a-f]{64}
+-- F: [0-9a-f]{64}
+-- C: [0-9a-f]{64}
+-- ExtraData: Extra data - from STDIN
+-- LTSID: [0-9a-f]{64}
+-- Cost: .*$"
+
+    # Provide both --data and --readExtra.
+    echo -n "Extra data - from STDIN" | runCA0 contract write spawn\
+                    --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+                    --secret "Hello world." --key "$PUB_KEY"\
+                    --readExtra --data "Hello there." -x > writeid.txt
+    WRITE_ID=`cat writeid.txt`
+    matchOK $WRITE_ID ^[0-9a-f]{64}$
+
+    # Lets now check the result
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
+
+    matchOK "$OUTRES" "^- Write:
+-- Data: Hello there.
+-- U: [0-9a-f]{64}
+-- Ubar: [0-9a-f]{64}
+-- E: [0-9a-f]{64}
+-- F: [0-9a-f]{64}
+-- C: [0-9a-f]{64}
+-- ExtraData: Extra data - from STDIN
+-- LTSID: [0-9a-f]{64}
+-- Cost: .*$"
+
+    # Provide both --extraData and --readData.
+    echo -n "Should be encrypted - from STDIN" | runCA0 contract write spawn\
+                    --darc "$ID" --sign "$KEY" --instid "$LTS_ID"\
+                    --secret "Hello world." --key "$PUB_KEY"\
+                    --readData --extraData "Hello there." -x > writeid.txt
+    WRITE_ID=`cat writeid.txt`
+    matchOK $WRITE_ID ^[0-9a-f]{64}$
+
+    # Lets now check the result
+    OUTRES=`runCA0 contract write get --instid $WRITE_ID`
+
+    matchOK "$OUTRES" "^- Write:
+-- Data: Should be encrypted - from STDIN
+-- U: [0-9a-f]{64}
+-- Ubar: [0-9a-f]{64}
+-- E: [0-9a-f]{64}
+-- F: [0-9a-f]{64}
+-- C: [0-9a-f]{64}
+-- ExtraData: Hello there.
 -- LTSID: [0-9a-f]{64}
 -- Cost: .*$"
 }

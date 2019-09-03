@@ -87,8 +87,13 @@ $ csadmin contract write spawn --instid <lts instance id>\
 Note: Data stored with `--secret` will be encrypted using a `kyber.Point`.
 Depending on the suite used, this has a limitation on the size. For the default
 suite used (ed25519), this limitation is 29 bits. Therefore, it is possible to
-store additional but unencrypted data with the `--data` option, or directly from
-STDIN using the `--readin` option.
+store additional data in two fields: 'data' and 'extra data'. The 'data' field
+should contain data encrypted with a symetric key stored in the secret, while
+the 'extra data' field should contain any public information. 'data' can be set
+with the `--data` option or directly from STDIN using the `--readData` option.
+'extra data' can be set with the `--extraData` option or directly from STDIN
+using the `--readExtra` option. Note that `--readData` and `--readExtra` can NOT
+be used both at the same time.
 
 **5) Spawn a read instance**
 
