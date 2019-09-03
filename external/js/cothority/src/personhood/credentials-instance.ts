@@ -35,8 +35,8 @@ export default class CredentialsInstance extends Instance {
      * @param darcID    The darc instance ID
      * @param signers   The list of signers for the transaction
      * @param cred      The credential to store
-     * @param credID    Optional - if given, the instanceID will be sha256("credential" | pub)
-     * @param credDarcID Optional - if given, replaces the darc stored in the new credential with credDarcID.
+     * @param credID    the instanceID will be sha256("credential" | pub)
+     * @param credDarcID replaces the darc stored in the new credential with credDarcID
      * @returns a promise that resolves with the new instance
      */
     static async spawn(
@@ -44,14 +44,14 @@ export default class CredentialsInstance extends Instance {
         darcID: InstanceID,
         signers: Signer[],
         cred: CredentialStruct,
-        credID: Buffer = null,
-        credDarcID: InstanceID = null,
+        credID?: Buffer,
+        credDarcID?: InstanceID,
     ): Promise<CredentialsInstance> {
         const args = [new Argument({name: CredentialsInstance.argumentCredential, value: cred.toBytes()})];
-        if (credID) {
+        if (credID !== undefined) {
             args.push(new Argument({name: CredentialsInstance.argumentCredID, value: credID}));
         }
-        if (credDarcID) {
+        if (credDarcID !== undefined) {
             args.push(new Argument({name: CredentialsInstance.argumentDarcID, value: credDarcID}));
         }
         const inst = Instruction.createSpawn(
@@ -75,16 +75,16 @@ export default class CredentialsInstance extends Instance {
      * @param bc        The RPC to use
      * @param darcID    The darc instance ID
      * @param cred      The credential to store
-     * @param credID       Optional - if given, the instanceID will be sha256("credential" | credID)
-     * @returns a promise that resolves with the new instance
+     * @param credID    the instanceID will be sha256("credential" | credID)
+     * @returns the new instance
      */
     static create(
         bc: ByzCoinRPC,
         darcID: InstanceID,
         cred: CredentialStruct,
-        credID: Buffer = null,
+        credID?: Buffer,
     ): CredentialsInstance {
-        if (!credID) {
+        if (credID === undefined) {
             credID = randomBytes(32);
         }
         const inst = new Instance({
@@ -108,9 +108,10 @@ export default class CredentialsInstance extends Instance {
         Promise<CredentialsInstance> {
         return new CredentialsInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
+
     credential: CredentialStruct;
 
-    constructor(private rpc: ByzCoinRPC, inst: Instance) {
+    constructor(private rpc: ByzCoinRPC, readonly inst: Instance) {
         super(inst);
         if (inst.contractID.toString() !== CredentialsInstance.contractID) {
             throw new Error(`mismatch contract name: ${inst.contractID} vs ${CredentialsInstance.contractID}`);
@@ -121,8 +122,7 @@ export default class CredentialsInstance extends Instance {
     /**
      * Update the data of the crendetial instance by fetching the proof
      *
-     * @returns a promise resolving with the instance on success, rejecting with
-     * the error otherwise
+     * @returns a promise resolving with the instance
      */
     async update(): Promise<CredentialsInstance> {
         const inst = await Instance.fromByzcoin(this.rpc, this.id);
@@ -137,9 +137,9 @@ export default class CredentialsInstance extends Instance {
      *
      * @param credential    The name of the credential
      * @param attribute     The name of the attribute
-     * @returns the value of the attribute if it exists, null otherwise
+     * @returns the value of the attribute if it exists, undefined otherwise
      */
-    getAttribute(credential: string, attribute: string): Buffer {
+    getAttribute(credential: string, attribute: string): Buffer | undefined {
         return this.credential.getAttribute(credential, attribute);
     }
 
@@ -150,11 +150,9 @@ export default class CredentialsInstance extends Instance {
      * @param credential    Name of the credential
      * @param attribute     Name of the attribute
      * @param value         The value to set
-     * @returns a promise resolving when the transaction is in a block, or rejecting
-     * for an error
      */
-    async setAttribute(credential: string, attribute: string, value: Buffer): Promise<any> {
-        return this.credential.setAttribute(credential, attribute, value);
+    setAttribute(credential: string, attribute: string, value?: Buffer) {
+        this.credential.setAttribute(credential, attribute, value);
     }
 
     /**
@@ -162,9 +160,10 @@ export default class CredentialsInstance extends Instance {
      *
      * @param owners a list of signers to fulfill the expression of the `invoke:credential.update` rule.
      * @param newCred the new credentialStruct to store in the instance.
+     * @return the updated CredentialInstance
      */
-    async sendUpdate(owners: Signer[], newCred: CredentialStruct = null): Promise<CredentialsInstance> {
-        if (newCred) {
+    async sendUpdate(owners: Signer[], newCred?: CredentialStruct): Promise<CredentialsInstance> {
+        if (newCred !== undefined) {
             this.credential = newCred.copy();
         }
         const instr = Instruction.createInvoke(
@@ -188,7 +187,7 @@ export default class CredentialsInstance extends Instance {
      * signer-rule.
      * @param signatures a threshold list of signatures on the public key and the instanceID.
      */
-    async recoverIdentity(pubKey: Point, signatures: RecoverySignature[]): Promise<any> {
+    async recoverIdentity(pubKey: Point, signatures: RecoverySignature[]): Promise<void> {
         const sigBuf = Buffer.alloc(RecoverySignature.pubSig * signatures.length);
         signatures.forEach((s, i) => s.signature.copy(sigBuf, RecoverySignature.pubSig * i));
         const ctx = ClientTransaction.make(
@@ -225,7 +224,10 @@ export class CredentialStruct extends Message<CredentialStruct> {
     constructor(properties?: Properties<CredentialStruct>) {
         super(properties);
 
-        this.credentials = this.credentials.slice() || [];
+        if (this.credentials === undefined) {
+            this.credentials = [];
+        }
+        this.credentials = this.credentials.slice();
     }
 
     /**
@@ -233,26 +235,26 @@ export class CredentialStruct extends Message<CredentialStruct> {
      *
      * @param credential    The name of the credential
      * @param attribute     The name of the attribute
-     * @returns the value of the attribute if it exists, null otherwise
+     * @returns the value of the attribute if it exists, undefined otherwise
      */
-    getAttribute(credential: string, attribute: string): Buffer {
+    getAttribute(credential: string, attribute: string): Buffer | undefined {
         const cred = this.credentials.find((c) => c.name === credential);
-        if (!cred) {
-            return null;
+        if (cred === undefined) {
+            return undefined;
         }
         const att = cred.attributes.find((a) => a.name === attribute);
-        if (!att) {
-            return null;
+        if (att === undefined) {
+            return undefined;
         }
         return att.value;
     }
 
     /**
-     * getCredential returns the credential with the given name, or null if
+     * getCredential returns the credential with the given name, or undefined if
      * nothing found.
      * @param credential name of the credential to return
      */
-    getCredential(credential: string): Credential {
+    getCredential(credential: string): Credential | undefined {
         return this.credentials.find((c) => c.name === credential);
     }
 
@@ -265,7 +267,7 @@ export class CredentialStruct extends Message<CredentialStruct> {
      */
     setCredential(name: string, cred: Credential) {
         const index = this.credentials.findIndex((c) => c.name === name);
-        if (index < 0) {
+        if (index === -1) {
             this.credentials.push(cred);
         } else {
             this.credentials[index] = cred;
@@ -280,17 +282,15 @@ export class CredentialStruct extends Message<CredentialStruct> {
      * @param credential    Name of the credential
      * @param attribute     Name of the attribute
      * @param value         The value to set
-     * @returns a promise resolving when the transaction is in a block, or rejecting
-     * for an error
      */
-    setAttribute(credential: string, attribute: string, value: Buffer) {
-        let cred = this.credentials.find((c) => c.name === credential);
-        if (!cred) {
-            cred = new Credential({name: credential, attributes: [new Attribute({name: attribute, value})]});
-            this.credentials.push(cred);
+    setAttribute(credential: string, attribute: string, value?: Buffer) {
+        const attr = new Attribute({name: attribute, value});
+        const cred = this.credentials.find((c) => c.name === credential);
+        if (cred === undefined) {
+            this.credentials.push(
+                new Credential({name: credential, attributes: [attr]}));
         } else {
             const idx = cred.attributes.findIndex((a) => a.name === attribute);
-            const attr = new Attribute({name: attribute, value});
             if (idx === -1) {
                 cred.attributes.push(attr);
             } else {
@@ -307,7 +307,7 @@ export class CredentialStruct extends Message<CredentialStruct> {
      * @param credential the name of the credential
      * @param attribute the attribute to be deleted
      */
-    deleteAttribute(credential: string, attribute: string): Buffer {
+    deleteAttribute(credential: string, attribute: string): Buffer | undefined {
         const cred = this.getCredential(credential);
         if (!cred) {
             return undefined;
@@ -364,7 +364,10 @@ export class Credential extends Message<Credential> {
     constructor(props?: Properties<Credential>) {
         super(props);
 
-        this.attributes = this.attributes.slice() || [];
+        if (this.attributes === undefined) {
+            this.attributes = [];
+        }
+        this.attributes = this.attributes.slice();
     }
 }
 
@@ -386,7 +389,10 @@ export class Attribute extends Message<Attribute> {
     constructor(props?: Properties<Attribute>) {
         super(props);
 
-        this.value = Buffer.from(this.value || EMPTY_BUFFER);
+        if (this.value === undefined) {
+            this.value = EMPTY_BUFFER;
+        }
+        this.value = Buffer.from(this.value);
     }
 }
 
