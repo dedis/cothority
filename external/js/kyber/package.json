@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dedis/kyber",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "A typescript implementation of Kyber interfaces",
   "main": "index.js",
   "browser": "bundle.min.js",

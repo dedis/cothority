@@ -24,11 +24,14 @@ import (
 // by the DKG. The secret that will be encrypted under the collective public key
 // is provided as a string with --secret and then converted as a slice of bytes.
 // This secret has a maximum size depending on the suite used (29 bits for
-// ed25519). Another field, filled with --data or from STDIN with the --readin
+// ed25519). Another field, filled with --data or from STDIN with the --readData
 // option, can contain unlimited sized data. The data however won't be
-// automatically encrypted. If everything goes well, it prints the instance id
-// of the newly spawned Write instance. With the --export option, the instance
-// id is sent to STDOUT.
+// automatically encrypted. An additional field 'extra data' can be set, which
+// is useful to store cleartext data, where --data should be used to store
+// encrypted data. The 'extra data' field can be filled with either --extraData
+// or --readExtra. Both --readExtra and --readData can NOT be used at the same
+// time. If everything goes well, it prints the instance id of the newly spawned
+// Write instance. With the --export option, the instance id is sent to STDOUT.
 func WriteSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
@@ -50,15 +53,28 @@ func WriteSpawn(c *cli.Context) error {
 	}
 
 	var dataBuf []byte
-	if c.Bool("readin") {
+	if c.Bool("readData") {
+		if c.Bool("readExtra") {
+			return errors.New("--readData can not be used toghether with --readExtra")
+		}
 		dataBuf, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return errors.New("failed to read from stdin: " + err.Error())
 		}
-		// We found out that a newline is automatically added when using pipes
-		dataBuf = bytes.TrimRight(dataBuf, "\n")
 	} else {
 		dataBuf = []byte(c.String("data"))
+	}
+
+	var extraDataBuf []byte
+	if c.Bool("readExtra") {
+		extraDataBuf, err = ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return errors.New("failed to read from stdin: " + err.Error())
+		}
+		// We found out that a newline is automatically added when using pipes
+		extraDataBuf = bytes.TrimRight(extraDataBuf, "\n")
+	} else {
+		extraDataBuf = []byte(c.String("extraData"))
 	}
 
 	secret := c.String("secret")
@@ -100,6 +116,7 @@ func WriteSpawn(c *cli.Context) error {
 			"too long to be embeded")
 	}
 	write.Data = dataBuf
+	write.ExtraData = extraDataBuf
 	writeBuf, err := protobuf.Encode(write)
 	if err != nil {
 		return errors.New("failed to encode Write struct: " + err.Error())
