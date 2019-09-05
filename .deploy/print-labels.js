@@ -1,6 +1,6 @@
 // https://guyharwood.co.uk/2018/03/12/conditional-travis-builds-with-pull-request-labels/
 
-// This script outputs each label's name found at the repo patch and PR id given
+// This script outputs each label's name found at the repo path and PR id given
 // in argument. Each label is printed in a separate line. If the PR has labels
 // "fix", "issues", "build-js-kyber", then the script will output:
 //

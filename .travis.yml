@@ -36,10 +36,10 @@ _: &stage_deploy_npm
   script: 
     - TAG_NAMES=""
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then TAG_NAMES=$(node .deploy/print-labels.js dedis/cothority $TRAVIS_PULL_REQUEST); fi
-    - PREBUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^Prebuild js/cothority$" || true`
-    - PREBUILD_JS_KYBER=`echo "$TAG_NAMES" | grep -E -c "^Prebuild js/kyber$" || true`
-    - BUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^Build js/cothority$" || true`
-    - BUILD_JS_KYBER=`echo "$TAG_NAMES" | grep -E -c "^Build js/kyber$" || true`
+    - PREBUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^PREBUILD js/cothority$" || true`
+    - PREBUILD_JS_KYBER=`echo "$TAG_NAMES" | grep -E -c "^PREBUILD js/kyber$" || true`
+    - BUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^BUILD js/cothority$" || true`
+    - BUILD_JS_KYBER=`echo "$TAG_NAMES" | grep -E -c "^BUILD js/kyber$" || true`
   before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
 
 
