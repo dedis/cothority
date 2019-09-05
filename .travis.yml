@@ -34,7 +34,8 @@ _: &stage_test_go
 _: &stage_deploy_npm
   <<: *language_js
   script: 
-    - TAG_NAMES=$(node .deploy/print-labels.js dedis/cothority $TRAVIS_PULL_REQUEST)
+    - TAG_NAMES=""
+    - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then TAG_NAMES=$(node .deploy/print-labels.js dedis/cothority $TRAVIS_PULL_REQUEST); fi
     - PREBUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^Prebuild js/cothority$" || true`
     - PREBUILD_JS_KYBER=`echo "$TAG_NAMES" | grep -E -c "^Prebuild js/kyber$" || true`
     - BUILD_JS_COTHORITY=`echo "$TAG_NAMES" | grep -E -c "^Build js/cothority$" || true`
