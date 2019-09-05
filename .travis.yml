@@ -33,11 +33,8 @@ _: &stage_test_go
   script: GO111MODULE=on make test_goveralls
 _: &stage_deploy_npm
   <<: *language_js
-  script: 
-    - CHANGED_FILES=$(git diff --name-only $TRAVIS_COMMIT_RANGE)
-    - JS_COTHORITY_N=`echo "$CHANGED_FILES" | grep -E -c "^external/js/cothority/" || true`
-    - JS_KYBER_N=`echo "$CHANGED_FILES" | grep -E -c "^external/js/kyber/" || true`
   before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
+  script: skip  # default to `make test`
 
 
 dist: trusty
@@ -116,7 +113,6 @@ jobs:
       deploy:
         on:
           branch: master
-          condition: $JS_KYBER_N != 0
         provider: script
         script: >-
           cd external/js/kyber &&
@@ -128,7 +124,6 @@ jobs:
       deploy:
         on:
           branch: master
-          condition: $JS_COTHORITY_N != 0
         provider: script
         script: >-
           cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
