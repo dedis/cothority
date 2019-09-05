@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"time"
 
+	_ "github.com/dedis/odyssey/projectc"
 	"go.dedis.ch/cothority/v3"
 	_ "go.dedis.ch/cothority/v3/authprox"
 	_ "go.dedis.ch/cothority/v3/byzcoin"
