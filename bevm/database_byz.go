@@ -65,22 +65,22 @@ func (db *ClientByzDatabase) Put(key []byte, value []byte) error {
 func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	instID := db.getValueInstanceID(key)
 
-	// Retrieve the proof of the ByzCoin instance
+	// Retrieve the proof of the BEvmValue instance
 	proofResponse, err := db.client.GetProof(instID[:])
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error retrieving BEvmValue instance: " + err.Error())
 	}
 
 	// Validate the proof
 	err = proofResponse.Proof.Verify(db.client.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error verifying BEvmValue instance proof: " + err.Error())
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error getting BEvmValue instance value: " + err.Error())
 	}
 
 	return value, nil
@@ -97,7 +97,7 @@ func (db *ClientByzDatabase) Has(key []byte) (bool, error) {
 func (db *ClientByzDatabase) Get(key []byte) ([]byte, error) {
 	value, err := db.getBEvmValue(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting value for key '%v': %s", key, err.Error())
 	}
 
 	return value, nil

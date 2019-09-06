@@ -1,6 +1,8 @@
 package bevm
 
 import (
+	"errors"
+
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
@@ -27,7 +29,7 @@ func newServiceBEvm(c *onet.Context) (onet.Service, error) {
 
 	err := byzcoin.RegisterContract(c, ContractBEvmID, contractBEvmFromBytes)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error registering BEvm contract: " + err.Error())
 	}
 
 	return s, nil
@@ -41,7 +43,7 @@ func newServiceBEvmValue(c *onet.Context) (onet.Service, error) {
 	// BEvmValue does not support explicit creation, so we can pass nil
 	err := byzcoin.RegisterContract(c, ContractBEvmValueID, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error registering BEvmValue contract: " + err.Error())
 	}
 
 	return s, nil
