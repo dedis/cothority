@@ -137,36 +137,15 @@ type Client struct {
 func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (byzcoin.InstanceID, error) {
 	instanceID := byzcoin.NewInstanceID(nil)
 
-	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
-	if err != nil {
-		return instanceID, errors.New("[NewBEvm] Error retrieving signer counters: " + err.Error())
-	}
-
-	ctx, err := bcClient.CreateTransaction(byzcoin.Instruction{
-		InstanceID:    byzcoin.NewInstanceID(gDarc.GetBaseID()),
-		SignerCounter: []uint64{counters.Counters[0] + 1},
-		Spawn: &byzcoin.Spawn{
-			ContractID: ContractBEvmID,
-			Args:       byzcoin.Arguments{},
-		},
+	tx, err := spawnBEvm(bcClient, signer, byzcoin.NewInstanceID(gDarc.GetBaseID()), &byzcoin.Spawn{
+		ContractID: ContractBEvmID,
+		Args:       byzcoin.Arguments{},
 	})
 	if err != nil {
-		return instanceID, errors.New("[NewBEvm] Error creating ByzCoin transaction: " + err.Error())
+		return instanceID, errors.New("Error executing ByzCoin spawn: " + err.Error())
 	}
 
-	err = ctx.FillSignersAndSignWith(signer)
-	if err != nil {
-		return instanceID, errors.New("[NewBEvm] Error signing ByzCoin transaction: " + err.Error())
-	}
-
-	// Sending this transaction to ByzCoin does not directly include it in the
-	// global state - first we must wait for the new block to be created.
-	_, err = bcClient.AddTransactionAndWait(ctx, 5)
-	if err != nil {
-		return instanceID, errors.New("[NewBEvm] Error sending ByzCoin transaction: " + err.Error())
-	}
-
-	instanceID = ctx.Instructions[0].DeriveID("")
+	instanceID = tx.Instructions[0].DeriveID("")
 
 	return instanceID, nil
 }
@@ -182,32 +161,11 @@ func NewClient(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.
 
 // Delete deletes the ByzCoin EVM client and all its state
 func (client *Client) Delete() error {
-	counters, err := client.bcClient.GetSignerCounters(client.signer.Identity().String())
-	if err != nil {
-		return errors.New("[Delete] Error retrieving signer counters: " + err.Error())
-	}
-
-	ctx, err := client.bcClient.CreateTransaction(byzcoin.Instruction{
-		InstanceID:    client.instanceID,
-		SignerCounter: []uint64{counters.Counters[0] + 1},
-		Delete: &byzcoin.Delete{
-			ContractID: ContractBEvmID,
-		},
+	_, err := client.deleteBEvm(&byzcoin.Delete{
+		ContractID: ContractBEvmID,
 	})
 	if err != nil {
-		return errors.New("[Delete] Error creating ByzCoin transaction: " + err.Error())
-	}
-
-	err = ctx.FillSignersAndSignWith(client.signer)
-	if err != nil {
-		return errors.New("[Delete] Error signing ByzCoin transaction: " + err.Error())
-	}
-
-	// Sending this transaction to ByzCoin does not directly include it in the
-	// global state - first we must wait for the new block to be created.
-	_, err = client.bcClient.AddTransactionAndWait(ctx, 5)
-	if err != nil {
-		return errors.New("[Delete] Error sending ByzCoin transaction: " + err.Error())
+		return errors.New("Error executing ByzCoin delete: " + err.Error())
 	}
 
 	return nil
@@ -378,35 +336,60 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (*state.State
 
 // Invoke a method on a ByzCoin EVM instance
 func (client *Client) invoke(command string, args byzcoin.Arguments) error {
-	counters, err := client.bcClient.GetSignerCounters(client.signer.Identity().String())
-	if err != nil {
-		return errors.New("Error retrieving signer counters: " + err.Error())
-	}
-
-	ctx, err := client.bcClient.CreateTransaction(byzcoin.Instruction{
-		InstanceID:    client.instanceID,
-		SignerCounter: []uint64{counters.Counters[0] + 1},
-		Invoke: &byzcoin.Invoke{
-			ContractID: ContractBEvmID,
-			Command:    command,
-			Args:       args,
-		},
+	_, err := client.invokeBEvm(&byzcoin.Invoke{
+		ContractID: ContractBEvmID,
+		Command:    command,
+		Args:       args,
 	})
 	if err != nil {
-		return errors.New("Error creating ByzCoin transaction: " + err.Error())
+		return errors.New("Error executing ByzCoin invoke: " + err.Error())
 	}
 
-	err = ctx.FillSignersAndSignWith(client.signer)
+	return nil
+}
+
+func spawnBEvm(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.InstanceID,
+	instr *byzcoin.Spawn) (*byzcoin.ClientTransaction, error) {
+	return execByzCoinTx(bcClient, signer, instanceID, instr, nil, nil)
+}
+
+func (client *Client) invokeBEvm(instr *byzcoin.Invoke) (*byzcoin.ClientTransaction, error) {
+	return execByzCoinTx(client.bcClient, client.signer, client.instanceID, nil, instr, nil)
+}
+
+func (client *Client) deleteBEvm(instr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
+	return execByzCoinTx(client.bcClient, client.signer, client.instanceID, nil, nil, instr)
+}
+
+func execByzCoinTx(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.InstanceID,
+	spawnInstr *byzcoin.Spawn, invokeInstr *byzcoin.Invoke, deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
+	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return errors.New("Error signing ByzCoin transaction: " + err.Error())
+		return nil, errors.New("Error retrieving signer counters: " + err.Error())
+	}
+
+	tx, err := bcClient.CreateTransaction(byzcoin.Instruction{
+		InstanceID:    instanceID,
+		SignerCounter: []uint64{counters.Counters[0] + 1},
+		Spawn:         spawnInstr,
+		Invoke:        invokeInstr,
+		Delete:        deleteInstr,
+	})
+	if err != nil {
+		return nil, errors.New("Error creating ByzCoin transaction: " + err.Error())
+	}
+
+	err = tx.FillSignersAndSignWith(signer)
+	if err != nil {
+		return nil, errors.New("Error signing ByzCoin transaction: " + err.Error())
 	}
 
 	// Sending this transaction to ByzCoin does not directly include it in the
 	// global state - first we must wait for the new block to be created.
-	_, err = client.bcClient.AddTransactionAndWait(ctx, 5)
+	_, err = bcClient.AddTransactionAndWait(tx, 5)
 	if err != nil {
-		return errors.New("Error sending ByzCoin transaction: " + err.Error())
+		return nil, errors.New("Error sending ByzCoin transaction: " + err.Error())
 	}
 
-	return nil
+	return &tx, nil
 }
