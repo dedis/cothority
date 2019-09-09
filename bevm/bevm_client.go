@@ -42,17 +42,17 @@ type EvmContract struct {
 func NewEvmContract(filepath string) (*EvmContract, error) {
 	abiJSON, err := ioutil.ReadFile(filepath + ".abi")
 	if err != nil {
-		return nil, errors.New("Error reading contract ABI: " + err.Error())
+		return nil, errors.New("error reading contract ABI: " + err.Error())
 	}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(abiJSON)))
 	if err != nil {
-		return nil, errors.New("Error decoding contract ABI JSON: " + err.Error())
+		return nil, errors.New("error decoding contract ABI JSON: " + err.Error())
 	}
 
 	contractBytecode, err := ioutil.ReadFile(filepath + ".bin")
 	if err != nil {
-		return nil, errors.New("Error reading contract Bytecode: " + err.Error())
+		return nil, errors.New("error reading contract Bytecode: " + err.Error())
 	}
 
 	return &EvmContract{
@@ -91,7 +91,7 @@ type EvmAccount struct {
 func NewEvmAccount(privateKey string) (*EvmAccount, error) {
 	privKey, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return nil, errors.New("Error decoding private key: " + err.Error())
+		return nil, errors.New("error decoding private key: " + err.Error())
 	}
 
 	address := crypto.PubkeyToAddress(privKey.PublicKey)
@@ -113,12 +113,12 @@ func (account EvmAccount) SignAndMarshalTx(tx *types.Transaction) ([]byte, error
 
 	signedTx, err := types.SignTx(tx, signer, account.PrivateKey)
 	if err != nil {
-		return nil, errors.New("Error signing EVM transaction: " + err.Error())
+		return nil, errors.New("error signing EVM transaction: " + err.Error())
 	}
 
 	signedBuffer, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, errors.New("Error marshalling EVM transaction to JSON: " + err.Error())
+		return nil, errors.New("error marshalling EVM transaction to JSON: " + err.Error())
 	}
 
 	return signedBuffer, nil
@@ -142,7 +142,7 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (by
 		Args:       byzcoin.Arguments{},
 	})
 	if err != nil {
-		return instanceID, errors.New("Error executing ByzCoin spawn: " + err.Error())
+		return instanceID, errors.New("error executing ByzCoin spawn: " + err.Error())
 	}
 
 	instanceID = tx.Instructions[0].DeriveID("")
@@ -165,7 +165,7 @@ func (client *Client) Delete() error {
 		ContractID: ContractBEvmID,
 	})
 	if err != nil {
-		return errors.New("Error executing ByzCoin delete: " + err.Error())
+		return errors.New("error executing ByzCoin delete: " + err.Error())
 	}
 
 	return nil
@@ -178,21 +178,21 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64, 
 
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
-		return errors.New("Error packing contract constructor: " + err.Error())
+		return errors.New("error packing contract constructor: " + err.Error())
 	}
 
 	callData := append(contract.Bytecode, packedArgs...)
 	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.SignAndMarshalTx(tx)
 	if err != nil {
-		return errors.New("Error preparing EVM transaction for contract deployment: " + err.Error())
+		return errors.New("error preparing EVM transaction for contract deployment: " + err.Error())
 	}
 
 	err = client.invoke("transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return errors.New("Error sending ByzCoin transaction for EVM contract deployment: " + err.Error())
+		return errors.New("error sending ByzCoin transaction for EVM contract deployment: " + err.Error())
 	}
 
 	contract.Address = crypto.CreateAddress(account.Address, account.Nonce)
@@ -208,20 +208,20 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, amount uin
 
 	callData, err := contract.packMethod(method, args...)
 	if err != nil {
-		return fmt.Errorf("Error packing contract method '%s': %s", method, err.Error())
+		return fmt.Errorf("error packing contract method '%s': %s", method, err.Error())
 	}
 
 	tx := types.NewTransaction(account.Nonce, contract.Address, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.SignAndMarshalTx(tx)
 	if err != nil {
-		return errors.New("Error preparing EVM transaction for method execution: " + err.Error())
+		return errors.New("error preparing EVM transaction for method execution: " + err.Error())
 	}
 
 	err = client.invoke("transaction", byzcoin.Arguments{
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return errors.New("Error sending ByzCoin transaction for EVM method execution: " + err.Error())
+		return errors.New("error sending ByzCoin transaction for EVM method execution: " + err.Error())
 	}
 
 	account.Nonce++
@@ -237,13 +237,13 @@ func (client *Client) Call(account *EvmAccount, result interface{}, contract *Ev
 	// Pack the method call and arguments
 	callData, err := contract.packMethod(method, args...)
 	if err != nil {
-		return fmt.Errorf("Error packing contract view method '%s': %s", method, err.Error())
+		return fmt.Errorf("error packing contract view method '%s': %s", method, err.Error())
 	}
 
 	// Retrieve the EVM state
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return errors.New("Error retrieving EVM state: " + err.Error())
+		return errors.New("error retrieving EVM state: " + err.Error())
 	}
 
 	// Instantiate a new EVM
@@ -252,13 +252,13 @@ func (client *Client) Call(account *EvmAccount, result interface{}, contract *Ev
 	// Perform the call (1 Ether should be enough for everyone [tm]...)
 	ret, _, err := evm.Call(vm.AccountRef(account.Address), contract.Address, callData, uint64(1*WeiPerEther), big.NewInt(0))
 	if err != nil {
-		return errors.New("Error executing EVM view method: " + err.Error())
+		return errors.New("error executing EVM view method: " + err.Error())
 	}
 
 	// Unpack the result into the caller's variable
 	err = contract.unpackResult(&result, method, ret)
 	if err != nil {
-		return errors.New("Error unpacking EVM view method result: " + err.Error())
+		return errors.New("error unpacking EVM view method result: " + err.Error())
 	}
 
 	return nil
@@ -271,7 +271,7 @@ func (client *Client) CreditAccount(amount *big.Int, address common.Address) err
 		{Name: "amount", Value: amount.Bytes()},
 	})
 	if err != nil {
-		return errors.New("Error crediting account: " + err.Error())
+		return errors.New("error crediting account: " + err.Error())
 	}
 
 	log.Lvlf2("Credited %d wei on '%x'", amount, address)
@@ -283,7 +283,7 @@ func (client *Client) CreditAccount(amount *big.Int, address common.Address) err
 func (client *Client) GetAccountBalance(address common.Address) (*big.Int, error) {
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, errors.New("Error retrieving EVM state: " + err.Error())
+		return nil, errors.New("error retrieving EVM state: " + err.Error())
 	}
 
 	balance := stateDb.GetBalance(address)
@@ -301,32 +301,32 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (*state.State
 	// Retrieve the proof of the Byzcoin instance
 	proofResponse, err := bcClient.GetProof(instID[:])
 	if err != nil {
-		return nil, errors.New("Error retrieving BEvm instance: " + err.Error())
+		return nil, errors.New("error retrieving BEvm instance: " + err.Error())
 	}
 
 	// Validate the proof
 	err = proofResponse.Proof.Verify(bcClient.ID)
 	if err != nil {
-		return nil, errors.New("Error verifying BEvm instance proof: " + err.Error())
+		return nil, errors.New("error verifying BEvm instance proof: " + err.Error())
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, errors.New("Error getting BEvm instance value: " + err.Error())
+		return nil, errors.New("error getting BEvm instance value: " + err.Error())
 	}
 
 	// Decode the proof value into an EVM State
 	var bs State
 	err = protobuf.Decode(value, &bs)
 	if err != nil {
-		return nil, errors.New("Error decoding BEvm instance value: " + err.Error())
+		return nil, errors.New("error decoding BEvm instance value: " + err.Error())
 	}
 
 	// Create a client ByzDB instance
 	byzDb, err := NewClientByzDatabase(instID, bcClient)
 	if err != nil {
-		return nil, errors.New("Error creating a new ByzDB instance: " + err.Error())
+		return nil, errors.New("error creating a new ByzDB instance: " + err.Error())
 	}
 
 	db := state.NewDatabase(byzDb)
@@ -342,7 +342,7 @@ func (client *Client) invoke(command string, args byzcoin.Arguments) error {
 		Args:       args,
 	})
 	if err != nil {
-		return errors.New("Error executing ByzCoin invoke: " + err.Error())
+		return errors.New("error executing ByzCoin invoke: " + err.Error())
 	}
 
 	return nil
@@ -365,7 +365,7 @@ func execByzCoinTx(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzc
 	spawnInstr *byzcoin.Spawn, invokeInstr *byzcoin.Invoke, deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
 	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return nil, errors.New("Error retrieving signer counters: " + err.Error())
+		return nil, errors.New("error retrieving signer counters: " + err.Error())
 	}
 
 	tx, err := bcClient.CreateTransaction(byzcoin.Instruction{
@@ -376,19 +376,19 @@ func execByzCoinTx(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzc
 		Delete:        deleteInstr,
 	})
 	if err != nil {
-		return nil, errors.New("Error creating ByzCoin transaction: " + err.Error())
+		return nil, errors.New("error creating ByzCoin transaction: " + err.Error())
 	}
 
 	err = tx.FillSignersAndSignWith(signer)
 	if err != nil {
-		return nil, errors.New("Error signing ByzCoin transaction: " + err.Error())
+		return nil, errors.New("error signing ByzCoin transaction: " + err.Error())
 	}
 
 	// Sending this transaction to ByzCoin does not directly include it in the
 	// global state - first we must wait for the new block to be created.
 	_, err = bcClient.AddTransactionAndWait(tx, 5)
 	if err != nil {
-		return nil, errors.New("Error sending ByzCoin transaction: " + err.Error())
+		return nil, errors.New("error sending ByzCoin transaction: " + err.Error())
 	}
 
 	return &tx, nil
