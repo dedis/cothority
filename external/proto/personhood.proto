@@ -63,6 +63,9 @@ message RoPaSciStruct {
   optional sint32 firstplayer = 4;
   optional sint32 secondplayer = 5;
   optional bytes secondplayeraccount = 6;
+  optional bytes firstplayeraccount = 7;
+  optional bytes calypsowrite = 8;
+  optional bytes calypsoread = 9;
 }
 
 // CredentialStruct holds a slice of credentials.

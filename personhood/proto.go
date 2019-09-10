@@ -75,6 +75,9 @@ type RoPaSciStruct struct {
 	FirstPlayer         int                `protobuf:"opt"`
 	SecondPlayer        int                `protobuf:"opt"`
 	SecondPlayerAccount byzcoin.InstanceID `protobuf:"opt"`
+	FirstPlayerAccount  byzcoin.InstanceID `protobuf:"opt"`
+	CalypsoWrite        byzcoin.InstanceID `protobuf:"opt"`
+	CalypsoRead         byzcoin.InstanceID `protobuf:"opt"`
 }
 
 // CredentialStruct holds a slice of credentials.

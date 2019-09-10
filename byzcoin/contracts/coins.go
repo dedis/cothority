@@ -189,7 +189,7 @@ func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			}
 		}
 	default:
-		err = errors.New("Coin contract can only mine and transfer")
+		err = errors.New("coin contract can only mine and transfer")
 		return
 	}
 
