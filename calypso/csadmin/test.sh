@@ -71,7 +71,9 @@ testAuth(){
     unset COTHORITY_ALLOW_INSECURE_ADMIN
 }
 
-# Rely on `csadmin contract lts spawn` and `csadmin authorize`
+# Rely on:
+# - csadmin contract lts spawn
+# - csadmin authorize
 testDkgStart(){
     rm -f config/*
     runCoBG 1 2 3
@@ -239,7 +241,7 @@ Hello world."
     matchOK "`cat data.txt`" "Hello world."
 
     #
-    # Now lets try to generate a new key and use this one to encrypt the data:
+    # Now let's try to generate a new key and use this one to encrypt the data:
     #
     #  1: generate a new key
     #  2: create a new read request

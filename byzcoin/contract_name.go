@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
@@ -45,6 +46,15 @@ type contractNaming struct {
 	ContractNamingBody
 }
 
+// String returns a human readable string representation of ContractNamingBody
+func (c ContractNamingBody) String() string {
+	out := new(strings.Builder)
+	out.WriteString("- ContractNamingBody:\n")
+	fmt.Fprintf(out, "-- Latest: %s\n", c.Latest)
+
+	return out.String()
+}
+
 func contractNamingFromBytes(in []byte) (Contract, error) {
 	c := &contractNaming{}
 	err := protobuf.DecodeWithConstructors(in, &c.ContractNamingBody, network.DefaultConstructors(cothority.Suite))
@@ -58,11 +68,11 @@ func contractNamingFromBytes(in []byte) (Contract, error) {
 func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(NamingInstanceID.Slice())
 	if err != nil {
-		return err
+		return errors.New("failed to get proof of NamingInstanceID: " + err.Error())
 	}
 	ok, err := pr.Exists(NamingInstanceID.Slice())
 	if err != nil {
-		return err
+		return errors.New("failed to see if proof exists: " + err.Error())
 	}
 
 	// The naming contract does not exist yet, so we need to create a
@@ -87,7 +97,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 
 	// Check the signature counters.
 	if err := verifySignerCounters(rst, inst.SignerCounter, inst.SignerIdentities); err != nil {
-		return err
+		return errors.New("failed to verify the counters: " + err.Error())
 	}
 
 	// Get the darc, we have to do it differently than the normal
@@ -103,11 +113,11 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	}
 	_, _, cID, dID, err := rst.GetValues(value)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get the rst values of %s: %s", value, err.Error())
 	}
 	d, err := LoadDarcFromTrie(rst, dID)
 	if err != nil {
-		return err
+		return errors.New("failed to load darc from tries: " + err.Error())
 	}
 
 	// Check that the darc has the right permission to allow naming.

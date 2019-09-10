@@ -2172,7 +2172,8 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 				var contractID string
 				_, _, contractID, _, err = sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
-					err = fmt.Errorf("%s couldn't get contractID from instruction %+v", s.ServerIdentity(), instr)
+					err = fmt.Errorf("%s couldn't get contractID from the "+
+						"following instruction:\n%+v", s.ServerIdentity(), instr)
 					return
 				}
 				err = fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
