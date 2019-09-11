@@ -1,7 +1,9 @@
 all: test
 
-include $(shell go env GOPATH)/src/github.com/dedis/Coding/bin/Makefile.base
-EXCLUDE_LINT = "should be.*UI|_test.go"
+Coding/bin/Makefile.base:
+	git clone https://github.com/dedis/Coding
+include Coding/bin/Makefile.base
+EXCLUDE_LINT = should be.*UI|_test.go
 
 # You can use `test_playground` to run any test or part of cothority
 # for more than once in Travis. Change `make test` in .travis.yml

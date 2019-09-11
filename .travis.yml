@@ -10,8 +10,6 @@ _: &language_js
   language: node_js
   node_js: "lts/*"
 
-_: &get_coding
-  b=github.com/dedis/Coding; git clone https://$b.git $GOPATH/src/$b
 _: &gen_link_kyber
   pushd external/js/kyber && npm ci && npm run link && popd
 _: &get_go
@@ -19,7 +17,6 @@ _: &get_go
   - . $HOME/.gimme/envs/go1.12.4.env
 
 _: &stage_lint_go
-  before_script: *get_coding
   script:
     - make -C conode verify
     - GO111MODULE=on make test_{fmt,lint}
@@ -29,7 +26,6 @@ _: &stage_build_go
     - GO111MODULE=on go get ./...
     - GO111MODULE=on go build ./...
 _: &stage_test_go
-  before_script: *get_coding
   script: GO111MODULE=on make test_goveralls
 _: &stage_deploy_npm
   <<: *language_js
@@ -50,7 +46,6 @@ jobs:
     - stage: lint
       name: "protobuf"
       language: minimal
-      before_script: *get_coding
       script: make test_proto
     - <<: *stage_lint_go
       <<: *language_go_1_11
@@ -86,7 +81,6 @@ jobs:
     - name: "java"
       language: java
       install: *get_go
-      before_script: *get_coding
       script: make test_java
     - name: "js > kyber"
       <<: *language_js
@@ -98,7 +92,6 @@ jobs:
       <<: *language_js
       install: *get_go
       before_script:
-        - *get_coding
         - make docker
         - *gen_link_kyber
       script:
