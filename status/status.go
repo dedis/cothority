@@ -13,12 +13,12 @@ import (
 	"sort"
 	"strings"
 
+	cli "github.com/urfave/cli"
 	status "go.dedis.ch/cothority/v3/status/service"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	cli "gopkg.in/urfave/cli.v1"
 )
 
 func main() {

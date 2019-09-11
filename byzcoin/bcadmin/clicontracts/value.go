@@ -7,11 +7,11 @@ import (
 
 	"go.dedis.ch/onet/v3/log"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
-	"gopkg.in/urfave/cli.v1"
 )
 
 // ValueSpawn is used to spawn a new contract.
