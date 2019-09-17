@@ -5,6 +5,10 @@ import (
 	"crypto/sha256"
 	"errors"
 
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/onet/v3/network"
+
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -26,7 +30,34 @@ func ContractRoPaSciFromBytes(in []byte) (byzcoin.Contract, error) {
 	return c, nil
 }
 
-// ContractRoPaSci embeds the BasicContract.
+// ContractRoPaSci embeds the BasicContract. It is used for the Rock-Paper-Scissors game.
+// The game comes in two variants: plain or calypso-enabled.
+//
+// For the plain game, the steps are the follows:
+//  1. player 1 stores a hashed move on the ledger
+//  2. player 2 stores a plain move on the ledger
+//  3. player 1 confirms (reveals) his move by providing the pre-hash
+//  4. the contract proceeds to a payout to the winner
+//
+// In case the player 1 is dishonest, or simply not available, player 2 might lose his money,
+// even though he won. To avoid that, a second variant has been implemented, using calypso:
+//  1. player 1 stores a hashed move on the ledger, but also the calypso-encrypted pre-hash
+//  2. the contract creates a CalypsoWrite instance (committed to the hash of the hash)
+//  3. player 2 stores a plain move on the ledger, providing his public key
+//  4. the contract creates a CalypsoRead instance
+//  5. player 2 can re-encrypt the pre-hash and confirm (reveal) player 1s move
+//  6. the contract proceeds to a payout to the winner
+//
+// This second variant avoids problems arising with the classical solution, where the
+// 2nd player can collect the wins if the 1st player didn't confirm in a given timeframe.
+//
+// The problem arising with this solution is if a player tries to cheat the calypso system
+// by taking a secret from a completely unrelated CalypsoWrite transaction and submits this
+// as the secret to the RoPaSci contract. In order to avoid that, instead of committing to a
+// darc, as in the original calypso program, the player 1 has to commit to the hash of the
+// hash of his move. This means that the player 1 cannot chose freely the commit, because he
+// has to provide the hash of his move to the contract. So the contract can calculate the
+// hash of this hash, and verify that the commitment is correct.
 type ContractRoPaSci struct {
 	byzcoin.BasicContract
 	RoPaSciStruct
@@ -67,7 +98,7 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	}
 	err = protobuf.Decode(rpsBuf, &c.RoPaSciStruct)
 	if err != nil {
-		return nil, nil, errors.New("couldn't decode RoPaScoInstance: " + err.Error())
+		return nil, nil, errors.New("couldn't decode RoPaSciInstance: " + err.Error())
 	}
 	if len(c.FirstPlayerHash) != 32 {
 		return nil, nil, errors.New("ropasci needs a hash from player 1")
@@ -79,13 +110,28 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	c.SecondPlayer = -1
 	c.FirstPlayer = -1
 	cout[0].Value = 0
+	if secret := inst.Spawn.Args.Search("secret"); secret != nil {
+		if c.FirstPlayerAccount.Equal(byzcoin.ConfigInstanceID) {
+			return nil, nil, errors.New("need to have FirstPlayerAccount when using calypso")
+		}
+		var write calypso.Write
+		err = protobuf.DecodeWithConstructors(secret, &write, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, nil, errors.New("couldn't unmarshal secret: " + err.Error())
+		}
+		writeCommit := sha256.Sum256(c.FirstPlayerHash)
+		if err = write.CheckProof(cothority.Suite, writeCommit[:]); err != nil {
+			return nil, nil, errors.New("proof of write failed: " + err.Error())
+		}
+		c.CalypsoWrite = inst.DeriveID(calypso.ContractWriteID)
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, c.CalypsoWrite,
+			calypso.ContractWriteID, secret, writeCommit[:]))
+	}
 	rpsBuf, err = protobuf.Encode(&c.RoPaSciStruct)
 	if err != nil {
 		return
 	}
-	sc = []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, ca, ContractRoPaSciID, rpsBuf, darcID),
-	}
+	sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, ca, ContractRoPaSciID, rpsBuf, darcID))
 	return
 }
 
@@ -143,6 +189,29 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 		c.SecondPlayerAccount = byzcoin.NewInstanceID(account)
 		c.SecondPlayer = int(choice[0]) % 3
 
+		if !c.CalypsoWrite.Equal(byzcoin.ConfigInstanceID) {
+			pub2Buf := inst.Invoke.Args.Search("public")
+			if pub2Buf == nil {
+				return nil, nil, errors.New("need 'public' for calypso-ropasci")
+			}
+			xc := cothority.Suite.Point()
+			if err = xc.UnmarshalBinary(pub2Buf); err != nil {
+				return nil, nil, errors.New("couldn't get public key: " + err.Error())
+			}
+			read := &calypso.Read{
+				Write: c.CalypsoWrite,
+				Xc:    xc,
+			}
+			readBuf, err := protobuf.Encode(read)
+			if err != nil {
+				return nil, nil, errors.New("couldn't encode read: " + err.Error())
+			}
+			c.CalypsoRead = sha256.Sum256(c.CalypsoWrite[:])
+			_, _, _, writeCommit, err := rst.GetValues(c.CalypsoWrite[:])
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, c.CalypsoRead, calypso.ContractReadID,
+				readBuf, writeCommit))
+		}
+
 	case "confirm":
 		preHash := inst.Invoke.Args.Search("prehash")
 		if len(preHash) != 32 {
@@ -152,17 +221,20 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 		if bytes.Compare(c.FirstPlayerHash, fph[:]) != 0 {
 			return nil, nil, errors.New("wrong prehash for first player")
 		}
-		firstAccountBuf := inst.Invoke.Args.Search("account")
-		if len(firstAccountBuf) != 32 {
-			return nil, nil, errors.New("wrong account for player 1")
-		}
-		var cid string
-		_, _, cid, _, err = rst.GetValues(firstAccountBuf)
-		if err != nil {
-			return
-		}
-		if cid != contracts.ContractCoinID {
-			return nil, nil, errors.New("account is not of coin type")
+		firstAccountBuf := c.FirstPlayerAccount.Slice()
+		if c.CalypsoWrite.Equal(byzcoin.ConfigInstanceID) {
+			firstAccountBuf = inst.Invoke.Args.Search("account")
+			if len(firstAccountBuf) != 32 {
+				return nil, nil, errors.New("wrong account for player 1")
+			}
+			var cid string
+			_, _, cid, _, err = rst.GetValues(firstAccountBuf)
+			if err != nil {
+				return
+			}
+			if cid != contracts.ContractCoinID {
+				return nil, nil, errors.New("account is not of coin type")
+			}
 		}
 		var winner []byte
 		c.FirstPlayer = int(preHash[0]) % 3

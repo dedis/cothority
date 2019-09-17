@@ -1810,7 +1810,7 @@ public final class Calypso {
   /**
    * <pre>
    * Read is the data stored in a read instance. It has a pointer to the write
-   * instance and the public key used to create the read instance.
+   * instance and the public key used to re-encrypt the secret to.
    * </pre>
    *
    * Protobuf type {@code calypso.Read}
@@ -2114,7 +2114,7 @@ public final class Calypso {
     /**
      * <pre>
      * Read is the data stored in a read instance. It has a pointer to the write
-     * instance and the public key used to create the read instance.
+     * instance and the public key used to re-encrypt the secret to.
      * </pre>
      *
      * Protobuf type {@code calypso.Read}

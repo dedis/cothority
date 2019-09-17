@@ -5315,6 +5315,33 @@ public final class Personhood {
      * <code>optional bytes secondplayeraccount = 6;</code>
      */
     com.google.protobuf.ByteString getSecondplayeraccount();
+
+    /**
+     * <code>optional bytes firstplayeraccount = 7;</code>
+     */
+    boolean hasFirstplayeraccount();
+    /**
+     * <code>optional bytes firstplayeraccount = 7;</code>
+     */
+    com.google.protobuf.ByteString getFirstplayeraccount();
+
+    /**
+     * <code>optional bytes calypsowrite = 8;</code>
+     */
+    boolean hasCalypsowrite();
+    /**
+     * <code>optional bytes calypsowrite = 8;</code>
+     */
+    com.google.protobuf.ByteString getCalypsowrite();
+
+    /**
+     * <code>optional bytes calypsoread = 9;</code>
+     */
+    boolean hasCalypsoread();
+    /**
+     * <code>optional bytes calypsoread = 9;</code>
+     */
+    com.google.protobuf.ByteString getCalypsoread();
   }
   /**
    * <pre>
@@ -5338,6 +5365,9 @@ public final class Personhood {
       firstplayer_ = 0;
       secondplayer_ = 0;
       secondplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
+      firstplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
+      calypsowrite_ = com.google.protobuf.ByteString.EMPTY;
+      calypsoread_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -5401,6 +5431,21 @@ public final class Personhood {
             case 50: {
               bitField0_ |= 0x00000020;
               secondplayeraccount_ = input.readBytes();
+              break;
+            }
+            case 58: {
+              bitField0_ |= 0x00000040;
+              firstplayeraccount_ = input.readBytes();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000080;
+              calypsowrite_ = input.readBytes();
+              break;
+            }
+            case 74: {
+              bitField0_ |= 0x00000100;
+              calypsoread_ = input.readBytes();
               break;
             }
             default: {
@@ -5559,6 +5604,51 @@ public final class Personhood {
       return secondplayeraccount_;
     }
 
+    public static final int FIRSTPLAYERACCOUNT_FIELD_NUMBER = 7;
+    private com.google.protobuf.ByteString firstplayeraccount_;
+    /**
+     * <code>optional bytes firstplayeraccount = 7;</code>
+     */
+    public boolean hasFirstplayeraccount() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional bytes firstplayeraccount = 7;</code>
+     */
+    public com.google.protobuf.ByteString getFirstplayeraccount() {
+      return firstplayeraccount_;
+    }
+
+    public static final int CALYPSOWRITE_FIELD_NUMBER = 8;
+    private com.google.protobuf.ByteString calypsowrite_;
+    /**
+     * <code>optional bytes calypsowrite = 8;</code>
+     */
+    public boolean hasCalypsowrite() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional bytes calypsowrite = 8;</code>
+     */
+    public com.google.protobuf.ByteString getCalypsowrite() {
+      return calypsowrite_;
+    }
+
+    public static final int CALYPSOREAD_FIELD_NUMBER = 9;
+    private com.google.protobuf.ByteString calypsoread_;
+    /**
+     * <code>optional bytes calypsoread = 9;</code>
+     */
+    public boolean hasCalypsoread() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional bytes calypsoread = 9;</code>
+     */
+    public com.google.protobuf.ByteString getCalypsoread() {
+      return calypsoread_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -5607,6 +5697,15 @@ public final class Personhood {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBytes(6, secondplayeraccount_);
       }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, firstplayeraccount_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, calypsowrite_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBytes(9, calypsoread_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5638,6 +5737,18 @@ public final class Personhood {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(6, secondplayeraccount_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, firstplayeraccount_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, calypsowrite_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(9, calypsoread_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5685,6 +5796,21 @@ public final class Personhood {
         result = result && getSecondplayeraccount()
             .equals(other.getSecondplayeraccount());
       }
+      result = result && (hasFirstplayeraccount() == other.hasFirstplayeraccount());
+      if (hasFirstplayeraccount()) {
+        result = result && getFirstplayeraccount()
+            .equals(other.getFirstplayeraccount());
+      }
+      result = result && (hasCalypsowrite() == other.hasCalypsowrite());
+      if (hasCalypsowrite()) {
+        result = result && getCalypsowrite()
+            .equals(other.getCalypsowrite());
+      }
+      result = result && (hasCalypsoread() == other.hasCalypsoread());
+      if (hasCalypsoread()) {
+        result = result && getCalypsoread()
+            .equals(other.getCalypsoread());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -5719,6 +5845,18 @@ public final class Personhood {
       if (hasSecondplayeraccount()) {
         hash = (37 * hash) + SECONDPLAYERACCOUNT_FIELD_NUMBER;
         hash = (53 * hash) + getSecondplayeraccount().hashCode();
+      }
+      if (hasFirstplayeraccount()) {
+        hash = (37 * hash) + FIRSTPLAYERACCOUNT_FIELD_NUMBER;
+        hash = (53 * hash) + getFirstplayeraccount().hashCode();
+      }
+      if (hasCalypsowrite()) {
+        hash = (37 * hash) + CALYPSOWRITE_FIELD_NUMBER;
+        hash = (53 * hash) + getCalypsowrite().hashCode();
+      }
+      if (hasCalypsoread()) {
+        hash = (37 * hash) + CALYPSOREAD_FIELD_NUMBER;
+        hash = (53 * hash) + getCalypsoread().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5874,6 +6012,12 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000010);
         secondplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000020);
+        firstplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        calypsowrite_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        calypsoread_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -5930,6 +6074,18 @@ public final class Personhood {
           to_bitField0_ |= 0x00000020;
         }
         result.secondplayeraccount_ = secondplayeraccount_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.firstplayeraccount_ = firstplayeraccount_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.calypsowrite_ = calypsowrite_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.calypsoread_ = calypsoread_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5998,6 +6154,15 @@ public final class Personhood {
         }
         if (other.hasSecondplayeraccount()) {
           setSecondplayeraccount(other.getSecondplayeraccount());
+        }
+        if (other.hasFirstplayeraccount()) {
+          setFirstplayeraccount(other.getFirstplayeraccount());
+        }
+        if (other.hasCalypsowrite()) {
+          setCalypsowrite(other.getCalypsowrite());
+        }
+        if (other.hasCalypsoread()) {
+          setCalypsoread(other.getCalypsoread());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6365,6 +6530,111 @@ public final class Personhood {
       public Builder clearSecondplayeraccount() {
         bitField0_ = (bitField0_ & ~0x00000020);
         secondplayeraccount_ = getDefaultInstance().getSecondplayeraccount();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString firstplayeraccount_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes firstplayeraccount = 7;</code>
+       */
+      public boolean hasFirstplayeraccount() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional bytes firstplayeraccount = 7;</code>
+       */
+      public com.google.protobuf.ByteString getFirstplayeraccount() {
+        return firstplayeraccount_;
+      }
+      /**
+       * <code>optional bytes firstplayeraccount = 7;</code>
+       */
+      public Builder setFirstplayeraccount(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        firstplayeraccount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes firstplayeraccount = 7;</code>
+       */
+      public Builder clearFirstplayeraccount() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        firstplayeraccount_ = getDefaultInstance().getFirstplayeraccount();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString calypsowrite_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes calypsowrite = 8;</code>
+       */
+      public boolean hasCalypsowrite() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bytes calypsowrite = 8;</code>
+       */
+      public com.google.protobuf.ByteString getCalypsowrite() {
+        return calypsowrite_;
+      }
+      /**
+       * <code>optional bytes calypsowrite = 8;</code>
+       */
+      public Builder setCalypsowrite(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        calypsowrite_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes calypsowrite = 8;</code>
+       */
+      public Builder clearCalypsowrite() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        calypsowrite_ = getDefaultInstance().getCalypsowrite();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString calypsoread_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes calypsoread = 9;</code>
+       */
+      public boolean hasCalypsoread() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional bytes calypsoread = 9;</code>
+       */
+      public com.google.protobuf.ByteString getCalypsoread() {
+        return calypsoread_;
+      }
+      /**
+       * <code>optional bytes calypsoread = 9;</code>
+       */
+      public Builder setCalypsoread(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        calypsoread_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes calypsoread = 9;</code>
+       */
+      public Builder clearCalypsoread() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        calypsoread_ = getDefaultInstance().getCalypsoread();
         onChanged();
         return this;
       }
@@ -26700,58 +26970,60 @@ public final class Personhood {
       "\014\n\004wipe\030\002 \001(\010\"<\n\023RoPaSciListResponse\022%\n\010" +
       "ropascis\030\001 \003(\0132\023.personhood.RoPaSci\"/\n\007R" +
       "oPaSci\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tropasciid\030\002" +
-      " \002(\014\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"\243\001\n\rR" +
+      " \002(\014\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"\352\001\n\rR" +
       "oPaSciStruct\022\023\n\013description\030\001 \002(\t\022\034\n\005sta" +
       "ke\030\002 \002(\0132\r.byzcoin.Coin\022\027\n\017firstplayerha" +
       "sh\030\003 \002(\014\022\023\n\013firstplayer\030\004 \001(\021\022\024\n\014secondp" +
       "layer\030\005 \001(\021\022\033\n\023secondplayeraccount\030\006 \001(\014" +
-      "\"?\n\020CredentialStruct\022+\n\013credentials\030\001 \003(" +
-      "\0132\026.personhood.Credential\"E\n\nCredential\022" +
-      "\014\n\004name\030\001 \002(\t\022)\n\nattributes\030\002 \003(\0132\025.pers" +
-      "onhood.Attribute\"(\n\tAttribute\022\014\n\004name\030\001 " +
-      "\002(\t\022\r\n\005value\030\002 \002(\014\"\230\002\n\rSpawnerStruct\022\037\n\010" +
-      "costdarc\030\001 \002(\0132\r.byzcoin.Coin\022\037\n\010costcoi" +
-      "n\030\002 \002(\0132\r.byzcoin.Coin\022%\n\016costcredential" +
-      "\030\003 \002(\0132\r.byzcoin.Coin\022 \n\tcostparty\030\004 \002(\013" +
-      "2\r.byzcoin.Coin\022\023\n\013beneficiary\030\005 \002(\014\022\"\n\013" +
-      "costropasci\030\006 \001(\0132\r.byzcoin.Coin\022!\n\ncost" +
-      "cwrite\030\007 \001(\0132\r.byzcoin.Coin\022 \n\tcostcread" +
-      "\030\010 \001(\0132\r.byzcoin.Coin\"\370\001\n\016PopPartyStruct" +
-      "\022\r\n\005state\030\001 \002(\021\022\022\n\norganizers\030\002 \002(\021\022\025\n\rf" +
-      "inalizations\030\003 \003(\t\022(\n\013description\030\004 \002(\0132" +
-      "\023.personhood.PopDesc\022(\n\tattendees\030\005 \002(\0132" +
-      "\025.personhood.Attendees\022\"\n\006miners\030\006 \003(\0132\022" +
-      ".personhood.LRSTag\022\024\n\014miningreward\030\007 \002(\004" +
-      "\022\020\n\010previous\030\010 \001(\014\022\014\n\004next\030\t \001(\014\"L\n\007PopD" +
-      "esc\022\014\n\004name\030\001 \002(\t\022\017\n\007purpose\030\002 \002(\t\022\020\n\010da" +
-      "tetime\030\003 \002(\004\022\020\n\010location\030\004 \002(\t\"]\n\016FinalS" +
-      "tatement\022!\n\004desc\030\001 \001(\0132\023.personhood.PopD" +
-      "esc\022(\n\tattendees\030\002 \002(\0132\025.personhood.Atte" +
-      "ndees\"\031\n\tAttendees\022\014\n\004keys\030\001 \003(\014\"\025\n\006LRST" +
-      "ag\022\013\n\003tag\030\001 \002(\014\"\216\001\n\004Poll\022\021\n\tbyzcoinid\030\001 " +
-      "\002(\014\022\'\n\007newpoll\030\002 \001(\0132\026.personhood.PollSt" +
-      "ruct\022\"\n\004list\030\003 \001(\0132\024.personhood.PollList" +
-      "\022&\n\006answer\030\004 \001(\0132\026.personhood.PollAnswer" +
-      "\"\034\n\010PollList\022\020\n\010partyids\030\001 \003(\014\"9\n\nPollAn" +
-      "swer\022\016\n\006pollid\030\001 \002(\014\022\016\n\006choice\030\002 \002(\021\022\013\n\003" +
-      "lrs\030\003 \002(\014\"\215\001\n\nPollStruct\022\022\n\npersonhood\030\001" +
-      " \002(\014\022\016\n\006pollid\030\002 \001(\014\022\r\n\005title\030\003 \002(\t\022\023\n\013d" +
-      "escription\030\004 \002(\t\022\017\n\007choices\030\005 \003(\t\022&\n\006cho" +
-      "sen\030\006 \003(\0132\026.personhood.PollChoice\",\n\nPol" +
-      "lChoice\022\016\n\006choice\030\001 \002(\021\022\016\n\006lrstag\030\002 \002(\014\"" +
-      "5\n\014PollResponse\022%\n\005polls\030\001 \003(\0132\026.personh" +
-      "ood.PollStruct\"\016\n\014Capabilities\"D\n\024Capabi" +
-      "litiesResponse\022,\n\014capabilities\030\001 \003(\0132\026.p" +
-      "ersonhood.Capability\"/\n\nCapability\022\020\n\010en" +
-      "dpoint\030\001 \002(\t\022\017\n\007version\030\002 \002(\014\"\212\001\n\014UserLo" +
-      "cation\022\021\n\tpublickey\030\001 \002(\014\022\025\n\rcredentiali" +
-      "id\030\002 \001(\014\0220\n\ncredential\030\003 \001(\0132\034.personhoo" +
-      "d.CredentialStruct\022\020\n\010location\030\004 \001(\t\022\014\n\004" +
-      "time\030\005 \002(\022\"F\n\006Meetup\022.\n\014userlocation\030\001 \001" +
-      "(\0132\030.personhood.UserLocation\022\014\n\004wipe\030\002 \001" +
-      "(\010\"9\n\016MeetupResponse\022\'\n\005users\030\001 \003(\0132\030.pe" +
-      "rsonhood.UserLocationB%\n\027ch.epfl.dedis.l" +
-      "ib.protoB\nPersonhood"
+      "\022\032\n\022firstplayeraccount\030\007 \001(\014\022\024\n\014calypsow" +
+      "rite\030\010 \001(\014\022\023\n\013calypsoread\030\t \001(\014\"?\n\020Crede" +
+      "ntialStruct\022+\n\013credentials\030\001 \003(\0132\026.perso" +
+      "nhood.Credential\"E\n\nCredential\022\014\n\004name\030\001" +
+      " \002(\t\022)\n\nattributes\030\002 \003(\0132\025.personhood.At" +
+      "tribute\"(\n\tAttribute\022\014\n\004name\030\001 \002(\t\022\r\n\005va" +
+      "lue\030\002 \002(\014\"\230\002\n\rSpawnerStruct\022\037\n\010costdarc\030" +
+      "\001 \002(\0132\r.byzcoin.Coin\022\037\n\010costcoin\030\002 \002(\0132\r" +
+      ".byzcoin.Coin\022%\n\016costcredential\030\003 \002(\0132\r." +
+      "byzcoin.Coin\022 \n\tcostparty\030\004 \002(\0132\r.byzcoi" +
+      "n.Coin\022\023\n\013beneficiary\030\005 \002(\014\022\"\n\013costropas" +
+      "ci\030\006 \001(\0132\r.byzcoin.Coin\022!\n\ncostcwrite\030\007 " +
+      "\001(\0132\r.byzcoin.Coin\022 \n\tcostcread\030\010 \001(\0132\r." +
+      "byzcoin.Coin\"\370\001\n\016PopPartyStruct\022\r\n\005state" +
+      "\030\001 \002(\021\022\022\n\norganizers\030\002 \002(\021\022\025\n\rfinalizati" +
+      "ons\030\003 \003(\t\022(\n\013description\030\004 \002(\0132\023.personh" +
+      "ood.PopDesc\022(\n\tattendees\030\005 \002(\0132\025.personh" +
+      "ood.Attendees\022\"\n\006miners\030\006 \003(\0132\022.personho" +
+      "od.LRSTag\022\024\n\014miningreward\030\007 \002(\004\022\020\n\010previ" +
+      "ous\030\010 \001(\014\022\014\n\004next\030\t \001(\014\"L\n\007PopDesc\022\014\n\004na" +
+      "me\030\001 \002(\t\022\017\n\007purpose\030\002 \002(\t\022\020\n\010datetime\030\003 " +
+      "\002(\004\022\020\n\010location\030\004 \002(\t\"]\n\016FinalStatement\022" +
+      "!\n\004desc\030\001 \001(\0132\023.personhood.PopDesc\022(\n\tat" +
+      "tendees\030\002 \002(\0132\025.personhood.Attendees\"\031\n\t" +
+      "Attendees\022\014\n\004keys\030\001 \003(\014\"\025\n\006LRSTag\022\013\n\003tag" +
+      "\030\001 \002(\014\"\216\001\n\004Poll\022\021\n\tbyzcoinid\030\001 \002(\014\022\'\n\007ne" +
+      "wpoll\030\002 \001(\0132\026.personhood.PollStruct\022\"\n\004l" +
+      "ist\030\003 \001(\0132\024.personhood.PollList\022&\n\006answe" +
+      "r\030\004 \001(\0132\026.personhood.PollAnswer\"\034\n\010PollL" +
+      "ist\022\020\n\010partyids\030\001 \003(\014\"9\n\nPollAnswer\022\016\n\006p" +
+      "ollid\030\001 \002(\014\022\016\n\006choice\030\002 \002(\021\022\013\n\003lrs\030\003 \002(\014" +
+      "\"\215\001\n\nPollStruct\022\022\n\npersonhood\030\001 \002(\014\022\016\n\006p" +
+      "ollid\030\002 \001(\014\022\r\n\005title\030\003 \002(\t\022\023\n\013descriptio" +
+      "n\030\004 \002(\t\022\017\n\007choices\030\005 \003(\t\022&\n\006chosen\030\006 \003(\013" +
+      "2\026.personhood.PollChoice\",\n\nPollChoice\022\016" +
+      "\n\006choice\030\001 \002(\021\022\016\n\006lrstag\030\002 \002(\014\"5\n\014PollRe" +
+      "sponse\022%\n\005polls\030\001 \003(\0132\026.personhood.PollS" +
+      "truct\"\016\n\014Capabilities\"D\n\024CapabilitiesRes" +
+      "ponse\022,\n\014capabilities\030\001 \003(\0132\026.personhood" +
+      ".Capability\"/\n\nCapability\022\020\n\010endpoint\030\001 " +
+      "\002(\t\022\017\n\007version\030\002 \002(\014\"\212\001\n\014UserLocation\022\021\n" +
+      "\tpublickey\030\001 \002(\014\022\025\n\rcredentialiid\030\002 \001(\014\022" +
+      "0\n\ncredential\030\003 \001(\0132\034.personhood.Credent" +
+      "ialStruct\022\020\n\010location\030\004 \001(\t\022\014\n\004time\030\005 \002(" +
+      "\022\"F\n\006Meetup\022.\n\014userlocation\030\001 \001(\0132\030.pers" +
+      "onhood.UserLocation\022\014\n\004wipe\030\002 \001(\010\"9\n\016Mee" +
+      "tupResponse\022\'\n\005users\030\001 \003(\0132\030.personhood." +
+      "UserLocationB%\n\027ch.epfl.dedis.lib.protoB" +
+      "\nPersonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -26814,7 +27086,7 @@ public final class Personhood {
     internal_static_personhood_RoPaSciStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_RoPaSciStruct_descriptor,
-        new java.lang.String[] { "Description", "Stake", "Firstplayerhash", "Firstplayer", "Secondplayer", "Secondplayeraccount", });
+        new java.lang.String[] { "Description", "Stake", "Firstplayerhash", "Firstplayer", "Secondplayer", "Secondplayeraccount", "Firstplayeraccount", "Calypsowrite", "Calypsoread", });
     internal_static_personhood_CredentialStruct_descriptor =
       getDescriptor().getMessageTypes().get(8);
     internal_static_personhood_CredentialStruct_fieldAccessorTable = new

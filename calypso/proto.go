@@ -50,7 +50,7 @@ type Write struct {
 }
 
 // Read is the data stored in a read instance. It has a pointer to the write
-// instance and the public key used to create the read instance.
+// instance and the public key used to re-encrypt the secret to.
 type Read struct {
 	Write byzcoin.InstanceID
 	Xc    kyber.Point

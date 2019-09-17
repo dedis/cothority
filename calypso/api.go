@@ -148,7 +148,7 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 // Input:
 //   - write - A Write structure
 //   - signer - The data owner who will sign the transaction
-//   - signerCtr - A monotonically increaing counter for every signer
+//   - signerCtr - A monotonically increasing counter for every signer
 //   - darc - The DARC with a spawn:calypsoWrite rule on it
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
