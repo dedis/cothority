@@ -330,6 +330,7 @@ message GetSignerCounters {
 // request.
 message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
+  optional uint64 index = 2;
 }
 
 // GetInstanceVersion is a request asking the service to fetch

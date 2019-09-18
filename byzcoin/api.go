@@ -441,6 +441,32 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	}
 }
 
+func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
+	err := protobuf.Decode(buf, data)
+	if err != nil {
+		return err
+	}
+
+	reply, ok := data.(*GetSignerCountersResponse)
+	if !ok {
+		return errors.New("wrong type of response")
+	}
+
+	// This assumes the client is up-to-date with the latest block which
+	// is usually right as it is updated after each GetProof. The goal is
+	// to insure that we got the data from the latest block.
+	// Note: index 0 is checked for backwards compatibility.
+	if reply.Index != 0 && c.Latest != nil {
+		log.Lvlf2("Latest block at index %d", c.Latest.Index)
+
+		if uint64(c.Latest.Index) > reply.Index {
+			return errors.New("data coming from an old block")
+		}
+	}
+
+	return nil
+}
+
 // GetSignerCounters gets the signer counters from ByzCoin. The counter must be
 // set correctly in the instruction for it to be verified. Every counter maps
 // to a signer, if the most recent instruction is signed by the signer at count
@@ -452,8 +478,8 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 		SignerIDs:   ids,
 	}
 	var reply GetSignerCountersResponse
-	_, err := c.SendProtobufParallel(c.Roster.List, &req, &reply,
-		c.options)
+	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, &req, &reply,
+		c.options, c.signerCounterDecoder)
 	if err != nil {
 		return nil, err
 	}

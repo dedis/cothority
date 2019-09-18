@@ -351,6 +351,7 @@ type GetSignerCounters struct {
 // request.
 type GetSignerCountersResponse struct {
 	Counters []uint64
+	Index    uint64 `protobuf:"opt"`
 }
 
 // GetInstanceVersion is a request asking the service to fetch
