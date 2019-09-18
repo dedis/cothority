@@ -1314,10 +1314,16 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	log.Lvlf1("%s: catching up with chain %x", s.ServerIdentity(), scID)
 
 	cl := skipchain.NewClient()
-	cl.DontContact(s.ServerIdentity())
 	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
 		return err
+	}
+
+	// If a genesis block is asked to be caught up, we need to store it
+	// before the normal procedure. We don't return as the following steps
+	// will create the trie.
+	if scID.Equal(sbID) {
+		s.db().Store(sb)
 	}
 
 	// catch up the intermediate missing blocks
@@ -1336,7 +1342,6 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	download := false
 	st, err := s.getStateTrie(sb.SkipChainID())
 	cl := skipchain.NewClient()
-	cl.DontContact(s.ServerIdentity())
 	if err != nil {
 		if sb.Index < catchupDownloadAll {
 			// Asked to catch up on an unknown chain, but don't want to download, instead only replay
