@@ -457,8 +457,6 @@ func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	// to insure that we got the data from the latest block.
 	// Note: index 0 is checked for backwards compatibility.
 	if reply.Index != 0 && c.Latest != nil {
-		log.Lvlf2("Latest block at index %d", c.Latest.Index)
-
 		if uint64(c.Latest.Index) > reply.Index {
 			return errors.New("data coming from an old block")
 		}
