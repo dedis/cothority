@@ -444,7 +444,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	err := protobuf.Decode(buf, data)
 	if err != nil {
-		return err
+		return errors.New("couldn't decode the counters reply: " + err.Error())
 	}
 
 	reply, ok := data.(*GetSignerCountersResponse)

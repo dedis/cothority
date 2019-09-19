@@ -28633,10 +28633,20 @@ public final class ByzCoinProto {
     long getCounters(int index);
 
     /**
+     * <pre>
+     * Index contains the trie index where the counters
+     * have been extracted.
+     * </pre>
+     *
      * <code>optional uint64 index = 2;</code>
      */
     boolean hasIndex();
     /**
+     * <pre>
+     * Index contains the trie index where the counters
+     * have been extracted.
+     * </pre>
+     *
      * <code>optional uint64 index = 2;</code>
      */
     long getIndex();
@@ -28775,12 +28785,22 @@ public final class ByzCoinProto {
     public static final int INDEX_FIELD_NUMBER = 2;
     private long index_;
     /**
+     * <pre>
+     * Index contains the trie index where the counters
+     * have been extracted.
+     * </pre>
+     *
      * <code>optional uint64 index = 2;</code>
      */
     public boolean hasIndex() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
+     * <pre>
+     * Index contains the trie index where the counters
+     * have been extracted.
+     * </pre>
+     *
      * <code>optional uint64 index = 2;</code>
      */
     public long getIndex() {
@@ -29221,18 +29241,33 @@ public final class ByzCoinProto {
 
       private long index_ ;
       /**
+       * <pre>
+       * Index contains the trie index where the counters
+       * have been extracted.
+       * </pre>
+       *
        * <code>optional uint64 index = 2;</code>
        */
       public boolean hasIndex() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
+       * <pre>
+       * Index contains the trie index where the counters
+       * have been extracted.
+       * </pre>
+       *
        * <code>optional uint64 index = 2;</code>
        */
       public long getIndex() {
         return index_;
       }
       /**
+       * <pre>
+       * Index contains the trie index where the counters
+       * have been extracted.
+       * </pre>
+       *
        * <code>optional uint64 index = 2;</code>
        */
       public Builder setIndex(long value) {
@@ -29242,6 +29277,11 @@ public final class ByzCoinProto {
         return this;
       }
       /**
+       * <pre>
+       * Index contains the trie index where the counters
+       * have been extracted.
+       * </pre>
+       *
        * <code>optional uint64 index = 2;</code>
        */
       public Builder clearIndex() {
