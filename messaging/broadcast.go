@@ -8,10 +8,14 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+// BroadcastName is the name of this service
+var BroadcastName = "Broadcast"
+
 func init() {
 	network.RegisterMessage(ContactNodes{})
 	network.RegisterMessage(Done{})
-	onet.GlobalProtocolRegister("Broadcast", NewBroadcastProtocol)
+	_, err := onet.GlobalProtocolRegister(BroadcastName, NewBroadcastProtocol)
+	log.ErrFatal(err)
 }
 
 // Broadcast ensures that all nodes are connected to each other. If you need

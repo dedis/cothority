@@ -16,3 +16,21 @@ message Response {
    map<string, onet.Status> status = 1;
   optional network.ServerIdentity serveridentity = 2;
 }
+
+// Connectivity is sent by a client to check the connectivity of a given roster. The Time must
+// be within 2 minutes of the server's time. The signature must be a schnorr-signature using the
+// private conode-key on the following message:
+//   sha256( bytes.LittleEndian.PutUInt64(Time) | protobuf.Encode(List[0]) |
+//   protobuf.Encode(List[1])... )
+message Connectivity {
+  required sint64 time = 1;
+  required sint64 timeout = 2;
+  repeated network.ServerIdentity list = 3;
+  required bytes signature = 4;
+  required bool findfaulty = 5;
+}
+
+// ConnectivityReply is the minimum list of all nodes that can contact each other.
+message ConnectivityReply {
+  repeated network.ServerIdentity nodes = 1;
+}

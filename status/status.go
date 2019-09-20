@@ -12,6 +12,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	cli "github.com/urfave/cli"
 	status "go.dedis.ch/cothority/v3/status/service"
@@ -46,6 +47,29 @@ func main() {
 			Value: 0,
 			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
+		cli.BoolFlag{
+			Name: "connectivity, c",
+		},
+	}
+	app.Commands = cli.Commands{
+		{
+			Name:      "connectivity",
+			Usage:     "if given, will verify connectivity of all nodes between themselves",
+			Aliases:   []string{"c"},
+			ArgsUsage: "group.toml private.toml",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "findFaulty, f",
+					Usage: "it tries to find a list of nodes that can communicate with each other",
+				},
+				cli.StringFlag{
+					Name:  "timeout, to",
+					Usage: "timeout in ms to wait if a set of nodes is connected",
+					Value: "1s",
+				},
+			},
+			Action: connectivity,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		log.SetUseColors(false)
@@ -74,7 +98,7 @@ func action(c *cli.Context) error {
 	host := c.String("host")
 	if host != "" {
 		// Only contact one host
-		log.Print("Only contacting one host", host)
+		log.Info("Only contacting one host", host)
 		addr := network.Address(host)
 		if !strings.HasPrefix(host, "tls://") {
 			addr = network.NewAddress(network.TLS, host)
@@ -87,10 +111,12 @@ func action(c *cli.Context) error {
 	} else {
 
 		ro, err := readGroup(groupToml)
-		log.ErrFatal(err, "Couldn't Read File")
+		if err != nil {
+			return errors.New("couldn't read file: " + err.Error())
+		}
 		log.Lvl3(ro)
 		list = ro.List
-		log.Print("List is", list)
+		log.Info("List is", list)
 	}
 	cl := status.NewClient()
 
@@ -118,6 +144,48 @@ func action(c *cli.Context) error {
 	}
 	if format == "json" {
 		printJSON(all)
+	}
+	return nil
+}
+
+func connectivity(c *cli.Context) error {
+	if c.NArg() != 2 {
+		return errors.New("please give 2 arguments: group.toml private.toml")
+	}
+	ro, err := readGroup(c.Args().First())
+	if err != nil {
+		return errors.New("couldn't read file: " + err.Error())
+	}
+	log.Lvl3(ro)
+	list := ro.List
+	log.Info("List is", list)
+	to, err := time.ParseDuration(c.String("timeout"))
+	if err != nil {
+		return errors.New("duration parse error: " + err.Error())
+	}
+	ff := c.Bool("findFaulty")
+	coth, err := app.LoadCothority(c.Args().Get(1))
+	if err != nil {
+		return errors.New("error while loading private.toml: " + err.Error())
+	}
+	si, err := coth.GetServerIdentity()
+	if err != nil {
+		return errors.New("private.toml didn't have a serverIdentity: " + err.Error())
+	}
+	resp, err := status.NewClient().Connectivity(si.GetPrivate(), list, time.Duration(to), ff)
+	if err != nil {
+		return errors.New("couldn't get private key from private.toml: " + err.Error())
+	}
+	switch len(resp) {
+	case 1:
+		return errors.New("couldn't contact any other node")
+	case len(list):
+		log.Info("All nodes can communicate with each other")
+	default:
+		log.Info("The following nodes can communicate with each other")
+	}
+	for _, si := range resp {
+		log.Info("  ", si.String())
 	}
 	return nil
 }

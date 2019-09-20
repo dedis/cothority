@@ -1,9 +1,15 @@
 package status
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	"time"
 )
 
 // Client is a structure to communicate with status service
@@ -24,4 +30,50 @@ func (c *Client) Request(dst *network.ServerIdentity) (*Response, error) {
 		return nil, err
 	}
 	return resp, nil
+}
+
+// Connectivity sends a message from all nodes to all nodes in the list
+// and checks if all messages are received correctly. If findFaulty == true,
+// then the service will try very hard to get a list of nodes that can
+// communicate with each other.
+//
+// The return value of this call is the set of nodes that can communicate
+// with each other.
+func (c *Client) Connectivity(priv kyber.Scalar, list []*network.ServerIdentity,
+	timeout time.Duration, findFaulty bool) ([]*network.ServerIdentity, error) {
+	conn := &Connectivity{
+		List:       list,
+		Timeout:    int64(timeout),
+		FindFaulty: findFaulty,
+		Time:       time.Now().Unix(),
+	}
+	hash, err := conn.hash()
+	if err != nil {
+		return nil, err
+	}
+	conn.Signature, err = schnorr.Sign(cothority.Suite, priv, hash)
+	if err != nil {
+		return nil, err
+	}
+	resp := &ConnectivityReply{}
+	err = c.SendProtobuf(list[0], conn, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Nodes, nil
+}
+
+func (c *Connectivity) hash() ([]byte, error) {
+	hash := sha256.New()
+	timeBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(timeBuf, uint64(c.Timeout))
+	hash.Write(timeBuf)
+	for _, si := range c.List {
+		buf, err := protobuf.Encode(si)
+		if err != nil {
+			return nil, err
+		}
+		hash.Write(buf)
+	}
+	return hash.Sum(nil), nil
 }
