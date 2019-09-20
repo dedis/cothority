@@ -225,6 +225,10 @@ var cmds = cli.Commands{
 								Name:  "export, x",
 								Usage: "export the instance id to STDOUT",
 							},
+							cli.StringFlag{
+								Name:  "projectInstID, pid",
+								Usage: "The project instance ID, which contains the metadata for verification (optional)",
+							},
 						},
 					},
 				},

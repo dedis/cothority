@@ -3,8 +3,10 @@ package calypso
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
+	"github.com/dedis/odyssey/projectc"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
@@ -214,4 +216,83 @@ func intersectRosters(r1, r2 *onet.Roster) int {
 		}
 	}
 	return res
+}
+
+// VerifyInstruction uses a specific verification based on attr in the case its
+// a read spawn
+func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+	log.Info("Hello from the verify instruction")
+	if inst.GetType() == byzcoin.SpawnType && inst.Spawn.ContractID == ContractReadID {
+		log.Info("Hello 2 from the verify instruction")
+		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: c.MakeAttrInterpreters(rst, inst)})
+	}
+	return inst.VerifyWithOption(rst, ctxHash, nil)
+}
+
+// MakeAttrInterpreters provides the attribute verification which check
+// the purposes and uses
+func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) darc.AttrInterpreters {
+	log.Info("Hello from the MakeAttrInterpreters")
+	cb := func(attr string) error {
+		log.Info("Hello from the inside MakeAttrInterpreters")
+		// Expecting an 'attr' of form:
+		// purposes=purpose1,purpose2&uses=use1,use2,use4
+		// which, once parsed, gives map[purposes:[purpose1,purpose2] uses:[use1,use2]]
+		vals, err := url.ParseQuery(attr)
+		if err != nil {
+			return err
+		}
+		purposesStr := vals.Get("purposes")
+		usesStr := vals.Get("uses")
+
+		projectInstID := inst.Spawn.Args.Search("projectInstID")
+		if projectInstID == nil {
+			return errors.New("argument 'projectInstID' not found")
+		}
+
+		projectC := projectc.ProjectData{}
+		projectBuf, _, _, _, err := rst.GetValues(projectInstID)
+		if err != nil {
+			return fmt.Errorf("failed to get the given project instance '%x': %s", projectInstID, err.Error())
+		}
+		err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return errors.New("failed to decode project instance: " + err.Error())
+		}
+
+		purposes := strings.Split(purposesStr, ",")
+		log.Info("here are the Darc purposes: ", purposes)
+		uses := strings.Split(usesStr, ",")
+
+		errorMessages := make([]string, 0)
+		for _, purpose := range projectC.Purposes {
+			if !stringInSlice(purpose, purposes) {
+				errorMessages = append(errorMessages,
+					fmt.Sprintf("the purpose '%s' is not allowed", purpose))
+			}
+		}
+		for _, use := range projectC.Uses {
+			if !stringInSlice(use, uses) {
+				errorMessages = append(errorMessages,
+					fmt.Sprintf("the use '%s' is not allowed", use))
+			}
+		}
+
+		if len(errorMessages) != 0 {
+			return fmt.Errorf("validation of attributes failed: %s", strings.Join(errorMessages, ", "))
+		}
+
+		return nil
+
+	}
+	return darc.AttrInterpreters{"allowed": cb}
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
