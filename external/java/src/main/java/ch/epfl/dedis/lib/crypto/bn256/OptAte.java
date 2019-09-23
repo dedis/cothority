@@ -190,10 +190,10 @@ class OptAte {
     private static byte[] sixuPlus2NAF = new byte[]{0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 1, 0, -1, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 1};
 
     private static GFp12 miller(TwistPoint q, CurvePoint p) {
-        GFp12 ret = new GFp12();
+        GFp12 ret = new GFp12(); // return
         ret.setOne();
 
-        TwistPoint aAffine = new TwistPoint();
+        TwistPoint aAffine = new TwistPoint(GFpPool.getInstance());
         aAffine.set(q);
         aAffine.makeAffine();
 
@@ -201,10 +201,10 @@ class OptAte {
         bAffine.set(p);
         bAffine.makeAffine();
 
-        TwistPoint minusA = new TwistPoint();
+        TwistPoint minusA = new TwistPoint(GFpPool.getInstance());
         minusA.negative(aAffine);
 
-        TwistPoint r = new TwistPoint();
+        TwistPoint r = new TwistPoint(GFpPool.getInstance());
         r.set(aAffine);
 
         GFp2 r2 = GFpPool.getInstance().get2();
@@ -243,7 +243,7 @@ class OptAte {
             r = newR;
         }
 
-        TwistPoint q1 = new TwistPoint();
+        TwistPoint q1 = new TwistPoint(GFpPool.getInstance());
         q1.x.conjugate(aAffine.x);
         q1.x.mul(q1.x, Constants.xiToPMinus1Over3);
         q1.y.conjugate(aAffine.y);
@@ -251,7 +251,7 @@ class OptAte {
         q1.z.setOne();
         q1.t.setOne();
 
-        TwistPoint minusQ2 = new TwistPoint();
+        TwistPoint minusQ2 = new TwistPoint(GFpPool.getInstance());
         minusQ2.x.mulScalar(aAffine.x, Constants.xiToPSquaredMinus1Over3);
         minusQ2.y.set(aAffine.y);
         minusQ2.z.setOne();
@@ -276,6 +276,13 @@ class OptAte {
         newR = res2.rOut;
         mulLine(ret, a, b, c);
         r = newR;
+
+        // Free at the end as GFps are passed around.
+        aAffine.free(GFpPool.getInstance());
+        minusA.free(GFpPool.getInstance());
+        r.free(GFpPool.getInstance());
+        q1.free(GFpPool.getInstance());
+        minusQ2.free(GFpPool.getInstance());
 
         return ret;
     }
