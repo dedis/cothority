@@ -1400,54 +1400,55 @@ public final class StatusProto {
     long getTimeout();
 
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>required bool findfaulty = 3;</code>
+     */
+    boolean hasFindfaulty();
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    boolean getFindfaulty();
+
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
         getListList();
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index);
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     int getListCount();
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
         getListOrBuilderList();
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
         int index);
 
     /**
-     * <code>required bytes signature = 4;</code>
+     * <code>required bytes signature = 5;</code>
      */
     boolean hasSignature();
     /**
-     * <code>required bytes signature = 4;</code>
+     * <code>required bytes signature = 5;</code>
      */
     com.google.protobuf.ByteString getSignature();
-
-    /**
-     * <code>required bool findfaulty = 5;</code>
-     */
-    boolean hasFindfaulty();
-    /**
-     * <code>required bool findfaulty = 5;</code>
-     */
-    boolean getFindfaulty();
   }
   /**
    * <pre>
    * Connectivity is sent by a client to check the connectivity of a given roster. The Time must
    * be within 2 minutes of the server's time. The signature must be a schnorr-signature using the
    * private conode-key on the following message:
-   *   sha256( bytes.LittleEndian.PutUInt64(Time) | protobuf.Encode(List[0]) |
-   *   protobuf.Encode(List[1])... )
+   *   sha256( bytes.LittleEndian.PutUInt64(Time) | binary.LittleEndian.PutUInt64(Timeout) |
+   *           FindFaulty ? byte(1) : byte(0) |
+   *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
    * </pre>
    *
    * Protobuf type {@code status.Connectivity}
@@ -1464,9 +1465,9 @@ public final class StatusProto {
     private Connectivity() {
       time_ = 0L;
       timeout_ = 0L;
+      findfaulty_ = false;
       list_ = java.util.Collections.emptyList();
       signature_ = com.google.protobuf.ByteString.EMPTY;
-      findfaulty_ = false;
     }
 
     @java.lang.Override
@@ -1503,23 +1504,23 @@ public final class StatusProto {
               timeout_ = input.readSInt64();
               break;
             }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+            case 24: {
+              bitField0_ |= 0x00000004;
+              findfaulty_ = input.readBool();
+              break;
+            }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                 list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000008;
               }
               list_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry));
               break;
             }
-            case 34: {
-              bitField0_ |= 0x00000004;
-              signature_ = input.readBytes();
-              break;
-            }
-            case 40: {
+            case 42: {
               bitField0_ |= 0x00000008;
-              findfaulty_ = input.readBool();
+              signature_ = input.readBytes();
               break;
             }
             default: {
@@ -1537,7 +1538,7 @@ public final class StatusProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
           list_ = java.util.Collections.unmodifiableList(list_);
         }
         this.unknownFields = unknownFields.build();
@@ -1588,69 +1589,69 @@ public final class StatusProto {
       return timeout_;
     }
 
-    public static final int LIST_FIELD_NUMBER = 3;
+    public static final int FINDFAULTY_FIELD_NUMBER = 3;
+    private boolean findfaulty_;
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    public boolean hasFindfaulty() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    public boolean getFindfaulty() {
+      return findfaulty_;
+    }
+
+    public static final int LIST_FIELD_NUMBER = 4;
     private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_;
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
       return list_;
     }
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
         getListOrBuilderList() {
       return list_;
     }
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     public int getListCount() {
       return list_.size();
     }
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
       return list_.get(index);
     }
     /**
-     * <code>repeated .network.ServerIdentity list = 3;</code>
+     * <code>repeated .network.ServerIdentity list = 4;</code>
      */
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
         int index) {
       return list_.get(index);
     }
 
-    public static final int SIGNATURE_FIELD_NUMBER = 4;
+    public static final int SIGNATURE_FIELD_NUMBER = 5;
     private com.google.protobuf.ByteString signature_;
     /**
-     * <code>required bytes signature = 4;</code>
+     * <code>required bytes signature = 5;</code>
      */
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>required bytes signature = 4;</code>
-     */
-    public com.google.protobuf.ByteString getSignature() {
-      return signature_;
-    }
-
-    public static final int FINDFAULTY_FIELD_NUMBER = 5;
-    private boolean findfaulty_;
-    /**
-     * <code>required bool findfaulty = 5;</code>
-     */
-    public boolean hasFindfaulty() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required bool findfaulty = 5;</code>
+     * <code>required bytes signature = 5;</code>
      */
-    public boolean getFindfaulty() {
-      return findfaulty_;
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1668,11 +1669,11 @@ public final class StatusProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasSignature()) {
+      if (!hasFindfaulty()) {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasFindfaulty()) {
+      if (!hasSignature()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1695,14 +1696,14 @@ public final class StatusProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeSInt64(2, timeout_);
       }
-      for (int i = 0; i < list_.size(); i++) {
-        output.writeMessage(3, list_.get(i));
-      }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(4, signature_);
+        output.writeBool(3, findfaulty_);
+      }
+      for (int i = 0; i < list_.size(); i++) {
+        output.writeMessage(4, list_.get(i));
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBool(5, findfaulty_);
+        output.writeBytes(5, signature_);
       }
       unknownFields.writeTo(output);
     }
@@ -1721,17 +1722,17 @@ public final class StatusProto {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(2, timeout_);
       }
-      for (int i = 0; i < list_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, list_.get(i));
-      }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, signature_);
+          .computeBoolSize(3, findfaulty_);
+      }
+      for (int i = 0; i < list_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, list_.get(i));
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(5, findfaulty_);
+          .computeBytesSize(5, signature_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1759,17 +1760,17 @@ public final class StatusProto {
         result = result && (getTimeout()
             == other.getTimeout());
       }
+      result = result && (hasFindfaulty() == other.hasFindfaulty());
+      if (hasFindfaulty()) {
+        result = result && (getFindfaulty()
+            == other.getFindfaulty());
+      }
       result = result && getListList()
           .equals(other.getListList());
       result = result && (hasSignature() == other.hasSignature());
       if (hasSignature()) {
         result = result && getSignature()
             .equals(other.getSignature());
-      }
-      result = result && (hasFindfaulty() == other.hasFindfaulty());
-      if (hasFindfaulty()) {
-        result = result && (getFindfaulty()
-            == other.getFindfaulty());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -1792,6 +1793,11 @@ public final class StatusProto {
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getTimeout());
       }
+      if (hasFindfaulty()) {
+        hash = (37 * hash) + FINDFAULTY_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getFindfaulty());
+      }
       if (getListCount() > 0) {
         hash = (37 * hash) + LIST_FIELD_NUMBER;
         hash = (53 * hash) + getListList().hashCode();
@@ -1799,11 +1805,6 @@ public final class StatusProto {
       if (hasSignature()) {
         hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
         hash = (53 * hash) + getSignature().hashCode();
-      }
-      if (hasFindfaulty()) {
-        hash = (37 * hash) + FINDFAULTY_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-            getFindfaulty());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1905,8 +1906,9 @@ public final class StatusProto {
      * Connectivity is sent by a client to check the connectivity of a given roster. The Time must
      * be within 2 minutes of the server's time. The signature must be a schnorr-signature using the
      * private conode-key on the following message:
-     *   sha256( bytes.LittleEndian.PutUInt64(Time) | protobuf.Encode(List[0]) |
-     *   protobuf.Encode(List[1])... )
+     *   sha256( bytes.LittleEndian.PutUInt64(Time) | binary.LittleEndian.PutUInt64(Timeout) |
+     *           FindFaulty ? byte(1) : byte(0) |
+     *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
      * </pre>
      *
      * Protobuf type {@code status.Connectivity}
@@ -1951,15 +1953,15 @@ public final class StatusProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         timeout_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
+        findfaulty_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         if (listBuilder_ == null) {
           list_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000008);
         } else {
           listBuilder_.clear();
         }
         signature_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
-        findfaulty_ = false;
         bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
@@ -1997,23 +1999,23 @@ public final class StatusProto {
           to_bitField0_ |= 0x00000002;
         }
         result.timeout_ = timeout_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.findfaulty_ = findfaulty_;
         if (listBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
             list_ = java.util.Collections.unmodifiableList(list_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000008);
           }
           result.list_ = list_;
         } else {
           result.list_ = listBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000004;
-        }
-        result.signature_ = signature_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.findfaulty_ = findfaulty_;
+        result.signature_ = signature_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2069,11 +2071,14 @@ public final class StatusProto {
         if (other.hasTimeout()) {
           setTimeout(other.getTimeout());
         }
+        if (other.hasFindfaulty()) {
+          setFindfaulty(other.getFindfaulty());
+        }
         if (listBuilder_ == null) {
           if (!other.list_.isEmpty()) {
             if (list_.isEmpty()) {
               list_ = other.list_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000008);
             } else {
               ensureListIsMutable();
               list_.addAll(other.list_);
@@ -2086,7 +2091,7 @@ public final class StatusProto {
               listBuilder_.dispose();
               listBuilder_ = null;
               list_ = other.list_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000008);
               listBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getListFieldBuilder() : null;
@@ -2097,9 +2102,6 @@ public final class StatusProto {
         }
         if (other.hasSignature()) {
           setSignature(other.getSignature());
-        }
-        if (other.hasFindfaulty()) {
-          setFindfaulty(other.getFindfaulty());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2114,10 +2116,10 @@ public final class StatusProto {
         if (!hasTimeout()) {
           return false;
         }
-        if (!hasSignature()) {
+        if (!hasFindfaulty()) {
           return false;
         }
-        if (!hasFindfaulty()) {
+        if (!hasSignature()) {
           return false;
         }
         for (int i = 0; i < getListCount(); i++) {
@@ -2212,12 +2214,44 @@ public final class StatusProto {
         return this;
       }
 
+      private boolean findfaulty_ ;
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public boolean hasFindfaulty() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public boolean getFindfaulty() {
+        return findfaulty_;
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public Builder setFindfaulty(boolean value) {
+        bitField0_ |= 0x00000004;
+        findfaulty_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public Builder clearFindfaulty() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        findfaulty_ = false;
+        onChanged();
+        return this;
+      }
+
       private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_ =
         java.util.Collections.emptyList();
       private void ensureListIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
           list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(list_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000008;
          }
       }
 
@@ -2225,7 +2259,7 @@ public final class StatusProto {
           ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> listBuilder_;
 
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
         if (listBuilder_ == null) {
@@ -2235,7 +2269,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public int getListCount() {
         if (listBuilder_ == null) {
@@ -2245,7 +2279,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
         if (listBuilder_ == null) {
@@ -2255,7 +2289,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder setList(
           int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
@@ -2272,7 +2306,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder setList(
           int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
@@ -2286,7 +2320,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder addList(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
         if (listBuilder_ == null) {
@@ -2302,7 +2336,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder addList(
           int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
@@ -2319,7 +2353,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder addList(
           ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
@@ -2333,7 +2367,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder addList(
           int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
@@ -2347,7 +2381,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder addAllList(
           java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> values) {
@@ -2362,12 +2396,12 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder clearList() {
         if (listBuilder_ == null) {
           list_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000008);
           onChanged();
         } else {
           listBuilder_.clear();
@@ -2375,7 +2409,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public Builder removeList(int index) {
         if (listBuilder_ == null) {
@@ -2388,14 +2422,14 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder getListBuilder(
           int index) {
         return getListFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
           int index) {
@@ -2405,7 +2439,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
            getListOrBuilderList() {
@@ -2416,14 +2450,14 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addListBuilder() {
         return getListFieldBuilder().addBuilder(
             ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addListBuilder(
           int index) {
@@ -2431,7 +2465,7 @@ public final class StatusProto {
             index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
       }
       /**
-       * <code>repeated .network.ServerIdentity list = 3;</code>
+       * <code>repeated .network.ServerIdentity list = 4;</code>
        */
       public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
            getListBuilderList() {
@@ -2444,7 +2478,7 @@ public final class StatusProto {
           listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
                   list_,
-                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  ((bitField0_ & 0x00000008) == 0x00000008),
                   getParentForChildren(),
                   isClean());
           list_ = null;
@@ -2454,67 +2488,35 @@ public final class StatusProto {
 
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes signature = 4;</code>
+       * <code>required bytes signature = 5;</code>
        */
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>required bytes signature = 4;</code>
+       * <code>required bytes signature = 5;</code>
        */
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
-       * <code>required bytes signature = 4;</code>
+       * <code>required bytes signature = 5;</code>
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         signature_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes signature = 4;</code>
+       * <code>required bytes signature = 5;</code>
        */
       public Builder clearSignature() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        signature_ = getDefaultInstance().getSignature();
-        onChanged();
-        return this;
-      }
-
-      private boolean findfaulty_ ;
-      /**
-       * <code>required bool findfaulty = 5;</code>
-       */
-      public boolean hasFindfaulty() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>required bool findfaulty = 5;</code>
-       */
-      public boolean getFindfaulty() {
-        return findfaulty_;
-      }
-      /**
-       * <code>required bool findfaulty = 5;</code>
-       */
-      public Builder setFindfaulty(boolean value) {
-        bitField0_ |= 0x00000010;
-        findfaulty_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bool findfaulty = 5;</code>
-       */
-      public Builder clearFindfaulty() {
         bitField0_ = (bitField0_ & ~0x00000010);
-        findfaulty_ = false;
+        signature_ = getDefaultInstance().getSignature();
         onChanged();
         return this;
       }
@@ -3412,9 +3414,9 @@ public final class StatusProto {
       "/\n\016serveridentity\030\002 \001(\0132\027.network.Server" +
       "Identity\032;\n\013StatusEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005" +
       "value\030\002 \001(\0132\014.onet.Status:\0028\001\"{\n\014Connect" +
-      "ivity\022\014\n\004time\030\001 \002(\022\022\017\n\007timeout\030\002 \002(\022\022%\n\004" +
-      "list\030\003 \003(\0132\027.network.ServerIdentity\022\021\n\ts" +
-      "ignature\030\004 \002(\014\022\022\n\nfindfaulty\030\005 \002(\010\";\n\021Co" +
+      "ivity\022\014\n\004time\030\001 \002(\022\022\017\n\007timeout\030\002 \002(\022\022\022\n\n" +
+      "findfaulty\030\003 \002(\010\022%\n\004list\030\004 \003(\0132\027.network" +
+      ".ServerIdentity\022\021\n\tsignature\030\005 \002(\014\";\n\021Co" +
       "nnectivityReply\022&\n\005nodes\030\001 \003(\0132\027.network" +
       ".ServerIdentityB&\n\027ch.epfl.dedis.lib.pro" +
       "toB\013StatusProto"
@@ -3456,7 +3458,7 @@ public final class StatusProto {
     internal_static_status_Connectivity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_status_Connectivity_descriptor,
-        new java.lang.String[] { "Time", "Timeout", "List", "Signature", "Findfaulty", });
+        new java.lang.String[] { "Time", "Timeout", "Findfaulty", "List", "Signature", });
     internal_static_status_ConnectivityReply_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_status_ConnectivityReply_fieldAccessorTable = new

@@ -66,8 +66,19 @@ func (c *Client) Connectivity(priv kyber.Scalar, list []*network.ServerIdentity,
 func (c *Connectivity) hash() ([]byte, error) {
 	hash := sha256.New()
 	timeBuf := make([]byte, 8)
+
+	binary.LittleEndian.PutUint64(timeBuf, uint64(c.Time))
+	hash.Write(timeBuf)
+
 	binary.LittleEndian.PutUint64(timeBuf, uint64(c.Timeout))
 	hash.Write(timeBuf)
+
+	if c.FindFaulty{
+		hash.Write([]byte{1})
+	} else {
+		hash.Write([]byte{0})
+	}
+
 	for _, si := range c.List {
 		buf, err := protobuf.Encode(si)
 		if err != nil {

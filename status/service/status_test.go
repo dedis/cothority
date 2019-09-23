@@ -1,10 +1,11 @@
 package status
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/onet/v3"
@@ -47,6 +48,9 @@ func TestStat_Connectivity(t *testing.T) {
 
 	repl, err = cl.Connectivity(priv, ro.List, time.Second, true)
 	require.NoError(t, err)
+	for i := range append(ro.List[0:2], ro.List[3:]...) {
+		require.True(t, ro.List[i].Equal(repl[i]))
+	}
 	local.Check = onet.CheckNone
 }
 
