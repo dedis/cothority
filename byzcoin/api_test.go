@@ -313,6 +313,42 @@ func TestClient_NoPhantomSkipchain(t *testing.T) {
 	require.Equal(t, 1, len(gac.IDs))
 }
 
+// Insure that the decoder will return an error if the reply
+// contains data from an old block.
+func TestClient_SignerCounterDecoder(t *testing.T) {
+	c := Client{}
+
+	invalidReply := GetSignerCounters{}
+	invalidBuff, err := protobuf.Encode(&invalidReply)
+	require.NoError(t, err)
+	// Invalid response type.
+	require.Error(t, c.signerCounterDecoder(invalidBuff, &invalidReply))
+
+	reply := GetSignerCountersResponse{
+		Counters: []uint64{},
+		Index:    0,
+	}
+
+	buf, err := protobuf.Encode(&reply)
+	require.NoError(t, err)
+	// Index is 0 so ignoring the check.
+	require.NoError(t, c.signerCounterDecoder(buf, &reply))
+
+	reply.Index = 1
+	buf, err = protobuf.Encode(&reply)
+	require.NoError(t, err)
+	// Latest is nil.
+	require.NoError(t, c.signerCounterDecoder(buf, &reply))
+
+	c.Latest = &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Index: 1}}
+	// Correct scenario with Index = 1.
+	require.NoError(t, c.signerCounterDecoder(buf, &reply))
+
+	c.Latest.Index = 2
+	// Incorrect scenario where the reply is older.
+	require.Error(t, c.signerCounterDecoder(buf, &reply))
+}
+
 const testServiceName = "TestByzCoin"
 
 type corruptedService struct {

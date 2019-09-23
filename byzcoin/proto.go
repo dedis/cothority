@@ -351,6 +351,10 @@ type GetSignerCounters struct {
 // request.
 type GetSignerCountersResponse struct {
 	Counters []uint64
+	// Index contains the trie index where the counters
+	// have been extracted so clients can use it to
+	// make sure the counters are up-to-date.
+	Index uint64 `protobuf:"opt"`
 }
 
 // GetInstanceVersion is a request asking the service to fetch

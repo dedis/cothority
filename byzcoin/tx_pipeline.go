@@ -400,10 +400,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				if proposing {
 					// If a block is currently created, it will wait for the
 					// end of the process.
-					select {
-					case err := <-proposalResult:
-						proposalResult <- err
-					}
+					err := <-proposalResult
+					proposalResult <- err
 				}
 
 				err := p.processor.ProposeUpgradeBlock(version)
@@ -414,7 +412,63 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				}
 
 				currentVersion = version
+			case <-intervalChan:
+				// update the interval every time because it might've changed
+				intervalChan = getInterval()
+
+				if proposing {
+					// Wait for the end of the block creation to prevent too many transactions
+					// to be processed and thus makes an even longer block after the new one.
+					err := <-proposalResult
+					// Only the ProposeBlock sends back results and it sends only one
+					proposing = false
+					if err != nil {
+						log.Error("reverting to last known state because proposal refused:", err)
+						currentState = []*txProcessorState{p.processor.GetLatestGoodState()}
+						break
+					}
+				}
+
+				// wait for the next interval if there are no changes
+				// we do not check for the length because currentState
+				// should always be non-empty, otherwise it's a
+				// programmer error
+				if len(currentState[0].txs) == 0 {
+					break
+				}
+
+				proposing = true
+
+				// find the right state and propose it in the block
+				var inState *txProcessorState
+				currentState, inState = proposeInputState(currentState)
+
+				go func(state *txProcessorState) {
+					p.wg.Add(1)
+					defer p.wg.Done()
+					if state != nil {
+						// NOTE: ProposeBlock might block for a long time,
+						// but there's nothing we can do about it at the moment
+						// other than waiting for the timeout.
+						err := p.processor.ProposeBlock(state)
+						if err != nil {
+							log.Error("failed to propose block:", err)
+							proposalResult <- err
+							return
+						}
+					}
+					proposalResult <- nil
+				}(inState)
 			case tx, ok := <-p.ctxChan:
+				select {
+				// This case has a higher priority so we force the select to go through it
+				// first.
+				case <-intervalChan:
+					intervalChan = time.After(0)
+					break
+				default:
+				}
+
 				if !ok {
 					log.Lvl3("stopping txs processor")
 					return
@@ -437,58 +491,9 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				if err != nil {
 					log.Error("processing transaction failed with error: " + err.Error())
 				} else {
-					// remove the last one from currentState because
-					// it might be getting updated and the append newStates
+					// Remove the last one from currentState because
+					// it might be getting updated and then append newStates.
 					currentState = append(currentState[:len(currentState)-1], newStates...)
-				}
-			case <-intervalChan:
-				// update the interval every time because it might've changed
-				intervalChan = getInterval()
-
-				// wait for the next interval if there are no changes
-				// we do not check for the length because currentState
-				// should always be non-empty, otherwise it's a
-				// programmer error
-				if len(currentState[0].txs) == 0 {
-					break
-				}
-
-				// if we're already proposing a block, then don't propose another one yet,
-				// because the followers won't be able to verify
-				if proposing {
-					log.Warn("block proposal is taking a longer time than the interval to complete," +
-						" consider using a longer block interval or check your network connection")
-					break
-				}
-				proposing = true
-
-				// find the right state and propose it in the block
-				var inState *txProcessorState
-				currentState, inState = proposeInputState(currentState)
-
-				go func(state *txProcessorState) {
-					p.wg.Add(1)
-					defer p.wg.Done()
-					if state == nil {
-						proposalResult <- nil
-					} else {
-						// NOTE: ProposeBlock might block for a long time,
-						// but there's nothing we can do about it at the moment
-						// other than waiting for the timeout.
-						if err := p.processor.ProposeBlock(state); err != nil {
-							log.Error("failed to propose block:", err)
-							proposalResult <- err
-						} else {
-							proposalResult <- nil
-						}
-					}
-				}(inState)
-			case err := <-proposalResult:
-				// only the ProposeBlock sends back results and it sends only one
-				proposing = false
-				if err != nil {
-					log.Error("reverting to last known state because proposal refused:", err)
-					currentState = []*txProcessorState{p.processor.GetLatestGoodState()}
 				}
 			}
 		}

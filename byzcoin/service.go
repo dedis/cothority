@@ -565,6 +565,7 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 	}
 	resp := GetSignerCountersResponse{
 		Counters: out,
+		Index:    uint64(st.GetIndex()),
 	}
 	return &resp, nil
 }
@@ -1318,6 +1319,15 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
 		return err
+	}
+
+	// If a genesis block is asked to be caught up, we need to store it
+	// before the normal procedure. We know from above that the chain
+	// is friendly.
+	//
+	// We don't return as the following steps will create the trie.
+	if scID.Equal(sbID) {
+		s.db().Store(sb)
 	}
 
 	// catch up the intermediate missing blocks
