@@ -28635,7 +28635,8 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Index contains the trie index where the counters
-     * have been extracted.
+     * have been extracted so clients can use it to
+     * make sure the counters are up-to-date.
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
@@ -28644,7 +28645,8 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Index contains the trie index where the counters
-     * have been extracted.
+     * have been extracted so clients can use it to
+     * make sure the counters are up-to-date.
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
@@ -28787,7 +28789,8 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Index contains the trie index where the counters
-     * have been extracted.
+     * have been extracted so clients can use it to
+     * make sure the counters are up-to-date.
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
@@ -28798,7 +28801,8 @@ public final class ByzCoinProto {
     /**
      * <pre>
      * Index contains the trie index where the counters
-     * have been extracted.
+     * have been extracted so clients can use it to
+     * make sure the counters are up-to-date.
      * </pre>
      *
      * <code>optional uint64 index = 2;</code>
@@ -29243,7 +29247,8 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Index contains the trie index where the counters
-       * have been extracted.
+       * have been extracted so clients can use it to
+       * make sure the counters are up-to-date.
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
@@ -29254,7 +29259,8 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Index contains the trie index where the counters
-       * have been extracted.
+       * have been extracted so clients can use it to
+       * make sure the counters are up-to-date.
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
@@ -29265,7 +29271,8 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Index contains the trie index where the counters
-       * have been extracted.
+       * have been extracted so clients can use it to
+       * make sure the counters are up-to-date.
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>
@@ -29279,7 +29286,8 @@ public final class ByzCoinProto {
       /**
        * <pre>
        * Index contains the trie index where the counters
-       * have been extracted.
+       * have been extracted so clients can use it to
+       * make sure the counters are up-to-date.
        * </pre>
        *
        * <code>optional uint64 index = 2;</code>

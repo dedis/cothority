@@ -331,7 +331,8 @@ message GetSignerCounters {
 message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
   // Index contains the trie index where the counters
-  // have been extracted.
+  // have been extracted so clients can use it to
+  // make sure the counters are up-to-date.
   optional uint64 index = 2;
 }
 

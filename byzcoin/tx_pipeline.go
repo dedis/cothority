@@ -446,19 +446,18 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				go func(state *txProcessorState) {
 					p.wg.Add(1)
 					defer p.wg.Done()
-					if state == nil {
-						proposalResult <- nil
-					} else {
+					if state != nil {
 						// NOTE: ProposeBlock might block for a long time,
 						// but there's nothing we can do about it at the moment
 						// other than waiting for the timeout.
-						if err := p.processor.ProposeBlock(state); err != nil {
+						err := p.processor.ProposeBlock(state)
+						if err != nil {
 							log.Error("failed to propose block:", err)
 							proposalResult <- err
-						} else {
-							proposalResult <- nil
+							return
 						}
 					}
+					proposalResult <- nil
 				}(inState)
 			case tx, ok := <-p.ctxChan:
 				select {
@@ -492,8 +491,8 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				if err != nil {
 					log.Error("processing transaction failed with error: " + err.Error())
 				} else {
-					// remove the last one from currentState because
-					// it might be getting updated and the append newStates
+					// Remove the last one from currentState because
+					// it might be getting updated and then append newStates.
 					currentState = append(currentState[:len(currentState)-1], newStates...)
 				}
 			}

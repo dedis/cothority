@@ -352,7 +352,8 @@ type GetSignerCounters struct {
 type GetSignerCountersResponse struct {
 	Counters []uint64
 	// Index contains the trie index where the counters
-	// have been extracted.
+	// have been extracted so clients can use it to
+	// make sure the counters are up-to-date.
 	Index uint64 `protobuf:"opt"`
 }
 
