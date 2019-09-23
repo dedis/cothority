@@ -14,6 +14,6 @@ This PR
 - [ ] 4. Errors are systematically wrapped, following the `[failed to | counldn't do] ACTION THAT FAILED: " + err.Error()` format.
 - [ ] 5. Hard limit of 80 chars is always respected.
 - [ ] 6. Changes are backward compatible.
-- [ ] 7. Indentation level does not exceed 5, althought 4 is already suspicious.
+- [ ] 7. Indentation level does not exceed 5, although 4 is already suspicious.
 - [ ] 8. Functions, files, and packages are kept to a manageable size and decomposed into smaller units if needed.
 - [ ] 9. There are no magic values.
