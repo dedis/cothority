@@ -148,5 +148,5 @@ $ csadmin decrypt < reply.bin
 Alternatively, the path to a private key file can be provided:
 
 ```
-$ csadmin recover --key <private key path> < reply.bin
+$ csadmin decrypt --key <private key path> < reply.bin
 ```
