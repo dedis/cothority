@@ -18,6 +18,7 @@ import (
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/pkg/browser"
+	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/authprox"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -35,7 +36,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/oauth2"
-	cli "gopkg.in/urfave/cli.v1"
 )
 
 type config struct {

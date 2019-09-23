@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/ftcosi/check"
 	s "go.dedis.ch/cothority/v3/ftcosi/service"
@@ -18,7 +19,6 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
-	"gopkg.in/urfave/cli.v1"
 )
 
 type sigHex struct {

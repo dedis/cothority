@@ -15,10 +15,10 @@ import (
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3/log"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
-	"gopkg.in/urfave/cli.v1"
 )
 
 // StringToDarcID converts a string representation of a DARC to a byte array

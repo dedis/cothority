@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol

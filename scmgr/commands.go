@@ -1,6 +1,6 @@
 package main
 
-import cli "gopkg.in/urfave/cli.v1"
+import cli "github.com/urfave/cli"
 
 func getCommands() cli.Commands {
 	groupsDef := "[group-definition]"

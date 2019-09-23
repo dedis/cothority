@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -29,7 +30,6 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.etcd.io/bbolt"
-	"gopkg.in/urfave/cli.v1"
 )
 
 var bucketName = []byte("skipblocks")
