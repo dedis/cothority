@@ -3,6 +3,7 @@ package status
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"errors"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/sign/schnorr"
@@ -32,16 +33,16 @@ func (c *Client) Request(dst *network.ServerIdentity) (*Response, error) {
 	return resp, nil
 }
 
-// Connectivity sends a message from all nodes to all nodes in the list
+// CheckConnectivity sends a message from all nodes to all nodes in the list
 // and checks if all messages are received correctly. If findFaulty == true,
 // then the service will try very hard to get a list of nodes that can
 // communicate with each other.
 //
 // The return value of this call is the set of nodes that can communicate
 // with each other.
-func (c *Client) Connectivity(priv kyber.Scalar, list []*network.ServerIdentity,
+func (c *Client) CheckConnectivity(priv kyber.Scalar, list []*network.ServerIdentity,
 	timeout time.Duration, findFaulty bool) ([]*network.ServerIdentity, error) {
-	conn := &Connectivity{
+	conn := &CheckConnectivity{
 		List:       list,
 		Timeout:    int64(timeout),
 		FindFaulty: findFaulty,
@@ -49,21 +50,21 @@ func (c *Client) Connectivity(priv kyber.Scalar, list []*network.ServerIdentity,
 	}
 	hash, err := conn.hash()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("couldn't hash message: " + err.Error())
 	}
 	conn.Signature, err = schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("couldn't sign message: " + err.Error())
 	}
-	resp := &ConnectivityReply{}
+	resp := &CheckConnectivityReply{}
 	err = c.SendProtobuf(list[0], conn, resp)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to send CheckConnectivity: " + err.Error())
 	}
 	return resp.Nodes, nil
 }
 
-func (c *Connectivity) hash() ([]byte, error) {
+func (c *CheckConnectivity) hash() ([]byte, error) {
 	hash := sha256.New()
 	timeBuf := make([]byte, 8)
 
@@ -73,7 +74,7 @@ func (c *Connectivity) hash() ([]byte, error) {
 	binary.LittleEndian.PutUint64(timeBuf, uint64(c.Timeout))
 	hash.Write(timeBuf)
 
-	if c.FindFaulty{
+	if c.FindFaulty {
 		hash.Write([]byte{1})
 	} else {
 		hash.Write([]byte{0})
@@ -82,7 +83,7 @@ func (c *Connectivity) hash() ([]byte, error) {
 	for _, si := range c.List {
 		buf, err := protobuf.Encode(si)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("couldn't encode ServerIdentity: " + err.Error())
 		}
 		hash.Write(buf)
 	}

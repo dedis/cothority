@@ -172,7 +172,7 @@ func connectivity(c *cli.Context) error {
 	if err != nil {
 		return errors.New("private.toml didn't have a serverIdentity: " + err.Error())
 	}
-	resp, err := status.NewClient().Connectivity(si.GetPrivate(), list, time.Duration(to), ff)
+	resp, err := status.NewClient().CheckConnectivity(si.GetPrivate(), list, time.Duration(to), ff)
 	if err != nil {
 		return errors.New("couldn't get private key from private.toml: " + err.Error())
 	}
@@ -190,7 +190,8 @@ func connectivity(c *cli.Context) error {
 	return nil
 }
 
-// readGroup takes a toml file name and reads the file, returning the entities within
+// readGroup takes a toml file name and reads the file, returning the entities
+// within.
 func readGroup(tomlFileName string) (*onet.Roster, error) {
 	f, err := os.Open(tomlFileName)
 	if err != nil {

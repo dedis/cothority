@@ -39,8 +39,8 @@ var Version = "unknown"
 func (st *Stat) Request(req *Request) (network.Message, error) {
 	statuses := st.Context.ReportStatus()
 
-	// Add this in here, because onet no longer knows the version, it is just a support
-	// library and should never really have known it.
+	// Add this in here, because onet no longer knows the version, it is just a
+	// support library and should never really have known it.
 	statuses["Conode"] = &onet.Status{Field: make(map[string]string)}
 	statuses["Conode"].Field["version"] = Version
 
@@ -53,16 +53,16 @@ func (st *Stat) Request(req *Request) (network.Message, error) {
 
 var errTimeout = errors.New("timeout while waiting for replies")
 
-// Connectivity does an all-by-all connectivity test
-func (st *Stat) Connectivity(req *Connectivity) (*ConnectivityReply, error) {
+// CheckConnectivity does an all-by-all connectivity test
+func (st *Stat) CheckConnectivity(req *CheckConnectivity) (*CheckConnectivityReply, error) {
 	// Check signature
 	hash, err := req.hash()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("couldn't hash message: " + err.Error())
 	}
 	err = schnorr.Verify(cothority.Suite, st.ServerIdentity().Public, hash, req.Signature)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("signature verification failed: " + err.Error())
 	}
 	if math.Abs(time.Now().Sub(time.Unix(req.Time, 0)).Seconds()) > 120 {
 		return nil, errors.New("too old request")
@@ -83,14 +83,16 @@ func (st *Stat) Connectivity(req *Connectivity) (*ConnectivityReply, error) {
 	to := time.Duration(req.Timeout)
 	err = st.testNodes(list, to)
 	if err == nil {
-		return &ConnectivityReply{Nodes: list}, nil
+		return &CheckConnectivityReply{Nodes: list}, nil
 	}
 
 	if !req.FindFaulty {
-		return nil, errors.New("one or more of the nodes did not reply. Run with FindFaulty=true")
+		return nil, errors.New("one or more of the nodes did not reply. " +
+			"Run with FindFaulty=true")
 	}
 
-	// Add one node after the other and only keep nodes that have a full connectivity
+	// Add one node after the other and only keep nodes that have a full
+	// connectivity
 	newList := []*network.ServerIdentity{list[0]}
 	for _, si := range list[1:] {
 		tmpList := append(newList, si)
@@ -103,7 +105,7 @@ func (st *Stat) Connectivity(req *Connectivity) (*ConnectivityReply, error) {
 		}
 	}
 
-	return &ConnectivityReply{newList}, nil
+	return &CheckConnectivityReply{newList}, nil
 }
 
 func (st *Stat) testNodes(nodes []*network.ServerIdentity, to time.Duration) error {
@@ -111,7 +113,7 @@ func (st *Stat) testNodes(nodes []*network.ServerIdentity, to time.Duration) err
 	tree := r.GenerateBinaryTree()
 	p, err := st.CreateProtocol(messaging.BroadcastName, tree)
 	if err != nil {
-		return err
+		return errors.New("protocol creation failed: " + err.Error())
 	}
 	bc := p.(*messaging.Broadcast)
 	done := make(chan bool)
@@ -119,7 +121,7 @@ func (st *Stat) testNodes(nodes []*network.ServerIdentity, to time.Duration) err
 		done <- true
 	})
 	if err = p.Start(); err != nil {
-		return err
+		return errors.New("couldn't start protocol: " + err.Error())
 	}
 	select {
 	case <-done:
@@ -134,9 +136,9 @@ func newStatService(c *onet.Context) (onet.Service, error) {
 	s := &Stat{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	err := s.RegisterHandlers(s.Request, s.Connectivity)
+	err := s.RegisterHandlers(s.Request, s.CheckConnectivity)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("couldn't register handlers: " + err.Error())
 	}
 
 	return s, nil

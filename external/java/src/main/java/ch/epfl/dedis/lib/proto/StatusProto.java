@@ -1377,8 +1377,8 @@ public final class StatusProto {
 
   }
 
-  public interface ConnectivityOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:status.Connectivity)
+  public interface CheckConnectivityOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:status.CheckConnectivity)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -1443,26 +1443,28 @@ public final class StatusProto {
   }
   /**
    * <pre>
-   * Connectivity is sent by a client to check the connectivity of a given roster. The Time must
-   * be within 2 minutes of the server's time. The signature must be a schnorr-signature using the
-   * private conode-key on the following message:
-   *   sha256( bytes.LittleEndian.PutUInt64(Time) | binary.LittleEndian.PutUInt64(Timeout) |
+   * CheckConnectivity is sent by a client to check the connectivity of a given
+   * roster. The Time must be within 2 minutes of the server's time. The signature
+   * must be a schnorr-signature using the private conode-key on the following
+   * message:
+   *   sha256( bytes.LittleEndian.PutUInt64(Time) |
+   *           binary.LittleEndian.PutUInt64(Timeout) |
    *           FindFaulty ? byte(1) : byte(0) |
    *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
    * </pre>
    *
-   * Protobuf type {@code status.Connectivity}
+   * Protobuf type {@code status.CheckConnectivity}
    */
-  public  static final class Connectivity extends
+  public  static final class CheckConnectivity extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:status.Connectivity)
-      ConnectivityOrBuilder {
+      // @@protoc_insertion_point(message_implements:status.CheckConnectivity)
+      CheckConnectivityOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use Connectivity.newBuilder() to construct.
-    private Connectivity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use CheckConnectivity.newBuilder() to construct.
+    private CheckConnectivity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private Connectivity() {
+    private CheckConnectivity() {
       time_ = 0L;
       timeout_ = 0L;
       findfaulty_ = false;
@@ -1475,7 +1477,7 @@ public final class StatusProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Connectivity(
+    private CheckConnectivity(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1547,15 +1549,15 @@ public final class StatusProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Connectivity_descriptor;
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Connectivity_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.StatusProto.Connectivity.class, ch.epfl.dedis.lib.proto.StatusProto.Connectivity.Builder.class);
+              ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.Builder.class);
     }
 
     private int bitField0_;
@@ -1744,10 +1746,10 @@ public final class StatusProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.Connectivity)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.StatusProto.Connectivity other = (ch.epfl.dedis.lib.proto.StatusProto.Connectivity) obj;
+      ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) obj;
 
       boolean result = true;
       result = result && (hasTime() == other.hasTime());
@@ -1811,69 +1813,69 @@ public final class StatusProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1886,7 +1888,7 @@ public final class StatusProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.Connectivity prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -1903,34 +1905,36 @@ public final class StatusProto {
     }
     /**
      * <pre>
-     * Connectivity is sent by a client to check the connectivity of a given roster. The Time must
-     * be within 2 minutes of the server's time. The signature must be a schnorr-signature using the
-     * private conode-key on the following message:
-     *   sha256( bytes.LittleEndian.PutUInt64(Time) | binary.LittleEndian.PutUInt64(Timeout) |
+     * CheckConnectivity is sent by a client to check the connectivity of a given
+     * roster. The Time must be within 2 minutes of the server's time. The signature
+     * must be a schnorr-signature using the private conode-key on the following
+     * message:
+     *   sha256( bytes.LittleEndian.PutUInt64(Time) |
+     *           binary.LittleEndian.PutUInt64(Timeout) |
      *           FindFaulty ? byte(1) : byte(0) |
      *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
      * </pre>
      *
-     * Protobuf type {@code status.Connectivity}
+     * Protobuf type {@code status.CheckConnectivity}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:status.Connectivity)
-        ch.epfl.dedis.lib.proto.StatusProto.ConnectivityOrBuilder {
+        // @@protoc_insertion_point(builder_implements:status.CheckConnectivity)
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Connectivity_descriptor;
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Connectivity_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.StatusProto.Connectivity.class, ch.epfl.dedis.lib.proto.StatusProto.Connectivity.Builder.class);
+                ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.StatusProto.Connectivity.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -1969,17 +1973,17 @@ public final class StatusProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_Connectivity_descriptor;
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.Connectivity getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.StatusProto.Connectivity.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.Connectivity build() {
-        ch.epfl.dedis.lib.proto.StatusProto.Connectivity result = buildPartial();
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity build() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -1987,8 +1991,8 @@ public final class StatusProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.Connectivity buildPartial() {
-        ch.epfl.dedis.lib.proto.StatusProto.Connectivity result = new ch.epfl.dedis.lib.proto.StatusProto.Connectivity(this);
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity buildPartial() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2055,16 +2059,16 @@ public final class StatusProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.Connectivity) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.Connectivity)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.Connectivity other) {
-        if (other == ch.epfl.dedis.lib.proto.StatusProto.Connectivity.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity other) {
+        if (other == ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.getDefaultInstance()) return this;
         if (other.hasTime()) {
           setTime(other.getTime());
         }
@@ -2135,11 +2139,11 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.StatusProto.Connectivity parsedMessage = null;
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.Connectivity) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -2533,48 +2537,48 @@ public final class StatusProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:status.Connectivity)
+      // @@protoc_insertion_point(builder_scope:status.CheckConnectivity)
     }
 
-    // @@protoc_insertion_point(class_scope:status.Connectivity)
-    private static final ch.epfl.dedis.lib.proto.StatusProto.Connectivity DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:status.CheckConnectivity)
+    private static final ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.Connectivity();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity();
     }
 
-    public static ch.epfl.dedis.lib.proto.StatusProto.Connectivity getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<Connectivity>
-        PARSER = new com.google.protobuf.AbstractParser<Connectivity>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConnectivity>
+        PARSER = new com.google.protobuf.AbstractParser<CheckConnectivity>() {
       @java.lang.Override
-      public Connectivity parsePartialFrom(
+      public CheckConnectivity parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Connectivity(input, extensionRegistry);
+        return new CheckConnectivity(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Connectivity> parser() {
+    public static com.google.protobuf.Parser<CheckConnectivity> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Connectivity> getParserForType() {
+    public com.google.protobuf.Parser<CheckConnectivity> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.StatusProto.Connectivity getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface ConnectivityReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:status.ConnectivityReply)
+  public interface CheckConnectivityReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:status.CheckConnectivityReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -2603,21 +2607,22 @@ public final class StatusProto {
   }
   /**
    * <pre>
-   * ConnectivityReply is the minimum list of all nodes that can contact each other.
+   * CheckConnectivityReply is the minimum list of all nodes that can contact each
+   * other.
    * </pre>
    *
-   * Protobuf type {@code status.ConnectivityReply}
+   * Protobuf type {@code status.CheckConnectivityReply}
    */
-  public  static final class ConnectivityReply extends
+  public  static final class CheckConnectivityReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:status.ConnectivityReply)
-      ConnectivityReplyOrBuilder {
+      // @@protoc_insertion_point(message_implements:status.CheckConnectivityReply)
+      CheckConnectivityReplyOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use ConnectivityReply.newBuilder() to construct.
-    private ConnectivityReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use CheckConnectivityReply.newBuilder() to construct.
+    private CheckConnectivityReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private ConnectivityReply() {
+    private CheckConnectivityReply() {
       nodes_ = java.util.Collections.emptyList();
     }
 
@@ -2626,7 +2631,7 @@ public final class StatusProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private ConnectivityReply(
+    private CheckConnectivityReply(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2678,15 +2683,15 @@ public final class StatusProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_ConnectivityReply_descriptor;
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_ConnectivityReply_fieldAccessorTable
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.Builder.class);
+              ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.Builder.class);
     }
 
     public static final int NODES_FIELD_NUMBER = 1;
@@ -2770,10 +2775,10 @@ public final class StatusProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply)) {
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply other = (ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply) obj;
+      ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) obj;
 
       boolean result = true;
       result = result && getNodesList()
@@ -2798,69 +2803,69 @@ public final class StatusProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(byte[] data)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseDelimitedFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parseFrom(
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2873,7 +2878,7 @@ public final class StatusProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -2890,29 +2895,30 @@ public final class StatusProto {
     }
     /**
      * <pre>
-     * ConnectivityReply is the minimum list of all nodes that can contact each other.
+     * CheckConnectivityReply is the minimum list of all nodes that can contact each
+     * other.
      * </pre>
      *
-     * Protobuf type {@code status.ConnectivityReply}
+     * Protobuf type {@code status.CheckConnectivityReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:status.ConnectivityReply)
-        ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReplyOrBuilder {
+        // @@protoc_insertion_point(builder_implements:status.CheckConnectivityReply)
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_ConnectivityReply_descriptor;
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_ConnectivityReply_fieldAccessorTable
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.Builder.class);
+                ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.newBuilder()
+      // Construct using ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -2943,17 +2949,17 @@ public final class StatusProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_ConnectivityReply_descriptor;
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.getDefaultInstance();
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.getDefaultInstance();
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply build() {
-        ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply result = buildPartial();
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply build() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -2961,8 +2967,8 @@ public final class StatusProto {
       }
 
       @java.lang.Override
-      public ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply buildPartial() {
-        ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply result = new ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply(this);
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply buildPartial() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply(this);
         int from_bitField0_ = bitField0_;
         if (nodesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3011,16 +3017,16 @@ public final class StatusProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply)other);
+        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply other) {
-        if (other == ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply other) {
+        if (other == ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.getDefaultInstance()) return this;
         if (nodesBuilder_ == null) {
           if (!other.nodes_.isEmpty()) {
             if (nodes_.isEmpty()) {
@@ -3067,11 +3073,11 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply parsedMessage = null;
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -3334,41 +3340,41 @@ public final class StatusProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:status.ConnectivityReply)
+      // @@protoc_insertion_point(builder_scope:status.CheckConnectivityReply)
     }
 
-    // @@protoc_insertion_point(class_scope:status.ConnectivityReply)
-    private static final ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:status.CheckConnectivityReply)
+    private static final ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply();
     }
 
-    public static ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply getDefaultInstance() {
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<ConnectivityReply>
-        PARSER = new com.google.protobuf.AbstractParser<ConnectivityReply>() {
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConnectivityReply>
+        PARSER = new com.google.protobuf.AbstractParser<CheckConnectivityReply>() {
       @java.lang.Override
-      public ConnectivityReply parsePartialFrom(
+      public CheckConnectivityReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ConnectivityReply(input, extensionRegistry);
+        return new CheckConnectivityReply(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<ConnectivityReply> parser() {
+    public static com.google.protobuf.Parser<CheckConnectivityReply> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<ConnectivityReply> getParserForType() {
+    public com.google.protobuf.Parser<CheckConnectivityReply> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public ch.epfl.dedis.lib.proto.StatusProto.ConnectivityReply getDefaultInstanceForType() {
+    public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3390,15 +3396,15 @@ public final class StatusProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_Response_StatusEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_status_Connectivity_descriptor;
+    internal_static_status_CheckConnectivity_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_status_Connectivity_fieldAccessorTable;
+      internal_static_status_CheckConnectivity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_status_ConnectivityReply_descriptor;
+    internal_static_status_CheckConnectivityReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_status_ConnectivityReply_fieldAccessorTable;
+      internal_static_status_CheckConnectivityReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -3413,13 +3419,13 @@ public final class StatusProto {
       "tus\030\001 \003(\0132\034.status.Response.StatusEntry\022" +
       "/\n\016serveridentity\030\002 \001(\0132\027.network.Server" +
       "Identity\032;\n\013StatusEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005" +
-      "value\030\002 \001(\0132\014.onet.Status:\0028\001\"{\n\014Connect" +
-      "ivity\022\014\n\004time\030\001 \002(\022\022\017\n\007timeout\030\002 \002(\022\022\022\n\n" +
-      "findfaulty\030\003 \002(\010\022%\n\004list\030\004 \003(\0132\027.network" +
-      ".ServerIdentity\022\021\n\tsignature\030\005 \002(\014\";\n\021Co" +
-      "nnectivityReply\022&\n\005nodes\030\001 \003(\0132\027.network" +
-      ".ServerIdentityB&\n\027ch.epfl.dedis.lib.pro" +
-      "toB\013StatusProto"
+      "value\030\002 \001(\0132\014.onet.Status:\0028\001\"\200\001\n\021CheckC" +
+      "onnectivity\022\014\n\004time\030\001 \002(\022\022\017\n\007timeout\030\002 \002" +
+      "(\022\022\022\n\nfindfaulty\030\003 \002(\010\022%\n\004list\030\004 \003(\0132\027.n" +
+      "etwork.ServerIdentity\022\021\n\tsignature\030\005 \002(\014" +
+      "\"@\n\026CheckConnectivityReply\022&\n\005nodes\030\001 \003(" +
+      "\0132\027.network.ServerIdentityB&\n\027ch.epfl.de" +
+      "dis.lib.protoB\013StatusProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3453,17 +3459,17 @@ public final class StatusProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_status_Response_StatusEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_status_Connectivity_descriptor =
+    internal_static_status_CheckConnectivity_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_status_Connectivity_fieldAccessorTable = new
+    internal_static_status_CheckConnectivity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_status_Connectivity_descriptor,
+        internal_static_status_CheckConnectivity_descriptor,
         new java.lang.String[] { "Time", "Timeout", "Findfaulty", "List", "Signature", });
-    internal_static_status_ConnectivityReply_descriptor =
+    internal_static_status_CheckConnectivityReply_descriptor =
       getDescriptor().getMessageTypes().get(3);
-    internal_static_status_ConnectivityReply_fieldAccessorTable = new
+    internal_static_status_CheckConnectivityReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_status_ConnectivityReply_descriptor,
+        internal_static_status_CheckConnectivityReply_descriptor,
         new java.lang.String[] { "Nodes", });
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
     ch.epfl.dedis.lib.proto.NetworkProto.getDescriptor();

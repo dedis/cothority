@@ -34,7 +34,7 @@ func TestStat_Connectivity(t *testing.T) {
 	// Send a request to the service
 	cl := NewClient()
 	priv := servers[0].ServerIdentity.GetPrivate()
-	repl, err := cl.Connectivity(priv, ro.List, time.Second, false)
+	repl, err := cl.CheckConnectivity(priv, ro.List, time.Second, false)
 	require.NoError(t, err)
 	require.Equal(t, len(ro.List), len(repl))
 	for i := range ro.List {
@@ -43,10 +43,10 @@ func TestStat_Connectivity(t *testing.T) {
 	require.NoError(t, local.WaitDone(time.Second))
 
 	servers[2].Pause()
-	repl, err = cl.Connectivity(priv, ro.List, time.Second, false)
+	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
 	require.Error(t, err)
 
-	repl, err = cl.Connectivity(priv, ro.List, time.Second, true)
+	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, true)
 	require.NoError(t, err)
 	for i := range append(ro.List[0:2], ro.List[3:]...) {
 		require.True(t, ro.List[i].Equal(repl[i]))
