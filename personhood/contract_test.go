@@ -85,14 +85,24 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 	// Store the party in the ledger
 	log.Lvl2("Publishing the party to the ledger")
 
+	timeBarrier := time.Now()
+
 	var err error
 	s.popI, err = PopPartySpawn(s.cl, *s.party.Desc, s.genesisDarc.GetBaseID(), 1e6, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// Activate the barrier point
 	log.Lvl2("activating barrier point")
 
+	_, err = s.cl.GetProofAfter(s.popI.Slice(), false, timeBarrier)
+	require.NoError(t, err)
+
+	timeBarrier = time.Now()
+
 	err = PopPartyBarrier(s.cl, s.popI, s.signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
+
+	_, err = s.cl.GetProofAfter(s.popI.Slice(), false, timeBarrier)
+	require.NoError(t, err)
 
 	// Store the finalized party in the ledger
 	log.Lvl2("finalizing the party in the ledger")
@@ -110,11 +120,12 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 		rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
 		rules.AddRule(darc.Action("invoke:"+contracts.ContractCoinID+".transfer"), expression.Expr(id.String()))
 		s.attDarc[i] = darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
+		timeBarrier := time.Now()
 		err = PopPartyMine(s.cl, s.popI, *att, nil, nil, s.attDarc[i])
 		require.Nil(t, err)
 
 		var coin byzcoin.Coin
-		s.attCoin[i], coin, err = PopPartyMineDarcToCoin(s.cl, s.attDarc[i])
+		s.attCoin[i], coin, err = PopPartyMineDarcToCoinAfter(s.cl, s.attDarc[i], timeBarrier)
 		require.Nil(t, err)
 		require.NotNil(t, coin)
 		require.Equal(t, uint64(1e6), coin.Value)

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.dedis.ch/kyber/v3/util/key"
 
@@ -395,6 +396,50 @@ func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attend
 	return err
 }
 
+func getFinalizedParty(c *byzcoin.Client, popIID byzcoin.InstanceID) (*PopPartyStruct, error) {
+	var pps *PopPartyStruct
+
+	decoder := func(buf []byte, msg interface{}) error {
+		err := protobuf.Decode(buf, msg)
+		if err != nil {
+			return err
+		}
+
+		gpr, ok := msg.(*byzcoin.GetProofResponse)
+		if !ok {
+			return errors.New("invalid proof response type")
+		}
+
+		_, value, cID, _, err := gpr.Proof.KeyValue()
+		if err != nil {
+			return err
+		}
+		if cID != ContractPopPartyID {
+			return errors.New("given popIID is not of contract-type PopParty")
+		}
+		var pop PopPartyStruct
+		err = protobuf.DecodeWithConstructors(value, &pop, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return err
+		}
+
+		if pop.State != 3 {
+			return errors.New("party must be finalized")
+		}
+
+		pps = &pop
+
+		return nil
+	}
+
+	_, err := c.GetProofFrom(popIID.Slice(), c.Latest, decoder)
+	if err != nil {
+		return nil, err
+	}
+
+	return pps, nil
+}
+
 // PopPartyMine is a method to be called by an outside client. It collects the reward for a given
 // attendee of the party. For convenience, this can be called with some of the arguments being 'nil'.
 //
@@ -409,22 +454,11 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		return errors.New("either set coinIID or d, but not both")
 	}
 	if atts == nil {
-		popProof, err := cl.GetProofFromLatest(popIID.Slice())
+		pop, err := getFinalizedParty(cl, popIID)
 		if err != nil {
 			return err
 		}
-		_, value, cID, _, err := popProof.Proof.KeyValue()
-		if err != nil {
-			return err
-		}
-		if cID != ContractPopPartyID {
-			return errors.New("given popIID is not of contract-type PopParty")
-		}
-		var pop PopPartyStruct
-		err = protobuf.DecodeWithConstructors(value, &pop, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			return err
-		}
+
 		atts = &pop.Attendees
 	}
 	var mine = -1
@@ -477,13 +511,19 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 
 // PopPartyMineDarcToCoin calculates the coin given a darc and returns the coin instance.
 func PopPartyMineDarcToCoin(cl *byzcoin.Client, d *darc.Darc) (coinIID byzcoin.InstanceID, coin byzcoin.Coin, err error) {
+	return PopPartyMineDarcToCoinAfter(cl, d, time.Unix(0, 0))
+}
+
+// PopPartyMineDarcToCoinAfter calculates the coin given a darc and returns
+// the coin instance created/updated after the time barrier.
+func PopPartyMineDarcToCoinAfter(cl *byzcoin.Client, d *darc.Darc, barrier time.Time) (coinIID byzcoin.InstanceID, coin byzcoin.Coin, err error) {
 	h := sha256.New()
 	h.Write([]byte("coin"))
 	h.Write(d.GetBaseID())
 	coinIID = byzcoin.NewInstanceID(h.Sum(nil))
 
 	var proof *byzcoin.GetProofResponse
-	proof, err = cl.GetProofFromLatest(coinIID.Slice())
+	proof, err = cl.GetProofAfter(coinIID.Slice(), false, barrier)
 	if err != nil {
 		return
 	}

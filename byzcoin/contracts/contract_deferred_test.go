@@ -49,7 +49,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -96,11 +95,13 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -152,6 +153,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
@@ -159,7 +162,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 	result.ProposedTransaction = proposedTransaction
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -223,6 +226,8 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
@@ -230,7 +235,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 	result.ProposedTransaction = proposedTransaction
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -263,10 +268,12 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -303,7 +310,7 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
+func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	// Since every method relies on the execution of a previous ones, I am not
 	// unit test but rather creating a scenario:
 	//
@@ -330,7 +337,6 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -390,11 +396,13 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -446,12 +454,14 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -510,10 +520,12 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -546,10 +558,12 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
@@ -597,7 +611,6 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -657,11 +670,13 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -713,13 +728,15 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -782,13 +799,15 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -851,7 +870,6 @@ func TestDeferred_WrongSignature(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -898,11 +916,13 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -981,7 +1001,6 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1028,11 +1047,13 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1144,7 +1165,6 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1191,11 +1211,13 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1276,7 +1298,6 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1323,11 +1344,13 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1389,7 +1412,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 0.2. Spawn a value contract
@@ -1473,11 +1495,13 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.NoError(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1528,13 +1552,15 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -1590,13 +1616,15 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[1].SignerIdentities = append(proposedTransaction.Instructions[1].SignerIdentities, identity)
 	proposedTransaction.Instructions[1].Signatures = append(proposedTransaction.Instructions[1].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -1659,7 +1687,6 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.NoError(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	expectedBlockIdx := uint64(50)
 
@@ -1701,11 +1728,13 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1742,7 +1771,6 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -1801,11 +1829,13 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -1856,13 +1886,15 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -1896,10 +1928,12 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -1957,7 +1991,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn the value contract
@@ -2029,11 +2062,13 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2084,13 +2119,15 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -2165,13 +2202,15 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	proposedTransaction.Instructions[0].SignerIdentities = append(proposedTransaction.Instructions[0].SignerIdentities, identity)
 	proposedTransaction.Instructions[0].Signatures = append(proposedTransaction.Instructions[0].Signatures, signature)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction.Instructions.Hash(), proposedTransaction.Instructions.Hash())
@@ -2203,10 +2242,12 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	result, err = cl.GetDeferredData(myID)
+	result, err = cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
@@ -2265,7 +2306,6 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -2312,11 +2352,13 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2339,10 +2381,12 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err := cl.GetProofFromLatest(myID.Slice())
+	prr, err := cl.GetProofAfter(myID.Slice(), false, timeBarrier)
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)
@@ -2375,7 +2419,6 @@ func TestDeferred_PublicDelete(t *testing.T) {
 
 	cl, _, err := byzcoin.NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// ------------------------------------------------------------------------
 	// 1. Spawn
@@ -2422,11 +2465,13 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
+	timeBarrier := time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	result, err := cl.GetDeferredData(myID)
+	result, err := cl.GetDeferredDataAfter(myID, timeBarrier)
 	require.Nil(t, err)
 
 	require.Equal(t, result.ProposedTransaction, proposedTransaction)
@@ -2452,10 +2497,12 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, ctx.FillSignersAndSignWith(signer2))
 
+	timeBarrier = time.Now()
+
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
 
-	prr, err := cl.GetProofFromLatest(myID.Slice())
+	prr, err := cl.GetProofAfter(myID.Slice(), false, timeBarrier)
 	require.Nil(t, err)
 	exist, err := prr.Proof.InclusionProof.Exists(myID.Slice())
 	require.Nil(t, err)

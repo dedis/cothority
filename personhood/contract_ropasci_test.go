@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"go.dedis.ch/cothority/v3"
 
@@ -26,7 +27,7 @@ import (
 
 // TestContractRoPaSci does a classical Rock-Paper-Scissors game and checks that all
 // combinations give the correct payout.
-func TestContractPoPaSci(t *testing.T) {
+func TestContractRoPaSci(t *testing.T) {
 	s := newS(t)
 	defer s.Close()
 
@@ -59,7 +60,7 @@ func TestContractPoPaSci(t *testing.T) {
 // TestContractRoPaSciCalypso uses the calypso-Rock-Paper-Scissors that stores the
 // prehash of player 1 in a CalypsoWrite, so that player 2 doesn't have to wait for
 // player 1 to reveal.
-func TestContractPoPaSciCalypso(t *testing.T) {
+func TestContractRoPaSciCalypso(t *testing.T) {
 	s := newS(t)
 	defer s.Close()
 
@@ -79,10 +80,11 @@ func TestContractPoPaSciCalypso(t *testing.T) {
 				sr.coin2.coin.Value += 100
 			}
 			rps := sr.newCalypsoRPS(move1, sr.coin1.id, 100)
+			timeBarrier := time.Now()
 			ret := rps.calypsoSecond(move2, sr.coin2.id)
-			wrProof, err := s.cl.GetProof(ret.CalypsoWrite.Slice())
+			wrProof, err := s.cl.GetProofAfter(ret.CalypsoWrite.Slice(), true, timeBarrier)
 			require.NoError(t, err)
-			rdProof, err := s.cl.GetProof(ret.CalypsoRead.Slice())
+			rdProof, err := s.cl.GetProofAfter(ret.CalypsoRead.Slice(), true, timeBarrier)
 			require.NoError(t, err)
 			dkr, err := sr.ca.DecryptKey(&calypso.DecryptKey{
 				Read:  rdProof.Proof,
@@ -275,6 +277,8 @@ func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSci
 	r.keypair = darc.NewSignerEd25519(nil, nil)
 	pubBuf, err := r.keypair.Ed25519.Point.MarshalBinary()
 	require.NoError(r.t, err)
+
+	timeBarrier := time.Now()
 	r.addTx(
 		byzcoin.Instruction{
 			InstanceID: coinID,
@@ -297,7 +301,7 @@ func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSci
 			},
 		},
 	)
-	pr, err := r.cl.GetProof(r.id.Slice())
+	pr, err := r.cl.GetProofAfter(r.id.Slice(), false, timeBarrier)
 	require.NoError(r.t, err)
 	_, val, cid, _, err := pr.Proof.KeyValue()
 	require.NoError(r.t, err)

@@ -393,6 +393,9 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	// no inclusion wait case.
 
 	if req.InclusionWait > 0 {
+		s.working.Add(1)
+		defer s.working.Done()
+
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
 		interval, _, err := s.LoadBlockInfo(req.SkipchainID)
 		if err != nil {

@@ -25,7 +25,6 @@ func TestSecureDarc(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
@@ -144,6 +143,8 @@ func TestSecureDarc(t *testing.T) {
 		require.Error(t, err)
 	}
 
+	timeBarrier := time.Now()
+
 	log.Info("evolve to modify existing rules - pass")
 	{
 		secDarc2 := secDarc.Copy()
@@ -168,7 +169,7 @@ func TestSecureDarc(t *testing.T) {
 	}
 
 	// get the latest darc
-	resp, err := cl.GetProof(secDarc.GetBaseID())
+	resp, err := cl.GetProofAfter(secDarc.GetBaseID(), false, timeBarrier)
 	require.NoError(t, err)
 	myDarc := darc.Darc{}
 	require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
@@ -200,6 +201,8 @@ func TestSecureDarc(t *testing.T) {
 		require.Error(t, err)
 	}
 
+	timeBarrier = time.Now()
+
 	log.Info("evolve_unrestricted to add rules - pass")
 	{
 		myDarc2 := myDarc.Copy()
@@ -226,7 +229,7 @@ func TestSecureDarc(t *testing.T) {
 
 	// try to get the DARC again and it should have the "spawn:coin" rule
 	{
-		resp, err := cl.GetProof(secDarc.GetBaseID())
+		resp, err := cl.GetProofAfter(secDarc.GetBaseID(), false, timeBarrier)
 		require.NoError(t, err)
 		myDarc := darc.Darc{}
 		require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))

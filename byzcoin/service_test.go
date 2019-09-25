@@ -1867,7 +1867,6 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
-		require.NoError(t, cl.UseNode(0))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 

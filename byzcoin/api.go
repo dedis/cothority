@@ -183,7 +183,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 		}
 	}
 
-	return c.GetProofFrom(key, c.Genesis)
+	return c.GetProofFrom(key, c.Genesis, protobuf.Decode)
 }
 
 // GetProofFromLatest returns a proof for the key stored in the skipchain
@@ -199,7 +199,42 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 		return c.GetProof(key)
 	}
 
-	return c.GetProofFrom(key, c.Latest)
+	return c.GetProofFrom(key, c.Latest, protobuf.Decode)
+}
+
+// GetProofAfter returns a proof for the key stored in the skipchain
+// starting from the latest known block by this client. The proof will always
+// be older than the barrier or it will return an error.
+// Caution: the proof will be verifiable only by client/service that knows the
+// state of the chain up to the block. If you need to pass the Proof onwards to
+// another server, you must use GetProof in order to create a complete standalone
+// proof starting from the genesis block.
+func (c *Client) GetProofAfter(key []byte, full bool, barrier time.Time) (*GetProofResponse, error) {
+	sb := c.Genesis
+	if c.Latest != nil && !full {
+		sb = c.Latest
+	}
+
+	decoder := func(buf []byte, msg interface{}) error {
+		err := protobuf.Decode(buf, msg)
+		if err != nil {
+			return err
+		}
+
+		gpr, ok := msg.(*GetProofResponse)
+		if !ok {
+			return errors.New("couldn't cast msg to GetProofResponse")
+		}
+
+		header, err := decodeBlockHeader(&gpr.Proof.Latest)
+		if time.Unix(0, header.Timestamp).Before(barrier) {
+			return errors.New("block has been created before the barrier")
+		}
+
+		return nil
+	}
+
+	return c.GetProofFrom(key, sb, decoder)
 }
 
 // GetProofFrom returns a proof for the key stored in the skipchain starting
@@ -209,13 +244,13 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // state of the chain up to the block. If you need to pass the Proof onwards to
 // another server, you must use GetProof in order to create a complete standalone
 // proof starting from the genesis block.
-func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
+func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock, decoder onet.Decoder) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
-	_, err := c.SendProtobufParallel(c.Roster.List, &GetProof{
+	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, &GetProof{
 		Version: CurrentVersion,
 		ID:      from.Hash,
 		Key:     key,
-	}, reply, c.options)
+	}, reply, c.options, decoder)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +267,14 @@ func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofR
 // GetDeferredData makes a request to retrieve the deferred instruction data
 // and return the reply if the proof can be verified.
 func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
-	pr, err := c.GetProofFromLatest(instrID.Slice())
+	return c.GetDeferredDataAfter(instrID, time.Unix(0, 0))
+}
+
+// GetDeferredDataAfter makes a request to retrieve the deferred instruction data
+// and return the reply if the proof can be verified and the block is not
+// older than the barrier.
+func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier time.Time) (*DeferredData, error) {
+	pr, err := c.GetProofAfter(instrID.Slice(), false, barrier)
 	if err != nil {
 		return nil, err
 	}

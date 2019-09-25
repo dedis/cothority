@@ -148,10 +148,13 @@ func TestClient_Log200(t *testing.T) {
 		current := s.getCurrentBlock(t)
 
 		start := i * logCount / 5
+		events := make([]Event, logCount/5)
 		for ct := start; ct < start+logCount/5; ct++ {
-			_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
-			require.Nil(t, err)
+			events[ct-start] = NewEvent("auth", fmt.Sprintf("user %v logged in", ct))
 		}
+
+		_, err := c.Log(events...)
+		require.NoError(t, err)
 
 		s.waitNextBlock(t, current)
 	}
@@ -240,14 +243,18 @@ func TestClient_Search(t *testing.T) {
 	}
 
 	logCount := 20
+	events := make([]Event, logCount)
 	for ct := int64(0); ct < int64(logCount); ct++ {
 		topic := "a"
 		if (ct & 1) == 0 {
 			topic = "b"
 		}
-		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm0 + ct})
-		require.Nil(t, err)
+		events[ct] = Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm0 + ct}
 	}
+
+	_, err = c.Log(events...)
+	require.NoError(t, err)
+
 	for i := 0; i < 10; i++ {
 		leader.waitForBlock(c.ByzCoin.ID)
 		if err = leader.checkBuckets(c.Instance, c.ByzCoin.ID, logCount); err == nil {

@@ -135,11 +135,12 @@ func TestClient_GetProof(t *testing.T) {
 
 	c, csr, err := NewLedger(msg, false)
 	require.Nil(t, err)
-	require.NoError(t, c.UseNode(0))
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gac.IDs))
+
+	timeBarrier := time.Now()
 
 	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}
@@ -151,7 +152,7 @@ func TestClient_GetProof(t *testing.T) {
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
-	p, err := c.GetProof(newID)
+	p, err := c.GetProofAfter(newID, false, timeBarrier)
 	require.NoError(t, err)
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
@@ -161,7 +162,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Equal(t, value, v0)
 
 	// The proof should now be smaller as we learnt about the block
-	p, err = c.GetProofFromLatest(newID)
+	p, err = c.GetProofAfter(newID, false, timeBarrier)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(p.Proof.Links))
 }
@@ -181,8 +182,6 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	gen.Hash = gen.CalculateHash()
 	c.ID = gen.Hash
 	c.Genesis = gen
-	// Fix on using only the leader
-	require.NoError(t, c.UseNode(0))
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
@@ -296,7 +295,6 @@ func TestClient_NoPhantomSkipchain(t *testing.T) {
 
 	c, _, err := NewLedger(msg, false)
 	require.NoError(t, err)
-	require.NoError(t, c.UseNode(0))
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[0])
 	require.NoError(t, err)
