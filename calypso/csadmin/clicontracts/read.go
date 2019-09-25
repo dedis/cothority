@@ -9,6 +9,7 @@ import (
 
 	"go.dedis.ch/onet/v3/log"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -16,7 +17,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/protobuf"
-	"gopkg.in/urfave/cli.v1"
 )
 
 // ReadSpawn spawns an instance of a read contract. This contract uses the darc

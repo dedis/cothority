@@ -971,7 +971,7 @@ func TestService_BigTx(t *testing.T) {
 	// blocks gets to be too close to the edge with the normal short
 	// testing interval, and starts generating
 	// errors-that-might-not-be-errors.
-	s := newSer(t, 1, 1*time.Second)
+	s := newSer(t, 1, 2*time.Second)
 	defer s.local.CloseAll()
 
 	smallVal := s.value

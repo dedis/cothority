@@ -10,6 +10,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/cosi/check"
 	"go.dedis.ch/cothority/v3/cosi/crypto"
@@ -18,7 +19,6 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/log"
-	"gopkg.in/urfave/cli.v1"
 )
 
 // checkConfig contacts all servers and verifies if it receives a valid

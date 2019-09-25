@@ -109,8 +109,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -181,8 +179,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 2.2 Invoke a second "addProof"
 	// ------------------------------------------------------------------------
@@ -252,8 +248,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
@@ -271,7 +265,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Nil(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	result, err = cl.GetDeferredData(myID)
 	require.Equal(t, 1, len(result.ExecResult))
@@ -286,8 +279,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	// Such a miracle to retrieve this value that was set at the begining
 	require.Equal(t, valueRes, rootInstructionValue)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 4. Invoke an "execRoot" command a second time. Since MaxNumExecution should
@@ -310,8 +301,6 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 }
 
 func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
@@ -414,8 +403,6 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -484,8 +471,6 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 2.2 Invoke a second "addProof" on the second instruction
 	// ------------------------------------------------------------------------
@@ -546,8 +531,6 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
@@ -589,8 +572,6 @@ func TestDeferred_ScenarioMultiInstructions_(t *testing.T) {
 
 	// Such a miracle to retrieve this value that was set at the begining
 	require.Equal(t, valueRes, rootInstructionValue2)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
@@ -689,8 +670,6 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -760,8 +739,6 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 2.2 Invoke a second "addProof" on the second instruction, but with a
 	//     different signer
@@ -829,8 +806,6 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 3. Invoke an "execRoot" command. This one will fail since one of the
 	//    instruction is signed by an unauthorized signer.
@@ -851,8 +826,6 @@ func TestDeferred_ScenarioMultiInstructionsDifferentSigners(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_WrongSignature(t *testing.T) {
@@ -938,8 +911,6 @@ func TestDeferred_WrongSignature(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -985,8 +956,6 @@ func TestDeferred_WrongSignature(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 }
 
 func TestDeferred_DuplicateIdentity(t *testing.T) {
@@ -1072,8 +1041,6 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -1153,8 +1120,6 @@ func TestDeferred_DuplicateIdentity(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 }
 
 func TestDeferred_ExpireBlockIndex(t *testing.T) {
@@ -1239,8 +1204,6 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -1288,8 +1251,6 @@ func TestDeferred_ExpireBlockIndex(t *testing.T) {
 
 	_, err = cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, nil)
 	require.Error(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 }
 
 func TestDeferred_ExecWithNoProof(t *testing.T) {
@@ -1374,8 +1335,6 @@ func TestDeferred_ExecWithNoProof(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
 	// 2. Invoke an "execProposedTx" command
@@ -1463,8 +1422,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, myvalue, v0)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 1. Spawn our deferred contract. We provide the previous ID.
 	// ------------------------------------------------------------------------
@@ -1528,8 +1485,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 
 	rootHash := result.InstructionHashes
 
@@ -1599,8 +1554,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 3. Invoke a second "addProof" (second instruction)
 	// ------------------------------------------------------------------------
@@ -1663,8 +1616,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	local.WaitDone(genesisMsg.BlockInterval)
-
 	// ------------------------------------------------------------------------
 	// 4. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
@@ -1682,9 +1633,6 @@ func TestDeferred_InstructionsDependent(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	local.WaitDone(genesisMsg.BlockInterval)
-
 }
 
 func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
@@ -1765,8 +1713,6 @@ func TestDeferred_DefaultExpireBlockIdx(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expectedBlockIdx)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 }
 
 func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
@@ -1867,8 +1813,6 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	rootHash := result.InstructionHashes
 
 	// ------------------------------------------------------------------------
@@ -1937,8 +1881,6 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 3. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
@@ -1977,8 +1919,6 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.Equal(t, config.MaxBlockSize, configResult.MaxBlockSize)
 	require.Equal(t, config.Roster, configResult.Roster)
 	require.Equal(t, config.DarcContractIDs, configResult.DarcContractIDs)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
@@ -2049,8 +1989,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, myvalue, v0)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 2. Spawn the deferred contract with a value contract update as the
 	//    proposed transaction.
@@ -2102,8 +2040,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.Equal(t, len(result.ProposedTransaction.Instructions), 1)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	rootHash := result.InstructionHashes
 
@@ -2173,8 +2109,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 4. Try to exec the proposed transaction. Should fail since only one
 	//    signer has signed.
@@ -2193,8 +2127,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 5. Invoke a second "addProof" with the second signer
@@ -2256,8 +2188,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	require.NotEmpty(t, result.InstructionHashes)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 6. Invoke an "execRoot" command
 	// ------------------------------------------------------------------------
@@ -2290,8 +2220,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	// Such a miracle to retrieve the updated value
 	require.Equal(t, valueRes, updatedValue)
 
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
-
 	// ------------------------------------------------------------------------
 	// 7. Invoke an "execRoot" command a second time. Since MaxNumExecution should
 	//    be at 0, we expect it to fail.
@@ -2310,8 +2238,6 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestDeferred_SimpleDelete(t *testing.T) {
@@ -2398,8 +2324,6 @@ func TestDeferred_SimpleDelete(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// ------------------------------------------------------------------------
 	// 2. Invoke a delete
@@ -2510,8 +2434,6 @@ func TestDeferred_PublicDelete(t *testing.T) {
 	require.Equal(t, result.ExpireBlockIndex, expireBlockIndexInt)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].SignerIdentities)
 	require.Empty(t, result.ProposedTransaction.Instructions[0].Signatures)
-
-	local.WaitDone(genesisMsg.BlockInterval)
 
 	// ------------------------------------------------------------------------
 	// 2. Invoke a delete with a new signer that has no rights. It should

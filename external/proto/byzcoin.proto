@@ -330,6 +330,10 @@ message GetSignerCounters {
 // request.
 message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
+  // Index contains the trie index where the counters
+  // have been extracted so clients can use it to
+  // make sure the counters are up-to-date.
+  optional uint64 index = 2;
 }
 
 // GetInstanceVersion is a request asking the service to fetch

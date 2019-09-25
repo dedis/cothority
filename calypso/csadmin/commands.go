@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/calypso/csadmin/clicontracts"
-	"gopkg.in/urfave/cli.v1"
 )
 
 var cmds = cli.Commands{
