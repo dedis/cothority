@@ -146,7 +146,7 @@ testReencrypt(){
     
     # Spawn write
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY"\
-                    --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
+                    --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -214,7 +214,7 @@ testDecrypt(){
     
     # Spawn write
     OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" \
-                    --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
+                    --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
     matchOK $WRITE_ID ^[0-9a-f]{64}$
 
@@ -229,16 +229,17 @@ testDecrypt(){
     # should fail since it will use the default key, the admin one, and this is
     # not the key that was set for the read request
     OUTRES=`runCA decrypt < reply.bin`
-    testNGrep "Hello world" echo "$OUTRES"
+    testNGrep "aabbccddeeff0011" echo "$OUTRES"
 
     # should pass with the correct --key
     OUTRES=`runCA0 decrypt --key config/key-$KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
-Hello world."
+aabbccddeeff0011"
 
     # Check the export option
-    runCA0 decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
-    matchOK "`cat data.txt`" "Hello world."
+    # We can not assert the content because the export option saves the data as
+    # raw bytes, where we input the secrect as hexadecimal converted to bytes.
+    testOK runCA0 decrypt --key config/key-$KEY.cfg -x < reply.bin > data.txt
 
     #
     # Now let's try to generate a new key and use this one to encrypt the data:
@@ -268,15 +269,15 @@ Hello world."
 
     # should fail with the default key
     OUTRES=`runCA decrypt < reply.bin`
-    testNGrep "Hello world" echo "$OUTRES"
+    testNGrep "aabbccddeeff0011" echo "$OUTRES"
     # should fail with the key used to sign
     OUTRES=`runCA decrypt --key config/key-$KEY.cfg < reply.bin`
-    testNGrep "Hello world" echo "$OUTRES"
+    testNGrep "aabbccddeeff0011" echo "$OUTRES"
     
     # should now work with the newly created key
     OUTRES=`runCA0 decrypt --key config/key-$NEW_KEY.cfg < reply.bin`
     matchOK "$OUTRES" "Key decrypted:
-Hello world."
+aabbccddeeff0011"
 }
 
 runCA(){
