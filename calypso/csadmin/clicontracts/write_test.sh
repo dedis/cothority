@@ -211,7 +211,6 @@ testContractWriteGet() {
     # Let's try with the --export option
     OUTRES=`runCA0 contract write get --instid $WRITE_ID --export`
 
-    testGrep "No secret from STDIN" echo "$OUTRES"
     testGrep "Should be encrypted - from STDIN" echo "$OUTRES"
     
     # Provide both --data and --extraData.
