@@ -145,7 +145,7 @@ var cmds = cli.Commands{
 							},
 							cli.StringFlag{
 								Name:  "secret",
-								Usage: "data to be encrypted, has limited space regarding the kyber.Suite used (29 bits for ed25519)",
+								Usage: "data to be encrypted, encoded as hexadecimal, has limited space regarding the kyber.Suite used (29 bytes for ed25519)",
 							},
 							cli.StringFlag{
 								Name:  "data, d",
