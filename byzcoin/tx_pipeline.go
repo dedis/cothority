@@ -333,9 +333,10 @@ func (p *txPipeline) start(initialState *txProcessorState, stopSignal chan bool)
 }
 
 func (p *txPipeline) collectTx() {
+	p.wg.Add(1)
+
 	// set the polling interval to half of the block interval
 	go func() {
-		p.wg.Add(1)
 		defer p.wg.Done()
 		for {
 			interval := p.processor.GetInterval()
