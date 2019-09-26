@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.dedis.ch/kyber/v3/util/key"
@@ -36,6 +37,16 @@ type ContractPopParty struct {
 	byzcoin.BasicContract
 	PopPartyStruct
 }
+
+const (
+	// InitState is the initial state of a party.
+	InitState = iota + 1
+	// ScanningState is the second state when organizers are scanning
+	// attendees' public keys.
+	ScanningState
+	// FinalizedState is the final state of a party.
+	FinalizedState
+)
 
 // ContractPopPartyFromBytes returns the ContractPopPary structure given a slice of bytes.
 func ContractPopPartyFromBytes(in []byte) (byzcoin.Contract, error) {
@@ -72,7 +83,7 @@ func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	if darcID == nil {
 		return nil, nil, errors.New("no darcID argument")
 	}
-	c.State = 1
+	c.State = InitState
 
 	err = protobuf.DecodeWithConstructors(descBuf, &c.Description, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
@@ -135,13 +146,13 @@ func (c *ContractPopParty) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 
 	switch inst.Invoke.Command {
 	case "barrier":
-		if c.State != 1 {
+		if c.State != InitState {
 			return nil, nil, fmt.Errorf("can only start barrier point when in configuration mode")
 		}
-		c.State = 2
+		c.State = ScanningState
 
 	case "finalize":
-		if c.State != 2 {
+		if c.State != ScanningState {
 			return nil, nil, fmt.Errorf("can only finalize when barrier point is passed")
 		}
 
@@ -190,11 +201,11 @@ func (c *ContractPopParty) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 		}
 		if len(c.Finalizations) == c.Organizers {
 			log.Lvlf2("Successfully finalized party %s / %x", c.Description.Name, inst.InstanceID[:])
-			c.State = 3
+			c.State = FinalizedState
 		}
 
 	case "mine":
-		if c.State != 3 {
+		if c.State != FinalizedState {
 			return nil, nil, errors.New("cannot mine when party is not finalized")
 		}
 		lrs := inst.Invoke.Args.Search("lrs")
@@ -396,8 +407,10 @@ func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attend
 	return err
 }
 
+// getFinalizedParty looks for a proof that will contain the finalized party.
 func getFinalizedParty(c *byzcoin.Client, popIID byzcoin.InstanceID) (*PopPartyStruct, error) {
 	var pps *PopPartyStruct
+	ppsLock := sync.Mutex{}
 
 	decoder := func(buf []byte, msg interface{}) error {
 		err := protobuf.Decode(buf, msg)
@@ -423,11 +436,13 @@ func getFinalizedParty(c *byzcoin.Client, popIID byzcoin.InstanceID) (*PopPartyS
 			return err
 		}
 
-		if pop.State != 3 {
+		if pop.State != FinalizedState {
 			return errors.New("party must be finalized")
 		}
 
+		ppsLock.Lock()
 		pps = &pop
+		ppsLock.Unlock()
 
 		return nil
 	}

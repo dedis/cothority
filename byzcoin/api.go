@@ -205,10 +205,11 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // GetProofAfter returns a proof for the key stored in the skipchain
 // starting from the latest known block by this client. The proof will always
 // be older than the barrier or it will return an error.
-// Caution: the proof will be verifiable only by client/service that knows the
-// state of the chain up to the block. If you need to pass the Proof onwards to
-// another server, you must use GetProof in order to create a complete standalone
-// proof starting from the genesis block.
+//
+// 	key - Instance ID to be included in the proof.
+//	full - When true, the proof returned will start from the genesis block.
+//	barrier - The latest block won't be older than the barrier.
+//
 func (c *Client) GetProofAfter(key []byte, full bool, barrier time.Time) (*GetProofResponse, error) {
 	sb := c.Genesis
 	if c.Latest != nil && !full {
