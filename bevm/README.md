@@ -1,3 +1,8 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+[Building Blocks](../doc/BuildingBlocks.md) ::
+BEvm
+
 # Ethereum Smart Contracts on ByzCoin
 
 The `bevm` ByzCoin contract allows to load and execute Ethereum contracts compiled to bytecode.
