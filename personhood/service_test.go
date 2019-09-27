@@ -88,6 +88,8 @@ func newS(t *testing.T) (s *sStruct) {
 			"invoke:" + contracts.ContractCoinID + ".mint",
 			"invoke:" + contracts.ContractCoinID + ".fetch",
 			"invoke:" + contracts.ContractCoinID + ".transfer",
+			"spawn:" + ContractSpawnerID,
+			"invoke:" + ContractSpawnerID + ".update",
 			"spawn:ropasci", "invoke:ropasci.second", "invoke:ropasci.confirm"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gMsg.BlockInterval = 500 * time.Millisecond
