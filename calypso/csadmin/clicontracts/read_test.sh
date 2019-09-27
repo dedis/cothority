@@ -1,14 +1,14 @@
 # This method should be called from the calypso/csadmin/test.sh script
 
 testContractRead() {
-    run testContractReadInvoke
+    run testContractReadSpawn
 }
 
 # rely on:
 # - csadmin contract lts spawn
 # - csadmin authorize
 # - csadmin contract write spawn
-testContractReadInvoke() {
+testContractReadSpawn() {
     rm -f config/*
     runCoBG 1 2 3
     runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
@@ -38,7 +38,7 @@ testContractReadInvoke() {
     # Add the Calypso rule "spawn:calypsoWrite"
     testOK runBA darc rule -rule spawn:calypsoWrite -darc $ID -sign $KEY -identity $KEY
     
-    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "Hello world." --key "$PUB_KEY"`
+    OUTRES=`runCA0 contract write spawn --darc "$ID" --sign "$KEY" --instid "$LTS_ID" --secret "aabbccddeeff0011" --key "$PUB_KEY"`
     WRITE_ID=`echo "$OUTRES" | sed -n '2p'` # must be at the second line
 
     # Should fail because we miss the "spawn:calypsoRead" rule

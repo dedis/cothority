@@ -78,22 +78,23 @@ spawn the write instance:
 
 ```bash
 $ csadmin contract write spawn --instid <lts instance id>\
-        --secret "Hello, world." --key <lts public key>\
+        --secret "aef123" --key <lts public key>\
         --darc <doc darc> --sign <writer id>
 > spawned a new write instance. Its instance id is:
 > <write instance id>
 ```
 
-Note: Data stored with `--secret` will be encrypted using a `kyber.Point`.
-Depending on the suite used, this has a limitation on the size. For the default
-suite used (ed25519), this limitation is 29 bits. Therefore, it is possible to
-store additional data in two fields: 'data' and 'extra data'. The 'data' field
-should contain data encrypted with a symetric key stored in the secret, while
-the 'extra data' field should contain any public information. 'data' can be set
-with the `--data` option or directly from STDIN using the `--readData` option.
-'extra data' can be set with the `--extraData` option or directly from STDIN
-using the `--readExtra` option. Note that `--readData` and `--readExtra` can NOT
-be used both at the same time.
+Note: Data stored with `--secret` will be encrypted using a `kyber.Point` and it
+must be provided as a hexadecimal string. Depending on the suite used, this has
+a limitation on the size. For the default suite used (ed25519), this limitation
+is 29 bytes, which means no more than 58 hexadecimal chars. Therefore, it is
+possible to store additional data in two fields: 'data' and 'extra data'. The
+'data' field should contain data encrypted with a symetric key stored in the
+secret, while the 'extra data' field should contain any public information.
+'data' can be set with the `--data` option or directly from STDIN using the
+`--readData` option. 'extra data' can be set with the `--extraData` option or
+directly from STDIN using the `--readExtra` option. Note that `--readData` and
+`--readExtra` can NOT be used both at the same time.
 
 **5) Spawn a read instance**
 
@@ -141,8 +142,8 @@ the re-encrypted secret:
 
 ```bash
 $ csadmin decrypt < reply.bin
-> key decrypted:
-> Hello, world.
+> Key decrypted:
+> aef123
 ```
 
 Alternatively, the path to a private key file can be provided:

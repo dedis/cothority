@@ -100,7 +100,7 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	// into the trie.
 	c2, err := cfact(nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
+		return nil, nil, fmt.Errorf("could not spawn new zero instance: %v", err)
 	}
 	if cwr, ok := c2.(ContractWithRegistry); ok {
 		cwr.SetRegistry(c.contracts)

@@ -311,9 +311,8 @@ func decrypt(c *cli.Context) error {
 		return errors.New("failed to recover the key: " + err.Error())
 	}
 
-	dataStr := string(key)
 	if c.Bool("export") {
-		reader := bytes.NewReader([]byte(dataStr))
+		reader := bytes.NewReader(key)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
 			return errors.New("failed to copy to stdout: " + err.Error())
@@ -321,7 +320,7 @@ func decrypt(c *cli.Context) error {
 		return nil
 	}
 
-	log.Infof("Key decrypted:\n%s", dataStr)
+	log.Infof("Key decrypted:\n%x", key)
 
 	return nil
 }
