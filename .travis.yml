@@ -25,7 +25,7 @@ _: &stage_lint_go
     - GO111MODULE=on make test_{fmt,lint}
 _: &stage_build_go
   script:
-    - make -C conode bindist
+    - make -C conode bindist tooldist
     - GO111MODULE=on go get ./...
     - GO111MODULE=on go build ./...
 _: &stage_test_go
