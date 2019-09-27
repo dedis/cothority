@@ -7,13 +7,13 @@ import (
 	"os"
 	"time"
 
+	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/bevm"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	cli "gopkg.in/urfave/cli.v1"
 )
 
 func init() {
