@@ -29,11 +29,6 @@ var testPrivateKeys = []string{
 	"f78572bd69fbd3118ab756e3544d23821a2002b137c9037a3b8fd5b09169a73c",
 }
 
-func init() {
-	// Ethereum starts goroutines for caching transactions, and never terminates them
-	log.AddUserUninterestingGoroutine("go-ethereum/core.(*txSenderCacher).cache")
-}
-
 // Spawn a BEvm
 func Test_Spawn(t *testing.T) {
 	log.LLvl1("BEvm instantiation")
@@ -447,12 +442,12 @@ func assertBigInt0(t *testing.T, actual *big.Int) {
 }
 
 func getContractPath(t *testing.T, name string) string {
-	// Test contracts are located in the "contracts" subdirectory, in a
+	// Test contracts are located in the "testdata" subdirectory, in a
 	// subdirectory named after the contract, and in files named
 	// <name>_sol_<name>.{abi,bin}
 
 	curDir, err := os.Getwd()
 	require.Nil(t, err)
 
-	return filepath.Join(curDir, "contracts", name, name+"_sol_"+name)
+	return filepath.Join(curDir, "testdata", name, name+"_sol_"+name)
 }

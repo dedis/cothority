@@ -2,6 +2,12 @@
 
 The `bevm` ByzCoin contract allows to load and execute Ethereum contracts compiled to bytecode.
 
+*Note:* all of the contracts and APIs in this directory are highly experimental, and
+are currently supported on a best-effort basis by https://C4DT.org, who contributed it.
+While C4DT and DEDIS continue to experiment with this code, it is not yet bound by our
+normal commitments to backwards compatibility within a major release. We expect to stabilise
+this new feature in an upcoming major release (v4.x.y, due February 2019). 
+
 ## The ByzCoin Virtual Machine contract
 
 We call BEvm the standard [EVM](https://en.wikipedia.org/wiki/Ethereum#Virtual_Machine) running within a ByzCoin contract.
