@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/c4dt/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/onet/v3/log"
 

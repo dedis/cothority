@@ -5,9 +5,11 @@ require (
 	github.com/allegro/bigcache v1.2.1 // indirect
 	github.com/aristanetworks/goarista v0.0.0-20190924011532-60b7b74727fd // indirect
 	github.com/bford/golang-x-crypto v0.0.0-20160518072526-27db609c9d03
-	github.com/c4dt/go-ethereum v1.8.27-c4dt
+	github.com/btcsuite/btcd v0.0.0-20190926002857-ba530c4abb35 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/deckarep/golang-set v1.7.1 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -27,6 +29,7 @@ require (
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 )
