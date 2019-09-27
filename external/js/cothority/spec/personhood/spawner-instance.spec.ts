@@ -3,15 +3,17 @@ import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import CoinInstance from "../../src/byzcoin/contracts/coin-instance";
 import DarcInstance from "../../src/byzcoin/contracts/darc-instance";
+import ValueInstance from "../../src/byzcoin/contracts/value-instance";
 import { IdentityEd25519 } from "../../src/darc";
 import Darc from "../../src/darc/darc";
 import { Rule } from "../../src/darc/rules";
 import ISigner from "../../src/darc/signer";
 import SignerEd25519 from "../../src/darc/signer-ed25519";
+import Log from "../../src/log";
 import { Roster } from "../../src/network";
 import { Attribute, Credential, CredentialStruct } from "../../src/personhood/credentials-instance";
 import { PopDesc } from "../../src/personhood/proto";
-import SpawnerInstance, { SPAWNER_COIN } from "../../src/personhood/spawner-instance";
+import SpawnerInstance, { ICreateCost, SPAWNER_COIN } from "../../src/personhood/spawner-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 const ed25519 = curve.newCurve("edwards25519");
@@ -31,13 +33,15 @@ describe("SpawnerInstance Tests", () => {
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
-        const costs = {
+        const costs: ICreateCost = {
             costCRead: Long.fromNumber(1000),
             costCWrite: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
             costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
+            costRoPaSci: Long.fromNumber(1000),
+            costValue: Long.fromNumber(1000),
         };
 
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
@@ -57,13 +61,15 @@ describe("SpawnerInstance Tests", () => {
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
-        const costs = {
+        const costs: ICreateCost = {
             costCRead: Long.fromNumber(1000),
             costCWrite: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
             costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
+            costRoPaSci: Long.fromNumber(1000),
+            costValue: Long.fromNumber(100),
         };
 
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
@@ -137,13 +143,15 @@ describe("SpawnerInstance Tests", () => {
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const ci = await CoinInstance.spawn(rpc, darc.getBaseID(), [SIGNER], SPAWNER_COIN);
 
-        const costs = {
+        const costs: ICreateCost = {
             costCRead: Long.fromNumber(1000),
             costCWrite: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
             costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
+            costRoPaSci: Long.fromNumber(1000),
+            costValue: Long.fromNumber(1000),
         };
 
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
@@ -168,6 +176,34 @@ describe("SpawnerInstance Tests", () => {
         expect(game.stake.value.toNumber()).toBe(stake.toNumber());
     });
 
+    it("should spawn a value instance1", async () => {
+        const darc = await makeDarc(roster);
+
+        const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
+        const ci = await CoinInstance.spawn(rpc, darc.getBaseID(), [SIGNER], SPAWNER_COIN);
+        await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
+        await ci.update();
+
+        const costs: ICreateCost = {
+            costCRead: Long.fromNumber(1000),
+            costCWrite: Long.fromNumber(1000),
+            costCoin: Long.fromNumber(1000),
+            costCredential: Long.fromNumber(1000),
+            costDarc: Long.fromNumber(1000),
+            costParty: Long.fromNumber(1000),
+            costRoPaSci: Long.fromNumber(1000),
+            costValue: Long.fromNumber(1000),
+        };
+
+        const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
+        const si = await SpawnerInstance.spawn(params);
+
+        const value = Buffer.from("value instance");
+        const vi = await si.spawnValue(ci, [SIGNER], darc.id, value);
+        const viCopy = await ValueInstance.fromByzcoin(rpc, vi.id);
+        expect(viCopy.value).toEqual(value);
+    });
+
     it("should not try to spawn existing instances", async () => {
         const darc = await makeDarc(roster);
 
@@ -176,13 +212,15 @@ describe("SpawnerInstance Tests", () => {
         await ci.mint([SIGNER], Long.fromNumber(10 ** 9, true));
         await ci.update();
 
-        const costs = {
+        const costs: ICreateCost = {
             costCRead: Long.fromNumber(1000),
             costCWrite: Long.fromNumber(1000),
             costCoin: Long.fromNumber(1000),
             costCredential: Long.fromNumber(1000),
             costDarc: Long.fromNumber(1000),
             costParty: Long.fromNumber(1000),
+            costRoPaSci: Long.fromNumber(1000),
+            costValue: Long.fromNumber(1000),
         };
 
         const params = {bc: rpc, darcID: darc.getBaseID(), signers: [SIGNER], costs, beneficiary: ci.id};
