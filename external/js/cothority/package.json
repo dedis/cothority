@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dedis/cothority",
-  "version": "3.1.5",
+  "version": "3.1.6",
   "description": "A typescript implementation of the cothority",
   "main": "index.js",
   "browser": "bundle.min.js",
@@ -60,7 +60,7 @@
     "@types/dockerode": "^2.5.11",
     "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
-    "@types/lodash": "^4.14.120",
+    "@types/lodash": "^4.14.139",
     "@types/long": "^4.0.0",
     "@types/shuffle-array": "0.0.28",
     "@types/ws": "^6.0.1",

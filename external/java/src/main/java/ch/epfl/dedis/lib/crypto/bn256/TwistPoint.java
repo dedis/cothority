@@ -43,6 +43,13 @@ class TwistPoint {
         this.t = new GFp2(p.t);
     }
 
+    TwistPoint(GFpPool pool) {
+        x = pool.get2();
+        y = pool.get2();
+        z = pool.get2();
+        t = pool.get2();
+    }
+
     private TwistPoint(GFp2 x, GFp2 y, GFp2 z, GFp2 t) {
         this.x = x;
         this.y = y;
@@ -237,5 +244,14 @@ class TwistPoint {
         this.y.sub(this.y, a.y);
         this.z.set(a.z);
         this.t.setZero();
+    }
+
+    void free(GFpPool pool) {
+        pool.put2(x, y, z, t);
+        // Make sure any use of the object will fail.
+        x = null;
+        y = null;
+        z = null;
+        t = null;
     }
 }

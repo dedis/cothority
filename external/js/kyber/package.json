@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@dedis/kyber",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "description": "A typescript implementation of Kyber interfaces",
   "main": "index.js",
   "browser": "bundle.min.js",
@@ -39,7 +39,9 @@
     "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
     "@types/node": "^9.6.6",
+    "@types/lodash": "^4.14.139",
     "ajv": "^6.9.1",
+    "ajv-keywords": "^3.4.1",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
@@ -54,7 +56,7 @@
     "prettier": "^1.10.2",
     "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",
-    "typedoc": "^0.14.2",
+    "typedoc": "^0.15.0",
     "typescript": "^3.2.2",
     "webpack": "^4.28.1",
     "webpack-cli": "^3.2.1"
