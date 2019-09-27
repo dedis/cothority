@@ -21,6 +21,9 @@ import (
 // ServiceName is the name to refer to the Status service.
 const ServiceName = "Status"
 
+// How old a checkConnectivity request can be before it is refused
+const maxRequestAge = 120 * time.Second
+
 func init() {
 	_, err := onet.RegisterNewService(ServiceName, newStatService)
 	log.ErrFatal(err)
@@ -64,7 +67,8 @@ func (st *Stat) CheckConnectivity(req *CheckConnectivity) (*CheckConnectivityRep
 	if err != nil {
 		return nil, errors.New("signature verification failed: " + err.Error())
 	}
-	if math.Abs(time.Now().Sub(time.Unix(req.Time, 0)).Seconds()) > 120 {
+	if math.Abs(time.Now().Sub(time.Unix(req.Time,
+		0)).Seconds()) > maxRequestAge.Seconds() {
 		return nil, errors.New("too old request")
 	}
 
