@@ -11,7 +11,10 @@ The `bevm` ByzCoin contract allows to load and execute Ethereum contracts compil
 are currently supported on a best-effort basis by https://C4DT.org, who contributed it.
 While C4DT and DEDIS continue to experiment with this code, it is not yet bound by our
 normal commitments to backwards compatibility within a major release. We expect to stabilise
-this new feature in an upcoming major release (v4.x.y, due February 2019). 
+this new feature in an upcoming major release (v4.x.y, due February 2019).
+The `bevm` feature is only available in release binaries for Linux. If you
+are running a conode on another kind of server, you will need to add bevm to `../conode/conode.go`
+and build locally with `go build`.
 
 ## The ByzCoin Virtual Machine contract
 
