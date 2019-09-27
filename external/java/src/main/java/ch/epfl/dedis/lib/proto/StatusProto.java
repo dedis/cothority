@@ -1377,6 +1377,2009 @@ public final class StatusProto {
 
   }
 
+  public interface CheckConnectivityOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:status.CheckConnectivity)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required sint64 time = 1;</code>
+     */
+    boolean hasTime();
+    /**
+     * <code>required sint64 time = 1;</code>
+     */
+    long getTime();
+
+    /**
+     * <code>required sint64 timeout = 2;</code>
+     */
+    boolean hasTimeout();
+    /**
+     * <code>required sint64 timeout = 2;</code>
+     */
+    long getTimeout();
+
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    boolean hasFindfaulty();
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    boolean getFindfaulty();
+
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
+        getListList();
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index);
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    int getListCount();
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+        getListOrBuilderList();
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
+        int index);
+
+    /**
+     * <code>required bytes signature = 5;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 5;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * CheckConnectivity is sent by a client to check the connectivity of a given
+   * roster. The Time must be within 2 minutes of the server's time. The signature
+   * must be a schnorr-signature using the private conode-key on the following
+   * message:
+   *   sha256( bytes.LittleEndian.PutUInt64(Time) |
+   *           binary.LittleEndian.PutUInt64(Timeout) |
+   *           FindFaulty ? byte(1) : byte(0) |
+   *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
+   * </pre>
+   *
+   * Protobuf type {@code status.CheckConnectivity}
+   */
+  public  static final class CheckConnectivity extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:status.CheckConnectivity)
+      CheckConnectivityOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use CheckConnectivity.newBuilder() to construct.
+    private CheckConnectivity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CheckConnectivity() {
+      time_ = 0L;
+      timeout_ = 0L;
+      findfaulty_ = false;
+      list_ = java.util.Collections.emptyList();
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CheckConnectivity(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              time_ = input.readSInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              timeout_ = input.readSInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              findfaulty_ = input.readBool();
+              break;
+            }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              list_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry));
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000008;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          list_ = java.util.Collections.unmodifiableList(list_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int TIME_FIELD_NUMBER = 1;
+    private long time_;
+    /**
+     * <code>required sint64 time = 1;</code>
+     */
+    public boolean hasTime() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required sint64 time = 1;</code>
+     */
+    public long getTime() {
+      return time_;
+    }
+
+    public static final int TIMEOUT_FIELD_NUMBER = 2;
+    private long timeout_;
+    /**
+     * <code>required sint64 timeout = 2;</code>
+     */
+    public boolean hasTimeout() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required sint64 timeout = 2;</code>
+     */
+    public long getTimeout() {
+      return timeout_;
+    }
+
+    public static final int FINDFAULTY_FIELD_NUMBER = 3;
+    private boolean findfaulty_;
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    public boolean hasFindfaulty() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bool findfaulty = 3;</code>
+     */
+    public boolean getFindfaulty() {
+      return findfaulty_;
+    }
+
+    public static final int LIST_FIELD_NUMBER = 4;
+    private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_;
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
+      return list_;
+    }
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+        getListOrBuilderList() {
+      return list_;
+    }
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    public int getListCount() {
+      return list_.size();
+    }
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
+      return list_.get(index);
+    }
+    /**
+     * <code>repeated .network.ServerIdentity list = 4;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
+        int index) {
+      return list_.get(index);
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 5;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>required bytes signature = 5;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasTime()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTimeout()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasFindfaulty()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getListCount(); i++) {
+        if (!getList(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeSInt64(1, time_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeSInt64(2, timeout_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBool(3, findfaulty_);
+      }
+      for (int i = 0; i < list_.size(); i++) {
+        output.writeMessage(4, list_.get(i));
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(1, time_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(2, timeout_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, findfaulty_);
+      }
+      for (int i = 0; i < list_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, list_.get(i));
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) obj;
+
+      boolean result = true;
+      result = result && (hasTime() == other.hasTime());
+      if (hasTime()) {
+        result = result && (getTime()
+            == other.getTime());
+      }
+      result = result && (hasTimeout() == other.hasTimeout());
+      if (hasTimeout()) {
+        result = result && (getTimeout()
+            == other.getTimeout());
+      }
+      result = result && (hasFindfaulty() == other.hasFindfaulty());
+      if (hasFindfaulty()) {
+        result = result && (getFindfaulty()
+            == other.getFindfaulty());
+      }
+      result = result && getListList()
+          .equals(other.getListList());
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasTime()) {
+        hash = (37 * hash) + TIME_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTime());
+      }
+      if (hasTimeout()) {
+        hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTimeout());
+      }
+      if (hasFindfaulty()) {
+        hash = (37 * hash) + FINDFAULTY_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getFindfaulty());
+      }
+      if (getListCount() > 0) {
+        hash = (37 * hash) + LIST_FIELD_NUMBER;
+        hash = (53 * hash) + getListList().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * CheckConnectivity is sent by a client to check the connectivity of a given
+     * roster. The Time must be within 2 minutes of the server's time. The signature
+     * must be a schnorr-signature using the private conode-key on the following
+     * message:
+     *   sha256( bytes.LittleEndian.PutUInt64(Time) |
+     *           binary.LittleEndian.PutUInt64(Timeout) |
+     *           FindFaulty ? byte(1) : byte(0) |
+     *           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
+     * </pre>
+     *
+     * Protobuf type {@code status.CheckConnectivity}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:status.CheckConnectivity)
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getListFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        time_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        timeout_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        findfaulty_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (listBuilder_ == null) {
+          list_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          listBuilder_.clear();
+        }
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivity_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity build() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity buildPartial() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.time_ = time_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.timeout_ = timeout_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.findfaulty_ = findfaulty_;
+        if (listBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+            list_ = java.util.Collections.unmodifiableList(list_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.list_ = list_;
+        } else {
+          result.list_ = listBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity other) {
+        if (other == ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity.getDefaultInstance()) return this;
+        if (other.hasTime()) {
+          setTime(other.getTime());
+        }
+        if (other.hasTimeout()) {
+          setTimeout(other.getTimeout());
+        }
+        if (other.hasFindfaulty()) {
+          setFindfaulty(other.getFindfaulty());
+        }
+        if (listBuilder_ == null) {
+          if (!other.list_.isEmpty()) {
+            if (list_.isEmpty()) {
+              list_ = other.list_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureListIsMutable();
+              list_.addAll(other.list_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.list_.isEmpty()) {
+            if (listBuilder_.isEmpty()) {
+              listBuilder_.dispose();
+              listBuilder_ = null;
+              list_ = other.list_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              listBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getListFieldBuilder() : null;
+            } else {
+              listBuilder_.addAllMessages(other.list_);
+            }
+          }
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasTime()) {
+          return false;
+        }
+        if (!hasTimeout()) {
+          return false;
+        }
+        if (!hasFindfaulty()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        for (int i = 0; i < getListCount(); i++) {
+          if (!getList(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long time_ ;
+      /**
+       * <code>required sint64 time = 1;</code>
+       */
+      public boolean hasTime() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required sint64 time = 1;</code>
+       */
+      public long getTime() {
+        return time_;
+      }
+      /**
+       * <code>required sint64 time = 1;</code>
+       */
+      public Builder setTime(long value) {
+        bitField0_ |= 0x00000001;
+        time_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint64 time = 1;</code>
+       */
+      public Builder clearTime() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        time_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long timeout_ ;
+      /**
+       * <code>required sint64 timeout = 2;</code>
+       */
+      public boolean hasTimeout() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required sint64 timeout = 2;</code>
+       */
+      public long getTimeout() {
+        return timeout_;
+      }
+      /**
+       * <code>required sint64 timeout = 2;</code>
+       */
+      public Builder setTimeout(long value) {
+        bitField0_ |= 0x00000002;
+        timeout_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint64 timeout = 2;</code>
+       */
+      public Builder clearTimeout() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        timeout_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private boolean findfaulty_ ;
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public boolean hasFindfaulty() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public boolean getFindfaulty() {
+        return findfaulty_;
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public Builder setFindfaulty(boolean value) {
+        bitField0_ |= 0x00000004;
+        findfaulty_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bool findfaulty = 3;</code>
+       */
+      public Builder clearFindfaulty() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        findfaulty_ = false;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> list_ =
+        java.util.Collections.emptyList();
+      private void ensureListIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(list_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> listBuilder_;
+
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getListList() {
+        if (listBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(list_);
+        } else {
+          return listBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public int getListCount() {
+        if (listBuilder_ == null) {
+          return list_.size();
+        } else {
+          return listBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getList(int index) {
+        if (listBuilder_ == null) {
+          return list_.get(index);
+        } else {
+          return listBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder setList(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.set(index, value);
+          onChanged();
+        } else {
+          listBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder setList(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder addList(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.add(value);
+          onChanged();
+        } else {
+          listBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder addList(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.add(index, value);
+          onChanged();
+        } else {
+          listBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder addList(
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.add(builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder addList(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder addAllList(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> values) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, list_);
+          onChanged();
+        } else {
+          listBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder clearList() {
+        if (listBuilder_ == null) {
+          list_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          listBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public Builder removeList(int index) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.remove(index);
+          onChanged();
+        } else {
+          listBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder getListBuilder(
+          int index) {
+        return getListFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getListOrBuilder(
+          int index) {
+        if (listBuilder_ == null) {
+          return list_.get(index);  } else {
+          return listBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+           getListOrBuilderList() {
+        if (listBuilder_ != null) {
+          return listBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(list_);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addListBuilder() {
+        return getListFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addListBuilder(
+          int index) {
+        return getListFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServerIdentity list = 4;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
+           getListBuilderList() {
+        return getListFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          getListFieldBuilder() {
+        if (listBuilder_ == null) {
+          listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
+                  list_,
+                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  getParentForChildren(),
+                  isClean());
+          list_ = null;
+        }
+        return listBuilder_;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 5;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>required bytes signature = 5;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 5;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 5;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:status.CheckConnectivity)
+    }
+
+    // @@protoc_insertion_point(class_scope:status.CheckConnectivity)
+    private static final ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity();
+    }
+
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConnectivity>
+        PARSER = new com.google.protobuf.AbstractParser<CheckConnectivity>() {
+      @java.lang.Override
+      public CheckConnectivity parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CheckConnectivity(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CheckConnectivity> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CheckConnectivity> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivity getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface CheckConnectivityReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:status.CheckConnectivityReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> 
+        getNodesList();
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getNodes(int index);
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    int getNodesCount();
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+        getNodesOrBuilderList();
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getNodesOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * CheckConnectivityReply is the minimum list of all nodes that can contact each
+   * other.
+   * </pre>
+   *
+   * Protobuf type {@code status.CheckConnectivityReply}
+   */
+  public  static final class CheckConnectivityReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:status.CheckConnectivityReply)
+      CheckConnectivityReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use CheckConnectivityReply.newBuilder() to construct.
+    private CheckConnectivityReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CheckConnectivityReply() {
+      nodes_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CheckConnectivityReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                nodes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              nodes_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          nodes_ = java.util.Collections.unmodifiableList(nodes_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.Builder.class);
+    }
+
+    public static final int NODES_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> nodes_;
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getNodesList() {
+      return nodes_;
+    }
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+        getNodesOrBuilderList() {
+      return nodes_;
+    }
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    public int getNodesCount() {
+      return nodes_.size();
+    }
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getNodes(int index) {
+      return nodes_.get(index);
+    }
+    /**
+     * <code>repeated .network.ServerIdentity nodes = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getNodesOrBuilder(
+        int index) {
+      return nodes_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getNodesCount(); i++) {
+        if (!getNodes(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < nodes_.size(); i++) {
+        output.writeMessage(1, nodes_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < nodes_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, nodes_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply other = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) obj;
+
+      boolean result = true;
+      result = result && getNodesList()
+          .equals(other.getNodesList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getNodesCount() > 0) {
+        hash = (37 * hash) + NODES_FIELD_NUMBER;
+        hash = (53 * hash) + getNodesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * CheckConnectivityReply is the minimum list of all nodes that can contact each
+     * other.
+     * </pre>
+     *
+     * Protobuf type {@code status.CheckConnectivityReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:status.CheckConnectivityReply)
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.class, ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getNodesFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (nodesBuilder_ == null) {
+          nodes_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          nodesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.internal_static_status_CheckConnectivityReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply build() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply buildPartial() {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply result = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply(this);
+        int from_bitField0_ = bitField0_;
+        if (nodesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            nodes_ = java.util.Collections.unmodifiableList(nodes_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.nodes_ = nodes_;
+        } else {
+          result.nodes_ = nodesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply other) {
+        if (other == ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply.getDefaultInstance()) return this;
+        if (nodesBuilder_ == null) {
+          if (!other.nodes_.isEmpty()) {
+            if (nodes_.isEmpty()) {
+              nodes_ = other.nodes_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureNodesIsMutable();
+              nodes_.addAll(other.nodes_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.nodes_.isEmpty()) {
+            if (nodesBuilder_.isEmpty()) {
+              nodesBuilder_.dispose();
+              nodesBuilder_ = null;
+              nodes_ = other.nodes_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              nodesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getNodesFieldBuilder() : null;
+            } else {
+              nodesBuilder_.addAllMessages(other.nodes_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        for (int i = 0; i < getNodesCount(); i++) {
+          if (!getNodes(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> nodes_ =
+        java.util.Collections.emptyList();
+      private void ensureNodesIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          nodes_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity>(nodes_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> nodesBuilder_;
+
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> getNodesList() {
+        if (nodesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(nodes_);
+        } else {
+          return nodesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public int getNodesCount() {
+        if (nodesBuilder_ == null) {
+          return nodes_.size();
+        } else {
+          return nodesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getNodes(int index) {
+        if (nodesBuilder_ == null) {
+          return nodes_.get(index);
+        } else {
+          return nodesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder setNodes(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (nodesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureNodesIsMutable();
+          nodes_.set(index, value);
+          onChanged();
+        } else {
+          nodesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder setNodes(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (nodesBuilder_ == null) {
+          ensureNodesIsMutable();
+          nodes_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          nodesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder addNodes(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (nodesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureNodesIsMutable();
+          nodes_.add(value);
+          onChanged();
+        } else {
+          nodesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder addNodes(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity value) {
+        if (nodesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureNodesIsMutable();
+          nodes_.add(index, value);
+          onChanged();
+        } else {
+          nodesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder addNodes(
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (nodesBuilder_ == null) {
+          ensureNodesIsMutable();
+          nodes_.add(builderForValue.build());
+          onChanged();
+        } else {
+          nodesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder addNodes(
+          int index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (nodesBuilder_ == null) {
+          ensureNodesIsMutable();
+          nodes_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          nodesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder addAllNodes(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity> values) {
+        if (nodesBuilder_ == null) {
+          ensureNodesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, nodes_);
+          onChanged();
+        } else {
+          nodesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder clearNodes() {
+        if (nodesBuilder_ == null) {
+          nodes_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          nodesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public Builder removeNodes(int index) {
+        if (nodesBuilder_ == null) {
+          ensureNodesIsMutable();
+          nodes_.remove(index);
+          onChanged();
+        } else {
+          nodesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder getNodesBuilder(
+          int index) {
+        return getNodesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder getNodesOrBuilder(
+          int index) {
+        if (nodesBuilder_ == null) {
+          return nodes_.get(index);  } else {
+          return nodesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+           getNodesOrBuilderList() {
+        if (nodesBuilder_ != null) {
+          return nodesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(nodes_);
+        }
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addNodesBuilder() {
+        return getNodesFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder addNodesBuilder(
+          int index) {
+        return getNodesFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .network.ServerIdentity nodes = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder> 
+           getNodesBuilderList() {
+        return getNodesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder> 
+          getNodesFieldBuilder() {
+        if (nodesBuilder_ == null) {
+          nodesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentityOrBuilder>(
+                  nodes_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          nodes_ = null;
+        }
+        return nodesBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:status.CheckConnectivityReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:status.CheckConnectivityReply)
+    private static final ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConnectivityReply>
+        PARSER = new com.google.protobuf.AbstractParser<CheckConnectivityReply>() {
+      @java.lang.Override
+      public CheckConnectivityReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CheckConnectivityReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CheckConnectivityReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CheckConnectivityReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.StatusProto.CheckConnectivityReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_status_Request_descriptor;
   private static final 
@@ -1392,6 +3395,16 @@ public final class StatusProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_status_Response_StatusEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_status_CheckConnectivity_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_status_CheckConnectivity_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_status_CheckConnectivityReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_status_CheckConnectivityReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1406,8 +3419,13 @@ public final class StatusProto {
       "tus\030\001 \003(\0132\034.status.Response.StatusEntry\022" +
       "/\n\016serveridentity\030\002 \001(\0132\027.network.Server" +
       "Identity\032;\n\013StatusEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005" +
-      "value\030\002 \001(\0132\014.onet.Status:\0028\001B&\n\027ch.epfl" +
-      ".dedis.lib.protoB\013StatusProto"
+      "value\030\002 \001(\0132\014.onet.Status:\0028\001\"\200\001\n\021CheckC" +
+      "onnectivity\022\014\n\004time\030\001 \002(\022\022\017\n\007timeout\030\002 \002" +
+      "(\022\022\022\n\nfindfaulty\030\003 \002(\010\022%\n\004list\030\004 \003(\0132\027.n" +
+      "etwork.ServerIdentity\022\021\n\tsignature\030\005 \002(\014" +
+      "\"@\n\026CheckConnectivityReply\022&\n\005nodes\030\001 \003(" +
+      "\0132\027.network.ServerIdentityB&\n\027ch.epfl.de" +
+      "dis.lib.protoB\013StatusProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1441,6 +3459,18 @@ public final class StatusProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_status_Response_StatusEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
+    internal_static_status_CheckConnectivity_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_status_CheckConnectivity_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_status_CheckConnectivity_descriptor,
+        new java.lang.String[] { "Time", "Timeout", "Findfaulty", "List", "Signature", });
+    internal_static_status_CheckConnectivityReply_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_status_CheckConnectivityReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_status_CheckConnectivityReply_descriptor,
+        new java.lang.String[] { "Nodes", });
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
     ch.epfl.dedis.lib.proto.NetworkProto.getDescriptor();
   }

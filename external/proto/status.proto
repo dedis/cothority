@@ -16,3 +16,25 @@ message Response {
    map<string, onet.Status> status = 1;
   optional network.ServerIdentity serveridentity = 2;
 }
+
+// CheckConnectivity is sent by a client to check the connectivity of a given
+// roster. The Time must be within 2 minutes of the server's time. The signature
+// must be a schnorr-signature using the private conode-key on the following
+// message:
+//   sha256( bytes.LittleEndian.PutUInt64(Time) |
+//           binary.LittleEndian.PutUInt64(Timeout) |
+//           FindFaulty ? byte(1) : byte(0) |
+//           protobuf.Encode(List[0]) | protobuf.Encode(List[1])... )
+message CheckConnectivity {
+  required sint64 time = 1;
+  required sint64 timeout = 2;
+  required bool findfaulty = 3;
+  repeated network.ServerIdentity list = 4;
+  required bytes signature = 5;
+}
+
+// CheckConnectivityReply is the minimum list of all nodes that can contact each
+// other.
+message CheckConnectivityReply {
+  repeated network.ServerIdentity nodes = 1;
+}
