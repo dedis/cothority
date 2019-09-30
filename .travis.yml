@@ -1,11 +1,11 @@
-_: &language_go_1_11
-  name: "go 1.11"
-  language: go
-  go: "1.11.x"
 _: &language_go_1_12
   name: "go 1.12"
   language: go
   go: "1.12.x"
+_: &language_go_1_13
+  name: "go 1.13"
+  language: go
+  go: "1.13.x"
 _: &language_js
   language: node_js
   node_js: "lts/*"
@@ -26,7 +26,6 @@ _: &stage_lint_go
 _: &stage_build_go
   script:
     - make -C conode bindist tooldist
-    - GO111MODULE=on go get ./...
     - GO111MODULE=on go build ./...
 _: &stage_test_go
   before_script: *get_coding
@@ -35,7 +34,6 @@ _: &stage_deploy_npm
   <<: *language_js
   before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
   script: skip  # default to `make test`
-
 
 dist: trusty
 
@@ -53,15 +51,13 @@ jobs:
       before_script: *get_coding
       script: make test_proto
     - <<: *stage_lint_go
-      <<: *language_go_1_11
-    - <<: *stage_lint_go
-      <<: *language_go_1_12
+      <<: *language_go_1_13
 
     - stage: build
       <<: *stage_build_go
-      <<: *language_go_1_11
-    - <<: *stage_build_go
       <<: *language_go_1_12
+    - <<: *stage_build_go
+      <<: *language_go_1_13
 
     - name: "js > kyber"
       <<: *language_js
@@ -79,10 +75,8 @@ jobs:
         - npm run build
 
     - stage: test
+      <<: *language_go_1_13
       <<: *stage_test_go
-      <<: *language_go_1_11
-    - <<: *stage_test_go
-      <<: *language_go_1_12
     - name: "java"
       language: java
       install: *get_go

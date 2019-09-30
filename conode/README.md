@@ -54,7 +54,6 @@ we will include your conode in the DEDIS-cothority.
 - 24/7 availability
 - 512MB of RAM and 1GB of disk-space
 - a public IP-address and two open ports
-- Go 1.12.x installed and set up according to https://golang.org/doc/install
 
 ## Network communication 
 
