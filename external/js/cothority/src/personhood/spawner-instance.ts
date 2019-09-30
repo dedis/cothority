@@ -5,6 +5,7 @@ import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
 import DarcInstance from "../byzcoin/contracts/darc-instance";
+import ValueInstance from "../byzcoin/contracts/value-instance";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import { CalypsoReadInstance } from "../calypso";
 import { CalypsoWriteInstance, Write } from "../calypso/calypso-instance";
@@ -439,6 +440,54 @@ export default class SpawnerInstance extends Instance {
 
         return CalypsoWriteInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId(), 2);
     }
+
+    /**
+     * Creates all the necessary instruction to create a new value - either with a 0 balance, or with
+     * a given balance by the caller.
+     *
+     * @param coin where to take the coins to create the instance
+     * @param darcID the responsible darc for the new coin
+     * @param value the value to store in the instance
+     */
+    spawnValueInstructions(coin: CoinInstance, darcID: InstanceID, value: Buffer): Instruction[] {
+        const valueBuf = this.struct.costValue.value.toBytesLE();
+        return [
+            Instruction.createInvoke(
+                coin.id,
+                CoinInstance.contractID,
+                CoinInstance.commandFetch,
+                [new Argument({name: CoinInstance.argumentCoins, value: Buffer.from(valueBuf)})],
+            ),
+            Instruction.createSpawn(
+                this.id,
+                ValueInstance.contractID,
+                [
+                    new Argument({name: ValueInstance.argumentValue, value}),
+                ],
+            ),
+        ];
+    }
+
+    /**
+     * Create a value instance for a given darc
+     *
+     * @param coin      The coin instance to take the coins from
+     * @param signers   The signers for the transaction
+     * @param darcID    The darc responsible for this coin
+     * @param value     The value to store in the instance
+     * @returns a promise that resolves with the new coin instance
+     */
+    async spawnValue(coin: CoinInstance, signers: Signer[], darcID: InstanceID, value: Buffer):
+        Promise<ValueInstance> {
+        const ctx = ClientTransaction.make(
+            this.rpc.getProtocolVersion(),
+            ...this.spawnValueInstructions(coin, darcID, value),
+        );
+        await ctx.updateCountersAndSign(this.rpc, [signers, []]);
+        await this.rpc.sendTransactionAndWait(ctx);
+
+        return ValueInstance.fromByzcoin(this.rpc, ctx.instructions[1].deriveId(), 2);
+    }
 }
 
 /**
@@ -460,6 +509,7 @@ export class SpawnerStruct extends Message<SpawnerStruct> {
     readonly costRoPaSci: Coin;
     readonly costCWrite: Coin;
     readonly costCRead: Coin;
+    readonly costValue: Coin;
     readonly beneficiary: InstanceID;
 
     constructor(props?: Properties<SpawnerStruct>) {
@@ -528,19 +578,29 @@ export class SpawnerStruct extends Message<SpawnerStruct> {
                 this.costCWrite = value;
             },
         });
+        Object.defineProperty(this, "costvalue", {
+            get(): Coin {
+                return this.costValue;
+            },
+            set(value: Coin) {
+                this.costValue = value;
+            },
+        });
     }
 }
 
 /**
  * Fields of the costs of a spawner instance
  */
-interface ICreateCost {
+export interface ICreateCost {
     costCRead: Long;
     costCWrite: Long;
     costCoin: Long;
     costCredential: Long;
     costDarc: Long;
     costParty: Long;
+    costRoPaSci: Long;
+    costValue: Long;
 
     [k: string]: Long;
 }

@@ -19,17 +19,17 @@ var ContractValueID = "value"
 // can put any data inside as wished.
 // It can spawn new value instances and will store the "value" argument in these
 // new instances. Existing value instances can be updated and deleted.
-
-type contractValue struct {
+type ContractValue struct {
 	byzcoin.BasicContract
 	value []byte
 }
 
 func contractValueFromBytes(in []byte) (byzcoin.Contract, error) {
-	return &contractValue{value: in}, nil
+	return &ContractValue{value: in}, nil
 }
 
-func (c *contractValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+// Spawn implements the byzcoin.Contract interface
+func (c ContractValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -46,7 +46,8 @@ func (c *contractValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 	return
 }
 
-func (c *contractValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+// Invoke implements the byzcoin.Contract interface
+func (c ContractValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -69,7 +70,8 @@ func (c *contractValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	}
 }
 
-func (c *contractValue) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+// Delete implements the byzcoin.Contract interface
+func (c ContractValue) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Find the darcID for this instance.
@@ -85,6 +87,7 @@ func (c *contractValue) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	return
 }
 
-func (c *contractValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
+// VerifyDeferredInstruction implements the byzcoin.Contract interface
+func (c ContractValue) VerifyDeferredInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
 	return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{IgnoreCounters: true})
 }
