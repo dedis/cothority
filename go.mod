@@ -7,10 +7,11 @@ require (
 	github.com/bford/golang-x-crypto v0.0.0-20160518072526-27db609c9d03
 	github.com/btcsuite/btcd v0.0.0-20190926002857-ba530c4abb35 // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
-	github.com/dedis/odyssey v0.0.0
 	github.com/deckarep/golang-set v1.7.1 // indirect
+	github.com/dedis/odyssey v0.0.0
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.8.27
+	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
@@ -33,4 +34,5 @@ require (
 )
 
 replace github.com/dedis/odyssey v0.0.0 => /Users/nkocher/GitHub/odyssey
+
 go 1.13
