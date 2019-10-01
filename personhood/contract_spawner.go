@@ -101,10 +101,18 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		if err != nil {
 			return nil, nil, errors.New("couldn't decode darc: " + err.Error())
 		}
-		// Whitelist allowed darc rules - there is no spawn allowed, and all
+
+		// Allowing unlimited rules while spawning darcs could give attackers
+		// a way break the system.
+		//
+		// So, we whitelist allowed darc rules - there is no spawn allowed, and all
 		// invokes need to be in this list. Just to be sure that there is
 		// no command in the future that will allow to spawn things as an
 		// invoke.
+		//
+		// When using the spawner-instance, darcs with spawn:calypsoRead
+		// can be allowed, as they can only be used as instructions to a
+		// calypsoWrite instance that will check if coins are needed or not.
 		allowed := regexp.MustCompile("^(_sign|invoke:(" +
 			"darc\\.evolve|" +
 			"spawner\\.update|" +
