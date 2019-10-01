@@ -7,7 +7,7 @@ import { LongTermSecret, OnChainSecretRPC } from "../../src/calypso/calypso-rpc"
 import { SignerEd25519 } from "../../src/darc";
 import Darc from "../../src/darc/darc";
 import { Rule } from "../../src/darc/rules";
-import SpawnerInstance from "../../src/personhood/spawner-instance";
+import SpawnerInstance, { ICreateCost } from "../../src/personhood/spawner-instance";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
 const curve25519 = curve.newCurve("edwards25519");
@@ -109,7 +109,7 @@ describe("Online Calypso Tests", async () => {
         // A second authorisation-request should return an error from the conode
         // which should be handled by the `spawn` method.
         await LongTermSecret.spawn(bc, darc.id, [SIGNER], roster);
-        const costs = {
+        const costs: ICreateCost = {
             costCRead: Long.fromNumber(100),
             costCWrite: Long.fromNumber(1000),
             costCoin: Long.fromNumber(100),
@@ -117,6 +117,7 @@ describe("Online Calypso Tests", async () => {
             costDarc: Long.fromNumber(100),
             costParty: Long.fromNumber(1000),
             costRoPaSci: Long.fromNumber(10),
+            costValue: Long.fromNumber(100),
         };
         spawner = await SpawnerInstance.spawn({
             bc,

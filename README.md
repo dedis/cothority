@@ -32,29 +32,24 @@ environment](https://github.com/dedis/doc/tree/master/README.md).
 
 ## Versioning and Roadmap
 
-We started to work on a 6-monthly cycle, synched up with the semesters at EPFL. From
-March to August we keep changes on the master-branch non-API breaking. Master and the
-current version https://gopkg.in/dedis/cothority.v2 are kept in sync. In September,
-we allow API-breaking changes in master and only selectively update the stable branch.
-End of February we freeze the current development in a stable branch and start again a
-non-breaking period of 6 months.
+We use a yearly release cycle, with new releases arriving in February, in time
+for students to use a new stable release during the spring semester.
 
-The current master branch is stable till the end of August 2018. If you are
-starting new work with this repository, use gopkg.in/dedis/cothority.v2 instead.
-The source code for this stable branch is
-[here](https://github.com/dedis/cothority/tree/v2).
+We use semantic versioning, and Go modules to make it possible to develop
+from a specific version and know the exact dependencies, and know when
+you are about to opt-in to an API-breaking change (because the major version
+of one or more of your dependencies changes).
 
-During 2018, we hope to bring you the following new pieces:
-- Cross platform mobile application to interact with the pop service
-- ByzCoin implementation using key/value pair storage and protected by darcs
+We maintain a major version for 18 months.
 
-Other pieces we hope to achieve in 2018:
-- Distributed internet archival functionality
-- New status-website of the cothority
-- Catena integration for skipchains
+The current major version is v3. It was released in Feb 2019. It will receive
+security updates, and possibly backports of simple and essential features
+from the master branch until June 2020.
 
-And some projects are private for the moment, but we hope to make them public
-as soon as possible.
+The last major version was v2, which is end of life as of June 2019.
+
+As of Oct 2019, work is starting on v4. It will be released in Feb 2020, with
+an end of life in June 2021.
 
 ### Release v3.1.0
 

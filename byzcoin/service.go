@@ -2149,7 +2149,8 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 			if err2 != nil {
 				err = fmt.Errorf("%s - while getting value: %s", err, err2)
 			}
-			err = fmt.Errorf("%s Contract %s got Instruction %x and returned error: %s", s.ServerIdentity(), cid, instr.Hash(), err)
+			err = fmt.Errorf("%s Contract %s got %+v and"+
+				" returned error: %s", s.ServerIdentity(), cid, instr, err)
 			return
 		}
 		var counterScs StateChanges

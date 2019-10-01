@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
@@ -15,7 +16,7 @@ func TestBroadcast(t *testing.T) {
 		local := onet.NewLocalTest(tSuite)
 		_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, false)
 
-		pi, err := local.CreateProtocol("Broadcast", tree)
+		pi, err := local.CreateProtocol(BroadcastName, tree)
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
@@ -24,7 +25,7 @@ func TestBroadcast(t *testing.T) {
 		protocol.RegisterOnDone(func() {
 			done <- true
 		})
-		protocol.Start()
+		require.NoError(t, protocol.Start())
 		timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 		select {
 		case <-done:

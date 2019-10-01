@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/calypso"
@@ -63,6 +64,7 @@ func (c ContractSpawner) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst b
 //     with the content of 'credential', protected by 'darcID' and at IID of sha256( "credential" | darcID )
 //   - ContractPopPartyID directly calls ContractPopParty.Spawn
 //   - ContractRoPaSciID directly calls ContractRoPaSci.Spawn
+//   - ContractValueID directly calls ContractValue.Spawn
 func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 
@@ -80,14 +82,16 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	case ContractSpawnerID:
 		c.CostCWrite = &byzcoin.Coin{}
 		c.CostCRead = &byzcoin.Coin{}
+		c.CostValue = &byzcoin.Coin{}
 		err = c.parseArgs(inst.Spawn.Args)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.New("couldn't parse args: " + err.Error())
 		}
 		instBuf, err = protobuf.Encode(&c.SpawnerStruct)
 		if err != nil {
 			return nil, nil, errors.New("couldn't encode SpawnerInstance: " + err.Error())
 		}
+
 	case byzcoin.ContractDarcID:
 		if err = c.getCoins(cout, c.CostDarc); err != nil {
 			return
@@ -95,10 +99,29 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		instBuf = inst.Spawn.Args.Search("darc")
 		d, err := darc.NewFromProtobuf(instBuf)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.New("couldn't decode darc: " + err.Error())
+		}
+		// Whitelist allowed darc rules - there is no spawn allowed, and all
+		// invokes need to be in this list. Just to be sure that there is
+		// no command in the future that will allow to spawn things as an
+		// invoke.
+		allowed := regexp.MustCompile("^(_sign|invoke:(" +
+			"darc\\.evolve|" +
+			"spawner\\.update|" +
+			"coin\\.(fetch|store|transfer)|" +
+			"credential\\.(update|recover)|" +
+			"popParty\\.(barrier|finalize|mine|addParty)|" +
+			"ropasci\\.(second|confirm)" +
+			"value\\.update))$")
+		for _, rule := range d.Rules.List {
+			if !allowed.MatchString(string(rule.Action)) {
+				return nil, nil, errors.New("cannot spawn darc with rule: " +
+					string(rule.Action))
+			}
 		}
 		ca = byzcoin.NewInstanceID(d.GetBaseID())
 		darcID = d.GetBaseID()
+
 	case contracts.ContractCoinID:
 		if err = c.getCoins(cout, c.CostCoin); err != nil {
 			return
@@ -132,6 +155,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		if err != nil {
 			return nil, nil, err
 		}
+
 	case ContractCredentialID:
 		if err = c.getCoins(cout, c.CostCredential); err != nil {
 			return
@@ -151,6 +175,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		h.Write([]byte("credential"))
 		h.Write(credID)
 		ca = byzcoin.NewInstanceID(h.Sum(nil))
+
 	case calypso.ContractWriteID:
 		w := inst.Spawn.Args.Search("write")
 		if w == nil || len(w) == 0 {
@@ -171,16 +196,25 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return
 		}
 		return calypso.ContractWrite{}.Spawn(rst, inst, cout)
+
 	case ContractPopPartyID:
 		if err = c.getCoins(cout, c.CostParty); err != nil {
 			return
 		}
 		return ContractPopParty{}.Spawn(rst, inst, cout)
+
 	case ContractRoPaSciID:
 		if err = c.getCoins(cout, c.CostRoPaSci); err != nil {
 			return
 		}
 		return ContractRoPaSci{}.Spawn(rst, inst, cout)
+
+	case contracts.ContractValueID:
+		if err = c.getCoins(cout, *c.CostValue); err != nil {
+			return
+		}
+		return contracts.ContractValue{}.Spawn(rst, inst, cout)
+
 	default:
 		return nil, nil, errors.New("don't know how to spawn this type of contract")
 	}
@@ -255,7 +289,7 @@ func (c *ContractSpawner) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 	for _, cost := range []struct {
 		name string
-		cost *byzcoin.Coin
+		coin *byzcoin.Coin
 	}{
 		{"costDarc", &ss.CostDarc},
 		{"costCoin", &ss.CostCoin},
@@ -264,19 +298,18 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 		{"costRoPaSci", &ss.CostRoPaSci},
 		{"costCWrite", ss.CostCWrite},
 		{"costCRead", ss.CostCRead},
+		{"costValue", ss.CostValue},
 	} {
 		if arg := args.Search(cost.name); arg != nil {
-			err := protobuf.Decode(arg, cost.cost)
+			err := protobuf.Decode(arg, cost.coin)
 			if err != nil {
-				return err
+				return fmt.Errorf("couldn't decode coin %s: %s", cost.name, err)
 			}
 		} else {
-			cost.cost = &byzcoin.Coin{
-				Name:  contracts.CoinName,
-				Value: 100,
-			}
+			cost.coin.Name = contracts.CoinName
+			cost.coin.Value = 100
 		}
-		log.Lvl2("Setting cost of", cost.name, "to", cost.cost.Value)
+		log.Lvl2("Setting cost of", cost.name, "to", cost.coin.Value)
 	}
 	// This is a check to make sure that older spawn-instructions don't get
 	// a wrong data.

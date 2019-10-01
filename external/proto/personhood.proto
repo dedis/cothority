@@ -96,6 +96,7 @@ message SpawnerStruct {
   optional byzcoin.Coin costropasci = 6;
   optional byzcoin.Coin costcwrite = 7;
   optional byzcoin.Coin costcread = 8;
+  optional byzcoin.Coin costvalue = 9;
 }
 
 // PopPartyStruct is the data that is stored in a pop-party instance.

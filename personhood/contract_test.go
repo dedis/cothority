@@ -24,7 +24,7 @@ func TestContractSpawner(t *testing.T) {
 	s := newRstSimul()
 	s.values[string(iid.Slice())] = byzcoin.StateChangeBody{}
 	cs := &ContractSpawner{}
-	cost := byzcoin.Coin{Name: iid, Value: 100}
+	cost := byzcoin.Coin{Name: iid, Value: 200}
 	costBuf, err := protobuf.Encode(&cost)
 	require.NoError(t, err)
 	inst := byzcoin.Instruction{
@@ -35,6 +35,7 @@ func TestContractSpawner(t *testing.T) {
 				{Name: "costDarc", Value: costBuf},
 				{Name: "costCRead", Value: costBuf},
 				{Name: "costRoPaSci", Value: costBuf},
+				{Name: "costValue", Value: costBuf},
 			},
 		},
 	}
@@ -44,9 +45,10 @@ func TestContractSpawner(t *testing.T) {
 	spawner := &SpawnerStruct{}
 	err = protobuf.Decode(scs[0].Value, spawner)
 	require.NoError(t, err)
-	require.Equal(t, uint64(100), spawner.CostDarc.Value)
-	require.Equal(t, uint64(100), spawner.CostCRead.Value)
-	require.Equal(t, uint64(0), spawner.CostCWrite.Value)
+	require.Equal(t, uint64(200), spawner.CostDarc.Value)
+	require.Equal(t, uint64(200), spawner.CostCRead.Value)
+	require.Equal(t, uint64(100), spawner.CostCWrite.Value)
+	require.Equal(t, uint64(200), spawner.CostValue.Value)
 }
 
 // Creates a party, activates the barrier point, finalizes it, and mines the coins.
