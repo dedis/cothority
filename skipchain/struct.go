@@ -1258,6 +1258,14 @@ func (db *SkipBlockDB) RemoveSkipchain(scid SkipBlockID) error {
 	})
 }
 
+// RemoveBlock removes the given block from the database.
+func (db *SkipBlockDB) RemoveBlock(blockID SkipBlockID) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.Delete(blockID)
+	})
+}
+
 // storeToTx stores the skipblock into the database.
 // An error is returned on failure.
 // The caller must ensure that this function is called from within a valid transaction.

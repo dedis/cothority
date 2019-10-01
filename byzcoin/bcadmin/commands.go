@@ -80,16 +80,65 @@ var cmds = cli.Commands{
 	},
 
 	{
+		Name:      "db",
+		Usage:     "interact with byzcoin for debugging",
+		Aliases:   []string{"d"},
+		ArgsUsage: "conode.db [byzCoinID]",
+		Subcommands: cli.Commands{
+			{
+				Name:   "status",
+				Usage:  "returns the status of the db",
+				Action: dbStatus,
+			},
+			{
+				Name:      "catchup",
+				Usage:     "Fetch new blocks from an active chain",
+				Action:    dbCatchup,
+				ArgsUsage: "URL",
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name: "batch",
+						Usage: "how many blocks will be fetched with each" +
+							" request",
+						Value: 100,
+					},
+				},
+			},
+			{
+				Name:   "replay",
+				Usage:  "Replay a chain and check the global state is consistent",
+				Action: dbReplay,
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "continue, cont",
+						Usage: "continue an aborted replay",
+					},
+					cli.IntFlag{
+						Name:  "blocks",
+						Usage: "how many blocks to apply",
+					},
+				},
+			},
+			{
+				Name:      "merge",
+				Usage:     "Copy the blocks of another db-file into this one",
+				Action:    dbMerge,
+				ArgsUsage: "conode2.db",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "overwrite",
+						Usage: "replace whole blocks if they are duplicate",
+					},
+				},
+			},
+		},
+	},
+
+	{
 		Name:    "debug",
 		Usage:   "interact with byzcoin for debugging",
 		Aliases: []string{"d"},
 		Subcommands: cli.Commands{
-			{
-				Name:      "replay",
-				Usage:     "Replay a chain and check the global state is consistent",
-				Action:    debugReplay,
-				ArgsUsage: "URL",
-			},
 			{
 				Name:   "block",
 				Usage:  "Read a block given by an id or an index",

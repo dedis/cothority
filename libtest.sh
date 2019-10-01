@@ -501,4 +501,4 @@ for i in "$@"; do
 done
 buildDir
 
-export CONODE_SERVICE_PATH=build/service_storage
+export CONODE_SERVICE_PATH=service_storage

@@ -20,7 +20,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/qantik/qrgo"
-	cli "github.com/urfave/cli"
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -843,75 +843,6 @@ func darcShow(c *cli.Context) error {
 	}
 
 	_, err = fmt.Fprintln(c.App.Writer, d.String())
-	return err
-}
-
-func debugReplay(c *cli.Context) error {
-	if c.NArg() < 1 {
-		return errors.New("please give the following arguments: url [bcID]")
-	}
-	if c.NArg() == 1 {
-		err := debugList(c)
-		if err != nil {
-			return err
-		}
-
-		log.Info("Please provide one of the following byzcoin ID as the second argument")
-		return nil
-	}
-
-	r := &onet.Roster{List: []*network.ServerIdentity{{
-		URL: c.Args().First(),
-		// valid server identity must have a public so we create a fake one
-		// as we are only interested in the URL.
-		Public: cothority.Suite.Point().Base(),
-	}}}
-	if r == nil {
-		return errors.New("couldn't create roster")
-	}
-	bcID, err := hex.DecodeString(c.Args().Get(1))
-	if err != nil {
-		return err
-	}
-
-	local := onet.NewLocalTest(cothority.Suite)
-	defer local.CloseAll()
-	servers := local.GenServers(1)
-	s := servers[0].Service(byzcoin.ServiceName).(*byzcoin.Service)
-
-	cl := skipchain.NewClient()
-	stack := []*skipchain.SkipBlock{}
-	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		if len(stack) > 0 {
-			// Use the blocks stored locally if possible ..
-			sb := stack[0]
-			stack = stack[1:]
-
-			// .. but only if it matches.
-			if sb.Hash.Equal(sib) {
-				return sb, nil
-			}
-		}
-
-		// Try to get more than a block at once to speed up the process.
-		blocks, err := cl.GetUpdateChainLevel(ro, sib, 1, 50)
-		if err != nil {
-			log.Info("An error occurred when getting the chain. Trying a single block.")
-			// In the worst case, it fetches only the requested block.
-			return cl.GetSingleBlock(ro, sib)
-		}
-
-		stack = blocks[1:]
-		return blocks[0], nil
-	}
-
-	log.Info("Replaying blocks")
-	_, err = s.ReplayState(bcID, r, cb)
-	if err != nil {
-		return err
-	}
-	log.Info("Successfully checked and replayed all blocks.")
-
 	return err
 }
 
