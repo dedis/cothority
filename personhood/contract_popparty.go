@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
-	"time"
 
 	"go.dedis.ch/kyber/v3/util/key"
 
@@ -22,6 +20,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
@@ -367,20 +366,36 @@ func PopPartyBarrier(cl *byzcoin.Client, popIID byzcoin.InstanceID, signers ...d
 	return err
 }
 
-// PopPartyFinalize sends the list of attendees to the party for finalization.
-func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attendees, signers ...darc.Signer) error {
+// PopPartyFinalized sends the list of attendees to the party for finalization.
+func PopPartyFinalized(
+	cl *byzcoin.Client,
+	popIID byzcoin.InstanceID,
+	atts Attendees,
+	signers ...darc.Signer,
+) error {
+	_, err := PopPartyFinalizeDetailed(cl, popIID, atts, signers...)
+	return err
+}
+
+// PopPartyFinalizeDetailed sends the list of attendees to the party for finalization.
+func PopPartyFinalizeDetailed(
+	cl *byzcoin.Client,
+	popIID byzcoin.InstanceID,
+	atts Attendees,
+	signers ...darc.Signer,
+) (*byzcoin.AddTxResponse, error) {
 	var sigStrs []string
 	for _, sig := range signers {
 		sigStrs = append(sigStrs, sig.Identity().String())
 	}
 	signerCtrs, err := cl.GetSignerCounters(sigStrs...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	attBuff, err := protobuf.Encode(&atts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: popIID,
@@ -397,62 +412,13 @@ func PopPartyFinalize(cl *byzcoin.Client, popIID byzcoin.InstanceID, atts Attend
 		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = ctx.FillSignersAndSignWith(signers...)
 	if err != nil {
-		return err
-	}
-	_, err = cl.AddTransactionAndWait(ctx, 5)
-	return err
-}
-
-// getFinalizedParty looks for a proof that will contain the finalized party.
-func getFinalizedParty(c *byzcoin.Client, popIID byzcoin.InstanceID) (*PopPartyStruct, error) {
-	var pps *PopPartyStruct
-	ppsLock := sync.Mutex{}
-
-	decoder := func(buf []byte, msg interface{}) error {
-		err := protobuf.Decode(buf, msg)
-		if err != nil {
-			return err
-		}
-
-		gpr, ok := msg.(*byzcoin.GetProofResponse)
-		if !ok {
-			return errors.New("invalid proof response type")
-		}
-
-		_, value, cID, _, err := gpr.Proof.KeyValue()
-		if err != nil {
-			return err
-		}
-		if cID != ContractPopPartyID {
-			return errors.New("given popIID is not of contract-type PopParty")
-		}
-		var pop PopPartyStruct
-		err = protobuf.DecodeWithConstructors(value, &pop, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			return err
-		}
-
-		if pop.State != FinalizedState {
-			return errors.New("party must be finalized")
-		}
-
-		ppsLock.Lock()
-		pps = &pop
-		ppsLock.Unlock()
-
-		return nil
-	}
-
-	_, err := c.GetProofFrom(popIID.Slice(), c.Latest, decoder)
-	if err != nil {
 		return nil, err
 	}
-
-	return pps, nil
+	return cl.AddTransactionAndWait(ctx, 5)
 }
 
 // PopPartyMine is a method to be called by an outside client. It collects the reward for a given
@@ -462,16 +428,54 @@ func getFinalizedParty(c *byzcoin.Client, popIID byzcoin.InstanceID) (*PopPartyS
 //     byzcoin.
 //   - coinIID - if set, 'd' must be nil. coinIID points to the coin InstanceID where the reward will be stored.
 //   - d - if set, 'coinIID' must be nil. d is the darc that will be used to create a new coinInstance.
-func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
-	atts *Attendees, coinIID *byzcoin.InstanceID, d *darc.Darc) error {
+func PopPartyMine(
+	cl *byzcoin.Client,
+	popIID byzcoin.InstanceID,
+	kp key.Pair,
+	atts *Attendees,
+	coinIID *byzcoin.InstanceID,
+	d *darc.Darc,
+) error {
+	_, err := PopPartyMineDetailed(cl, popIID, kp, atts, coinIID, d, nil)
+	return err
+}
+
+// PopPartyMineDetailed is a method to be called by an outside client. It collects the reward for a given
+// attendee of the party. For convenience, this can be called with some of the arguments being 'nil'.
+//
+//   - atts - the list of the public keys of the attendees. If it is nil, the party will be fetched from
+//     byzcoin.
+//   - coinIID - if set, 'd' must be nil. coinIID points to the coin InstanceID where the reward will be stored.
+//   - d - if set, 'coinIID' must be nil. d is the darc that will be used to create a new coinInstance.
+func PopPartyMineDetailed(
+	cl *byzcoin.Client,
+	popIID byzcoin.InstanceID,
+	kp key.Pair,
+	atts *Attendees,
+	coinIID *byzcoin.InstanceID,
+	d *darc.Darc,
+	barrier *skipchain.SkipBlock,
+) (*byzcoin.AddTxResponse, error) {
 	if (coinIID == nil && d == nil) ||
 		(coinIID != nil && d != nil) {
-		return errors.New("either set coinIID or d, but not both")
+		return nil, errors.New("either set coinIID or d, but not both")
 	}
 	if atts == nil {
-		pop, err := getFinalizedParty(cl, popIID)
+		popProof, err := cl.GetProofAfter(popIID.Slice(), true, barrier)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		_, value, cID, _, err := popProof.Proof.KeyValue()
+		if err != nil {
+			return nil, err
+		}
+		if cID != ContractPopPartyID {
+			return nil, errors.New("given popIID is not of contract-type PopParty")
+		}
+		var pop PopPartyStruct
+		err = protobuf.DecodeWithConstructors(value, &pop, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, err
 		}
 
 		atts = &pop.Attendees
@@ -484,7 +488,7 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		}
 	}
 	if mine == -1 {
-		return errors.New("didn't find public key of keypair in attendees")
+		return nil, errors.New("didn't find public key of keypair in attendees")
 	}
 
 	lrs := anon.Sign(&suiteBlake2s{}, []byte("mine"), atts.Keys, popIID[:], mine, kp.Private)
@@ -495,7 +499,7 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 	if coinIID == nil {
 		darcBuf, err := d.ToProto()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		args = append(args, byzcoin.Argument{
@@ -518,27 +522,26 @@ func PopPartyMine(cl *byzcoin.Client, popIID byzcoin.InstanceID, kp key.Pair,
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = cl.AddTransactionAndWait(ctx, 5)
-	return err
+	return cl.AddTransactionAndWait(ctx, 5)
 }
 
 // PopPartyMineDarcToCoin calculates the coin given a darc and returns the coin instance.
 func PopPartyMineDarcToCoin(cl *byzcoin.Client, d *darc.Darc) (coinIID byzcoin.InstanceID, coin byzcoin.Coin, err error) {
-	return PopPartyMineDarcToCoinAfter(cl, d, time.Unix(0, 0))
+	return PopPartyMineDarcToCoinAfter(cl, d, nil)
 }
 
 // PopPartyMineDarcToCoinAfter calculates the coin given a darc and returns
 // the coin instance created/updated after the time barrier.
-func PopPartyMineDarcToCoinAfter(cl *byzcoin.Client, d *darc.Darc, barrier time.Time) (coinIID byzcoin.InstanceID, coin byzcoin.Coin, err error) {
+func PopPartyMineDarcToCoinAfter(cl *byzcoin.Client, d *darc.Darc, block *skipchain.SkipBlock) (coinIID byzcoin.InstanceID, coin byzcoin.Coin, err error) {
 	h := sha256.New()
 	h.Write([]byte("coin"))
 	h.Write(d.GetBaseID())
 	coinIID = byzcoin.NewInstanceID(h.Sum(nil))
 
 	var proof *byzcoin.GetProofResponse
-	proof, err = cl.GetProofAfter(coinIID.Slice(), false, barrier)
+	proof, err = cl.GetProofAfter(coinIID.Slice(), false, block)
 	if err != nil {
 		return
 	}

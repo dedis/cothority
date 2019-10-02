@@ -333,6 +333,49 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
+func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResponse, error) {
+	resp := &AddTxResponse{Version: CurrentVersion}
+
+	errMsg, exists := s.txErrorBuf.get(tx.ClientTransaction.Instructions.HashWithSignatures())
+	if !tx.Accepted {
+		if !exists {
+			return nil, errors.New("transaction is in block, but got refused for unknown error")
+		}
+		// We cannot return an error here because onet will ignore the response if an error occurs.
+		// The length of the error message is limited if we return an error, so we have to return the
+		// error message in the response.
+		resp.Error = errMsg
+		return resp, nil
+	}
+
+	if exists {
+		log.Warn(s.ServerIdentity(), "transaction is accepted but there are errors: ", errMsg)
+	}
+
+	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		log.Error(resp.Error)
+		return resp, nil
+	}
+
+	from := req.SkipchainID
+	if len(req.ProofFrom) > 0 {
+		from = req.ProofFrom
+	}
+
+	pr, err := NewProof(st, s.db(), from, nil)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		log.Error(resp.Error)
+		return resp, nil
+	}
+
+	resp.Proof = pr
+
+	return resp, nil
+}
+
 // AddTransaction requests to apply a new transaction to the ledger. Note
 // that unlike other service APIs, it is *not* enough to only check for the
 // error value to find out if an error has occured. The caller must also check
@@ -403,12 +446,8 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		}
 
 		ctxHash := req.Transaction.Instructions.Hash()
-		ch := s.notifications.createWaitChannel(ctxHash)
-		defer s.notifications.deleteWaitChannel(ctxHash)
-
-		blockCh := make(chan skipchain.SkipBlockID, 10)
-		z := s.notifications.registerForBlocks(blockCh)
-		defer s.notifications.unregisterForBlocks(z)
+		ch := s.notifications.registerForBlocks()
+		defer s.notifications.unregisterForBlocks(ch)
 
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
@@ -420,26 +459,14 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 		blocksLeft := req.InclusionWait
 
-		for found := false; !found; {
+		for {
 			select {
-			case success := <-ch:
-				errMsg, exists := s.txErrorBuf.get(req.Transaction.Instructions.HashWithSignatures())
-				if !success {
-					if !exists {
-						return nil, errors.New("transaction is in block, but got refused for unknown error")
-					}
-					// We cannot return an error here because onet will ignore the response if an error occurs.
-					// The length of the error message is limited if we return an error, so we have to return the
-					// error message in the response.
-					return &AddTxResponse{Version: CurrentVersion, Error: errMsg}, nil
+			case notif := <-ch:
+				if tx := notif.getTx(ctxHash); tx != nil {
+					return s.prepareTxResponse(req, tx)
 				}
 
-				if exists {
-					log.Warn(s.ServerIdentity(), "transaction is accepted but there are errors: ", errMsg)
-				}
-				found = true
-			case id := <-blockCh:
-				if id.Equal(req.SkipchainID) {
+				if notif.block.SkipChainID().Equal(req.SkipchainID) {
 					blocksLeft--
 				}
 				if blocksLeft == 0 {
@@ -453,9 +480,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 	}
 
-	return &AddTxResponse{
-		Version: CurrentVersion,
-	}, nil
+	return &AddTxResponse{Version: CurrentVersion}, nil
 }
 
 // GetProof searches for a key and returns a proof of the
@@ -475,8 +500,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
-		err = errors.New("cannot find skipblock while getting proof")
-		return
+		return nil, errors.New("cannot find skipblock while getting proof")
 	}
 	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
 	if err != nil {
@@ -484,17 +508,26 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	}
 	proof, err := NewProof(st, s.db(), req.ID, req.Key)
 	if err != nil {
-		return
+		return nil, err
+	}
+
+	if len(req.MustContainBlock) > 0 {
+		mcb := s.db().GetByID(req.MustContainBlock)
+		// The clause is checked but we return the proof with the latest
+		// known block so the client can stay up-to-date. That means we
+		// only check that the latest block is older or the same as mcb.
+		if mcb == nil || proof.Latest.Index < mcb.Index {
+			return nil, errors.New("must contain clause cannot be enforced")
+		}
 	}
 
 	_, v := proof.InclusionProof.KeyValue()
 	log.Lvlf2("%s: Returning proof for %x from chain %x at index %v", s.ServerIdentity(), req.Key, sb.SkipChainID(), sb.Index)
 	log.Lvlf3("value is %x", v)
-	resp = &GetProofResponse{
+	return &GetProofResponse{
 		Version: CurrentVersion,
 		Proof:   *proof,
-	}
-	return
+	}, nil
 }
 
 // CheckAuthorization verifies whether a given combination of identities can
@@ -569,6 +602,7 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 	resp := GetSignerCountersResponse{
 		Counters: out,
 		Index:    uint64(st.GetIndex()),
+		Version:  CurrentVersion,
 	}
 	return &resp, nil
 }
@@ -1655,10 +1689,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Notify all waiting channels for processed ClientTransactions.
-	for _, t := range body.TxResults {
-		s.notifications.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
-	}
-	s.notifications.informBlock(sb.SkipChainID())
+	s.notifications.informBlock(sb, body.TxResults)
 
 	// At this point everything should be stored.
 	s.streamingMan.notify(string(sb.SkipChainID()), sb)
@@ -2534,9 +2565,7 @@ func (s *Service) startAllChains() error {
 		}
 	}
 	s.stateTries = make(map[string]*stateTrie)
-	s.notifications = bcNotifications{
-		waitChannels: make(map[string]chan bool),
-	}
+	s.notifications = bcNotifications{}
 	s.closedMutex.Lock()
 	s.closed = false
 	s.closedMutex.Unlock()

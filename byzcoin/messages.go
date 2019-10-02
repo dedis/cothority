@@ -24,4 +24,4 @@ func init() {
 type Version int
 
 // CurrentVersion is what we're running now
-const CurrentVersion Version = 1
+const CurrentVersion Version = 2

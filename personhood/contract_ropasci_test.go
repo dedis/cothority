@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
-	"time"
 
 	"go.dedis.ch/cothority/v3"
 
@@ -80,11 +79,10 @@ func TestContractRoPaSciCalypso(t *testing.T) {
 				sr.coin2.coin.Value += 100
 			}
 			rps := sr.newCalypsoRPS(move1, sr.coin1.id, 100)
-			timeBarrier := time.Now()
-			ret := rps.calypsoSecond(move2, sr.coin2.id)
-			wrProof, err := s.cl.GetProofAfter(ret.CalypsoWrite.Slice(), true, timeBarrier)
+			ret, atr := rps.calypsoSecond(move2, sr.coin2.id)
+			wrProof, err := s.cl.GetProofAfter(ret.CalypsoWrite.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
-			rdProof, err := s.cl.GetProofAfter(ret.CalypsoRead.Slice(), true, timeBarrier)
+			rdProof, err := s.cl.GetProofAfter(ret.CalypsoRead.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
 			dkr, err := sr.ca.DecryptKey(&calypso.DecryptKey{
 				Read:  rdProof.Proof,
@@ -271,15 +269,14 @@ func (r *rps) confirm(preHash []byte) {
 
 // calypsoSecond is for a calypso RoPaSci, where the 2nd player gets a CalypsoRead instance
 // with which he can reveal/confirm the game.
-func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSciStruct) {
+func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (*RoPaSciStruct, *byzcoin.AddTxResponse) {
 	coinsBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(coinsBuf, r.stake)
 	r.keypair = darc.NewSignerEd25519(nil, nil)
 	pubBuf, err := r.keypair.Ed25519.Point.MarshalBinary()
 	require.NoError(r.t, err)
 
-	timeBarrier := time.Now()
-	r.addTx(
+	_, atr := r.addTx(
 		byzcoin.Instruction{
 			InstanceID: coinID,
 			Invoke: &byzcoin.Invoke{ContractID: contracts.ContractCoinID,
@@ -301,11 +298,12 @@ func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSci
 			},
 		},
 	)
-	pr, err := r.cl.GetProofAfter(r.id.Slice(), false, timeBarrier)
+	pr, err := r.cl.GetProofAfter(r.id.Slice(), false, &atr.Proof.Latest)
 	require.NoError(r.t, err)
 	_, val, cid, _, err := pr.Proof.KeyValue()
 	require.NoError(r.t, err)
 	require.Equal(r.t, ContractRoPaSciID, cid)
+	var rpsRet RoPaSciStruct
 	require.NoError(r.t, protobuf.Decode(val, &rpsRet))
-	return
+	return &rpsRet, atr
 }

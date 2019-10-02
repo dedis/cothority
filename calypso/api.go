@@ -72,13 +72,13 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 		return nil, err
 	}
 
-	timeBarrier := time.Now()
-	if _, err := c.bcClient.AddTransactionAndWait(tx, 10); err != nil {
+	atr, err := c.bcClient.AddTransactionAndWait(tx, 10)
+	if err != nil {
 		return nil, err
 	}
 
 	id := tx.Instructions[0].DeriveID("").Slice()
-	resp, err := c.bcClient.GetProofAfter(id, true, timeBarrier)
+	resp, err := c.bcClient.GetProofAfter(id, true, &atr.Proof.Latest)
 	if err != nil {
 		return nil, err
 	}

@@ -179,12 +179,11 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NoError(t, ctx.FillSignersAndSignWith(s.signer))
-			timeBarrier := time.Now()
-			_, err = s.cl.AddTransactionAndWait(ctx, 4)
+			atr, err := s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
 			// Get the proof and start resharing
-			proof, err := s.cl.GetProofAfter(s.ltsReply.InstanceID.Slice(), true, timeBarrier)
+			proof, err := s.cl.GetProofAfter(s.ltsReply.InstanceID.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
 
 			log.Lvl1("first reshare")

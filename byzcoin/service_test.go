@@ -214,6 +214,8 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	})
 	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
+	require.NotNil(t, akvresp.Proof)
+	require.NoError(t, akvresp.Proof.VerifyFromBlock(s.genesis))
 
 	// add the second tx
 	log.Lvl1("adding the second tx")

@@ -5409,6 +5409,27 @@ public final class ByzCoinProto {
      * <code>optional sint32 inclusionwait = 4;</code>
      */
     int getInclusionwait();
+
+    /**
+     * <pre>
+     * ProofFrom is used to ask a proof from a given block. If this field
+     * is empty, the proof will start from the genesis block. The proof is
+     * returned only when InclusionWait is above 0.
+     * </pre>
+     *
+     * <code>optional bytes prooffrom = 5;</code>
+     */
+    boolean hasProoffrom();
+    /**
+     * <pre>
+     * ProofFrom is used to ask a proof from a given block. If this field
+     * is empty, the proof will start from the genesis block. The proof is
+     * returned only when InclusionWait is above 0.
+     * </pre>
+     *
+     * <code>optional bytes prooffrom = 5;</code>
+     */
+    com.google.protobuf.ByteString getProoffrom();
   }
   /**
    * <pre>
@@ -5430,6 +5451,7 @@ public final class ByzCoinProto {
       version_ = 0;
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
       inclusionwait_ = 0;
+      prooffrom_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -5482,6 +5504,11 @@ public final class ByzCoinProto {
             case 32: {
               bitField0_ |= 0x00000008;
               inclusionwait_ = input.readSInt32();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              prooffrom_ = input.readBytes();
               break;
             }
             default: {
@@ -5621,6 +5648,33 @@ public final class ByzCoinProto {
       return inclusionwait_;
     }
 
+    public static final int PROOFFROM_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString prooffrom_;
+    /**
+     * <pre>
+     * ProofFrom is used to ask a proof from a given block. If this field
+     * is empty, the proof will start from the genesis block. The proof is
+     * returned only when InclusionWait is above 0.
+     * </pre>
+     *
+     * <code>optional bytes prooffrom = 5;</code>
+     */
+    public boolean hasProoffrom() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * ProofFrom is used to ask a proof from a given block. If this field
+     * is empty, the proof will start from the genesis block. The proof is
+     * returned only when InclusionWait is above 0.
+     * </pre>
+     *
+     * <code>optional bytes prooffrom = 5;</code>
+     */
+    public com.google.protobuf.ByteString getProoffrom() {
+      return prooffrom_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -5663,6 +5717,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeSInt32(4, inclusionwait_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, prooffrom_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5687,6 +5744,10 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt32Size(4, inclusionwait_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, prooffrom_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5724,6 +5785,11 @@ public final class ByzCoinProto {
         result = result && (getInclusionwait()
             == other.getInclusionwait());
       }
+      result = result && (hasProoffrom() == other.hasProoffrom());
+      if (hasProoffrom()) {
+        result = result && getProoffrom()
+            .equals(other.getProoffrom());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -5750,6 +5816,10 @@ public final class ByzCoinProto {
       if (hasInclusionwait()) {
         hash = (37 * hash) + INCLUSIONWAIT_FIELD_NUMBER;
         hash = (53 * hash) + getInclusionwait();
+      }
+      if (hasProoffrom()) {
+        hash = (37 * hash) + PROOFFROM_FIELD_NUMBER;
+        hash = (53 * hash) + getProoffrom().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5901,6 +5971,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         inclusionwait_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
+        prooffrom_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -5949,6 +6021,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000008;
         }
         result.inclusionwait_ = inclusionwait_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.prooffrom_ = prooffrom_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6009,6 +6085,9 @@ public final class ByzCoinProto {
         }
         if (other.hasInclusionwait()) {
           setInclusionwait(other.getInclusionwait());
+        }
+        if (other.hasProoffrom()) {
+          setProoffrom(other.getProoffrom());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6356,6 +6435,65 @@ public final class ByzCoinProto {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.ByteString prooffrom_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * ProofFrom is used to ask a proof from a given block. If this field
+       * is empty, the proof will start from the genesis block. The proof is
+       * returned only when InclusionWait is above 0.
+       * </pre>
+       *
+       * <code>optional bytes prooffrom = 5;</code>
+       */
+      public boolean hasProoffrom() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * ProofFrom is used to ask a proof from a given block. If this field
+       * is empty, the proof will start from the genesis block. The proof is
+       * returned only when InclusionWait is above 0.
+       * </pre>
+       *
+       * <code>optional bytes prooffrom = 5;</code>
+       */
+      public com.google.protobuf.ByteString getProoffrom() {
+        return prooffrom_;
+      }
+      /**
+       * <pre>
+       * ProofFrom is used to ask a proof from a given block. If this field
+       * is empty, the proof will start from the genesis block. The proof is
+       * returned only when InclusionWait is above 0.
+       * </pre>
+       *
+       * <code>optional bytes prooffrom = 5;</code>
+       */
+      public Builder setProoffrom(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        prooffrom_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ProofFrom is used to ask a proof from a given block. If this field
+       * is empty, the proof will start from the genesis block. The proof is
+       * returned only when InclusionWait is above 0.
+       * </pre>
+       *
+       * <code>optional bytes prooffrom = 5;</code>
+       */
+      public Builder clearProoffrom() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        prooffrom_ = getDefaultInstance().getProoffrom();
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6455,6 +6593,31 @@ public final class ByzCoinProto {
      */
     com.google.protobuf.ByteString
         getErrorBytes();
+
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    boolean hasProof();
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof();
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder();
   }
   /**
    * <pre>
@@ -6510,6 +6673,19 @@ public final class ByzCoinProto {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
               error_ = bs;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = proof_.toBuilder();
+              }
+              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(proof_);
+                proof_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
             default: {
@@ -6622,6 +6798,39 @@ public final class ByzCoinProto {
       }
     }
 
+    public static final int PROOF_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_;
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    public boolean hasProof() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+    }
+    /**
+     * <pre>
+     * Proof of the block with the transaction.
+     * </pre>
+     *
+     * <code>optional .byzcoin.Proof proof = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+      return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -6632,6 +6841,12 @@ public final class ByzCoinProto {
       if (!hasVersion()) {
         memoizedIsInitialized = 0;
         return false;
+      }
+      if (hasProof()) {
+        if (!getProof().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -6645,6 +6860,9 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, error_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getProof());
       }
       unknownFields.writeTo(output);
     }
@@ -6661,6 +6879,10 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, error_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getProof());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6688,6 +6910,11 @@ public final class ByzCoinProto {
         result = result && getError()
             .equals(other.getError());
       }
+      result = result && (hasProof() == other.hasProof());
+      if (hasProof()) {
+        result = result && getProof()
+            .equals(other.getProof());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -6706,6 +6933,10 @@ public final class ByzCoinProto {
       if (hasError()) {
         hash = (37 * hash) + ERROR_FIELD_NUMBER;
         hash = (53 * hash) + getError().hashCode();
+      }
+      if (hasProof()) {
+        hash = (37 * hash) + PROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getProof().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6839,6 +7070,7 @@ public final class ByzCoinProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getProofFieldBuilder();
         }
       }
       @java.lang.Override
@@ -6848,6 +7080,12 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         error_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (proofBuilder_ == null) {
+          proof_ = null;
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -6884,6 +7122,14 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000002;
         }
         result.error_ = error_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (proofBuilder_ == null) {
+          result.proof_ = proof_;
+        } else {
+          result.proof_ = proofBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6941,6 +7187,9 @@ public final class ByzCoinProto {
           error_ = other.error_;
           onChanged();
         }
+        if (other.hasProof()) {
+          mergeProof(other.getProof());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -6950,6 +7199,11 @@ public final class ByzCoinProto {
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
+        }
+        if (hasProof()) {
+          if (!getProof().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -7121,6 +7375,160 @@ public final class ByzCoinProto {
         onChanged();
         return this;
       }
+
+      private ch.epfl.dedis.lib.proto.ByzCoinProto.Proof proof_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> proofBuilder_;
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public boolean hasProof() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof getProof() {
+        if (proofBuilder_ == null) {
+          return proof_ == null ? ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+        } else {
+          return proofBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public Builder setProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          proof_ = value;
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public Builder setProof(
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder builderForValue) {
+        if (proofBuilder_ == null) {
+          proof_ = builderForValue.build();
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public Builder mergeProof(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              proof_ != null &&
+              proof_ != ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance()) {
+            proof_ =
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.newBuilder(proof_).mergeFrom(value).buildPartial();
+          } else {
+            proof_ = value;
+          }
+          onChanged();
+        } else {
+          proofBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public Builder clearProof() {
+        if (proofBuilder_ == null) {
+          proof_ = null;
+          onChanged();
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder getProofBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getProofFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder getProofOrBuilder() {
+        if (proofBuilder_ != null) {
+          return proofBuilder_.getMessageOrBuilder();
+        } else {
+          return proof_ == null ?
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.getDefaultInstance() : proof_;
+        }
+      }
+      /**
+       * <pre>
+       * Proof of the block with the transaction.
+       * </pre>
+       *
+       * <code>optional .byzcoin.Proof proof = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder> 
+          getProofFieldBuilder() {
+        if (proofBuilder_ == null) {
+          proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.ByzCoinProto.Proof, ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.lib.proto.ByzCoinProto.ProofOrBuilder>(
+                  getProof(),
+                  getParentForChildren(),
+                  isClean());
+          proof_ = null;
+        }
+        return proofBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7230,6 +7638,25 @@ public final class ByzCoinProto {
      * <code>required bytes id = 3;</code>
      */
     com.google.protobuf.ByteString getId();
+
+    /**
+     * <pre>
+     * MustContainBlock when provided informs the server that the proof
+     * should include this block.
+     * </pre>
+     *
+     * <code>optional bytes mustcontainblock = 4;</code>
+     */
+    boolean hasMustcontainblock();
+    /**
+     * <pre>
+     * MustContainBlock when provided informs the server that the proof
+     * should include this block.
+     * </pre>
+     *
+     * <code>optional bytes mustcontainblock = 4;</code>
+     */
+    com.google.protobuf.ByteString getMustcontainblock();
   }
   /**
    * <pre>
@@ -7251,6 +7678,7 @@ public final class ByzCoinProto {
       version_ = 0;
       key_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
+      mustcontainblock_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -7290,6 +7718,11 @@ public final class ByzCoinProto {
             case 26: {
               bitField0_ |= 0x00000004;
               id_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              mustcontainblock_ = input.readBytes();
               break;
             }
             default: {
@@ -7396,6 +7829,31 @@ public final class ByzCoinProto {
       return id_;
     }
 
+    public static final int MUSTCONTAINBLOCK_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString mustcontainblock_;
+    /**
+     * <pre>
+     * MustContainBlock when provided informs the server that the proof
+     * should include this block.
+     * </pre>
+     *
+     * <code>optional bytes mustcontainblock = 4;</code>
+     */
+    public boolean hasMustcontainblock() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * MustContainBlock when provided informs the server that the proof
+     * should include this block.
+     * </pre>
+     *
+     * <code>optional bytes mustcontainblock = 4;</code>
+     */
+    public com.google.protobuf.ByteString getMustcontainblock() {
+      return mustcontainblock_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -7431,6 +7889,9 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, id_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, mustcontainblock_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -7451,6 +7912,10 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, id_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, mustcontainblock_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -7483,6 +7948,11 @@ public final class ByzCoinProto {
         result = result && getId()
             .equals(other.getId());
       }
+      result = result && (hasMustcontainblock() == other.hasMustcontainblock());
+      if (hasMustcontainblock()) {
+        result = result && getMustcontainblock()
+            .equals(other.getMustcontainblock());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -7505,6 +7975,10 @@ public final class ByzCoinProto {
       if (hasId()) {
         hash = (37 * hash) + ID_FIELD_NUMBER;
         hash = (53 * hash) + getId().hashCode();
+      }
+      if (hasMustcontainblock()) {
+        hash = (37 * hash) + MUSTCONTAINBLOCK_FIELD_NUMBER;
+        hash = (53 * hash) + getMustcontainblock().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -7649,6 +8123,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000002);
         id_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        mustcontainblock_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -7689,6 +8165,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000004;
         }
         result.id_ = id_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.mustcontainblock_ = mustcontainblock_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7746,6 +8226,9 @@ public final class ByzCoinProto {
         }
         if (other.hasId()) {
           setId(other.getId());
+        }
+        if (other.hasMustcontainblock()) {
+          setMustcontainblock(other.getMustcontainblock());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -7936,6 +8419,61 @@ public final class ByzCoinProto {
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000004);
         id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString mustcontainblock_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * MustContainBlock when provided informs the server that the proof
+       * should include this block.
+       * </pre>
+       *
+       * <code>optional bytes mustcontainblock = 4;</code>
+       */
+      public boolean hasMustcontainblock() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * MustContainBlock when provided informs the server that the proof
+       * should include this block.
+       * </pre>
+       *
+       * <code>optional bytes mustcontainblock = 4;</code>
+       */
+      public com.google.protobuf.ByteString getMustcontainblock() {
+        return mustcontainblock_;
+      }
+      /**
+       * <pre>
+       * MustContainBlock when provided informs the server that the proof
+       * should include this block.
+       * </pre>
+       *
+       * <code>optional bytes mustcontainblock = 4;</code>
+       */
+      public Builder setMustcontainblock(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        mustcontainblock_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * MustContainBlock when provided informs the server that the proof
+       * should include this block.
+       * </pre>
+       *
+       * <code>optional bytes mustcontainblock = 4;</code>
+       */
+      public Builder clearMustcontainblock() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        mustcontainblock_ = getDefaultInstance().getMustcontainblock();
         onChanged();
         return this;
       }
@@ -28652,6 +29190,23 @@ public final class ByzCoinProto {
      * <code>optional uint64 index = 2;</code>
      */
     long getIndex();
+
+    /**
+     * <pre>
+     * Version is the current version of the protocol.
+     * </pre>
+     *
+     * <code>optional sint32 version = 3;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <pre>
+     * Version is the current version of the protocol.
+     * </pre>
+     *
+     * <code>optional sint32 version = 3;</code>
+     */
+    int getVersion();
   }
   /**
    * <pre>
@@ -28673,6 +29228,7 @@ public final class ByzCoinProto {
     private GetSignerCountersResponse() {
       counters_ = java.util.Collections.emptyList();
       index_ = 0L;
+      version_ = 0;
     }
 
     @java.lang.Override
@@ -28723,6 +29279,11 @@ public final class ByzCoinProto {
             case 16: {
               bitField0_ |= 0x00000001;
               index_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000002;
+              version_ = input.readSInt32();
               break;
             }
             default: {
@@ -28811,6 +29372,29 @@ public final class ByzCoinProto {
       return index_;
     }
 
+    public static final int VERSION_FIELD_NUMBER = 3;
+    private int version_;
+    /**
+     * <pre>
+     * Version is the current version of the protocol.
+     * </pre>
+     *
+     * <code>optional sint32 version = 3;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Version is the current version of the protocol.
+     * </pre>
+     *
+     * <code>optional sint32 version = 3;</code>
+     */
+    public int getVersion() {
+      return version_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -28835,6 +29419,9 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeUInt64(2, index_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeSInt32(3, version_);
       }
       unknownFields.writeTo(output);
     }
@@ -28863,6 +29450,10 @@ public final class ByzCoinProto {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, index_);
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(3, version_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -28886,6 +29477,11 @@ public final class ByzCoinProto {
         result = result && (getIndex()
             == other.getIndex());
       }
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -28905,6 +29501,10 @@ public final class ByzCoinProto {
         hash = (37 * hash) + INDEX_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getIndex());
+      }
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + getVersion();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -29048,6 +29648,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         index_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
+        version_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -29085,6 +29687,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000001;
         }
         result.index_ = index_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -29146,6 +29752,9 @@ public final class ByzCoinProto {
         }
         if (other.hasIndex()) {
           setIndex(other.getIndex());
+        }
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -29295,6 +29904,54 @@ public final class ByzCoinProto {
       public Builder clearIndex() {
         bitField0_ = (bitField0_ & ~0x00000002);
         index_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private int version_ ;
+      /**
+       * <pre>
+       * Version is the current version of the protocol.
+       * </pre>
+       *
+       * <code>optional sint32 version = 3;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Version is the current version of the protocol.
+       * </pre>
+       *
+       * <code>optional sint32 version = 3;</code>
+       */
+      public int getVersion() {
+        return version_;
+      }
+      /**
+       * <pre>
+       * Version is the current version of the protocol.
+       * </pre>
+       *
+       * <code>optional sint32 version = 3;</code>
+       */
+      public Builder setVersion(int value) {
+        bitField0_ |= 0x00000004;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Version is the current version of the protocol.
+       * </pre>
+       *
+       * <code>optional sint32 version = 3;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        version_ = 0;
         onChanged();
         return this;
       }
@@ -40047,85 +40704,87 @@ public final class ByzCoinProto {
       "\030\004 \002(\022\022\024\n\014maxblocksize\030\005 \001(\021\022\027\n\017darccont" +
       "ractids\030\006 \003(\t\"V\n\032CreateGenesisBlockRespo" +
       "nse\022\017\n\007version\030\001 \002(\021\022\'\n\tskipblock\030\002 \001(\0132" +
-      "\024.skipchain.SkipBlock\"|\n\014AddTxRequest\022\017\n" +
-      "\007version\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\022/\n\013t" +
-      "ransaction\030\003 \002(\0132\032.byzcoin.ClientTransac" +
-      "tion\022\025\n\rinclusionwait\030\004 \001(\021\"/\n\rAddTxResp" +
-      "onse\022\017\n\007version\030\001 \002(\021\022\r\n\005error\030\002 \001(\t\"4\n\010" +
-      "GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030\002 \002(\014\022\n" +
-      "\n\002id\030\003 \002(\014\"B\n\020GetProofResponse\022\017\n\007versio" +
-      "n\030\001 \002(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"l" +
-      "\n\022CheckAuthorization\022\017\n\007version\030\001 \002(\021\022\021\n" +
-      "\tbyzcoinid\030\002 \002(\014\022\016\n\006darcid\030\003 \002(\014\022\"\n\niden" +
-      "tities\030\004 \003(\0132\016.darc.Identity\"-\n\032CheckAut" +
-      "horizationResponse\022\017\n\007actions\030\001 \003(\t\"q\n\013C" +
-      "hainConfig\022\025\n\rblockinterval\030\001 \002(\022\022\034\n\006ros" +
-      "ter\030\002 \002(\0132\014.onet.Roster\022\024\n\014maxblocksize\030" +
-      "\003 \002(\021\022\027\n\017darccontractids\030\004 \003(\t\"y\n\005Proof\022" +
-      "#\n\016inclusionproof\030\001 \002(\0132\013.trie.Proof\022$\n\006" +
-      "latest\030\002 \002(\0132\024.skipchain.SkipBlock\022%\n\005li" +
-      "nks\030\003 \003(\0132\026.skipchain.ForwardLink\"\333\001\n\013In" +
-      "struction\022\022\n\ninstanceid\030\001 \002(\014\022\035\n\005spawn\030\002" +
-      " \001(\0132\016.byzcoin.Spawn\022\037\n\006invoke\030\003 \001(\0132\017.b" +
-      "yzcoin.Invoke\022\037\n\006delete\030\004 \001(\0132\017.byzcoin." +
-      "Delete\022\031\n\rsignercounter\030\005 \003(\004B\002\020\001\022(\n\020sig" +
-      "neridentities\030\006 \003(\0132\016.darc.Identity\022\022\n\ns" +
-      "ignatures\030\007 \003(\014\"<\n\005Spawn\022\022\n\ncontractid\030\001" +
-      " \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n" +
-      "\006Invoke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002" +
-      " \002(\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n" +
-      "\006Delete\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022" +
-      "\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTr" +
-      "ansaction\022*\n\014instructions\030\001 \003(\0132\024.byzcoi" +
-      "n.Instruction\"S\n\010TxResult\0225\n\021clienttrans" +
-      "action\030\001 \002(\0132\032.byzcoin.ClientTransaction" +
-      "\022\020\n\010accepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013sta" +
-      "teaction\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\nco" +
-      "ntractid\030\003 \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030" +
-      "\005 \002(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001" +
-      " \002(\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022" +
-      "\n\n\002id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005bloc" +
-      "k\030\001 \001(\0132\024.skipchain.SkipBlock\"A\n\rDownloa" +
-      "dState\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004" +
-      "\022\016\n\006length\030\003 \002(\021\"]\n\025DownloadStateRespons" +
-      "e\022&\n\tkeyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValu" +
-      "e\022\r\n\005nonce\030\002 \002(\004\022\r\n\005total\030\003 \001(\021\"(\n\nDBKey" +
-      "Value\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017Sta" +
-      "teChangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncon" +
-      "tractid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030" +
-      "\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounte" +
-      "rs\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002" +
-      "(\014\"@\n\031GetSignerCountersResponse\022\024\n\010count" +
-      "ers\030\001 \003(\004B\002\020\001\022\r\n\005index\030\002 \001(\004\"N\n\022GetInsta" +
-      "nceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninsta" +
-      "nceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastI" +
-      "nstanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ni" +
-      "nstanceid\030\002 \002(\014\"[\n\032GetInstanceVersionRes" +
-      "ponse\022)\n\013statechange\030\001 \002(\0132\024.byzcoin.Sta" +
-      "teChange\022\022\n\nblockindex\030\002 \002(\021\"@\n\025GetAllIn" +
-      "stanceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\nin" +
-      "stanceid\030\002 \002(\014\"Z\n\035GetAllInstanceVersionR" +
-      "esponse\0229\n\014statechanges\030\001 \003(\0132#.byzcoin." +
-      "GetInstanceVersionResponse\"T\n\030CheckState" +
-      "ChangeValidity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ni" +
-      "nstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n Chec" +
-      "kStateChangeValidityResponse\022*\n\014statecha" +
-      "nges\030\001 \003(\0132\024.byzcoin.StateChange\022\017\n\007bloc" +
-      "kid\030\002 \002(\014\"F\n\021ResolveInstanceID\022\023\n\013skipch" +
-      "ainid\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\022\014\n\004name\030\003 \002(" +
-      "\t\"(\n\022ResolvedInstanceID\022\022\n\ninstanceid\030\001 " +
-      "\002(\014\"!\n\014DebugRequest\022\021\n\tbyzcoinid\030\001 \001(\014\"k" +
-      "\n\rDebugResponse\022/\n\010byzcoins\030\001 \003(\0132\035.byzc" +
-      "oin.DebugResponseByzcoin\022)\n\004dump\030\002 \003(\0132\033" +
-      ".byzcoin.DebugResponseState\"v\n\024DebugResp" +
-      "onseByzcoin\022\021\n\tbyzcoinid\030\001 \002(\014\022%\n\007genesi" +
-      "s\030\002 \001(\0132\024.skipchain.SkipBlock\022$\n\006latest\030" +
-      "\003 \001(\0132\024.skipchain.SkipBlock\"J\n\022DebugResp" +
-      "onseState\022\013\n\003key\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030." +
-      "byzcoin.StateChangeBody\":\n\022DebugRemoveRe" +
-      "quest\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tsignature\030\002 " +
-      "\002(\014B\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinP" +
-      "roto"
+      "\024.skipchain.SkipBlock\"\217\001\n\014AddTxRequest\022\017" +
+      "\n\007version\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\022/\n\013" +
+      "transaction\030\003 \002(\0132\032.byzcoin.ClientTransa" +
+      "ction\022\025\n\rinclusionwait\030\004 \001(\021\022\021\n\tprooffro" +
+      "m\030\005 \001(\014\"N\n\rAddTxResponse\022\017\n\007version\030\001 \002(" +
+      "\021\022\r\n\005error\030\002 \001(\t\022\035\n\005proof\030\003 \001(\0132\016.byzcoi" +
+      "n.Proof\"N\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003" +
+      "key\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\022\030\n\020mustcontainbloc" +
+      "k\030\004 \001(\014\"B\n\020GetProofResponse\022\017\n\007version\030\001" +
+      " \002(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin.Proof\"l\n\022C" +
+      "heckAuthorization\022\017\n\007version\030\001 \002(\021\022\021\n\tby" +
+      "zcoinid\030\002 \002(\014\022\016\n\006darcid\030\003 \002(\014\022\"\n\nidentit" +
+      "ies\030\004 \003(\0132\016.darc.Identity\"-\n\032CheckAuthor" +
+      "izationResponse\022\017\n\007actions\030\001 \003(\t\"q\n\013Chai" +
+      "nConfig\022\025\n\rblockinterval\030\001 \002(\022\022\034\n\006roster" +
+      "\030\002 \002(\0132\014.onet.Roster\022\024\n\014maxblocksize\030\003 \002" +
+      "(\021\022\027\n\017darccontractids\030\004 \003(\t\"y\n\005Proof\022#\n\016" +
+      "inclusionproof\030\001 \002(\0132\013.trie.Proof\022$\n\006lat" +
+      "est\030\002 \002(\0132\024.skipchain.SkipBlock\022%\n\005links" +
+      "\030\003 \003(\0132\026.skipchain.ForwardLink\"\333\001\n\013Instr" +
+      "uction\022\022\n\ninstanceid\030\001 \002(\014\022\035\n\005spawn\030\002 \001(" +
+      "\0132\016.byzcoin.Spawn\022\037\n\006invoke\030\003 \001(\0132\017.byzc" +
+      "oin.Invoke\022\037\n\006delete\030\004 \001(\0132\017.byzcoin.Del" +
+      "ete\022\031\n\rsignercounter\030\005 \003(\004B\002\020\001\022(\n\020signer" +
+      "identities\030\006 \003(\0132\016.darc.Identity\022\022\n\nsign" +
+      "atures\030\007 \003(\014\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(" +
+      "\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argument\"N\n\006In" +
+      "voke\022\022\n\ncontractid\030\001 \002(\t\022\017\n\007command\030\002 \002(" +
+      "\t\022\037\n\004args\030\003 \003(\0132\021.byzcoin.Argument\"\034\n\006De" +
+      "lete\022\022\n\ncontractid\030\001 \002(\t\"\'\n\010Argument\022\014\n\004" +
+      "name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"?\n\021ClientTrans" +
+      "action\022*\n\014instructions\030\001 \003(\0132\024.byzcoin.I" +
+      "nstruction\"S\n\010TxResult\0225\n\021clienttransact" +
+      "ion\030\001 \002(\0132\032.byzcoin.ClientTransaction\022\020\n" +
+      "\010accepted\030\002 \002(\010\"z\n\013StateChange\022\023\n\013statea" +
+      "ction\030\001 \002(\021\022\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontr" +
+      "actid\030\003 \002(\t\022\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002" +
+      "(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(" +
+      "\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002" +
+      "id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001" +
+      " \001(\0132\024.skipchain.SkipBlock\"A\n\rDownloadSt" +
+      "ate\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n" +
+      "\006length\030\003 \002(\021\"]\n\025DownloadStateResponse\022&" +
+      "\n\tkeyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValue\022\r" +
+      "\n\005nonce\030\002 \002(\004\022\r\n\005total\030\003 \001(\021\"(\n\nDBKeyVal" +
+      "ue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateC" +
+      "hangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncontra" +
+      "ctid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030\004 \002" +
+      "(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounters\022" +
+      "\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"" +
+      "Q\n\031GetSignerCountersResponse\022\024\n\010counters" +
+      "\030\001 \003(\004B\002\020\001\022\r\n\005index\030\002 \001(\004\022\017\n\007version\030\003 \001" +
+      "(\021\"N\n\022GetInstanceVersion\022\023\n\013skipchainid\030" +
+      "\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version\030\003 \002" +
+      "(\004\"A\n\026GetLastInstanceVersion\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032GetInst" +
+      "anceVersionResponse\022)\n\013statechange\030\001 \002(\013" +
+      "2\024.byzcoin.StateChange\022\022\n\nblockindex\030\002 \002" +
+      "(\021\"@\n\025GetAllInstanceVersion\022\023\n\013skipchain" +
+      "id\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetAllIn" +
+      "stanceVersionResponse\0229\n\014statechanges\030\001 " +
+      "\003(\0132#.byzcoin.GetInstanceVersionResponse" +
+      "\"T\n\030CheckStateChangeValidity\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version" +
+      "\030\003 \002(\004\"_\n CheckStateChangeValidityRespon" +
+      "se\022*\n\014statechanges\030\001 \003(\0132\024.byzcoin.State" +
+      "Change\022\017\n\007blockid\030\002 \002(\014\"F\n\021ResolveInstan" +
+      "ceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006darcid\030\002 \002(" +
+      "\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInstanceID\022\022\n" +
+      "\ninstanceid\030\001 \002(\014\"!\n\014DebugRequest\022\021\n\tbyz" +
+      "coinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n\010byzcoin" +
+      "s\030\001 \003(\0132\035.byzcoin.DebugResponseByzcoin\022)" +
+      "\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResponseStat" +
+      "e\"v\n\024DebugResponseByzcoin\022\021\n\tbyzcoinid\030\001" +
+      " \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchain.SkipBl" +
+      "ock\022$\n\006latest\030\003 \001(\0132\024.skipchain.SkipBloc" +
+      "k\"J\n\022DebugResponseState\022\013\n\003key\030\001 \002(\014\022\'\n\005" +
+      "state\030\002 \002(\0132\030.byzcoin.StateChangeBody\":\n" +
+      "\022DebugRemoveRequest\022\021\n\tbyzcoinid\030\001 \002(\014\022\021" +
+      "\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.dedis.lib.p" +
+      "rotoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -40184,19 +40843,19 @@ public final class ByzCoinProto {
     internal_static_byzcoin_AddTxRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_AddTxRequest_descriptor,
-        new java.lang.String[] { "Version", "Skipchainid", "Transaction", "Inclusionwait", });
+        new java.lang.String[] { "Version", "Skipchainid", "Transaction", "Inclusionwait", "Prooffrom", });
     internal_static_byzcoin_AddTxResponse_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_byzcoin_AddTxResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_AddTxResponse_descriptor,
-        new java.lang.String[] { "Version", "Error", });
+        new java.lang.String[] { "Version", "Error", "Proof", });
     internal_static_byzcoin_GetProof_descriptor =
       getDescriptor().getMessageTypes().get(8);
     internal_static_byzcoin_GetProof_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetProof_descriptor,
-        new java.lang.String[] { "Version", "Key", "Id", });
+        new java.lang.String[] { "Version", "Key", "Id", "Mustcontainblock", });
     internal_static_byzcoin_GetProofResponse_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_byzcoin_GetProofResponse_fieldAccessorTable = new
@@ -40328,7 +40987,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_GetSignerCountersResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetSignerCountersResponse_descriptor,
-        new java.lang.String[] { "Counters", "Index", });
+        new java.lang.String[] { "Counters", "Index", "Version", });
     internal_static_byzcoin_GetInstanceVersion_descriptor =
       getDescriptor().getMessageTypes().get(31);
     internal_static_byzcoin_GetInstanceVersion_fieldAccessorTable = new

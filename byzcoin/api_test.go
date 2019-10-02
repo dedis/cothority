@@ -140,19 +140,17 @@ func TestClient_GetProof(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gac.IDs))
 
-	timeBarrier := time.Now()
-
 	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
 	require.Nil(t, err)
-	_, err = c.AddTransactionAndWait(tx, 10)
+	atr, err := c.AddTransactionAndWait(tx, 10)
 	require.Nil(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
-	p, err := c.GetProofAfter(newID, false, timeBarrier)
+	p, err := c.GetProofAfter(newID, true, &atr.Proof.Latest)
 	require.NoError(t, err)
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
@@ -162,7 +160,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Equal(t, value, v0)
 
 	// The proof should now be smaller as we learnt about the block
-	p, err = c.GetProofAfter(newID, false, timeBarrier)
+	p, err = c.GetProofAfter(newID, false, &atr.Proof.Latest)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(p.Proof.Links))
 }
@@ -325,6 +323,7 @@ func TestClient_SignerCounterDecoder(t *testing.T) {
 	reply := GetSignerCountersResponse{
 		Counters: []uint64{},
 		Index:    0,
+		Version:  CurrentVersion,
 	}
 
 	buf, err := protobuf.Encode(&reply)
