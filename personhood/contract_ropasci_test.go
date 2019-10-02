@@ -182,7 +182,7 @@ func (sr *testRPS) newCalypsoRPS(move int, coinID byzcoin.InstanceID, stake uint
 	ropasci := RoPaSciStruct{
 		Description:        "test",
 		FirstPlayerHash:    moveHash[:],
-		FirstPlayerAccount: sr.coin1.id,
+		FirstPlayerAccount: &sr.coin1.id,
 	}
 	ropasciBuf, err := protobuf.Encode(&ropasci)
 	require.NoError(sr.t, err)

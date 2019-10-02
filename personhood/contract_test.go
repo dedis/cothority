@@ -20,7 +20,7 @@ import (
 )
 
 func TestContractSpawner(t *testing.T) {
-	iid := byzcoin.InstanceID{}
+	iid := byzcoin.NewInstanceID([]byte("some coin"))
 	s := newRstSimul()
 	s.values[string(iid.Slice())] = byzcoin.StateChangeBody{}
 	cs := &ContractSpawner{}
