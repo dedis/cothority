@@ -6,7 +6,7 @@
 #   -b   re-builds bcadmin package
 
 DBG_TEST=1
-DBG_SRV=2
+DBG_SRV=1
 DBG_BCADMIN=2
 
 NBR_SERVERS=4
@@ -27,6 +27,7 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
+    run testDebugBlock
     run testReplay
     run testLink
     run testLinkScenario
@@ -51,13 +52,32 @@ main(){
     stopTest
 }
 
+testDebugBlock(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testOK runBA debug block --bcCfg $bc --blockIndex 0
+  testGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
+  runBA config --blockSize 1000000 $bc $key
+  testNGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
+  testNGrep "no block with index" runBA debug block \
+    --url http://localhost:2003 --bcID $bcID --blockIndex 1
+  testGrep "Command: update_config" runBA debug block --bcCfg $bc --blockIndex 1 \
+    --txDetails
+}
+
 testReplay(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   bc=config/bc*cfg
   key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
   testOK runBA debug replay http://localhost:2003
 
@@ -359,11 +379,11 @@ testExpression(){
 }
 
 runBA(){
-  ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
+  dbgRun ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
 }
 
 runBA0(){
-  ./bcadmin -c config/ --debug 0 "$@"
+  dbgRun ./bcadmin -c config/ --debug 0 "$@"
 }
 
 testQR() {

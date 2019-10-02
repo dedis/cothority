@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/xerrors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -201,7 +202,7 @@ func link(c *cli.Context) error {
 				cc, err = cl.GetChainConfig()
 				if err != nil {
 					cl = nil
-					log.Warnf("Could not get chain config from %v: %v\n", si, err)
+					log.Warnf("Could not get chain config from %v: %+v\n", si, err)
 					continue
 				}
 				cl.Roster = cc.Roster
@@ -401,7 +402,7 @@ func fmtRoster(r *onet.Roster) string {
 	var roster []string
 	for _, s := range r.List {
 		if s.URL != "" {
-			roster = append(roster, fmt.Sprintf("%v (url: %v)", string(s.Address), s.URL))
+			roster = append(roster, fmt.Sprintf("%v (url: %+v)", string(s.Address), s.URL))
 		} else {
 			roster = append(roster, string(s.Address))
 		}
@@ -466,7 +467,7 @@ func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *da
 	defer f.Close()
 	group, err := app.ReadGroupDescToml(f)
 	if err != nil {
-		err = fmt.Errorf("couldn't open %v: %v", fn, err.Error())
+		err = fmt.Errorf("couldn't open %v: %+v", fn, err.Error())
 		return
 	}
 	if len(group.Roster.List) != 1 {
@@ -1000,6 +1001,141 @@ func darcCdesc(c *cli.Context) error {
 	}
 
 	return lib.WaitPropagation(c, cl)
+}
+
+func debugBlock(c *cli.Context) error {
+	var roster *onet.Roster
+	var bcID *skipchain.SkipBlockID
+	var err error
+	blockID, err := getIDPointer(c.String("blockID"))
+	if err != nil {
+		return xerrors.Errorf("couldn't get blockID: %+v", err)
+	}
+	blockIndex := c.Int("blockIndex")
+	if blockIndex < 0 && blockID == nil {
+		log.Print(blockIndex, blockID)
+		return errors.New("need either blockIndex or blockID")
+	}
+	if bcCfg := c.String("bcCfg"); bcCfg != "" {
+		cfg, _, err := lib.LoadConfig(bcCfg)
+		if err != nil {
+			return xerrors.Errorf("couldn't get bc-config: %+v", err)
+		}
+		roster = &cfg.Roster
+		bcID = &cfg.ByzCoinID
+	}
+	bcIDNew, err := getIDPointer(c.String("bcID"))
+	if err != nil {
+		return xerrors.Errorf("couldn't get bcID: %+v", err)
+	}
+	if bcIDNew != nil {
+		bcID = bcIDNew
+	}
+	all := c.Bool("all")
+	if url := c.String("url"); url != "" {
+		if bcID == nil {
+			return errors.New("please also give either --bcID or --bcCfg")
+		}
+		roster = onet.NewRoster([]*network.ServerIdentity{{
+			Public:  cothority.Suite.Point(),
+			Address: network.NewAddress(network.TLS, url),
+			URL:     url,
+		}})
+		if all {
+			sb, err := getBlock(*roster, bcID, blockID, blockIndex, 0)
+			if err != nil {
+				return xerrors.Errorf("couldn't get block: %+v", err)
+			}
+			roster = sb.Roster
+		}
+	}
+	if roster == nil {
+		return errors.New("give either --bcCfg or --url")
+	}
+
+	for i, node := range roster.List {
+		url := node.URL
+		if url == "" {
+			url = node.Address.String()
+		}
+		log.Info("Contacting node", url)
+		sb, err := getBlock(*roster, bcID, blockID, blockIndex, i)
+		if err != nil {
+			log.Warn("Got error while contacting node:", err)
+			continue
+		}
+		var dBody byzcoin.DataBody
+		err = protobuf.Decode(sb.Payload, &dBody)
+		if err != nil {
+			return xerrors.Errorf("couldn't decode body: %+v", err)
+		}
+		var dHead byzcoin.DataHeader
+		err = protobuf.Decode(sb.Data, &dHead)
+		if err != nil {
+			return xerrors.Errorf("couldn't decode data: %+v", err)
+		}
+		t := time.Unix(dHead.Timestamp/1e9, 0)
+		var flinks []string
+		for _, l := range sb.ForwardLink {
+			flinks = append(flinks, fmt.Sprintf("\t\tTo: %x - NewRoster: %t",
+				l.To, l.NewRoster != nil))
+		}
+		out := fmt.Sprintf("\tBlock #%d from %s\n"+
+			"\tNode-list: %s\n"+
+			"\tForward-links:\n%s\n",
+			sb.Index, t.String(),
+			sb.Roster.List,
+			strings.Join(flinks, "\n"))
+		if c.Bool("txDetails") {
+			var txs []string
+			for _, tx := range dBody.TxResults {
+				if tx.Accepted {
+					var insts []string
+					for _, inst := range tx.ClientTransaction.Instructions {
+						insts = append(insts, inst.String())
+					}
+					txs = append(txs, strings.Join(insts, "\n"))
+				} else {
+					txs = append(txs, "\t\tRefused TX")
+				}
+			}
+			out += fmt.Sprintf("\tTransactions:\n%s\n",
+				strings.Join(txs, "\n"))
+		} else {
+			out += fmt.Sprintf("\tTransactions: %d\n",
+				len(dBody.TxResults))
+		}
+		log.Info(out)
+	}
+
+	return nil
+}
+
+func getBlock(roster onet.Roster, bcID *skipchain.SkipBlockID,
+	blockID *skipchain.SkipBlockID, blockIndex int,
+	node int) (*skipchain.SkipBlock, error) {
+	cl := skipchain.NewClient()
+	cl.UseNode(node)
+	if blockID != nil {
+		return cl.GetSingleBlock(&roster, *blockID)
+	}
+	repl, err := cl.GetSingleBlockByIndex(&roster, *bcID, blockIndex)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get block: %+v", err)
+	}
+	return repl.SkipBlock, nil
+}
+
+func getIDPointer(s string) (*skipchain.SkipBlockID, error) {
+	if s == "" {
+		return nil, nil
+	}
+	idB, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't decode %s: %+v", s, err)
+	}
+	idSC := skipchain.SkipBlockID(idB)
+	return &idSC, nil
 }
 
 func debugList(c *cli.Context) error {

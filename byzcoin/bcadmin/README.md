@@ -195,3 +195,20 @@ Displays a QR Code containing the ByzCoin configuration, compatible to be scanne
 
 Optional flags:
  * -admin   The QR Code will also contain the admin keypair to allow the user who scans it to manage the ByzCoin
+
+## Debug usage
+
+To debug issues with ByzCoin, `bcadmin` supports commands to poke the chain
+on the block-level to better understand eventual errors.
+
+### View Block
+
+It is possible to display a block from one or all nodes of the chain with the
+ following command:
+ 
+```bash
+$ bcadmin debug block --bc bc-xxx.cfg --index 0 --txDetails
+```
+
+This command will show the genesis-block of the chain defined in `bc-xxx.cfg`
+ of all nodes, and also show the transactions contained in that block.
