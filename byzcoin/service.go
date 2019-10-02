@@ -244,9 +244,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	s.createSkipChainMut.Lock()
 	defer s.createSkipChainMut.Unlock()
 
-	if req.Version < CurrentVersion {
-		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
-	}
 	if req.Roster.List == nil {
 		return nil, errors.New("must provide a roster")
 	}
@@ -382,10 +379,6 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
-	if req.Version < CurrentVersion {
-		return nil, xerrors.New("version mismatch")
-	}
-
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, xerrors.New("no transactions to add")
 	}
@@ -495,10 +488,6 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 		s.catchingLock.Unlock()
 	}()
 
-	if req.Version < CurrentVersion {
-		return nil, xerrors.New("version mismatch")
-	}
-
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
 		return nil, xerrors.New("cannot find skipblock while getting proof")
@@ -535,9 +524,6 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 // fulfill a given rule of a given darc. Because all darcs are now used in
 // an online fashion, we need to offer this check.
 func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
-	if req.Version < CurrentVersion {
-		return nil, errors.New("version mismatch")
-	}
 	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
 
 	resp = &CheckAuthorizationResponse{}
