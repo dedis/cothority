@@ -13,6 +13,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -167,7 +168,7 @@ func TestClient_GetProof(t *testing.T) {
 
 func TestClient_GetProofCorrupted(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
+	servers, roster, _ := l.GenTree(1, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
@@ -380,9 +381,17 @@ func newTestService(c *onet.Context) (onet.Service, error) {
 }
 
 func (cs *corruptedService) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+	if cs.GetProofResponse == nil {
+		return nil, xerrors.New("empty response")
+	}
+
 	return cs.GetProofResponse, nil
 }
 
 func (cs *corruptedService) CreateGenesisBlock(req *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
+	if cs.CreateGenesisBlockResponse == nil {
+		return nil, xerrors.New("empty response")
+	}
+
 	return cs.CreateGenesisBlockResponse, nil
 }

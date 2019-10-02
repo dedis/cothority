@@ -17,6 +17,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ServiceName is used for registration on the onet.
@@ -164,7 +165,7 @@ func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
 	if c.Genesis == nil {
 		if err := c.fetchGenesis(); err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("fetching genesis: %w", err)
 		}
 	}
 
@@ -181,16 +182,16 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 		ProofFrom:     latest.Hash,
 	}, reply, c.options)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("sending: %w", err)
 	}
 
 	if reply.Error != "" {
-		return reply, errors.New(reply.Error)
+		return reply, xerrors.New(reply.Error)
 	}
 
 	if reply.Proof != nil {
 		if err := reply.Proof.VerifyFromBlock(latest); err != nil {
-			return reply, err
+			return reply, xerrors.Errorf("proof verification: %w", err)
 		}
 
 		if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -263,20 +264,20 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	decoder := func(buf []byte, msg interface{}) error {
 		err := protobuf.Decode(buf, msg)
 		if err != nil {
-			return err
+			return xerrors.Errorf("decoding: %w", err)
 		}
 
 		gpr, ok := msg.(*GetProofResponse)
 		if !ok {
-			return errors.New("couldn't cast msg to GetProofResponse")
+			return xerrors.New("couldn't cast msg")
 		}
 
 		if err := gpr.Proof.VerifyFromBlock(from); err != nil {
-			return err
+			return xerrors.Errorf("proof verification: %w", err)
 		}
 
 		if include != nil && gpr.Proof.Latest.Index < include.Index {
-			return errors.New("latest block in proof is too old")
+			return xerrors.New("latest block in proof is too old")
 		}
 
 		return nil
@@ -295,7 +296,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	reply := &GetProofResponse{}
 	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, req, reply, c.options, decoder)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("sending: %w", err)
 	}
 
 	if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -312,30 +313,30 @@ func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
 }
 
 // GetDeferredDataAfter makes a request to retrieve the deferred instruction data
-// and return the reply if the proof can be verified and the block is not
+// and returns the reply if the proof can be verified and the block is not
 // older than the barrier.
 func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier *skipchain.SkipBlock) (*DeferredData, error) {
 	pr, err := c.getProofRaw(instrID.Slice(), c.getLatestKnownBlock(), barrier)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting proof: %w", err)
 	}
 
 	if !pr.Proof.InclusionProof.Match(instrID.Slice()) {
-		return nil, errors.New("key not set")
+		return nil, xerrors.New("key not set")
 	}
 
 	dataBuf, _, _, err := pr.Proof.Get(instrID.Slice())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting proof value: %w", err)
 	}
 	var result DeferredData
 	if err = protobuf.Decode(dataBuf, &result); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding data: %w", err)
 	}
 
 	header, err := decodeBlockHeader(c.Latest)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding header: %w")
 	}
 
 	result.ProposedTransaction.Instructions.SetVersion(header.Version)
