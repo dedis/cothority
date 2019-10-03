@@ -589,7 +589,6 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 	resp := GetSignerCountersResponse{
 		Counters: out,
 		Index:    uint64(st.GetIndex()),
-		Version:  CurrentVersion,
 	}
 	return &resp, nil
 }

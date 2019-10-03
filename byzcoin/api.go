@@ -528,21 +528,32 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	err := protobuf.Decode(buf, data)
 	if err != nil {
-		return errors.New("couldn't decode the counters reply: " + err.Error())
+		return xerrors.Errorf("couldn't decode the counters reply: %w", err)
 	}
 
 	reply, ok := data.(*GetSignerCountersResponse)
 	if !ok {
-		return errors.New("wrong type of response")
+		return xerrors.New("wrong type of response")
 	}
 
 	// This assumes the client is up-to-date with the latest block which
 	// is usually right as it is updated after each GetProof. The goal is
 	// to insure that we got the data from the latest block.
 	// Note: using versioning as index 0 might cause troubles.
-	if reply.Version >= 2 && c.Latest != nil {
+	if c.Latest != nil {
+		header, err := decodeBlockHeader(c.Latest)
+		if err != nil {
+			return xerrors.Errorf("decoding header: %w", err)
+		}
+
+		if header.Version < 2 {
+			// Skip the check for version as the trie index is available
+			// for version 2+ only.
+			return nil
+		}
+
 		if uint64(c.Latest.Index) > reply.Index {
-			return errors.New("data coming from an old block")
+			return xerrors.New("data coming from an old block")
 		}
 	}
 

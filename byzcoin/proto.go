@@ -364,8 +364,6 @@ type GetSignerCountersResponse struct {
 	// have been extracted so clients can use it to
 	// make sure the counters are up-to-date.
 	Index uint64 `protobuf:"opt"`
-	// Version is the current version of the protocol.
-	Version Version `protobuf:"opt"`
 }
 
 // GetInstanceVersion is a request asking the service to fetch

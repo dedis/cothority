@@ -324,7 +324,6 @@ func TestClient_SignerCounterDecoder(t *testing.T) {
 	reply := GetSignerCountersResponse{
 		Counters: []uint64{},
 		Index:    0,
-		Version:  CurrentVersion,
 	}
 
 	buf, err := protobuf.Encode(&reply)
@@ -338,7 +337,12 @@ func TestClient_SignerCounterDecoder(t *testing.T) {
 	// Latest is nil.
 	require.NoError(t, c.signerCounterDecoder(buf, &reply))
 
-	c.Latest = &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Index: 1}}
+	c.Latest = skipchain.NewSkipBlock()
+	data, err := protobuf.Encode(&DataHeader{Version: CurrentVersion})
+	require.NoError(t, err)
+	c.Latest.Data = data
+
+	c.Latest.Index = 1
 	// Correct scenario with Index = 1.
 	require.NoError(t, c.signerCounterDecoder(buf, &reply))
 
