@@ -99,7 +99,7 @@ func newS(t *testing.T) (s *sStruct) {
 	require.Nil(t, err)
 	s.olID = resp.Skipblock.SkipChainID()
 	s.cl = byzcoin.NewClient(s.olID, *s.roster)
-	require.NoError(t, s.cl.UseNode(0))
+	s.cl.Genesis = resp.Skipblock
 	s.counter = uint64(0)
 	return
 }

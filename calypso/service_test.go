@@ -45,7 +45,6 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 	nodes := 4
 	s := newTSWithExtras(t, nodes, nodes)
 	defer s.closeAll(t)
-	require.NoError(t, s.cl.UseNode(0))
 	require.NotNil(t, s.ltsReply.ByzCoinID)
 	require.NotNil(t, s.ltsReply.InstanceID)
 	require.NotNil(t, s.ltsReply.X)
@@ -153,7 +152,6 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			}
 			s := newTSWithExtras(t, nodes, 1)
 			defer s.closeAll(t)
-			require.NoError(t, s.cl.UseNode(0))
 			require.NotNil(t, s.ltsReply.ByzCoinID)
 			require.NotNil(t, s.ltsReply.InstanceID)
 			require.NotNil(t, s.ltsReply.X)
@@ -181,11 +179,11 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NoError(t, ctx.FillSignersAndSignWith(s.signer))
-			_, err = s.cl.AddTransactionAndWait(ctx, 4)
+			atr, err := s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
 			// Get the proof and start resharing
-			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
+			proof, err := s.cl.GetProofAfter(s.ltsReply.InstanceID.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
 
 			log.Lvl1("first reshare")

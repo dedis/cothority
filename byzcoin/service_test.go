@@ -214,6 +214,8 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	})
 	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
+	require.NotNil(t, akvresp.Proof)
+	require.NoError(t, akvresp.Proof.VerifyFromBlock(s.genesis))
 
 	// add the second tx
 	log.Lvl1("adding the second tx")
@@ -1867,7 +1869,6 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
-		require.NoError(t, cl.UseNode(0))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 

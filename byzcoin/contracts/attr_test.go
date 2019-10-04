@@ -199,7 +199,6 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the existing value matches the attr requirement
 	myvalue = []byte("abcd5678")
@@ -220,7 +219,6 @@ func TestAttrCustomRule(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - the new value does not match the attr requirement
 	myvalue = []byte("abcdefxzy")
@@ -242,7 +240,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "wrong suffix")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submitting empty sigscheme
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -263,7 +260,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "cannot find sigscheme argument")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submit a wrong sigscheme
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -288,7 +284,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "signature scheme did not match")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the correct sigscheme is used
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -312,7 +307,6 @@ func TestAttrCustomRule(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestAttrBlockIndex(t *testing.T) {
@@ -353,7 +347,6 @@ func TestAttrBlockIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - we're within the block interval
 	myvalue = []byte("abcde888fgxyz")
@@ -374,7 +367,6 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - we are outside the block interval
 	myvalue = []byte("abcde8888fxzy")
@@ -396,5 +388,4 @@ func TestAttrBlockIndex(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "does not fit in the interval")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }

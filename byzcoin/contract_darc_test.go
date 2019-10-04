@@ -6,6 +6,7 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 
@@ -25,7 +26,6 @@ func TestSecureDarc(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
@@ -144,6 +144,8 @@ func TestSecureDarc(t *testing.T) {
 		require.Error(t, err)
 	}
 
+	var barrier *skipchain.SkipBlock
+
 	log.Info("evolve to modify existing rules - pass")
 	{
 		secDarc2 := secDarc.Copy()
@@ -163,12 +165,14 @@ func TestSecureDarc(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NoError(t, ctx2.FillSignersAndSignWith(restrictedSigner))
-		_, err = cl.AddTransactionAndWait(ctx2, 10)
+		atr, err := cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
+
+		barrier = &atr.Proof.Latest
 	}
 
 	// get the latest darc
-	resp, err := cl.GetProof(secDarc.GetBaseID())
+	resp, err := cl.GetProofAfter(secDarc.GetBaseID(), false, barrier)
 	require.NoError(t, err)
 	myDarc := darc.Darc{}
 	require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))
@@ -220,13 +224,15 @@ func TestSecureDarc(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NoError(t, ctx2.FillSignersAndSignWith(unrestrictedSigner)) // here we use the correct signer
-		_, err = cl.AddTransactionAndWait(ctx2, 10)
+		atr, err := cl.AddTransactionAndWait(ctx2, 10)
 		require.NoError(t, err)
+
+		barrier = &atr.Proof.Latest
 	}
 
 	// try to get the DARC again and it should have the "spawn:coin" rule
 	{
-		resp, err := cl.GetProof(secDarc.GetBaseID())
+		resp, err := cl.GetProofAfter(secDarc.GetBaseID(), false, barrier)
 		require.NoError(t, err)
 		myDarc := darc.Darc{}
 		require.NoError(t, resp.Proof.VerifyAndDecode(cothority.Suite, ContractDarcID, &myDarc))

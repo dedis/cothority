@@ -17,6 +17,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ServiceName is used for registration on the onet.
@@ -74,6 +75,14 @@ func NewLedger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlock
 	c.Genesis = reply.Skipblock
 	c.Latest = c.Genesis
 	return c, reply, nil
+}
+
+func (c *Client) getLatestKnownBlock() *skipchain.SkipBlock {
+	if c.Latest == nil {
+		return c.Genesis
+	}
+
+	return c.Latest
 }
 
 // UseNode sets the options so that only the given node will be contacted
@@ -154,20 +163,42 @@ func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 // any feedback on the transaction. The Client's Roster and ID should be
 // initialized before calling this method (see NewClientFromConfig).
 func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
+	if c.Genesis == nil {
+		if err := c.fetchGenesis(); err != nil {
+			return nil, xerrors.Errorf("fetching genesis: %w", err)
+		}
+	}
+
+	// As we fetch the genesis if required, this will never be
+	// nil but either the genesis or the latest.
+	latest := c.getLatestKnownBlock()
+
 	reply := &AddTxResponse{}
 	_, err := c.SendProtobufParallel(c.Roster.List, &AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   c.ID,
 		Transaction:   tx,
 		InclusionWait: wait,
+		ProofFrom:     latest.Hash,
 	}, reply, c.options)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("sending: %w", err)
 	}
 
 	if reply.Error != "" {
-		return reply, errors.New(reply.Error)
+		return reply, xerrors.New(reply.Error)
 	}
+
+	if reply.Proof != nil {
+		if err := reply.Proof.VerifyFromBlock(latest); err != nil {
+			return reply, xerrors.Errorf("proof verification: %w", err)
+		}
+
+		if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
+			c.Latest = &reply.Proof.Latest
+		}
+	}
+
 	return reply, nil
 }
 
@@ -210,21 +241,67 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // another server, you must use GetProof in order to create a complete standalone
 // proof starting from the genesis block.
 func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
-	reply := &GetProofResponse{}
-	_, err := c.SendProtobufParallel(c.Roster.List, &GetProof{
+	return c.getProofRaw(key, from, nil)
+}
+
+// GetProofAfter returns a proof for the key stored in the skipchain
+// starting from the latest known block by this client. The proof will always
+// be newer than the barrier or it will return an error.
+//
+// 	key - Instance ID to be included in the proof.
+//	full - When true, the proof returned will start from the genesis block.
+//	block - The latest block won't be older than the barrier.
+//
+func (c *Client) GetProofAfter(key []byte, full bool, block *skipchain.SkipBlock) (*GetProofResponse, error) {
+	if full {
+		return c.getProofRaw(key, c.Genesis, block)
+	}
+
+	return c.getProofRaw(key, c.getLatestKnownBlock(), block)
+}
+
+func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*GetProofResponse, error) {
+	decoder := func(buf []byte, msg interface{}) error {
+		err := protobuf.Decode(buf, msg)
+		if err != nil {
+			return xerrors.Errorf("decoding: %w", err)
+		}
+
+		gpr, ok := msg.(*GetProofResponse)
+		if !ok {
+			return xerrors.New("couldn't cast msg")
+		}
+
+		if err := gpr.Proof.VerifyFromBlock(from); err != nil {
+			return xerrors.Errorf("proof verification: %w", err)
+		}
+
+		if include != nil && gpr.Proof.Latest.Index < include.Index {
+			return xerrors.New("latest block in proof is too old")
+		}
+
+		return nil
+	}
+
+	req := &GetProof{
 		Version: CurrentVersion,
-		ID:      from.Hash,
 		Key:     key,
-	}, reply, c.options)
+		ID:      from.Hash,
+	}
+
+	if include != nil {
+		req.MustContainBlock = include.Hash
+	}
+
+	reply := &GetProofResponse{}
+	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, req, reply, c.options, decoder)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("sending: %w", err)
 	}
 
-	if err := reply.Proof.VerifyFromBlock(from); err != nil {
-		return nil, err
+	if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
+		c.Latest = &reply.Proof.Latest
 	}
-
-	c.Latest = &reply.Proof.Latest
 
 	return reply, nil
 }
@@ -232,27 +309,34 @@ func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofR
 // GetDeferredData makes a request to retrieve the deferred instruction data
 // and return the reply if the proof can be verified.
 func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
-	pr, err := c.GetProofFromLatest(instrID.Slice())
+	return c.GetDeferredDataAfter(instrID, nil)
+}
+
+// GetDeferredDataAfter makes a request to retrieve the deferred instruction data
+// and returns the reply if the proof can be verified and the block is not
+// older than the barrier.
+func (c *Client) GetDeferredDataAfter(instrID InstanceID, barrier *skipchain.SkipBlock) (*DeferredData, error) {
+	pr, err := c.getProofRaw(instrID.Slice(), c.getLatestKnownBlock(), barrier)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting proof: %w", err)
 	}
 
 	if !pr.Proof.InclusionProof.Match(instrID.Slice()) {
-		return nil, errors.New("key not set")
+		return nil, xerrors.New("key not set")
 	}
 
 	dataBuf, _, _, err := pr.Proof.Get(instrID.Slice())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting proof value: %w", err)
 	}
 	var result DeferredData
 	if err = protobuf.Decode(dataBuf, &result); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding data: %w", err)
 	}
 
 	header, err := decodeBlockHeader(c.Latest)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding header: %w")
 	}
 
 	result.ProposedTransaction.Instructions.SetVersion(header.Version)
@@ -444,21 +528,32 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 func (c *Client) signerCounterDecoder(buf []byte, data interface{}) error {
 	err := protobuf.Decode(buf, data)
 	if err != nil {
-		return errors.New("couldn't decode the counters reply: " + err.Error())
+		return xerrors.Errorf("couldn't decode the counters reply: %w", err)
 	}
 
 	reply, ok := data.(*GetSignerCountersResponse)
 	if !ok {
-		return errors.New("wrong type of response")
+		return xerrors.New("wrong type of response")
 	}
 
 	// This assumes the client is up-to-date with the latest block which
 	// is usually right as it is updated after each GetProof. The goal is
 	// to insure that we got the data from the latest block.
-	// Note: index 0 is checked for backwards compatibility.
-	if reply.Index != 0 && c.Latest != nil {
+	// Note: using versioning as index 0 might cause troubles.
+	if c.Latest != nil {
+		header, err := decodeBlockHeader(c.Latest)
+		if err != nil {
+			return xerrors.Errorf("decoding header: %w", err)
+		}
+
+		if header.Version < 2 {
+			// Skip the check for version as the trie index is available
+			// for version 2+ only.
+			return nil
+		}
+
 		if uint64(c.Latest.Index) > reply.Index {
-			return errors.New("data coming from an old block")
+			return xerrors.New("data coming from an old block")
 		}
 	}
 

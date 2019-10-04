@@ -31,6 +31,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -243,9 +244,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	s.createSkipChainMut.Lock()
 	defer s.createSkipChainMut.Unlock()
 
-	if req.Version < CurrentVersion {
-		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
-	}
 	if req.Roster.List == nil {
 		return nil, errors.New("must provide a roster")
 	}
@@ -333,38 +331,77 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
+func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResponse, error) {
+	resp := &AddTxResponse{Version: CurrentVersion}
+
+	errMsg, exists := s.txErrorBuf.get(tx.ClientTransaction.Instructions.HashWithSignatures())
+	if !tx.Accepted {
+		if !exists {
+			return nil, xerrors.New("transaction is in block, but got refused for unknown error")
+		}
+		// We cannot return an error here because onet will ignore the response if an error occurs.
+		// The length of the error message is limited if we return an error, so we have to return the
+		// error message in the response.
+		resp.Error = errMsg
+		return resp, nil
+	}
+
+	if exists {
+		log.Warn(s.ServerIdentity(), "transaction is accepted but there are errors: ", errMsg)
+	}
+
+	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		log.Error(resp.Error)
+		return resp, nil
+	}
+
+	from := req.SkipchainID
+	if len(req.ProofFrom) > 0 {
+		from = req.ProofFrom
+	}
+
+	pr, err := NewProof(st, s.db(), from, nil)
+	if err != nil {
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		log.Error(resp.Error)
+		return resp, nil
+	}
+
+	resp.Proof = pr
+
+	return resp, nil
+}
+
 // AddTransaction requests to apply a new transaction to the ledger. Note
 // that unlike other service APIs, it is *not* enough to only check for the
 // error value to find out if an error has occured. The caller must also check
 // AddTxResponse.Error even if the error return value is nil.
 func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
-	if req.Version < CurrentVersion {
-		return nil, errors.New("version mismatch")
-	}
-
 	if len(req.Transaction.Instructions) == 0 {
-		return nil, errors.New("no transactions to add")
+		return nil, xerrors.New("no transactions to add")
 	}
 
 	gen := s.db().GetByID(req.SkipchainID)
 	if gen == nil || gen.Index != 0 {
-		return nil, errors.New("skipchain ID is does not exist")
+		return nil, xerrors.New("skipchain ID is does not exist")
 	}
 
 	latest, err := s.db().GetLatest(gen)
 	if err != nil {
 		if latest == nil {
-			return nil, err
+			return nil, xerrors.Errorf("reading latest block: %w", err)
 		}
 		log.Warn("Got block, but with an error:", err)
 	}
 	if i, _ := latest.Roster.Search(s.ServerIdentity().ID); i < 0 {
-		return nil, errors.New("refusing to accept transaction for a chain we're not part of")
+		return nil, xerrors.New("refusing to accept transaction for a chain we're not part of")
 	}
 
 	header, err := decodeBlockHeader(latest)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding header: %w", err)
 	}
 
 	// Upgrade the instructions with the byzcoin protocol version
@@ -377,7 +414,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	}
 	txsz := txSize(TxResult{ClientTransaction: req.Transaction})
 	if txsz > maxsz {
-		return nil, errors.New("transaction too large")
+		return nil, xerrors.New("transaction too large")
 	}
 
 	for i, instr := range req.Transaction.Instructions {
@@ -393,19 +430,18 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	// no inclusion wait case.
 
 	if req.InclusionWait > 0 {
+		s.working.Add(1)
+		defer s.working.Done()
+
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
 		interval, _, err := s.LoadBlockInfo(req.SkipchainID)
 		if err != nil {
-			return nil, errors.New("couldn't get block info: " + err.Error())
+			return nil, xerrors.New("couldn't get block info: " + err.Error())
 		}
 
 		ctxHash := req.Transaction.Instructions.Hash()
-		ch := s.notifications.createWaitChannel(ctxHash)
-		defer s.notifications.deleteWaitChannel(ctxHash)
-
-		blockCh := make(chan skipchain.SkipBlockID, 10)
-		z := s.notifications.registerForBlocks(blockCh)
-		defer s.notifications.unregisterForBlocks(z)
+		ch := s.notifications.registerForBlocks()
+		defer s.notifications.unregisterForBlocks(ch)
 
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
@@ -417,47 +453,33 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 		blocksLeft := req.InclusionWait
 
-		for found := false; !found; {
+		for {
 			select {
-			case success := <-ch:
-				errMsg, exists := s.txErrorBuf.get(req.Transaction.Instructions.HashWithSignatures())
-				if !success {
-					if !exists {
-						return nil, errors.New("transaction is in block, but got refused for unknown error")
-					}
-					// We cannot return an error here because onet will ignore the response if an error occurs.
-					// The length of the error message is limited if we return an error, so we have to return the
-					// error message in the response.
-					return &AddTxResponse{Version: CurrentVersion, Error: errMsg}, nil
+			case notif := <-ch:
+				if tx := notif.getTx(ctxHash); tx != nil {
+					return s.prepareTxResponse(req, tx)
 				}
 
-				if exists {
-					log.Warn(s.ServerIdentity(), "transaction is accepted but there are errors: ", errMsg)
-				}
-				found = true
-			case id := <-blockCh:
-				if id.Equal(req.SkipchainID) {
+				if notif.block.SkipChainID().Equal(req.SkipchainID) {
 					blocksLeft--
 				}
 				if blocksLeft == 0 {
-					return nil, fmt.Errorf("did not find transaction after %v blocks", req.InclusionWait)
+					return nil, xerrors.Errorf("did not find transaction after %v blocks", req.InclusionWait)
 				}
 			case <-tooLong:
-				return nil, fmt.Errorf("transaction didn't get included after %v (2 * t_block * %d)", tooLongDur, req.InclusionWait)
+				return nil, xerrors.Errorf("transaction didn't get included after %v (2 * t_block * %d)", tooLongDur, req.InclusionWait)
 			}
 		}
 	} else {
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 	}
 
-	return &AddTxResponse{
-		Version: CurrentVersion,
-	}, nil
+	return &AddTxResponse{Version: CurrentVersion}, nil
 }
 
 // GetProof searches for a key and returns a proof of the
 // presence or the absence of this key.
-func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 	s.catchingLock.Lock()
 	s.updateTrieLock.Lock()
 
@@ -466,41 +488,42 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		s.catchingLock.Unlock()
 	}()
 
-	if req.Version < CurrentVersion {
-		return nil, errors.New("version mismatch")
-	}
-
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
-		err = errors.New("cannot find skipblock while getting proof")
-		return
+		return nil, xerrors.New("cannot find skipblock while getting proof")
 	}
 	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting state trie: %w", err)
 	}
 	proof, err := NewProof(st, s.db(), req.ID, req.Key)
 	if err != nil {
-		return
+		return nil, xerrors.Errorf("making proof: %w", err)
+	}
+
+	if len(req.MustContainBlock) > 0 {
+		mcb := s.db().GetByID(req.MustContainBlock)
+		// The clause is checked but we return the proof with the latest
+		// known block so the client can stay up-to-date. That means we
+		// only check that the latest block is older or the same as mcb.
+		if mcb == nil || proof.Latest.Index < mcb.Index {
+			return nil, xerrors.New("must contain clause cannot be enforced")
+		}
 	}
 
 	_, v := proof.InclusionProof.KeyValue()
 	log.Lvlf2("%s: Returning proof for %x from chain %x at index %v", s.ServerIdentity(), req.Key, sb.SkipChainID(), sb.Index)
 	log.Lvlf3("value is %x", v)
-	resp = &GetProofResponse{
+	return &GetProofResponse{
 		Version: CurrentVersion,
 		Proof:   *proof,
-	}
-	return
+	}, nil
 }
 
 // CheckAuthorization verifies whether a given combination of identities can
 // fulfill a given rule of a given darc. Because all darcs are now used in
 // an online fashion, we need to offer this check.
 func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
-	if req.Version < CurrentVersion {
-		return nil, errors.New("version mismatch")
-	}
 	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
 
 	resp = &CheckAuthorizationResponse{}
@@ -1652,10 +1675,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	// Notify all waiting channels for processed ClientTransactions.
-	for _, t := range body.TxResults {
-		s.notifications.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
-	}
-	s.notifications.informBlock(sb.SkipChainID())
+	s.notifications.informBlock(sb, body.TxResults)
 
 	// At this point everything should be stored.
 	s.streamingMan.notify(string(sb.SkipChainID()), sb)
@@ -2531,9 +2551,7 @@ func (s *Service) startAllChains() error {
 		}
 	}
 	s.stateTries = make(map[string]*stateTrie)
-	s.notifications = bcNotifications{
-		waitChannels: make(map[string]chan bool),
-	}
+	s.notifications = bcNotifications{}
 	s.closedMutex.Lock()
 	s.closed = false
 	s.closedMutex.Unlock()

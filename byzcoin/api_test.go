@@ -13,6 +13,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -135,7 +136,6 @@ func TestClient_GetProof(t *testing.T) {
 
 	c, csr, err := NewLedger(msg, false)
 	require.Nil(t, err)
-	require.NoError(t, c.UseNode(0))
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
@@ -146,12 +146,12 @@ func TestClient_GetProof(t *testing.T) {
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
 	require.Nil(t, err)
-	_, err = c.AddTransactionAndWait(tx, 10)
+	atr, err := c.AddTransactionAndWait(tx, 10)
 	require.Nil(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
-	p, err := c.GetProof(newID)
+	p, err := c.GetProofAfter(newID, true, &atr.Proof.Latest)
 	require.NoError(t, err)
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
@@ -161,14 +161,14 @@ func TestClient_GetProof(t *testing.T) {
 	require.Equal(t, value, v0)
 
 	// The proof should now be smaller as we learnt about the block
-	p, err = c.GetProofFromLatest(newID)
+	p, err = c.GetProofAfter(newID, false, &atr.Proof.Latest)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(p.Proof.Links))
 }
 
 func TestClient_GetProofCorrupted(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
-	servers, roster, _ := l.GenTree(3, true)
+	servers, roster, _ := l.GenTree(1, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
@@ -181,8 +181,6 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	gen.Hash = gen.CalculateHash()
 	c.ID = gen.Hash
 	c.Genesis = gen
-	// Fix on using only the leader
-	require.NoError(t, c.UseNode(0))
 
 	sb := skipchain.NewSkipBlock()
 	sb.Data = []byte{1, 2, 3}
@@ -296,7 +294,6 @@ func TestClient_NoPhantomSkipchain(t *testing.T) {
 
 	c, _, err := NewLedger(msg, false)
 	require.NoError(t, err)
-	require.NoError(t, c.UseNode(0))
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[0])
 	require.NoError(t, err)
@@ -340,7 +337,12 @@ func TestClient_SignerCounterDecoder(t *testing.T) {
 	// Latest is nil.
 	require.NoError(t, c.signerCounterDecoder(buf, &reply))
 
-	c.Latest = &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Index: 1}}
+	c.Latest = skipchain.NewSkipBlock()
+	data, err := protobuf.Encode(&DataHeader{Version: CurrentVersion})
+	require.NoError(t, err)
+	c.Latest.Data = data
+
+	c.Latest.Index = 1
 	// Correct scenario with Index = 1.
 	require.NoError(t, c.signerCounterDecoder(buf, &reply))
 
@@ -383,9 +385,17 @@ func newTestService(c *onet.Context) (onet.Service, error) {
 }
 
 func (cs *corruptedService) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+	if cs.GetProofResponse == nil {
+		return nil, xerrors.New("empty response")
+	}
+
 	return cs.GetProofResponse, nil
 }
 
 func (cs *corruptedService) CreateGenesisBlock(req *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
+	if cs.CreateGenesisBlockResponse == nil {
+		return nil, xerrors.New("empty response")
+	}
+
 	return cs.CreateGenesisBlockResponse, nil
 }

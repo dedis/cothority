@@ -556,73 +556,71 @@ func (c *Coin) SafeSub(a uint64) error {
 	return errors.New("uint64 underflow")
 }
 
+type notification struct {
+	block  *skipchain.SkipBlock
+	txs    TxResults
+	hashes [][]byte
+}
+
+func (n *notification) getTx(id []byte) *TxResult {
+	for i, h := range n.hashes {
+		if bytes.Equal(h, id) {
+			return &n.txs[i]
+		}
+	}
+
+	return nil
+}
+
+type waitChannel = chan *notification
+
 type bcNotifications struct {
 	sync.Mutex
-	// waitChannels will be informed by Service.updateTrieCallback that a
-	// given ClientTransaction has been included. updateTrieCallback will
-	// send true for a valid ClientTransaction and false for an invalid
-	// ClientTransaction.
-	waitChannels map[string]chan bool
 	// blockListeners will be notified every time a block is created.
 	// It is up to them to filter out block creations on chains they are not
 	// interested in.
-	blockListeners []chan skipchain.SkipBlockID
+	blockListeners []waitChannel
 }
 
-func (bc *bcNotifications) createWaitChannel(ctxHash []byte) chan bool {
-	bc.Lock()
-	defer bc.Unlock()
-	ch := make(chan bool, 1)
-	bc.waitChannels[string(ctxHash)] = ch
-	return ch
-}
-
-func (bc *bcNotifications) informWaitChannel(ctxHash []byte, valid bool) {
-	bc.Lock()
-	defer bc.Unlock()
-	ch := bc.waitChannels[string(ctxHash)]
-	if ch != nil {
-		ch <- valid
+func (bc *bcNotifications) informBlock(block *skipchain.SkipBlock, txs TxResults) {
+	hashes := make([][]byte, len(txs))
+	for i, tx := range txs {
+		// Pre-computed hash to save some computation load.
+		hashes[i] = tx.ClientTransaction.Instructions.Hash()
 	}
-}
 
-func (bc *bcNotifications) deleteWaitChannel(ctxHash []byte) {
-	bc.Lock()
-	defer bc.Unlock()
-	delete(bc.waitChannels, string(ctxHash))
-}
+	notif := &notification{
+		block:  block,
+		txs:    txs,
+		hashes: hashes,
+	}
 
-func (bc *bcNotifications) informBlock(id skipchain.SkipBlockID) {
 	bc.Lock()
 	defer bc.Unlock()
 	for _, x := range bc.blockListeners {
-		if x != nil {
-			x <- id
-		}
+		x <- notif
 	}
 }
 
-func (bc *bcNotifications) registerForBlocks(ch chan skipchain.SkipBlockID) int {
+func (bc *bcNotifications) registerForBlocks() waitChannel {
 	bc.Lock()
 	defer bc.Unlock()
 
-	for i := 0; i < len(bc.blockListeners); i++ {
-		if bc.blockListeners[i] == nil {
-			bc.blockListeners[i] = ch
-			return i
-		}
-	}
-
-	// If we got here, no empty spots left, append and return the position of the
-	// new element (on startup: after append(nil, ch), len == 1, so len-1 = index 0.
+	ch := make(waitChannel, 1)
 	bc.blockListeners = append(bc.blockListeners, ch)
-	return len(bc.blockListeners) - 1
+
+	return ch
 }
 
-func (bc *bcNotifications) unregisterForBlocks(i int) {
+func (bc *bcNotifications) unregisterForBlocks(ch waitChannel) {
 	bc.Lock()
 	defer bc.Unlock()
-	bc.blockListeners[i] = nil
+
+	for i, listener := range bc.blockListeners {
+		if listener == ch {
+			bc.blockListeners = append(bc.blockListeners[0:i], bc.blockListeners[i+1:]...)
+		}
+	}
 }
 
 func (c ChainConfig) sanityCheck(old *ChainConfig) error {

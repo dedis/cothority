@@ -71,10 +71,14 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 	if err := tx.FillSignersAndSignWith(signers...); err != nil {
 		return nil, err
 	}
-	if _, err := c.bcClient.AddTransactionAndWait(tx, 10); err != nil {
+
+	atr, err := c.bcClient.AddTransactionAndWait(tx, 10)
+	if err != nil {
 		return nil, err
 	}
-	resp, err := c.bcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
+
+	id := tx.Instructions[0].DeriveID("").Slice()
+	resp, err := c.bcClient.GetProofAfter(id, true, &atr.Proof.Latest)
 	if err != nil {
 		return nil, err
 	}
