@@ -83,7 +83,7 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		c.CostCWrite = &byzcoin.Coin{}
 		c.CostCRead = &byzcoin.Coin{}
 		c.CostValue = &byzcoin.Coin{}
-		err = c.parseArgs(inst.Spawn.Args)
+		err = c.parseArgs(inst.Spawn.Args, rst.GetVersion())
 		if err != nil {
 			return nil, nil, errors.New("couldn't parse args: " + err.Error())
 		}
@@ -102,30 +102,32 @@ func (c *ContractSpawner) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 			return nil, nil, errors.New("couldn't decode darc: " + err.Error())
 		}
 
-		// Allowing unlimited rules while spawning darcs could give attackers
-		// a way break the system.
-		//
-		// So, we whitelist allowed darc rules - there is no spawn allowed, and all
-		// invokes need to be in this list. Just to be sure that there is
-		// no command in the future that will allow to spawn things as an
-		// invoke.
-		//
-		// When using the spawner-instance, darcs with spawn:calypsoRead
-		// can be allowed, as they can only be used as instructions to a
-		// calypsoWrite instance that will check if coins are needed or not.
-		allowed := regexp.MustCompile("^(_sign|invoke:(" +
-			"darc\\.evolve|" +
-			"spawner\\.update|" +
-			"coin\\.(fetch|store|transfer)|" +
-			"credential\\.(update|recover)|" +
-			"popParty\\.(barrier|finalize|mine|addParty)|" +
-			"ropasci\\.(second|confirm)|" +
-			"value\\.update)|" +
-			"spawn:(calypsoRead))$")
-		for _, rule := range d.Rules.List {
-			if !allowed.MatchString(string(rule.Action)) {
-				return nil, nil, errors.New("cannot spawn darc with rule: " +
-					string(rule.Action))
+		if rst.GetVersion() > 1 {
+			// Allowing unlimited rules while spawning darcs could give attackers
+			// a way break the system.
+			//
+			// So, we whitelist allowed darc rules - there is no spawn allowed, and all
+			// invokes need to be in this list. Just to be sure that there is
+			// no command in the future that will allow to spawn things as an
+			// invoke.
+			//
+			// When using the spawner-instance, darcs with spawn:calypsoRead
+			// can be allowed, as they can only be used as instructions to a
+			// calypsoWrite instance that will check if coins are needed or not.
+			allowed := regexp.MustCompile("^(_sign|invoke:(" +
+				"darc\\.evolve|" +
+				"spawner\\.update|" +
+				"coin\\.(fetch|store|transfer)|" +
+				"credential\\.(update|recover)|" +
+				"popParty\\.(barrier|finalize|mine|addParty)|" +
+				"ropasci\\.(second|confirm)|" +
+				"value\\.update)|" +
+				"spawn:(calypsoRead))$")
+			for _, rule := range d.Rules.List {
+				if !allowed.MatchString(string(rule.Action)) {
+					return nil, nil, errors.New("cannot spawn darc with rule: " +
+						string(rule.Action))
+				}
 			}
 		}
 		ca = byzcoin.NewInstanceID(d.GetBaseID())
@@ -262,7 +264,7 @@ func (c *ContractSpawner) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	switch inst.Invoke.Command {
 	case "update":
 		// updates the values of the contract
-		err = c.SpawnerStruct.parseArgs(inst.Invoke.Args)
+		err = c.SpawnerStruct.parseArgs(inst.Invoke.Args, rst.GetVersion())
 		if err != nil {
 			return
 		}
@@ -295,7 +297,7 @@ func (c *ContractSpawner) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	return
 }
 
-func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
+func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version) error {
 	for _, cost := range []struct {
 		name string
 		coin *byzcoin.Coin
@@ -315,8 +317,11 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 				return fmt.Errorf("couldn't decode coin %s: %s", cost.name, err)
 			}
 		} else {
-			cost.coin.Name = contracts.CoinName
-			cost.coin.Value = 100
+			log.Print(v)
+			if v > 1 {
+				cost.coin.Name = contracts.CoinName
+				cost.coin.Value = 100
+			}
 		}
 		log.Lvl2("Setting cost of", cost.name, "to", cost.coin.Value)
 	}
@@ -326,5 +331,9 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments) error {
 		ss.CostCWrite = nil
 		ss.CostCRead = nil
 	}
+	if args.Search("costValue") == nil {
+		ss.CostValue = nil
+	}
+	log.Printf("%+v", ss.CostCWrite)
 	return nil
 }

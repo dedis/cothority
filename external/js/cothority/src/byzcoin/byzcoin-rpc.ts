@@ -25,7 +25,7 @@ import {
     GetSignerCountersResponse,
 } from "./proto/requests";
 
-export const currentVersion = 1;
+export const currentVersion = 2;
 
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
