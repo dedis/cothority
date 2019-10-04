@@ -91,6 +91,43 @@ var cmds = cli.Commands{
 				ArgsUsage: "URL",
 			},
 			{
+				Name:   "block",
+				Usage:  "Read a block given by an id or an index",
+				Action: debugBlock,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name: "bcCfg, bc",
+						Usage: "pass a byzcoin-config to define the bcID and" +
+							" the roster",
+					},
+					cli.StringFlag{
+						Name:  "url",
+						Usage: "pass a url to indicate the node to contact",
+					},
+					cli.StringFlag{
+						Name:  "bcID",
+						Usage: "give byzcoin-ID to search for",
+					},
+					cli.BoolFlag{
+						Name:  "all",
+						Usage: "show block in all nodes",
+					},
+					cli.IntFlag{
+						Name:  "blockIndex, index",
+						Value: -1,
+						Usage: "give this block-index",
+					},
+					cli.StringFlag{
+						Name:  "blockID, id",
+						Usage: "give block-id to show",
+					},
+					cli.BoolFlag{
+						Name:  "txDetails, txd",
+						Usage: "prints all transactions",
+					},
+				},
+			},
+			{
 				Name:   "list",
 				Usage:  "Lists all byzcoin instances",
 				Action: debugList,
