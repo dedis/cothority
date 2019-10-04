@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/xerrors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -17,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/xerrors"
 
 	"github.com/qantik/qrgo"
 	cli "github.com/urfave/cli"
@@ -1013,8 +1014,7 @@ func debugBlock(c *cli.Context) error {
 	}
 	blockIndex := c.Int("blockIndex")
 	if blockIndex < 0 && blockID == nil {
-		log.Print(blockIndex, blockID)
-		return errors.New("need either blockIndex or blockID")
+		return errors.New("need either --index or --id")
 	}
 	if bcCfg := c.String("bcCfg"); bcCfg != "" {
 		cfg, _, err := lib.LoadConfig(bcCfg)
@@ -1037,9 +1037,8 @@ func debugBlock(c *cli.Context) error {
 			return errors.New("please also give either --bcID or --bcCfg")
 		}
 		roster = onet.NewRoster([]*network.ServerIdentity{{
-			Public:  cothority.Suite.Point(),
-			Address: network.NewAddress(network.TLS, url),
-			URL:     url,
+			Public: cothority.Suite.Point(),
+			URL:    url,
 		}})
 		if all {
 			sb, err := getBlock(*roster, bcID, blockID, blockIndex, 0)
