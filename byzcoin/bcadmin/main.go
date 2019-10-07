@@ -1010,10 +1010,10 @@ func debugBlock(c *cli.Context) error {
 			flinks = append(flinks, fmt.Sprintf("\t\tTo: %x - NewRoster: %t",
 				l.To, l.NewRoster != nil))
 		}
-		out := fmt.Sprintf("\tBlock #%d from %s\n"+
+		out := fmt.Sprintf("\tBlock %x (index %d) from %s\n"+
 			"\tNode-list: %s\n"+
 			"\tForward-links:\n%s\n",
-			sb.Index, t.String(),
+			sb.Hash, sb.Index, t.String(),
 			sb.Roster.List,
 			strings.Join(flinks, "\n"))
 		if c.Bool("txDetails") {

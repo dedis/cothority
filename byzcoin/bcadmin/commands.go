@@ -125,6 +125,10 @@ var cmds = cli.Commands{
 				Action:    dbMerge,
 				ArgsUsage: "conode2.db",
 				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "blocks",
+						Usage: "maximum number of blocks to merge",
+					},
 					cli.BoolFlag{
 						Name:  "overwrite",
 						Usage: "replace whole blocks if they are duplicate",

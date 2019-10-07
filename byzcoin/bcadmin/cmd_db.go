@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"flag"
+	"strings"
+
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -13,7 +15,6 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
-	"strings"
 )
 
 // dbStatus returns the last block in the db - useful for the integration tests.
@@ -48,12 +49,15 @@ func dbCatchup(c *cli.Context) error {
 
 	log.Info("Search for latest block")
 	latestID := *fb.bcID
+	lastIndex := 0
 	for next := fb.db.GetByID(latestID); next != nil && len(next.ForwardLink) > 0; next = fb.db.GetByID(latestID) {
+		lastIndex = next.Index
 		latestID = next.ForwardLink[0].To
 		if next.Index%1000 == 0 {
 			log.Info("Found block", next.Index)
 		}
 	}
+	log.Info("Last index", lastIndex)
 
 	for {
 		sb, err := fb.gbMulti(latestID)
@@ -160,6 +164,7 @@ func dbMerge(c *cli.Context) error {
 	}
 	var latest int
 	var blocks int
+	maxBlocks := c.Int("blocks")
 	if c.Bool("overwrite") {
 		err = fb.db.RemoveSkipchain(*fb.bcID)
 		if err != nil {
@@ -169,10 +174,14 @@ func dbMerge(c *cli.Context) error {
 		for sb != nil {
 			blocks++
 			latest = sb.Index
-			if blocks%100 == 0{
+			if blocks%100 == 0 {
 				log.Infof("Stored %d blocks so far", blocks)
 			}
 			fb.db.Store(sb)
+			if maxBlocks > 0 && blocks == maxBlocks+1 {
+				log.Infof("Stopping after applying %d blocks", maxBlocks)
+				break
+			}
 			if len(sb.ForwardLink) > 0 {
 				sb = dbBack.GetByID(sb.ForwardLink[0].To)
 			} else {
