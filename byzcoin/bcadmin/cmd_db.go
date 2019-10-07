@@ -4,7 +4,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"flag"
+	"fmt"
 	"strings"
+
+	"go.dedis.ch/kyber/v3/pairing"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -206,6 +209,113 @@ func dbMerge(c *cli.Context) error {
 	}
 	log.Infof("Found %d blocks in backup. Latest index: %d", blocks,
 		latest)
+	return nil
+}
+
+// dbCheck verifies all the hashes and links from the blocks.
+func dbCheck(c *cli.Context) error {
+	fb, err := newFetchBlocks(c)
+	if err != nil {
+		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+	}
+
+	if fb.bcID == nil {
+		return xerrors.New("need bcID")
+	}
+
+	sb := fb.db.GetByID(*fb.bcID)
+	start := c.Int("start")
+	for sb.Index < start {
+		if len(sb.ForwardLink) == 0 {
+			return xerrors.Errorf("cannot find block %d", start)
+		}
+		sb = fb.db.GetByID(sb.ForwardLink[0].To)
+	}
+
+	blocks := 0
+	process := c.Int("process")
+	for sb != nil {
+		blocks++
+		if blocks%process == 0 {
+			log.Infof("Processed %d blocks so far", blocks)
+		}
+		errStr := fmt.Sprintf("found block %d with", sb.Index)
+		if !sb.Hash.Equal(sb.CalculateHash()) {
+			log.Errorf("%s wrong hash: %x instead"+
+				" of %x", errStr, sb.Hash, sb.CalculateHash())
+		}
+
+		if sb.Index > 0 {
+			if !sb.SkipChainID().Equal(*fb.bcID) {
+				log.Errorf(
+					"%s different skipchain-id: %x", errStr, sb.SkipChainID())
+			}
+			for i, bl := range sb.BackLinkIDs {
+				errStrBl := fmt.Sprintf("%s with backlink at height %d",
+					errStr, i)
+				previous := fb.db.GetByID(bl)
+				if previous == nil {
+					log.Errorf(
+						"%s pointing to unknown block", errStrBl)
+					continue
+				}
+				if len(previous.ForwardLink) <= i {
+					log.Warnf("%s points to block with less forward"+
+						"-links to point to itself", errStrBl)
+					continue
+				}
+				if previous.ForwardLink[i].IsEmpty() {
+					continue
+				}
+				if !previous.ForwardLink[i].To.Equal(sb.Hash) {
+					log.Errorf(
+						"%s pointing backwards to a block that doesn't"+
+							" reference it", errStrBl)
+				}
+			}
+		}
+		for i, fl := range sb.ForwardLink {
+			if fl.IsEmpty() {
+				continue
+			}
+			errStrFl := fmt.Sprintf("%s forwardLink at height %d", errStr, i)
+			if !fl.From.Equal(sb.Hash) {
+				log.Errorf(
+					"%s not originating from itself", errStrFl)
+			}
+			next := fb.db.GetByID(fl.To)
+			if next == nil {
+				log.Errorf("%s pointing to an unknown block",
+					errStrFl)
+				continue
+			}
+			err := fl.VerifyWithScheme(pairing.NewSuiteBn256(),
+				sb.Roster.ServicePublics(skipchain.ServiceName),
+				sb.SignatureScheme)
+			if err != nil {
+				log.Errorf("%s fails signature verification: %+v",
+					errStrFl, err)
+			}
+			if fl.NewRoster != nil {
+				equal, err := fl.NewRoster.Equal(next.Roster)
+				if err != nil {
+					log.Errorf(
+						"%s cannot test if new roster is the same: %+v",
+						errStrFl, err)
+					continue
+				}
+				if !equal {
+					log.Errorf("%s contains wrong roster", errStrFl)
+				}
+			}
+		}
+		if len(sb.ForwardLink) > 0 {
+			sb = fb.db.GetByID(sb.ForwardLink[0].To)
+		} else {
+			break
+		}
+	}
+	log.Infof("Checked successfully all blocks: %d", blocks)
 	return nil
 }
 

@@ -222,13 +222,14 @@ Bcadmin can also work on the database - either a separate, or a database from
 - `db catchup` fetches new blocks from the network
 - `db replay` applies the blocks from the database to the global state
 - `db status` returns simple status' about the internal database
+- `db check` goes through the whole chain and reports on bad blocks
 
 Before a release of a new version, the following commands should be run 
 and return success:
 
 ```bash
-bcadmin db catchup cache.db _bcID_ _url_
-bcadmin db replay cache.db _bcID_ --continue
+bcadmin db catchup cached.db _bcID_ _url_
+bcadmin db replay cached.db _bcID_ --continue
 ```
 
 The `_bcID_` has to be replaced by the hexadecimal representation of the 
@@ -257,7 +258,10 @@ If no other node in the system has all nodes stored, then you can `merge` a
 db with all nodes:
 ```bash
 # First stop the node
-bcadmin db merge path/to/conode.db _bcID_ cached.db
+bcadmin db merge --overwrite path/to/conode.db _bcID_ cached.db
 ```
+
+The `--overwrite` is necessary to store all blocks from the `cached.db` file 
+to the existing database.
 
 A `cached.db` is available at https://conode.c4dt.org/files/cached.db

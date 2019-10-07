@@ -135,6 +135,27 @@ var cmds = cli.Commands{
 					},
 				},
 			},
+			{
+				Name: "check",
+				Usage: "Check that the chain is in a correct state with" +
+					" regard to hashes, forward-, and backward-links",
+				Action: dbCheck,
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "blocks",
+						Usage: "maximum number of blocks to check",
+					},
+					cli.IntFlag{
+						Name:  "start",
+						Usage: "index of block to start verifications",
+					},
+					cli.IntFlag{
+						Name:  "process",
+						Usage: "show process indicator every n blocks",
+						Value: 100,
+					},
+				},
+			},
 		},
 	},
 
