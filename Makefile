@@ -7,15 +7,26 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd byzcoin; \
 	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race > log.txt 2>&1; then \
+    	cd byzcoin/contracts; \
+		if DEBUG_TIME=true go test -v -race -run TestDeferred_WrongSignature > \
+		        log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \
 			cat log.txt; \
 			exit 1; \
 		fi; \
+    	cd ../../skipchain; \
+		if DEBUG_TIME=true go test -v -race -run TestService_MissingForwardlink > \
+		        log.txt 2>&1; then \
+			echo Successfully ran \#$$a at $$(date); \
+		else \
+			echo Failed at $$(date); \
+			cat log.txt; \
+			exit 1; \
+		fi; \
+		cd ..; \
 	done;
 
 proto:

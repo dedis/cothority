@@ -29,7 +29,7 @@ _: &stage_build_go
     - GO111MODULE=on go build ./...
 _: &stage_test_go
   before_script: *get_coding
-  script: GO111MODULE=on make test_goveralls
+  script: GO111MODULE=on make test_playground
 _: &stage_deploy_npm
   <<: *language_js
   before_deploy: echo "//registry.npmjs.org/:_authToken=${DEPLOY_NPM_TOKEN}" > $HOME/.npmrc
@@ -38,94 +38,13 @@ _: &stage_deploy_npm
 dist: trusty
 
 stages:
-  - lint
-  - build
   - test
-  - deploy
 
 jobs:
   include:
-    - stage: lint
-      name: "protobuf"
-      language: minimal
-      before_script: *get_coding
-      script: make test_proto
-    - <<: *stage_lint_go
-      <<: *language_go_1_13
-
-    - stage: build
-      <<: *stage_build_go
-      <<: *language_go_1_12
-    - <<: *stage_build_go
-      <<: *language_go_1_13
-
-    - name: "js > kyber"
-      <<: *language_js
-      script:
-        - cd external/js/kyber
-        - npm ci
-        - npm run build
-    - name: "js > cothority"
-      <<: *language_js
-      script:
-        - *gen_link_kyber
-        - cd external/js/cothority
-        - npm ci
-        - npm link @dedis/kyber
-        - npm run build
-
     - stage: test
       <<: *language_go_1_13
       <<: *stage_test_go
-    - name: "java"
-      language: java
-      install: *get_go
-      before_script: *get_coding
-      script: make test_java
-    - name: "js > kyber"
-      <<: *language_js
-      script:
-        - cd external/js/kyber
-        - npm ci
-        - npm run test
-    - name: "js > cothority"
-      <<: *language_js
-      install: *get_go
-      before_script:
-        - *get_coding
-        - make docker
-        - *gen_link_kyber
-      script:
-        - cd external/js/cothority
-        - npm ci
-        - npm link @dedis/kyber
-        - npm run test
-
-    - stage: deploy
-      name: "NPM: js > kyber"
-      <<: *stage_deploy_npm
-      deploy:
-        on:
-          branch: master
-        provider: script
-        script: >-
-          cd external/js/kyber &&
-          npm ci &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
-    - name: "NPM: js > cothority"
-      <<: *stage_deploy_npm
-      deploy:
-        on:
-          branch: master
-        provider: script
-        script: >-
-          cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
-          cd external/js/cothority &&
-          npm ci &&
-          npm link @dedis/kyber &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
 
 notifications:
   email: false
