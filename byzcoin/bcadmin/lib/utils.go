@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3/log"
@@ -167,29 +169,39 @@ searchLatest:
 		for node := range cl.Roster.List {
 			log.Lvl2("Searching node", node)
 			if err := cl.UseNode(node); err != nil {
-				return err
+				return xerrors.Errorf("couldn't set node: %+v", err)
 			}
-			_, err := cl.GetProof(make([]byte, 32))
+			pr, err := cl.GetProof(make([]byte, 32))
 			if err != nil {
 				log.Warn("error while searching for node - ignoring")
-				//continue searchLatest
+				continue searchLatest
 			}
-			if cl.Latest.Index > sb.Index {
-				sb = *cl.Latest
+			if pr.Proof.Latest.Index > sb.Index {
+				sb = pr.Proof.Latest
 				log.Lvl2("Found new block:", sb.Index)
 				cc, err := cl.GetChainConfig()
 				if err != nil {
-					return err
+					log.Warnf("Couldn't get chain config: %+v", err)
+					continue searchLatest
 				}
-				cl.Roster = cc.Roster
+				same, err := cl.Roster.Equal(&cc.Roster)
+				if err != nil {
+					return xerrors.Errorf("couldn't compare rosters: %+v", err)
+				}
+				if !same {
+					cl.Roster = cc.Roster
+					continue searchLatest
+				}
 				if node > 0 {
 					continue searchLatest
 				}
-			} else if cl.Latest.Index < sb.Index {
-				log.Lvlf2("Node %d returned earlier block: %d", node, cl.Latest.Index)
+			} else if pr.Proof.Latest.Index < sb.Index {
+				log.Lvlf2("Node %d returned earlier block: %d", node,
+					pr.Proof.Latest.Index)
 				continue searchLatest
+			} else {
+				log.Lvl2("Node", node, "returned same block as other nodes")
 			}
-			log.Lvl2("Node", node, "returned same block as other nodes")
 		}
 		return nil
 	}

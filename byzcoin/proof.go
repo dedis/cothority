@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 
+	"golang.org/x/xerrors"
+
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3/pairing"
@@ -19,12 +21,12 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 	p = &Proof{}
 	pr, err := c.GetProof(key)
 	if err != nil {
-		return
+		return nil, xerrors.Errorf("couldn't get proof: %+v", err)
 	}
 	p.InclusionProof = *pr
 	sb := s.GetByID(id)
 	if sb == nil {
-		return nil, errors.New("didn't find skipchain")
+		return nil, xerrors.New("didn't find skipchain")
 	}
 	p.Links = []skipchain.ForwardLink{{
 		From:      []byte{},
@@ -41,7 +43,7 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 			link = sb.ForwardLink[height]
 			sbTemp := s.GetByID(link.To)
 			if sbTemp == nil {
-				return nil, errors.New("missing block in chain")
+				return nil, xerrors.New("missing block in chain")
 			}
 			if sbTemp.Index <= sb.Index {
 				return nil, skipchain.ErrorInconsistentForwardLink
@@ -52,6 +54,10 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 			}
 		}
 		p.Links = append(p.Links, *link)
+	}
+	if c.GetIndex() != sb.Index {
+		return nil, xerrors.New("didn't find skipblock with same index as" +
+			" state-trie")
 	}
 	p.Latest = *sb
 	return

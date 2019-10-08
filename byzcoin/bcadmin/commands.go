@@ -533,7 +533,7 @@ var cmds = cli.Commands{
                                       [--darc <darc id>] 
                                       [--sign <pub key>]     
                              }
-   CONTRAT   {value,deferred,config}`),
+   CONTRACT   {value,deferred,config}`),
 		Subcommands: cli.Commands{
 			{
 				Name:  "value",

@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"go.dedis.ch/onet/v3/log"
 
 	"github.com/urfave/cli"
@@ -74,6 +76,9 @@ func DeferredSpawn(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+	}
 
 	spawn := byzcoin.Spawn{
 		ContractID: byzcoin.ContractDeferredID,
@@ -116,7 +121,7 @@ func DeferredSpawn(c *cli.Context) error {
 	// ---
 	proof, err := cl.WaitProof(byzcoin.NewInstanceID(instID), time.Second, nil)
 	if err != nil {
-		return errors.New("couldn't get proof for admin-darc: " + err.Error())
+		return xerrors.Errorf("couldn't get proof for admin-darc: %+v", err)
 	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
@@ -212,6 +217,9 @@ func DeferredInvokeAddProof(c *cli.Context) error {
 	// 3.
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(instIDBuf),
@@ -294,12 +302,12 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
 	if err != nil {
-		return err
+		return xerrors.Errorf("couldn't load config: %+v", err)
 	}
 
 	var signer *darc.Signer
@@ -311,22 +319,25 @@ func ExecProposedTx(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(sstr)
 	}
 	if err != nil {
-		return err
+		return xerrors.Errorf("couldn't load key: %+v", err)
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instid flag is required")
+		return xerrors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instid string")
+		return xerrors.New("failed to decode the instid string")
 	}
 
 	// ---
 	// 2.
 	// ---
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return xerrors.Errorf("couldn't get counters: %+v", err)
+	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(instIDBuf),
@@ -336,10 +347,13 @@ func ExecProposedTx(c *cli.Context) error {
 		},
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	})
+	if err != nil {
+		return xerrors.Errorf("couldn't create transaction: %+v", err)
+	}
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
-		return err
+		return xerrors.Errorf("couldn't fill signers and sign: %+v", err)
 	}
 
 	if lib.FindRecursivefBool("export", c) {
@@ -348,7 +362,7 @@ func ExecProposedTx(c *cli.Context) error {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
-		return err
+		return xerrors.Errorf("couldn't add transaction: %+v", err)
 	}
 
 	// ---
@@ -356,22 +370,22 @@ func ExecProposedTx(c *cli.Context) error {
 	// ---
 	err = lib.WaitPropagation(c, cl)
 	if err != nil {
-		return err
+		return xerrors.Errorf("waiting on propagation failed: %+v", err)
 	}
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return errors.New("couldn't get proof for admin-darc: " + err.Error())
+		return xerrors.Errorf("couldn't get proof for admin-darc: %+v", err)
 	}
 
 	_, resultBuf, _, _, err := pr.Proof.KeyValue()
 	if err != nil {
-		return errors.New("couldn't get value out of proof: " + err.Error())
+		return xerrors.Errorf("couldn't get value out of proof: %+v", err)
 	}
 
 	result := byzcoin.DeferredData{}
 	err = protobuf.Decode(resultBuf, &result)
 	if err != nil {
-		return errors.New("couldn't decode the result: " + err.Error())
+		return xerrors.Errorf("couldn't decode the result: %+v", err)
 	}
 
 	log.Infof("Here is the deferred data: \n%s", result)
@@ -475,6 +489,9 @@ func DeferredDelete(c *cli.Context) error {
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return xerrors.Errorf("couldn't get signer counters: %+v", err)
+	}
 
 	delete := byzcoin.Delete{
 		ContractID: byzcoin.ContractDeferredID,
