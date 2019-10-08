@@ -191,7 +191,7 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 
 	if reply.Proof != nil {
 		if err := reply.Proof.VerifyFromBlock(latest); err != nil {
-			return reply, xerrors.Errorf("proof verification: %w", err)
+			return reply, xerrors.Errorf("proof verification: %+v", err)
 		}
 
 		if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -264,7 +264,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	decoder := func(buf []byte, msg interface{}) error {
 		err := protobuf.Decode(buf, msg)
 		if err != nil {
-			return xerrors.Errorf("decoding: %w", err)
+			return xerrors.Errorf("decoding: %+v", err)
 		}
 
 		gpr, ok := msg.(*GetProofResponse)
@@ -273,7 +273,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 		}
 
 		if err := gpr.Proof.VerifyFromBlock(from); err != nil {
-			return xerrors.Errorf("proof verification: %w", err)
+			return xerrors.Errorf("proof verification: %+v", err)
 		}
 
 		if include != nil && gpr.Proof.Latest.Index < include.Index {
@@ -296,7 +296,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 	reply := &GetProofResponse{}
 	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, req, reply, c.options, decoder)
 	if err != nil {
-		return nil, xerrors.Errorf("sending: %w", err)
+		return nil, xerrors.Errorf("sending: %+v", err)
 	}
 
 	if c.Latest == nil || c.Latest.Index < reply.Proof.Latest.Index {
@@ -457,12 +457,14 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 		// try to get the darc back, we should get the genesis back instead
 		resp, err := c.GetProof(id.Slice())
 		if err != nil {
-			return nil, err
+			log.Warnf("Error while getting proof: %+v", err)
+			continue
 		}
 		pr = resp.Proof
 		ok, err := pr.InclusionProof.Exists(id.Slice())
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf(
+				"inclusion proof couldn't be checked: %+v", err)
 		}
 		if ok {
 			if value == nil {
@@ -470,7 +472,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 			}
 			_, buf, _, _, err := pr.KeyValue()
 			if err != nil {
-				return nil, err
+				return nil, xerrors.Errorf("couldn't get keyvalue: %+v", err)
 			}
 			if bytes.Compare(buf, value) == 0 {
 				return &pr, nil
@@ -481,7 +483,7 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 		time.Sleep(interval / 5)
 	}
 
-	return nil, errors.New("timeout reached and inclusion not found")
+	return nil, xerrors.New("timeout reached and inclusion not found")
 }
 
 // StreamTransactions sends a streaming request to the service. If successful,

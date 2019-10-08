@@ -87,7 +87,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	err := cliApp.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error: %+v", err)
 	}
 	return
 }
@@ -446,6 +446,8 @@ func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.
 		err = errors.New("couldn't decode chainConfig: " + err.Error())
 		return
 	}
+	cl.Roster = chainCfg.Roster
+
 	return
 }
 

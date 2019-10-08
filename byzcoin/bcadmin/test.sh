@@ -5,7 +5,7 @@
 # Options:
 #   -b   re-builds bcadmin package
 
-DBG_TEST=1
+DBG_TEST=2
 DBG_SRV=1
 DBG_BCADMIN=2
 
