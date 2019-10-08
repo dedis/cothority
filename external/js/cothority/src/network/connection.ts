@@ -1,5 +1,6 @@
 import { Message, util } from "protobufjs/light";
 import shuffle from "shuffle-array";
+import URL from "url-parse";
 import Log from "../log";
 import { Roster } from "./proto";
 import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
@@ -53,7 +54,12 @@ export class WebSocketConnection implements IConnection {
      * @param service   Name of the service to reach
      */
     constructor(addr: string, service: string) {
-        this.url = addr;
+        const url = new URL(addr, {});
+        if (typeof window !== "undefined" && window.isSecureContext === true) {
+            url.set("protocol", "wss");
+        }
+        this.url = url.href;
+
         this.service = service;
         this.timeout = 30 * 1000; // 30s by default
     }
