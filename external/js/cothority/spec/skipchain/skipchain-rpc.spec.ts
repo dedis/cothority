@@ -79,7 +79,7 @@ describe("SkipchainRPC Tests", () => {
             .toBeRejected();
         await expectAsync(rejectContains(rpc.getSkipBlock(Buffer.from([1, 2, 3])), "No such block"))
             .toBeResolved();
-        await expectAsync(rejectContains(rpc.getLatestBlock(Buffer.from([1, 2, 3])), "Couldn't find latest skipblock"))
+        await expectAsync(rejectContains(rpc.getLatestBlock(Buffer.from([1, 2, 3])), "couldn't find latest skipblock"))
             .toBeResolved();
     });
 

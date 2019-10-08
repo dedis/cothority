@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/protobuf"
 )
 
@@ -29,7 +28,7 @@ func TestService_StateReplay(t *testing.T) {
 		require.Nil(t, err)
 	}
 
-	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		return s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
 	}
 
@@ -61,13 +60,13 @@ func TestService_StateReplayFailures(t *testing.T) {
 	require.Nil(t, err)
 
 	// 1. error when fetching the genesis block
-	cb := func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		return nil, errors.New("")
 	}
 	tryReplay(t, s, cb, "fail to get the first block:")
 
 	// 2. not a genesis block for the first block
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Index = 1
 		sb.Roster = s.roster
@@ -76,7 +75,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "must start from genesis block")
 
 	// 3. error when getting the next block
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		if !sib.Equal(s.genesis.Hash) {
 			return nil, errors.New("")
 		}
@@ -86,7 +85,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "replay failed to get the next block")
 
 	// 4. bad payload
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Roster = s.roster
 		sb.Payload = []byte{1, 1, 1, 1, 1}
@@ -96,7 +95,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "Error while decoding field")
 
 	// 5. bad data
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
 		sb.Roster = s.roster
 		sb.Payload = []byte{}
@@ -107,9 +106,8 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "Error while decoding field")
 
 	// 6. non matching hash
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb := skipchain.NewSkipBlock()
-		sb.Roster = ro
 		sb.Payload = []byte{}
 		sb.ForwardLink = []*skipchain.ForwardLink{&skipchain.ForwardLink{}}
 		return sb, nil
@@ -117,7 +115,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "client transaction hash does not match")
 
 	// 7. mismatching merkle trie root
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb, err := s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
 		if err != nil {
 			return nil, err
@@ -137,7 +135,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	tryReplay(t, s, cb, "merkle tree root doesn't match with trie root")
 
 	// 8. failing instruction
-	cb = func(ro *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
+	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		sb, err := s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})
 		if err != nil {
 			return nil, err

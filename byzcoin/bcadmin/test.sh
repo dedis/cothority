@@ -27,8 +27,10 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
+    run testDbReplay
+    run testDbMerge
+    run testDbCatchup
     run testDebugBlock
-    run testReplay
     run testLink
     run testLinkScenario
     run testCoin
@@ -52,6 +54,69 @@ main(){
     stopTest
 }
 
+testDbReplay(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testFail runBA db replay conode.db $bcID
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
+
+  testOK runBA mint $bc $key $keyPub 1000
+  testOK runBA mint $bc $key $keyPub 1000
+
+  # replay with more than 1 block
+  runBA db catchup conode.db $bcID http://localhost:2003
+  testNGrep "Replaying block at index 0" runBA db replay conode.db $bcID --cont
+  testReGrep "Replaying block at index 1"
+  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
+  testOK runBA db replay conode.db $bcID --cont
+}
+
+testDbMerge(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  db=$( ls $CONODE_SERVICE_PATH/* | head -n 1 )
+  pkill conode 2> /dev/null
+
+  testOK runBA db merge conode.db $bcID $db
+  testGrep "Last block is: 0" runBA db status conode.db $bcID
+
+  runCoBG 1 2 3
+  testOK runBA mint $bc $key $keyPub 1000
+
+  pkill conode 2> /dev/null
+  testOK runBA db merge conode.db $bcID $db
+  testGrep "Last block is: 3" runBA db status conode.db $bcID
+}
+
+testDbCatchup(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Last block is: 0" runBA db status conode.db $bcID
+  testOK runBA mint $bc $key $keyPub 1000
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Last block is: 3" runBA db status conode.db $bcID
+}
+
 testDebugBlock(){
   rm -f config/*
   runCoBG 1 2 3
@@ -69,26 +134,6 @@ testDebugBlock(){
     --url http://localhost:2003 --bcID $bcID --blockIndex 1
   testGrep "Command: update_config" runBA debug block --bcCfg $bc --blockIndex 1 \
     --txDetails
-}
-
-testReplay(){
-  rm -f config/*
-  runCoBG 1 2 3
-  testOK runBA create public.toml --interval .5s
-  bc=config/bc*cfg
-  key=config/key*cfg
-  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
-  testOK runBA debug replay http://localhost:2003
-
-  # replay with only the genesis block
-  testOK runBA debug replay http://localhost:2003 $bcID
-
-  for i in $( seq 10 ); do
-    testOK runBA mint $bc $key $keyPub 1000
-  done
-  # replay with more than 1 block
-  testOK runBA debug replay http://localhost:2003 $bcID
 }
 
 testLink(){
@@ -168,6 +213,7 @@ testRoster(){
   bc=config/bc*cfg
   key=config/key*cfg
   testOK runBA latest $bc
+
   # Adding an already added roster should raise an error
   testFail runBA roster add $bc $key co1/public.toml
   testOK runBA roster add $bc $key co4/public.toml

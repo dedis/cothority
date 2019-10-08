@@ -212,3 +212,56 @@ $ bcadmin debug block --bc bc-xxx.cfg --index 0 --txDetails
 
 This command will show the genesis-block of the chain defined in `bc-xxx.cfg`
  of all nodes, and also show the transactions contained in that block.
+
+## DataBase Methods
+
+Bcadmin can also work on the database - either a separate, or a database from
+ a conode. The following commands are available:
+ 
+- `db merge` copies the skipblocks from one database to another
+- `db catchup` fetches new blocks from the network
+- `db replay` applies the blocks from the database to the global state
+- `db status` returns simple status' about the internal database
+- `db check` goes through the whole chain and reports on bad blocks
+
+Before a release of a new version, the following commands should be run 
+and return success:
+
+```bash
+bcadmin db catchup cached.db _bcID_ _url_
+bcadmin db replay cached.db _bcID_ --continue
+```
+
+The `_bcID_` has to be replaced by the hexadecimal representation of the 
+chain to be tested (for the DEDIS chain: 
+`9cc36071ccb902a1de7e0d21a2c176d73894b1cf88ae4cc2ba4c95cd76f474f3`) and the 
+`_url_` can be any node in the network who has the needed blocks available, 
+e.g., `https://conode.dedis.ch`.
+
+### Creating a full node out of a caught-up node
+
+If a node is stuck, sometimes the only way to continue is to delete its 
+database and restart it. This works fine, but the node then only has the 
+minimal set of needed blocks and can not participate in catching-up for 
+replays.
+
+Suppose a node has been restarted with an empty database, and has caught up, 
+then you can use the following to store all blocks in the node again:
+
+```bash
+# First you need to stop the node, else the db cannot be modified
+bcadmin db catchup path/to/conode.db _bcID_ _url_
+# Then start the node again
+```
+
+If no other node in the system has all nodes stored, then you can `merge` a 
+db with all nodes:
+```bash
+# First stop the node
+bcadmin db merge --overwrite path/to/conode.db _bcID_ cached.db
+```
+
+The `--overwrite` is necessary to store all blocks from the `cached.db` file 
+to the existing database.
+
+A `cached.db` is available at https://conode.c4dt.org/files/cached.db

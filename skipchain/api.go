@@ -272,7 +272,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 		_, err = c.SendProtobufParallel(roster.List, &GetUpdateChain{
 			LatestID:  latest,
 			MaxHeight: maxLevel,
-			MaxBlocks: maxBlocks,
+			MaxBlocks: maxBlocks - len(update),
 		}, r2, c.options)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't get update chain; last error: %v", err)
@@ -323,6 +323,9 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 				}
 			}
 			update = append(update, b)
+			if len(update) == maxBlocks {
+				return update, nil
+			}
 		}
 
 		last := update[len(update)-1]
