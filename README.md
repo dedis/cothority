@@ -105,6 +105,15 @@ Javascript/Typescript
 const tx = ClientTransaction.make(rpc.getProtocolVersion(), instr1, instr2);
 ```
 
+### Release v3.3.0
+
+An *experimental* contract has been added to ByzCoin making it possible to use
+Ethereum contracts. See directory `bevm`.
+
+The ByzCoin client-side API version number has changed from 1 to 2. Callers
+should use the new version in their requests, but the change is backwards
+compatible and old clients will still work.
+
 # Documentation
 
 The goal of the cothority is to collect projects that
