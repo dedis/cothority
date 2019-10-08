@@ -260,8 +260,8 @@ func dbCheck(c *cli.Context) error {
 					continue
 				}
 				if len(previous.ForwardLink) <= i {
-					log.Warnf("%s points to block with less forward"+
-						"-links to point to itself", errStrBl)
+					log.Warnf("%s points to block with not enough forward"+
+						"-links", errStrBl)
 					continue
 				}
 				if previous.ForwardLink[i].IsEmpty() {

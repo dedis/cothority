@@ -1005,6 +1005,10 @@ func debugBlock(c *cli.Context) error {
 			return xerrors.Errorf("couldn't decode data: %+v", err)
 		}
 		t := time.Unix(dHead.Timestamp/1e9, 0)
+		var blinks []string
+		for _, l := range sb.BackLinkIDs {
+			blinks = append(blinks, fmt.Sprintf("\t\tTo: %x", l))
+		}
 		var flinks []string
 		for _, l := range sb.ForwardLink {
 			flinks = append(flinks, fmt.Sprintf("\t\tTo: %x - NewRoster: %t",
@@ -1012,9 +1016,11 @@ func debugBlock(c *cli.Context) error {
 		}
 		out := fmt.Sprintf("\tBlock %x (index %d) from %s\n"+
 			"\tNode-list: %s\n"+
+			"\tBack-links:\n%s\n"+
 			"\tForward-links:\n%s\n",
 			sb.Hash, sb.Index, t.String(),
 			sb.Roster.List,
+			strings.Join(blinks, "\n"),
 			strings.Join(flinks, "\n"))
 		if c.Bool("txDetails") {
 			var txs []string
