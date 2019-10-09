@@ -3,7 +3,6 @@ package byzcoin
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ContractNamingID is the ID of the naming contract. This contract is a
@@ -68,11 +68,11 @@ func contractNamingFromBytes(in []byte) (Contract, error) {
 func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(NamingInstanceID.Slice())
 	if err != nil {
-		return errors.New("failed to get proof of NamingInstanceID: " + err.Error())
+		return xerrors.Errorf("failed to get proof of NamingInstanceID: %v", err)
 	}
 	ok, err := pr.Exists(NamingInstanceID.Slice())
 	if err != nil {
-		return errors.New("failed to see if proof exists: " + err.Error())
+		return xerrors.Errorf("failed to see if proof exists: %v", err)
 	}
 
 	// The naming contract does not exist yet, so we need to create a
@@ -89,15 +89,15 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 
 	// Check the number of signers match with the number of signatures.
 	if len(inst.SignerIdentities) != len(inst.Signatures) {
-		return errors.New("lengh of identities does not match the length of signatures")
+		return xerrors.New("lengh of identities does not match the length of signatures")
 	}
 	if len(inst.Signatures) == 0 {
-		return errors.New("no signatures - nothing to verify")
+		return xerrors.New("no signatures - nothing to verify")
 	}
 
 	// Check the signature counters.
 	if err := verifySignerCounters(rst, inst.SignerCounter, inst.SignerIdentities); err != nil {
-		return errors.New("failed to verify the counters: " + err.Error())
+		return xerrors.Errorf("failed to verify the counters: %v", err)
 	}
 
 	// Get the darc, we have to do it differently than the normal
@@ -105,26 +105,26 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	// that guards the instance ID in the instruction.
 	if inst.Invoke == nil {
 		// TODO this needs to be changed when we add delete
-		return errors.New("only invoke is supported")
+		return xerrors.New("only invoke is supported")
 	}
 	value := inst.Invoke.Args.Search("instanceID")
 	if value == nil {
-		return errors.New("argument instanceID is missing")
+		return xerrors.New("argument instanceID is missing")
 	}
 	_, _, cID, dID, err := rst.GetValues(value)
 	if err != nil {
-		return fmt.Errorf("failed to get the rst values of %s: %s", value, err.Error())
+		return xerrors.Errorf("failed to get the rst values of %s: %v", value, err)
 	}
 	d, err := LoadDarcFromTrie(rst, dID)
 	if err != nil {
-		return errors.New("failed to load darc from tries: " + err.Error())
+		return xerrors.Errorf("failed to load darc from tries: %v", err)
 	}
 
 	// Check that the darc has the right permission to allow naming.
 	action := "_name:" + cID
 	ex := d.Rules.Get(darc.Action(action))
 	if len(ex) == 0 {
-		return fmt.Errorf("action '%v' does not exist", action)
+		return xerrors.Errorf("action '%v' does not exist", action)
 	}
 
 	// Save the identities that provide good signatures.
@@ -135,7 +135,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		}
 	}
 	if len(goodIdentities) == 0 {
-		return errors.New("all signatures failed to verify")
+		return xerrors.New("all signatures failed to verify")
 	}
 
 	// Evaluate the expression using the good signatures.
@@ -200,7 +200,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		// Construct the key.
 		name := inst.Invoke.Args.Search("name")
 		if len(name) == 0 {
-			err = errors.New("the name cannot be empty")
+			err = xerrors.New("the name cannot be empty")
 			return
 		}
 		h := sha256.New()
@@ -219,10 +219,10 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 				return
 			}
 			if oldEntry.Removed {
-				err = errors.New("cannot create a name that existed before")
+				err = xerrors.New("cannot create a name that existed before")
 				return
 			}
-			err = errors.New("this name already exists")
+			err = xerrors.New("this name already exists")
 			return
 		}
 
@@ -262,7 +262,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		// Construct the key.
 		name := inst.Invoke.Args.Search("name")
 		if len(name) == 0 {
-			err = errors.New("the name cannot be empty")
+			err = xerrors.New("the name cannot be empty")
 			return
 		}
 		h := sha256.New()
@@ -283,7 +283,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 			return
 		}
 		if oldEntry.Removed {
-			err = errors.New("this entry is already removed")
+			err = xerrors.New("this entry is already removed")
 			return
 		}
 
@@ -300,7 +300,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 		return
 	default:
-		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
+		err = xerrors.New("invalid invoke command: " + inst.Invoke.Command)
 		return
 	}
 }

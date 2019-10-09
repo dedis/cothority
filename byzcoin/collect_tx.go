@@ -1,7 +1,6 @@
 package byzcoin
 
 import (
-	"errors"
 	"time"
 
 	"go.dedis.ch/cothority/v3/byzcoinx"
@@ -9,6 +8,7 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
+	"golang.org/x/xerrors"
 )
 
 const defaultMaxNumTxs = 100
@@ -87,13 +87,13 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 // Start starts the protocol, it should only be called on the root node.
 func (p *CollectTxProtocol) Start() error {
 	if !p.IsRoot() {
-		return errors.New("only the root should call start")
+		return xerrors.New("only the root should call start")
 	}
 	if len(p.SkipchainID) == 0 {
-		return errors.New("missing skipchain ID")
+		return xerrors.New("missing skipchain ID")
 	}
 	if len(p.LatestID) == 0 {
-		return errors.New("missing latest skipblock ID")
+		return xerrors.New("missing latest skipblock ID")
 	}
 	req := &CollectTxRequest{
 		SkipchainID: p.SkipchainID,
@@ -126,9 +126,9 @@ func (p *CollectTxProtocol) Dispatch() error {
 	case <-time.After(time.Second):
 		// This timeout checks whether the root started the protocol,
 		// it is not like our usual timeout that detect failures.
-		return errors.New("did not receive request")
+		return xerrors.New("did not receive request")
 	case <-p.closing:
-		return errors.New("closing down system")
+		return xerrors.New("closing down system")
 	}
 
 	maxOut := -1

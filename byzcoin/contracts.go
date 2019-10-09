@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -20,6 +19,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // Contract is the interface that an instance needs
@@ -110,13 +110,13 @@ func (cr *contractRegistry) register(contractID string, f ContractFn, ignoreLock
 	cr.Lock()
 	if cr.locked && !ignoreLock {
 		cr.Unlock()
-		return errors.New("contract registry is locked")
+		return xerrors.New("contract registry is locked")
 	}
 
 	_, exists := cr.registry[contractID]
 	if exists {
 		cr.Unlock()
-		return errors.New("contract already registered")
+		return xerrors.New("contract already registered")
 	}
 
 	cr.registry[contractID] = f
@@ -177,7 +177,7 @@ func RegisterGlobalContract(contractID string, f ContractFn) error {
 func RegisterContract(s skipchain.GetService, contractID string, f ContractFn) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
+		return xerrors.New("Didn't find our service: " + ServiceName)
 	}
 
 	return scs.(*Service).contracts.register(contractID, f, true)
@@ -193,7 +193,7 @@ func GetContractRegistry() ReadOnlyContractRegistry {
 // default implementations for the Contract interface.
 type BasicContract struct{}
 
-func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
+func notImpl(what string) error { return xerrors.Errorf("this contract does not implement %v", what) }
 
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
@@ -247,7 +247,7 @@ func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruct
 		if after < rst.GetIndex() && rst.GetIndex() < before {
 			return nil
 		}
-		return fmt.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
+		return xerrors.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
 	}
 	return darc.AttrInterpreters{"block": cb}
 }
@@ -384,7 +384,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 		return
 	}
 	if d.Rules.Count() == 0 {
-		return nil, nil, errors.New("don't accept darc with empty rules")
+		return nil, nil, xerrors.New("don't accept darc with empty rules")
 	}
 	if err = d.Verify(true); err != nil {
 		log.Error("couldn't verify darc")
@@ -519,7 +519,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		sc, err = updateRosterScs(rst, darcID, req.Roster)
 		return
 	default:
-		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
+		err = xerrors.New("invalid invoke command: " + inst.Invoke.Command)
 		return
 	}
 }
@@ -548,7 +548,7 @@ func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 		return nil, err
 	}
 	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
+		return nil, xerrors.New("did not get " + ContractConfigID)
 	}
 
 	config := ChainConfig{}
@@ -594,7 +594,7 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID, darcContractIDs []stri
 	}
 
 	if _, ok := m[string(contract)]; !ok {
-		return nil, fmt.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
+		return nil, xerrors.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
 	}
 	return darc.NewFromProtobuf(value)
 }
@@ -616,7 +616,7 @@ func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 		}
 	}
 	if !ok {
-		return nil, errors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
+		return nil, xerrors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {

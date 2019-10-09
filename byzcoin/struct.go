@@ -3,7 +3,6 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 )
 
 const defaultMaxSize = (1 << 31) - 1 // maximum 32-bit int
@@ -22,7 +22,7 @@ const prefixLength = 32              // bytes
 const cleanThreshold = 0.8
 
 var bucketStateChangeStorage = []byte("statechangestorage")
-var errLengthInstanceID = errors.New("InstanceID must have 32 bytes")
+var errLengthInstanceID = xerrors.New("InstanceID must have 32 bytes")
 
 // StateChangeEntry is the object stored to keep track of instance history. It
 // contains the state change and the block index
@@ -132,7 +132,7 @@ func (s *stateChangeStorage) calculateSize() error {
 	return s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
-			return errors.New("Missing bucket")
+			return xerrors.New("Missing bucket")
 		}
 
 		return b.ForEach(func(scid, v []byte) error {
@@ -167,7 +167,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 		b := tx.Bucket(s.bucket)
 		if b == nil {
-			return errors.New("Missing bucket")
+			return xerrors.New("Missing bucket")
 		}
 
 		// loop until enough blocks have been cleaned
@@ -339,7 +339,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 	// Run a cleaning procedure first to insure we're not above the limit
 	err := s.cleanBySize()
 	if err != nil {
-		return fmt.Errorf("error when cleaning: %v", err)
+		return xerrors.Errorf("error when cleaning: %v", err)
 	}
 
 	size := s.size
@@ -540,7 +540,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 func (c *Coin) SafeAdd(a uint64) error {
 	s1 := c.Value + a
 	if s1 < c.Value || s1 < a {
-		return errors.New("uint64 overflow")
+		return xerrors.New("uint64 overflow")
 	}
 	c.Value = s1
 	return nil
@@ -553,7 +553,7 @@ func (c *Coin) SafeSub(a uint64) error {
 		c.Value -= a
 		return nil
 	}
-	return errors.New("uint64 underflow")
+	return xerrors.New("uint64 underflow")
 }
 
 type notification struct {
@@ -625,19 +625,19 @@ func (bc *bcNotifications) unregisterForBlocks(ch waitChannel) {
 
 func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 	if c.BlockInterval <= 0 {
-		return errors.New("block interval is less or equal to zero")
+		return xerrors.New("block interval is less or equal to zero")
 	}
 	// too small would make it impossible to even send through a config update tx to fix it,
 	// so don't allow that.
 	if c.MaxBlockSize < 16000 {
-		return errors.New("max block size is less than 16000")
+		return xerrors.New("max block size is less than 16000")
 	}
 	// onet/network.MaxPacketSize is 10 megs, leave some headroom anyway.
 	if c.MaxBlockSize > 8*1e6 {
-		return errors.New("max block size is greater than 8 megs")
+		return xerrors.New("max block size is greater than 8 megs")
 	}
 	if len(c.Roster.List) < 3 {
-		return errors.New("need at least 3 nodes to have a majority")
+		return xerrors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
 		return old.checkNewRoster(c.Roster)
@@ -652,7 +652,7 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 	// Check new leader was in old roster
 	if index, _ := c.Roster.Search(newRoster.List[0].ID); index < 0 {
-		return errors.New("new leader must be in previous roster")
+		return xerrors.New("new leader must be in previous roster")
 	}
 
 	// Check we don't change more than one node
@@ -666,7 +666,7 @@ func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 		}
 	}
 	if len(oldList.List)+added > 1 {
-		return errors.New("can only change one node at a time - adding or removing")
+		return xerrors.New("can only change one node at a time - adding or removing")
 	}
 	return nil
 }

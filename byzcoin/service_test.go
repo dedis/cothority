@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1150,7 +1150,7 @@ func TestService_StateChange(t *testing.T) {
 		case SpawnType:
 			// create the object if it doesn't exist
 			if inst.Spawn.ContractID != "add" {
-				return nil, nil, errors.New("can only spawn add contracts")
+				return nil, nil, xerrors.New("can only spawn add contracts")
 			}
 			binary.PutVarint(zeroBuf, 0)
 			return []StateChange{
@@ -1181,7 +1181,7 @@ func TestService_StateChange(t *testing.T) {
 				},
 			}, nil, nil
 		}
-		return nil, nil, errors.New("need spawn or invoke")
+		return nil, nil, xerrors.New("need spawn or invoke")
 	}
 	s.service().testRegisterContract("add", adaptorNoVerify(f))
 
@@ -2842,7 +2842,7 @@ func adaptorNoVerify(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) 
 }
 
 func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	return nil, nil, errors.New("this invalid contract always returns an error")
+	return nil, nil, xerrors.New("this invalid contract always returns an error")
 }
 
 func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
@@ -2894,7 +2894,7 @@ func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]S
 	}
 
 	if rst.GetVersion() != Version(inst.Spawn.Args[0].Value[0]) {
-		return nil, nil, errors.New("wrong byzcoin version")
+		return nil, nil, xerrors.New("wrong byzcoin version")
 	}
 
 	sc := NewStateChange(Create, NewInstanceID(inst.Hash()), versionContract, inst.Spawn.Args[0].Value, darcID)

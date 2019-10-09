@@ -3,15 +3,15 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 )
 
-var errKeyNotSet = errors.New("key not set")
+var errKeyNotSet = xerrors.New("key not set")
 
 // GlobalState is used to query for any data in byzcoin.
 type GlobalState interface {
@@ -124,7 +124,7 @@ func (t *stagingStateTrie) GetIndex() int {
 func (t *stagingStateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
 	newTrie := t.Clone()
 	if err := newTrie.StoreAll(scs); err != nil {
-		return nil, errors.New("replica failed to store state changes: " + err.Error())
+		return nil, xerrors.Errorf("replica failed to store state changes: %v", err)
 	}
 	return newTrie, nil
 }
@@ -198,7 +198,7 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 		}
 
 		if expectedRoot != nil && !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
-			return errors.New("root verfication failed")
+			return xerrors.New("root verfication failed")
 		}
 		return nil
 	})
@@ -256,7 +256,7 @@ func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
 // trie since the receiver is not a stagingStateTrie. Convert it to a
 // stagingStateTrie and then use StoreAllToReplica.
 func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, error) {
-	return nil, errors.New("unsupported operation")
+	return nil, xerrors.New("unsupported operation")
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.
@@ -317,7 +317,7 @@ func (s *roSkipChain) GetGenesisBlock() (*skipchain.SkipBlock, error) {
 func (s *roSkipChain) GetBlock(id skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 	sb := s.inner.GetDB().GetByID(id)
 	if sb == nil {
-		return nil, errors.New("block not found")
+		return nil, xerrors.New("block not found")
 	}
 	return sb, nil
 }

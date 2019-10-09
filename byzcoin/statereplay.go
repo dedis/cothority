@@ -2,10 +2,10 @@ package byzcoin
 
 import (
 	"bytes"
-	"fmt"
+	"time"
+
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
-	"time"
 
 	"go.dedis.ch/kyber/v3/pairing"
 
@@ -20,7 +20,7 @@ import (
 type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
 func replayError(sb *skipchain.SkipBlock, msg string) error {
-	return fmt.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
+	return xerrors.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until
@@ -76,7 +76,7 @@ func (s *Service) ReplayStateDB(db *bbolt.DB, bucket []byte,
 func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
 	sb, err := cb(id)
 	if err != nil {
-		return nil, fmt.Errorf("fail to get the first block: %s", err.Error())
+		return nil, xerrors.Errorf("fail to get the first block: %v", err)
 	}
 
 	var st *stateTrie
@@ -87,10 +87,10 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 		if sb.Index != 0 {
 			// It could be possible to start from a non-genesis block but you need to download
 			// the state trie first from a conode in addition to the block
-			return nil, fmt.Errorf("must start from genesis block but found index %d", sb.Index)
+			return nil, xerrors.Errorf("must start from genesis block but found index %d", sb.Index)
 		}
 	} else if st.GetIndex()+1 != sb.Index {
-		return nil, fmt.Errorf("got a skipblock with index %d for trie with"+
+		return nil, xerrors.Errorf("got a skipblock with index %d for trie with"+
 			" index %d", sb.Index, st.GetIndex()+1)
 	}
 
@@ -197,7 +197,7 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 			// states for each block.
 			sb, err = cb(sb.ForwardLink[0].To)
 			if err != nil {
-				return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
+				return nil, xerrors.Errorf("replay failed to get the next block: %v", err)
 			}
 		} else {
 			sb = nil

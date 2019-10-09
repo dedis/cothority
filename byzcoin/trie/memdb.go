@@ -1,8 +1,9 @@
 package trie
 
 import (
-	"errors"
 	"sync"
+
+	"golang.org/x/xerrors"
 )
 
 // memDB is the DB implementation for an in-memory database.
@@ -76,7 +77,7 @@ func (r *memBucket) Get(k []byte) []byte {
 
 func (r *memBucket) Put(k, v []byte) error {
 	if !r.writable {
-		return errors.New("trying to use Put in a read-only transaction")
+		return xerrors.New("trying to use Put in a read-only transaction")
 	}
 	r.storage[string(k)] = clone(v)
 	return nil
@@ -84,7 +85,7 @@ func (r *memBucket) Put(k, v []byte) error {
 
 func (r *memBucket) Delete(k []byte) error {
 	if !r.writable {
-		return errors.New("trying to use Put in a read-only transaction")
+		return xerrors.New("trying to use Put in a read-only transaction")
 	}
 	delete(r.storage, string(k))
 	return nil

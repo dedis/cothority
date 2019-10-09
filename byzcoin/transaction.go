@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"hash"
 	"regexp"
@@ -17,6 +16,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // An InstanceID is a unique identifier for one instance of a contract.
@@ -292,16 +292,16 @@ func (instr Instruction) String() string {
 // side.
 func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	if len(signers) != len(instr.SignerIdentities) {
-		return errors.New("the number of signers does not match the number of identities")
+		return xerrors.New("the number of signers does not match the number of identities")
 	}
 	if len(signers) != len(instr.SignerCounter) {
-		return errors.New("the number of signers does not match the number of counters")
+		return xerrors.New("the number of signers does not match the number of counters")
 	}
 	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {
 		signerID := signers[i].Identity()
 		if !instr.SignerIdentities[i].Equal(&signerID) {
-			return errors.New("signer identity is not set correctly")
+			return xerrors.New("signer identity is not set correctly")
 		}
 		sig, err := signers[i].Sign(msg)
 		if err != nil {
@@ -346,7 +346,7 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
-		return errors.New("lengh of identities does not match the length of signatures")
+		return xerrors.New("lengh of identities does not match the length of signatures")
 	}
 
 	// check the signature counters
@@ -365,15 +365,15 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// get the darc
 	d, err := getInstanceDarc(st, instr.InstanceID, config.DarcContractIDs)
 	if err != nil {
-		return errors.New("darc not found: " + err.Error())
+		return xerrors.Errorf("darc not found: %v", err)
 	}
 	if len(instr.Signatures) == 0 {
-		return errors.New("no signatures - nothing to verify")
+		return xerrors.New("no signatures - nothing to verify")
 	}
 
 	// check the action
 	if !d.Rules.Contains(darc.Action(instr.Action())) {
-		return fmt.Errorf("action '%v' does not exist", instr.Action())
+		return xerrors.Errorf("action '%v' does not exist", instr.Action())
 	}
 
 	// check the signature

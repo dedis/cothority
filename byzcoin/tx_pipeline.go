@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // collectTxResult contains the aggregated response of the conodes to the
@@ -105,7 +105,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	bcConfig, err := s.LoadConfig(s.scID)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
-			"a problem with the database! "+err.Error())
+			"a problem with the database! ", err)
 		return nil, err
 	}
 
@@ -114,8 +114,8 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	latest, err := s.db().GetLatestByID(s.scID)
 	if err != nil {
 		log.Errorf("Error while searching for %x", s.scID[:])
-		log.Error("DB is in bad state and cannot find skipchain anymore: " + err.Error() +
-			" This function should never be called on a skipchain that does not exist.")
+		log.Error("DB is in bad state and cannot find skipchain anymore."+
+			" This function should never be called on a skipchain that does not exist.", err)
 		return nil, err
 	}
 
@@ -129,11 +129,11 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 
 	proto, err := s.CreateProtocol(collectTxProtocol, tree)
 	if err != nil {
-		log.Error(s.ServerIdentity(), "Protocol creation failed with error: "+err.Error()+
+		log.Error(s.ServerIdentity(), "Protocol creation failed with error."+
 			" This panic indicates that there is most likely a programmer error,"+
 			" e.g., the protocol does not exist."+
 			" Hence, we cannot recover from this failure without putting"+
-			" the server in a strange state, so we panic.")
+			" the server in a strange state, so we panic.", err)
 		return nil, err
 	}
 	root := proto.(*CollectTxProtocol)
@@ -147,10 +147,10 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 
 	log.Lvl2("Asking", root.Roster().List, "for Txs")
 	if err := root.Start(); err != nil {
-		log.Error(s.ServerIdentity(), "Failed to start the protocol with error: "+err.Error()+
+		log.Error(s.ServerIdentity(), "Failed to start the protocol with error."+
 			" Start() only returns an error when the protocol is not initialised correctly,"+
 			" e.g., not all the required fields are set."+
-			" If you see this message then there may be a programmer error.")
+			" If you see this message then there may be a programmer error.", err)
 		return nil, err
 	}
 
@@ -201,7 +201,7 @@ func (s *defaultTxProcessor) ProcessTx(tx ClientTransaction, inState *txProcesso
 	latest := s.latest
 	s.Unlock()
 	if latest == nil {
-		return nil, errors.New("missing latest block in processor")
+		return nil, xerrors.New("missing latest block in processor")
 	}
 
 	header, err := decodeBlockHeader(latest)
@@ -276,7 +276,7 @@ func (s *defaultTxProcessor) GetInterval() time.Duration {
 	bcConfig, err := s.LoadConfig(s.scID)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
-			"a problem with the database! "+err.Error())
+			"a problem with the database! ", err)
 		return defaultInterval
 	}
 	return bcConfig.BlockInterval
@@ -300,7 +300,7 @@ func (s *defaultTxProcessor) GetBlockSize() int {
 	bcConfig, err := s.LoadConfig(s.scID)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "couldn't get configuration - this is bad and probably "+
-			"a problem with the database! "+err.Error())
+			"a problem with the database! ", err)
 		return defaultMaxBlockSize
 	}
 	return bcConfig.MaxBlockSize
@@ -490,7 +490,7 @@ func (p *txPipeline) processTxs(initialState *txProcessorState) {
 				// (the last one) and then apply the new transaction to it
 				newStates, err := p.processor.ProcessTx(tx, currentState[len(currentState)-1])
 				if err != nil {
-					log.Error("processing transaction failed with error: " + err.Error())
+					log.Error("processing transaction failed with error:", err)
 				} else {
 					// Remove the last one from currentState because
 					// it might be getting updated and then append newStates.

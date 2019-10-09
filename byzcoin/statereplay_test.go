@@ -1,12 +1,12 @@
 package byzcoin
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // Test the expected use case
@@ -61,7 +61,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 	// 1. error when fetching the genesis block
 	cb := func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-		return nil, errors.New("")
+		return nil, xerrors.New("")
 	}
 	tryReplay(t, s, cb, "fail to get the first block:")
 
@@ -77,7 +77,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 	// 3. error when getting the next block
 	cb = func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 		if !sib.Equal(s.genesis.Hash) {
-			return nil, errors.New("")
+			return nil, xerrors.New("")
 		}
 
 		return s.service().skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sib})

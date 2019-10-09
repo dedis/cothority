@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"bytes"
-	"errors"
 
 	"golang.org/x/xerrors"
 
@@ -64,27 +63,27 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 }
 
 // ErrorVerifyTrie is returned if the proof itself is not properly set up.
-var ErrorVerifyTrie = errors.New("trie inclusion proof is wrong")
+var ErrorVerifyTrie = xerrors.New("trie inclusion proof is wrong")
 
 // ErrorVerifyTrieRoot is returned if the root of the trie is different than
 // the stored value in the skipblock.
-var ErrorVerifyTrieRoot = errors.New("root of trie is not in skipblock")
+var ErrorVerifyTrieRoot = xerrors.New("root of trie is not in skipblock")
 
 // ErrorVerifySkipchain is returned if the stored skipblock doesn't
 // have a proper proof that it comes from the genesis block.
-var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved from genesis block")
+var ErrorVerifySkipchain = xerrors.New("stored skipblock is not properly evolved from genesis block")
 
 // ErrorVerifyHash is returned if the latest block hash does not match
 // the target of the last forward link.
-var ErrorVerifyHash = errors.New("last forward link does not point to the latest block")
+var ErrorVerifyHash = xerrors.New("last forward link does not point to the latest block")
 
 // ErrorMissingForwardLinks is returned if no forward-link is found
 // in the proof.
-var ErrorMissingForwardLinks = errors.New("missing forward-links")
+var ErrorMissingForwardLinks = xerrors.New("missing forward-links")
 
 // ErrorMalformedForwardLink is returned when the new roster is not defined in the link
 // but is expected to be.
-var ErrorMalformedForwardLink = errors.New("missing new roster from the forward-link")
+var ErrorMalformedForwardLink = xerrors.New("missing new roster from the forward-link")
 
 // VerifyFromBlock takes a skipchain id and the first block of the proof. It
 // verifies that the proof is valid for this skipchain. It verifies the proof,
@@ -172,11 +171,11 @@ func (p Proof) VerifyInclusionProof(latest *skipchain.SkipBlock) error {
 func (p Proof) KeyValue() (key []byte, value []byte, contractID string, darcID darc.ID, err error) {
 	k, vals := p.InclusionProof.KeyValue()
 	if len(k) == 0 {
-		err = errors.New("empty key")
+		err = xerrors.New("empty key")
 		return
 	}
 	if len(vals) == 0 {
-		err = errors.New("no value")
+		err = xerrors.New("no value")
 		return
 	}
 	var s StateChangeBody
@@ -196,7 +195,7 @@ func (p Proof) KeyValue() (key []byte, value []byte, contractID string, darcID d
 func (p Proof) Get(k []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	vals := p.InclusionProof.Get(k)
 	if len(vals) == 0 {
-		err = errors.New("no value")
+		err = xerrors.New("no value")
 		return
 	}
 	var s StateChangeBody
@@ -221,7 +220,7 @@ func (p Proof) VerifyAndDecode(suite network.Suite, cid string, value interface{
 		return err
 	}
 	if contractID != cid {
-		return errors.New("not an instance of this contract")
+		return xerrors.New("not an instance of this contract")
 	}
 	return protobuf.DecodeWithConstructors(buf, value, network.DefaultConstructors(suite))
 }

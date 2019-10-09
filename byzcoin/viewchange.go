@@ -2,8 +2,6 @@ package byzcoin
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -18,6 +16,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 type viewChangeManager struct {
@@ -119,7 +118,7 @@ func (m *viewChangeManager) closeAll() {
 // function should only be used as a callback in viewchange.Controller.
 func (s *Service) sendViewChangeReq(view viewchange.View) error {
 	if view.LeaderIndex < 0 {
-		return errors.New("leader index must be positive")
+		return xerrors.New("leader index must be positive")
 	}
 
 	log.Lvl2(s.ServerIdentity(), "sending view-change request for view:", view)
@@ -211,16 +210,16 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 	// Parse message.
 	req, ok := env.Msg.(*viewchange.InitReq)
 	if !ok {
-		return fmt.Errorf("%v failed to cast to viewchange.ViewChangeReq", s.ServerIdentity())
+		return xerrors.Errorf("%v failed to cast to viewchange.ViewChangeReq", s.ServerIdentity())
 	}
 	// Should not be sending to ourself.
 	if req.SignerID.Equal(s.ServerIdentity().ID) {
-		return fmt.Errorf("%v should not send to ourself", s.ServerIdentity())
+		return xerrors.Errorf("%v should not send to ourself", s.ServerIdentity())
 	}
 
 	// Check that the genesis exists and the view is valid.
 	if gen := s.db().GetByID(req.View.Gen); gen == nil || gen.Index != 0 {
-		return fmt.Errorf("%v cannot find the genesis block in request", s.ServerIdentity())
+		return xerrors.Errorf("%v cannot find the genesis block in request", s.ServerIdentity())
 	}
 	reqLatest := s.db().GetByID(req.View.ID)
 	if reqLatest == nil {
@@ -229,7 +228,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		// delay for triggering view-change should be longer than the
 		// time it takes to create and propagate a new block. Hence,
 		// somebody is sending bogus views.
-		return fmt.Errorf("%v we do not know this view", s.ServerIdentity())
+		return xerrors.Errorf("%v we do not know this view", s.ServerIdentity())
 	}
 	if len(reqLatest.ForwardLink) != 0 {
 		// This is because the node is out-of-sync with others. If the current leader happens
@@ -241,19 +240,19 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) error {
 		ro := onet.NewRoster([]*network.ServerIdentity{env.ServerIdentity})
 		err := s.skService().PropagateProof(ro, req.View.Gen)
 		if err != nil {
-			log.Errorf("View change failed to propagate a proof: %s", err.Error())
+			log.Errorf("View change failed to propagate a proof: %+v", err)
 		}
 
-		return fmt.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
+		return xerrors.Errorf("%v view-change should not happen for blocks that are not the latest", s.ServerIdentity())
 	}
 
 	// Check signature.
 	_, signerSID := reqLatest.Roster.Search(req.SignerID)
 	if signerSID == nil {
-		return fmt.Errorf("%v signer does not exist", s.ServerIdentity())
+		return xerrors.Errorf("%v signer does not exist", s.ServerIdentity())
 	}
 	if err := schnorr.Verify(cothority.Suite, signerSID.Public, req.Hash(), req.Signature); err != nil {
-		return fmt.Errorf("%v %v", s.ServerIdentity(), err)
+		return xerrors.Errorf("%v: %v", s.ServerIdentity(), err)
 	}
 
 	// Store it in our log.
@@ -266,7 +265,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	sb := s.db().GetByID(req.GetView().ID)
 	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
 	if !newRoster.List[0].Equal(s.ServerIdentity()) {
-		return nil, errors.New("startViewChangeCosi should not be called by non-leader")
+		return nil, xerrors.New("startViewChangeCosi should not be called by non-leader")
 	}
 	proto, err := s.CreateProtocol(viewChangeFtCosi, newRoster.GenerateBinaryTree())
 	if err != nil {
@@ -370,7 +369,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return err
 	}
 	if len(sb.Roster.List) < 4 {
-		return errors.New("roster size is too small, must be >= 4")
+		return xerrors.New("roster size is too small, must be >= 4")
 	}
 
 	reqBuf, err := protobuf.Encode(&req)

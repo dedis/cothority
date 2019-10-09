@@ -3,10 +3,9 @@ package byzcoin
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
-	"fmt"
 
 	"go.dedis.ch/cothority/v3/darc"
+	"golang.org/x/xerrors"
 )
 
 // getSignerCounter returns 0 if the key is not set, otherwise it loads the
@@ -60,11 +59,11 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 // respect to the current counters.
 func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, ids []darc.Identity) error {
 	if len(counters) != len(ids) {
-		return errors.New("lengths of the counters and signatures are not the same")
+		return xerrors.New("lengths of the counters and signatures are not the same")
 	}
 	for i, counter := range counters {
 		if !ids[i].PrimaryIdentity() {
-			return errors.New("not a primary identity")
+			return xerrors.New("not a primary identity")
 		}
 		id := ids[i].String()
 		c, err := getSignerCounter(st, id)
@@ -75,7 +74,7 @@ func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, ids []darc.Id
 		// to 0, this is the intended behaviour, otherwise the client
 		// will not be able to make more transactions.
 		if counter != c+1 {
-			return fmt.Errorf("for pk %s, got counter=%v, but need %v", id, counter, c+1)
+			return xerrors.Errorf("for pk %s, got counter=%v, but need %v", id, counter, c+1)
 		}
 	}
 	return nil
