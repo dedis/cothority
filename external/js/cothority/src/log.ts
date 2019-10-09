@@ -138,10 +138,10 @@ export class Logger {
     catch(e: (Error | string), ...args: any) {
         let errMsg = e;
         if (e instanceof Error) {
-            errMsg = (e as Error).message;
+            errMsg = e.message;
         }
         if (e instanceof Error) {
-            for (let i = 1; i < (e as Error).stack.split("\n").length; i++) {
+            for (let i = 1; i < e.stack.split("\n").length; i++) {
                 this.out("C : " + this.printCaller(e, i) + " -> " + this.joinArgs(args));
             }
         } else {
@@ -153,7 +153,7 @@ export class Logger {
         this.stackFrameOffset++;
         this.catch(e, ...args);
         this.stackFrameOffset--;
-        const errMsg = e instanceof Error ? (e as Error).message : e;
+        const errMsg = e instanceof Error ? e.message : e;
         return Promise.reject(errMsg.toString().replace(/Error: /, ""));
     }
 }
