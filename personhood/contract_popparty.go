@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"go.dedis.ch/cothority/v3/darc/expression"
 	"strings"
 
 	"go.dedis.ch/kyber/v3/util/key"
@@ -97,7 +98,12 @@ func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	if err != nil {
 		return nil, nil, errors.New("couldn't get darc: " + err.Error())
 	}
-	expr := d.Rules.Get("invoke:finalize")
+	var expr expression.Expr
+	if rst.GetVersion() < 2 {
+		expr = d.Rules.Get("invoke:finalize")
+	} else {
+		expr = d.Rules.Get("invoke:popParty.finalize")
+	}
 	c.Organizers = len(strings.Split(string(expr), "|"))
 
 	miningRewardBuf := inst.Spawn.Args.Search("miningReward")
