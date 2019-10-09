@@ -7,18 +7,11 @@ const lvlStr = ["E ", "W ", "I ", "!4", "!3", "!2", "!1", "P ", " 1", " 2", " 3"
 
 export class Logger {
 
-    set lvl(l) {
-        this._lvl = l;
-    }
-
-    get lvl() {
-        return this._lvl;
-    }
-    _lvl: number;
+    lvl: number;
     stackFrameOffset: number = 0;
 
     constructor(lvl: number) {
-        this._lvl = lvl === undefined ? defaultLvl : lvl;
+        this.lvl = lvl === undefined ? defaultLvl : lvl;
     }
     out = (...str: string[]) => {
         // tslint:disable-next-line
@@ -80,7 +73,7 @@ export class Logger {
     printLvl(l: number, args: any) {
         let indent = Math.abs(l);
         indent = indent >= 5 ? 0 : indent;
-        if (l <= this._lvl) {
+        if (l <= this.lvl) {
             // tslint:disable-next-line
             this.out(lvlStr[l + 7] + ": " + this.printCaller(new Error(), 3) +
                 " -> " + " ".repeat(indent * 2) + this.joinArgs(args));

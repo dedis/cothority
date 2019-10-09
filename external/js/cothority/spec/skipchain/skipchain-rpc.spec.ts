@@ -1,4 +1,5 @@
 import { SkipBlock, SkipchainRPC } from "../../src/skipchain";
+import Log from "../../src/log";
 import { ROSTER, startConodes } from "../support/conondes";
 
 describe("SkipchainRPC Tests", () => {
@@ -48,7 +49,7 @@ describe("SkipchainRPC Tests", () => {
             await rpc2.addBlock(genesis.hash, Buffer.from("def"));
         }
 
-        const chain = await rpc.getUpdateChain(genesis.hash);
+        const chain = await rpc2.getUpdateChain(genesis.hash);
         expect(chain.length).toBe(7);
     });
 
