@@ -34,54 +34,11 @@ _: &stage_deploy_npm
 dist: trusty
 
 stages:
-  - lint
-  - build
   - test
-  - deploy
 
 jobs:
   include:
-    - stage: lint
-      name: "protobuf"
-      language: minimal
-      script: make test_proto
-    - <<: *stage_lint_go
-      <<: *language_go_1_13
-
-    - stage: build
-      <<: *stage_build_go
-      <<: *language_go_1_12
-    - <<: *stage_build_go
-      <<: *language_go_1_13
-
-    - name: "js > kyber"
-      <<: *language_js
-      script:
-        - cd external/js/kyber
-        - npm ci
-        - npm run build
-    - name: "js > cothority"
-      <<: *language_js
-      script:
-        - *gen_link_kyber
-        - cd external/js/cothority
-        - npm ci
-        - npm link @dedis/kyber
-        - npm run build
-
     - stage: test
-      <<: *language_go_1_13
-      <<: *stage_test_go
-    - name: "java"
-      language: java
-      install: *get_go
-      script: make test_java
-    - name: "js > kyber"
-      <<: *language_js
-      script:
-        - cd external/js/kyber
-        - npm ci
-        - npm run test
     - name: "js > cothority"
       <<: *language_js
       install: *get_go
@@ -92,33 +49,7 @@ jobs:
         - cd external/js/cothority
         - npm ci
         - npm link @dedis/kyber
-        - npm run test
-
-    - stage: deploy
-      name: "NPM: js > kyber"
-      <<: *stage_deploy_npm
-      deploy:
-        on:
-          branch: master
-        provider: script
-        script: >-
-          cd external/js/kyber &&
-          npm ci &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
-    - name: "NPM: js > cothority"
-      <<: *stage_deploy_npm
-      deploy:
-        on:
-          branch: master
-        provider: script
-        script: >-
-          cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
-          cd external/js/cothority &&
-          npm ci &&
-          npm link @dedis/kyber &&
-          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-          ./publish.sh --tag dev
+        - npm run test:nocover -- --filter=SkipchainRPC
 
 notifications:
   email: false
