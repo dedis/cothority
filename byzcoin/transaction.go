@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )

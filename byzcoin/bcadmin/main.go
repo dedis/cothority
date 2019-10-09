@@ -211,6 +211,8 @@ func link(c *cli.Context) error {
 			}
 			cl.Roster = cc.Roster
 			break
+		if cl == nil {
+			return xerrors.New("didn't manage to find a node with a valid copy of the given skipchain-id")
 		}
 	}
 	if cl == nil {

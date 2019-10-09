@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v3/darc"
 	"golang.org/x/xerrors"
 
 	"testing"

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
