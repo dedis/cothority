@@ -4,7 +4,7 @@ Scripts for coding and best practices for the DeDiS-workgroup.
 
 ## GitHub usage
 
-On top of github, we rely on the [ZenHub](http://ZenHub.io) for project
+We use a [GitHub project](https://github.com/orgs/dedis/projects/1) for project
 management. We use its board to put each task into a 'pipeline':
 
 - Ready4Merge: pull-requests we think are ready to be merged. Please
@@ -15,8 +15,6 @@ should be done.
 OK to move things around between WIP and the following pipeline
 - TODO: Open issues that should be treated next.
 - BUG: Issues that make the project behave in a not-wanted way.
-- NeedDetails: Issues that are not detailed enough to work on them
-and need more explanation.
 
 ### Branches
 
@@ -25,17 +23,6 @@ All work has to be done in branches. Per default, branches go off from
 
 The branch-name should be one to three words, concatenated using underscores,
 followed by the number of the issue it solves.
-If you work on a foreign branch, include the start of the foreign branch in
-your branch.
-
-Let's say user 1 made a branch `add_platform_lxc_345` and you want to
-participate, you'll create a branch that goes off it with the name
-`add_platform_lxc_macosxfix_345` and do a pull request to the first branch,
-`add_platform_lxc_345`.
-
-There are two scripts, [`gic`](#gid) and [`gid`](#gid), in the `bin`
-directory which make it a lot easier to handle a lot of long branch names
-and can save you a lot of typing.
 
 ### Pull Requests and Issues
 
@@ -44,19 +31,16 @@ requests. Ideally this allows to have general discussions in the
 issues and more implementation-specific discussions in the pull request.
 If a pull request is deleted, the general discussion is still available.
 
-Using Zenhub, you can connect pull-requests and issues, so they show
-up as being together in the zenhub-board.
-
 ### Assignees
 
 An issue/pull-request with an assignee belongs to this person - he is
- responsible for it. Specially for a pull-request, this means:
+responsible for it. Specially for a pull-request, this means:
 
 - only the assignee may add commits to this pull-request
 - only somebody else than the assignee may merge the pull-request
 
 If somebody else wants to participate on a given pull-request, he can make a
- new branch off from this pull-request and continue the work therein:
+new branch off from this pull-request and continue the work therein:
 
 ```
 PR1 with assignee1
@@ -73,14 +57,10 @@ The general rule is that for each commit, all tests should pass. This is not
 
 ### Merge to master
 
-Before merging into master, all tests MUST pass. This can be enforced by
-using the ```.git/hooks/pre-push``` hook provided in this repository.
+Before merging into master, all tests MUST pass.
 Then you have to pass code-review by one or two other developers, which will
 comment your code and ask for changes. Only once at least one other
 developer is happy with your branch can he merge it.
-
-It is good practice to do a `squash` when merging and adding all important
-information about the merge in the squash-comment.
 
 ### Travis
 
@@ -93,13 +73,6 @@ In every PR the code coverage shall not decrease (+/-0.5% is OK though).
 We aim for ~100% and have 80% as lower boundary. Code containing only `func main`
 and not much more is OK if it is tested by integration tests and manually instead
 of unit tests (for these few packages may have lower code coverage).
-
-### Go-imports and git pre-push
-
-If you have troubles using goimports in your editor, please use the pre-push hook
-in this directory for git. If you alread installed the 'bin'-directory with
-`add_path_to_mac`, you can just call `add_hooks`. Now everytime before your
-changes get pushed, `goimport` renices all your files.
 
 ## Comments
 
@@ -122,28 +95,6 @@ except function- and variable-names that aren't English words.
 ## Line-width
 
 The standard line-width is 80 characters and this is a hard limit.
-
-## Scripts
-
-Two scripts are provided for more easy switching and cleaning up between
-branches.
-
-### gic
-
-The bash script [`gic`](bin/gic) stands for git-checkout. If you call it
-without any arguments, it will output a list of all branches that are checked
-out, together with a number in front. This lets you easily change between
-branches.
-
-New branches that have never been checked out will come in the second part of
-the list and can be checked out the same way.
-
-### gid
-
-The script [`gid`](bin/gic) will delete a local branch to make place for new
-branches. Called without arguments, it will show a list of all branches
-available for deletion, called with a number, it will try to delete that
-branch. This can fail if the branch hasn't been pushed.
 
 ## Debug-levels
 
