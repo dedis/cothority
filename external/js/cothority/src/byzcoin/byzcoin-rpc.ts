@@ -31,8 +31,6 @@ const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
 
-    static staticCounters: Map<string, Map<string, Long>> = new Map<string, Map<string, Long>>();
-
     /**
      * Helper to create a genesis darc
      * @param signers       Authorized signers
@@ -67,14 +65,14 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @returns a promise that resolves with the initialized ByzCoin instance
      */
     static async fromByzcoin(roster: Roster, skipchainID: Buffer, waitMatch: number = 0, interval: number = 1000,
-                             latest: SkipBlock = null):
+                             latest?: SkipBlock):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
         rpc.conn = new RosterWSConnection(roster, "ByzCoin");
 
         const skipchain = new SkipchainRPC(roster);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
-        rpc._latest = latest ? latest : rpc.genesis;
+        rpc._latest = latest !== undefined ? latest : rpc.genesis;
 
         const ccProof = await rpc.getProofFromLatest(CONFIG_INSTANCE_ID, waitMatch, interval);
         rpc.config = ChainConfig.fromProof(ccProof);
@@ -112,6 +110,8 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         return rpc;
     }
+
+    private static staticCounters = new Map<string, Map<string, Long>>();
     private _latest: SkipBlock;
     private genesisDarc: Darc;
     private config: ChainConfig;
@@ -246,7 +246,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @return a promise that resolves with the proof, rejecting otherwise
      */
     async getProofFromLatest(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
-        if (!this._latest) {
+        if (this._latest === undefined) {
             throw new Error("no latest block found");
         }
 
