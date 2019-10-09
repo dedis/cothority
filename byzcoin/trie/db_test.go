@@ -2,10 +2,10 @@ package trie
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 )
 
 func TestDB(t *testing.T) {
@@ -24,7 +24,7 @@ func testDB(t *testing.T, db DB) {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if v := b.Get(k); !bytes.Equal(k, v) {
-				return errors.New("got an unexpected value")
+				return xerrors.New("got an unexpected value")
 			}
 		}
 		return nil
@@ -36,7 +36,7 @@ func testDB(t *testing.T, db DB) {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if v := b.Get(k); !bytes.Equal(k, v) {
-				return errors.New("got an unexpected value")
+				return xerrors.New("got an unexpected value")
 			}
 		}
 		return nil
@@ -53,7 +53,7 @@ func testDB(t *testing.T, db DB) {
 	err = db.View(func(b Bucket) error {
 		v := b.Get([]byte("hello"))
 		if v != nil {
-			return errors.New("failed tx exists")
+			return xerrors.New("failed tx exists")
 		}
 		return nil
 	})
@@ -119,7 +119,7 @@ func testDBDryRun(t *testing.T, db DB) {
 			k := []byte{byte(i)}
 			v := []byte{byte(i * 2)}
 			if v2 := b.Get(k); !bytes.Equal(v, v2) {
-				return errors.New("values are not updated in dry-run")
+				return xerrors.New("values are not updated in dry-run")
 			}
 		}
 		return nil
@@ -131,7 +131,7 @@ func testDBDryRun(t *testing.T, db DB) {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if v := b.Get(k); !bytes.Equal(k, v) {
-				return errors.New("missing value after dry-run")
+				return xerrors.New("missing value after dry-run")
 			}
 		}
 		return nil

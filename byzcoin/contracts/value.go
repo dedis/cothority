@@ -1,10 +1,9 @@
 package contracts
 
 import (
-	"errors"
-
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"golang.org/x/xerrors"
 )
 
 // The value contract can simply store a value in an instance and serves
@@ -66,7 +65,7 @@ func (c ContractValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 		}
 		return
 	default:
-		return nil, nil, errors.New("Value contract can only update")
+		return nil, nil, xerrors.New("Value contract can only update")
 	}
 }
 

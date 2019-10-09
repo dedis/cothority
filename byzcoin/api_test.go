@@ -42,7 +42,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Hash = sb.CalculateHash()
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "wrong roster in genesis block", err.Error())
+	require.Contains(t, err.Error(), "wrong roster in genesis block")
 
 	sb.Roster = roster
 	sb.Payload = []byte{1, 2, 3}
@@ -55,7 +55,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	sb.Hash = sb.CalculateHash()
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "genesis block should only have one transaction", err.Error())
+	require.Contains(t, err.Error(), "genesis block should only have one transaction")
 
 	data := &DataBody{
 		TxResults: []TxResult{
@@ -67,7 +67,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	require.NoError(t, err)
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "didn't get a spawn instruction", err.Error())
+	require.Contains(t, err.Error(), "didn't get a spawn instruction")
 
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
 		Args: []Argument{
@@ -98,7 +98,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	require.NoError(t, err)
 	_, err = newLedgerWithClient(msg, c)
 	require.Error(t, err)
-	require.Equal(t, "wrong darc spawned", err.Error())
+	require.Contains(t, err.Error(), "wrong darc spawned")
 }
 
 func TestClient_CreateTransaction(t *testing.T) {

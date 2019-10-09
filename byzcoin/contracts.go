@@ -2,7 +2,6 @@ package byzcoin
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -17,9 +16,9 @@ import (
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // Contract is the interface that an instance needs
@@ -110,13 +109,13 @@ func (cr *contractRegistry) register(contractID string, f ContractFn, ignoreLock
 	cr.Lock()
 	if cr.locked && !ignoreLock {
 		cr.Unlock()
-		return errors.New("contract registry is locked")
+		return xerrors.New("contract registry is locked")
 	}
 
 	_, exists := cr.registry[contractID]
 	if exists {
 		cr.Unlock()
-		return errors.New("contract already registered")
+		return xerrors.New("contract already registered")
 	}
 
 	cr.registry[contractID] = f
@@ -166,7 +165,8 @@ var globalContractRegistry = newContractRegistry()
 // be called during module initialization as the registry will be locked down
 // after the first cloning.
 func RegisterGlobalContract(contractID string, f ContractFn) error {
-	return globalContractRegistry.register(contractID, f, false)
+	err := globalContractRegistry.register(contractID, f, false)
+	return cothority.ErrorOrNil(err, "registration failed")
 }
 
 // RegisterContract stores the contract in the service registry which
@@ -177,10 +177,11 @@ func RegisterGlobalContract(contractID string, f ContractFn) error {
 func RegisterContract(s skipchain.GetService, contractID string, f ContractFn) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
+		return xerrors.New("Didn't find our service: " + ServiceName)
 	}
 
-	return scs.(*Service).contracts.register(contractID, f, true)
+	err := scs.(*Service).contracts.register(contractID, f, true)
+	return cothority.ErrorOrNil(err, "registration failed")
 }
 
 // GetContractRegistry clones the global registry and returns a read-only one.
@@ -193,7 +194,9 @@ func GetContractRegistry() ReadOnlyContractRegistry {
 // default implementations for the Contract interface.
 type BasicContract struct{}
 
-func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
+func notImpl(what string) error {
+	return xerrors.Errorf("this contract does not implement %v", what)
+}
 
 // VerifyInstruction offers the default implementation of verifying an instruction. Types
 // which embed BasicContract may choose to override this implementation.
@@ -215,7 +218,7 @@ func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruct
 	cb := func(attr string) error {
 		vals, err := url.ParseQuery(attr)
 		if err != nil {
-			return err
+			return xerrors.Errorf("parsing query: %v", err)
 		}
 		beforeStr := vals.Get("before")
 		afterStr := vals.Get("after")
@@ -230,7 +233,7 @@ func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruct
 			var err error
 			before, err = strconv.Atoi(beforeStr)
 			if err != nil {
-				return err
+				return xerrors.Errorf("atoi: %v")
 			}
 		}
 
@@ -240,14 +243,14 @@ func (b BasicContract) MakeAttrInterpreters(rst ReadOnlyStateTrie, inst Instruct
 			var err error
 			after, err = strconv.Atoi(afterStr)
 			if err != nil {
-				return err
+				return xerrors.Errorf("atoi: %v", err)
 			}
 		}
 
 		if after < rst.GetIndex() && rst.GetIndex() < before {
 			return nil
 		}
-		return fmt.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
+		return xerrors.Errorf("the current block index is %d which does not fit in the interval (%d, %d)", rst.GetIndex(), after, before)
 	}
 	return darc.AttrInterpreters{"block": cb}
 }
@@ -297,7 +300,7 @@ func contractConfigFromBytes(in []byte) (Contract, error) {
 	err := protobuf.DecodeWithConstructors(in, &c.ChainConfig, network.DefaultConstructors(cothority.Suite))
 
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding: %v", err)
 	}
 	return c, nil
 }
@@ -307,14 +310,14 @@ type darcContractIDs struct {
 }
 
 // We need to override BasicContract.Verify because of the genesis config special case.
-func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
-		return
+		return xerrors.Errorf("reading trie: %v", err)
 	}
 	ok, err := pr.Exists(ConfigInstanceID.Slice())
 	if err != nil {
-		return
+		return xerrors.Errorf("proof invalid: %v", err)
 	}
 
 	// The config does not exist yet, so this is a genesis config creation. No need/possiblity of verifying it.
@@ -322,20 +325,21 @@ func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return nil
 	}
 
-	return inst.Verify(rst, msg)
+	err = inst.Verify(rst, msg)
+	return cothority.ErrorOrNil(err, "instruction verification failed")
 }
 
 // This is the same as the VerifyInstruction function, but it uses
 // VerifyWithOption() instead of Verify(). We need to implement it in order to
 // use deferred config contract.
-func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
-		return
+		return xerrors.Errorf("reading trie: %v", err)
 	}
 	ok, err := pr.Exists(ConfigInstanceID.Slice())
 	if err != nil {
-		return
+		return xerrors.Errorf("invalid proof: %v", err)
 	}
 
 	// The config does not exist yet, so this is a genesis config creation. No need/possiblity of verifying it.
@@ -343,7 +347,8 @@ func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst I
 		return nil
 	}
 
-	return inst.VerifyWithOption(rst, msg, &VerificationOptions{IgnoreCounters: true})
+	err = inst.VerifyWithOption(rst, msg, &VerificationOptions{IgnoreCounters: true})
+	return cothority.ErrorOrNil(err, "instruction verification failed")
 }
 
 // FormatMethod overrides the implementation from the BasicContract in order to
@@ -375,20 +380,17 @@ func (c *contractConfig) FormatMethod(instr Instruction) string {
 //   - max_block_size int64
 //   - roster         onet.Roster
 //   - darc_contracts darcContractID
-func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	cout = coins
+func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
-		log.Errorf("couldn't decode darc: %v", err)
-		return
+		return nil, nil, xerrors.Errorf("couldn't decode darc: %+v", err)
 	}
 	if d.Rules.Count() == 0 {
-		return nil, nil, errors.New("don't accept darc with empty rules")
+		return nil, nil, xerrors.New("don't accept darc with empty rules")
 	}
 	if err = d.Verify(true); err != nil {
-		log.Error("couldn't verify darc")
-		return
+		return nil, nil, xerrors.Errorf("couldn't verify darc: %v", err)
 	}
 
 	intervalBuf := inst.Spawn.Args.Search("block_interval")
@@ -400,7 +402,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	roster := onet.Roster{}
 	err = protobuf.DecodeWithConstructors(rosterBuf, &roster, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("decoding roster: %v", err)
 	}
 
 	// create the config to be stored by state changes
@@ -408,7 +410,7 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	c.Roster = roster
 	c.MaxBlockSize = int(maxsz)
 	if err = c.sanityCheck(nil); err != nil {
-		return
+		return nil, nil, xerrors.Errorf("sanity check: %v", err)
 	}
 
 	// get the darc contracts
@@ -416,21 +418,21 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	dcIDs := darcContractIDs{}
 	err = protobuf.Decode(darcContractIDsBuf, &dcIDs)
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("decoding darc: %v", err)
 	}
 	c.DarcContractIDs = dcIDs.IDs
 
 	configBuf, err := protobuf.Encode(c)
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("encoding config: %v", err)
 	}
 
 	id := d.GetBaseID()
-	sc = []StateChange{
+	sc := StateChanges{
 		NewStateChange(Create, ConfigInstanceID, ContractConfigID, configBuf, id),
 		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 	}
-	return
+	return sc, coins, nil
 }
 
 // Invoke offers the following functions:
@@ -443,14 +445,12 @@ func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 // Invoke:view_change sould have the following input arguments:
 //   - newview viewchange.NewViewReq
 //   - multisig []byte
-func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	cout = coins
-
+func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	// Find the darcID for this instance.
 	var darcID darc.ID
-	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	// There are two situations where we need to change the roster:
@@ -466,26 +466,26 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		newConfig := ChainConfig{}
 		err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("decoding config: %v", err)
 		}
 
 		var oldConfig *ChainConfig
 		oldConfig, err = LoadConfigFromTrie(rst)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 		if err = newConfig.sanityCheck(oldConfig); err != nil {
-			return
+			return nil, nil, xerrors.Errorf("sanity check: %v", err)
 		}
 		var val []byte
 		val, _, _, _, err = rst.GetValues(darcID)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 		var genesisDarc *darc.Darc
 		genesisDarc, err = darc.NewFromProtobuf(val)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("decoding darc: %v", err)
 		}
 		var rules []string
 		for _, p := range newConfig.Roster.Publics() {
@@ -495,44 +495,43 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var genesisBuf []byte
 		genesisBuf, err = genesisDarc.ToProto()
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("encoding darc: %v", err)
 		}
-		sc = []StateChange{
+		sc := StateChanges{
 			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
 			NewStateChange(Update, NewInstanceID(darcID), ContractDarcID, genesisBuf, darcID),
 		}
-		return
+		return sc, coins, nil
 	case "view_change":
 		var req viewchange.NewViewReq
 		err = protobuf.DecodeWithConstructors(inst.Invoke.Args.Search("newview"), &req, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("decoding: %v", err)
 		}
 		// If everything is correctly signed, then we trust it, no need
 		// to do additional verification.
 		sigBuf := inst.Invoke.Args.Search("multisig")
 		err = protocol.BlsSignature(sigBuf).Verify(pairingSuite, req.Hash(), req.Roster.ServicePublics(ServiceName))
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("invalid signature: %v", err)
 		}
 
-		sc, err = updateRosterScs(rst, darcID, req.Roster)
-		return
+		sc, err := updateRosterScs(rst, darcID, req.Roster)
+		return sc, coins, cothority.ErrorOrNil(err, "roster scs")
 	default:
-		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
-		return
+		return nil, nil, xerrors.New("invalid invoke command: " + inst.Invoke.Command)
 	}
 }
 
 func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
 	config, err := LoadConfigFromTrie(rst)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 	config.Roster = newRoster
 	configBuf, err := protobuf.Encode(config)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding: %v", err)
 	}
 
 	return []StateChange{
@@ -545,16 +544,16 @@ func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
 	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %w", err)
 	}
 	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
+		return nil, xerrors.New("did not get " + ContractConfigID)
 	}
 
 	config := ChainConfig{}
 	err = protobuf.DecodeWithConstructors(val, &config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding config: %v", err)
 	}
 
 	return &config, nil
@@ -565,10 +564,11 @@ func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 func GetValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version uint64, contract string, darcID darc.ID, err error) {
 	value, version, contract, darcID, err = st.GetValues(key)
 	if err != nil {
+		err = xerrors.Errorf("reading trie: %v", err)
 		return
 	}
 	if value == nil {
-		err = errKeyNotSet
+		err = cothority.WrapError(errKeyNotSet)
 		return
 	}
 	return
@@ -584,30 +584,31 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID, darcContractIDs []stri
 	// From instance ID, find the darcID that controls access to it.
 	_, _, _, dID, err := c.GetValues(iid.Slice())
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	// Fetch the darc itself.
 	value, _, contract, _, err := c.GetValues(dID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	if _, ok := m[string(contract)]; !ok {
-		return nil, fmt.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
+		return nil, xerrors.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
 	}
-	return darc.NewFromProtobuf(value)
+	darc, err := darc.NewFromProtobuf(value)
+	return darc, cothority.ErrorOrNil(err, "decoding darc")
 }
 
 // LoadDarcFromTrie loads a darc which should be stored in key.
 func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 	darcBuf, _, contract, _, err := st.GetValues(key)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 	config, err := LoadConfigFromTrie(st)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 	var ok bool
 	for _, id := range config.DarcContractIDs {
@@ -616,11 +617,11 @@ func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 		}
 	}
 	if !ok {
-		return nil, errors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
+		return nil, xerrors.New("the contract \"" + contract + "\" is not in the set of DARC contracts")
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding darc: %v", err)
 	}
 	return d, nil
 }
