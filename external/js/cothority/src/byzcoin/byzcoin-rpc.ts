@@ -31,10 +31,6 @@ const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
 
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
-    }
-
     static staticCounters: Map<string, Map<string, Long>> = new Map<string, Map<string, Long>>();
 
     /**
@@ -123,6 +119,14 @@ export default class ByzCoinRPC implements ICounterUpdater {
     private conn: IConnection;
 
     protected constructor() {
+    }
+
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
+
+    get latest(): SkipBlock {
+        return new SkipBlock(this._latest);
     }
 
     /**
