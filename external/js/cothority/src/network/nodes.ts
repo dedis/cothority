@@ -14,71 +14,28 @@ import { Roster } from "./proto";
  * - if a node is slower than the slowThreshold, the node is replaced with a node from the reserve pool
  */
 export class Nodes {
-    // is > 0, it will be enforced.
-    static parallel: number = 0;
+    // the threshold for the ratio of response_node / response_fastest where the node is
     // put in the 'reserve'.
     static slowThreshold: number = 10;
 
-    // Holds the fastest connections for 'parallel' nodes. They are sorted from the fastest
-    // This can be set from the outside to enforce a number of parallel requests. If it
-    private readonly addresses: string[];
+    // holds all nodes that are available. After each `send`, the nodes will be sorted from fastest to slowest.
+    // Each time `gotError` is called, the corresponding node will be moved to the end of the list.
+    private readonly nodeList: Node[] = [];
 
-    // the threshold for the ratio of response_node / response_fastest where the node is
-    // to the slowest node.
-    private readonly active: Node[] = [];
-    // is the one that was not used for the longest time.
-    private readonly reserve: Node[];
-
-    // Current number of nodes in the active queue.
-    private _parallel: number;
-
-    constructor(r: Roster, parallel: number = 3) {
-        this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
-        shuffle(this.addresses);
+    constructor(r: Roster) {
+        const addresses = r.list.map((conode) => conode.getWebSocketAddress());
+        shuffle(addresses);
         // Initialize the pool of connections
-        this.reserve = this.addresses.map((addr) => new Node(addr));
-        this.parallel = parallel;
-    }
-
-    /**
-     * Returns the number of nodes currently in the active queue.
-     */
-    get parallel(): number {
-        return this._parallel;
-    }
-
-    // Pool of available connections that are not in the active connections. The first node
-
-    /**
-     * Resets the number of active connections
-     * @param p active connections
-     */
-    set parallel(p: number) {
-        if (Nodes.parallel > 0) {
-            p = Nodes.parallel;
-        }
-        if (p > this.addresses.length) {
-            this._parallel = this.addresses.length;
-        } else if (p > 0) {
-            this._parallel = p;
-        }
-        while (this._parallel > this.active.length) {
-            this.active.push(this.reserve.shift());
-        }
-        while (this._parallel < this.active.length) {
-            this.reserve.push(this.active.pop());
-        }
+        this.nodeList = addresses.map((addr) => new Node(addr));
     }
 
     /**
      * Creates a new NodeList for one message.
-     * @param service
+     * @param service which service to use
+     * @param parallel how many calls will run in parallel
      */
-    newList(service: string): NodeList {
-        if (Nodes.parallel > 0) {
-            this.parallel = Nodes.parallel;
-        }
-        return new NodeList(this, service, this.active.slice(), this.reserve.slice());
+    newList(service: string, parallel: number): NodeList {
+        return new NodeList(this, service, parallel);
     }
 
     /**
@@ -106,7 +63,7 @@ export class Nodes {
             if (ratio >= Nodes.slowThreshold) {
                 this.replaceActive(index);
             } else {
-                this.swapActive(index, rang);
+                this.swapNodes(index, rang);
             }
         }
     }
@@ -116,7 +73,17 @@ export class Nodes {
      * @param t
      */
     setTimeout(t: number) {
-        this.active.concat(this.reserve).forEach((n) => n.setTimeout(t));
+        this.nodeList.forEach((n) => n.setTimeout(t));
+    }
+
+    /**
+     * Returns the WebSocketConnections corresponding to the active list and the reserve nodes.
+     * @param active how many active nodes to return
+     * @param service the chosen service
+     */
+    splitList(active: number, service: string): [WebSocketConnection[], WebSocketConnection[]] {
+        const wsc = this.nodeList.map((n) => n.getService(service));
+        return [wsc.slice(0, active), wsc.slice(active)];
     }
 
     /**
@@ -126,21 +93,20 @@ export class Nodes {
      */
     private replaceActive(index: number) {
         if (index >= 0) {
-            this.reserve.push(this.active.splice(index, 1)[0]);
-            this.active.push(this.reserve.shift());
+            this.nodeList.push(this.nodeList.splice(index, 1)[0]);
         }
     }
 
     /**
      * Swaps two nodes in the active queue.
      */
-    private swapActive(a: number, b: number) {
+    private swapNodes(a: number, b: number) {
         if (a >= 0 && b >= 0 &&
-            a < this.active.length && b < this.active.length) {
-            [this.active[a], this.active[b]] =
-                [this.active[b], this.active[a]];
+            a < this.nodeList.length && b < this.nodeList.length) {
+            [this.nodeList[a], this.nodeList[b]] =
+                [this.nodeList[b], this.nodeList[a]];
         } else {
-            Log.error("asked to swap", a, b, this.active.length);
+            Log.error("asked to swap", a, b, this.nodeList.length);
         }
     }
 
@@ -149,7 +115,7 @@ export class Nodes {
      * @param address
      */
     private index(address: string): number {
-        return this.active.findIndex((c) => {
+        return this.nodeList.findIndex((c) => {
             return c.address === address;
         });
     }
@@ -197,10 +163,9 @@ export class NodeList {
     private first: number = 0;
     private replied: number = 0;
 
-    constructor(private nodes: Nodes, service: string, active: Node[], reserve: Node[]) {
+    constructor(private nodes: Nodes, service: string, parallel: number) {
         this.start = Date.now();
-        this.active = active.map((a) => a.getService(service));
-        this.reserve = reserve.map((r) => r.getService(service));
+        [this.active, this.reserve] = nodes.splitList(parallel, service);
     }
 
     /**

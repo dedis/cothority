@@ -141,8 +141,11 @@ export class WebSocketConnection implements IConnection {
  * It uses the Nodes class to manage which nodes will be contacted.
  */
 export class RosterWSConnection {
+    // debugging variable
     static totalConnNbr = 0;
     private static nodes: Map<string, Nodes> = new Map<string, Nodes>();
+    // Can be set after the RosterWSConnection is set up.
+    parallel: number = 3;
     nodes: Nodes;
     private readonly connNbr: number;
     private msgNbr = 0;
@@ -150,21 +153,15 @@ export class RosterWSConnection {
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
-     * @param parallel how many nodes to contact in parallel
      */
-    constructor(r: Roster, private service: string, parallel: number = 2) {
-        if (parallel < 1) {
-            throw new Error("parallel must be >= 1");
-        }
+    constructor(r: Roster, private service: string) {
         const rID = r.id.toString("hex");
         if (!RosterWSConnection.nodes.has(rID)) {
-            RosterWSConnection.nodes.set(rID, new Nodes(r, parallel));
+            RosterWSConnection.nodes.set(rID, new Nodes(r));
         }
         this.nodes = RosterWSConnection.nodes.get(rID);
         this.connNbr = RosterWSConnection.totalConnNbr;
         RosterWSConnection.totalConnNbr++;
-        // Upon failure of a connection, it is pushed to the end of the connectionsPool, and a
-        // new connection is taken from the beginning of the connectionsPool.
     }
 
     /**
@@ -180,7 +177,7 @@ export class RosterWSConnection {
         const errors: string[] = [];
         const msgNbr = this.msgNbr;
         this.msgNbr++;
-        const list = this.nodes.newList(this.service);
+        const list = this.nodes.newList(this.service, this.parallel);
         const pool = list.active;
 
         Log.lvl3(sprintf("%d/%d", this.connNbr, msgNbr), "sending", message.constructor.name, "with list:",
@@ -222,7 +219,7 @@ export class RosterWSConnection {
      * To be conform with an IConnection
      */
     getURL(): string {
-        return this.nodes.newList(this.service).active[0].getURL();
+        return this.nodes.newList(this.service, (this.parallel)).active[0].getURL();
     }
 
     /**
