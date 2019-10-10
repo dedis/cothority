@@ -6,14 +6,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"go.dedis.ch/cothority/v3/darc/expression"
 	"strings"
-
-	"go.dedis.ch/kyber/v3/util/key"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/group/edwards25519"
 	"go.dedis.ch/kyber/v3/sign/anon"
+	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/kyber/v3/xof/blake2xs"
 	"go.dedis.ch/onet/v3/log"
 
@@ -21,6 +19,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"

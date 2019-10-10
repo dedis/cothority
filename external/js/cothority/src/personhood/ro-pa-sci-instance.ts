@@ -107,7 +107,7 @@ export default class RoPaSciInstance extends Instance {
      */
     ourGame(coinID: InstanceID): boolean {
         const player1 = this.struct.firstPlayerAccount;
-        if (player1 && !player1.equals(Buffer.alloc(32))) {
+        if (player1 !== undefined && !player1.equals(Buffer.alloc(32))) {
             return player1.equals(coinID);
         }
         return !!this.getChoice()[1];
@@ -136,7 +136,7 @@ export default class RoPaSciInstance extends Instance {
         const priv = curve25519.scalar().pick();
         const pub = curve25519.point().mul(priv);
         if (this.isCalypso()) {
-            if (!lts) {
+            if (lts !== undefined) {
                 throw new Error("need LTS for calypso-ropascis");
             }
             args.push(new Argument({name: "public", value: pub.marshalBinary()}));
@@ -242,7 +242,7 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     readonly firstPlayer: number;
     readonly secondPlayer: number;
     readonly secondPlayerAccount: Buffer;
-    readonly firstPlayerAccount: Buffer;
+    readonly firstPlayerAccount: Buffer | undefined;
     readonly calypsoWrite: Buffer;
     readonly calypsoRead: Buffer;
 

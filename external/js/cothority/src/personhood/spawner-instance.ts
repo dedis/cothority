@@ -358,7 +358,7 @@ export default class SpawnerInstance extends Instance {
         const rps = new RoPaSciStruct({
             description: desc,
             firstPlayer: -1,
-            firstPlayerAccount: calypso ? coin.id : null,
+            firstPlayerAccount: calypso !== undefined ? coin.id : undefined,
             firstPlayerHash: fph.digest(),
             secondPlayer: -1,
             secondPlayerAccount: Buffer.alloc(32),
@@ -366,7 +366,7 @@ export default class SpawnerInstance extends Instance {
         });
 
         const rpsArgs = [new Argument({name: "struct", value: rps.toBytes()})];
-        if (calypso) {
+        if (calypso !== undefined) {
             const wcH = createHash("sha256");
             wcH.update(rps.firstPlayerHash);
             const writeCommit = wcH.digest();
