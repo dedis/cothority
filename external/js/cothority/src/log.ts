@@ -10,9 +10,10 @@ export class Logger {
     lvl: number;
     stackFrameOffset: number = 0;
 
-    constructor(lvl: number) {
+    constructor(lvl: number | undefined) {
         this.lvl = lvl === undefined ? defaultLvl : lvl;
     }
+
     out = (...str: string[]) => {
         // tslint:disable-next-line
         console.log(str.join(" "));
