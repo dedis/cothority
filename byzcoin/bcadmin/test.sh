@@ -166,6 +166,11 @@ testLink(){
   testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
   testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should fail since it would overwrite the file
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should pass with the --force option
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   testFile linkDir/bc*
 }
 
@@ -180,6 +185,7 @@ testLinkScenario(){
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
+  rm -rf linkDir
 
   # Create new client
   runBA key --save newkey.id
@@ -203,9 +209,15 @@ testLinkScenario(){
   # Let's try now to link with the client darc and identity. This will make that
   # default --darc and --sign will be the client's darc and identiity
   bcID=$( echo $BC | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  testOK runBA link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # See if we can overwrite it withtout --force
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # Now we should be able to overwrite
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   # The final test
-  testOK runBA contract value spawn --value "shoud pass"
+  newBc="linkDir/$(ls linkDir | head -1)"
+  testOK runBA contract value spawn --value "shoud pass" --bc "$newBc"
 
   testOK unset BC
 }
@@ -388,6 +400,21 @@ testRuleDarc(){
   testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
   testNGrep "spawn:xxx" runBA darc show -darc "$ID"
+
+  # re-add the rule to check the restricted mode
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
+  # removing the unrestricted rule
+  testOK runBA darc rule -delete -rule "invoke:darc.evolve_unrestricted" -darc "$ID" -sign "$KEY"
+  # now, without using the --restricted flag, it shouldn't be possible to update
+  # the darc. Then we try we the --restricted flag.
+  testFail runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  # same for deleting
+  testFail runBA darc rule -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+
+  # test the particular case of the _sign action
+  testOK runBA darc rule --restricted -replace -rule _sign -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
 }
 
 testAddDarcFromOtherOne(){
