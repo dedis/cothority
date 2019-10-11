@@ -8,7 +8,7 @@ The conode in this repository includes all protocols and services and can
 be run either for local tests or on a public server. The currently running
 conodes are available under http://status.dedis.ch.
 
-To operate a Conode, one need to correctly set up a host and run the Conode
+To operate a Conode, one needs to correctly set up a host and run the Conode
 program. The following chapters describe the requirements and needed environment
 to correctly run the conode program, as well as general instruction on how to
 operate it.
