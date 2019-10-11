@@ -152,6 +152,11 @@ testLink(){
   testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
   testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should fail since it would overwrite the file
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should pass with the --force option
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   testFile linkDir/bc*
 }
 
@@ -166,6 +171,7 @@ testLinkScenario(){
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
+  rm -rf linkDir
 
   # Create new client
   runBA key --save newkey.id
@@ -189,9 +195,15 @@ testLinkScenario(){
   # Let's try now to link with the client darc and identity. This will make that
   # default --darc and --sign will be the client's darc and identiity
   bcID=$( echo $BC | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  testOK runBA link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # See if we can overwrite it withtout --force
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # Now we should be able to overwrite
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   # The final test
-  testOK runBA contract value spawn --value "shoud pass"
+  newBc="linkDir/$(ls linkDir | head -1)"
+  testOK runBA contract value spawn --value "shoud pass" --bc "$newBc"
 
   testOK unset BC
 }

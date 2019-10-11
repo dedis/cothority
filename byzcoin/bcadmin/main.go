@@ -150,7 +150,7 @@ func link(c *cli.Context) error {
 	if c.NArg() < 1 {
 		return errors.New("please give the following args: roster.toml [byzcoin id]")
 	}
-	r, err := lib.ReadRoster(c.Args().First())
+	roster, err := lib.ReadRoster(c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func link(c *cli.Context) error {
 		// conode
 		log.Info("Fetching all byzcoin-ids from the roster")
 		var scIDs []skipchain.SkipBlockID
-		for _, si := range r.List {
+		for _, si := range roster.List {
 			ids, err := fetchChains(si, byzcoinFetcher, skipchainFetcher)
 			if err != nil {
 				log.Warn("Couldn't contact", si.Address, err)
@@ -190,7 +190,7 @@ func link(c *cli.Context) error {
 	}
 	var cl *byzcoin.Client
 	var cc *byzcoin.ChainConfig
-	for _, si := range r.List {
+	for _, si := range roster.List {
 		ids, err := fetchChains(si, byzcoinFetcher, skipchainFetcher)
 		if err != nil {
 			log.Warn("Got error while asking", si.Address, "for skipchains:", err)
@@ -222,7 +222,11 @@ func link(c *cli.Context) error {
 
 	dstr := c.String("darc")
 	if dstr == "" {
-		log.Info("no darc given, will use an empty default one")
+		log.Warn("[!] no darc given, we will use the genesis darc")
+		newDarc, err = cl.GetGenDarc()
+		if err != nil {
+			return errors.New("failed to get the genesis DARC: " + err.Error())
+		}
 	} else {
 		// Accept both plain-darcs, as well as "darc:...." darcs
 		darcID, err := lib.StringToDarcID(dstr)
@@ -254,7 +258,7 @@ func link(c *cli.Context) error {
 
 	identityStr := c.String("identity")
 	if identityStr == "" {
-		log.Info("no identity provided, will use a default one")
+		log.Info("[!] no identity provided, will use a default one")
 	} else {
 		identityBuf, err := lib.StringToEd25519Buf(identityStr)
 		if err != nil {
@@ -274,15 +278,30 @@ func link(c *cli.Context) error {
 		"\tMacBlockSize: %d\n"+
 		"\tDarcContracts: %s",
 		id[:], cc.Roster.List, cc.BlockInterval, cc.MaxBlockSize, cc.DarcContractIDs)
-	filePath, err := lib.SaveConfig(lib.Config{
-		Roster:        cc.Roster,
-		ByzCoinID:     id,
-		AdminDarc:     *newDarc,
-		AdminIdentity: darc.NewIdentityEd25519(identity),
-	})
-	if err != nil {
-		return errors.New("while writing config-file: " + err.Error())
+	var filePath string
+	if c.Bool("force") {
+		filePath, err = lib.SaveConfig(lib.Config{
+			Roster:        cc.Roster,
+			ByzCoinID:     id,
+			AdminDarc:     *newDarc,
+			AdminIdentity: darc.NewIdentityEd25519(identity),
+		})
+		if err != nil {
+			return errors.New("while writing config-file: " + err.Error())
+		}
+	} else {
+		filePath, err = lib.SafeSaveConfig(lib.Config{
+			Roster:        cc.Roster,
+			ByzCoinID:     id,
+			AdminDarc:     *newDarc,
+			AdminIdentity: darc.NewIdentityEd25519(identity),
+		})
+		if err != nil {
+			return fmt.Errorf("while writing config-file: %s. "+
+				"Maybe use --force ?", err.Error())
+		}
 	}
+
 	log.Info(fmt.Sprintf("Wrote config to \"%s\"", filePath))
 
 	return nil

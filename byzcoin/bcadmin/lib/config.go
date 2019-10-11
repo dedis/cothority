@@ -43,8 +43,8 @@ type Config struct {
 // LoadKey returns the signer of a given identity. It searches it in the
 // ConfigPath. If the identity is empty it return an error.
 func LoadKey(id darc.Identity) (*darc.Signer, error) {
-	// First check if this is an empty identity. Note: we expect an identity to
-	// use 32 bytes
+	// Check if this is an empty identity. Note: we expect an identity to use 32
+	// bytes
 	if bytes.Equal(id.GetPublicBytes(), emptyID) {
 		return nil, xerrors.New("failed to load the key because the identity is empty")
 	}
@@ -123,6 +123,23 @@ func SaveConfig(cfg Config) (string, error) {
 	}
 
 	return fn, nil
+}
+
+// SafeSaveConfig does the same as SaveConfig but it checks if the file already
+// exist and returns an error if this is the case.
+func SafeSaveConfig(cfg Config) (string, error) {
+	os.MkdirAll(ConfigPath, 0755)
+
+	fn := fmt.Sprintf("bc-%x.cfg", cfg.ByzCoinID)
+	fn = filepath.Join(ConfigPath, fn)
+	_, err := os.Stat(fn)
+	if os.IsNotExist(err) {
+		return SaveConfig((cfg))
+	}
+	if err != nil {
+		return "", errors.New("failed to check if file exist: " + err.Error())
+	}
+	return "", fmt.Errorf("file already exist, we refuse to overwrite '%s'", fn)
 }
 
 // LoadConfig returns a config read from the file and an initialized

@@ -37,11 +37,15 @@ var cmds = cli.Commands{
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the darc id to be saved (defaults to an empty darc)",
+				Usage: "the darc id to be saved. If not provided, it will use the genesis darc.",
 			},
 			cli.StringFlag{
 				Name:  "identity, id",
 				Usage: "the identity to be saved (defaults to an empty identity)",
+			},
+			cli.BoolFlag{
+				Name:  "force, f",
+				Usage: "if set, it will overwrite the config file if already present",
 			},
 		},
 		Action: link,
