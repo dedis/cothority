@@ -350,7 +350,7 @@ export default class SpawnerInstance extends Instance {
             throw new Error("account balance not high enough for that stake");
         }
 
-        const preHash = Buffer.alloc(32);
+        const preHash = Buffer.allocUnsafe(32);
         preHash.writeInt8(choice % 3, 0);
         fillup.copy(preHash, 1);
         const fph = createHash("sha256");

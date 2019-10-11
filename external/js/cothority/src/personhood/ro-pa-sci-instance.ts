@@ -81,7 +81,7 @@ export default class RoPaSciInstance extends Instance {
     /**
      * Returns the firstMove and the fillUp values.
      */
-    getChoice(): [number, Buffer] {
+    getChoice(): [number, Buffer | undefined] {
         return [this.firstMove, this.fillUp ? Buffer.from(this.fillUp) : undefined];
     }
 
@@ -110,7 +110,7 @@ export default class RoPaSciInstance extends Instance {
         if (player1 !== undefined && !player1.equals(Buffer.alloc(32))) {
             return player1.equals(coinID);
         }
-        return !!this.getChoice()[1];
+        return this.getChoice()[1] !== undefined;
     }
 
     /**
@@ -171,7 +171,7 @@ export default class RoPaSciInstance extends Instance {
                 await this.rpc.getProof(this.struct.calypsoRead));
             const preHash = await dreply.decrypt(priv);
             this.firstMove = preHash[0];
-            this.fillUp = Buffer.alloc(31);
+            this.fillUp = Buffer.allocUnsafe(31);
             preHash.slice(1).copy(this.fillUp);
             await this.confirm(coin);
         }
