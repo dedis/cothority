@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -147,7 +148,7 @@ func create(c *cli.Context) error {
 
 func link(c *cli.Context) error {
 	if c.NArg() < 1 {
-		return xerrors.New("please give the following args: roster.toml [byzcoin id]")
+		return errors.New("please give the following args: roster.toml [byzcoin id]")
 	}
 	roster, err := lib.ReadRoster(c.Args().First())
 	if err != nil {
@@ -288,7 +289,18 @@ func link(c *cli.Context) error {
 			AdminIdentity: darc.NewIdentityEd25519(identity),
 		})
 		if err != nil {
-			return xerrors.Errorf("while writing config-file: %v", err)
+			return errors.New("while writing config-file: " + err.Error())
+		}
+	} else {
+		filePath, err = lib.SafeSaveConfig(lib.Config{
+			Roster:        cc.Roster,
+			ByzCoinID:     id,
+			AdminDarc:     *newDarc,
+			AdminIdentity: darc.NewIdentityEd25519(identity),
+		})
+		if err != nil {
+			return fmt.Errorf("while writing config-file: %s. "+
+				"Maybe use --force ?", err.Error())
 		}
 	} else {
 		filePath, err = lib.SafeSaveConfig(lib.Config{
