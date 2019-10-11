@@ -102,7 +102,7 @@ func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) err
 	for i := range ctx.Instructions {
 		ctx.Instructions[i].SignerIdentities = ids
 	}
-	return ctx.SignWith(signers...)
+	return ErrorOrNil(ctx.SignWith(signers...), "signing failed")
 }
 
 // SignWith signs all the instructions with the same signers. If some instructions need to be signed by different sets
@@ -305,7 +305,7 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 		}
 		sig, err := signers[i].Sign(msg)
 		if err != nil {
-			return err
+			return xerrors.Errorf("signing failed: %v", err)
 		}
 		instr.Signatures[i] = sig
 	}
@@ -352,14 +352,14 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	// check the signature counters
 	if !ops.IgnoreCounters {
 		if err := verifySignerCounters(st, instr.SignerCounter, instr.SignerIdentities); err != nil {
-			return err
+			return xerrors.Errorf("signer counter: %v", err)
 		}
 	}
 
 	// get the valid DARC contract IDs from the configuration
 	config, err := LoadConfigFromTrie(st)
 	if err != nil {
-		return err
+		return xerrors.Errorf("reading trie: %v", err)
 	}
 
 	// get the darc
@@ -402,9 +402,11 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	}
 
 	if ops.EvalAttr != nil {
-		return darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
+		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
+		return ErrorOrNil(err, "evaluating darc")
 	}
-	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
+	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
+	return ErrorOrNil(err, "evaluating darc")
 }
 
 // InstrType is the instruction type, which can be spawn, invoke or delete.
@@ -577,7 +579,7 @@ func (sc *StateChange) Op() trie.OpType {
 func decodeStateChangeBody(buf []byte) (StateChangeBody, error) {
 	var out StateChangeBody
 	err := protobuf.Decode(buf, &out)
-	return out, err
+	return out, ErrorOrNil(err, "decoding body")
 }
 
 // StateChanges hold a slice of StateChange

@@ -84,7 +84,7 @@ func contractDeferredFromBytes(in []byte) (Contract, error) {
 
 	err := protobuf.Decode(in, &c.DeferredData)
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't unmarshal instance data: ", err)
+		return nil, xerrors.Errorf("couldn't unmarshal instance data: %v", err)
 	}
 	return c, nil
 }
@@ -94,7 +94,7 @@ func (c *contractDeferred) SetRegistry(r ReadOnlyContractRegistry) {
 	c.contracts = r
 }
 
-func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	// This method should do the following:
 	//   1. Parse the input buffer
 	//   2. Compute and store the instruction hashes
@@ -103,13 +103,11 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 	// Spawn should have those input arguments:
 	//   - proposedTransaction ClientTransaction
 	//   - expireBlockIndex uint64 (optional)
-	cout = coins
 
 	// Find the darcID for this instance.
-	var darcID darc.ID
-	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	// 1. Reads and parses the input
@@ -145,15 +143,13 @@ func (c *contractDeferred) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins 
 		InstructionHashes:   hash,
 		MaxNumExecution:     numExecution,
 	}
-	var dataBuf []byte
-	dataBuf, err = protobuf.Encode(&data)
+	dataBuf, err := protobuf.Encode(&data)
 	if err != nil {
 		return nil, nil, xerrors.Errorf("couldn't encode DeferredData: %v", err)
 	}
 
-	sc = append(sc, NewStateChange(Create, inst.DeriveID(""),
-		ContractDeferredID, dataBuf, darcID))
-	return
+	sc := StateChanges{NewStateChange(Create, inst.DeriveID(""), ContractDeferredID, dataBuf, darcID)}
+	return sc, coins, nil
 }
 
 func (c *contractDeferred) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -318,7 +314,7 @@ func (c *contractDeferred) Delete(rst ReadOnlyStateTrie, inst Instruction, coins
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	sc = StateChanges{

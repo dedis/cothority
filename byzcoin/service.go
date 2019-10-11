@@ -575,7 +575,7 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 	for i := range req.SignerIDs {
 		key := publicVersionKey(req.SignerIDs[i])
 		buf, _, _, _, err := st.GetValues(key)
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			out[i] = 0
 			continue
 		}
@@ -1827,7 +1827,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
 	config, err := LoadConfigFromTrie(st)
 	if err != nil {
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			err = nil
 		}
 		return defaultInterval, defaultMaxBlockSize, err
@@ -2280,7 +2280,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	gs := globalState{st, roSC}
 
 	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
-	if err != errKeyNotSet && err != nil {
+	if !xerrors.Is(err, errKeyNotSet) && err != nil {
 		err = xerrors.Errorf("Couldn't get contract type of instruction: %v", err)
 		return
 	}
@@ -2355,7 +2355,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 		// this is done at this scope because we must increase
 		// the version only when it's not the first one
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			ver = 0
 			err = nil
 		} else if err != nil {
@@ -2808,7 +2808,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 func decodeBlockHeader(sb *skipchain.SkipBlock) (*DataHeader, error) {
 	var header DataHeader
 	if err := protobuf.Decode(sb.Data, &header); err != nil {
-		return nil, xerrors.Errorf("couldn't unmarshal header: %v", err)
+		return nil, xerrors.Errorf("couldn't unmarshal: %v", err)
 	}
 
 	return &header, nil

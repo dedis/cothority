@@ -33,7 +33,7 @@ const cmdDarcEvolve = "evolve"
 func contractSecureDarcFromBytes(in []byte) (Contract, error) {
 	d, err := darc.NewFromProtobuf(in)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("darc decoding: %v", err)
 	}
 	c := &contractSecureDarc{Darc: *d}
 	return c, nil
@@ -49,7 +49,8 @@ func (c *contractSecureDarc) SetRegistry(r ReadOnlyContractRegistry) {
 // need the Darc contract to opt in for deferred transaction because it is used
 // by default when spawning new contracts.
 func (c *contractSecureDarc) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
-	return inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true})
+	err := inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true})
+	return ErrorOrNil(err, "instruction verification")
 }
 
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -105,38 +106,39 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 		cwr.SetRegistry(c.contracts)
 	}
 
-	return c2.Spawn(rst, inst, coins)
+	scs, coins, err := c2.Spawn(rst, inst, coins)
+	return scs, coins, ErrorOrNil(err, "spawn instance")
 }
 
-func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	switch inst.Invoke.Command {
 	case cmdDarcEvolve:
 		var darcID darc.ID
-		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+		_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 
 		darcBuf := inst.Invoke.Args.Search("darc")
 		newD, err := darc.NewFromProtobuf(darcBuf)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("darc encoding: %v", err)
 		}
 		oldD, err := LoadDarcFromTrie(rst, darcID)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("darc from trie: %v", err)
 		}
 		// do not allow modification of evolve_unrestricted
 		if isChangingEvolveUnrestricted(oldD, newD) {
 			return nil, nil, xerrors.New("the evolve command is not allowed to change the the evolve_unrestricted rule")
 		}
 		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("sanity check: %v", err)
 		}
 		// use the subset rule if it's not a genesis Darc
 		_, _, _, genesisDarcID, err := GetValueContract(rst, NewInstanceID(nil).Slice())
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("getting contract: %v", err)
 		}
 		if !genesisDarcID.Equal(oldD.GetBaseID()) {
 			if !newD.Rules.IsSubset(oldD.Rules) {
@@ -148,22 +150,22 @@ func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coi
 		}, coins, nil
 	case cmdDarcEvolveUnrestriction:
 		var darcID darc.ID
-		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+		_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 
 		darcBuf := inst.Invoke.Args.Search("darc")
 		newD, err := darc.NewFromProtobuf(darcBuf)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("encoding darc: %v", err)
 		}
 		oldD, err := LoadDarcFromTrie(rst, darcID)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("darc from trie: %v", err)
 		}
 		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("sanity check: %v", err)
 		}
 		return []StateChange{
 			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),

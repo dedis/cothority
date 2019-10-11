@@ -78,7 +78,7 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			version:           1,
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
-			return c, err
+			return c, xerrors.Errorf("registering channels: %v", err)
 		}
 		return c, nil
 	}
@@ -103,7 +103,7 @@ func (p *CollectTxProtocol) Start() error {
 	}
 	// send to myself and the children
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
-		return err
+		return xerrors.Errorf("sending msg: %v", err)
 	}
 	// do not return an error if we fail to send to some children
 	if errs := p.SendToChildrenInParallel(req); len(errs) > 0 {
@@ -146,11 +146,11 @@ func (p *CollectTxProtocol) Dispatch() error {
 	log.Lvl3(p.ServerIdentity(), "sends back", len(resp.Txs), "transactions")
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {
-			return err
+			return xerrors.Errorf("sending msg: %v", err)
 		}
 	} else {
 		if err := p.SendToParent(resp); err != nil {
-			return err
+			return xerrors.Errorf("sending msg: %v", err)
 		}
 	}
 

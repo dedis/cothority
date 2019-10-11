@@ -709,7 +709,7 @@ func TestService_WrongSigner(t *testing.T) {
 	})
 	// Expect it to not be accepted, because only s.signer is in the Darc
 	require.NoError(t, err)
-	require.Contains(t, resp.Error, "instruction verification failed: expression evaluated to false")
+	require.Contains(t, resp.Error, "instruction verification failed: evaluating darc: expression evaluated to false")
 }
 
 // Test that inter-instruction dependencies are correctly handled.
@@ -750,7 +750,7 @@ func TestService_Depending(t *testing.T) {
 	require.NoError(t, err)
 	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
-	require.Equal(t, errKeyNotSet, err)
+	require.True(t, xerrors.Is(err, errKeyNotSet))
 
 	// We need to wait a bit for the propagation to finish because the
 	// skipchain service might decide to update forward links by adding
@@ -2291,7 +2291,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the version is correctly increased for multiple state changes
 		var scs []StateChange
-		if _, _, _, _, err := cdb.GetValues(iid.Slice()); err == errKeyNotSet {
+		if _, _, _, _, err := cdb.GetValues(iid.Slice()); xerrors.Is(err, errKeyNotSet) {
 			scs = []StateChange{{
 				StateAction: Create,
 				InstanceID:  iid[:],

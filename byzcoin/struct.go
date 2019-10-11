@@ -189,7 +189,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 					err := binary.Read(buf, binary.BigEndian, &idx)
 					if err != nil {
-						return err
+						return xerrors.Errorf("decoding index: %v", err)
 					}
 
 					if oldestIndex == -1 || oldestIndex > idx {
@@ -207,12 +207,12 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 					err := binary.Read(buf, binary.BigEndian, &idx)
 					if err != nil {
-						return err
+						return xerrors.Errorf("decoding index: %v", err)
 					}
 
 					if oldestIndex == idx {
 						if err := c.Delete(); err != nil {
-							return err
+							return xerrors.Errorf("deleting pair: %v", err)
 						}
 
 						size -= len(v)
@@ -225,7 +225,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 				if scb.Stats().KeyN == 0 {
 					if err := b.DeleteBucket(scid); err != nil {
-						return err
+						return xerrors.Errorf("deleting bucket: %v", err)
 					}
 				}
 
@@ -233,7 +233,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 			})
 
 			if err != nil {
-				return err
+				return xerrors.Errorf("processing pairs: %v", err)
 			}
 		}
 
@@ -241,7 +241,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 	})
 
 	if err != nil {
-		return err
+		return xerrors.Errorf("tx error: %v", err)
 	}
 
 	s.size = size
@@ -274,7 +274,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				// The key is built using BigEndian order
 				err := binary.Write(&buf, binary.BigEndian, thres)
 				if err != nil {
-					return err
+					return xerrors.Errorf("encoding threshold: %v", err)
 				}
 				index := buf.Bytes()
 
@@ -282,7 +282,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				for k, v := c.Seek(sc.InstanceID); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Next() {
 					if bytes.Compare(k[len(k)-len(index):], index) <= 0 {
 						if err := c.Delete(); err != nil {
-							return err
+							return xerrors.Errorf("deleting item: %v", err)
 						}
 						size -= len(v)
 					}
@@ -297,7 +297,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 		s.size = size
 	}
 
-	return err
+	return ErrorOrNil(err, "tx error")
 }
 
 // this generates a storage key using the instance ID and the version
@@ -305,19 +305,19 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, err
 	b := bytes.Buffer{}
 	_, err := b.Write(iid)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing id: %v", err)
 	}
 
 	// BigEndian is used here because of the byte-sorted order of
 	// BoltDB when iterating over the keys
 	err = binary.Write(&b, binary.BigEndian, ver)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing version: %v", err)
 	}
 
 	err = binary.Write(&b, binary.BigEndian, idx)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing index: %v", err)
 	}
 
 	return b.Bytes(), nil
@@ -351,12 +351,12 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		for i, sc := range scs {
 			if len(sc.InstanceID) != prefixLength {
 				// as we use it as a prefix, all must have the same length
-				return errLengthInstanceID
+				return WrapError(errLengthInstanceID)
 			}
 
 			key, err := s.key(sc.InstanceID, sc.Version, int64(sb.Index))
 			if err != nil {
-				return err
+				return xerrors.Errorf("key: %v", err)
 			}
 
 			now := time.Now()
@@ -367,7 +367,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 				Timestamp:   now,
 			})
 			if err != nil {
-				return err
+				return xerrors.Errorf("encoding: %v", err)
 			}
 
 			// get the previous value to recalculate the size
@@ -375,7 +375,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 
 			err = b.Put(key, buf)
 			if err != nil {
-				return err
+				return xerrors.Errorf("writing item: %v", err)
 			}
 
 			// optimization for cleaning to avoir recomputing the size
@@ -385,12 +385,12 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		return nil
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("tx error: %v", err)
 	}
 
 	s.size = size
 
-	return s.cleanByBlock(scs, sb)
+	return ErrorOrNil(s.cleanByBlock(scs, sb), "cleaning")
 }
 
 // This will return the list of state changes for the given instance
@@ -398,7 +398,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		return nil, errLengthInstanceID
+		return nil, WrapError(errLengthInstanceID)
 	}
 
 	err = s.db.View(func(tx *bbolt.Tx) error {
@@ -413,7 +413,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 			var sce StateChangeEntry
 			err = protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			entries = append(entries, sce)
@@ -422,6 +422,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 		return nil
 	})
 
+	err = ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -432,12 +433,13 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = errLengthInstanceID
+		err = WrapError(errLengthInstanceID)
 		return
 	}
 
 	key, err := s.key(iid, ver, int64(0))
 	if err != nil {
+		err = xerrors.Errorf("key: %v", err)
 		return
 	}
 
@@ -452,7 +454,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 		if k != nil && bytes.HasPrefix(k, prefix) {
 			err := protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			ok = true
@@ -461,6 +463,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 		return nil
 	})
 
+	err = ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -486,7 +489,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 				var sce StateChangeEntry
 				err = protobuf.Decode(v, &sce)
 				if err != nil {
-					return err
+					return xerrors.Errorf("decoding: %v", err)
 				}
 
 				entries = append(entries, sce)
@@ -497,6 +500,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 	})
 
 	sort.Sort(entries)
+	err = ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -506,7 +510,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = errLengthInstanceID
+		err = WrapError(errLengthInstanceID)
 		return
 	}
 
@@ -524,7 +528,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		if bytes.HasPrefix(k, iid) {
 			err := protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			ok = true
@@ -532,6 +536,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		return nil
 	})
 
+	err = ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -640,7 +645,7 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 		return xerrors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
-		return old.checkNewRoster(c.Roster)
+		return ErrorOrNil(old.checkNewRoster(c.Roster), "roster check: %v")
 	}
 	return nil
 }

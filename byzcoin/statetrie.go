@@ -77,7 +77,7 @@ func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 		pairs[i] = &scs[i]
 	}
 	if err := t.StagingTrie.Batch(pairs); err != nil {
-		return err
+		return xerrors.Errorf("batch failed: %v", err)
 	}
 	return nil
 }
@@ -88,16 +88,18 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
+		err = xerrors.Errorf("reading trie: %v", err)
 		return
 	}
 	if buf == nil {
-		err = errKeyNotSet
+		err = WrapError(errKeyNotSet)
 		return
 	}
 
 	var vals StateChangeBody
 	vals, err = decodeStateChangeBody(buf)
 	if err != nil {
+		err = xerrors.Errorf("decoding body: %v", err)
 		return
 	}
 
@@ -110,7 +112,7 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 
 // Commit commits the staged data to the source trie.
 func (t *stagingStateTrie) Commit() error {
-	return t.StagingTrie.Commit()
+	return ErrorOrNil(t.StagingTrie.Commit(), "commit failed")
 }
 
 // GetIndex returns the index of the current trie.
@@ -148,11 +150,9 @@ type stateTrie struct {
 func loadStateTrie(db *bbolt.DB, bucket []byte) (*stateTrie, error) {
 	t, err := trie.LoadTrie(trie.NewDiskDB(db, bucket))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("loading trie: %v")
 	}
-	return &stateTrie{
-		Trie: *t,
-	}, nil
+	return &stateTrie{Trie: *t}, nil
 }
 
 // newStateTrie creates a new, disk-based trie.Trie, an error is returned if
@@ -160,16 +160,14 @@ func loadStateTrie(db *bbolt.DB, bucket []byte) (*stateTrie, error) {
 func newStateTrie(db *bbolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 	t, err := trie.NewTrie(trie.NewDiskDB(db, bucket), nonce)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("creating trie: %v")
 	}
-	return &stateTrie{
-		Trie: *t,
-	}, nil
+	return &stateTrie{Trie: *t}, nil
 }
 
 // StoreAll stores the state changes in the Trie.
 func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error {
-	return t.VerifiedStoreAll(scs, index, version, nil)
+	return ErrorOrNil(t.VerifiedStoreAll(scs, index, version, nil), "store failed")
 }
 
 // VerifiedStoreAll stores the state changes, the index and the version as metadata. It
@@ -182,19 +180,19 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 	}
 	return t.DB().Update(func(b trie.Bucket) error {
 		if err := t.BatchWithBucket(pairs, b); err != nil {
-			return err
+			return xerrors.Errorf("batch failed: %v", err)
 		}
 
 		indexBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 		if err := t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b); err != nil {
-			return err
+			return xerrors.Errorf("storing index: %v")
 		}
 
 		versionBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(versionBuf, uint32(version))
 		if err := t.SetMetadataWithBucket([]byte(trieVersionKey), versionBuf, b); err != nil {
-			return err
+			return xerrors.Errorf("storing version: %v")
 		}
 
 		if expectedRoot != nil && !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
@@ -210,16 +208,18 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
+		err = xerrors.Errorf("reading trie: %v")
 		return
 	}
 	if buf == nil {
-		err = errKeyNotSet
+		err = WrapError(errKeyNotSet)
 		return
 	}
 
 	var vals StateChangeBody
 	vals, err = decodeStateChangeBody(buf)
 	if err != nil {
+		err = xerrors.Errorf("decoding body: %v")
 		return
 	}
 
@@ -263,7 +263,7 @@ func (t *stateTrie) StoreAllToReplica(scs StateChanges) (ReadOnlyStateTrie, erro
 func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("creating trie: %v", err)
 	}
 	et := stagingStateTrie{
 		StagingTrie: *memTrie.MakeStagingTrie(),
@@ -275,7 +275,7 @@ func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 func newMemStateTrie(nonce []byte) (*stateTrie, error) {
 	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("creating trie: %v", err)
 	}
 	st := stateTrie{
 		Trie: *memTrie,
@@ -296,7 +296,7 @@ func newROSkipChain(s *skipchain.Service, genesisID skipchain.SkipBlockID) *roSk
 func (s *roSkipChain) GetLatest() (*skipchain.SkipBlock, error) {
 	sb, err := s.inner.GetDB().GetLatestByID(s.currLatest)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("read latest: %v", err)
 	}
 	s.currLatest = sb.CalculateHash()
 	return sb, nil
@@ -309,7 +309,7 @@ func (s *roSkipChain) GetGenesisBlock() (*skipchain.SkipBlock, error) {
 			Index:   0,
 		})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading block: %v", err)
 	}
 	return reply.SkipBlock, nil
 }
@@ -329,7 +329,7 @@ func (s *roSkipChain) GetBlockByIndex(idx int) (*skipchain.SkipBlock, error) {
 			Index:   idx,
 		})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading block: %v", err)
 	}
 	return reply.SkipBlock, nil
 }

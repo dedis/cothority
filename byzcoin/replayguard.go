@@ -12,11 +12,11 @@ import (
 // counter from the Trie.
 func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 	val, _, _, _, err := st.GetValues(publicVersionKey(id))
-	if err == errKeyNotSet {
+	if xerrors.Is(err, errKeyNotSet) {
 		return 0, nil
 	}
 	if err != nil {
-		return 0, err
+		return 0, xerrors.Errorf("reading trie: %v", err)
 	}
 	ver := binary.LittleEndian.Uint64(val)
 	return ver, nil
@@ -30,7 +30,7 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 		id := id.String()
 		ver, err := getSignerCounter(st, id)
 		if err != nil {
-			return scs, err
+			return scs, xerrors.Errorf("reading counter: %v", err)
 		}
 		verBuf := make([]byte, 8)
 		// If ver is the highest uint64, then it'll overflow and go
@@ -68,7 +68,7 @@ func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, ids []darc.Id
 		id := ids[i].String()
 		c, err := getSignerCounter(st, id)
 		if err != nil {
-			return err
+			return xerrors.Errorf("reading counter: %v", err)
 		}
 		// If c is the highest uint64, then it'll overflow and go back
 		// to 0, this is the intended behaviour, otherwise the client

@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -19,8 +20,8 @@ import (
 // and returns the block or an error
 type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
-func replayError(sb *skipchain.SkipBlock, msg string) error {
-	return xerrors.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
+func replayError(sb *skipchain.SkipBlock, err error) error {
+	return ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until
@@ -101,28 +102,28 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 			var dBody DataBody
 			err := protobuf.Decode(sb.Payload, &dBody)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, err)
 			}
 			var dHead DataHeader
 			err = protobuf.Decode(sb.Data, &dHead)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, err)
 			}
 
 			dBody.TxResults.SetVersion(dHead.Version)
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
-				return nil, replayError(sb, "client transaction hash does not match")
+				return nil, replayError(sb, xerrors.New("client transaction hash does not match"))
 			}
 
 			if sb.Index == 0 && st == nil {
 				nonce, err := loadNonceFromTxs(dBody.TxResults)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, err)
 				}
 				st, err = newMemStateTrie(nonce)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, err)
 				}
 			}
 
@@ -137,15 +138,14 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 					scsTmp, sst, err = s.processOneTx(sst, tx.ClientTransaction,
 						id)
 					if err != nil {
-						return nil, replayError(sb, err.Error())
+						return nil, replayError(sb, err)
 					}
 
 					scs = append(scs, scsTmp...)
 				} else {
 					_, _, err = s.processOneTx(sst, tx.ClientTransaction, id)
 					if err == nil {
-						return nil, replayError(sb,
-							"refused transaction passes")
+						return nil, replayError(sb, xerrors.New("refused transaction passes"))
 					}
 				}
 			}
@@ -165,7 +165,8 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 						}
 					}
 				}
-				return nil, replayError(sb, "merkle tree root doesn't match with trie root")
+				err = xerrors.New("merkle tree root doesn't match with trie root")
+				return nil, replayError(sb, err)
 			}
 
 			log.Lvl2("Checking links for block", sb.Index)
@@ -179,13 +180,13 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 				err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
 				if err != nil {
 					log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
-					return nil, err
+					return nil, xerrors.Errorf("invalid forward-link: %v", err)
 				}
 			}
 
 			err = st.StoreAll(scs, sb.Index, dHead.Version)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, err)
 			}
 			t := time.Unix(dHead.Timestamp/1e9, 0)
 			log.Infof("Got correct block from %s with %d/%d txs",
