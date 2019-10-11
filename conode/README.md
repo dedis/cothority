@@ -13,7 +13,7 @@ program. The following chapters describe the requirements and needed environment
 to correctly run the conode program, as well as general instruction on how to
 operate it.
 
-Once you have a conode up and running, you can inform us on dedis@epfl.ch and
+Once you have a conode up and running, you can inform us at dedis@epfl.ch and
 we will include your conode in the DEDIS-cothority.
 
 ---
