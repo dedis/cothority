@@ -398,6 +398,9 @@ testRuleDarc(){
   # same for deleting
   testFail runBA darc rule -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
   testOK runBA darc rule --restricted -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+
+  # test the particular case of the _sign action
+  testOK runBA darc rule --restricted -replace -rule _sign -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
 }
 
 testAddDarcFromOtherOne(){

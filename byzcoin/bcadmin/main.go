@@ -1483,7 +1483,11 @@ func darcRule(c *cli.Context) error {
 	case c.Bool("delete"):
 		err = d2.Rules.DeleteRules(darc.Action(action))
 	case c.Bool("replace"):
-		err = d2.Rules.UpdateRule(darc.Action(action), groupExpr)
+		if action == "_sign" {
+			err = d2.Rules.UpdateSign(groupExpr)
+		} else {
+			err = d2.Rules.UpdateRule(darc.Action(action), groupExpr)
+		}
 	default:
 		err = d2.Rules.AddRule(darc.Action(action), groupExpr)
 	}
