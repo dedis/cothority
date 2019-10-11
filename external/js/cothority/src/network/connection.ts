@@ -98,7 +98,10 @@ export class WebSocketConnection {
 
             const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
-            ws.onOpen(() => ws.send(bytes));
+            ws.onOpen(() => {
+                Log.lvl3("Sending message to", path);
+                ws.send(bytes);
+            });
 
             ws.onMessage((data: Buffer) => {
                 clearTimeout(timer);
@@ -146,20 +149,22 @@ export class WebSocketConnection {
  * It uses the Nodes class to manage which nodes will be contacted.
  */
 export class RosterWSConnection implements IConnection {
+    // Can be set to override the default parallel value
+    static defaultParallel: number = 3;
     // debugging variable
     static totalConnNbr = 0;
     private static nodes: Map<string, Nodes> = new Map<string, Nodes>();
     nodes: Nodes;
     private readonly connNbr: number;
     private msgNbr = 0;
-    private _parallel: number = 3;
+    private parallel: number;
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
      * @param parallel  How many nodes to contact in parallel. Can be changed afterwards
      */
-    constructor(r: Roster, private service: string, parallel: number = 3) {
+    constructor(r: Roster, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
         this.setParallel(parallel);
         const rID = r.id.toString("hex");
         if (!RosterWSConnection.nodes.has(rID)) {
@@ -178,7 +183,7 @@ export class RosterWSConnection implements IConnection {
         if (p < 1) {
             throw new Error("Parallel needs to be bigger or equal to 1");
         }
-        this._parallel = p;
+        this.parallel = p;
     }
 
     /**
@@ -194,7 +199,7 @@ export class RosterWSConnection implements IConnection {
         const errors: string[] = [];
         const msgNbr = this.msgNbr;
         this.msgNbr++;
-        const list = this.nodes.newList(this.service, this._parallel);
+        const list = this.nodes.newList(this.service, this.parallel);
         const pool = list.active;
 
         Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
@@ -260,6 +265,6 @@ export class LeaderConnection extends WebSocketConnection {
             throw new Error("Roster should have at least one node");
         }
 
-        super(roster.list[0].address, service);
+        super(roster.list[0].getWebSocketAddress(), service);
     }
 }

@@ -17,7 +17,6 @@ describe("CoinInstance Tests", () => {
         darc.addIdentity("spawn:coin", SIGNER, Rule.OR);
         darc.addIdentity("invoke:coin.mint", SIGNER, Rule.OR);
         darc.addIdentity("invoke:coin.transfer", SIGNER, Rule.OR);
-
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
         const ci = await CoinInstance.spawn(rpc, darc.getBaseID(), [SIGNER], SPAWNER_COIN);
 

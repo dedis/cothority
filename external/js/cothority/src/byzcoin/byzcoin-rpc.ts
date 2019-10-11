@@ -3,7 +3,7 @@ import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -30,6 +30,7 @@ export const currentVersion = 2;
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
+    static serviceName = "ByzCoin";
 
     /**
      * Helper to create a genesis darc
@@ -68,7 +69,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
                              latest?: SkipBlock):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
-        rpc.conn = new RosterWSConnection(roster, "ByzCoin");
+        rpc.conn = new RosterWSConnection(roster, ByzCoinRPC.serviceName);
 
         const skipchain = new SkipchainRPC(roster);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
@@ -90,7 +91,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param blockInterval The interval of block creation in nanoseconds
      */
     static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
-        const leader = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
+        const leader = new LeaderConnection(roster, ByzCoinRPC.serviceName);
         const req = new CreateGenesisBlock({
             blockInterval,
             darcContractIDs: [DarcInstance.contractID],

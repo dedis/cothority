@@ -1,4 +1,4 @@
-import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import {
     GetAllSkipChainIDs,
@@ -27,7 +27,7 @@ export default class SkipchainRPC {
     constructor(roster: Roster) {
         this.roster = roster;
         this.pool = new RosterWSConnection(roster, SkipchainRPC.serviceName);
-        this.leader = new WebSocketConnection(this.roster.list[0].getWebSocketAddress(), SkipchainRPC.serviceName);
+        this.leader = new LeaderConnection(this.roster, SkipchainRPC.serviceName);
     }
 
     /**
