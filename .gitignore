@@ -5,6 +5,7 @@ conode/conode
 conode/co[0-9]*/
 conode/public.toml
 conode/log
+conode/tmp
 status/status
 scmgr/scmgr
 cisc/cisc

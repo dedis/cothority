@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -15,10 +16,16 @@ import (
 	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ConfigPath points to where the files will be stored by default.
 var ConfigPath = "."
+
+// This var is used to check if an identity is empty. It helps providing some
+// insights to users in special cases, for example when using "bcadmin link"
+// that ends up using an empty identity if none is provided.
+var emptyID = make([]byte, 32)
 
 // BcaName is used for cliApp.Name and the default config folder of bcadmin.
 const BcaName = "bcadmin"
@@ -34,8 +41,13 @@ type Config struct {
 }
 
 // LoadKey returns the signer of a given identity. It searches it in the
-// ConfigPath.
+// ConfigPath. If the identity is empty it return an error.
 func LoadKey(id darc.Identity) (*darc.Signer, error) {
+	// First check if this is an empty identity. Note: we expect an identity to
+	// use 32 bytes
+	if bytes.Equal(id.GetPublicBytes(), emptyID) {
+		return nil, xerrors.New("failed to load the key because the identity is empty")
+	}
 	// Find private key file.
 	fn := fmt.Sprintf("key-%s.cfg", id)
 	fn = filepath.Join(ConfigPath, fn)
