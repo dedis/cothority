@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"go.dedis.ch/kyber/v3/util/key"
-
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/group/edwards25519"
 	"go.dedis.ch/kyber/v3/sign/anon"
+	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/kyber/v3/xof/blake2xs"
 	"go.dedis.ch/onet/v3/log"
 
@@ -20,6 +19,7 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
@@ -97,7 +97,12 @@ func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	if err != nil {
 		return nil, nil, errors.New("couldn't get darc: " + err.Error())
 	}
-	expr := d.Rules.Get("invoke:finalize")
+	var expr expression.Expr
+	if rst.GetVersion() < 2 {
+		expr = d.Rules.Get("invoke:finalize")
+	} else {
+		expr = d.Rules.Get("invoke:popParty.finalize")
+	}
 	c.Organizers = len(strings.Split(string(expr), "|"))
 
 	miningRewardBuf := inst.Spawn.Args.Search("miningReward")
