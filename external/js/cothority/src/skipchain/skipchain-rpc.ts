@@ -22,14 +22,12 @@ export default class SkipchainRPC {
 
     private roster: Roster;
     private pool: IConnection;
-    private conn: IConnection[];
+    private leader: WebSocketConnection;
 
     constructor(roster: Roster) {
         this.roster = roster;
         this.pool = new RosterWSConnection(roster, SkipchainRPC.serviceName);
-        this.conn = roster.list.map((srvid) => {
-            return new WebSocketConnection(srvid.getWebSocketAddress(), SkipchainRPC.serviceName);
-        });
+        this.leader = new WebSocketConnection(this.roster.list[0].getWebSocketAddress(), SkipchainRPC.serviceName);
     }
 
     /**
@@ -43,7 +41,7 @@ export default class SkipchainRPC {
         const newBlock = new SkipBlock({roster: this.roster, maxHeight, baseHeight});
         const req = new StoreSkipBlock({newBlock});
 
-        return this.conn[0].send(req, StoreSkipBlockReply);
+        return this.leader.send(req, StoreSkipBlockReply);
     }
 
     /**
@@ -59,7 +57,7 @@ export default class SkipchainRPC {
             targetSkipChainID: gid,
         });
 
-        return this.conn[0].send(req, StoreSkipBlockReply);
+        return this.leader.send(req, StoreSkipBlockReply);
     }
 
     /**

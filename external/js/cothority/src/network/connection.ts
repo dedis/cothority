@@ -1,5 +1,4 @@
 import { Message, util } from "protobufjs/light";
-import { sprintf } from "sprintf-js";
 import URL from "url-parse";
 import Log from "../log";
 import { Nodes } from "./nodes";
@@ -18,7 +17,7 @@ export function setFactory(generator: (path: string) => WebSocketAdapter): void 
 }
 
 /**
- * A connection allows to send a message to one or more distant peer
+ * A connection allows to send a message to one or more distant peers
  */
 export interface IConnection {
     /**
@@ -40,12 +39,18 @@ export interface IConnection {
      * @param value Timeout in milliseconds
      */
     setTimeout(value: number): void;
+
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
 }
 
 /**
  * Single peer connection to one single node.
  */
-export class WebSocketConnection implements IConnection {
+export class WebSocketConnection {
     private readonly url: string;
     private readonly service: string;
     private timeout: number;
@@ -140,21 +145,22 @@ export class WebSocketConnection implements IConnection {
  *
  * It uses the Nodes class to manage which nodes will be contacted.
  */
-export class RosterWSConnection {
+export class RosterWSConnection implements IConnection {
     // debugging variable
     static totalConnNbr = 0;
     private static nodes: Map<string, Nodes> = new Map<string, Nodes>();
-    // Can be set after the RosterWSConnection is set up.
-    parallel: number = 3;
     nodes: Nodes;
     private readonly connNbr: number;
     private msgNbr = 0;
+    private _parallel: number = 3;
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
+     * @param parallel  How many nodes to contact in parallel. Can be changed afterwards
      */
-    constructor(r: Roster, private service: string) {
+    constructor(r: Roster, private service: string, parallel: number = 3) {
+        this.setParallel(parallel);
         const rID = r.id.toString("hex");
         if (!RosterWSConnection.nodes.has(rID)) {
             RosterWSConnection.nodes.set(rID, new Nodes(r));
@@ -162,6 +168,17 @@ export class RosterWSConnection {
         this.nodes = RosterWSConnection.nodes.get(rID);
         this.connNbr = RosterWSConnection.totalConnNbr;
         RosterWSConnection.totalConnNbr++;
+    }
+
+    /**
+     * Set a new parameter for how many nodes should be contacted in parallel.
+     * @param p
+     */
+    setParallel(p: number) {
+        if (p < 1) {
+            throw new Error("Parallel needs to be bigger or equal to 1");
+        }
+        this._parallel = p;
     }
 
     /**
@@ -177,10 +194,10 @@ export class RosterWSConnection {
         const errors: string[] = [];
         const msgNbr = this.msgNbr;
         this.msgNbr++;
-        const list = this.nodes.newList(this.service, this.parallel);
+        const list = this.nodes.newList(this.service, this._parallel);
         const pool = list.active;
 
-        Log.lvl3(sprintf("%d/%d", this.connNbr, msgNbr), "sending", message.constructor.name, "with list:",
+        Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
             pool.map((conn) => conn.getURL()));
 
         // Get the first reply - need to take care not to return a reject too soon, else
@@ -190,7 +207,7 @@ export class RosterWSConnection {
         return Promise.race(pool.map((conn) => {
             return new Promise<T>(async (resolve, reject) => {
                 do {
-                    const idStr = sprintf("%d/%d: %s - ", this.connNbr, msgNbr.toString(), conn.getURL());
+                    const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
                     try {
                         Log.lvl3(idStr, "sending");
                         const sub = await conn.send(message, reply);
@@ -219,7 +236,7 @@ export class RosterWSConnection {
      * To be conform with an IConnection
      */
     getURL(): string {
-        return this.nodes.newList(this.service, (this.parallel)).active[0].getURL();
+        return this.nodes.newList(this.service, 1).active[0].getURL();
     }
 
     /**

@@ -1,4 +1,4 @@
-import { IConnection, WebSocketConnection } from "../network/connection";
+import { WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { StatusRequest, StatusResponse } from "./proto";
 
@@ -8,7 +8,7 @@ import { StatusRequest, StatusResponse } from "./proto";
 export default class StatusRPC {
     static serviceName = "Status";
 
-    private conn: IConnection[];
+    private conn: WebSocketConnection[];
     private timeout: number;
 
     constructor(roster: Roster) {

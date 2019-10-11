@@ -84,17 +84,13 @@ export default class ByzCoinRPC implements ICounterUpdater {
     }
 
     /**
-     * Create a new byzcoin chain and return a associated RPC
+     * Create a new byzcoin chain and returns an associated RPC
      * @param roster        The roster to use to create the genesis block
      * @param darc          The genesis darc
      * @param blockInterval The interval of block creation in nanoseconds
      */
     static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
-        const rpc = new ByzCoinRPC();
-        rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
-        rpc.genesisDarc = darc;
-        rpc.config = new ChainConfig({blockInterval});
-
+        const leader = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
         const req = new CreateGenesisBlock({
             blockInterval,
             darcContractIDs: [DarcInstance.contractID],
@@ -103,12 +99,8 @@ export default class ByzCoinRPC implements ICounterUpdater {
             version: currentVersion,
         });
 
-        const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
-        rpc.genesis = ret.skipblock;
-        rpc._latest = ret.skipblock;
-        await rpc.updateConfig();
-
-        return rpc;
+        const ret = await leader.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
+        return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
     }
 
     private static staticCounters = new Map<string, Map<string, Long>>();
@@ -161,6 +153,14 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const header = DataHeader.decode(this._latest.data);
 
         return header.version;
+    }
+
+    /**
+     * Defines how many nodes will be contacted in parallel when sending a message
+     * @param p nodes to contact in parallel
+     */
+    setParallel(p: number) {
+         this.conn.setParallel(p);
     }
 
     /**
@@ -260,6 +260,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * you must use getProof in order to create a complete standalone
      * proof starting from the genesis block.
      *
+     * @param from skipblock to start
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again
