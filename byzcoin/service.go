@@ -403,6 +403,12 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, xerrors.Errorf("decoding header: %w", err)
 	}
 
+	if req.Version < 2 && header.Version >= 2 {
+		// As the version 2 introduced a fix to the hash, the client must
+		// at least be above it when the chain is.
+		return nil, xerrors.New("invalid client version below 2")
+	}
+
 	// Upgrade the instructions with the byzcoin protocol version
 	// to use the correct hash function.
 	req.Transaction.Instructions.SetVersion(header.Version)

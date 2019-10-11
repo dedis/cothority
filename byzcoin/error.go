@@ -20,6 +20,8 @@ func ErrorOrNil(err error, msg string) error {
 	return ErrorOrNilSkip(err, msg, 1)
 }
 
+// ErrorOrNilSkip returns the error if any with the stack trace
+// beginning at the call of the skip-nth caller.
 func ErrorOrNilSkip(err error, msg string, skip int) error {
 	if err == nil {
 		return nil
@@ -31,6 +33,8 @@ func ErrorOrNilSkip(err error, msg string, skip int) error {
 	}
 }
 
+// WrapError returns a wrapper of the error is it can be used
+// for comparison.
 func WrapError(err error) error {
 	return ErrorOrNilSkip(err, "wrapper", 1)
 }
