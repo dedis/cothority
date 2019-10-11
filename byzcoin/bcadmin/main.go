@@ -1499,9 +1499,14 @@ func darcRule(c *cli.Context) error {
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 
+	command := "evolve_unrestricted"
+	if c.Bool("restricted") {
+		command = "evolve"
+	}
+
 	invoke := byzcoin.Invoke{
 		ContractID: byzcoin.ContractDarcID,
-		Command:    "evolve_unrestricted",
+		Command:    command,
 		Args: []byzcoin.Argument{
 			{
 				Name:  "darc",

@@ -449,6 +449,10 @@ var cmds = cli.Commands{
 						Name:  "delete",
 						Usage: "delete the rule",
 					},
+					cli.BoolFlag{
+						Name:  "restricted, r",
+						Usage: "evolves the darc in a restricted mode, ie. NOT using the invoke:darc.evolve_unrestricted command",
+					},
 				},
 			},
 		},

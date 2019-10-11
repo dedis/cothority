@@ -386,6 +386,18 @@ testRuleDarc(){
   testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
   testNGrep "spawn:xxx" runBA darc show -darc "$ID"
+
+  # re-add the rule to check the restricted mode
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
+  # removing the unrestricted rule
+  testOK runBA darc rule -delete -rule "invoke:darc.evolve_unrestricted" -darc "$ID" -sign "$KEY"
+  # now, without using the --restricted flag, it shouldn't be possible to update
+  # the darc. Then we try we the --restricted flag.
+  testFail runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  # same for deleting
+  testFail runBA darc rule -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
 }
 
 testAddDarcFromOtherOne(){
