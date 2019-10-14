@@ -3,7 +3,7 @@ import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -30,6 +30,7 @@ export const currentVersion = 2;
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
+    static readonly serviceName = "ByzCoin";
 
     /**
      * Helper to create a genesis darc
@@ -68,7 +69,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
                              latest?: SkipBlock):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
-        rpc.conn = new RosterWSConnection(roster, "ByzCoin");
+        rpc.conn = new RosterWSConnection(roster, ByzCoinRPC.serviceName);
 
         const skipchain = new SkipchainRPC(roster);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
@@ -84,17 +85,13 @@ export default class ByzCoinRPC implements ICounterUpdater {
     }
 
     /**
-     * Create a new byzcoin chain and return a associated RPC
+     * Create a new byzcoin chain and returns an associated RPC
      * @param roster        The roster to use to create the genesis block
      * @param darc          The genesis darc
      * @param blockInterval The interval of block creation in nanoseconds
      */
     static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
-        const rpc = new ByzCoinRPC();
-        rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
-        rpc.genesisDarc = darc;
-        rpc.config = new ChainConfig({blockInterval});
-
+        const leader = new LeaderConnection(roster, ByzCoinRPC.serviceName);
         const req = new CreateGenesisBlock({
             blockInterval,
             darcContractIDs: [DarcInstance.contractID],
@@ -103,12 +100,8 @@ export default class ByzCoinRPC implements ICounterUpdater {
             version: currentVersion,
         });
 
-        const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
-        rpc.genesis = ret.skipblock;
-        rpc._latest = ret.skipblock;
-        await rpc.updateConfig();
-
-        return rpc;
+        const ret = await leader.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
+        return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
     }
 
     private static staticCounters = new Map<string, Map<string, Long>>();
@@ -161,6 +154,14 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const header = DataHeader.decode(this._latest.data);
 
         return header.version;
+    }
+
+    /**
+     * Defines how many nodes will be contacted in parallel when sending a message
+     * @param p nodes to contact in parallel
+     */
+    setParallel(p: number) {
+         this.conn.setParallel(p);
     }
 
     /**
@@ -260,6 +261,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * you must use getProof in order to create a complete standalone
      * proof starting from the genesis block.
      *
+     * @param from skipblock to start
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again

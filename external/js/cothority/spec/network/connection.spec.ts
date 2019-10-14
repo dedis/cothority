@@ -67,8 +67,8 @@ describe("WebSocketAdapter Tests", () => {
         });
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
@@ -82,8 +82,8 @@ describe("WebSocketAdapter Tests", () => {
         setFactory(() => new TestWebSocket(null, new Error(), 1000));
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
@@ -95,13 +95,13 @@ describe("WebSocketAdapter Tests", () => {
     it("should send a request to the leader", async () => {
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
         const conn = new LeaderConnection(roster, "");
-        expect(conn.getURL()).toBe("a");
+        expect(conn.getURL()).toBe("ws://a:1235");
 
         expect(() => new LeaderConnection(new Roster(), "")).toThrow();
     });

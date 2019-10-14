@@ -496,7 +496,8 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 	}
 
 	blocks := []*SkipBlock{block.Copy()}
-	log.Lvlf3("Starting to search chain at %s", s.Context.ServerIdentity())
+	log.Lvlf3("%s: starting to search chain at %x",
+		s.Context.ServerIdentity(), guc.LatestID)
 	maxHeight := guc.MaxHeight
 	if maxHeight <= 0 {
 		maxHeight = block.MaximumHeight
@@ -538,7 +539,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
-	log.Lvl3("Found", len(blocks), "blocks")
+	log.Lvlf3("Found %d blocks", len(blocks))
 	reply := &GetUpdateChainReply{Update: blocks}
 
 	return reply, nil
