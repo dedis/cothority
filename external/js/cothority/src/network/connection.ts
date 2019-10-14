@@ -152,7 +152,7 @@ export class RosterWSConnection implements IConnection {
     // Can be set to override the default parallel value
     static defaultParallel: number = 3;
     // debugging variable
-    static totalConnNbr = 0;
+    private static totalConnNbr = 0;
     private static nodes: Map<string, Nodes> = new Map<string, Nodes>();
     nodes: Nodes;
     private readonly connNbr: number;

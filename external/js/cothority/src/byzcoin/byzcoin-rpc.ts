@@ -30,7 +30,7 @@ export const currentVersion = 2;
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
 export default class ByzCoinRPC implements ICounterUpdater {
-    static serviceName = "ByzCoin";
+    static readonly serviceName = "ByzCoin";
 
     /**
      * Helper to create a genesis darc
