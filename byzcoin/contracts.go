@@ -544,7 +544,7 @@ func LoadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
 	val, _, contract, _, err := GetValueContract(st, NewInstanceID(nil).Slice())
 	if err != nil {
-		return nil, xerrors.Errorf("reading trie: %v", err)
+		return nil, xerrors.Errorf("reading trie: %w", err)
 	}
 	if string(contract) != ContractConfigID {
 		return nil, xerrors.New("did not get " + ContractConfigID)
@@ -568,7 +568,7 @@ func GetValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version u
 		return
 	}
 	if value == nil {
-		err = xerrors.Errorf("invalid value: %v", errKeyNotSet)
+		err = WrapError(errKeyNotSet)
 		return
 	}
 	return

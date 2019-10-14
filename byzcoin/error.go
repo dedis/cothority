@@ -36,7 +36,7 @@ func ErrorOrNilSkip(err error, msg string, skip int) error {
 // WrapError returns a wrapper of the error is it can be used
 // for comparison.
 func WrapError(err error) error {
-	return ErrorOrNilSkip(err, "wrapper", 1)
+	return ErrorOrNilSkip(err, "wrapper", 2)
 }
 
 func (e *Error) Error() string {
