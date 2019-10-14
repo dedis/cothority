@@ -1,4 +1,4 @@
-package byzcoin
+package cothority
 
 import (
 	"fmt"
@@ -36,11 +36,14 @@ func ErrorOrNilSkip(err error, msg string, skip int) error {
 // WrapError returns a wrapper of the error is it can be used
 // for comparison.
 func WrapError(err error) error {
-	return ErrorOrNilSkip(err, "wrapper", 2)
+	return ErrorOrNilSkip(err, "", 2)
 }
 
 func (e *Error) Error() string {
-	return e.msg + ":" + fmt.Sprintf("%v", e.err)
+	if e.msg != "" {
+		return e.msg + ": " + fmt.Sprintf("%v", e.err)
+	}
+	return fmt.Sprintf("%v", e.err)
 }
 
 // Unwrap returns the next error in the chain.
@@ -57,7 +60,11 @@ func (e *Error) Format(f fmt.State, c rune) {
 // the stack trace when the '+' is used in combination with
 // 'v'.
 func (e *Error) FormatError(p xerrors.Printer) error {
-	p.Printf("%s: %v", e.msg, e.err)
+	if e.msg != "" {
+		p.Printf("%s: %v", e.msg, e.err)
+	} else {
+		p.Printf("%v", e.err)
+	}
 
 	if p.Detail() {
 		e.frame.Format(p)

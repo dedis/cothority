@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -92,7 +93,7 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 		return
 	}
 	if buf == nil {
-		err = WrapError(errKeyNotSet)
+		err = cothority.WrapError(errKeyNotSet)
 		return
 	}
 
@@ -112,7 +113,7 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, version uint64, 
 
 // Commit commits the staged data to the source trie.
 func (t *stagingStateTrie) Commit() error {
-	return ErrorOrNil(t.StagingTrie.Commit(), "commit failed")
+	return cothority.ErrorOrNil(t.StagingTrie.Commit(), "commit failed")
 }
 
 // GetIndex returns the index of the current trie.
@@ -167,7 +168,7 @@ func newStateTrie(db *bbolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 
 // StoreAll stores the state changes in the Trie.
 func (t *stateTrie) StoreAll(scs StateChanges, index int, version Version) error {
-	return ErrorOrNil(t.VerifiedStoreAll(scs, index, version, nil), "store failed")
+	return cothority.ErrorOrNil(t.VerifiedStoreAll(scs, index, version, nil), "store failed")
 }
 
 // VerifiedStoreAll stores the state changes, the index and the version as metadata. It
@@ -212,7 +213,7 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 		return
 	}
 	if buf == nil {
-		err = WrapError(errKeyNotSet)
+		err = cothority.WrapError(errKeyNotSet)
 		return
 	}
 

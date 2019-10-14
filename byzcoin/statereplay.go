@@ -8,6 +8,7 @@ import (
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -21,7 +22,7 @@ import (
 type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
 func replayError(sb *skipchain.SkipBlock, err error) error {
-	return ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
+	return cothority.ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until

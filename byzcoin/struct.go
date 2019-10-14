@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/protobuf"
@@ -297,7 +298,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 		s.size = size
 	}
 
-	return ErrorOrNil(err, "tx error")
+	return cothority.ErrorOrNil(err, "tx error")
 }
 
 // this generates a storage key using the instance ID and the version
@@ -351,7 +352,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		for i, sc := range scs {
 			if len(sc.InstanceID) != prefixLength {
 				// as we use it as a prefix, all must have the same length
-				return WrapError(errLengthInstanceID)
+				return cothority.WrapError(errLengthInstanceID)
 			}
 
 			key, err := s.key(sc.InstanceID, sc.Version, int64(sb.Index))
@@ -390,7 +391,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 
 	s.size = size
 
-	return ErrorOrNil(s.cleanByBlock(scs, sb), "cleaning")
+	return cothority.ErrorOrNil(s.cleanByBlock(scs, sb), "cleaning")
 }
 
 // This will return the list of state changes for the given instance
@@ -398,7 +399,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		return nil, WrapError(errLengthInstanceID)
+		return nil, cothority.WrapError(errLengthInstanceID)
 	}
 
 	err = s.db.View(func(tx *bbolt.Tx) error {
@@ -422,7 +423,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 		return nil
 	})
 
-	err = ErrorOrNil(err, "tx error")
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -433,7 +434,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = WrapError(errLengthInstanceID)
+		err = cothority.WrapError(errLengthInstanceID)
 		return
 	}
 
@@ -463,7 +464,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 		return nil
 	})
 
-	err = ErrorOrNil(err, "tx error")
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -500,7 +501,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 	})
 
 	sort.Sort(entries)
-	err = ErrorOrNil(err, "tx error")
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -510,7 +511,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = WrapError(errLengthInstanceID)
+		err = cothority.WrapError(errLengthInstanceID)
 		return
 	}
 
@@ -536,7 +537,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		return nil
 	})
 
-	err = ErrorOrNil(err, "tx error")
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -645,7 +646,7 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 		return xerrors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
-		return ErrorOrNil(old.checkNewRoster(c.Roster), "roster check: %v")
+		return cothority.ErrorOrNil(old.checkNewRoster(c.Roster), "roster check: %v")
 	}
 	return nil
 }

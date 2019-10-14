@@ -3,6 +3,7 @@ package byzcoin
 import (
 	"bytes"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"golang.org/x/xerrors"
 )
@@ -50,7 +51,7 @@ func (c *contractSecureDarc) SetRegistry(r ReadOnlyContractRegistry) {
 // by default when spawning new contracts.
 func (c *contractSecureDarc) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
 	err := inst.VerifyWithOption(rst, ctxHash, &VerificationOptions{IgnoreCounters: true})
-	return ErrorOrNil(err, "instruction verification")
+	return cothority.ErrorOrNil(err, "instruction verification")
 }
 
 func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -107,7 +108,7 @@ func (c *contractSecureDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coin
 	}
 
 	scs, coins, err := c2.Spawn(rst, inst, coins)
-	return scs, coins, ErrorOrNil(err, "spawn instance")
+	return scs, coins, cothority.ErrorOrNil(err, "spawn instance")
 }
 
 func (c *contractSecureDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {

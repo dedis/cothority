@@ -154,7 +154,7 @@ func (c *Client) CreateTransaction(instrs ...Instruction) (ClientTransaction, er
 // calling this method (see NewClientFromConfig).
 func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 	resp, err := c.AddTransactionAndWait(tx, 0)
-	return resp, ErrorOrNil(err, "request failed")
+	return resp, cothority.ErrorOrNil(err, "request failed")
 }
 
 // AddTransactionAndWait adds a transaction and will wait for it to be included
@@ -214,7 +214,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	}
 
 	rep, err := c.GetProofFrom(key, c.Genesis)
-	return rep, ErrorOrNil(err, "request failed")
+	return rep, cothority.ErrorOrNil(err, "request failed")
 }
 
 // GetProofFromLatest returns a proof for the key stored in the skipchain
@@ -231,7 +231,7 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 	}
 
 	rep, err := c.GetProofFrom(key, c.Latest)
-	return rep, ErrorOrNil(err, "request failed")
+	return rep, cothority.ErrorOrNil(err, "request failed")
 }
 
 // GetProofFrom returns a proof for the key stored in the skipchain starting
@@ -243,7 +243,7 @@ func (c *Client) GetProofFromLatest(key []byte) (*GetProofResponse, error) {
 // proof starting from the genesis block.
 func (c *Client) GetProofFrom(key []byte, from *skipchain.SkipBlock) (*GetProofResponse, error) {
 	rep, err := c.getProofRaw(key, from, nil)
-	return rep, ErrorOrNil(err, "request failed")
+	return rep, cothority.ErrorOrNil(err, "request failed")
 }
 
 // GetProofAfter returns a proof for the key stored in the skipchain
@@ -261,7 +261,7 @@ func (c *Client) GetProofAfter(key []byte, full bool, block *skipchain.SkipBlock
 		rep, err = c.getProofRaw(key, c.getLatestKnownBlock(), block)
 	}
 
-	return rep, ErrorOrNil(err, "request failed")
+	return rep, cothority.ErrorOrNil(err, "request failed")
 }
 
 func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*GetProofResponse, error) {
@@ -314,7 +314,7 @@ func (c *Client) getProofRaw(key []byte, from, include *skipchain.SkipBlock) (*G
 // and return the reply if the proof can be verified.
 func (c *Client) GetDeferredData(instrID InstanceID) (*DeferredData, error) {
 	rep, err := c.GetDeferredDataAfter(instrID, nil)
-	return rep, ErrorOrNil(err, "request failed")
+	return rep, cothority.ErrorOrNil(err, "request failed")
 }
 
 // GetDeferredDataAfter makes a request to retrieve the deferred instruction data
@@ -444,7 +444,7 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	config := &ChainConfig{}
 	err = protobuf.DecodeWithConstructors(configBuf, config, network.DefaultConstructors(cothority.Suite))
 
-	return config, ErrorOrNil(err, "decoding config")
+	return config, cothority.ErrorOrNil(err, "decoding config")
 }
 
 // WaitProof will poll ByzCoin until a given instanceID exists.
@@ -578,7 +578,7 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 	var reply GetSignerCountersResponse
 	_, err := c.SendProtobufParallelWithDecoder(c.Roster.List, &req, &reply,
 		c.options, c.signerCounterDecoder)
-	return &reply, ErrorOrNil(err, "request failed")
+	return &reply, cothority.ErrorOrNil(err, "request failed")
 }
 
 // DownloadState is used by a new node to ask to download the global state.
@@ -615,7 +615,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 	}
 	si, ok := c.noncesSI[nonce]
 	if ok {
-		err = ErrorOrNil(c.SendProtobuf(si, msg, reply), "request failed")
+		err = cothority.ErrorOrNil(c.SendProtobuf(si, msg, reply), "request failed")
 	} else {
 		var si *network.ServerIdentity
 		var po onet.ParallelOptions
@@ -625,7 +625,7 @@ func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, le
 		po.Parallel = 1
 		po.StartNode = indexStart
 		si, err = c.SendProtobufParallel(c.Roster.List, msg, reply, &po)
-		err = ErrorOrNil(err, "request failed")
+		err = cothority.ErrorOrNil(err, "request failed")
 		c.noncesSI[reply.Nonce] = si
 	}
 	return
@@ -642,7 +642,7 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 	reply := ResolvedInstanceID{}
 
 	_, err := c.SendProtobufParallel(c.Roster.List, &req, &reply, c.options)
-	return reply.InstanceID, ErrorOrNil(err, "request failed")
+	return reply.InstanceID, cothority.ErrorOrNil(err, "request failed")
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
@@ -655,7 +655,7 @@ func Debug(url string, byzcoinID *skipchain.SkipBlockID) (*DebugResponse, error)
 	}
 	si := &network.ServerIdentity{URL: url}
 	err := onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, reply)
-	return reply, ErrorOrNil(err, "request failed")
+	return reply, cothority.ErrorOrNil(err, "request failed")
 }
 
 // DebugRemove deletes an existing byzcoin-instance from the conode.
@@ -669,7 +669,7 @@ func DebugRemove(si *network.ServerIdentity, byzcoinID skipchain.SkipBlockID) er
 		Signature: sig,
 	}
 	err = onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, nil)
-	return ErrorOrNil(err, "request failed")
+	return cothority.ErrorOrNil(err, "request failed")
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the

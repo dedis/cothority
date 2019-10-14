@@ -154,7 +154,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		return d
 	}
 	err = darc.EvalExpr(ex, getDarc, goodIdentities...)
-	return ErrorOrNil(err, "darc evaluation")
+	return cothority.ErrorOrNil(err, "darc evaluation")
 }
 
 func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {

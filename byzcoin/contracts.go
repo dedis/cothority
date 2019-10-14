@@ -166,7 +166,7 @@ var globalContractRegistry = newContractRegistry()
 // after the first cloning.
 func RegisterGlobalContract(contractID string, f ContractFn) error {
 	err := globalContractRegistry.register(contractID, f, false)
-	return ErrorOrNil(err, "registration failed")
+	return cothority.ErrorOrNil(err, "registration failed")
 }
 
 // RegisterContract stores the contract in the service registry which
@@ -181,7 +181,7 @@ func RegisterContract(s skipchain.GetService, contractID string, f ContractFn) e
 	}
 
 	err := scs.(*Service).contracts.register(contractID, f, true)
-	return ErrorOrNil(err, "registration failed")
+	return cothority.ErrorOrNil(err, "registration failed")
 }
 
 // GetContractRegistry clones the global registry and returns a read-only one.
@@ -326,7 +326,7 @@ func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	}
 
 	err = inst.Verify(rst, msg)
-	return ErrorOrNil(err, "instruction verification failed")
+	return cothority.ErrorOrNil(err, "instruction verification failed")
 }
 
 // This is the same as the VerifyInstruction function, but it uses
@@ -348,7 +348,7 @@ func (c *contractConfig) VerifyDeferredInstruction(rst ReadOnlyStateTrie, inst I
 	}
 
 	err = inst.VerifyWithOption(rst, msg, &VerificationOptions{IgnoreCounters: true})
-	return ErrorOrNil(err, "instruction verification failed")
+	return cothority.ErrorOrNil(err, "instruction verification failed")
 }
 
 // FormatMethod overrides the implementation from the BasicContract in order to
@@ -517,7 +517,7 @@ func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		}
 
 		sc, err := updateRosterScs(rst, darcID, req.Roster)
-		return sc, coins, ErrorOrNil(err, "roster scs")
+		return sc, coins, cothority.ErrorOrNil(err, "roster scs")
 	default:
 		return nil, nil, xerrors.New("invalid invoke command: " + inst.Invoke.Command)
 	}
@@ -568,7 +568,7 @@ func GetValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version u
 		return
 	}
 	if value == nil {
-		err = WrapError(errKeyNotSet)
+		err = cothority.WrapError(errKeyNotSet)
 		return
 	}
 	return
@@ -597,7 +597,7 @@ func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID, darcContractIDs []stri
 		return nil, xerrors.Errorf("for instance %v, \"%v\" is not a contract ID that decodes to a DARC", iid, string(contract))
 	}
 	darc, err := darc.NewFromProtobuf(value)
-	return darc, ErrorOrNil(err, "decoding darc")
+	return darc, cothority.ErrorOrNil(err, "decoding darc")
 }
 
 // LoadDarcFromTrie loads a darc which should be stored in key.

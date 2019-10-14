@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin/trie"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
@@ -102,7 +103,7 @@ func (ctx *ClientTransaction) FillSignersAndSignWith(signers ...darc.Signer) err
 	for i := range ctx.Instructions {
 		ctx.Instructions[i].SignerIdentities = ids
 	}
-	return ErrorOrNil(ctx.SignWith(signers...), "signing failed")
+	return cothority.ErrorOrNil(ctx.SignWith(signers...), "signing failed")
 }
 
 // SignWith signs all the instructions with the same signers. If some instructions need to be signed by different sets
@@ -403,10 +404,10 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	if ops.EvalAttr != nil {
 		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
-		return ErrorOrNil(err, "evaluating darc")
+		return cothority.ErrorOrNil(err, "evaluating darc")
 	}
 	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
-	return ErrorOrNil(err, "evaluating darc")
+	return cothority.ErrorOrNil(err, "evaluating darc")
 }
 
 // InstrType is the instruction type, which can be spawn, invoke or delete.
@@ -579,7 +580,7 @@ func (sc *StateChange) Op() trie.OpType {
 func decodeStateChangeBody(buf []byte) (StateChangeBody, error) {
 	var out StateChangeBody
 	err := protobuf.Decode(buf, &out)
-	return out, ErrorOrNil(err, "decoding body")
+	return out, cothority.ErrorOrNil(err, "decoding body")
 }
 
 // StateChanges hold a slice of StateChange

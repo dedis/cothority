@@ -676,7 +676,7 @@ func entryToResponse(sce *StateChangeEntry, ok bool, err error) (*GetInstanceVer
 		err = errKeyNotSet
 	}
 	if err != nil {
-		return nil, WrapError(err)
+		return nil, cothority.WrapError(err)
 	}
 
 	return &GetInstanceVersionResponse{
@@ -728,7 +728,7 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		err = errKeyNotSet
 	}
 	if err != nil {
-		return nil, WrapError(err)
+		return nil, cothority.WrapError(err)
 	}
 
 	sb, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
@@ -783,7 +783,7 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 	}
 
 	if valStruct.Removed {
-		return nil, WrapError(errKeyNotSet)
+		return nil, cothority.WrapError(errKeyNotSet)
 	}
 
 	return &ResolvedInstanceID{valStruct.IID}, nil
@@ -812,7 +812,7 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 	}
 
 	buf, stream, err := s.ServiceProcessor.ProcessClientRequest(req, path, buf)
-	return buf, stream, ErrorOrNil(err, "processing request")
+	return buf, stream, cothority.ErrorOrNil(err, "processing request")
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
@@ -866,7 +866,7 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 		})
 		return xerrors.Errorf("iterating values: %v", err)
 	})
-	err = ErrorOrNil(err, "tx error: %v")
+	err = cothority.ErrorOrNil(err, "tx error: %v")
 	return
 }
 
@@ -1146,7 +1146,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			// Suppose we _do_ have a statetrie
 			db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
 			err := db.Update(func(tx *bbolt.Tx) error {
-				return ErrorOrNil(tx.DeleteBucket(stBucket), "deleting bucket")
+				return cothority.ErrorOrNil(tx.DeleteBucket(stBucket), "deleting bucket")
 			})
 			if err != nil {
 				return xerrors.Errorf("Cannot delete existing trie while trying to download: %v", err)
@@ -1722,7 +1722,7 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 // skipchain.
 func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStateTrie, error) {
 	trie, err := s.getStateTrie(scID)
-	return trie, ErrorOrNil(err, "getting trie")
+	return trie, cothority.ErrorOrNil(err, "getting trie")
 }
 
 func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
@@ -1804,7 +1804,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 	cfg, err := LoadConfigFromTrie(st)
-	return cfg, ErrorOrNil(err, "reading trie")
+	return cfg, cothority.ErrorOrNil(err, "reading trie")
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
@@ -1818,7 +1818,7 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 		return nil, xerrors.Errorf("loading config: %v", err)
 	}
 	darc, err := getInstanceDarc(st, ConfigInstanceID, config.DarcContractIDs)
-	return darc, ErrorOrNil(err, "getting darc instance")
+	return darc, cothority.ErrorOrNil(err, "getting darc instance")
 }
 
 // LoadBlockInfo loads the block interval and the maximum size from the
@@ -1833,7 +1833,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
 	dur, size, err := loadBlockInfo(st)
-	return dur, size, ErrorOrNil(err, "from trie")
+	return dur, size, cothority.ErrorOrNil(err, "from trie")
 }
 
 func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {

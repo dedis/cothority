@@ -422,7 +422,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	}
 
 	_, err = s.createNewBlock(req.GetGen(), rotateRoster(sb.Roster, req.GetView().LeaderIndex), []TxResult{TxResult{ctx, false}})
-	return ErrorOrNil(err, "creating block")
+	return cothority.ErrorOrNil(err, "creating block")
 }
 
 // getPrivateKey returns the default private key of the server

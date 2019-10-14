@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
@@ -264,12 +265,12 @@ func (s *defaultTxProcessor) ProposeBlock(state *txProcessorState) error {
 		return xerrors.Errorf("reading trie: %v", err)
 	}
 	_, err = s.createNewBlock(s.scID, &config.Roster, state.txs)
-	return ErrorOrNil(err, "creating block")
+	return cothority.ErrorOrNil(err, "creating block")
 }
 
 func (s *defaultTxProcessor) ProposeUpgradeBlock(version Version) error {
 	_, err := s.createUpgradeVersionBlock(s.scID, version)
-	return ErrorOrNil(err, "creating block")
+	return cothority.ErrorOrNil(err, "creating block")
 }
 
 func (s *defaultTxProcessor) GetInterval() time.Duration {
