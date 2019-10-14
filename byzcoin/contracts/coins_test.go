@@ -3,7 +3,6 @@ package contracts
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +12,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 var ciZero, ciOne, ciTwo []byte
@@ -306,7 +306,7 @@ func (ct cvTest) GetContractID(key []byte) (string, error) {
 	return ct.contractIDs[string(key)], nil
 }
 func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
-	return nil, errors.New("not implemented")
+	return nil, xerrors.New("not implemented")
 }
 
 func (ct cvTest) GetIndex() int {
@@ -318,15 +318,15 @@ func (ct cvTest) GetVersion() byzcoin.Version {
 }
 
 func (ct cvTest) ForEach(f func(k, v []byte) error) error {
-	return errors.New("not implemented")
+	return xerrors.New("not implemented")
 }
 
 func (ct cvTest) GetNonce() ([]byte, error) {
-	return nil, errors.New("not implemented")
+	return nil, xerrors.New("not implemented")
 }
 
 func (ct cvTest) StoreAllToReplica(scs byzcoin.StateChanges) (byzcoin.ReadOnlyStateTrie, error) {
-	return nil, errors.New("not implemented")
+	return nil, xerrors.New("not implemented")
 }
 
 func (ct cvTest) setSignatureCounter(id string, v uint64) {

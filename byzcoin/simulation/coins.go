@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -12,6 +11,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/simul/monitor"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -75,19 +75,19 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	gm, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, config.Roster,
 		[]string{"spawn:" + contracts.ContractCoinID, "invoke:" + contracts.ContractCoinID + ".mint", "invoke:" + contracts.ContractCoinID + ".transfer"}, signer.Identity())
 	if err != nil {
-		return errors.New("couldn't setup genesis message: " + err.Error())
+		return xerrors.Errorf("couldn't setup genesis message: %v", err)
 	}
 
 	// Set block interval from the simulation config.
 	blockInterval, err := time.ParseDuration(s.BlockInterval)
 	if err != nil {
-		return errors.New("parse duration of BlockInterval failed: " + err.Error())
+		return xerrors.Errorf("parse duration of BlockInterval failed: %v", err)
 	}
 	gm.BlockInterval = blockInterval
 
 	c, _, err := byzcoin.NewLedger(gm, s.Keep)
 	if err != nil {
-		return errors.New("couldn't create genesis block: " + err.Error())
+		return xerrors.Errorf("couldn't create genesis block: %v", err)
 	}
 	if err = c.UseNode(0); err != nil {
 		return err
@@ -117,7 +117,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Now sign all the instructions
 	if err = tx.FillSignersAndSignWith(signer); err != nil {
-		return errors.New("signing of instruction failed: " + err.Error())
+		return xerrors.Errorf("signing of instruction failed: %v", err)
 	}
 	coinAddr1 := tx.Instructions[0].DeriveID("")
 	coinAddr2 := tx.Instructions[1].DeriveID("")
@@ -125,7 +125,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// Send the instructions.
 	_, err = c.AddTransactionAndWait(tx, 2)
 	if err != nil {
-		return errors.New("couldn't initialize accounts: " + err.Error())
+		return xerrors.Errorf("couldn't initialize accounts: %v", err)
 	}
 
 	// Because of issue #1379, we need to do this in a separate tx, once we know
@@ -146,11 +146,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		return err
 	}
 	if err = tx.FillSignersAndSignWith(signer); err != nil {
-		return errors.New("signing of instruction failed: " + err.Error())
+		return xerrors.Errorf("signing of instruction failed: %v", err)
 	}
 	_, err = c.AddTransactionAndWait(tx, 2)
 	if err != nil {
-		return errors.New("couldn't mint coin: " + err.Error())
+		return xerrors.Errorf("couldn't mint coin: %v", err)
 	}
 
 	coinOne := make([]byte, 8)
@@ -178,7 +178,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				send := monitor.NewTimeMeasure("send")
 				_, err = c.AddTransaction(tx)
 				if err != nil {
-					return errors.New("couldn't add transfer transaction: " + err.Error())
+					return xerrors.Errorf("couldn't add transfer transaction: %v", err)
 				}
 				send.Record()
 				tx.Instructions = byzcoin.Instructions{}
@@ -211,7 +211,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				signatureCtr++
 				err = tx.FillSignersAndSignWith(signer)
 				if err != nil {
-					return errors.New("signature error: " + err.Error())
+					return xerrors.Errorf("signature error: %v", err)
 				}
 
 			}
@@ -225,7 +225,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		log.Lvl1("Sending last transaction and waiting")
 		_, err = c.AddTransactionAndWait(tx, 20)
 		if err != nil {
-			return errors.New("while adding transaction and waiting: " + err.Error())
+			return xerrors.Errorf("while adding transaction and waiting: %v", err)
 		}
 
 		// The AddTransactionAndWait returns as soon as the transaction is included in the node, but
@@ -234,20 +234,20 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		time.Sleep(time.Second)
 		proof, err := c.GetProof(coinAddr2.Slice())
 		if err != nil {
-			return errors.New("couldn't get proof for transaction: " + err.Error())
+			return xerrors.Errorf("couldn't get proof for transaction: %v", err)
 		}
 		_, v0, _, _, err := proof.Proof.KeyValue()
 		if err != nil {
-			return errors.New("proof doesn't hold transaction: " + err.Error())
+			return xerrors.Errorf("proof doesn't hold transaction: %v", err)
 		}
 		var account byzcoin.Coin
 		err = protobuf.Decode(v0, &account)
 		if err != nil {
-			return errors.New("couldn't decode account: " + err.Error())
+			return xerrors.Errorf("couldn't decode account: %v", err)
 		}
 		log.Lvlf1("Account has %d - total should be: %d", account.Value, s.Transactions*(round+1))
 		if account.Value != uint64(s.Transactions*(round+1)) {
-			return errors.New("account has wrong amount")
+			return xerrors.New("account has wrong amount")
 		}
 		confirm.Record()
 		roundM.Record()
