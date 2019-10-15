@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4/log"
 	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"

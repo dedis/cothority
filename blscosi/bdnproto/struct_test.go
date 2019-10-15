@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/pairing/bn256"
-	"go.dedis.ch/kyber/v3/sign"
-	"go.dedis.ch/kyber/v3/sign/bdn"
-	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/pairing/bn256"
+	"go.dedis.ch/kyber/v4/sign"
+	"go.dedis.ch/kyber/v4/sign/bdn"
+	"go.dedis.ch/kyber/v4/util/random"
 )
 
 func TestBdnSignature_Verify(t *testing.T) {

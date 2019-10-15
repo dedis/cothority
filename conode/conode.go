@@ -34,12 +34,12 @@ import (
 	_ "go.dedis.ch/cothority/v3/personhood"
 	_ "go.dedis.ch/cothority/v3/skipchain"
 	status "go.dedis.ch/cothority/v3/status/service"
-	"go.dedis.ch/kyber/v3/util/encoding"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3/app"
-	"go.dedis.ch/onet/v3/cfgpath"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4/util/encoding"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/cfgpath"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 const (

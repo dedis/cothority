@@ -12,8 +12,8 @@ import (
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4/util/random"
+	"go.dedis.ch/onet/v4/log"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"

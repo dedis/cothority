@@ -9,11 +9,11 @@ import (
 	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v4/pairing"
 
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/protobuf"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4/network"
 
 	"github.com/stretchr/testify/require"
 
@@ -16,7 +16,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v4"
 )
 
 // Note: Those tests relie on the Value contract, hence it is not possible to

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin/viewchange"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4/log"
 )
 
 // TestService_ViewChange is an end-to-end test for view-change. We kill the

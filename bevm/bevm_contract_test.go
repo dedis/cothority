@@ -9,12 +9,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4/log"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v4"
 )
 
 var txParams = struct {

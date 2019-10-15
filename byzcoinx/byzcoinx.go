@@ -13,10 +13,10 @@ import (
 
 	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 // ByzCoinX contains the state used to execute two rounds of blscosi.

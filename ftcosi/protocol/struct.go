@@ -13,11 +13,11 @@ import (
 	"hash"
 	"time"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/edwards25519"
-	"go.dedis.ch/kyber/v3/sign/cosi"
-	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/group/edwards25519"
+	"go.dedis.ch/kyber/v4/sign/cosi"
+	"go.dedis.ch/kyber/v4/util/random"
+	"go.dedis.ch/onet/v4"
 )
 
 // DefaultProtocolName can be used from other packages to refer to this protocol.

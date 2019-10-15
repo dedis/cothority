@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v4"
 
 	"github.com/stretchr/testify/require"
 

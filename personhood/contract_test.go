@@ -13,8 +13,8 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4/log"
 
 	"github.com/stretchr/testify/require"
 )

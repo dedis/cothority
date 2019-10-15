@@ -9,8 +9,8 @@ protocol, as in Test Driven Development.
 import (
 	"testing"
 
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/network"
 )
 
 // tests the root of the trees

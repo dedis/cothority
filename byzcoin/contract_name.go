@@ -8,7 +8,7 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )

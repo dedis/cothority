@@ -12,11 +12,11 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/evoting"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/log"
 )
 
 var (

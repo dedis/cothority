@@ -12,13 +12,13 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/authprox"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/share"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
-	"go.dedis.ch/onet/v3/cfgpath"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/share"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/cfgpath"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 var cmds = cli.Commands{

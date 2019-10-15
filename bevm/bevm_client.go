@@ -17,7 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/protobuf"
 )
 

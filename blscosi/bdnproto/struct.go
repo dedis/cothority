@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"go.dedis.ch/cothority/v3/blscosi/protocol"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign"
-	"go.dedis.ch/kyber/v3/sign/bdn"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/kyber/v4/sign"
+	"go.dedis.ch/kyber/v4/sign/bdn"
 )
 
 // BdnSignature is a signature that must be verified using coefficients

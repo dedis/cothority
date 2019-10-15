@@ -1,12 +1,12 @@
 package lib
 
 import (
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/proof"
-	"go.dedis.ch/kyber/v3/share/dkg/rabin"
-	"go.dedis.ch/kyber/v3/shuffle"
-	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/proof"
+	"go.dedis.ch/kyber/v4/share/dkg/rabin"
+	"go.dedis.ch/kyber/v4/shuffle"
+	"go.dedis.ch/kyber/v4/util/random"
+	"go.dedis.ch/onet/v4/network"
 
 	"go.dedis.ch/cothority/v3"
 )

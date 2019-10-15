@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/network"
 
 	"go.dedis.ch/cothority/v3/skipchain"
 )

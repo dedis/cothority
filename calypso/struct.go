@@ -6,10 +6,10 @@ import (
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/xof/keccak"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/kyber/v4/xof/keccak"
+	"go.dedis.ch/onet/v4/network"
 )
 
 func init() {

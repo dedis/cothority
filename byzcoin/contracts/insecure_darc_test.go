@@ -8,7 +8,7 @@ import (
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v4"
 )
 
 func TestInsecureDarc(t *testing.T) {

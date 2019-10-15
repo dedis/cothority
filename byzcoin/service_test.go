@@ -21,12 +21,12 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3/sign/eddsa"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4/sign/eddsa"
+	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/kyber/v4/util/random"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
 )
 

@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3"
-	dkgrabin "go.dedis.ch/kyber/v3/share/dkg/rabin"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4"
+	dkgrabin "go.dedis.ch/kyber/v4/share/dkg/rabin"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 // Name is the protocol identifier string.

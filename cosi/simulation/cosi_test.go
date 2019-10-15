@@ -6,8 +6,8 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/cosi/crypto"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 var tSuite = cothority.Suite

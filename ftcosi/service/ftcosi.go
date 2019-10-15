@@ -9,10 +9,10 @@ import (
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/ftcosi/protocol"
-	"go.dedis.ch/kyber/v3/sign/cosi"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4/sign/cosi"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to

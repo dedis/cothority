@@ -8,7 +8,7 @@ import (
 
 	_ "go.dedis.ch/cothority/v3/cosi/protocol"
 	_ "go.dedis.ch/cothority/v3/cosi/service"
-	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v4/app"
 )
 
 func runServer(ctx *cli.Context) {

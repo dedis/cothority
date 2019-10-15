@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"go.dedis.ch/cothority/v3/cosi/crypto"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 // Name can be used to reference the registered protocol.

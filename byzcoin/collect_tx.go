@@ -5,9 +5,9 @@ import (
 
 	"go.dedis.ch/cothority/v3/byzcoinx"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 	"golang.org/x/xerrors"
 )
 

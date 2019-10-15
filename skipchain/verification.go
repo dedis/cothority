@@ -1,6 +1,6 @@
 package skipchain
 
-import "go.dedis.ch/onet/v3/log"
+import "go.dedis.ch/onet/v4/log"
 
 /*
 This file holds all verification-functions for the skipchain.

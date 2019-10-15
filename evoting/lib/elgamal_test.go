@@ -3,7 +3,7 @@ package lib
 import (
 	"testing"
 
-	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/kyber/v4/util/random"
 
 	"github.com/stretchr/testify/assert"
 

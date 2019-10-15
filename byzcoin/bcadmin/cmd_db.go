@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"strings"
 
-	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v4/pairing"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 	"go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )

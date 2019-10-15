@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"strings"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/group/edwards25519"
-	"go.dedis.ch/kyber/v3/sign/anon"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/kyber/v3/xof/blake2xs"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/group/edwards25519"
+	"go.dedis.ch/kyber/v4/sign/anon"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/kyber/v4/xof/blake2xs"
+	"go.dedis.ch/onet/v4/log"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -21,7 +21,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
 )
 

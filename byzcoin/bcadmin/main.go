@@ -29,11 +29,11 @@ import (
 	_ "go.dedis.ch/cothority/v3/eventlog"
 	_ "go.dedis.ch/cothority/v3/personhood"
 	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
-	"go.dedis.ch/onet/v3/cfgpath"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/cfgpath"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
 )
 

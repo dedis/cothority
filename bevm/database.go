@@ -20,7 +20,7 @@ import (
 	"encoding/hex"
 	"sync"
 
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v4/log"
 
 	"github.com/ethereum/go-ethereum/common"
 )
