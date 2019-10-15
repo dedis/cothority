@@ -45,8 +45,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/darc/expression"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/sign/eddsa"
 	"go.dedis.ch/kyber/v4/sign/schnorr"

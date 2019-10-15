@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/cothority/v3/blscosi"
+	"go.dedis.ch/cothority/v4/blscosi"
 	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/app"

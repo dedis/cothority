@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.dedis.ch/cothority/v3/cosi/protocol"
+	"go.dedis.ch/cothority/v4/cosi/protocol"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"

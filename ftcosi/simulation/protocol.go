@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/ftcosi/protocol"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/ftcosi/protocol"
 	"go.dedis.ch/kyber/v4/sign/cosi"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"

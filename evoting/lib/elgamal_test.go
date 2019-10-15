@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 )
 
 func TestElGamal(t *testing.T) {

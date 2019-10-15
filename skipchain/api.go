@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/cothority/v3"
-	status "go.dedis.ch/cothority/v3/status/service"
+	"go.dedis.ch/cothority/v4"
+	status "go.dedis.ch/cothority/v4/status/service"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/onet/v4"

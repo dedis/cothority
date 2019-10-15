@@ -9,7 +9,7 @@ DBG_APP=2
 
 main(){
 	startTest
-	buildConode go.dedis.ch/cothority/v3/skipchain
+	buildConode go.dedis.ch/cothority/v4/skipchain
 	CFG=$BUILDDIR/scmgr_config
 	run testOptimize
 	run testDNSUpdate

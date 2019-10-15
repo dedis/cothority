@@ -9,9 +9,9 @@ import (
 	"go.dedis.ch/kyber/v4/pairing"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"

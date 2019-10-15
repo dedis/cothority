@@ -15,7 +15,7 @@ import (
 	"time"
 
 	cli "github.com/urfave/cli"
-	status "go.dedis.ch/cothority/v3/status/service"
+	status "go.dedis.ch/cothority/v4/status/service"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/app"
 	"go.dedis.ch/onet/v4/log"

@@ -7,7 +7,7 @@ import (
 	"go.dedis.ch/kyber/v4/share/dkg/rabin"
 	"go.dedis.ch/kyber/v4/util/random"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 )
 
 // RandomKeyPair creates a random public/private Diffie-Hellman key pair.

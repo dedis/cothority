@@ -7,7 +7,7 @@ import (
 	"sort"
 	"sync"
 
-	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v4/byzcoin"
 	"go.dedis.ch/onet/v4/log"
 
 	"github.com/ethereum/go-ethereum/ethdb"

@@ -1,8 +1,8 @@
 package personhood
 
 import (
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/onet/v4"
 )

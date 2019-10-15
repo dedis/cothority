@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v4/blscosi/protocol"
 	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/kyber/v4/suites"
 	"go.dedis.ch/onet/v4"

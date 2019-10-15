@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/evoting"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/evoting"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/util/key"
 	"go.dedis.ch/onet/v4"

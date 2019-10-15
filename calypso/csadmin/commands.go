@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3/calypso/csadmin/clicontracts"
+	"go.dedis.ch/cothority/v4/calypso/csadmin/clicontracts"
 )
 
 var cmds = cli.Commands{

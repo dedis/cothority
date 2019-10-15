@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v3/blscosi/bdnproto"
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
-	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/cothority/v4/blscosi/bdnproto"
+	"go.dedis.ch/cothority/v4/blscosi/protocol"
+	"go.dedis.ch/cothority/v4/byzcoinx"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/onet/v4"

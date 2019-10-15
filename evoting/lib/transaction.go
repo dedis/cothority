@@ -17,8 +17,8 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/skipchain"
 )
 
 func init() {

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/ftcosi/check"
-	s "go.dedis.ch/cothority/v3/ftcosi/service"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/ftcosi/check"
+	s "go.dedis.ch/cothority/v4/ftcosi/service"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/sign/cosi"
 	"go.dedis.ch/onet/v4"

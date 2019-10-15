@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"sync"
 
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"golang.org/x/xerrors"
 )
 

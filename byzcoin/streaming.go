@@ -3,7 +3,7 @@ package byzcoin
 import (
 	"sync"
 
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/onet/v4/network"
 )
 

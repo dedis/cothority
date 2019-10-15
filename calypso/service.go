@@ -40,12 +40,12 @@ import (
 
 	"go.dedis.ch/kyber/v4/sign/schnorr"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/calypso/protocol"
-	"go.dedis.ch/cothority/v3/darc"
-	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/calypso/protocol"
+	"go.dedis.ch/cothority/v4/darc"
+	dkgprotocol "go.dedis.ch/cothority/v4/dkg/pedersen"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/share"
 	dkg "go.dedis.ch/kyber/v4/share/dkg/pedersen"

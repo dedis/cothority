@@ -23,8 +23,8 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"go.dedis.ch/cothority/v3/blscosi"
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v4/blscosi"
+	"go.dedis.ch/cothority/v4/blscosi/protocol"
 	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"

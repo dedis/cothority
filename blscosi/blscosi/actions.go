@@ -11,8 +11,8 @@ import (
 	"os"
 
 	cli "github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3/blscosi"
-	"go.dedis.ch/cothority/v3/blscosi/blscosi/check"
+	"go.dedis.ch/cothority/v4/blscosi"
+	"go.dedis.ch/cothority/v4/blscosi/blscosi/check"
 	"go.dedis.ch/onet/v4/app"
 	"go.dedis.ch/onet/v4/log"
 )

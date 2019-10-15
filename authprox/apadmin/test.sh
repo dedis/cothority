@@ -15,7 +15,7 @@ main(){
 	build $APPDIR/../../eventlog/el
 	
 	startTest
-	buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/authprox
+	buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/authprox
 
 	# This must succeed before the others will work.
 	run BCSetup

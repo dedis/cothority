@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/darc"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/suites"
 	"go.dedis.ch/kyber/v4/xof/keccak"

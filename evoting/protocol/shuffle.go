@@ -3,7 +3,7 @@ package protocol
 import (
 	"errors"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/kyber/v4/proof"
 	"go.dedis.ch/kyber/v4/shuffle"
 	"go.dedis.ch/kyber/v4/sign/schnorr"
@@ -12,8 +12,8 @@ import (
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 
-	"go.dedis.ch/cothority/v3/evoting/lib"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/evoting/lib"
+	"go.dedis.ch/cothority/v4/skipchain"
 )
 
 /*

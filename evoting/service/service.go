@@ -24,12 +24,12 @@ import (
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 
-	"go.dedis.ch/cothority/v3"
-	dkgprotocol "go.dedis.ch/cothority/v3/dkg/rabin"
-	"go.dedis.ch/cothority/v3/evoting"
-	"go.dedis.ch/cothority/v3/evoting/lib"
-	"go.dedis.ch/cothority/v3/evoting/protocol"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4"
+	dkgprotocol "go.dedis.ch/cothority/v4/dkg/rabin"
+	"go.dedis.ch/cothority/v4/evoting"
+	"go.dedis.ch/cothority/v4/evoting/lib"
+	"go.dedis.ch/cothority/v4/evoting/protocol"
+	"go.dedis.ch/cothority/v4/skipchain"
 )
 
 var errOnlyLeader = errors.New("operation only allowed on the leader node")

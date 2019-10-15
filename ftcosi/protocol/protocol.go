@@ -12,7 +12,7 @@ import (
 
 	"math"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/sign/cosi"
 	"go.dedis.ch/onet/v4"

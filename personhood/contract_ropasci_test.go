@@ -5,16 +5,16 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 
-	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	"go.dedis.ch/cothority/v4/byzcoin/contracts"
 
 	"go.dedis.ch/protobuf"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/calypso"
-	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/calypso"
+	"go.dedis.ch/cothority/v4/darc"
 )
 
 // This test-file has some more elaborate structures to handle the RoPaSci

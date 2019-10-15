@@ -8,10 +8,10 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
-	"go.dedis.ch/cothority/v3/byzcoin/contracts"
-	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v4/byzcoin/contracts"
+	"go.dedis.ch/cothority/v4/darc"
 )
 
 // ValueSpawn is used to spawn a new contract.

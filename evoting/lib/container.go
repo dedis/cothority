@@ -8,7 +8,7 @@ import (
 	"go.dedis.ch/kyber/v4/util/random"
 	"go.dedis.ch/onet/v4/network"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 )
 
 // Ballot represents an encrypted vote.

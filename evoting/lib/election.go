@@ -8,7 +8,7 @@ import (
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/network"
 
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/skipchain"
 )
 
 // ElectionState is the type for storing the stage of Election.

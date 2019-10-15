@@ -9,9 +9,9 @@ import (
 	"os"
 
 	cli "github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/authprox"
-	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/authprox"
+	"go.dedis.ch/cothority/v4/byzcoin/bcadmin/lib"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/share"
 	"go.dedis.ch/onet/v4"

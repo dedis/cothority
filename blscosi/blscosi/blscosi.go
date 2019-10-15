@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/onet/v4/app"
 	"go.dedis.ch/onet/v4/cfgpath"
 	"go.dedis.ch/onet/v4/log"

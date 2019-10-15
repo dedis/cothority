@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/kyber/v4"
 	dkgrabin "go.dedis.ch/kyber/v4/share/dkg/rabin"
 	"go.dedis.ch/kyber/v4/util/key"

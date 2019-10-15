@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/evoting"
-	_ "go.dedis.ch/cothority/v3/evoting/service"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/evoting"
+	_ "go.dedis.ch/cothority/v4/evoting/service"
 )
 
 func TestMain(m *testing.M) {

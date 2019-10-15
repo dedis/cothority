@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v3"
-	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	"go.dedis.ch/cothority/v4"
+	dkgprotocol "go.dedis.ch/cothority/v4/dkg/pedersen"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/share"
 	"go.dedis.ch/onet/v4"
