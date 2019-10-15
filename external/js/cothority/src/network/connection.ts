@@ -55,8 +55,10 @@ export class WebSocketConnection implements IConnection {
      */
     constructor(addr: string, service: string) {
         const url = new URL(addr, {});
-        if (typeof window !== "undefined" && window.isSecureContext === true) {
-            url.set("protocol", "wss");
+        if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
+            if (globalThis.location.protocol === "https:") {
+                url.set("protocol", "wss");
+            }
         }
         this.url = url.href;
 

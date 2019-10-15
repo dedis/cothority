@@ -10,6 +10,11 @@ class UnregisteredMessage extends Message<UnregisteredMessage> {}
 describe("WebSocketAdapter Tests", () => {
     afterAll(() => {
         setFactory((path: string) => new BrowserWebSocketAdapter(path));
+
+        globalThis.location = {
+            ...globalThis.location,
+            protocol: "",
+        };
     });
 
     it("should send and receive data", async () => {
@@ -104,5 +109,18 @@ describe("WebSocketAdapter Tests", () => {
         expect(conn.getURL()).toBe("a");
 
         expect(() => new LeaderConnection(new Roster(), "")).toThrow();
+    });
+
+    it("should switch to wss in https context", async () => {
+        const conn = new WebSocketConnection("ws://a:1234", "");
+        expect(conn.getURL()).toBe("ws://a:1234");
+
+        globalThis.location = {
+            ...globalThis.location,
+            protocol: "https:",
+        };
+
+        const conn2 = new WebSocketConnection("ws://a:1234", "");
+        expect(conn2.getURL()).toBe("wss://a:1234");
     });
 });
