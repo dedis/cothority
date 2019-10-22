@@ -11,16 +11,20 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/blscosi/bdnproto"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
+	"go.dedis.ch/onet/ciphersuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 )
 
 var defaultTimeout = 20 * time.Second
-var testSuite = pairing.NewSuiteBn256()
+var testSuite = cosuite.NewBdnSuite()
+
+func makeBuilder() onet.Builder {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(testSuite)
+	return builder
+}
 
 type Counter struct {
 	veriCount   int
@@ -119,27 +123,11 @@ func TestBftCoSi(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
-		runProtocol(t, n, 0, 0, protoName, 0)
-	}
-}
-
-func TestBdnCoSi(t *testing.T) {
-	const protoName = "TestBDN"
-	nNodes := []int{1, 2, 4, 9, 20}
-	if testing.Short() {
-		nNodes = []int{1, 4}
-	}
-
-	err := GlobalInitBdnCoSiProtocol(testSuite, verify, ack, protoName)
-	require.Nil(t, err)
-
-	for _, n := range nNodes {
-		runProtocol(t, n, 0, 0, protoName, 1)
+		runProtocol(t, n, 0, 0, protoName)
 	}
 }
 
 func TestBftCoSiRefuse(t *testing.T) {
-	t.Skip("doesn't work with new onet testing...")
 	const protoName = "TestBftCoSiRefuse"
 
 	err := GlobalInitBFTCoSiProtocol(testSuite, verifyRefuse, ack, protoName)
@@ -153,7 +141,7 @@ func TestBftCoSiRefuse(t *testing.T) {
 		{9, 0, 1},
 	}
 	for _, c := range configs {
-		runProtocol(t, c.n, c.f, c.r, protoName, 0)
+		runProtocol(t, c.n, c.f, c.r, protoName)
 	}
 }
 
@@ -169,14 +157,14 @@ func TestBftCoSiFault(t *testing.T) {
 		{10, 3, 0},
 	}
 	for _, c := range configs {
-		runProtocol(t, c.n, c.f, c.r, protoName, 0)
+		runProtocol(t, c.n, c.f, c.r, protoName)
 	}
 }
 
-func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string, scheme int) {
+func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string) {
 	log.Lvlf1("Starting with %d hosts with %d faulty ones and refusing at %d. Protocol name is %s",
 		nbrHosts, nbrFault, refuseIndex, protoName)
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 
 	servers, roster, tree := local.GenTree(nbrHosts, false)
@@ -185,7 +173,6 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	pi, err := local.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	publics := roster.Publics()
 	bftCosiProto := pi.(*ByzCoinX)
 	bftCosiProto.CreateProtocol = local.CreateProtocol
 	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 1)
@@ -197,6 +184,9 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	bftCosiProto.Data = []byte("hello world")
 	bftCosiProto.Timeout = defaultTimeout
 	bftCosiProto.Threshold = nbrHosts - nbrFault
+	if refuseIndex > 0 {
+		bftCosiProto.Threshold--
+	}
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
 	require.Equal(t, bftCosiProto.nSubtrees, int(math.Pow(float64(nbrHosts), 1.0/3.0)))
@@ -204,7 +194,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	// kill the leafs first
 	nbrFault = min(nbrFault, len(servers))
 	for i := len(servers) - 1; i > len(servers)-nbrFault-1; i-- {
-		log.Lvl3("Pausing server:", servers[i].ServerIdentity.Public, servers[i].Address())
+		log.Lvl3("Pausing server:", servers[i].ServerIdentity.PublicKey, servers[i].Address())
 		servers[i].Pause()
 	}
 
@@ -212,7 +202,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.Nil(t, err)
 
 	// verify signature
-	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, scheme)
+	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, bftCosiProto.PublicKeys(), proposal)
 	require.Nil(t, err)
 
 	// check the counters
@@ -225,7 +215,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.True(t, nbrHosts-nbrFault <= counter.veriCount)
 }
 
-func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte, scheme int) error {
+func getAndVerifySignature(sigChan chan FinalSignature, publics []ciphersuite.PublicKey, proposal []byte) error {
 	var sig FinalSignature
 	timeout := defaultTimeout + time.Second
 	select {
@@ -241,14 +231,11 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if bytes.Compare(sig.Msg, proposal) != 0 {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
-	err := func() error {
-		switch scheme {
-		case 1:
-			return bdnproto.BdnSignature(sig.Sig).Verify(testSuite, proposal, publics)
-		default:
-			return protocol.BlsSignature(sig.Sig).Verify(testSuite, proposal, publics)
-		}
-	}()
+	aggKey, err := testSuite.AggregatePublicKeys(publics, sig.Sig)
+	if err != nil {
+		return err
+	}
+	err = testSuite.Verify(aggKey, sig.Sig, proposal)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

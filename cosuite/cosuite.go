@@ -18,6 +18,9 @@ type CoSiCipherSuite interface {
 	// can only be checked by aggregated public keys.
 	SignWithMask(sk ciphersuite.SecretKey, msg []byte, mask *sign.Mask) (ciphersuite.Signature, error)
 
+	// VerifyThreshold returns true if the aggregation has enough signatures.
+	VerifyThreshold(ciphersuite.Signature, int) bool
+
 	// AggregatePublicKeys makes the public key aggregation using the mask
 	// of the signature to know which keys are include.
 	AggregatePublicKeys([]ciphersuite.PublicKey, ciphersuite.Signature) (ciphersuite.PublicKey, error)

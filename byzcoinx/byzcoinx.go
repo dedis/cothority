@@ -6,17 +6,18 @@
 package byzcoinx
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"time"
 
-	"go.dedis.ch/cothority/v4/blscosi/bdnproto"
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/onet/ciphersuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
+	"golang.org/x/xerrors"
 )
 
 // ByzCoinX contains the state used to execute two rounds of blscosi.
@@ -45,24 +46,17 @@ type ByzCoinX struct {
 	// commitCosiProtoName is the ftcosi protocol name for the commit phase
 	commitCosiProtoName string
 	// prepSigChan is the channel for reading the prepare phase signature
-	prepSigChan chan []byte
-	// publics is the list of public keys
-	publics []kyber.Point
-	// suite is the ftcosi.Suite, which may be different from the suite used
-	// in the protocol because we need sha512 for the hash function so that
-	// the signature can be verified using eddsa.Verify.
-	suite *pairing.SuiteBn256
+	prepSigChan chan ciphersuite.Signature
+
+	suite cosuite.CoSiCipherSuite
 	// nSubtrees is the number of subtrees used for the ftcosi protocols.
 	nSubtrees int
-	// verifySignature takes the given signature and verifies it against
-	// the message
-	verifier VerifierFn
 }
 
 // FinalSignature holds the message Msg and its signature
 type FinalSignature struct {
 	Msg []byte
-	Sig []byte
+	Sig ciphersuite.Signature
 }
 
 type phase int
@@ -153,7 +147,10 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.BlsCosi, error) {
 // 4, wait for the commit phase to finish
 // 5, send the final signature
 func (bft *ByzCoinX) Dispatch() error {
-	defer bft.Done()
+	defer func() {
+		close(bft.FinalSignatureChan)
+		bft.Done()
+	}()
 
 	if !bft.IsRoot() {
 		return fmt.Errorf("non-root should not start this protocol")
@@ -161,10 +158,16 @@ func (bft *ByzCoinX) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	err := bft.verifier(bft.suite, bft.Msg, prepSig, bft.publics)
+
+	aggKey, err := bft.suite.AggregatePublicKeys(bft.PublicKeys(), prepSig)
 	if err != nil {
-		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
-		bft.FinalSignatureChan <- FinalSignature{nil, nil}
+		log.Error("Couldn't aggregate the public key:", err)
+		return nil
+	}
+
+	err = bft.suite.Verify(aggKey, prepSig, bft.Msg)
+	if err != nil {
+		log.Error("Signature verification failed on root during the prepare phase with error:", err)
 		return nil
 	}
 	log.Lvl3("Finished prepare phase")
@@ -181,7 +184,7 @@ func (bft *ByzCoinX) Dispatch() error {
 		return err
 	}
 
-	var commitSig []byte
+	var commitSig ciphersuite.Signature
 	select {
 	case commitSig = <-commitProto.FinalSignature:
 		log.Lvl3("Finished commit phase")
@@ -191,10 +194,18 @@ func (bft *ByzCoinX) Dispatch() error {
 		log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 	}
 
-	err = bft.verifier(bft.suite, bft.Msg, commitSig, bft.publics)
+	aggKey, err = bft.suite.AggregatePublicKeys(bft.PublicKeys(), commitSig)
 	if err != nil {
-		bft.FinalSignatureChan <- FinalSignature{nil, nil}
-		return errors.New("Commit signature is wrong")
+		return err
+	}
+
+	err = bft.suite.Verify(aggKey, commitSig, bft.Msg)
+	if err != nil {
+		return xerrors.New("commit signature is wrong")
+	}
+
+	if !bft.suite.VerifyThreshold(commitSig, bft.Threshold) {
+		return xerrors.New("threshold not achieved")
 	}
 
 	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
@@ -203,7 +214,7 @@ func (bft *ByzCoinX) Dispatch() error {
 
 // NewByzCoinX creates and initialises a ByzCoinX protocol.
 func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
-	suite *pairing.SuiteBn256, verifier VerifierFn) (*ByzCoinX, error) {
+	suite cosuite.CoSiCipherSuite) (*ByzCoinX, error) {
 	return &ByzCoinX{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
@@ -211,17 +222,15 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		Data:                make([]byte, 0),
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
-		prepSigChan:         make(chan []byte, 0),
-		publics:             n.Publics(),
+		prepSigChan:         make(chan ciphersuite.Signature, 0),
 		suite:               suite,
-		verifier:            verifier,
 		// We set nSubtrees to the cube root of n to evenly distribute the load,
 		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
 		nSubtrees: int(math.Pow(float64(len(n.List())), 1.0/3.0)),
 	}, nil
 }
 
-func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pairing.SuiteBn256) map[string]onet.NewProtocol {
+func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite cosuite.CoSiCipherSuite) map[string]onet.NewProtocol {
 
 	protocolMap := make(map[string]onet.NewProtocol)
 
@@ -230,12 +239,8 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pai
 	commitCosiProtoName := protoName + "_cosi_commit"
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
-	verifier := func(suite pairing.Suite, msg, sig []byte, pubkeys []kyber.Point) error {
-		return protocol.BlsSignature(sig).Verify(suite, msg, pubkeys)
-	}
-
 	protocolMap[protoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite, verifier)
+		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite)
 	}
 	protocolMap[prepCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return protocol.NewBlsCosi(n, vf, prepCosiSubProtoName, suite)
@@ -253,53 +258,10 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pai
 	return protocolMap
 }
 
-func makeBdnProtocols(vf, ack protocol.VerificationFn, protoName string, suite *pairing.SuiteBn256) map[string]onet.NewProtocol {
-	protocolMap := make(map[string]onet.NewProtocol)
-
-	prepCosiProtoName := protoName + "_cosi_prep"
-	prepCosiSubProtoName := protoName + "_subcosi_prep"
-	commitCosiProtoName := protoName + "_cosi_commit"
-	commitCosiSubProtoName := protoName + "_subcosi_commit"
-
-	verifier := func(suite pairing.Suite, msg, sig []byte, pubkeys []kyber.Point) error {
-		return bdnproto.BdnSignature(sig).Verify(suite, msg, pubkeys)
-	}
-
-	protocolMap[protoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite, verifier)
-	}
-	protocolMap[prepCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bdnproto.NewBdnCosi(n, vf, prepCosiSubProtoName, suite)
-	}
-	protocolMap[prepCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bdnproto.NewSubBdnCosi(n, vf, suite)
-	}
-	protocolMap[commitCosiProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bdnproto.NewBdnCosi(n, ack, commitCosiSubProtoName, suite)
-	}
-	protocolMap[commitCosiSubProtoName] = func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bdnproto.NewSubBdnCosi(n, ack, suite)
-	}
-
-	return protocolMap
-}
-
 // GlobalInitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi globally.
-func GlobalInitBFTCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
+func GlobalInitBFTCoSiProtocol(suite cosuite.CoSiCipherSuite, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeProtocols(vf, ack, protoName, suite)
-	for protoName, proto := range protocolMap {
-		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// GlobalInitBdnCoSiProtocol creates and registers the protocols required to run
-// the robust implementation of the BLS signature algorithm globally.
-func GlobalInitBdnCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.VerificationFn, protoName string) error {
-	protocolMap := makeBdnProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {
 			return err
@@ -310,20 +272,8 @@ func GlobalInitBdnCoSiProtocol(suite *pairing.SuiteBn256, vf, ack protocol.Verif
 
 // InitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi to the context c.
-func InitBFTCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
+func InitBFTCoSiProtocol(suite cosuite.CoSiCipherSuite, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeProtocols(vf, ack, protoName, suite)
-	for protoName, proto := range protocolMap {
-		if _, err := c.ProtocolRegister(protoName, proto); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// InitBDNCoSiProtocol creates and registers the protocols required to run
-// BFTCoSi to the context c over the BDN signature scheme
-func InitBDNCoSiProtocol(suite *pairing.SuiteBn256, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
-	protocolMap := makeBdnProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := c.ProtocolRegister(protoName, proto); err != nil {
 			return err

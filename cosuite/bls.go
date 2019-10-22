@@ -220,6 +220,11 @@ func (s *BlsCipherSuite) Verify(pk ciphersuite.PublicKey, sig ciphersuite.Signat
 	return bls.Verify(bn256Suite, publicKey.point, msg, sigdata)
 }
 
+// VerifyThreshold returns true if the aggregation has enough signatures.
+func (s *BlsCipherSuite) VerifyThreshold(sig ciphersuite.Signature, threshold int) bool {
+	return s.Count(sig) >= threshold
+}
+
 // AggregatePublicKeys produces a single public key that can verify the signature
 // passed in parameter.
 func (s *BlsCipherSuite) AggregatePublicKeys(publicKeys []ciphersuite.PublicKey, sig ciphersuite.Signature) (ciphersuite.PublicKey, error) {
