@@ -146,7 +146,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 		root.MaxNumTxs = 0
 	}
 
-	log.Lvl2("Asking", root.Roster().List, "for Txs")
+	log.Lvl3("Asking", root.Roster().List, "for Txs")
 	if err := root.Start(); err != nil {
 		log.Error(s.ServerIdentity(), "Failed to start the protocol with error."+
 			" Start() only returns an error when the protocol is not initialised correctly,"+
