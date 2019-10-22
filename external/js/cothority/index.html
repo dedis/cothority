@@ -1,3 +1,7 @@
+<!--
+Demo using js/cothority
+To use this demo, first run `npm install` and `npm run bundle`.
+-->
 <html>
   <head>
     <meta charset="UTF-8">
@@ -13,13 +17,12 @@
         fr.onload = function(evt) {
           const r = cothority.network.Roster.fromTOML(evt.target.result);
           const rpc = new cothority.status.StatusRPC(r);
-
+          const p = document.getElementById('status');
           rpc.getStatus(0).then(
             (r) => {
-              const p = document.getElementById('status');
               p.innerText = r.toString();
             },
-            () => console.log('something went wrong. Did you start the conodes ?'),
+            (e) => p.innerText = 'something went wrong. Did you start the conodes ?: ' + e,
           );
         }
         fr.readAsText(e.target.files[0]);
