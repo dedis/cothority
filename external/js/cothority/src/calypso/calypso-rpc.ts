@@ -3,7 +3,6 @@ import { Message, Properties } from "protobufjs";
 import { Argument, ClientTransaction, InstanceID, Instruction, Proof } from "../byzcoin";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import { Signer } from "../darc";
-import Log from "../log";
 import { Roster, ServerIdentity } from "../network";
 import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
 import { registerMessage } from "../protobuf";

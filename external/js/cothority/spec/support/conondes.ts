@@ -2,7 +2,9 @@
 import Docker from "dockerode";
 import fs from "fs";
 import Long from "long";
+
 import SignerEd25519 from "../../src/darc/signer-ed25519";
+import { RosterWSConnection } from "../../src/network/connection";
 import { Roster } from "../../src/network/proto";
 
 const docker = new Docker();
@@ -19,6 +21,7 @@ export const SIGNER = SignerEd25519.fromBytes(Buffer.from("0cb119094dbf72dfd169f
 export async function startConodes(): Promise<void> {
     const containers = await docker.listContainers({ all: true, filters: FILTERS });
     const container = containers[0];
+    RosterWSConnection.defaultParallel = 1;
 
     if (container) {
         if (container.State === "running") {

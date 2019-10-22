@@ -2,10 +2,10 @@ package clicontracts
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -18,12 +18,12 @@ import (
 func ValueSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	value := c.String("value")
 	if value == "" {
-		return errors.New("--value flag is required")
+		return xerrors.New("--value flag is required")
 	}
 	valueBuf := []byte(value)
 
@@ -98,22 +98,22 @@ func ValueSpawn(c *cli.Context) error {
 func ValueInvokeUpdate(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	value := c.String("value")
 	if value == "" {
-		return errors.New("--value flag is required")
+		return xerrors.New("--value flag is required")
 	}
 	valueBuf := []byte(value)
 
 	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instid flag is required")
+		return xerrors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instid string")
+		return xerrors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -184,7 +184,7 @@ func ValueGet(c *cli.Context) error {
 
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
@@ -194,35 +194,35 @@ func ValueGet(c *cli.Context) error {
 
 	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instid flag is required")
+		return xerrors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string" + instID)
+		return xerrors.New("failed to decode the instID string" + instID)
 	}
 
 	pr, err := cl.GetProofFromLatest(instIDBuf)
 	if err != nil {
-		return errors.New("couldn't get proof: " + err.Error())
+		return xerrors.Errorf("couldn't get proof: %v", err)
 	}
 	proof := pr.Proof
 
 	exist, err := proof.InclusionProof.Exists(instIDBuf)
 	if err != nil {
-		return errors.New("error while checking if proof exist: " + err.Error())
+		return xerrors.Errorf("error while checking if proof exist: %v", err)
 	}
 	if !exist {
-		return errors.New("proof not found")
+		return xerrors.New("proof not found")
 	}
 
 	match := proof.InclusionProof.Match(instIDBuf)
 	if !match {
-		return errors.New("proof does not match")
+		return xerrors.New("proof does not match")
 	}
 
 	_, resultBuf, _, _, err := proof.KeyValue()
 	if err != nil {
-		return errors.New("couldn't get value out of proof: " + err.Error())
+		return xerrors.Errorf("couldn't get value out of proof: %v", err)
 	}
 
 	log.Infof("%s", resultBuf)
@@ -234,16 +234,16 @@ func ValueGet(c *cli.Context) error {
 func ValueDelete(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instid flag is required")
+		return xerrors.New("--instid flag is required")
 	}
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instid string")
+		return xerrors.New("failed to decode the instid string")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)

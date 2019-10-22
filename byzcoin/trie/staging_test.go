@@ -2,11 +2,11 @@ package trie
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 )
 
 func TestStaging(t *testing.T) {
@@ -123,7 +123,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, testTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))
@@ -140,7 +140,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))
@@ -158,7 +158,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))
@@ -175,7 +175,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))
@@ -191,7 +191,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))
@@ -208,7 +208,7 @@ func testStagingForEach(t *testing.T, db DB) {
 	require.NoError(t, sTrie.ForEach(func(k, v []byte) error {
 		m[string(k)] = struct{}{}
 		if !bytes.Equal(dummyVal, v) {
-			return errors.New("bad value")
+			return xerrors.New("bad value")
 		}
 		return nil
 	}))

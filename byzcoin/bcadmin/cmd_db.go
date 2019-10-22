@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
 	"flag"
 	"fmt"
 	"strings"
@@ -38,7 +37,7 @@ func dbStatus(c *cli.Context) error {
 // dbCatchup uses the live byzcoin chain to update to the latest blocks
 func dbCatchup(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return errors.New("please give the following arguments: " +
+		return xerrors.New("please give the following arguments: " +
 			"conode.db byzCoinID url")
 	}
 	fb, err := newFetchBlocks(c)
@@ -80,7 +79,7 @@ func dbCatchup(c *cli.Context) error {
 func dbReplay(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)
 	if err != nil {
-		return errors.New("couldn't initialize fetchBlocks: " + err.Error())
+		return xerrors.Errorf("couldn't initialize fetchBlocks: %v", err)
 	}
 
 	log.Info("Preparing db")
@@ -143,7 +142,7 @@ func dbReplay(c *cli.Context) error {
 // dbMerge takes new blocks from a conode-db and applies them to the replay-db.
 func dbMerge(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return errors.New("please give the following arguments: " +
+		return xerrors.New("please give the following arguments: " +
 			"conode.db byzCoinID conode2.db")
 	}
 
@@ -341,7 +340,7 @@ type fetchBlocks struct {
 func newFetchBlocks(c *cli.Context) (*fetchBlocks,
 	error) {
 	if c.NArg() < 1 {
-		return nil, errors.New("please give the following arguments: " +
+		return nil, xerrors.New("please give the following arguments: " +
 			"conode.db [byzCoinID]")
 	}
 
@@ -394,12 +393,12 @@ func (fb *fetchBlocks) needBcID() error {
 	}
 	log.Info("The following chains are available in your db:",
 		strings.Join(scIDs, "\n"))
-	return errors.New("need byzCoinID in arguments")
+	return xerrors.New("need byzCoinID in arguments")
 }
 
 func (fb *fetchBlocks) addURL(url string) error {
 	if url == "" {
-		return errors.New("cannot use empty url")
+		return xerrors.New("cannot use empty url")
 	}
 
 	if fb.bcID == nil {
@@ -546,7 +545,7 @@ func (fb *fetchBlocks) gbSingle(blockID skipchain.SkipBlockID) (
 		if sb != nil && !sb.ForwardLink[0].To.Equal(blockID) {
 			blockID = sb.ForwardLink[0].To
 		} else {
-			return sb, errors.New("couldn't fetch next block")
+			return sb, xerrors.New("couldn't fetch next block")
 		}
 	}
 	return sb, nil

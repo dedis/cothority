@@ -1,3 +1,23 @@
+# Introduction
+
+A **Conode** is a Collective Authority Node and is a server in the cothority.
+Conodes are linked together to form a cothority. They can run decentralized
+protocols, and to offer services to clients.
+
+The conode in this repository includes all protocols and services and can
+be run either for local tests or on a public server. The currently running
+conodes are available under http://status.dedis.ch.
+
+To operate a Conode, one needs to correctly set up a host and run the Conode
+program. The following chapters describe the requirements and needed environment
+to correctly run the conode program, as well as general instruction on how to
+operate it.
+
+Once you have a conode up and running, you can inform us at dedis@epfl.ch and
+we will include your conode in the DEDIS-cothority.
+
+---
+
 <!-- START doctoc.sh generated TOC please keep comment here to allow auto update -->
 <!-- DO NOT EDIT THIS SECTION, INSTEAD RE-RUN doctoc.sh TO UPDATE -->
 **:book: Table of Contents**
@@ -29,25 +49,6 @@
 - [For the lazy ones: A survival guide to install your server with Ubuntu 18.04](#for-the-lazy-ones-a-survival-guide-to-install-your-server-with-ubuntu-1804)
 
 <!-- END doctoc.sh generated TOC please keep comment here to allow auto update -->
-
-
-# Introduction
-
-A **Conode** is a Collective Authority Node and is a server in the cothority.
-Conodes are linked together to form a cothority. They can run decentralized
-protocols, and to offer services to clients.
-
-The conode in this repository includes all protocols and services and can
-be run either for local tests or on a public server. The currently running
-conodes are available under http://status.dedis.ch.
-
-To operate a Conode, one need to correctly set up a host and run the Conode
-program. The following chapters describe the requirements and needed environment
-to correctly run the conode program, as well as general instruction on how to
-operate it.
-
-Once you have a conode up and running, you can inform us on dedis@epfl.ch and
-we will include your conode in the DEDIS-cothority.
 
 ## Server requirements
 

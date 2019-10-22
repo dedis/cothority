@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -214,7 +213,7 @@ func (s *Service) GetProtocolVersion() Version {
 func (s *Service) GetAllByzCoinIDs(req *GetAllByzCoinIDsRequest) (*GetAllByzCoinIDsResponse, error) {
 	chains, err := s.skService().GetDB().GetSkipchains()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting chains: %v", err)
 	}
 
 	ids := make([]skipchain.SkipBlockID, len(chains))
@@ -245,16 +244,16 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	defer s.createSkipChainMut.Unlock()
 
 	if req.Roster.List == nil {
-		return nil, errors.New("must provide a roster")
+		return nil, xerrors.New("must provide a roster")
 	}
 
 	darcBuf, err := req.GenesisDarc.ToProto()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding darc: %v", err)
 	}
 	if req.GenesisDarc.Verify(true) != nil ||
 		req.GenesisDarc.Rules.Count() == 0 {
-		return nil, errors.New("invalid genesis darc")
+		return nil, xerrors.New("invalid genesis darc")
 	}
 
 	if req.BlockInterval == 0 {
@@ -271,17 +270,17 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 
 	rosterBuf, err := protobuf.Encode(&req.Roster)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding roster: %v", err)
 	}
 
 	// The user must include at least one contract that can be parsed as a
 	// DARC and it must exist.
 	if len(req.DarcContractIDs) == 0 {
-		return nil, errors.New("must provide at least one DARC contract")
+		return nil, xerrors.New("must provide at least one DARC contract")
 	}
 	for _, c := range req.DarcContractIDs {
 		if _, ok := s.GetContractConstructor(c); !ok {
-			return nil, errors.New("the given contract \"" + c + "\" does not exist")
+			return nil, xerrors.New("the given contract \"" + c + "\" does not exist")
 		}
 	}
 
@@ -290,7 +289,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}
 	darcContractIDsBuf, err := protobuf.Encode(&dcIDs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding id: %v", err)
 	}
 
 	// This is the nonce for the trie.
@@ -322,7 +321,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 
 	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("creating block: %v", err)
 	}
 
 	return &CreateGenesisBlockResponse{
@@ -352,7 +351,7 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 
 	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
 	if err != nil {
-		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %v", err)
 		log.Error(resp.Error)
 		return resp, nil
 	}
@@ -364,7 +363,7 @@ func (s *Service) prepareTxResponse(req *AddTxRequest, tx *TxResult) (*AddTxResp
 
 	pr, err := NewProof(st, s.db(), from, nil)
 	if err != nil {
-		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %s", err.Error())
+		resp.Error = fmt.Sprintf("Couldn't return the proof of the transaction: %v", err)
 		log.Error(resp.Error)
 		return resp, nil
 	}
@@ -404,13 +403,19 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, xerrors.Errorf("decoding header: %w", err)
 	}
 
+	if req.Version < 2 && header.Version >= 2 {
+		// As the version 2 introduced a fix to the hash, the client must
+		// at least be above it when the chain is.
+		return nil, xerrors.New("invalid client version below 2")
+	}
+
 	// Upgrade the instructions with the byzcoin protocol version
 	// to use the correct hash function.
 	req.Transaction.Instructions.SetVersion(header.Version)
 
 	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("loading block info: %v", err)
 	}
 	txsz := txSize(TxResult{ClientTransaction: req.Transaction})
 	if txsz > maxsz {
@@ -436,7 +441,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
 		interval, _, err := s.LoadBlockInfo(req.SkipchainID)
 		if err != nil {
-			return nil, xerrors.New("couldn't get block info: " + err.Error())
+			return nil, xerrors.Errorf("couldn't get block info: %v", err)
 		}
 
 		ctxHash := req.Transaction.Instructions.Hash()
@@ -529,11 +534,11 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	resp = &CheckAuthorizationResponse{}
 	st, err := s.GetReadOnlyStateTrie(req.ByzCoinID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 	d, err := LoadDarcFromTrie(st, req.DarcID)
 	if err != nil {
-		return nil, errors.New("couldn't find darc: " + err.Error())
+		return nil, xerrors.Errorf("couldn't find darc: %v", err)
 	}
 	getDarcs := func(s string, latest bool) *darc.Darc {
 		if !latest {
@@ -569,20 +574,20 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersResponse, error) {
 	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 	out := make([]uint64, len(req.SignerIDs))
 
 	for i := range req.SignerIDs {
 		key := publicVersionKey(req.SignerIDs[i])
 		buf, _, _, _, err := st.GetValues(key)
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			out[i] = 0
 			continue
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("reading trie: %v", err)
 		}
 		out[i] = binary.LittleEndian.Uint64(buf)
 	}
@@ -599,7 +604,7 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 	s.catchingLock.Lock()
 	defer s.catchingLock.Unlock()
 	if req.Length <= 0 {
-		return nil, errors.New("length must be bigger than 0")
+		return nil, xerrors.New("length must be bigger than 0")
 	}
 
 	if req.Nonce == 0 {
@@ -610,7 +615,7 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 		}
 		sb := s.db().GetByID(req.ByzCoinID)
 		if sb == nil || sb.Index > 0 {
-			return nil, errors.New("unknown byzcoinID")
+			return nil, xerrors.New("unknown byzcoinID")
 		}
 		s.downloadState.id = req.ByzCoinID
 		s.downloadState.read = make(chan DBKeyValue)
@@ -632,9 +637,9 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 					select {
 					case ds.read <- DBKeyValue{key, value}:
 					case <-ds.stop:
-						return errors.New("closed")
+						return xerrors.New("closed")
 					case <-time.After(time.Minute):
-						return errors.New("timed out while waiting for next read")
+						return xerrors.New("timed out while waiting for next read")
 					}
 					return nil
 				})
@@ -646,7 +651,7 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 		}(s.downloadState)
 		s.downloadState.total = <-total
 	} else if !s.downloadState.id.Equal(req.ByzCoinID) || req.Nonce != s.downloadState.nonce {
-		return nil, errors.New("download has been aborted in favor of another download")
+		return nil, xerrors.New("download has been aborted in favor of another download")
 	}
 
 	resp = &DownloadStateResponse{
@@ -671,7 +676,7 @@ func entryToResponse(sce *StateChangeEntry, ok bool, err error) (*GetInstanceVer
 		err = errKeyNotSet
 	}
 	if err != nil {
-		return nil, err
+		return nil, cothority.WrapError(err)
 	}
 
 	return &GetInstanceVersionResponse{
@@ -702,7 +707,7 @@ func (s *Service) GetLastInstanceVersion(req *GetLastInstanceVersion) (*GetInsta
 func (s *Service) GetAllInstanceVersion(req *GetAllInstanceVersion) (res *GetAllInstanceVersionResponse, err error) {
 	sces, err := s.stateChangeStorage.getAll(req.InstanceID[:], req.SkipChainID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting state changes: %v", err)
 	}
 
 	scs := make([]GetInstanceVersionResponse, len(sces))
@@ -723,7 +728,7 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		err = errKeyNotSet
 	}
 	if err != nil {
-		return nil, err
+		return nil, cothority.WrapError(err)
 	}
 
 	sb, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
@@ -731,12 +736,12 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		Index:   sce.BlockIndex,
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting block: %v", err)
 	}
 
 	sces, err := s.stateChangeStorage.getByBlock(req.SkipChainID, sce.BlockIndex)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting state changes: %v", err)
 	}
 
 	scs := make(StateChanges, len(sces))
@@ -755,11 +760,11 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID, error) {
 	st, err := s.GetReadOnlyStateTrie(req.SkipChainID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 
 	if len(req.DarcID) == 0 {
-		return nil, errors.New("darc ID must be set")
+		return nil, xerrors.New("darc ID must be set")
 	}
 
 	h := sha256.New()
@@ -769,16 +774,16 @@ func (s *Service) ResolveInstanceID(req *ResolveInstanceID) (*ResolvedInstanceID
 	key := NewInstanceID(h.Sum(nil))
 	val, _, _, _, err := st.GetValues(key[:])
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading trie: %v", err)
 	}
 
 	valStruct := contractNamingEntry{}
 	if err := protobuf.Decode(val, &valStruct); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding contract: %v", err)
 	}
 
 	if valStruct.Removed {
-		return nil, errKeyNotSet
+		return nil, cothority.WrapError(errKeyNotSet)
 	}
 
 	return &ResolvedInstanceID{valStruct.IID}, nil
@@ -797,16 +802,17 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 	if path == "Debug" {
 		h, _, err := net.SplitHostPort(req.RemoteAddr)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, xerrors.Errorf("invalid address: %v", err)
 		}
 		ip := net.ParseIP(h)
 
 		if !ip.IsLoopback() {
-			return nil, nil, errors.New("the 'debug'-endpoint is only allowed on loopback")
+			return nil, nil, xerrors.New("the 'debug'-endpoint is only allowed on loopback")
 		}
 	}
 
-	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
+	buf, stream, err := s.ServiceProcessor.ProcessClientRequest(req, path, buf)
+	return buf, stream, cothority.ErrorOrNil(err, "processing request")
 }
 
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
@@ -816,7 +822,7 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 	if len(req.ByzCoinID) != 32 {
 		rep, err := s.skService().GetAllSkipChainIDs(nil)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("getting chains: %v", err)
 		}
 
 		for _, scID := range rep.IDs {
@@ -838,7 +844,7 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 	}
 	st, err := s.getStateTrie(skipchain.SkipBlockID(req.ByzCoinID))
 	if err != nil {
-		return nil, errors.New("didn't find this byzcoin instance: " + err.Error())
+		return nil, xerrors.Errorf("didn't find this byzcoin instance: %v", err)
 	}
 	err = st.DB().View(func(b trie.Bucket) error {
 		err := b.ForEach(func(k, v []byte) error {
@@ -858,8 +864,9 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 			}
 			return nil
 		})
-		return err
+		return xerrors.Errorf("iterating values: %v", err)
 	})
+	err = cothority.ErrorOrNil(err, "tx error: %v")
 	return
 }
 
@@ -867,7 +874,7 @@ func (s *Service) Debug(req *DebugRequest) (resp *DebugResponse, err error) {
 func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, req.ByzCoinID, req.Signature); err != nil {
 		log.Error("Signature failure:", err)
-		return nil, err
+		return nil, xerrors.Errorf("verifying signature: %v", err)
 	}
 	idStr := string(req.ByzCoinID)
 	if s.heartbeats.exists(idStr) {
@@ -891,13 +898,13 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 		log.Lvl2("Removing state-trie")
 		db, bn := s.GetAdditionalBucket([]byte(idStrHex))
 		if db == nil {
-			return nil, errors.New("didn't find trie for this byzcoin-ID")
+			return nil, xerrors.New("didn't find trie for this byzcoin-ID")
 		}
 		err := db.Update(func(tx *bbolt.Tx) error {
 			return tx.DeleteBucket(bn)
 		})
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("deleting bucket: %v", err)
 		}
 		delete(s.stateTries, idStr)
 		err = s.db().RemoveSkipchain(req.ByzCoinID)
@@ -949,7 +956,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// There is no need to verify the darc because the caller does
 		// it.
 		if r == nil {
-			return nil, errors.New("need roster for genesis block")
+			return nil, xerrors.New("need roster for genesis block")
 		}
 		sb = skipchain.NewSkipBlock()
 		sb.MaximumHeight = 32
@@ -959,11 +966,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 
 		nonce, err := loadNonceFromTxs(tx)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("getting nonce: %v", err)
 		}
 		et, err := newMemStagingStateTrie(nonce)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("making trie: %v", err)
 		}
 		sst = et
 		// Use the latest version of the byzcoin protocol.
@@ -976,8 +983,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// signature before continuing.
 		sbLatest, err := s.db().GetLatestByID(scID)
 		if err != nil {
-			return nil, errors.New(
-				"Could not get latest block from the skipchain: " + err.Error())
+			return nil, xerrors.Errorf(
+				"Could not get latest block from the skipchain: %v", err)
 		}
 		log.Lvlf3("Creating block #%d with %d transactions", sbLatest.Index+1,
 			len(tx))
@@ -985,14 +992,14 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 
 		st, err := s.getStateTrie(scID)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("getting trie: %v", err)
 		}
 		sst = st.MakeStagingStateTrie()
 		// Preserve the same version of the byzcoin protocol for backwards
 		// compatibility.
 		header, err := decodeBlockHeader(sbLatest)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("decoding header: %v", err)
 		}
 
 		version = header.Version
@@ -1006,14 +1013,14 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	log.Lvl3("Creating state changes")
 	mr, txRes, scs, _ = s.createStateChanges(sst, scID, tx, noTimeout, version)
 	if len(txRes) == 0 {
-		return nil, errors.New("no transactions")
+		return nil, xerrors.New("no transactions")
 	}
 
 	// Store transactions in the body
 	body := &DataBody{TxResults: txRes}
 	sb.Payload, err = protobuf.Encode(body)
 	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
+		return nil, xerrors.Errorf("Couldn't marshal data: %v", err)
 	}
 
 	header := &DataHeader{
@@ -1025,7 +1032,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	}
 	sb.Data, err = protobuf.Encode(header)
 	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
+		return nil, xerrors.Errorf("Couldn't marshal data: %v", err)
 	}
 
 	if r != nil {
@@ -1046,11 +1053,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		ssbReply = &skipchain.StoreSkipBlockReply{}
 		err = skipchain.NewClient().SendProtobuf(sb.Roster.List[0], &ssb, ssbReply)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("store request: %v", err)
 		}
 
 		if ssbReply.Latest == nil {
-			return nil, errors.New("got an empty reply")
+			return nil, xerrors.New("got an empty reply")
 		}
 
 		// we're not doing more verification because the block should not be used
@@ -1060,7 +1067,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("storing block: %v", err)
 	}
 
 	// State changes are cached only when the block is confirmed
@@ -1077,18 +1084,18 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version Version) (*skipchain.SkipBlock, error) {
 	sbLatest, err := s.db().GetLatestByID(scID)
 	if err != nil {
-		return nil, errors.New(
-			"Could not get latest block from the skipchain: " + err.Error())
+		return nil, xerrors.Errorf(
+			"Could not get latest block from the skipchain: %v", err)
 	}
 	sb := sbLatest.Copy()
 
 	if !sb.Roster.List[0].Equal(s.ServerIdentity()) {
-		return nil, errors.New("only the leader can upgrade the chain version")
+		return nil, xerrors.New("only the leader can upgrade the chain version")
 	}
 
 	st, err := s.getStateTrie(scID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 
 	sst := st.MakeStagingStateTrie()
@@ -1096,7 +1103,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 
 	sb.Payload, err = protobuf.Encode(&DataBody{TxResults: TxResults{}})
 	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
+		return nil, xerrors.Errorf("Couldn't marshal data: %v", err)
 	}
 
 	sb.Data, err = protobuf.Encode(&DataHeader{
@@ -1107,7 +1114,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 		Version:               version,
 	})
 	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
+		return nil, xerrors.Errorf("Couldn't marshal data: %v", err)
 	}
 
 	ssbReply, err := s.skService().StoreSkipBlockInternal(&skipchain.StoreSkipBlock{
@@ -1115,7 +1122,7 @@ func (s *Service) createUpgradeVersionBlock(scID skipchain.SkipBlockID, version 
 		TargetSkipChainID: scID,
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("storing block: %v", err)
 	}
 
 	return ssbReply.Latest, nil
@@ -1139,10 +1146,10 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			// Suppose we _do_ have a statetrie
 			db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
 			err := db.Update(func(tx *bbolt.Tx) error {
-				return tx.DeleteBucket(stBucket)
+				return cothority.ErrorOrNil(tx.DeleteBucket(stBucket), "deleting bucket")
 			})
 			if err != nil {
-				return fmt.Errorf("Cannot delete existing trie while trying to download: %s", err.Error())
+				return xerrors.Errorf("Cannot delete existing trie while trying to download: %v", err)
 			}
 			s.stateTriesLock.Lock()
 			delete(s.stateTries, idStr)
@@ -1161,7 +1168,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			// it will be detected by difference in the root hash
 			resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
 			if err != nil {
-				return errors.New("cannot download trie: " + err.Error())
+				return xerrors.Errorf("cannot download trie: %v", err)
 			}
 			log.Lvlf1("Downloaded key/values %d..%d of %d from %s", cursor, cursor+len(resp.KeyValues), resp.Total,
 				cl.noncesSI[resp.Nonce])
@@ -1182,7 +1189,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 				return nil
 			})
 			if err != nil {
-				return fmt.Errorf("Couldn't store entries: %s", err.Error())
+				return xerrors.Errorf("couldn't store entries: %v", err)
 			}
 			if len(resp.KeyValues) < catchupFetchDBEntries {
 				break
@@ -1192,7 +1199,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		// Check the new trie is correct
 		st, err := loadStateTrie(db, bucketName)
 		if err != nil {
-			return errors.New("couldn't load state trie: " + err.Error())
+			return xerrors.Errorf("couldn't load state trie: %v", err)
 		}
 		skCl := skipchain.NewClient()
 		skCl.DontContact(s.ServerIdentity())
@@ -1201,17 +1208,17 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			// TODO: add a client API to fetch a specific block and its proof
 			search, err := skCl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), st.GetIndex())
 			if err != nil {
-				return errors.New("couldn't get correct block for verification: " + err.Error())
+				return xerrors.Errorf("couldn't get correct block for verification: %v", err)
 			}
 			sb = search.SkipBlock
 		}
 
 		header, err := decodeBlockHeader(sb)
 		if err != nil {
-			return errors.New("couldn't unmarshal header: " + err.Error())
+			return xerrors.Errorf("couldn't unmarshal header: %v", err)
 		}
 		if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
-			return errors.New("got wrong database, merkle roots don't work out")
+			return xerrors.New("got wrong database, merkle roots don't work out")
 		}
 
 		// Finally initialize the stateTrie using the new database.
@@ -1220,7 +1227,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		s.stateTriesLock.Unlock()
 		chain, err := skCl.GetUpdateChain(sb.Roster, sb.SkipChainID())
 		if err != nil {
-			return err
+			return xerrors.Errorf("getting chain: %v", err)
 		}
 		for _, sb := range chain.Update {
 			log.Lvlf2("Storing block %d: %x", sb.Index, sb.CalculateHash())
@@ -1234,7 +1241,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 		return nil
 	}
 	log.Error(err)
-	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
+	return xerrors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
 }
 
 // catchupAll calls catchup for every byzcoin instance stored in this system.
@@ -1242,7 +1249,7 @@ func (s *Service) catchupAll() error {
 	s.closedMutex.Lock()
 	if s.closed {
 		s.closedMutex.Unlock()
-		return errors.New("cannot sync all while closing")
+		return xerrors.New("cannot sync all while closing")
 	}
 	s.working.Add(1)
 	defer s.working.Done()
@@ -1263,7 +1270,7 @@ func (s *Service) catchupAll() error {
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting chains: %v", err)
 	}
 
 	for _, scID := range gasr.IDs {
@@ -1273,18 +1280,18 @@ func (s *Service) catchupAll() error {
 
 		sb, err := s.db().GetLatestByID(scID)
 		if err != nil {
-			return err
+			return xerrors.Errorf("getting latest: %v", err)
 		}
 
 		cl := skipchain.NewClient()
 		// Get the latest block known by the Cothority.
 		reply, err := cl.GetUpdateChain(sb.Roster, sb.Hash)
 		if err != nil {
-			return err
+			return xerrors.Errorf("getting chain: %v", err)
 		}
 
 		if len(reply.Update) == 0 {
-			return errors.New("no block found in chain update")
+			return xerrors.New("no block found in chain update")
 		}
 
 		s.catchUp(reply.Update[len(reply.Update)-1])
@@ -1302,7 +1309,7 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	s.catchingLock.Lock()
 	if s.catchingUp {
 		s.catchingLock.Unlock()
-		return errors.New("already catching up")
+		return xerrors.New("already catching up")
 	}
 	s.updateTrieLock.Lock()
 	s.catchingUp = true
@@ -1329,7 +1336,7 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	ts := s.catchingUpHistory[string(scID)]
 	if ts.After(time.Now()) {
 		s.catchingUpHistoryLock.Unlock()
-		return errors.New("catch up request already processed recently")
+		return xerrors.New("catch up request already processed recently")
 	}
 
 	s.catchingUpHistory[string(scID)] = time.Now().Add(catchupMinimumInterval)
@@ -1341,7 +1348,7 @@ func (s *Service) catchupFromID(r *onet.Roster, scID skipchain.SkipBlockID, sbID
 	cl.DontContact(s.ServerIdentity())
 	sb, err := cl.GetSingleBlock(r, sbID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting block: %v", err)
 	}
 
 	// If a genesis block is asked to be caught up, we need to store it
@@ -1397,7 +1404,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 			// right afterwards.
 			st, err = s.createStateTrie(sb.SkipChainID(), nonce)
 			if err != nil {
-				log.Errorf("could not create trie: %v", err)
+				log.Errorf("could not create trie: %+v", err)
 				return
 			}
 		} else {
@@ -1451,7 +1458,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		log.Lvlf2("%s: our index: %d - latest known index: %d", s.ServerIdentity(), trieIndex, sb.Index)
 		updates, err := cl.GetUpdateChainLevel(sb.Roster, latest.Hash, 1, catchupFetchBlocks)
 		if err != nil {
-			log.Error("Couldn't update blocks: " + err.Error())
+			log.Error("Couldn't update blocks:", err)
 			return
 		}
 
@@ -1461,7 +1468,7 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 		}
 		_, err = s.db().StoreBlocks(updates)
 		if err != nil {
-			log.Error("Got an invalid, unlinkable block: " + err.Error())
+			log.Error("Got an invalid, unlinkable block: ", err)
 			return
 		}
 		latest = updates[len(updates)-1]
@@ -1509,25 +1516,25 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		err := protobuf.Decode(sb.Payload, &body)
 		if err != nil {
 			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
-			return errors.New("couldn't unmarshal body for genesis block")
+			return xerrors.New("couldn't unmarshal body for genesis block")
 		}
 		nonce, err := loadNonceFromTxs(body.TxResults)
 		if err != nil {
-			return err
+			return xerrors.Errorf("getting nonce: %v", err)
 		}
 		// We don't care about the state trie that is returned in this
 		// function because we load the trie again in getStateTrie
 		// right afterwards.
 		_, err = s.createStateTrie(sb.SkipChainID(), nonce)
 		if err != nil {
-			return fmt.Errorf("could not create trie: %v", err)
+			return xerrors.Errorf("could not create trie: %v", err)
 		}
 	}
 
 	// Load the trie.
 	st, err := s.getStateTrie(sb.SkipChainID())
 	if err != nil {
-		return fmt.Errorf("could not load trie: %v", err)
+		return xerrors.Errorf("could not load trie: %v", err)
 	}
 
 	// Check if we are updating the right index.
@@ -1556,14 +1563,14 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// Get the DataHeader and the DataBody of the block.
 	header, err := decodeBlockHeader(sb)
 	if err != nil {
-		return err
+		return xerrors.Errorf("decoding header: %v", err)
 	}
 
 	var body DataBody
 	err = protobuf.Decode(sb.Payload, &body)
 	if err != nil {
 		log.Error(s.ServerIdentity(), "could not unmarshal body", err)
-		return errors.New("couldn't unmarshal body")
+		return xerrors.New("couldn't unmarshal body")
 	}
 
 	log.Lvlf2("%s Updating %d transactions for %x on index %v", s.ServerIdentity(), len(body.TxResults), sb.SkipChainID(), sb.Index)
@@ -1572,13 +1579,14 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
 	// Update our global state using all state changes.
 	if err = st.VerifiedStoreAll(scs, sb.Index, header.Version, header.TrieRoot); err != nil {
-		return err
+		return xerrors.Errorf("storing state changes: %v", err)
 	}
 
 	err = s.stateChangeStorage.append(scs, sb)
 	if err != nil {
+		log.Error(err)
 		panic("Couldn't append the state changes to the storage - this might " +
-			"mean that the db is broken. Error: " + err.Error())
+			"mean that the db is broken.")
 	}
 
 	// If we are adding a genesis block, then look into it for the darc ID
@@ -1587,7 +1595,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		// the information should already be in the trie
 		d, err := s.LoadGenesisDarc(sb.SkipChainID())
 		if err != nil {
-			return err
+			return xerrors.Errorf("getting darc: %v", err)
 		}
 		s.darcToScMut.Lock()
 		s.darcToSc[string(d.GetBaseID())] = sb.SkipChainID()
@@ -1598,8 +1606,9 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// ClientTransactions received.
 	bcConfig, err := s.LoadConfig(sb.SkipChainID())
 	if err != nil {
+		log.Error(err)
 		panic("Couldn't get configuration of the block - this might " +
-			"mean that the db is broken. Error: " + err.Error())
+			"mean that the db is broken.")
 	}
 
 	// Variables for easy understanding what's being tested. Node in this context
@@ -1609,7 +1618,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	nodeIsLeader := bcConfig.Roster.List[0].Equal(s.ServerIdentity())
 	initialDur, err := s.computeInitialDuration(sb.Hash)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting initial duration: %v", err)
 	}
 	// Check if the polling needs to be updated.
 	s.pollChanMut.Lock()
@@ -1633,7 +1642,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// new one
 	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading block info: %v", err)
 	}
 	if nodeInNew && !s.catchingUp {
 		// Update or start heartbeats
@@ -1644,7 +1653,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			log.Lvlf2("%s starting heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*s.rotationWindow)
 			err = s.heartbeats.start(string(sb.SkipChainID()), interval*s.rotationWindow, s.heartbeatsTimeout)
 			if err != nil {
-				log.Errorf("%s heartbeat failed to start with error: %s", s.ServerIdentity(), err.Error())
+				log.Errorf("%s heartbeat failed to start with error: %+v", s.ServerIdentity(), err)
 			}
 		}
 
@@ -1712,7 +1721,8 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 // GetReadOnlyStateTrie returns a read-only accessor to the trie for the given
 // skipchain.
 func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStateTrie, error) {
-	return s.getStateTrie(scID)
+	trie, err := s.getStateTrie(scID)
+	return trie, cothority.ErrorOrNil(err, "getting trie")
 }
 
 func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
@@ -1727,7 +1737,7 @@ func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
 
 func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 	if len(id) == 0 {
-		return nil, errors.New("no skipchain ID")
+		return nil, xerrors.New("no skipchain ID")
 	}
 	s.stateTriesLock.Lock()
 	defer s.stateTriesLock.Unlock()
@@ -1737,7 +1747,7 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 		db, name := s.GetAdditionalBucket([]byte(idStr))
 		st, err := loadStateTrie(db, name)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("getting trie: %v", err)
 		}
 		s.stateTries[idStr] = st
 		return s.stateTries[idStr], nil
@@ -1747,18 +1757,18 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 
 func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stateTrie, error) {
 	if len(id) == 0 {
-		return nil, errors.New("no skipchain ID")
+		return nil, xerrors.New("no skipchain ID")
 	}
 	s.stateTriesLock.Lock()
 	defer s.stateTriesLock.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	if s.stateTries[idStr] != nil {
-		return nil, errors.New("state trie already exists")
+		return nil, xerrors.New("state trie already exists")
 	}
 	db, name := s.GetAdditionalBucket([]byte(idStr))
 	st, err := newStateTrie(db, name, nonce)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("making trie: %v", err)
 	}
 	s.stateTries[idStr] = st
 	return s.stateTries[idStr], nil
@@ -1791,22 +1801,24 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	st, err := s.GetReadOnlyStateTrie(scID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
-	return LoadConfigFromTrie(st)
+	cfg, err := LoadConfigFromTrie(st)
+	return cfg, cothority.ErrorOrNil(err, "reading trie")
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
 	st, err := s.GetReadOnlyStateTrie(scID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting trie: %v", err)
 	}
 	config, err := s.LoadConfig(scID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("loading config: %v", err)
 	}
-	return getInstanceDarc(st, ConfigInstanceID, config.DarcContractIDs)
+	darc, err := getInstanceDarc(st, ConfigInstanceID, config.DarcContractIDs)
+	return darc, cothority.ErrorOrNil(err, "getting darc instance")
 }
 
 // LoadBlockInfo loads the block interval and the maximum size from the
@@ -1820,13 +1832,14 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	if err != nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	return loadBlockInfo(st)
+	dur, size, err := loadBlockInfo(st)
+	return dur, size, cothority.ErrorOrNil(err, "from trie")
 }
 
 func loadBlockInfo(st ReadOnlyStateTrie) (time.Duration, int, error) {
 	config, err := LoadConfigFromTrie(st)
 	if err != nil {
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			err = nil
 		}
 		return defaultInterval, defaultMaxBlockSize, err
@@ -1889,18 +1902,18 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	// We'll check the timestamp later, once we have the config loaded.
 	err = func() error {
 		if len(header.TrieRoot) != sha256.Size {
-			return errors.New("trie root is wrong size")
+			return xerrors.New("trie root is wrong size")
 		}
 		if len(header.ClientTransactionHash) != sha256.Size {
-			return errors.New("client transaction hash is wrong size")
+			return xerrors.New("client transaction hash is wrong size")
 		}
 		if len(header.StateChangesHash) != sha256.Size {
-			return errors.New("state changes hash is wrong size")
+			return xerrors.New("state changes hash is wrong size")
 		}
 
 		prevBlock := s.skService().GetDB().GetByID(newSB.BackLinkIDs[0])
 		if prevBlock == nil {
-			return errors.New("missing previous block")
+			return xerrors.New("missing previous block")
 		}
 		prevHeader, err := decodeBlockHeader(prevBlock)
 		if err != nil {
@@ -1910,7 +1923,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			log.Errorf("Got a block with version %d but previous is %d and the conode version is %d\n",
 				header.Version, prevHeader.Version, CurrentVersion)
 
-			return errors.New("version cannot be lower than previous block or higher than the conode version")
+			return xerrors.New("version cannot be lower than previous block or higher than the conode version")
 		}
 		return nil
 	}()
@@ -2167,15 +2180,15 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
-				err = fmt.Errorf("%s - while getting value: %s", err, err2)
+				err = xerrors.Errorf("%v - while getting value: %v", err, err2)
 			}
-			err = fmt.Errorf("%s Contract %s got %+v and"+
-				" returned error: %s", s.ServerIdentity(), cid, instr, err)
+			err = xerrors.Errorf("%s Contract %s got %x and returned error: %v",
+				s.ServerIdentity(), cid, instr.Hash(), err)
 			return
 		}
 		var counterScs StateChanges
 		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
-			err = fmt.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+			err = xerrors.Errorf("%s failed to update signature counters: %v", s.ServerIdentity(), err)
 			return
 		}
 
@@ -2203,22 +2216,22 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 				var contractID string
 				_, _, contractID, _, err = sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
-					err = fmt.Errorf("%s couldn't get contractID from the "+
-						"following instruction:\n%+v", s.ServerIdentity(), instr)
+					err = xerrors.Errorf("%s couldn't get contractID from the "+
+						"following instruction: %x", s.ServerIdentity(), instr.Hash())
 					return
 				}
-				err = fmt.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
+				err = xerrors.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
 				return
 			}
 			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction, sc.InstanceID, sc.ContractID)
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
-				err = fmt.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				err = xerrors.Errorf("%s StoreAll failed: %v", s.ServerIdentity(), err)
 				return
 			}
 		}
 		if err = sst.StoreAll(counterScs); err != nil {
-			err = fmt.Errorf("%s StoreAll failed to add counter changes: %s", s.ServerIdentity(), err)
+			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v", s.ServerIdentity(), err)
 			return
 		}
 		statesTemp = append(statesTemp, scs...)
@@ -2249,12 +2262,12 @@ func (s *Service) GetContractConstructor(contractName string) (ContractFn, bool)
 func (s *Service) GetContractInstance(contractName string, in []byte) (Contract, error) {
 	fn, exists := s.contracts.Search(contractName)
 	if !exists {
-		return nil, errors.New("contract does not exist")
+		return nil, xerrors.New("contract does not exist")
 	}
 
 	c, err := fn(in)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("making contract: %v", err)
 	}
 
 	// Populate the contract registry in the case of special contracts
@@ -2270,7 +2283,7 @@ func (s *Service) GetContractInstance(contractName string, in []byte) (Contract,
 func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte, scID skipchain.SkipBlockID) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
-			err = fmt.Errorf("%s", re)
+			err = xerrors.Errorf("executing instr: %v", re)
 		}
 	}()
 
@@ -2279,8 +2292,8 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	gs := globalState{st, roSC}
 
 	contents, _, contractID, _, err := gs.GetValues(instr.InstanceID.Slice())
-	if err != errKeyNotSet && err != nil {
-		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
+	if !xerrors.Is(err, errKeyNotSet) && err != nil {
+		err = xerrors.Errorf("Couldn't get contract type of instruction: %v", err)
 		return
 	}
 
@@ -2298,7 +2311,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		} else {
 			// If the leader does not have a verifier for this
 			// contract, it drops the transaction.
-			err = fmt.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"",
+			err = xerrors.Errorf("leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"",
 				contractID, instr.InstanceID.Slice())
 			return
 		}
@@ -2310,10 +2323,11 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	var c Contract
 	c, err = contractFactory(contents)
 	if err != nil {
+		err = xerrors.Errorf("making contract: %v", err)
 		return
 	}
 	if c == nil {
-		err = errors.New("contract factory returned nil contract instance")
+		err = xerrors.New("contract factory returned nil contract instance")
 		return
 	}
 	if sc, ok := c.(ContractWithRegistry); ok {
@@ -2322,7 +2336,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 	err = c.VerifyInstruction(gs, instr, ctxHash)
 	if err != nil {
-		err = fmt.Errorf("instruction verification failed: %v", err)
+		err = xerrors.Errorf("instruction verification failed: %v", err)
 		return
 	}
 
@@ -2334,7 +2348,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	case DeleteType:
 		scs, cout, err = c.Delete(gs, instr, cin)
 	default:
-		return nil, nil, errors.New("unexpected contract type")
+		return nil, nil, xerrors.New("unexpected contract type")
 	}
 
 	// As the InstanceID of each sc is not necessarily the same as the
@@ -2344,7 +2358,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		// Make sure that the contract either exists or is empty.
 		if _, ok := s.contracts.Search(sc.ContractID); !ok && sc.ContractID != "" {
 			log.Errorf("Found unknown contract ID \"%s\"", sc.ContractID)
-			return nil, nil, errors.New("unknown contract ID")
+			return nil, nil, xerrors.New("unknown contract ID")
 		}
 
 		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
@@ -2354,7 +2368,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 
 		// this is done at this scope because we must increase
 		// the version only when it's not the first one
-		if err == errKeyNotSet {
+		if xerrors.Is(err, errKeyNotSet) {
 			ver = 0
 			err = nil
 		} else if err != nil {
@@ -2373,10 +2387,10 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
 	scConfig, err := s.LoadConfig(scID)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("loading config: %v", err)
 	}
 	if len(scConfig.Roster.List) < 1 {
-		return nil, errors.New("roster is empty")
+		return nil, xerrors.New("roster is empty")
 	}
 	return scConfig.Roster.List[0], nil
 }
@@ -2430,18 +2444,18 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 // loadNonceFromTxs gets the nonce from a TxResults. This only works for the genesis-block.
 func loadNonceFromTxs(txs TxResults) ([]byte, error) {
 	if len(txs) == 0 {
-		return nil, errors.New("no transactions")
+		return nil, xerrors.New("no transactions")
 	}
 	instrs := txs[0].ClientTransaction.Instructions
 	if len(instrs) != 1 {
-		return nil, fmt.Errorf("expected 1 instruction, got %v", len(instrs))
+		return nil, xerrors.Errorf("expected 1 instruction, got %v", len(instrs))
 	}
 	if instrs[0].Spawn == nil {
-		return nil, errors.New("first instruction is not a Spawn")
+		return nil, xerrors.New("first instruction is not a Spawn")
 	}
 	nonce := instrs[0].Spawn.Args.Search("trie_nonce")
 	if len(nonce) == 0 {
-		return nil, errors.New("nonce is empty")
+		return nil, xerrors.New("nonce is empty")
 	}
 	return nonce, nil
 }
@@ -2534,20 +2548,20 @@ func (s *Service) startAllChains() error {
 	s.closedMutex.Lock()
 	if !s.closed {
 		s.closedMutex.Unlock()
-		return errors.New("can only call startAllChains if the service has been closed before")
+		return xerrors.New("can only call startAllChains if the service has been closed before")
 	}
 	s.closedMutex.Unlock()
 	// Why ??
 	// s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load(storageID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading storage: %v", err)
 	}
 	if msg != nil {
 		var ok bool
 		s.storage, ok = msg.(*bcStorage)
 		if !ok {
-			return errors.New("data of wrong type")
+			return xerrors.New("data of wrong type")
 		}
 	}
 	s.stateTries = make(map[string]*stateTrie)
@@ -2572,14 +2586,14 @@ func (s *Service) startAllChains() error {
 		// Catch up is done before starting the chains to prevent undesired events
 		err = s.catchupAll()
 		if err != nil {
-			log.Errorf("%v couldn't sync: %s", s.ServerIdentity(), err.Error())
+			log.Errorf("%v couldn't sync: %+v", s.ServerIdentity(), err)
 			return
 		}
 
 		gas := &skipchain.GetAllSkipChainIDs{}
 		gasr, err := s.skService().GetAllSkipChainIDs(gas)
 		if err != nil {
-			log.Errorf("%v couldn't get the skipchains: %s", s.ServerIdentity(), err.Error())
+			log.Errorf("%v couldn't get the skipchains: %+v", s.ServerIdentity(), err)
 			return
 		}
 
@@ -2604,33 +2618,33 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	// before doing anything, verify that byzcoin is consistent
 	st, err := s.getStateTrie(genesisID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting trie: %v", err)
 	}
 	if err := s.fixInconsistencyIfAny(genesisID, st); err != nil {
-		return err
+		return xerrors.Errorf("fixing inconsistency: %v", err)
 	}
 
 	// load the metadata to prepare for starting the managers (heartbeat, viewchange)
 	interval, _, err := s.LoadBlockInfo(genesisID)
 	if err != nil {
-		return fmt.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s",
+		return xerrors.Errorf("%s ignoring chain %x because we can't load blockInterval: %v",
 			s.ServerIdentity(), genesisID, err)
 	}
 
 	if s.db().GetByID(genesisID) == nil {
-		return fmt.Errorf("%s ignoring chain with missing genesis-block %x",
+		return xerrors.Errorf("%s ignoring chain with missing genesis-block %x",
 			s.ServerIdentity(), genesisID)
 	}
 	latest, err := s.db().GetLatestByID(genesisID)
 	if err != nil {
-		return fmt.Errorf("%s ignoring chain %x where latest block cannot be found: %s",
+		return xerrors.Errorf("%s ignoring chain %x where latest block cannot be found: %v",
 			s.ServerIdentity(), genesisID, err)
 	}
 
 	leader, err := s.getLeader(genesisID)
 	if err != nil {
-		return fmt.Errorf("getLeader should not return an error if roster is initialised: %s",
-			err.Error())
+		return xerrors.Errorf("getLeader should not return an error if roster is initialised: %v",
+			err)
 	}
 	if leader.Equal(s.ServerIdentity()) {
 		log.Lvlf2("%s: Starting as a leader for chain %x", s.ServerIdentity(), latest.SkipChainID())
@@ -2642,7 +2656,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	// populate the darcID to skipchainID mapping
 	d, err := s.LoadGenesisDarc(genesisID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting darc: %v", err)
 	}
 	s.darcToScMut.Lock()
 	s.darcToSc[string(d.GetBaseID())] = genesisID
@@ -2650,7 +2664,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 
 	// start the heartbeat
 	if s.heartbeats.exists(string(genesisID)) {
-		return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
+		return xerrors.New("we are just starting the service, there should be no existing heartbeat monitors")
 	}
 	log.Lvlf2("%s started heartbeat monitor for block %d of %x", s.ServerIdentity(), latest.Index, genesisID)
 	s.heartbeats.start(string(genesisID), interval*s.rotationWindow, s.heartbeatsTimeout)
@@ -2658,7 +2672,7 @@ func (s *Service) startChain(genesisID skipchain.SkipBlockID) error {
 	// initiate the view-change manager
 	initialDur, err := s.computeInitialDuration(latest.Hash)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting initial duration: %v", err)
 	}
 	s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(genesisID))
 	s.viewChangeMan.start(s.ServerIdentity().ID, genesisID, initialDur, s.getFaultThreshold(genesisID))
@@ -2715,12 +2729,12 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *stateTrie) error {
 	currSB, err := s.db().GetLatestByID(genesisID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("getting latest: %v", err)
 	}
 
 	header, err := decodeBlockHeader(currSB)
 	if err != nil {
-		return errors.New("couldn't decode header: " + err.Error())
+		return xerrors.Errorf("couldn't decode header: %v", err)
 	}
 
 	if bytes.Equal(header.TrieRoot, st.GetRoot()) {
@@ -2735,19 +2749,19 @@ func (s *Service) fixInconsistencyIfAny(genesisID skipchain.SkipBlockID, st *sta
 	for {
 		currHeader, err := decodeBlockHeader(currSB)
 		if err != nil {
-			return err
+			return xerrors.Errorf("decoding header: %v", err)
 		}
 		if bytes.Equal(currHeader.TrieRoot, st.GetRoot()) {
 			return s.repairStateTrie(currSB, st)
 		}
 
 		if len(currSB.BackLinkIDs) == 0 {
-			return errors.New("could not find a consistent state")
+			return xerrors.New("could not find a consistent state")
 		}
 		prevID := currSB.BackLinkIDs[0]
 		currSB = s.db().GetByID(prevID)
 		if currSB == nil {
-			return errors.New("missing block")
+			return xerrors.New("missing block")
 		}
 	}
 }
@@ -2759,11 +2773,11 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 	{
 		header, err := decodeBlockHeader(from)
 		if err != nil {
-			return err
+			return xerrors.Errorf("decoding header: %v", err)
 		}
 
 		if !bytes.Equal(header.TrieRoot, st.GetRoot()) {
-			return errors.New("repair must start from a consistent state")
+			return xerrors.New("repair must start from a consistent state")
 		}
 	}
 
@@ -2773,33 +2787,33 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 	for len(from.ForwardLink) > 0 {
 		from = s.db().GetByID(from.ForwardLink[0].To)
 		if from == nil {
-			return errors.New("missing skipblocks")
+			return xerrors.New("missing skipblocks")
 		}
 
 		header, err := decodeBlockHeader(from)
 		if err != nil {
-			return err
+			return xerrors.Errorf("decoding header: %v", err)
 		}
 
 		var body DataBody
 		if err := protobuf.Decode(from.Payload, &body); err != nil {
-			return err
+			return xerrors.Errorf("decoding body: %v", err)
 		}
 
 		_, _, scs, _ := s.createStateChanges(st.MakeStagingStateTrie(), from.SkipChainID(), body.TxResults, noTimeout, header.Version)
 
 		// Update our global state using all state changes.
 		if st.GetIndex()+1 != from.Index {
-			return errors.New("unexpected index")
+			return xerrors.New("unexpected index")
 		}
 		if err := st.VerifiedStoreAll(scs, from.Index, header.Version, header.TrieRoot); err != nil {
-			return err
+			return xerrors.Errorf("storing state changes: %v", err)
 		}
 		cnt++
 	}
 
 	if cnt == 0 {
-		return errors.New("repair failed")
+		return xerrors.New("repair failed")
 	}
 	return nil
 }
@@ -2807,7 +2821,7 @@ func (s *Service) repairStateTrie(from *skipchain.SkipBlock, st *stateTrie) erro
 func decodeBlockHeader(sb *skipchain.SkipBlock) (*DataHeader, error) {
 	var header DataHeader
 	if err := protobuf.Decode(sb.Data, &header); err != nil {
-		return nil, errors.New("couldn't unmarshal header: " + err.Error())
+		return nil, xerrors.Errorf("couldn't unmarshal: %v", err)
 	}
 
 	return &header, nil
@@ -2862,7 +2876,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("registering handlers: %v", err)
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
@@ -2871,7 +2885,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("registering protocol: %v", err)
 	}
 
 	// Register the view-change cosi protocols.
@@ -2879,18 +2893,18 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return protocol.NewSubBlsCosi(n, s.verifyViewChange, pairingSuite)
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("registering protocol: %v", err)
 	}
 	_, err = s.ProtocolRegister(viewChangeFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return protocol.NewBlsCosi(n, s.verifyViewChange, viewChangeSubFtCosi, pairingSuite)
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("registering protocol: %v", err)
 	}
 
 	ver, err := s.LoadVersion()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("loading version: %v", err)
 	}
 	switch ver {
 	case 0:
@@ -2904,32 +2918,32 @@ func newService(c *onet.Context) (onet.Service, error) {
 			for k, _ := c.First(); k != nil; k, _ = c.Next() {
 				log.Lvlf4("looking for old ByzCoin data in bucket %v", string(k))
 				if existingDB.Match(k) {
-					return fmt.Errorf("database format is too old; rm '%v' to lose all data and make a new database", db.Path())
+					return xerrors.Errorf("database format is too old; rm '%v' to lose all data and make a new database", db.Path())
 				}
 			}
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("tx error: %v", err)
 		}
 
 		// Otherwise set the db version to 1, because we've confirmed there are
 		// no old-style ones.
 		err = s.SaveVersion(1)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("saving version: %v", err)
 		}
 	case 1:
 		// This is where any necessary future migration fron version 1 -> 2 will happen.
 	default:
-		return nil, fmt.Errorf("unknown db version number %v", ver)
+		return nil, xerrors.Errorf("unknown db version number %v", ver)
 	}
 
 	// initialize the stats of the storage
 	s.stateChangeStorage.calculateSize()
 
 	if err := s.startAllChains(); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("starting chains: %v", err)
 	}
 	return s, nil
 }
