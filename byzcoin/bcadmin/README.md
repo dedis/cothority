@@ -52,7 +52,7 @@ create a new darc for the user _foo_:
 
 ```bash
 admin $ bcadmin -c . darc add --bc bc-xxxx.cfg --unrestricted --sign ed25519:pub_admin \
-                --owner ed25519:pub_foo --desc "Darc for Foo"  
+                --id ed25519:pub_foo --desc "Darc for Foo"
 ```
 
 This command will output the darc-id `darc:darc_foo` that has been created. The _admin_ can
@@ -64,7 +64,7 @@ Now for _foo_ to use this new darc, he will first have to create a configuration
 `bc-xxxx.cfg` with the new darc inside:
 
 ```bash
-foo $ bcadmin -c . link roster.toml xxxx --pub ed25519:pub_foo --darc darc:darc_foo
+foo $ bcadmin -c . link roster.toml xxxx --id ed25519:pub_foo --darc darc:darc_foo
 ``` 
 
 This will create a file `bc-xxxx.cfg` in _foo_'s directory that points to _foo_'s
