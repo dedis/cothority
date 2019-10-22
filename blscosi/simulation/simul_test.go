@@ -8,5 +8,5 @@ import (
 
 func TestSimulation(t *testing.T) {
 	raiseLimit()
-	simul.Start("local.toml")
+	simul.Start(builder, "local.toml")
 }

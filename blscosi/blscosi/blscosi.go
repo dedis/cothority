@@ -8,7 +8,9 @@ import (
 	"path"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/blscosi"
+	"go.dedis.ch/cothority/v4/cosuite"
+	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/app"
 	"go.dedis.ch/onet/v4/cfgpath"
 	"go.dedis.ch/onet/v4/log"
@@ -28,13 +30,25 @@ const (
 	optionConfigShort = "c"
 )
 
+var suite = cosuite.NewBlsSuite()
+
 func main() {
 	cliApp := createApp()
 	err := cliApp.Run(os.Args)
 	log.ErrFatal(err)
 }
 
+func makeBuilder() *onet.DefaultBuilder {
+	builder := onet.NewDefaultBuilder()
+	builder.SetSuite(suite)
+	blscosi.RegisterBlsCoSiService(builder, suite)
+
+	return builder
+}
+
 func createApp() *cli.App {
+	builder := makeBuilder()
+
 	cliApp := cli.NewApp()
 	cliApp.Name = "blscosi"
 	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
@@ -124,7 +138,7 @@ func createApp() *cli.App {
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						app.InteractiveConfig(cothority.Suite, BinaryName)
+						app.InteractiveConfig(builder, BinaryName)
 						return nil
 					},
 				},
@@ -144,6 +158,8 @@ func createApp() *cli.App {
 
 func runServer(ctx *cli.Context) {
 	config := ctx.String("config")
+	builder := makeBuilder()
 
-	app.RunServer(config)
+	srv := app.MakeServer(builder, config)
+	srv.Start()
 }

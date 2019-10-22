@@ -9,7 +9,7 @@ import (
 )
 
 func TestClient_SignatureRequest(t *testing.T) {
-	local := onet.NewTCPTest(testSuite)
+	local := onet.NewLocalTest(serviceTestBuilder)
 	_, roster, _ := local.GenTree(10, false)
 	defer local.CloseAll()
 
@@ -26,9 +26,15 @@ func TestClient_SignatureRequest(t *testing.T) {
 		reply, err := client.SignatureRequest(newRoster, msg)
 		require.Nil(t, err, "Couldn't send")
 
-		publics := newRoster.ServicePublics(ServiceName)
+		sig := testSuite.Signature()
+		require.NoError(t, sig.Unpack(reply.Signature))
+
+		publics, err := newRoster.PublicKeys(onet.NewCipherSuiteMapper(testSuite, ServiceName))
+		require.NoError(t, err)
 
 		// verify the response still
-		require.Nil(t, reply.Signature.Verify(testSuite, msg, publics))
+		pubkey, err := testSuite.AggregatePublicKeys(publics, sig)
+		require.NoError(t, err)
+		require.NoError(t, testSuite.Verify(pubkey, sig, msg))
 	}
 }

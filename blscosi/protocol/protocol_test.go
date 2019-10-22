@@ -8,12 +8,24 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/kyber/v4/sign"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
+	"golang.org/x/xerrors"
 )
+
+var testSuite = cosuite.NewBlsSuite()
+
+func makeBuilder() onet.Builder {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(testSuite)
+	builder.SetService(testServiceName, nil, newService)
+	return builder
+}
+
+var testTimeout = 20 * time.Second
 
 const FailureProtocolName = "FailureProtocol"
 const FailureSubProtocolName = "FailureSubProtocol"
@@ -27,9 +39,6 @@ func NewFailureSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, err
 	return NewSubBlsCosi(n, vf, testSuite)
 }
 
-// Used for tests
-var testServiceID onet.ServiceID
-
 const testServiceName = "TestServiceBlsCosi"
 
 var newProtocolMethods = map[string]func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error){
@@ -40,18 +49,11 @@ var newProtocolMethods = map[string]func(*onet.TreeNodeInstance) (onet.ProtocolI
 }
 
 func init() {
-	var err error
-	testServiceID, err = onet.RegisterNewServiceWithSuite(testServiceName, testSuite, newService)
-	log.ErrFatal(err)
-
 	// Register Protocols
 	GlobalRegisterDefaultProtocols()
 	onet.GlobalProtocolRegister(FailureProtocolName, NewFailureProtocol)
 	onet.GlobalProtocolRegister(FailureSubProtocolName, NewFailureSubProtocol)
 }
-
-var testSuite = pairing.NewSuiteBn256()
-var testTimeout = 20 * time.Second
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -92,12 +94,12 @@ func TestProtocol_25_5(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Roster, error) {
-	local := onet.NewLocalTest(cothority.Suite)
+func runProtocol(nbrNodes, nbrSubTrees, threshold int) (ciphersuite.Signature, *onet.Roster, error) {
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 	servers, roster, tree := local.GenTree(nbrNodes, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(DefaultProtocolName, tree)
@@ -132,15 +134,15 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) (BlsSignature, *onet.Rost
 }
 
 func TestQuickAnswerProtocol_2_1(t *testing.T) {
-	mask, err := runQuickAnswerProtocol(2, 1)
+	sig, err := runQuickAnswerProtocol(2, 1)
 	require.Nil(t, err)
-	require.Equal(t, 1, mask.CountEnabled())
+	require.Equal(t, 1, testSuite.Count(sig))
 }
 
 func TestQuickAnswerProtocol_5_4(t *testing.T) {
-	mask, err := runQuickAnswerProtocol(5, 4)
+	sig, err := runQuickAnswerProtocol(5, 4)
 	require.Nil(t, err)
-	require.Equal(t, 2, mask.CountEnabled())
+	require.Equal(t, 2, testSuite.Count(sig))
 }
 
 func TestQuickAnswerProtocol_24_5(t *testing.T) {
@@ -148,27 +150,14 @@ func TestQuickAnswerProtocol_24_5(t *testing.T) {
 		t.Skip("skipped for Travis")
 	}
 
-	mask, err := runQuickAnswerProtocol(24, 5)
+	sig, err := runQuickAnswerProtocol(24, 5)
 	require.Nil(t, err)
-	require.InEpsilon(t, 14, mask.CountEnabled(), 2)
+	require.InEpsilon(t, 14, testSuite.Count(sig), 2)
 }
 
-func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (*sign.Mask, error) {
-	sig, roster, err := runProtocol(nbrNodes, nbrTrees, nbrNodes/2)
-	if err != nil {
-		return nil, err
-	}
-
-	publics := roster.ServicePublics(testServiceName)
-
-	mask, err := sign.NewMask(testSuite, publics, nil)
-	if err != nil {
-		return nil, err
-	}
-	lenRes := testSuite.G1().PointLen()
-	mask.SetMask(sig[lenRes:])
-
-	return mask, nil
+func runQuickAnswerProtocol(nbrNodes, nbrTrees int) (ciphersuite.Signature, error) {
+	sig, _, err := runProtocol(nbrNodes, nbrTrees, nbrNodes/2)
+	return sig, err
 }
 
 func TestProtocol_FailingLeaves_5_1(t *testing.T) {
@@ -186,11 +175,11 @@ func TestProtocol_FailingLeaves_25_9(t *testing.T) {
 }
 
 func runProtocolFailingNodes(nbrNodes, nbrTrees, nbrFailure, threshold int) error {
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(nbrNodes, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(DefaultProtocolName, tree)
@@ -244,11 +233,11 @@ func TestProtocol_FailingSubLeader_25_3(t *testing.T) {
 }
 
 func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(nbrNodes, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(DefaultProtocolName, tree)
@@ -287,11 +276,11 @@ func runProtocolFailingSubLeader(nbrNodes, nbrTrees int) error {
 
 // Tests that the protocol throws errors with invalid configurations
 func TestProtocol_IntegrityCheck(t *testing.T) {
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(1, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(DefaultProtocolName, tree)
@@ -362,11 +351,11 @@ func TestProtocol_QuickFailure_14(t *testing.T) {
 }
 
 func runProtocolAllFailing(nbrNodes, nbrTrees, threshold int) (time.Time, error) {
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
 	servers, _, tree := local.GenTree(nbrNodes, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	time := time.Now()
 	rootService := services[0].(*testService)
@@ -404,8 +393,8 @@ type testService struct {
 	*onet.ServiceProcessor
 }
 
-func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy sign.Policy) (BlsSignature, error) {
-	var signature BlsSignature
+func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy sign.Policy) (ciphersuite.Signature, error) {
+	var signature ciphersuite.Signature
 	log.Lvl3("Waiting for Instance")
 	select {
 	case signature = <-proto.FinalSignature:
@@ -416,12 +405,22 @@ func getAndVerifySignature(proto *BlsCosi, proposal []byte, policy sign.Policy) 
 		return nil, fmt.Errorf("didn't get commitment in time")
 	}
 
-	publics := proto.Roster().ServicePublics(testServiceName)
-	return signature, signature.VerifyWithPolicy(testSuite, proto.Msg, publics, policy)
+	if signature == nil {
+		return nil, xerrors.New("no signature")
+	}
+
+	publics := proto.PublicKeys()
+
+	pubkey, err := testSuite.AggregatePublicKeys(publics, signature)
+	if err != nil {
+		return nil, err
+	}
+
+	return signature, testSuite.Verify(pubkey, signature, proto.Msg)
 }
 
 // Starts a new service. No function needed.
-func newService(c *onet.Context) (onet.Service, error) {
+func newService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
 	s := &testService{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}

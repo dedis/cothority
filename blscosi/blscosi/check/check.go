@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"go.dedis.ch/cothority/v4/blscosi"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/app"
 	"go.dedis.ch/onet/v4/log"
@@ -27,7 +27,7 @@ const RequestTimeOut = time.Second * 10
 // along with the IP-address of the server.
 // In case a server doesn't reply in time or there is an error in the
 // signature, an error is returned.
-func CothorityCheck(tomlFileName string, detail bool) error {
+func CothorityCheck(suite cosuite.CoSiCipherSuite, tomlFileName string, detail bool) error {
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return fmt.Errorf("Couldn't open group definition file: %s", err.Error())
@@ -53,7 +53,7 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 			desc = []string{d, d}
 		}
 		ro := onet.NewRoster([]*network.ServerIdentity{e})
-		err := checkRoster(ro, desc, true)
+		err := checkRoster(suite, ro, desc, true)
 		if err == nil {
 			working = append(working, e)
 		} else {
@@ -71,7 +71,7 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 			for i, si := range working {
 				descriptions[permutation[i]] = group.GetDescription(si)
 			}
-			err = checkRoster(onet.NewRoster(working), descriptions, detail)
+			err = checkRoster(suite, onet.NewRoster(working), descriptions, detail)
 			if err != nil {
 				checkErr = err
 			}
@@ -87,13 +87,13 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 						desc = []string{d1, group.GetDescription(second)}
 					}
 					es := []*network.ServerIdentity{first, second}
-					err = checkRoster(onet.NewRoster(es), desc, detail)
+					err = checkRoster(suite, onet.NewRoster(es), desc, detail)
 					if err != nil {
 						checkErr = err
 					}
 					es[0], es[1] = es[1], es[0]
 					desc[0], desc[1] = desc[1], desc[0]
-					err = checkRoster(onet.NewRoster(es), desc, detail)
+					err = checkRoster(suite, onet.NewRoster(es), desc, detail)
 					if err != nil {
 						checkErr = err
 					}
@@ -108,7 +108,7 @@ func CothorityCheck(tomlFileName string, detail bool) error {
 // waits for the reply.
 // If the reply doesn't arrive in time, it will return an
 // error.
-func checkRoster(ro *onet.Roster, descs []string, detail bool) error {
+func checkRoster(suite cosuite.CoSiCipherSuite, ro *onet.Roster, descs []string, detail bool) error {
 	serverStr := ""
 	for i, s := range ro.List {
 		name := strings.Split(descs[i], " ")[0]
@@ -120,11 +120,11 @@ func checkRoster(ro *onet.Roster, descs []string, detail bool) error {
 	log.Lvl3("Sending message to: " + serverStr)
 	log.Lvlf3("Checking %d server(s) %s: ", len(ro.List), serverStr)
 	msg := []byte("verification")
-	sig, err := SignStatement(msg, ro)
+	sig, err := SignStatement(suite, msg, ro)
 	if err != nil {
 		return err
 	}
-	err = VerifySignatureHash(msg, sig, ro)
+	err = VerifySignatureHash(suite, msg, sig, ro)
 	if err != nil {
 		return fmt.Errorf("Invalid signature: %s", err.Error())
 	}
@@ -134,9 +134,8 @@ func checkRoster(ro *onet.Roster, descs []string, detail bool) error {
 
 // SignStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func SignStatement(msg []byte, ro *onet.Roster) (*blscosi.SignatureResponse, error) {
+func SignStatement(suite cosuite.CoSiCipherSuite, msg []byte, ro *onet.Roster) (*blscosi.SignatureResponse, error) {
 	client := blscosi.NewClient()
-	publics := ro.ServicePublics(blscosi.ServiceName)
 
 	log.Lvlf4("Signing message %x", msg)
 
@@ -158,7 +157,23 @@ func SignStatement(msg []byte, ro *onet.Roster) (*blscosi.SignatureResponse, err
 	case response := <-pchan:
 		log.Lvlf5("Response: %x", response.Signature)
 
-		err := response.Signature.Verify(client.Suite().(*pairing.SuiteBn256), msg[:], publics)
+		publics, err := ro.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
+		if err != nil {
+			return nil, err
+		}
+
+		sig := suite.Signature()
+		err = sig.Unpack(response.Signature)
+		if err != nil {
+			return nil, err
+		}
+
+		pk, err := suite.AggregatePublicKeys(publics, sig)
+		if err != nil {
+			return nil, err
+		}
+
+		err = suite.Verify(pk, sig, msg)
 		if err != nil {
 			return nil, err
 		}
@@ -169,12 +184,14 @@ func SignStatement(msg []byte, ro *onet.Roster) (*blscosi.SignatureResponse, err
 }
 
 // VerifySignatureHash checks that the signature is correct
-func VerifySignatureHash(b []byte, sig *blscosi.SignatureResponse, ro *onet.Roster) error {
-	suite := blscosi.NewClient().Suite().(*pairing.SuiteBn256)
-	publics := ro.ServicePublics(blscosi.ServiceName)
+func VerifySignatureHash(suite cosuite.CoSiCipherSuite, b []byte, sig *blscosi.SignatureResponse, ro *onet.Roster) error {
+	publics, err := ro.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
+	if err != nil {
+		return err
+	}
 
 	h := suite.Hash()
-	_, err := h.Write(b)
+	_, err = h.Write(b)
 	if err != nil {
 		return err
 	}
@@ -186,7 +203,18 @@ func VerifySignatureHash(b []byte, sig *blscosi.SignatureResponse, ro *onet.Rost
 			"doesn't match with the hash of the file.)")
 	}
 
-	if err := sig.Signature.Verify(suite, b, publics); err != nil {
+	signature := suite.Signature()
+	err = signature.Unpack(sig.Signature)
+	if err != nil {
+		return err
+	}
+
+	pk, err := suite.AggregatePublicKeys(publics, signature)
+	if err != nil {
+		return err
+	}
+
+	if err := suite.Verify(pk, signature, b); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil

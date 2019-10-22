@@ -24,7 +24,7 @@ func TestGenTreesRoot(t *testing.T) {
 
 	for _, nbrNodes := range nodes {
 		for _, nSubtrees := range subtrees {
-			local := onet.NewLocalTest(testSuite)
+			local := onet.NewLocalTest(makeBuilder())
 			_, _, tree := local.GenTree(nbrNodes, false)
 
 			trees, err := genTrees(tree, nSubtrees)
@@ -57,7 +57,7 @@ func TestGenTreesCount(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
-			local := onet.NewLocalTest(testSuite)
+			local := onet.NewLocalTest(makeBuilder())
 			_, _, tree := local.GenTree(nNodes, false)
 
 			trees, err := genTrees(tree, nSubtrees)
@@ -100,7 +100,7 @@ func TestGenTreesSubtrees(t *testing.T) {
 				}
 			}
 
-			local := onet.NewLocalTest(testSuite)
+			local := onet.NewLocalTest(makeBuilder())
 			_, _, tree := local.GenTree(nNodes, false)
 
 			trees, err := genTrees(tree, nSubtrees)
@@ -127,7 +127,7 @@ func TestGenTreesComplete(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
-			local := onet.NewLocalTest(testSuite)
+			local := onet.NewLocalTest(makeBuilder())
 			_, _, tree := local.GenTree(nNodes, false)
 
 			trees, err := genTrees(tree, nSubtrees)
@@ -181,7 +181,7 @@ func TestGenTreesUsesWholeRoster(t *testing.T) {
 
 	for _, nServers := range servers {
 
-		local := onet.NewLocalTest(testSuite)
+		local := onet.NewLocalTest(makeBuilder())
 		_, _, tree := local.GenTree(nNodes, false)
 
 		trees, err := genTrees(tree, 4)
@@ -228,7 +228,7 @@ func TestGenSubtreePutsCorrectSubleader(t *testing.T) {
 	for _, nNodes := range nodes {
 		for _, subleaderID := range subleaderIDs {
 
-			local := onet.NewLocalTest(testSuite)
+			local := onet.NewLocalTest(makeBuilder())
 			servers := local.GenServers(nNodes)
 			roster := local.GenRosterFromHost(servers...)
 
@@ -278,7 +278,7 @@ func TestGenSubtreeStructure(t *testing.T) {
 
 	for _, nNodes := range nodes {
 
-		local := onet.NewLocalTest(testSuite)
+		local := onet.NewLocalTest(makeBuilder())
 		servers := local.GenServers(nNodes)
 		roster := local.GenRosterFromHost(servers...)
 
@@ -318,7 +318,7 @@ func TestGenSubtreeErrors(t *testing.T) {
 
 	for _, nNodes := range nodes {
 
-		local := onet.NewLocalTest(testSuite)
+		local := onet.NewLocalTest(makeBuilder())
 		servers := local.GenServers(nNodes)
 		roster := local.GenRosterFromHost(servers...)
 

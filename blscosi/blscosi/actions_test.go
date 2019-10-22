@@ -7,12 +7,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/app"
 )
 
-var testSuite = pairing.NewSuiteBn256()
+var testBuilder = makeBuilder()
 
 // TestMain_Check checks if the CLI command check works correctly
 func TestMain_Check(t *testing.T) {
@@ -21,7 +20,7 @@ func TestMain_Check(t *testing.T) {
 
 	os.Chdir(tmp)
 
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(testBuilder)
 	defer local.CloseAll()
 	_, roster, _ := local.GenTree(10, true)
 
@@ -31,7 +30,7 @@ func TestMain_Check(t *testing.T) {
 	require.NotNil(t, cliApp)
 
 	group := &app.Group{Roster: roster}
-	err := group.Save(testSuite, publicToml)
+	err := group.Save(publicToml)
 	require.NoError(t, err)
 	err = cliApp.Run([]string{"", "check", "-g", publicToml, "--detail"})
 	require.NoError(t, err)
@@ -47,11 +46,11 @@ func TestMain_Sign(t *testing.T) {
 	publicToml := path.Join(tmp, "public.toml")
 	signatureFile := path.Join(tmp, "sig.json")
 
-	local := onet.NewLocalTest(testSuite)
+	local := onet.NewLocalTest(testBuilder)
 	defer local.CloseAll()
 	_, roster, _ := local.GenTree(5, true)
 	group := &app.Group{Roster: roster}
-	err := group.Save(testSuite, publicToml)
+	err := group.Save(publicToml)
 	require.NoError(t, err)
 
 	cliApp := createApp()

@@ -15,7 +15,7 @@ type Client struct {
 
 // NewClient instantiates a new blscosi.Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(suite, ServiceName)}
+	return &Client{Client: onet.NewClient(ServiceName)}
 }
 
 // SignatureRequest sends a CoSi sign request to the Cothority defined by the given

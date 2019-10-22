@@ -25,14 +25,21 @@ import (
 	"github.com/BurntSushi/toml"
 	"go.dedis.ch/cothority/v4/blscosi"
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/onet/v4/simul/monitor"
+	"golang.org/x/xerrors"
 )
 
+var builder = onet.NewDefaultBuilder()
+var suite = cosuite.NewBlsSuite()
+
 func init() {
+	builder.SetSuite(suite)
+	blscosi.RegisterBlsCoSiService(builder, suite)
+
 	onet.SimulationRegister("BlsCosiProtocol", NewSimulationProtocol)
 }
 
@@ -57,7 +64,7 @@ func NewSimulationProtocol(config string) (onet.Simulation, error) {
 
 // Setup implements onet.Simulation.
 func (s *SimulationProtocol) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
-	sc := &onet.SimulationConfig{}
+	sc := &onet.SimulationConfig{Builder: builder}
 	s.CreateRoster(sc, hosts, 2000)
 	err := s.CreateTree(sc)
 	if err != nil {
@@ -91,7 +98,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 		if n.ID.Equal(config.Server.ServerIdentity.ID) {
 			config.Server.RegisterProcessorFunc(onet.ProtocolMsgID, func(e *network.Envelope) error {
 				//get message
-				_, msg, err := network.Unmarshal(e.Msg.(*onet.ProtocolMsg).MsgSlice, config.Server.Suite())
+				_, msg, err := network.Unmarshal(e.Msg.(*onet.ProtocolMsg).MsgSlice)
 				if err != nil {
 					log.Fatal("error while unmarshaling a message:", err)
 					return err
@@ -134,21 +141,26 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		log.Lvl1("Sending request to service...")
 		err := client.SendProtobuf(config.Server.ServerIdentity, serviceReq, serviceReply)
 		if err != nil {
-			return fmt.Errorf("Cannot send:%s", err)
+			return xerrors.Errorf("Cannot send: %v", err)
 		}
 
 		round.Record()
+		sig := suite.Signature()
+		sig.Unpack(serviceReply.Signature)
 
-		suite := client.Suite().(pairing.Suite)
-		publics := config.Roster.ServicePublics(blscosi.ServiceName)
+		publics, err := config.Roster.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
+		if err != nil {
+			return xerrors.Errorf("public keys: %v", err)
+		}
 
-		err = serviceReply.Signature.Verify(suite, proposal, publics)
+		pk, err := suite.AggregatePublicKeys(publics, sig)
+
+		err = suite.Verify(pk, sig, proposal)
 		if err != nil {
 			return fmt.Errorf("error while verifying signature:%s", err)
 		}
 
-		mask, err := serviceReply.Signature.GetMask(suite, publics)
-		monitor.RecordSingleMeasure("correct_nodes", float64(mask.CountEnabled()))
+		monitor.RecordSingleMeasure("correct_nodes", float64(suite.Count(sig)))
 
 		log.Lvl2("Signature correctly verified!")
 	}

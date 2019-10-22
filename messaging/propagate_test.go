@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 )
@@ -29,8 +30,11 @@ func TestPropagation(t *testing.T) {
 
 // Tests an n-node system
 func propagate(t *testing.T, nbrNodes, nbrFailures []int) {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(&ciphersuite.UnsecureCipherSuite{})
+
 	for i, n := range nbrNodes {
-		local := onet.NewLocalTest(tSuite)
+		local := onet.NewLocalTest(builder)
 		servers, el, _ := local.GenTree(n, true)
 		var recvCount int
 		var iMut sync.Mutex

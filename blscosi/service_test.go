@@ -4,20 +4,22 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 )
 
-var testSuite = pairing.NewSuiteBn256()
+var testSuite = cosuite.NewBlsSuite()
+var serviceTestBuilder = onet.NewDefaultBuilder()
 
 func TestMain(m *testing.M) {
+	serviceTestBuilder.SetSuite(testSuite)
+	RegisterBlsCoSiService(serviceTestBuilder, testSuite)
 	log.MainTest(m)
 }
 
 func TestService_SignatureRequest(t *testing.T) {
-	local := onet.NewTCPTest(testSuite)
+	local := onet.NewLocalTest(serviceTestBuilder)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, roster, _ := local.GenTree(10, false)
@@ -62,9 +64,16 @@ func TestService_SignatureRequest(t *testing.T) {
 	})
 	require.Nil(t, err, "Couldn't send")
 
-	publics := roster.ServicePublics(ServiceName)
 	res := buf.(*SignatureResponse)
 
+	sig := testSuite.Signature()
+	require.NoError(t, sig.Unpack(res.Signature))
+
+	publics, err := ro2.PublicKeys(onet.NewCipherSuiteMapper(testSuite, ServiceName))
+	require.NoError(t, err)
+
 	// verify the response still
-	require.Nil(t, res.Signature.VerifyWithPolicy(testSuite, msg, publics, sign.NewThresholdPolicy(1)))
+	pubkey, err := testSuite.AggregatePublicKeys(publics, sig)
+	require.NoError(t, err)
+	require.NoError(t, testSuite.Verify(pubkey, sig, msg))
 }

@@ -1,19 +1,24 @@
 package messaging
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 )
 
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(&ciphersuite.UnsecureCipherSuite{})
+
 	for _, nbrNodes := range []int{3, 10, 14} {
-		local := onet.NewLocalTest(tSuite)
+		local := onet.NewLocalTest(builder.Clone())
 		_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, false)
 
 		pi, err := local.CreateProtocol(BroadcastName, tree)

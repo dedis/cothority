@@ -6,36 +6,36 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
+	"go.dedis.ch/onet/ciphersuite"
 	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"golang.org/x/xerrors"
 )
 
-var testSuite = pairing.NewSuiteBn256()
+var testSuite = cosuite.NewBdnSuite()
 
 const testServiceName = "TestServiceBdnCosi"
 
-var testServiceID onet.ServiceID
+func makeTestBuilder() onet.Builder {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(testSuite)
+	builder.SetService(testServiceName, nil, newService)
+	return builder
+}
 
 func init() {
 	GlobalRegisterBdnProtocols()
-
-	id, err := onet.RegisterNewServiceWithSuite(testServiceName, testSuite, newService)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	testServiceID = id
 }
 
 func TestBdnProto_SimpleCase(t *testing.T) {
 	err := runProtocol(5, 1, 5)
 	require.NoError(t, err)
+}
 
+func TestBdnProto_LongTest(t *testing.T) {
 	if !testing.Short() {
-		err = runProtocol(10, 5, 10)
+		err := runProtocol(10, 5, 10)
 		require.NoError(t, err)
 
 		err = runProtocol(20, 5, 15)
@@ -44,11 +44,11 @@ func TestBdnProto_SimpleCase(t *testing.T) {
 }
 
 func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTest(makeTestBuilder())
 	defer local.CloseAll()
-	servers, roster, tree := local.GenTree(nbrNodes, false)
+	servers, _, tree := local.GenTree(nbrNodes, false)
 
-	services := local.GetServices(servers, testServiceID)
+	services := local.GetServices(servers, testServiceName)
 
 	rootService := services[0].(*testService)
 	pi, err := rootService.CreateProtocol(BdnProtocolName, tree)
@@ -75,8 +75,18 @@ func runProtocol(nbrNodes, nbrSubTrees, threshold int) error {
 
 	select {
 	case sig := <-cosiProtocol.FinalSignature:
-		pubs := roster.ServicePublics(testServiceName)
-		return BdnSignature(sig).Verify(testSuite, cosiProtocol.Msg, pubs)
+		if sig == nil {
+			return xerrors.New("missing signature")
+		}
+
+		pubs := cosiProtocol.PublicKeys()
+
+		pk, err := testSuite.AggregatePublicKeys(pubs, sig)
+		if err != nil {
+			return err
+		}
+
+		return testSuite.Verify(pk, sig, cosiProtocol.Msg)
 	case <-time.After(2 * time.Second):
 	}
 
@@ -91,7 +101,7 @@ type testService struct {
 }
 
 // Starts a new service. No function needed.
-func newService(c *onet.Context) (onet.Service, error) {
+func newService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
 	s := &testService{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}

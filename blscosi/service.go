@@ -7,25 +7,20 @@ import (
 	"time"
 
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
+	"golang.org/x/xerrors"
 )
 
 const protocolTimeout = 20 * time.Second
-
-var suite = suites.MustFind("bn256.adapter").(*pairing.SuiteBn256)
-
-// ServiceID is the key to get the service later
-var ServiceID onet.ServiceID
 
 // ServiceName is the name to refer to the CoSi service
 const ServiceName = "blsCoSiService"
 
 func init() {
-	ServiceID, _ = onet.RegisterNewServiceWithSuite(ServiceName, suite, newCoSiService)
 	network.RegisterMessage(&SignatureRequest{})
 	network.RegisterMessage(&SignatureResponse{})
 }
@@ -33,7 +28,7 @@ func init() {
 // Service is the service that handles collective signing operations
 type Service struct {
 	*onet.ServiceProcessor
-	suite     pairing.Suite
+	suite     cosuite.CoSiCipherSuite
 	Threshold int
 	NSubtrees int
 	Timeout   time.Duration
@@ -48,7 +43,7 @@ type SignatureRequest struct {
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Hash      []byte
-	Signature protocol.BlsSignature
+	Signature *ciphersuite.CipherData
 }
 
 // SignatureRequest treats external request to this service.
@@ -101,7 +96,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	// same way as blscosi and then return it.
 	h := s.suite.Hash()
 	h.Write(req.Message)
-	return &SignatureResponse{h.Sum(nil), sig}, nil
+	return &SignatureResponse{h.Sum(nil), sig.Pack()}, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -118,10 +113,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }
 
-func newCoSiService(c *onet.Context) (onet.Service, error) {
+func newCoSiService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
+	cosiSuite, ok := suite.(cosuite.CoSiCipherSuite)
+	if !ok {
+		return nil, xerrors.New("expect a cosi cipher suite for this service")
+	}
+
 	s := &Service{
+		suite:            cosiSuite,
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		suite:            suite,
 		Timeout:          protocolTimeout,
 	}
 
@@ -131,4 +131,10 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 	}
 
 	return s, nil
+}
+
+// RegisterBlsCoSiService regiters the service to the builder and assign the suite
+// if provided.
+func RegisterBlsCoSiService(builder onet.Builder, suite cosuite.CoSiCipherSuite) {
+	builder.SetService(ServiceName, suite, newCoSiService)
 }

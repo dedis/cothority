@@ -11,5 +11,5 @@ import (
 )
 
 func main() {
-	simul.Start()
+	simul.Start(builder)
 }

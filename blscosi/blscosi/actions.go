@@ -14,6 +14,7 @@ import (
 	"go.dedis.ch/cothority/v4/blscosi"
 	"go.dedis.ch/cothority/v4/blscosi/blscosi/check"
 	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 )
 
@@ -28,7 +29,7 @@ func checkRequest(c *cli.Context) error {
 	tomlFileName := c.String(optionGroup)
 
 	log.Info("Checking the availability and responsiveness of the servers in the group...")
-	return check.CothorityCheck(tomlFileName, c.Bool("detail"))
+	return check.CothorityCheck(suite, tomlFileName, c.Bool("detail"))
 }
 
 // signFile will search for the file and sign it
@@ -88,9 +89,11 @@ func verifyFile(c *cli.Context) error {
 
 // writeSigAsJSON - writes the JSON out to a file
 func writeSigAsJSON(res *blscosi.SignatureResponse, outW io.Writer) error {
+	sigtext, err := res.Signature.MarshalText()
+
 	b, err := json.Marshal(sigHex{
 		Hash:      hex.EncodeToString(res.Hash),
-		Signature: hex.EncodeToString(res.Signature)},
+		Signature: string(sigtext)},
 	)
 
 	if err != nil {
@@ -128,7 +131,7 @@ func sign(msg []byte, tomlFileName string) (*blscosi.SignatureResponse, error) {
 	}
 
 	log.Lvl2("Sending signature to", g.Roster)
-	return check.SignStatement(msg, g.Roster)
+	return check.SignStatement(suite, msg, g.Roster)
 }
 
 // verify takes a file and a group-definition, calls the signature
@@ -166,10 +169,9 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig.Signature, err = hex.DecodeString(sigStr.Signature)
-	if err != nil {
-		return err
-	}
+	sig.Signature = &ciphersuite.CipherData{}
+	sig.Signature.UnmarshalText([]byte(sigStr.Signature))
+
 	fGroup, err := os.Open(groupToml)
 	if err != nil {
 		return err
@@ -182,5 +184,5 @@ func verify(fileName, sigFileName, groupToml string) error {
 	}
 
 	log.Lvlf4("Verifying signature %x %x", b, sig.Signature)
-	return check.VerifySignatureHash(b, sig, g.Roster)
+	return check.VerifySignatureHash(suite, b, sig, g.Roster)
 }

@@ -184,7 +184,7 @@ func (p *Propagate) Dispatch() error {
 			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Timeout)
 			p.sd.Timeout = msg.Timeout
 			if p.onData != nil {
-				_, netMsg, err := network.Unmarshal(msg.Data, p.Suite())
+				_, netMsg, err := network.Unmarshal(msg.Data)
 				if err != nil {
 					log.Lvlf2("Unmarshal failed with %v", err)
 				} else {
@@ -233,7 +233,7 @@ func (p *Propagate) Dispatch() error {
 			}
 		case <-time.After(timeout):
 			if received < subtreeCount-p.allowedFailures {
-				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
+				_, _, err := network.Unmarshal(p.sd.Data)
 				return fmt.Errorf("Timeout of %s reached, got %v but need %v, err: %v",
 					timeout, received, subtreeCount-p.allowedFailures, err)
 			}

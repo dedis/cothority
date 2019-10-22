@@ -10,6 +10,7 @@ import (
 	"go.dedis.ch/kyber/v4/sign"
 	"go.dedis.ch/kyber/v4/sign/bls"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 )
@@ -133,8 +134,7 @@ type StructAnnouncement struct {
 
 // Response is the blscosi response message.
 type Response struct {
-	Signature BlsSignature
-	Mask      []byte
+	Signature *ciphersuite.CipherData
 }
 
 // StructResponse just contains Response and the data necessary to identify and
@@ -146,7 +146,7 @@ type StructResponse struct {
 
 // Refusal is the signed refusal response from a given node.
 type Refusal struct {
-	Signature []byte
+	Signature *ciphersuite.CipherData
 }
 
 // StructRefusal contains the refusal and the treenode that sent it.

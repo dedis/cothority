@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/kyber/v4/sign"
-	"go.dedis.ch/kyber/v4/sign/bls"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 )
 
@@ -30,7 +30,7 @@ type SubBlsCosi struct {
 	Threshold      int
 	stoppedOnce    sync.Once
 	verificationFn VerificationFn
-	suite          *pairing.SuiteBn256
+	suite          cosuite.CoSiCipherSuite
 	startChan      chan bool
 	closeChan      chan struct{}
 
@@ -43,23 +43,18 @@ type SubBlsCosi struct {
 	ChannelAnnouncement chan StructAnnouncement
 	ChannelResponse     chan StructResponse
 	ChannelRefusal      chan StructRefusal
-
-	// Crypto functions
-	Sign      SignFn
-	Verify    VerifyFn
-	Aggregate AggregateFn
 }
 
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubBlsCosi(n, vf, pairing.NewSuiteBn256())
+	return NewSubBlsCosi(n, vf, cosuite.NewBlsSuite())
 }
 
 // NewSubBlsCosi is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.SuiteBn256) (onet.ProtocolInstance, error) {
+func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosuite.CoSiCipherSuite) (onet.ProtocolInstance, error) {
 	// tests if it's a three level tree
 	moreThreeLevel := false
 	n.Tree().Root.Visit(0, func(depth int, n *onet.TreeNode) {
@@ -73,15 +68,10 @@ func NewSubBlsCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite *pairing.S
 
 	c := &SubBlsCosi{
 		TreeNodeInstance: n,
-		Sign:             bls.Sign,
-		Verify:           bls.Verify,
-		Aggregate: func(suite pairing.Suite, mask *sign.Mask, sigs [][]byte) ([]byte, error) {
-			return bls.AggregateSignatures(suite, sigs...)
-		},
-		verificationFn: vf,
-		suite:          suite,
-		startChan:      make(chan bool, 1),
-		closeChan:      make(chan struct{}),
+		verificationFn:   vf,
+		suite:            suite,
+		startChan:        make(chan bool, 1),
+		closeChan:        make(chan struct{}),
 	}
 
 	if n.IsRoot() {
@@ -275,6 +265,13 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		case <-p.closeChan:
 			return nil
 		case reply := <-p.ChannelResponse:
+			sig := p.suite.Signature()
+			err := sig.Unpack(reply.Signature)
+			if err != nil {
+				log.Error(err)
+				break
+			}
+
 			public, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
 			if public != nil {
 				r, ok := responses[pubIndex]
@@ -283,7 +280,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				} else if r == nil {
 					if public == nil {
 						log.Warnf("Tentative to forge a server identity or unknown node.")
-					} else if err := p.Verify(p.suite, public, p.Msg, reply.Signature); err == nil {
+					} else if err := p.verify(sig, p.Msg); err == nil {
 						responses[pubIndex] = &reply.Response
 						done++
 					}
@@ -294,18 +291,25 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				log.Warnf("Received unknown server identity %v", reply.ServerIdentity)
 			}
 		case reply := <-p.ChannelRefusal:
-			public, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
+			_, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
 			r, ok := responses[pubIndex]
 
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				if err := p.Verify(p.suite, public, a.Nonce, reply.Signature); err == nil {
+				sig := p.suite.Signature()
+				err := sig.Unpack(reply.Signature)
+				if err != nil {
+					log.Error(err)
+					break
+				}
+
+				if err := p.verify(sig, a.Nonce); err == nil {
 					// The child gives an empty signature as a mark of refusal
 					responses[pubIndex] = &Response{}
 					done++
 				} else {
-					log.Warnf("Tentative to send a unsigned refusal from %v", reply.ServerIdentity.ID)
+					log.Warnf("Tentative to send a unsigned refusal from %v: %v", reply.ServerIdentity.ID, err)
 				}
 			} else {
 				log.Warnf("Duplicate refusal from %v", reply.ServerIdentity)
@@ -318,14 +322,25 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		}
 	}
 
-	r, err := p.makeSubLeaderResponse(responses)
+	sig, err := p.makeSubLeaderResponse(responses)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	log.Lvlf3("Subleader %v sent its reply with mask %b", p.ServerIdentity(), r.Mask)
-	return p.SendToParent(r)
+	log.Lvlf3("Subleader %v sent its reply with mask %b", p.ServerIdentity(), p.suite.Count(sig))
+	return p.SendToParent(&Response{Signature: sig.Pack()})
+}
+
+func (p *SubBlsCosi) verify(sig ciphersuite.Signature, msg []byte) error {
+	pubkeys := p.PublicKeys()
+
+	agg, err := p.suite.AggregatePublicKeys(pubkeys, sig)
+	if err != nil {
+		return err
+	}
+
+	return p.suite.Verify(agg, sig, msg)
 }
 
 // dispatchLeaf prepares the signature and send it to the subleader
@@ -366,31 +381,48 @@ func (p *SubBlsCosi) dispatchLeaf() error {
 	}
 }
 
+func (p *SubBlsCosi) makeMask() (*sign.Mask, error) {
+	publics := p.PublicKeys()
+
+	mask, err := p.suite.Mask(publics)
+	if err != nil {
+		return nil, err
+	}
+
+	mask.SetBit(p.PublicKeyIndex(), true)
+	if err != nil {
+		return nil, err
+	}
+
+	return mask, nil
+}
+
 // Sign the message and pack it with the mask as a response
 func (p *SubBlsCosi) makeResponse() (*Response, error) {
-	mask, err := sign.NewMask(p.suite, p.Publics(), p.Public())
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	sig, err := p.Sign(p.suite, p.Private(), p.Msg)
+	mask, err := p.makeMask()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Response{
-		Mask:      mask.Mask(),
-		Signature: sig,
-	}, nil
+	sig, err := p.suite.SignWithMask(p.SecretKey(), p.Msg, mask)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Response{Signature: sig.Pack()}, nil
 }
 
 // makeRefusal will sign a random nonce so that we can check
 // that the refusal is not forged
 func (p *SubBlsCosi) makeRefusal(nonce []byte) (*Refusal, error) {
-	sig, err := p.Sign(p.suite, p.Private(), nonce)
+	mask, err := p.makeMask()
+	if err != nil {
+		return nil, err
+	}
 
-	return &Refusal{Signature: sig}, err
+	sig, err := p.suite.SignWithMask(p.SecretKey(), nonce, mask)
+
+	return &Refusal{Signature: sig.Pack()}, err
 }
 
 // makeVerification executes the verification function provided and
@@ -401,31 +433,28 @@ func (p *SubBlsCosi) makeVerification(out chan bool) {
 
 // makeSubLeaderResponse aggregates its own signature with the children's and it also
 // creates the final mask for this aggregation
-func (p *SubBlsCosi) makeSubLeaderResponse(responses ResponseMap) (*Response, error) {
-	pubs := p.Publics()
-	mask, err := sign.NewMask(p.suite, pubs, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	sigs := [][]byte{}
-	for idx, res := range responses {
-		if res == nil || len(res.Signature) == 0 {
+func (p *SubBlsCosi) makeSubLeaderResponse(responses ResponseMap) (ciphersuite.Signature, error) {
+	sigs := []ciphersuite.Signature{}
+	for _, res := range responses {
+		if res == nil || res.Signature == nil {
 			continue
 		}
 
-		err = mask.Merge(res.Mask)
+		sig := p.suite.Signature()
+		err := sig.Unpack(res.Signature)
 		if err != nil {
-			return nil, err
+			break
 		}
 
-		i := mask.NthEnabledAtIndex(idx)
-		sigs = append(sigs[:i], append([][]byte{res.Signature}, sigs[i:]...)...)
+		sigs = append(sigs, sig)
 	}
 
-	agg, err := p.Aggregate(p.suite, mask, sigs)
+	if len(sigs) == 0 {
+		sig := p.suite.Signature()
+		return sig, nil
+	}
 
-	return &Response{Signature: agg, Mask: mask.Mask()}, err
+	return p.suite.AggregateSignatures(sigs, p.PublicKeys())
 }
 
 // checkIntegrity checks that the subprotocol can start with the current
