@@ -4,11 +4,11 @@
 package bdnproto
 
 import (
-	"go.dedis.ch/cothority/v3/blscosi/protocol"
-	"go.dedis.ch/kyber/v3/pairing"
-	"go.dedis.ch/kyber/v3/sign"
-	"go.dedis.ch/kyber/v3/sign/bdn"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/cothority/v4/blscosi/protocol"
+	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/kyber/v4/sign"
+	"go.dedis.ch/kyber/v4/sign/bdn"
+	"go.dedis.ch/onet/v4"
 )
 
 // BdnProtocolName is the name of the main protocol for the BDN signature scheme.

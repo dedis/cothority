@@ -1,11 +1,11 @@
-module go.dedis.ch/cothority/v3
+module go.dedis.ch/cothority/v4
 
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/allegro/bigcache v1.2.1 // indirect
-	github.com/aristanetworks/goarista v0.0.0-20190924011532-60b7b74727fd // indirect
+	github.com/aristanetworks/goarista v0.0.0-20191015010157-ce4ff66f8dba // indirect
 	github.com/bford/golang-x-crypto v0.0.0-20160518072526-27db609c9d03
-	github.com/btcsuite/btcd v0.0.0-20190926002857-ba530c4abb35 // indirect
+	github.com/btcsuite/btcd v0.20.0-beta // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
@@ -21,13 +21,13 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.0
-	go.dedis.ch/kyber/v3 v3.0.6
-	go.dedis.ch/onet/v3 v3.0.26
+	go.dedis.ch/kyber/v4 v4.0.0-pre1
+	go.dedis.ch/onet/v4 v4.0.0-pre1
 	go.dedis.ch/protobuf v1.0.9
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8
-	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect

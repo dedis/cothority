@@ -5,18 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4/network"
 
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/darc/expression"
 	"go.dedis.ch/protobuf"
 
-	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v4/darc"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/onet/v4"
 )
 
 // Note: Those tests relie on the Value contract, hence it is not possible to

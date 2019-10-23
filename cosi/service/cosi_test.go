@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/cosi/crypto"
-	cosi "go.dedis.ch/cothority/v3/cosi/protocol"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/cosi/crypto"
+	cosi "go.dedis.ch/cothority/v4/cosi/protocol"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 var tSuite = cothority.Suite

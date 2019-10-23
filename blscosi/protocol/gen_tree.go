@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/network"
 )
 
 // BlsProtocolTree represents the subtrees used in the BLS CoSi protocol

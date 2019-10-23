@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/clicontracts"
+	"go.dedis.ch/cothority/v4/byzcoin/bcadmin/clicontracts"
 )
 
 var cmds = cli.Commands{

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/cothority/v4/darc/expression"
 )
 
 func TestRules(t *testing.T) {

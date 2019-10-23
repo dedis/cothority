@@ -5,17 +5,17 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/cothority/v4/calypso"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3/byzcoin"
-	"go.dedis.ch/cothority/v3/byzcoin/contracts"
-	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/cothority/v4/byzcoin"
+	"go.dedis.ch/cothority/v4/byzcoin/contracts"
+	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/protobuf"
 )
 

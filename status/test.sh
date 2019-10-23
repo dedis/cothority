@@ -7,7 +7,7 @@ DBG_APP=2
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v3/status/service
+    buildConode go.dedis.ch/cothority/v4/status/service
     run testBuild
     run testNetwork
     run testConnectivity

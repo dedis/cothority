@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )

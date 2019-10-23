@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/sign/cosi"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/sign/cosi"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
 )
 
 const FailureProtocolName = "FailureProtocol"

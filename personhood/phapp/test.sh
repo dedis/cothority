@@ -16,7 +16,7 @@ ZERO_KEY=0000000000000000000000000000000000000000000000000000000000000000
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts go.dedis.ch/cothority/v3/personhood
+    buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts go.dedis.ch/cothority/v4/personhood
     build $APPDIR/../../byzcoin/bcadmin
     run testSpawner
     run testWipe

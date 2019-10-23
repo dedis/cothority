@@ -45,14 +45,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/darc/expression"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/sign/eddsa"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/kyber/v3/suites"
-	"go.dedis.ch/kyber/v3/util/encoding"
-	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/darc/expression"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/sign/eddsa"
+	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/kyber/v4/util/encoding"
+	"go.dedis.ch/kyber/v4/util/key"
 	"go.dedis.ch/protobuf"
 )
 

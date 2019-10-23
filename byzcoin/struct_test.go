@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
 )

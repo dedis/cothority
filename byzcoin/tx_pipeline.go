@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
 )

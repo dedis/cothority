@@ -17,7 +17,7 @@ el="./el -c ."
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
 	startTest
-	buildConode go.dedis.ch/cothority/v3/eventlog
+	buildConode go.dedis.ch/cothority/v4/eventlog
 
 	# This must succeed before any others will work.
 	run testEventLog

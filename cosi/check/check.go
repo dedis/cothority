@@ -13,14 +13,14 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/app"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/app"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 
-	"go.dedis.ch/cothority/v3/cosi/crypto"
-	"go.dedis.ch/cothority/v3/cosi/service"
+	"go.dedis.ch/cothority/v4/cosi/crypto"
+	"go.dedis.ch/cothority/v4/cosi/service"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.

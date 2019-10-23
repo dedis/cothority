@@ -2,4 +2,4 @@
 
 package main
 
-import _ "go.dedis.ch/cothority/v3/bevm"
+import _ "go.dedis.ch/cothority/v4/bevm"

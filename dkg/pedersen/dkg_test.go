@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/kyber/v3/pairing/bn256"
-	vss "go.dedis.ch/kyber/v3/share/vss/pedersen"
-	"go.dedis.ch/kyber/v3/util/key"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/kyber/v4/pairing/bn256"
+	vss "go.dedis.ch/kyber/v4/share/vss/pedersen"
+	"go.dedis.ch/kyber/v4/util/key"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 func TestMain(m *testing.M) {

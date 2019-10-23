@@ -18,13 +18,13 @@ import (
 	"math"
 	"time"
 
-	"go.dedis.ch/cothority/v3"
-	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3"
-	"go.dedis.ch/kyber/v3/sign/schnorr"
-	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
-	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v4/skipchain"
+	"go.dedis.ch/kyber/v4"
+	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 // maxTimeout is an upper bound for the view change timeout as it is increasing

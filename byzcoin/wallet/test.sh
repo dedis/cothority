@@ -13,7 +13,7 @@ export BC_WAIT=true
 
 main(){
   startTest
-  buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
+  buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts
   build $APPDIR/../bcadmin
   run testMulti
   run testLoadSave
