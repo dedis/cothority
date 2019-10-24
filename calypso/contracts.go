@@ -1,7 +1,6 @@
 package calypso
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ContractWriteID references a write contract system-wide.
@@ -44,10 +44,7 @@ func contractWriteFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &ContractWrite{}
 
 	err := protobuf.DecodeWithConstructors(in, &c.Write, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return nil, errors.New("couldn't unmarshal write: " + err.Error())
-	}
-	return c, nil
+	return c, cothority.ErrorOrNil(err, "couldn't unmarshal write")
 }
 
 // Spawn is used to create a new write- or read-contract. The read-contract is
@@ -59,6 +56,7 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
+		err = xerrors.Errorf("getting values: %v", err)
 		return
 	}
 
@@ -66,19 +64,19 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	case ContractWriteID:
 		w := inst.Spawn.Args.Search("write")
 		if w == nil || len(w) == 0 {
-			err = errors.New("need a write request in 'write' argument")
+			err = xerrors.New("need a write request in 'write' argument")
 			return
 		}
 		err = protobuf.DecodeWithConstructors(w, &c.Write, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			err = errors.New("couldn't unmarshal write: " + err.Error())
+			err = xerrors.New("couldn't unmarshal write: " + err.Error())
 			return
 		}
 		if d := inst.Spawn.Args.Search("darcID"); d != nil {
 			darcID = d
 		}
 		if err = c.Write.CheckProof(cothority.Suite, darcID); err != nil {
-			err = errors.New("proof of write failed: " + err.Error())
+			err = xerrors.Errorf("proof of write failed: %v", err)
 			return
 		}
 		instID := inst.DeriveID("")
@@ -88,21 +86,21 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		var rd Read
 		r := inst.Spawn.Args.Search("read")
 		if r == nil || len(r) == 0 {
-			return nil, nil, errors.New("need a read argument")
+			return nil, nil, xerrors.New("need a read argument")
 		}
 		err = protobuf.DecodeWithConstructors(r, &rd, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return nil, nil, errors.New("passed read argument is invalid: " + err.Error())
+			return nil, nil, xerrors.Errorf("passed read argument is invalid: %v", err)
 		}
 		if !rd.Write.Equal(inst.InstanceID) {
-			return nil, nil, errors.New("the read request doesn't reference this write-instance")
+			return nil, nil, xerrors.New("the read request doesn't reference this write-instance")
 		}
 		if c.Cost.Value > 0 {
 			for i, coin := range cout {
 				if coin.Name.Equal(c.Cost.Name) {
 					err := coin.SafeSub(c.Cost.Value)
 					if err != nil {
-						return nil, nil, errors.New("couldn't pay for read request:" + err.Error())
+						return nil, nil, xerrors.Errorf("couldn't pay for read request: %v", err)
 					}
 					cout[i] = coin
 					break
@@ -111,7 +109,7 @@ func (c ContractWrite) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 		}
 		sc = byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}
 	default:
-		err = errors.New("can only spawn writes and reads")
+		err = xerrors.New("can only spawn writes and reads")
 	}
 	return
 }
@@ -126,7 +124,7 @@ type ContractRead struct {
 }
 
 func contractReadFromBytes(in []byte) (byzcoin.Contract, error) {
-	return nil, errors.New("calypso read instances are never instantiated")
+	return nil, xerrors.New("calypso read instances are never instantiated")
 }
 
 // ContractLongTermSecretID is the contract ID for updating the LTS roster.
@@ -141,30 +139,27 @@ func contractLTSFromBytes(in []byte) (byzcoin.Contract, error) {
 	c := &contractLTS{}
 
 	err := protobuf.DecodeWithConstructors(in, &c.LtsInstanceInfo, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return nil, errors.New("couldn't unmarshal LtsInfo: " + err.Error())
-	}
-	return c, nil
+	return c, cothority.ErrorOrNil(err, "couldn't unmarshal LtsInfo")
 }
 
 func (c *contractLTS) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	var darcID darc.ID
 	_, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, xerrors.Errorf("getting values: %v", err)
 	}
 
 	if inst.Spawn.ContractID != ContractLongTermSecretID {
-		return nil, nil, errors.New("can only spawn long-term-secret instances")
+		return nil, nil, xerrors.New("can only spawn long-term-secret instances")
 	}
 	infoBuf := inst.Spawn.Args.Search("lts_instance_info")
 	if infoBuf == nil || len(infoBuf) == 0 {
-		return nil, nil, errors.New("need a lts_instance_info argument")
+		return nil, nil, xerrors.New("need a lts_instance_info argument")
 	}
 	var info LtsInstanceInfo
 	err = protobuf.DecodeWithConstructors(infoBuf, &info, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, nil, errors.New("passed lts_instance_info argument is invalid: " + err.Error())
+		return nil, nil, xerrors.Errorf("passed lts_instance_info argument is invalid: %v", err)
 	}
 	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
 }
@@ -173,25 +168,25 @@ func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	var darcID darc.ID
 	curBuf, _, _, darcID, err := rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, xerrors.Errorf("getting values: %v", err)
 	}
 
 	if inst.Invoke.Command != "reshare" {
-		return nil, nil, errors.New("can only reshare long-term secrets")
+		return nil, nil, xerrors.New("can only reshare long-term secrets")
 	}
 	infoBuf := inst.Invoke.Args.Search("lts_instance_info")
 	if infoBuf == nil || len(infoBuf) == 0 {
-		return nil, nil, errors.New("need a lts_instance_info argument")
+		return nil, nil, xerrors.New("need a lts_instance_info argument")
 	}
 
 	var curInfo, newInfo LtsInstanceInfo
 	err = protobuf.DecodeWithConstructors(infoBuf, &newInfo, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, nil, errors.New("passed lts_instance_info argument is invalid: " + err.Error())
+		return nil, nil, xerrors.Errorf("passed lts_instance_info argument is invalid: %v", err)
 	}
 	err = protobuf.DecodeWithConstructors(curBuf, &curInfo, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, nil, errors.New("current info is invalid: " + err.Error())
+		return nil, nil, xerrors.Errorf("current info is invalid: %v", err)
 	}
 
 	// Verify the intersection between new roster and the old one. There must be
@@ -200,7 +195,7 @@ func (c *contractLTS) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	overlap := intersectRosters(&curInfo.Roster, &newInfo.Roster)
 	thr := n - (n-1)/3
 	if overlap < thr {
-		return nil, nil, errors.New("new roster does not overlap enough with current roster")
+		return nil, nil, xerrors.New("new roster does not overlap enough with current roster")
 	}
 
 	return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractLongTermSecretID, infoBuf, darcID)}, coins, nil
