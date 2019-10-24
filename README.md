@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority) [![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg)](https://coveralls.io/github/dedis/cothority)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f0f742c7e11c4f22b612f017dbbf8b92)](https://www.codacy.com/manual/nkcr/cothority?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dedis/cothority&amp;utm_campaign=Badge_Grade)
 
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 Cothority
