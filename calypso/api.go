@@ -99,7 +99,10 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 // from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
 // Deprecated: please use Authorize.
 func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
-	return cothority.ErrorOrNil(c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil), "send Authorize message")
+	return cothority.ErrorOrNil(
+		c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil),
+		"send Authorize message",
+	)
 }
 
 // Authorize adds a ByzCoinID to the list of authorized IDs in the server. To

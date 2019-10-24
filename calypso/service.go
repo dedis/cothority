@@ -195,7 +195,7 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 		binary.LittleEndian.PutUint64(msg[32:], uint64(req.Timestamp))
 		err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, req.Signature)
 		if err != nil {
-			return nil, xerrors.New("signature verification failed: " + err.Error())
+			return nil, xerrors.Errorf("signature verification failed: %v", err)
 		}
 	}
 
@@ -354,7 +354,8 @@ func (s *Service) ReshareLTS(req *ReshareLTS) (*ReshareLTSReply, error) {
 		}
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
-			return d, cothority.ErrorOrNil(err, "creating new distributed key generator")
+			return d, cothority.ErrorOrNil(err,
+				"creating new distributed key generator")
 		}
 		return setupDKG, nil
 	}()
@@ -419,7 +420,8 @@ func (s *Service) verifyProof(proof *byzcoin.Proof) error {
 		return xerrors.Errorf("fetching genesis block: %v", err)
 	}
 
-	return cothority.ErrorOrNil(proof.VerifyFromBlock(sb), "verifying proof from block")
+	return cothority.ErrorOrNil(proof.VerifyFromBlock(sb),
+		"verifying proof from block")
 }
 
 func (s *Service) fetchGenesisBlock(scID skipchain.SkipBlockID, roster *onet.Roster) (*skipchain.SkipBlock, error) {
@@ -452,7 +454,8 @@ func (s *Service) getLtsRoster(proof *byzcoin.Proof) (*onet.Roster, byzcoin.Inst
 	var info LtsInstanceInfo
 	err = protobuf.DecodeWithConstructors(buf, &info, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return nil, byzcoin.InstanceID{}, xerrors.Errorf("decoding roster: %v", err)
+		return nil, byzcoin.InstanceID{},
+			xerrors.Errorf("decoding roster: %v", err)
 	}
 	return &info.Roster, byzcoin.NewInstanceID(instanceID), nil
 }
@@ -484,15 +487,20 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	roster := s.storage.Rosters[id]
 	if roster == nil {
 		s.storage.Unlock()
-		return nil, xerrors.Errorf("don't know the LTSID '%v' stored in write", id)
+		return nil,
+			xerrors.Errorf("don't know the LTSID '%v' stored in write", id)
 	}
 	s.storage.Unlock()
 
 	if err = s.verifyProof(&dkr.Read); err != nil {
-		return nil, xerrors.Errorf("read proof cannot be verified to come from scID: %v", err)
+		return nil, xerrors.Errorf(
+			"read proof cannot be verified to come from scID: %v",
+			err)
 	}
 	if err = s.verifyProof(&dkr.Write); err != nil {
-		return nil, xerrors.Errorf("write proof cannot be verified to come from scID: %v", err)
+		return nil, xerrors.Errorf(
+			"write proof cannot be verified to come from scID: %v",
+			err)
 	}
 
 	// Start ocs-protocol to re-encrypt the file's symmetric key under the
@@ -513,7 +521,8 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsProto.Xc)
 	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
-		return nil, xerrors.Errorf("couldn't marshal verification data: %v", err)
+		return nil,
+			xerrors.Errorf("couldn't marshal verification data: %v", err)
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
@@ -532,7 +541,8 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvl3("Starting reencryption protocol")
 	err = ocsProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to set config for ocs-protocol: %v", err)
+		return nil,
+			xerrors.Errorf("failed to set config for ocs-protocol: %v", err)
 	}
 	err = ocsProto.Start()
 	if err != nil {
@@ -668,7 +678,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 		setupDKG.NewDKG = func() (*dkg.DistKeyGenerator, error) {
 			d, err := dkg.NewDistKeyHandler(c)
-			return d, cothority.ErrorOrNil(err, "creating new distributed key generator")
+			return d, cothority.ErrorOrNil(err,
+				"creating new distributed key generator")
 		}
 
 		// Wait for DKG in reshare mode to end

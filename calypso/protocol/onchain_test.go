@@ -133,10 +133,12 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 					log.Lvl3("Response from-to-peer:", i, j, k)
 					justification, err := p.ProcessResponse(r)
 					if err != nil {
-						return nil, xerrors.Errorf("processing responses: %v", err)
+						return nil,
+							xerrors.Errorf("processing responses: %v", err)
 					}
 					if justification != nil {
-						return nil, xerrors.New("there should be no justification")
+						return nil,
+							xerrors.New("there should be no justification")
 					}
 				}
 			}
@@ -165,7 +167,8 @@ const nonceLen = 12
 func aeadSeal(symKey, data []byte) ([]byte, error) {
 	block, err := aes.NewCipher(symKey)
 	if err != nil {
-		return nil, xerrors.Errorf("creating aes cipher block instance: %v", err)
+		return nil,
+			xerrors.Errorf("creating aes cipher block instance: %v", err)
 	}
 
 	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
@@ -187,7 +190,8 @@ func aeadSeal(symKey, data []byte) ([]byte, error) {
 func aeadOpen(key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, xerrors.Errorf("creating aes cipher block instance: %v", err)
+		return nil,
+			xerrors.Errorf("creating aes cipher block instance: %v", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(block)

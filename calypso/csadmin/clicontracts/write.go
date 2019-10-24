@@ -55,7 +55,8 @@ func WriteSpawn(c *cli.Context) error {
 	var dataBuf []byte
 	if c.Bool("readData") {
 		if c.Bool("readExtra") {
-			return xerrors.New("--readData can not be used toghether with --readExtra")
+			return xerrors.New("--readData can not be used toghether with" +
+				"--readExtra")
 		}
 		dataBuf, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {

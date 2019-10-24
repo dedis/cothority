@@ -211,7 +211,8 @@ func reencrypt(c *cli.Context) error {
 		}
 		exist, err := proof.InclusionProof.Exists(iid)
 		if err != nil {
-			return nil, xerrors.Errorf("error while checking if proof exist: %v", err)
+			return nil,
+				xerrors.Errorf("error while checking if proof exist: %v", err)
 		}
 		if !exist {
 			return nil, xerrors.New("proof not found")
