@@ -168,7 +168,7 @@ func WriteSpawn(c *cli.Context) error {
 
 	err = lib.WaitPropagation(c, cl)
 	if err != nil {
-		return xerrors.Errorf("waiting for block propagation", err)
+		return xerrors.Errorf("waiting for block propagation: %v", err)
 	}
 
 	iidStr := hex.EncodeToString(reply.InstanceID.Slice())
