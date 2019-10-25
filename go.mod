@@ -23,8 +23,9 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.0
 	go.dedis.ch/kyber/v4 v4.0.0-pre1
+	go.dedis.ch/onet/v3 v3.0.31
 	go.dedis.ch/onet/v4 v4.0.0-pre1
-	go.dedis.ch/protobuf v1.0.9
+	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8
