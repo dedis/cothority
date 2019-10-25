@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"go.dedis.ch/onet/v4/log"
+	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v4"
@@ -233,12 +234,12 @@ func WriteGet(c *cli.Context) error {
 	if c.Bool("export") {
 		_, buf, _, _, err := proof.KeyValue()
 		if err != nil {
-			return errors.New("failed to get value from proof: " + err.Error())
+			return xerrors.Errorf("failed to get value from proof: %v", err.Error())
 		}
 		reader := bytes.NewReader(buf)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return errors.New("failed to copy to stdout: " + err.Error())
+			return xerrors.Errorf("failed to copy to stdout: %v", err.Error())
 		}
 		return nil
 	}
