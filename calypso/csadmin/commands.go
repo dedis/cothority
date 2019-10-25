@@ -187,6 +187,10 @@ var cmds = cli.Commands{
 								Name:  "instid, i",
 								Usage: "the instance id (required)",
 							},
+							cli.BoolFlag{
+								Name:  "export, x",
+								Usage: "export the write instance to STDOUT",
+							},
 						},
 					},
 				},

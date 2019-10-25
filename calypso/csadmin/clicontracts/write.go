@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -228,6 +229,19 @@ func WriteGet(c *cli.Context) error {
 	err = proof.VerifyAndDecode(cothority.Suite, calypso.ContractWriteID, &write)
 	if err != nil {
 		return errors.New("didn't get a write instance: " + err.Error())
+	}
+
+	if c.Bool("export") {
+		_, buf, _, _, err := proof.KeyValue()
+		if err != nil {
+			return xerrors.Errorf("failed to get value from proof: %v", err)
+		}
+		reader := bytes.NewReader(buf)
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return xerrors.Errorf("failed to copy to stdout: %v", err)
+		}
+		return nil
 	}
 
 	log.Infof("%s", write)
