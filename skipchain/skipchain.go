@@ -21,19 +21,18 @@ import (
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoinx"
+	"go.dedis.ch/cothority/v3/messaging"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/random"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"golang.org/x/xerrors"
-
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
-	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/cothority/v4/messaging"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
 )
 
 // ServiceName can be used to refer to the name of this service

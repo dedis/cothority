@@ -10,11 +10,10 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"go.dedis.ch/kyber/v4/util/random"
-
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/protobuf"
 )
 
