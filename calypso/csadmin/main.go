@@ -23,6 +23,7 @@ import (
 	"go.dedis.ch/onet/v4/cfgpath"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 var cliApp = cli.NewApp()
