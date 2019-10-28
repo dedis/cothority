@@ -136,6 +136,18 @@ var cmds = cli.Commands{
 				},
 			},
 			{
+				Name:      "resetBlock",
+				Usage:     "Clean latest block of dangling forward-links",
+				Action:    dbReset,
+				ArgsUsage: "conode2.db",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "bcID",
+						Usage: "blockchain ID",
+					},
+				},
+			},
+			{
 				Name: "check",
 				Usage: "Check that the chain is in a correct state with" +
 					" regard to hashes, forward-, and backward-links",

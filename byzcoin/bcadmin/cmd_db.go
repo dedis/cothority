@@ -211,6 +211,46 @@ func dbMerge(c *cli.Context) error {
 	return nil
 }
 
+// dbReset removes dangling forward-links from the db
+func dbReset(c *cli.Context) error {
+	fb, err := newFetchBlocks(c)
+	if err != nil {
+		return xerrors.Errorf("couldn't create fetchBlock: %+v", err)
+	}
+
+	if fb.bcID == nil {
+		return xerrors.New("need bcID")
+	}
+
+	latest := *fb.bcID
+	var previous skipchain.SkipBlockID
+	for {
+		sb := fb.db.GetByID(latest)
+		if sb == nil {
+			if previous == nil {
+				return xerrors.New("didn't find first block")
+			}
+			sb = fb.db.GetByID(previous)
+			log.Info("Found dangling forward-link in block", sb.Index)
+			sb.ForwardLink = []*skipchain.ForwardLink{}
+			err = fb.db.RemoveBlock(previous)
+			if err != nil {
+				return xerrors.Errorf("couldn't remove block: %v", err)
+			}
+			fb.db.Store(sb)
+			log.Info("DB updated")
+			break
+		}
+		if len(sb.ForwardLink) == 0 {
+			return xerrors.New("no dangling forward-links")
+		}
+		previous = latest
+		latest = sb.ForwardLink[len(sb.ForwardLink)-1].To
+	}
+
+	return nil
+}
+
 // dbCheck verifies all the hashes and links from the blocks.
 func dbCheck(c *cli.Context) error {
 	fb, err := newFetchBlocks(c)

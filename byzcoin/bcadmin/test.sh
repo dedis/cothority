@@ -27,6 +27,7 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
+    run testReset
     run testDbReplay
     run testDbMerge
     run testDbCatchup
@@ -52,6 +53,19 @@ main(){
     run testContractConfig
     run testContractName
     stopTest
+}
+
+testReset(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  db=service_storage/$( ls service_storage | tail -n 1 )
+  runBA config --blockSize 1000000 $bc $key
+
+  runBA db resetBlock $db $bcID
 }
 
 testDbReplay(){
