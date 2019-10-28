@@ -43,7 +43,7 @@ type SignatureRequest struct {
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Hash      []byte
-	Signature *ciphersuite.CipherData
+	Signature *ciphersuite.RawSignature
 }
 
 // SignatureRequest treats external request to this service.
@@ -96,7 +96,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	// same way as blscosi and then return it.
 	h := s.suite.Hash()
 	h.Write(req.Message)
-	return &SignatureResponse{h.Sum(nil), sig.Pack()}, nil
+	return &SignatureResponse{h.Sum(nil), sig.Raw()}, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is

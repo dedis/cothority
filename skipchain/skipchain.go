@@ -21,17 +21,16 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
 	"go.dedis.ch/cothority/v4/byzcoinx"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/cothority/v4/messaging"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/kyber/v4/util/random"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
+	"golang.org/x/xerrors"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -43,18 +42,17 @@ const bdnFollowBlock = "SkipchainBDNFollow"
 
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
-var suite = pairing.NewSuiteBn256()
 
 var sid onet.ServiceID
 
 func init() {
-	sid, _ = onet.RegisterNewServiceWithSuite(ServiceName, suite, newSkipchainService)
 	network.RegisterMessages(&Storage{})
 }
 
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
+	suite                   cosuite.CoSiCipherSuite
 	db                      *SkipBlockDB
 	blockBuffer             *skipBlockBuffer
 	propagateGenesis        messaging.PropagationFunc
@@ -149,7 +147,7 @@ type Storage struct {
 	// Clients is a list of public keys of clients that have successfully linked
 	// to this service. Once a client is linked to a service, only blocks signed
 	// by this client will be allowed.
-	Clients []kyber.Point
+	Clients []*ciphersuite.RawPublicKey
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -172,7 +170,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			return nil, errors.New(
 				"cannot create new skipblock without authentication")
 		}
-		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
+		if !s.authenticate(psbd.NewBlock.CalculateHash(), psbd.Signature) {
 			return nil, errors.New(
 				"wrong signature for this skipchain")
 		}
@@ -343,10 +341,9 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 		// Only check changing roster, or if this is the block after the genesis-block,
 		// as we don't verify the roster for the genesis-block.
 		log.Lvl3("Checking if all nodes from roster accept block")
-		if !prev.Roster.ID.Equal(prop.Roster.ID) || prop.Index == 1 {
+		if !prev.Roster.Equal(prop.Roster) || prop.Index == 1 {
 			if !s.willNodesAcceptBlock(prop) {
-				return nil, errors.New(
-					"node refused to accept new roster")
+				return nil, errors.New("node refused to accept new roster")
 			}
 		}
 
@@ -403,8 +400,8 @@ func (s *Service) StoreSkipBlockInternal(psbd *StoreSkipBlock) (*StoreSkipBlockR
 
 // sendForwardLinkRequest sends requests to conodes in the given roster until either the forward-link is
 // created or there's not enough online nodes to get a valid signature.
-func sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
-	cl := NewClient()
+func (s *Service) sendForwardLinkRequest(ro *onet.Roster, req *ForwardSignature, reply *ForwardSignatureReply) (err error) {
+	cl := NewClient(s.CipherSuiteRegistry())
 
 	// Try as many times as it can until the faulty threshold is reached
 	// meaning it's impossible to get a valid signature.
@@ -457,7 +454,7 @@ func (s *Service) OptimizeProof(req *OptimizeProofRequest) (*OptimizeProofReply,
 
 			log.Lvlf2("requesting missing forward-link at index %d with height %d / %d", sb.Index, h, index)
 			// The signature must be created by the roster of the block
-			err := sendForwardLinkRequest(sb.Roster, req, reply)
+			err := s.sendForwardLinkRequest(sb.Roster, req, reply)
 
 			if err != nil {
 				log.Error("could not create a missing forward link:", err)
@@ -618,7 +615,7 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 	}
 	select {
 	case result := <-pisc.GetBlocksReply:
-		if err := Proof(result).VerifyFromID(id); err != nil {
+		if err := Proof(result).VerifyFromID(id, s.CipherSuiteRegistry()); err != nil {
 			return nil, err
 		}
 		return result, nil
@@ -758,13 +755,19 @@ func (s *Service) GetAllSkipChainIDs(id *GetAllSkipChainIDs) (*GetAllSkipChainID
 // CreateLinkPrivate checks if the given public key is signed with our private
 // key and stores it in the list of allowed clients if it is true.
 func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, error) {
-	msg, err := link.Public.MarshalBinary()
+	msg, err := link.Public.MarshalText()
 	if err != nil {
 		return nil, errors.New("couldn't marshal public key: " + err.Error())
 	}
-	if err = schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, link.Signature); err != nil {
-		return nil, errors.New("wrong signature on public key: " + err.Error())
+
+	if link.Signature == nil {
+		return nil, xerrors.New("missing signature")
 	}
+
+	if err = s.CipherSuiteRegistry().Verify(s.PublicKey(), link.Signature, msg); err != nil {
+		return nil, xerrors.Errorf("wrong signature on public key: %v", err)
+	}
+
 	s.storageMutex.Lock()
 	s.Storage.Clients = append(s.Storage.Clients, link.Public)
 	s.storageMutex.Unlock()
@@ -778,14 +781,20 @@ func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, error
 // "unlink:" + byte representation of the public key to be
 // removed
 func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, error) {
-	msg, err := unlink.Public.MarshalBinary()
+	msg, err := unlink.Public.MarshalText()
 	if err != nil {
 		return &EmptyReply{}, err
 	}
 	msg = append([]byte("unlink:"), msg...)
+
+	publicKey, err := s.CipherSuiteRegistry().UnpackPublicKey(unlink.Public)
+	if err != nil {
+		return nil, xerrors.Errorf("unpacking public key: %v", err)
+	}
+
 	found := false
 	for _, pub := range s.Storage.Clients {
-		if pub.Equal(unlink.Public) {
+		if pub.Equal(publicKey) {
 			found = true
 			break
 		}
@@ -793,13 +802,13 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, error) {
 	if !found {
 		return &EmptyReply{}, errors.New("didn't find public key in clients")
 	}
-	err = schnorr.Verify(s.Suite(), unlink.Public, msg, unlink.Signature)
+	err = s.CipherSuiteRegistry().Verify(publicKey, unlink.Signature, msg)
 	if err != nil {
 		return &EmptyReply{}, err
 	}
 	client := -1
 	for i, pub := range s.Storage.Clients {
-		if pub.Equal(unlink.Public) {
+		if pub.Equal(publicKey) {
 			client = i
 			break
 		}
@@ -818,7 +827,7 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, error) {
 func (s *Service) Listlink(list *Listlink) (*ListlinkReply, error) {
 	reply := &ListlinkReply{}
 	for _, pub := range s.Storage.Clients {
-		reply.Publics = append(reply.Publics, pub)
+		reply.Publics = append(reply.Publics, pub.Raw())
 	}
 	return reply, nil
 }
@@ -936,7 +945,7 @@ func (s *Service) DelFollow(del *DelFollow) (*EmptyReply, error) {
 // ListFollow returns the skipchain-ids that are followed
 func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, error) {
 	reply := &ListFollowReply{}
-	msg, err := s.ServerIdentity().Public.MarshalBinary()
+	msg, err := s.ServerIdentity().PublicKey.MarshalText()
 	if err != nil {
 		return reply, errors.New("couldn't marshal public key")
 	}
@@ -1001,13 +1010,13 @@ func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 // AddClientKey can be used by other services to add a key so
 // they can store new Blocks
-func (s *Service) AddClientKey(pub kyber.Point) {
+func (s *Service) AddClientKey(pub ciphersuite.PublicKey) {
 	for _, p := range s.Storage.Clients {
 		if p.Equal(pub) {
 			return
 		}
 	}
-	s.Storage.Clients = append(s.Storage.Clients, pub)
+	s.Storage.Clients = append(s.Storage.Clients, pub.Raw())
 	s.save()
 }
 
@@ -1045,7 +1054,7 @@ func (s *Service) TestClose() {
 func (s *Service) TestRestart() error {
 	s.TestClose()
 	db, bucket := s.GetAdditionalBucket([]byte("skipblocks"))
-	s.db = NewSkipBlockDB(db, bucket)
+	s.db = NewSkipBlockDB(db, bucket, s.CipherSuiteRegistry())
 	s.Storage = &Storage{}
 	// Don't reset the verifiers, keep them
 	//s.verifiers = map[VerifierID]SkipBlockVerifier{}
@@ -1056,14 +1065,14 @@ func (s *Service) TestRestart() error {
 	return s.tryLoad()
 }
 
-func (s *Service) verifySigs(msg, sig []byte) bool {
+func (s *Service) verifySigs(msg []byte, sig *ciphersuite.RawSignature) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
 		return true
 	}
 
 	for _, cl := range s.Storage.Clients {
-		if schnorr.Verify(cothority.Suite, cl, msg, sig) == nil {
+		if s.CipherSuiteRegistry().Verify(cl, sig, msg) == nil {
 			return true
 		}
 	}
@@ -1121,7 +1130,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	}
 
 	src.ForwardLink = []*ForwardLink{fwd}
-	if err = src.VerifyForwardSignatures(); err != nil {
+	if err = src.VerifyForwardSignatures(s.CipherSuiteRegistry()); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
 
@@ -1160,7 +1169,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 // is valid.
 func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	_, fsInt, err := network.Unmarshal(data, cothority.Suite)
+	_, fsInt, err := network.Unmarshal(data)
 	if err != nil {
 		log.Error(s.ServerIdentity().Address, "Couldn't unmarshal ForwardSignature", data)
 		return false
@@ -1260,7 +1269,7 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 	if ok {
 		s.verifyNewBlockBuffer.Delete(arr)
 	} else {
-		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
+		_, fsInt, err := network.Unmarshal(data)
 		if err != nil {
 			log.Error(s.ServerIdentity().Address, "Couldn't unmarshal ForwardSignature", data)
 			return false
@@ -1356,7 +1365,7 @@ func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureRe
 		log.Lvl2("Adding forward-link level", fs.TargetHeight, "to block", from.Index)
 
 		fl.Signature = *sig
-		if !from.Roster.ID.Equal(fs.Newest.Roster.ID) {
+		if !from.Roster.Equal(fs.Newest.Roster) {
 			fl.NewRoster = fs.Newest.Roster
 		}
 		if err = from.AddForwardLink(fl, fs.TargetHeight); err != nil {
@@ -1379,7 +1388,7 @@ func (s *Service) ForwardLinkHandler(req *ForwardSignature) (*ForwardSignatureRe
 // is valid.
 func (s *Service) bftForwardLink(msg, data []byte) bool {
 	err := func() error {
-		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
+		_, fsInt, err := network.Unmarshal(data)
 		if err != nil {
 			return err
 		}
@@ -1423,9 +1432,9 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		newRoster := src.Roster
 
 		for i, fl := range fs.Links {
-			publics := newRoster.ServicePublics(ServiceName)
+			publics := newRoster.PublicKeys(ServiceName)
 
-			if err := fl.VerifyWithScheme(suite, publics, src.SignatureScheme); err != nil {
+			if err := fl.Verify(s.CipherSuiteRegistry(), publics); err != nil {
 				return errors.New("verification failed: " + err.Error())
 			}
 			if fl.NewRoster != nil {
@@ -1621,20 +1630,20 @@ func (s *Service) PropagateProof(roster *onet.Roster, sid SkipBlockID) error {
 func (s *Service) propagateProofHandler(msg network.Message) error {
 	pc, ok := msg.(*PropagateProof)
 	if !ok {
-		return errors.New("Couldn't convert to PropagateProof message")
+		return xerrors.New("Couldn't convert to PropagateProof message")
 	}
 
 	if len(pc.Proof) > 0 && !s.BlockIsFriendly(pc.Proof[0]) {
-		return errors.New("Block is not friendly")
+		return xerrors.New("Block is not friendly")
 	}
 
-	if err := pc.Proof.Verify(); err != nil {
-		return fmt.Errorf("Proof verification failed with: %s", err.Error())
+	if err := pc.Proof.Verify(s.CipherSuiteRegistry()); err != nil {
+		return xerrors.Errorf("Proof verification failed with: %v", err)
 	}
 
 	_, err := s.db.StoreBlocks(pc.Proof)
 	if err != nil {
-		return err
+		return xerrors.Errorf("storing block: %v", err)
 	}
 
 	log.Lvlf3("Proof has been propagated to %v", s.ServerIdentity())
@@ -1707,21 +1716,21 @@ func (s *Service) startGenesisPropagation(genesis *SkipBlock) error {
 
 // authenticate searches if this node or any follower-node can verify the
 // schnorr-signature.
-func (s *Service) authenticate(msg []byte, sig []byte) bool {
-	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, sig); err == nil {
+func (s *Service) authenticate(msg []byte, sig *ciphersuite.RawSignature) bool {
+	if err := s.CipherSuiteRegistry().Verify(s.ServerIdentity().PublicKey, sig, msg); err == nil {
 		return true
 	}
 	s.storageMutex.Lock()
 	defer s.storageMutex.Unlock()
 	for _, fct := range s.Storage.Follow {
 		for _, si := range fct.Block.Roster.List {
-			if err := schnorr.Verify(cothority.Suite, si.Public, msg, sig); err == nil {
+			if err := s.CipherSuiteRegistry().Verify(si.PublicKey, sig, msg); err == nil {
 				return true
 			}
 		}
 	}
 	for _, cl := range s.Storage.Clients {
-		if err := schnorr.Verify(cothority.Suite, cl, msg, sig); err == nil {
+		if err := s.CipherSuiteRegistry().Verify(cl, sig, msg); err == nil {
 			return true
 		}
 	}
@@ -1836,11 +1845,17 @@ func sliceToArr(msg []byte) [32]byte {
 	return arr
 }
 
-func newSkipchainService(c *onet.Context) (onet.Service, error) {
+func newSkipchainService(c *onet.Context, csuite ciphersuite.CipherSuite) (onet.Service, error) {
+	suite, ok := csuite.(cosuite.CoSiCipherSuite)
+	if !ok {
+		return nil, xerrors.New("wrong type of cipher suite")
+	}
+
 	db, bucket := c.GetAdditionalBucket([]byte("skipblocks"))
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		db:               NewSkipBlockDB(db, bucket),
+		suite:            suite,
+		db:               NewSkipBlockDB(db, bucket, c.CipherSuiteRegistry()),
 		Storage:          &Storage{},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		propTimeout:      defaultPropagateTimeout,
@@ -1877,7 +1892,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Register ByzCoinX protocols for BLS
+	// Register ByzCoinX protocols.
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bftNewBlock)
 	if err != nil {
@@ -1885,17 +1900,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	err = byzcoinx.InitBFTCoSiProtocol(suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
-	if err != nil {
-		return nil, err
-	}
-	// Register ByzCoinX protocols for BDN
-	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
-		s.bftForwardLinkLevel0, s.bftForwardLinkLevel0Ack, bdnNewBlock)
-	if err != nil {
-		return nil, err
-	}
-	err = byzcoinx.InitBDNCoSiProtocol(suite, s.Context,
-		s.bftForwardLink, s.bftForwardLinkAck, bdnFollowBlock)
 	if err != nil {
 		return nil, err
 	}

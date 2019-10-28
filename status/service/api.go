@@ -4,23 +4,26 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"time"
+
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/network"
 	"go.dedis.ch/protobuf"
-	"time"
 )
 
 // Client is a structure to communicate with status service
 type Client struct {
 	*onet.Client
+	suite ciphersuite.CipherSuite
 }
 
 // NewClient makes a new Client
-func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+func NewClient(suite ciphersuite.CipherSuite) *Client {
+	return &Client{
+		Client: onet.NewClient(ServiceName),
+		suite:  suite,
+	}
 }
 
 // Request sends requests to all other members of network and creates client.
@@ -40,7 +43,7 @@ func (c *Client) Request(dst *network.ServerIdentity) (*Response, error) {
 //
 // The return value of this call is the set of nodes that can communicate
 // with each other.
-func (c *Client) CheckConnectivity(priv kyber.Scalar, list []*network.ServerIdentity,
+func (c *Client) CheckConnectivity(sk ciphersuite.SecretKey, list []*network.ServerIdentity,
 	timeout time.Duration, findFaulty bool) ([]*network.ServerIdentity, error) {
 	conn := &CheckConnectivity{
 		List:       list,
@@ -52,10 +55,12 @@ func (c *Client) CheckConnectivity(priv kyber.Scalar, list []*network.ServerIden
 	if err != nil {
 		return nil, errors.New("couldn't hash message: " + err.Error())
 	}
-	conn.Signature, err = schnorr.Sign(cothority.Suite, priv, hash)
+	sig, err := c.suite.Sign(sk, hash)
 	if err != nil {
 		return nil, errors.New("couldn't sign message: " + err.Error())
 	}
+	conn.Signature = sig.Raw()
+
 	resp := &CheckConnectivityReply{}
 	err = c.SendProtobuf(list[0], conn, resp)
 	if err != nil {

@@ -8,14 +8,14 @@ package status
 
 import (
 	"errors"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/messaging"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
 	"math"
 	"time"
+
+	"go.dedis.ch/cothority/v4/messaging"
+	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
+	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v4/network"
 )
 
 // ServiceName is the name to refer to the Status service.
@@ -24,15 +24,11 @@ const ServiceName = "Status"
 // How old a checkConnectivity request can be before it is refused
 const maxRequestAge = 120 * time.Second
 
-func init() {
-	_, err := onet.RegisterNewService(ServiceName, newStatService)
-	log.ErrFatal(err)
-}
-
 // Stat is the service that returns the status reports of all services running
 // on a server.
 type Stat struct {
 	*onet.ServiceProcessor
+	suite ciphersuite.CipherSuite
 }
 
 // Version will be set by the main() function before starting the server.
@@ -63,7 +59,8 @@ func (st *Stat) CheckConnectivity(req *CheckConnectivity) (*CheckConnectivityRep
 	if err != nil {
 		return nil, errors.New("couldn't hash message: " + err.Error())
 	}
-	err = schnorr.Verify(cothority.Suite, st.ServerIdentity().Public, hash, req.Signature)
+
+	err = st.suite.Verify(st.PublicKey(), req.Signature, hash)
 	if err != nil {
 		return nil, errors.New("signature verification failed: " + err.Error())
 	}
@@ -136,9 +133,10 @@ func (st *Stat) testNodes(nodes []*network.ServerIdentity, to time.Duration) err
 }
 
 // newStatService creates a new service that is built for Status
-func newStatService(c *onet.Context) (onet.Service, error) {
+func newStatService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
 	s := &Stat{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		suite:            suite,
 	}
 	err := s.RegisterHandlers(s.Request, s.CheckConnectivity)
 	if err != nil {
@@ -146,4 +144,8 @@ func newStatService(c *onet.Context) (onet.Service, error) {
 	}
 
 	return s, nil
+}
+
+func RegisterStatusService(builder onet.Builder, suite ciphersuite.CipherSuite) {
+	builder.SetService(ServiceName, suite, newStatService)
 }

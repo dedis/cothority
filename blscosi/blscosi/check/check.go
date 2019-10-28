@@ -157,23 +157,14 @@ func SignStatement(suite cosuite.CoSiCipherSuite, msg []byte, ro *onet.Roster) (
 	case response := <-pchan:
 		log.Lvlf5("Response: %x", response.Signature)
 
-		publics, err := ro.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
+		publics := ro.PublicKeys(blscosi.ServiceName)
+
+		pk, err := suite.AggregatePublicKeys(publics, response.Signature)
 		if err != nil {
 			return nil, err
 		}
 
-		sig := suite.Signature()
-		err = sig.Unpack(response.Signature)
-		if err != nil {
-			return nil, err
-		}
-
-		pk, err := suite.AggregatePublicKeys(publics, sig)
-		if err != nil {
-			return nil, err
-		}
-
-		err = suite.Verify(pk, sig, msg)
+		err = suite.Verify(pk, response.Signature, msg)
 		if err != nil {
 			return nil, err
 		}
@@ -185,13 +176,10 @@ func SignStatement(suite cosuite.CoSiCipherSuite, msg []byte, ro *onet.Roster) (
 
 // VerifySignatureHash checks that the signature is correct
 func VerifySignatureHash(suite cosuite.CoSiCipherSuite, b []byte, sig *blscosi.SignatureResponse, ro *onet.Roster) error {
-	publics, err := ro.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
-	if err != nil {
-		return err
-	}
+	publics := ro.PublicKeys(blscosi.ServiceName)
 
 	h := suite.Hash()
-	_, err = h.Write(b)
+	_, err := h.Write(b)
 	if err != nil {
 		return err
 	}
@@ -203,18 +191,12 @@ func VerifySignatureHash(suite cosuite.CoSiCipherSuite, b []byte, sig *blscosi.S
 			"doesn't match with the hash of the file.)")
 	}
 
-	signature := suite.Signature()
-	err = signature.Unpack(sig.Signature)
+	pk, err := suite.AggregatePublicKeys(publics, sig.Signature)
 	if err != nil {
 		return err
 	}
 
-	pk, err := suite.AggregatePublicKeys(publics, signature)
-	if err != nil {
-		return err
-	}
-
-	if err := suite.Verify(pk, signature, b); err != nil {
+	if err := suite.Verify(pk, sig.Signature, b); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil

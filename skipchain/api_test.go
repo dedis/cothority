@@ -8,16 +8,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/util/key"
+	status "go.dedis.ch/cothority/v4/status/service"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 )
 
+func makeAPITestBuilder() onet.Builder {
+	builder := onet.NewDefaultBuilder()
+	builder.SetSuite(testSuite)
+	builder.SetService(ServiceName, nil, newSkipchainService)
+	builder.SetService(testServiceName, nil, newCorruptedTestService)
+	status.RegisterStatusService(builder, nil)
+	return builder
+}
+
 func init() {
-	onet.RegisterNewServiceWithSuite(testServiceName, suite, newCorruptedTestService)
 	network.RegisterMessage(&testData{})
 }
 
@@ -25,7 +32,7 @@ func TestClient_CreateGenesis(t *testing.T) {
 	if testing.Short() {
 		t.Skip("limiting travis time")
 	}
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
@@ -38,12 +45,15 @@ func TestClient_CreateGenesis(t *testing.T) {
 }
 
 func TestClient_CreateGenesisCorrupted(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	servers, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
-	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+	c := &Client{
+		Client: onet.NewClient(testServiceName),
+		reg:    testRegistry,
+	}
 
 	service.StoreSkipBlockReply = &StoreSkipBlockReply{}
 
@@ -91,7 +101,7 @@ func TestClient_CreateGenesisCorrupted(t *testing.T) {
 func TestClient_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
-	local := onet.NewTCPTest(cothority.Suite)
+	local := onet.NewLocalTest(makeAPITestBuilder())
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 
@@ -100,7 +110,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 		conodes = 3
 	}
 	sbCount := conodes - 1
-	servers, roster, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
+	servers, roster, gs := local.MakeSRS(conodes, ServiceName)
 	s := gs.(*Service)
 
 	c := newTestClient(local)
@@ -116,7 +126,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := 1; i < sbCount; i++ {
 		newSB := NewSkipBlock()
 		newSB.Roster = onet.NewRoster(roster.List[i : i+2])
-		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
+		service := local.Services[servers[i].ServerIdentity.ID][ServiceName].(*Service)
 		log.Lvl2("Storing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
 		reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbs[i-1].Hash, NewBlock: newSB})
 		require.Nil(t, err)
@@ -139,7 +149,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
 		for up, sb1 := range sbc.Update {
-			log.ErrFatal(sb1.VerifyForwardSignatures())
+			log.ErrFatal(sb1.VerifyForwardSignatures(testRegistry))
 			if up < len(sbc.Update)-1 {
 				sb2 := sbc.Update[up+1]
 				h1 := sb1.Height
@@ -158,7 +168,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 func TestClient_StoreSkipBlock(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -207,12 +217,15 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 
 func TestClient_StoreSkipBlockCorrupted(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	servers, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
-	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+	c := &Client{
+		Client: onet.NewClient(testServiceName),
+		reg:    testRegistry,
+	}
 	genesis := NewSkipBlock()
 	genesis.Roster = ro
 
@@ -235,7 +248,7 @@ func TestClient_StoreSkipBlockCorrupted(t *testing.T) {
 
 func TestClient_GetAllSkipchains(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -259,7 +272,7 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 
 func TestClient_GetAllSkipChainIDs(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -293,12 +306,15 @@ func TestClient_GetAllSkipChainIDs(t *testing.T) {
 
 func TestClient_GetSingleBlock(t *testing.T) {
 	nbrHosts := 1
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	servers, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
-	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+	c := &Client{
+		Client: onet.NewClient(testServiceName),
+		reg:    testRegistry,
+	}
 
 	sb := NewSkipBlock()
 	sb.Roster = ro
@@ -323,7 +339,7 @@ func TestClient_GetSingleBlock(t *testing.T) {
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	_, roster, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -353,7 +369,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	require.True(t, sb1.Equal(search.SkipBlock))
 	require.Equal(t, links[0], len(search.Links))
 	require.True(t, sb1.SkipChainID().Equal(search.Links[0].To))
-	require.True(t, sb1.Roster.Aggregate.Equal(search.Links[0].NewRoster.Aggregate))
+	require.True(t, sb1.Roster.Equal(search.Links[0].NewRoster))
 
 	// 1..nbrBlocks
 	for i := 1; i < nbrBlocks; i++ {
@@ -363,7 +379,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
 		require.Equal(t, links[i], len(search.Links))
 		for _, link := range search.Links[1:] {
-			require.Nil(t, link.VerifyWithScheme(suite, sb1.Roster.ServicePublics(ServiceName), BdnSignatureSchemeIndex))
+			require.Nil(t, link.Verify(testRegistry, sb1.Roster.PublicKeys(ServiceName)))
 		}
 	}
 
@@ -374,12 +390,15 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 }
 
 func TestClient_GetSingleBlockByIndexCorrupted(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	servers, roster, _ := l.GenTree(1, true)
 	defer l.CloseAll()
 
 	service := servers[0].Service(testServiceName).(*corruptedService)
-	c := &Client{Client: onet.NewClient(cothority.Suite, testServiceName)}
+	c := &Client{
+		Client: onet.NewClient(testServiceName),
+		reg:    testRegistry,
+	}
 
 	genesis := NewSkipBlock()
 	genesis.Roster = roster
@@ -435,10 +454,10 @@ func TestClient_Follow(t *testing.T) {
 	err := ls.client.CreateLinkPrivate(ls.si, priv0, ls.pub)
 	require.Nil(t, err)
 	priv1 := ls.local.GetPrivate(ls.servers[1])
-	err = ls.client.CreateLinkPrivate(ls.roster.List[1], priv1, ls.servers[1].ServerIdentity.Public)
+	err = ls.client.CreateLinkPrivate(ls.roster.List[1], priv1, ls.servers[1].ServerIdentity.PublicKey)
 	require.Nil(t, err)
 	priv2 := ls.local.GetPrivate(ls.servers[2])
-	err = ls.client.CreateLinkPrivate(ls.roster.List[2], priv2, ls.servers[2].ServerIdentity.Public)
+	err = ls.client.CreateLinkPrivate(ls.roster.List[2], priv2, ls.servers[2].ServerIdentity.PublicKey)
 	require.Nil(t, err)
 	log.Lvl1(ls.roster)
 
@@ -536,30 +555,30 @@ type linkStruct struct {
 	server   *onet.Server
 	service  *Service
 	si       *network.ServerIdentity
-	servPriv kyber.Scalar
-	priv     kyber.Scalar
-	pub      kyber.Point
+	servPriv ciphersuite.SecretKey
+	priv     ciphersuite.SecretKey
+	pub      ciphersuite.PublicKey
 	client   *Client
 }
 
 func linked(nbr int) *linkStruct {
-	kp := key.NewKeyPair(cothority.Suite)
+	pk, sk, _ := testSuite.GenerateKeyPair(nil)
 	ls := &linkStruct{
-		local: onet.NewTCPTest(cothority.Suite),
-		priv:  kp.Private,
-		pub:   kp.Public,
+		local: onet.NewLocalTest(makeAPITestBuilder()),
+		priv:  sk,
+		pub:   pk,
 	}
 	ls.servers, ls.roster, _ = ls.local.GenTree(nbr, true)
 	ls.server = ls.servers[0]
 	ls.si = ls.server.ServerIdentity
 	ls.servPriv = ls.local.GetPrivate(ls.server)
-	ls.service = ls.local.GetServices(ls.servers, skipchainSID)[0].(*Service)
+	ls.service = ls.local.GetServices(ls.servers, ServiceName)[0].(*Service)
 	ls.client = newTestClient(ls.local)
 	return ls
 }
 
 func newTestClient(l *onet.LocalTest) *Client {
-	c := NewClient()
+	c := NewClient(testRegistry)
 	c.Client = l.NewClient("Skipchain")
 	return c
 }
@@ -576,7 +595,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 		numClients = 2
 	}
 
-	l := onet.NewTCPTest(cothority.Suite)
+	l := onet.NewLocalTest(makeAPITestBuilder())
 	svrs, ro, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -585,7 +604,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 	gen, err := cl.CreateGenesis(ro, 2, 10, VerificationStandard, msg)
 	require.Nil(t, err)
 
-	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)
+	s := l.Services[svrs[0].ServerIdentity.ID][ServiceName].(*Service)
 
 	wg := sync.WaitGroup{}
 
@@ -644,7 +663,7 @@ type corruptedService struct {
 	GetSingleBlockByIndexReply *GetSingleBlockByIndexReply
 }
 
-func newCorruptedTestService(c *onet.Context) (onet.Service, error) {
+func newCorruptedTestService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage:          &Storage{},

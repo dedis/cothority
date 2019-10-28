@@ -145,22 +145,20 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		}
 
 		round.Record()
-		sig := suite.Signature()
-		sig.Unpack(serviceReply.Signature)
 
-		publics, err := config.Roster.PublicKeys(onet.NewCipherSuiteMapper(suite, blscosi.ServiceName))
+		publics := config.Roster.PublicKeys(blscosi.ServiceName)
 		if err != nil {
 			return xerrors.Errorf("public keys: %v", err)
 		}
 
-		pk, err := suite.AggregatePublicKeys(publics, sig)
+		pk, err := suite.AggregatePublicKeys(publics, serviceReply.Signature)
 
-		err = suite.Verify(pk, sig, proposal)
+		err = suite.Verify(pk, serviceReply.Signature, proposal)
 		if err != nil {
 			return fmt.Errorf("error while verifying signature:%s", err)
 		}
 
-		monitor.RecordSingleMeasure("correct_nodes", float64(suite.Count(sig)))
+		monitor.RecordSingleMeasure("correct_nodes", float64(suite.Count(serviceReply.Signature)))
 
 		log.Lvl2("Signature correctly verified!")
 	}

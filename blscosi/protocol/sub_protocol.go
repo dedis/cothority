@@ -265,13 +265,6 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 		case <-p.closeChan:
 			return nil
 		case reply := <-p.ChannelResponse:
-			sig := p.suite.Signature()
-			err := sig.Unpack(reply.Signature)
-			if err != nil {
-				log.Error(err)
-				break
-			}
-
 			public, pubIndex := searchPublicKey(p.TreeNodeInstance, reply.ServerIdentity)
 			if public != nil {
 				r, ok := responses[pubIndex]
@@ -280,7 +273,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 				} else if r == nil {
 					if public == nil {
 						log.Warnf("Tentative to forge a server identity or unknown node.")
-					} else if err := p.verify(sig, p.Msg); err == nil {
+					} else if err := p.verify(reply.Signature, p.Msg); err == nil {
 						responses[pubIndex] = &reply.Response
 						done++
 					}
@@ -297,14 +290,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 			if !ok {
 				log.Warnf("Got a message from an unknown node %v", reply.ServerIdentity.ID)
 			} else if r == nil {
-				sig := p.suite.Signature()
-				err := sig.Unpack(reply.Signature)
-				if err != nil {
-					log.Error(err)
-					break
-				}
-
-				if err := p.verify(sig, a.Nonce); err == nil {
+				if err := p.verify(reply.Signature, a.Nonce); err == nil {
 					// The child gives an empty signature as a mark of refusal
 					responses[pubIndex] = &Response{}
 					done++
@@ -329,7 +315,7 @@ func (p *SubBlsCosi) dispatchSubLeader() error {
 	}
 
 	log.Lvlf3("Subleader %v sent its reply with mask %b", p.ServerIdentity(), p.suite.Count(sig))
-	return p.SendToParent(&Response{Signature: sig.Pack()})
+	return p.SendToParent(&Response{Signature: sig.Raw()})
 }
 
 func (p *SubBlsCosi) verify(sig ciphersuite.Signature, msg []byte) error {
@@ -409,7 +395,7 @@ func (p *SubBlsCosi) makeResponse() (*Response, error) {
 		return nil, err
 	}
 
-	return &Response{Signature: sig.Pack()}, nil
+	return &Response{Signature: sig.Raw()}, nil
 }
 
 // makeRefusal will sign a random nonce so that we can check
@@ -422,7 +408,7 @@ func (p *SubBlsCosi) makeRefusal(nonce []byte) (*Refusal, error) {
 
 	sig, err := p.suite.SignWithMask(p.SecretKey(), nonce, mask)
 
-	return &Refusal{Signature: sig.Pack()}, err
+	return &Refusal{Signature: sig.Raw()}, err
 }
 
 // makeVerification executes the verification function provided and
@@ -440,18 +426,7 @@ func (p *SubBlsCosi) makeSubLeaderResponse(responses ResponseMap) (ciphersuite.S
 			continue
 		}
 
-		sig := p.suite.Signature()
-		err := sig.Unpack(res.Signature)
-		if err != nil {
-			break
-		}
-
-		sigs = append(sigs, sig)
-	}
-
-	if len(sigs) == 0 {
-		sig := p.suite.Signature()
-		return sig, nil
+		sigs = append(sigs, res.Signature)
 	}
 
 	return p.suite.AggregateSignatures(sigs, p.PublicKeys())

@@ -12,15 +12,14 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4/blscosi/bdnproto"
-	"go.dedis.ch/cothority/v4/blscosi/protocol"
 	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 	bbolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
@@ -340,7 +339,7 @@ func NewSkipBlock() *SkipBlock {
 
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
-func (sb *SkipBlock) VerifyForwardSignatures() error {
+func (sb *SkipBlock) VerifyForwardSignatures(reg *ciphersuite.Registry) error {
 	if !sb.Hash.Equal(sb.CalculateHash()) {
 		// Because we extract the public keys from the block, we need to insure
 		// the hash is correct with respect to what is stored
@@ -351,7 +350,7 @@ func (sb *SkipBlock) VerifyForwardSignatures() error {
 		return errors.New("Missing roster in the block")
 	}
 
-	publics := sb.Roster.ServicePublics(ServiceName)
+	publics := sb.Roster.PublicKeys(ServiceName)
 
 	for _, fl := range sb.ForwardLink {
 		if fl.IsEmpty() {
@@ -359,7 +358,7 @@ func (sb *SkipBlock) VerifyForwardSignatures() error {
 			// forward-link in place.
 			continue
 		}
-		if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
+		if err := fl.Verify(reg, publics); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
 	}
@@ -487,12 +486,8 @@ func (sb *SkipBlock) pathForIndex(targetIndex int) (int, int) {
 // create higher level forward links.
 func (sb *SkipBlock) SignatureProtocol() (string, string) {
 	switch sb.SignatureScheme {
-	case BlsSignatureSchemeIndex:
-		return bftNewBlock, bftFollowBlock
-	case BdnSignatureSchemeIndex:
-		return bdnNewBlock, bdnFollowBlock
 	default:
-		return "", ""
+		return bftNewBlock, bftFollowBlock
 	}
 }
 
@@ -516,8 +511,8 @@ func (sb *SkipBlock) CalculateHash() SkipBlockID {
 	hash.Write(sb.GenesisID)
 	hash.Write(sb.Data)
 	if sb.Roster != nil {
-		for _, pub := range sb.Roster.Publics() {
-			_, err := pub.MarshalTo(hash)
+		for _, si := range sb.Roster.List {
+			_, err := si.PublicKey.WriteTo(hash)
 			if err != nil {
 				panic("couldn't marshall point to hash: " + err.Error())
 			}
@@ -559,7 +554,7 @@ func (sbs Proof) Search(index int) *SkipBlock {
 
 // Verify checks that the proof is correct by checking individual
 // blocks and their back and forward links
-func (sbs Proof) Verify() error {
+func (sbs Proof) Verify(reg *ciphersuite.Registry) error {
 	if len(sbs) == 0 {
 		return errors.New("Empty list of blocks")
 	}
@@ -568,12 +563,12 @@ func (sbs Proof) Verify() error {
 		return errors.New("First element must be a genesis")
 	}
 
-	return sbs.verifyChain()
+	return sbs.verifyChain(reg)
 }
 
 // VerifyFromID checks that the proof is correct starting from a given
 // block and verifies the back and forward links up to the last block
-func (sbs Proof) VerifyFromID(id SkipBlockID) error {
+func (sbs Proof) VerifyFromID(id SkipBlockID, reg *ciphersuite.Registry) error {
 	if len(sbs) == 0 {
 		return errors.New("Empty list of blocks")
 	}
@@ -583,10 +578,10 @@ func (sbs Proof) VerifyFromID(id SkipBlockID) error {
 		return errors.New("Proof does not start with the correct block")
 	}
 
-	return sbs.verifyChain()
+	return sbs.verifyChain(reg)
 }
 
-func (sbs Proof) verifyChain() error {
+func (sbs Proof) verifyChain(reg *ciphersuite.Registry) error {
 	for i, sb := range sbs {
 		if !sb.CalculateHash().Equal(sb.Hash) {
 			return errors.New("Wrong hash")
@@ -610,8 +605,10 @@ func (sbs Proof) verifyChain() error {
 				return errors.New("Missing forward links")
 			}
 
+			publics := sb.Roster.PublicKeys(ServiceName)
+
 			fl := sb.ForwardLink[len(sb.ForwardLink)-1]
-			if err := fl.VerifyWithScheme(suite, sb.Roster.ServicePublics(ServiceName), sb.SignatureScheme); err != nil {
+			if err := fl.Verify(reg, publics); err != nil {
 				return err
 			}
 
@@ -662,7 +659,7 @@ func NewForwardLink(from, to *SkipBlock) *ForwardLink {
 	}
 
 	if from.Roster != nil && to.Roster != nil &&
-		!from.Roster.ID.Equal(to.Roster.ID) {
+		!from.Roster.Equal(to.Roster) {
 		fl.NewRoster = to.Roster
 	}
 	return fl
@@ -677,7 +674,11 @@ func (fl *ForwardLink) Hash() SkipBlockID {
 	hash.Write(fl.From)
 	hash.Write(fl.To)
 	if fl.NewRoster != nil {
-		hash.Write(fl.NewRoster.ID[:])
+		_, err := fl.NewRoster.GetID().WriteTo(hash)
+		if err != nil {
+			log.Error(err)
+			panic("Couldn't hash the roster ID.")
+		}
 	}
 	return hash.Sum(nil)
 }
@@ -687,11 +688,14 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 	var newRoster *onet.Roster
 	if fl.NewRoster != nil {
 		newRoster = onet.NewRoster(fl.NewRoster.List)
-		newRoster.ID = onet.RosterID([uuid.Size]byte(fl.NewRoster.ID))
+	}
+	var signature *ciphersuite.RawSignature
+	if fl.Signature.Sig != nil {
+		signature = fl.Signature.Sig.Clone()
 	}
 	return &ForwardLink{
 		Signature: byzcoinx.FinalSignature{
-			Sig: append([]byte{}, fl.Signature.Sig...),
+			Sig: signature,
 			Msg: append([]byte{}, fl.Signature.Msg...),
 		},
 		From:      append([]byte{}, fl.From...),
@@ -703,26 +707,29 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // Verify checks the signature against a list of public keys. The list must
 // correspond to the block roster to match the signature.
 // It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) Verify(suite *pairing.SuiteBn256, pubs []kyber.Point) error {
-	return fl.VerifyWithScheme(suite, pubs, 0)
-}
-
-// VerifyWithScheme checks the signature against a list of public keys with
-// a given scheme. The list must correspond to the block roster to match the
-// signature. It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) VerifyWithScheme(suite *pairing.SuiteBn256, pubs []kyber.Point, scheme uint32) error {
+func (fl *ForwardLink) Verify(reg *ciphersuite.Registry, pubs []ciphersuite.PublicKey) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
-		return errors.New("wrong hash of forward link")
+		return xerrors.New("wrong hash of forward link")
 	}
 
-	switch scheme {
-	case BlsSignatureSchemeIndex:
-		return protocol.BlsSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
-	case BdnSignatureSchemeIndex:
-		return bdnproto.BdnSignature(fl.Signature.Sig).Verify(suite, fl.Signature.Msg, pubs)
-	default:
-		return errors.New("unknown signature scheme")
-	}
+	return reg.WithContext(fl.Signature.Sig, func(suite ciphersuite.CipherSuite) error {
+		esuite, ok := suite.(cosuite.CoSiCipherSuite)
+		if !ok {
+			return xerrors.New("wrong type of cipher suite")
+		}
+
+		aggKey, err := esuite.AggregatePublicKeys(pubs, fl.Signature.Sig)
+		if err != nil {
+			return xerrors.Errorf("aggregating public key: %v", err)
+		}
+
+		err = esuite.Verify(aggKey, fl.Signature.Sig, fl.Hash())
+		if err != nil {
+			return xerrors.Errorf("signature verification: %v", err)
+		}
+
+		return nil
+	})
 }
 
 // IsEmpty indicates whether this forwardlink is merely a placeholder for
@@ -736,6 +743,7 @@ func (fl *ForwardLink) IsEmpty() bool {
 // It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
 	*bbolt.DB
+	registry   *ciphersuite.Registry
 	bucketName []byte
 	// latestBlocks is used as a simple caching mechanism
 	latestBlocks map[string]SkipBlockID
@@ -744,8 +752,9 @@ type SkipBlockDB struct {
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
-func NewSkipBlockDB(db *bbolt.DB, bn []byte) *SkipBlockDB {
+func NewSkipBlockDB(db *bbolt.DB, bn []byte, reg *ciphersuite.Registry) *SkipBlockDB {
 	return &SkipBlockDB{
+		registry:     reg,
 		DB:           db,
 		bucketName:   bn,
 		latestBlocks: map[string]SkipBlockID{},
@@ -810,11 +819,11 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							continue
 						}
 
-						publics := sbOld.Roster.ServicePublics(ServiceName)
+						publics := sbOld.Roster.PublicKeys(ServiceName)
 
-						if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
+						if err := fl.Verify(db.registry, publics); err != nil {
 							// Only keep a log of the failing forward links but keep trying others.
-							log.Error("Got a known block with wrong signature in forward-link with error: " + err.Error())
+							log.Error("Got a known block with wrong signature in forward-link with error:", err)
 							continue
 						}
 
@@ -868,7 +877,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 						len(sb.ForwardLink), sb.Height)
 				}
 
-				publics := sb.Roster.ServicePublics(ServiceName)
+				publics := sb.Roster.PublicKeys(ServiceName)
 
 				for _, fl := range sb.ForwardLink {
 					if !fl.IsEmpty() {
@@ -876,13 +885,13 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							return ErrorInconsistentForwardLink
 						}
 
-						if err := fl.VerifyWithScheme(suite, publics, sb.SignatureScheme); err != nil {
+						if err := fl.Verify(db.registry, publics); err != nil {
 							return errors.New("invalid forward-link signature: " + err.Error())
 						}
 					}
 				}
 
-				err := db.storeToTx(tx, sb)
+				err = db.storeToTx(tx, sb)
 				if err != nil {
 					return err
 				}
@@ -996,7 +1005,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		return errors.New("need at least one backlink")
 	}
 
-	if err := sb.VerifyForwardSignatures(); err != nil {
+	if err := sb.VerifyForwardSignatures(db.registry); err != nil {
 		return errors.New("Wrong signatures: " + err.Error())
 	}
 
@@ -1014,7 +1023,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		}
 		return errors.New("didn't find height-0 skipblock in db")
 	}
-	if err := sbBack.VerifyForwardSignatures(); err != nil {
+	if err := sbBack.VerifyForwardSignatures(db.registry); err != nil {
 		return err
 	}
 	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
@@ -1085,7 +1094,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 		c := tx.Bucket([]byte(db.bucketName)).Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if bytes.HasPrefix(k, match) {
-				_, msg, err := network.Unmarshal(v, suite)
+				_, msg, err := network.Unmarshal(v)
 				if err != nil {
 					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
@@ -1095,7 +1104,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 		}
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if bytes.HasSuffix(k, match) {
-				_, msg, err := network.Unmarshal(v, suite)
+				_, msg, err := network.Unmarshal(v)
 				if err != nil {
 					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
@@ -1292,7 +1301,7 @@ func (db *SkipBlockDB) getFromTx(tx *bbolt.Tx, sbID SkipBlockID) (*SkipBlock, er
 	// copying the value into a buffer, there is no SIGSEGV anymore.
 	buf := make([]byte, len(val))
 	copy(buf, val)
-	_, sbMsg, err := network.Unmarshal(buf, suite)
+	_, sbMsg, err := network.Unmarshal(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -1309,7 +1318,7 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
-			_, sbMsg, err := network.Unmarshal(v, suite)
+			_, sbMsg, err := network.Unmarshal(v)
 			if err != nil {
 				return err
 			}
@@ -1338,7 +1347,7 @@ func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
-			_, sbMsg, err := network.Unmarshal(v, suite)
+			_, sbMsg, err := network.Unmarshal(v)
 			if err != nil {
 				return err
 			}

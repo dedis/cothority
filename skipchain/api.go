@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"go.dedis.ch/cothority/v4"
 	status "go.dedis.ch/cothority/v4/status/service"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 )
@@ -18,13 +16,17 @@ import (
 // service from the outside
 type Client struct {
 	*onet.Client
+	reg *ciphersuite.Registry
 	// Used for SendProtobufParallel. If it is nil, default values will be used.
 	options *onet.ParallelOptions
 }
 
 // NewClient instantiates a new client with name 'n'
-func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, "Skipchain")}
+func NewClient(reg *ciphersuite.Registry) *Client {
+	return &Client{
+		Client: onet.NewClient("Skipchain"),
+		reg:    reg,
+	}
 }
 
 // UseNode sets the options so that only the given node will be contacted
@@ -59,7 +61,7 @@ func (c *Client) DontContact(si *network.ServerIdentity) {
 //    []byte, it will be marshalled using `network.Marshal`.
 //  - priv is the private key that will be used to sign the skipblock. If priv
 //    is nil, the skipblock will not be signed.
-func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d network.Message, priv kyber.Scalar) (reply *StoreSkipBlockReply, err error) {
+func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d network.Message, priv ciphersuite.SecretKey) (reply *StoreSkipBlockReply, err error) {
 	log.Lvlf3("%#v", target)
 	var newBlock *SkipBlock
 	var targetID SkipBlockID
@@ -87,13 +89,13 @@ func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d n
 	}
 	host := target.Roster.Get(0)
 	reply = &StoreSkipBlockReply{}
-	var sig *[]byte
+	var sig *ciphersuite.RawSignature
 	if priv != nil {
-		signature, err := schnorr.Sign(cothority.Suite, priv, newBlock.CalculateHash())
+		signature, err := c.reg.Sign(priv, newBlock.CalculateHash())
 		if err != nil {
 			return nil, errors.New("couldn't sign block: " + err.Error())
 		}
-		sig = &signature
+		sig = signature.Raw()
 	}
 	err = c.SendProtobuf(host, &StoreSkipBlock{TargetSkipChainID: targetID, NewBlock: newBlock,
 		Signature: sig}, reply)
@@ -102,12 +104,12 @@ func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d n
 	}
 
 	if reply.Latest != nil {
-		if err = reply.Latest.VerifyForwardSignatures(); err != nil {
+		if err = reply.Latest.VerifyForwardSignatures(c.reg); err != nil {
 			return nil, err
 		}
 	}
 	if reply.Previous != nil {
-		if err = reply.Previous.VerifyForwardSignatures(); err != nil {
+		if err = reply.Previous.VerifyForwardSignatures(c.reg); err != nil {
 			return nil, err
 		}
 	}
@@ -143,7 +145,7 @@ func (c *Client) StoreSkipBlock(target *SkipBlock, ro *onet.Roster, d network.Me
 //
 // This function returns the created skipblock or nil and an error.
 func (c *Client) CreateGenesisSignature(ro *onet.Roster, baseH, maxH int, ver []VerifierID,
-	data interface{}, priv kyber.Scalar) (*SkipBlock, error) {
+	data interface{}, priv ciphersuite.SecretKey) (*SkipBlock, error) {
 	genesis := NewSkipBlock()
 	genesis.Roster = ro
 	genesis.VerifierIDs = ver
@@ -185,11 +187,7 @@ func compareGenesisBlocks(prop *SkipBlock, ret *SkipBlock) error {
 		return errors.New("got an empty reply")
 	}
 
-	ok, err := ret.Roster.Equal(prop.Roster)
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if !ret.Roster.Equal(prop.Roster) {
 		return errors.New("got a different roster")
 	}
 
@@ -293,7 +291,7 @@ func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
 			}
 
 			// Check the integrity of the block
-			if err := b.VerifyForwardSignatures(); err != nil {
+			if err := b.VerifyForwardSignatures(c.reg); err != nil {
 				return nil, err
 			}
 			// Cannot check back links until we've confirmed the first one
@@ -375,7 +373,7 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 	if err != nil {
 		return nil, errors.New("all nodes failed to return block: " + err.Error())
 	}
-	if err := reply.VerifyForwardSignatures(); err != nil {
+	if err := reply.VerifyForwardSignatures(c.reg); err != nil {
 		return nil, err
 	}
 
@@ -402,7 +400,7 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 		return
 	}
 
-	if err = reply.SkipBlock.VerifyForwardSignatures(); err != nil {
+	if err = reply.SkipBlock.VerifyForwardSignatures(c.reg); err != nil {
 		return
 	}
 
@@ -423,51 +421,57 @@ func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID,
 // key of the client, signed by the private key of the conode. The reasoning is
 // that an administrator should well be able to copy the private.toml-file from
 // the server and use that to authenticate and link to the conode.
-func (c *Client) CreateLinkPrivate(si *network.ServerIdentity, conodePriv kyber.Scalar,
-	pub kyber.Point) error {
+func (c *Client) CreateLinkPrivate(si *network.ServerIdentity, conodePriv ciphersuite.SecretKey,
+	pub ciphersuite.PublicKey) error {
 	reply := &EmptyReply{}
-	msg, err := pub.MarshalBinary()
+	msg, err := pub.Raw().MarshalText()
 	if err != nil {
 		return errors.New("couldn't marshal point: " + err.Error())
 	}
-	sig, err := schnorr.Sign(cothority.Suite, conodePriv, msg)
+	sig, err := c.reg.Sign(conodePriv, msg)
 	if err != nil {
 		return errors.New("couldn't sign public key: " + err.Error())
 	}
-	return c.SendProtobuf(si, &CreateLinkPrivate{Public: pub, Signature: sig}, reply)
+	return c.SendProtobuf(si, &CreateLinkPrivate{Public: pub.Raw(), Signature: sig.Raw()}, reply)
 }
 
 // Unlink removes a link on the remote service for our client. This might be
 // because we want to change the key. It's not possible to remove a lost key,
 // only if you have the private key can you request to remove the public
 // counterpart on the server.
-func (c *Client) Unlink(si *network.ServerIdentity, priv kyber.Scalar) error {
-	public := cothority.Suite.Point().Mul(priv, nil)
-	msg, err := public.MarshalBinary()
+func (c *Client) Unlink(si *network.ServerIdentity, priv ciphersuite.SecretKey, pub ciphersuite.PublicKey) error {
+	msg, err := pub.Raw().MarshalText()
 	if err != nil {
 		return err
 	}
 	msg = append([]byte("unlink:"), msg...)
-	sig, err := schnorr.Sign(cothority.Suite, priv, msg)
+	sig, err := c.reg.Sign(priv, msg)
 	if err != nil {
 		return err
 	}
+	// TODO: this looks fishy. It should at least use a nonce..
 	return c.SendProtobuf(si, &Unlink{
-		Public:    public,
-		Signature: sig,
+		Public:    pub.Raw(),
+		Signature: sig.Raw(),
 	}, &EmptyReply{})
 }
 
 // Listlink returns all public keys that are allowed to contact
 // this conode securely. It can return an empty list which means
 // that this conode is not secured.
-func (c *Client) Listlink(si *network.ServerIdentity) ([]kyber.Point, error) {
+func (c *Client) Listlink(si *network.ServerIdentity) ([]ciphersuite.PublicKey, error) {
 	reply := &ListlinkReply{}
 	err := c.SendProtobuf(si, &Listlink{}, reply)
 	if err != nil {
 		return nil, err
 	}
-	return reply.Publics, nil
+
+	publics := make([]ciphersuite.PublicKey, len(reply.Publics))
+	for i, raw := range reply.Publics {
+		publics[i] = raw
+	}
+
+	return publics, nil
 }
 
 // AddFollow gives a skipchain-id to the conode that should be used to allow/disallow
@@ -476,7 +480,7 @@ func (c *Client) Listlink(si *network.ServerIdentity) ([]kyber.Point, error) {
 // 1 - search if it can find that skipchain-id and then add the whole roster to
 // the list of allowed nodes to request a new skipblock. 2 - lookup the skipchain-id
 // given the ip and port of the conode where it is available.
-func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv kyber.Scalar,
+func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv ciphersuite.SecretKey,
 	scid SkipBlockID, Follow FollowType, NewChain PolicyNewChain, conode string) error {
 	req := &AddFollow{
 		SkipchainID: scid,
@@ -488,48 +492,55 @@ func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv kyber.Scalar,
 
 	if conode != "" {
 		log.Lvl2("Getting public key of conode:", conode, si)
-		lookup := network.NewServerIdentity(cothority.Suite.Point().Null(), network.NewAddress(network.PlainTCP, conode))
-		resp, err := status.NewClient().Request(lookup)
+		err := c.reg.WithContext(clientPriv, func(suite ciphersuite.CipherSuite) error {
+			pk := ciphersuite.NewRawPublicKey("", []byte{})
+			lookup := network.NewServerIdentity(pk, network.NewAddress(network.PlainTCP, conode))
+			resp, err := status.NewClient(suite).Request(lookup)
+			if err != nil {
+				return err
+			}
+			req.Conode = resp.ServerIdentity
+			msg = append(msg, req.Conode.ID[:]...)
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-		req.Conode = resp.ServerIdentity
-		msg = append(msg, req.Conode.ID[:]...)
 	}
-	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
+	sig, err := c.reg.Sign(clientPriv, msg)
 	if err != nil {
 		return errors.New("couldn't sign message:" + err.Error())
 	}
-	req.Signature = sig
+	req.Signature = sig.Raw()
 	return c.SendProtobuf(si, req, nil)
 }
 
 // DelFollow asks the conode to remove a skipchain-id from the list of skipchains that are
 // used to to allow/disallow new blocks. Only if SettingAuthentication(true) has
 // been called is this active.
-func (c *Client) DelFollow(si *network.ServerIdentity, clientPriv kyber.Scalar, scid SkipBlockID) error {
+func (c *Client) DelFollow(si *network.ServerIdentity, clientPriv ciphersuite.SecretKey, scid SkipBlockID) error {
 	msg := append([]byte("delfollow:"), scid...)
-	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
+	sig, err := c.reg.Sign(clientPriv, msg)
 	if err != nil {
 		return err
 	}
-	return c.SendProtobuf(si, &DelFollow{SkipchainID: scid, Signature: sig}, nil)
+	return c.SendProtobuf(si, &DelFollow{SkipchainID: scid, Signature: sig.Raw()}, nil)
 }
 
 // ListFollow returns the list of latest skipblock of all skipchains that are followed
 // for authentication purposes.
-func (c *Client) ListFollow(si *network.ServerIdentity, clientPriv kyber.Scalar) (*ListFollowReply, error) {
-	msg, err := si.Public.MarshalBinary()
+func (c *Client) ListFollow(si *network.ServerIdentity, clientPriv ciphersuite.SecretKey) (*ListFollowReply, error) {
+	msg, err := si.PublicKey.MarshalText()
 	if err != nil {
 		return nil, err
 	}
 	msg = append([]byte("listfollow:"), msg...)
-	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
+	sig, err := c.reg.Sign(clientPriv, msg)
 	if err != nil {
 		return nil, err
 	}
 	reply := &ListFollowReply{}
-	err = c.SendProtobuf(si, &ListFollow{Signature: sig}, reply)
+	err = c.SendProtobuf(si, &ListFollow{Signature: sig.Raw()}, reply)
 	if err != nil {
 		return nil, err
 	}

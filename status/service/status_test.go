@@ -7,12 +7,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.dedis.ch/kyber/v4/suites"
+	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 )
 
-var tSuite = suites.MustFind("Ed25519")
+var testSuite = cosuite.NewBdnSuite()
+
+func makeBuilder() *onet.DefaultBuilder {
+	builder := onet.NewDefaultBuilder()
+	builder.SetSuite(testSuite)
+	builder.SetService(ServiceName, nil, newStatService)
+	return builder
+}
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -26,15 +33,16 @@ func NewTestClient(l *onet.LocalTest) *Client {
 // makes sure that the connectivity test fails, and that the `findFaulty` finds
 // the paused node.
 func TestStat_Connectivity(t *testing.T) {
-	local := onet.NewLocalTest(tSuite)
+	local := onet.NewLocalTest(onet.NewLocalBuilder(makeBuilder()))
 
 	servers, ro, _ := local.GenTree(5, false)
 	defer local.CloseAll()
 
 	// Send a request to the service
-	cl := NewClient()
-	priv := servers[0].ServerIdentity.GetPrivate()
-	repl, err := cl.CheckConnectivity(priv, ro.List, time.Second, false)
+	cl := NewClient(testSuite)
+	sk := servers[0].ServerIdentity.GetPrivate()
+
+	repl, err := cl.CheckConnectivity(sk, ro.List, time.Second, false)
 	require.NoError(t, err)
 	require.Equal(t, len(ro.List), len(repl))
 	for i := range ro.List {
@@ -43,10 +51,10 @@ func TestStat_Connectivity(t *testing.T) {
 	require.NoError(t, local.WaitDone(time.Second))
 
 	servers[2].Pause()
-	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
+	repl, err = cl.CheckConnectivity(sk, ro.List, time.Second, false)
 	require.Error(t, err)
 
-	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, true)
+	repl, err = cl.CheckConnectivity(sk, ro.List, time.Second, true)
 	require.NoError(t, err)
 	for i := range append(ro.List[0:2], ro.List[3:]...) {
 		require.True(t, ro.List[i].Equal(repl[i]))
@@ -55,7 +63,7 @@ func TestStat_Connectivity(t *testing.T) {
 }
 
 func TestStat_Request(t *testing.T) {
-	local := onet.NewTCPTest(tSuite)
+	local := onet.NewLocalTest(makeBuilder())
 
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist

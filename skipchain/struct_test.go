@@ -9,24 +9,23 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/cothority/v4/byzcoinx"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/kyber/v4/sign"
-	"go.dedis.ch/kyber/v4/sign/bls"
-	"go.dedis.ch/kyber/v4/suites"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
 	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
 
-var pairingSuite = pairing.NewSuiteBn256()
+var testRegistry = ciphersuite.NewRegistry()
+
+func init() {
+	testRegistry.RegisterCipherSuite(testSuite)
+}
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
-	l := onet.NewTCPTest(suite)
+	l := onet.NewLocalTest(makeBuilder())
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
@@ -68,7 +67,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 }
 
 func TestSkipBlock_VerifySignatures(t *testing.T) {
-	l := onet.NewTCPTest(suite)
+	l := onet.NewLocalTest(makeBuilder())
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
@@ -82,29 +81,29 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
 	root.Hash = root.CalculateHash()
 	db.Store(root)
-	log.ErrFatal(root.VerifyForwardSignatures())
+	log.ErrFatal(root.VerifyForwardSignatures(testRegistry))
 	log.ErrFatal(db.VerifyLinks(root))
 
 	block1 := root.Copy()
 	block1.BackLinkIDs = append(block1.BackLinkIDs, root.Hash)
 	block1.Index++
 	db.Store(block1)
-	require.NotNil(t, block1.VerifyForwardSignatures())
+	require.NotNil(t, block1.VerifyForwardSignatures(testRegistry))
 	block1.updateHash()
-	require.Nil(t, block1.VerifyForwardSignatures())
+	require.Nil(t, block1.VerifyForwardSignatures(testRegistry))
 	require.NotNil(t, db.VerifyLinks(block1))
 
 	block1.Roster = nil
 	block1.updateHash()
-	err := block1.VerifyForwardSignatures()
+	err := block1.VerifyForwardSignatures(testRegistry)
 	require.NotNil(t, err)
 	require.Equal(t, "Missing roster in the block", err.Error())
 }
 
 func TestSkipBlock_InvalidForwardLinks(t *testing.T) {
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTest(makeBuilder())
 	defer local.CloseAll()
-	_, ro, service := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+	_, ro, service := local.MakeSRS(3, ServiceName)
 
 	s := service.(*Service)
 
@@ -147,27 +146,16 @@ func TestSkipBlock_WrongSignatures(t *testing.T) {
 		To:        SkipBlockID{},
 		Signature: byzcoinx.FinalSignature{},
 	}
-	err := fl.VerifyWithScheme(suite, []kyber.Point{}, 0)
+	err := fl.Verify(testRegistry, []ciphersuite.PublicKey{})
 	require.Error(t, err)
 	require.Equal(t, "wrong hash of forward link", err.Error())
 
 	fl.Signature.Msg = fl.Hash()
-
-	err = fl.VerifyWithScheme(suite, []kyber.Point{}, 123456789)
-	require.Error(t, err)
-	require.Equal(t, "unknown signature scheme", err.Error())
-	err = fl.VerifyWithScheme(suite, []kyber.Point{}, BlsSignatureSchemeIndex)
-	require.Error(t, err)
-	require.NotEqual(t, "unknown signature scheme", err.Error())
-	err = fl.VerifyWithScheme(suite, []kyber.Point{}, BdnSignatureSchemeIndex)
-	require.Error(t, err)
-	require.NotEqual(t, "unknown signature scheme", err.Error())
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
 	// Needed for the roster.
-	s := suites.MustFind("ed25519")
-	si := network.NewServerIdentity(s.Point(), "tcp://127.0.0.1:2000")
+	si := network.NewServerIdentity(ciphersuite.NewRawPublicKey("", []byte{}), "tcp://127.0.0.1:2000")
 
 	sbd1 := NewSkipBlock()
 	sbd1.Data = []byte("1")
@@ -208,7 +196,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 }
 
 func TestSkipBlock_Hash2(t *testing.T) {
-	local := onet.NewLocalTest(suite)
+	local := onet.NewLocalTest(makeBuilder())
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
@@ -239,10 +227,10 @@ func TestSkipBlock_VerifierIDs(t *testing.T) {
 func TestBlockLink_Copy(t *testing.T) {
 	// Test if copy is deep or only shallow
 	b1 := &ForwardLink{}
-	b1.Signature.Sig = []byte{1}
+	b1.Signature.Sig = ciphersuite.NewRawSignature("abc", []byte{1})
 	b2 := b1.Copy()
-	b2.Signature.Sig[0] = byte(2)
-	if bytes.Equal(b1.Signature.Sig, b2.Signature.Sig) {
+	b2.Signature.Sig = ciphersuite.NewRawSignature("", []byte{})
+	if bytes.Equal(b1.Signature.Sig.Data, b2.Signature.Sig.Data) {
 		t.Fatal("They should not be equal")
 	}
 
@@ -352,7 +340,7 @@ func TestSkipBlock_PathForIndex(t *testing.T) {
 // This checks if the it returns the shortest path or an error
 // when blocks are missing
 func TestSkipBlockDB_GetProof(t *testing.T) {
-	local := onet.NewLocalTest(suite)
+	local := onet.NewLocalTest(makeBuilder())
 	_, ro, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 
@@ -420,12 +408,12 @@ func TestProof_Verify(t *testing.T) {
 	sb := NewSkipBlock()
 	sb.updateHash()
 
-	require.NotNil(t, Proof{}.Verify())
+	require.NotNil(t, Proof{}.Verify(testRegistry))
 	sb.Index = 1
-	require.NotNil(t, Proof{sb}.Verify())
+	require.NotNil(t, Proof{sb}.Verify(testRegistry))
 
-	require.NotNil(t, Proof{}.VerifyFromID(sb.Hash))
-	require.NotNil(t, Proof{sb}.VerifyFromID(SkipBlockID{}))
+	require.NotNil(t, Proof{}.VerifyFromID(sb.Hash, testRegistry))
+	require.NotNil(t, Proof{sb}.VerifyFromID(SkipBlockID{}, testRegistry))
 }
 
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
@@ -445,7 +433,7 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	})
 	require.Nil(t, err)
 
-	return NewSkipBlockDB(db, []byte("skipblock-test")), fname
+	return NewSkipBlockDB(db, []byte("skipblock-test"), testRegistry), fname
 }
 
 // Checks if the buffer api works as expected
@@ -480,32 +468,33 @@ func TestBlockBuffer(t *testing.T) {
 
 func (fl *ForwardLink) sign(ro *onet.Roster) error {
 	msg := fl.Hash()
-	mask, err := sign.NewMask(pairingSuite, ro.ServicePublics(ServiceName), nil)
-	if err != nil {
-		return err
-	}
-	sigs := make([][]byte, len(ro.List))
+	sigs := make([]ciphersuite.Signature, len(ro.List))
 	for i, si := range ro.List {
-		sig, err := bls.Sign(pairingSuite, si.ServicePrivate(ServiceName), msg)
+		mask, err := testSuite.Mask(ro.PublicKeys(ServiceName))
 		if err != nil {
 			return err
 		}
-		sigs[i] = sig
 
 		err = mask.SetBit(i, true)
 		if err != nil {
 			return err
 		}
+
+		sig, err := testSuite.SignWithMask(si.ServicePrivate(ServiceName), msg, mask)
+		if err != nil {
+			return err
+		}
+		sigs[i] = sig
 	}
 
-	agg, err := bls.AggregateSignatures(pairingSuite, sigs...)
+	agg, err := testSuite.AggregateSignatures(sigs, ro.PublicKeys(ServiceName))
 	if err != nil {
 		return err
 	}
 
 	fl.Signature = byzcoinx.FinalSignature{
 		Msg: msg,
-		Sig: append(agg, mask.Mask()...),
+		Sig: agg.Raw(),
 	}
 
 	return nil

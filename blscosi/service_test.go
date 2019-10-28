@@ -66,14 +66,10 @@ func TestService_SignatureRequest(t *testing.T) {
 
 	res := buf.(*SignatureResponse)
 
-	sig := testSuite.Signature()
-	require.NoError(t, sig.Unpack(res.Signature))
-
-	publics, err := ro2.PublicKeys(onet.NewCipherSuiteMapper(testSuite, ServiceName))
-	require.NoError(t, err)
+	publics := ro2.PublicKeys(ServiceName)
 
 	// verify the response still
-	pubkey, err := testSuite.AggregatePublicKeys(publics, sig)
+	pubkey, err := testSuite.AggregatePublicKeys(publics, res.Signature)
 	require.NoError(t, err)
-	require.NoError(t, testSuite.Verify(pubkey, sig, msg))
+	require.NoError(t, testSuite.Verify(pubkey, res.Signature, msg))
 }

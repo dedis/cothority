@@ -5,28 +5,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 )
 
 const tsName = "tsName"
 
-var tsID onet.ServiceID
-
-func init() {
-	var err error
-	tsID, err = onet.RegisterNewService(tsName, newTestService)
-	log.ErrFatal(err)
+func makeProtocolTestBuilder() onet.Builder {
+	builder := onet.NewLocalBuilder(onet.NewDefaultBuilder())
+	builder.SetSuite(testSuite)
+	builder.SetService(tsName, nil, newTestService)
+	return builder
 }
 
 // TestGB tests the GetBlocks protocol
 func TestGB(t *testing.T) {
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTest(makeProtocolTestBuilder())
 	defer local.CloseAll()
 	servers, ro, _ := local.GenTree(3, true)
-	tss := local.GetServices(servers, tsID)
+	tss := local.GetServices(servers, tsName)
 
 	ts0 := tss[0].(*testService)
 	ts1 := tss[1].(*testService)
@@ -73,10 +71,10 @@ func TestGB(t *testing.T) {
 	sb1.ForwardLink = []*ForwardLink{sig12, sig13}
 
 	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))
-	ts0.Db = NewSkipBlockDB(db, bucket)
+	ts0.Db = NewSkipBlockDB(db, bucket, testRegistry)
 	db, bucket = ts1.GetAdditionalBucket([]byte("skipblocks"))
-	ts1.Db = NewSkipBlockDB(db, bucket)
-	ts2.Db = NewSkipBlockDB(db, bucket)
+	ts1.Db = NewSkipBlockDB(db, bucket, testRegistry)
+	ts2.Db = NewSkipBlockDB(db, bucket, testRegistry)
 	blocks := []*SkipBlock{sb0, sb1, sb2, sb3}
 	_, err := ts0.Db.StoreBlocks(blocks)
 	require.Nil(t, err)
@@ -136,15 +134,16 @@ func TestGB(t *testing.T) {
 
 // TestER tests the ProtoExtendRoster message
 func TestER(t *testing.T) {
+	log.SetDebugVisible(3)
 	nodes := []int{2, 5, 13}
 	for _, nbrNodes := range nodes {
-		testER(t, tsID, nbrNodes)
+		testER(t, tsName, nbrNodes)
 	}
 }
 
-func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
+func testER(t *testing.T, tsid string, nbrNodes int) {
 	log.Lvl1("Testing", nbrNodes, "nodes")
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTest(makeProtocolTestBuilder())
 	servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss := local.GetServices(servers, tsid)
 
@@ -160,7 +159,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	local.CloseAll()
 
 	// Check inclusion of new chains
-	local = onet.NewLocalTest(cothority.Suite)
+	local = onet.NewLocalTest(makeProtocolTestBuilder())
 	servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss = local.GetServices(servers, tsid)
 	for _, t := range tss {
@@ -175,14 +174,14 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	for _, s := range sigs {
 		_, si := roster.Search(s.SI)
 		require.NotNil(t, si)
-		require.Nil(t, schnorr.Verify(cothority.Suite, si.Public, sb.SkipChainID(), s.Signature))
+		require.Nil(t, testSuite.Verify(si.PublicKey, s.Signature, sb.SkipChainID()))
 	}
 	local.CloseAll()
 
 	// When only one node refuses,
 	// we should be able to proceed because skipchain is fault tolerant
 	if nbrNodes > 4 {
-		local = onet.NewLocalTest(cothority.Suite)
+		local = onet.NewLocalTest(makeProtocolTestBuilder())
 		servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 		tss = local.GetServices(servers, tsid)
 		for i := 3; i < nbrNodes; i++ {
@@ -270,7 +269,7 @@ func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.Generic
 	return
 }
 
-func newTestService(c *onet.Context) (onet.Service, error) {
+func newTestService(c *onet.Context, suite ciphersuite.CipherSuite) (onet.Service, error) {
 	s := &testService{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}

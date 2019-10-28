@@ -15,8 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
 	"go.dedis.ch/onet/v4"
 	"go.dedis.ch/onet/v4/log"
 	"go.dedis.ch/onet/v4/network"
@@ -90,12 +88,12 @@ func (p *ExtendRoster) HandleExtendRoster(msg ProtoStructExtendRoster) error {
 
 	log.Lvlf3("%s: Check block with roster %s", p.ServerIdentity(), msg.Block.Roster.List)
 	if p.isBlockAccepted(msg.ServerIdentity, &msg.Block) {
-		sig, err := schnorr.Sign(cothority.Suite, p.Host().ServerIdentity.GetPrivate(), msg.Block.SkipChainID())
+		sig, err := p.CipherSuiteRegistry().Sign(p.Host().ServerIdentity.GetPrivate(), msg.Block.SkipChainID())
 		if err != nil {
 			log.Error("couldn't sign genesis-block")
 			return p.SendToParent(&ProtoExtendRosterReply{})
 		}
-		return p.SendToParent(&ProtoExtendRosterReply{Signature: &sig})
+		return p.SendToParent(&ProtoExtendRosterReply{Signature: sig.Raw()})
 	}
 
 	return p.SendToParent(&ProtoExtendRosterReply{})
@@ -180,11 +178,12 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 		if r.Signature == nil {
 			return false
 		}
-		if schnorr.Verify(cothority.Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {
+
+		if p.CipherSuiteRegistry().Verify(r.ServerIdentity.PublicKey, r.Signature, p.ExtendRoster.Block.SkipChainID()) != nil {
 			log.Lvl3("Signature verification failed")
 			return false
 		}
-		p.tempSigs = append(p.tempSigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
+		p.tempSigs = append(p.tempSigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: r.Signature})
 		return true
 	}()
 	// if a single node disagrees, we fail

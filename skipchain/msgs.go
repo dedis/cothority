@@ -1,8 +1,8 @@
 package skipchain
 
 import (
-	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/network"
 )
 
@@ -78,7 +78,7 @@ func init() {
 type StoreSkipBlock struct {
 	TargetSkipChainID SkipBlockID
 	NewBlock          *SkipBlock
-	Signature         *[]byte
+	Signature         *ciphersuite.RawSignature
 }
 
 // StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
@@ -228,7 +228,7 @@ type GetBlockReply struct {
 // in a new roster.
 type ProtoExtendSignature struct {
 	SI        network.ServerIdentityID
-	Signature []byte
+	Signature *ciphersuite.RawSignature
 }
 
 // ProtoExtendRoster asks a conode whether it would be OK to accept a new block
@@ -245,7 +245,7 @@ type ProtoStructExtendRoster struct {
 
 // ProtoExtendRosterReply is a signature on the Genesis-id.
 type ProtoExtendRosterReply struct {
-	Signature *[]byte
+	Signature *ciphersuite.RawSignature
 }
 
 // ProtoStructExtendRosterReply embeds the treenode
@@ -284,16 +284,16 @@ type ProtoStructGetBlocksReply struct {
 // CreateLinkPrivate asks to store the given public key in the list of administrative
 // clients.
 type CreateLinkPrivate struct {
-	Public    kyber.Point
-	Signature []byte
+	Public    *ciphersuite.RawPublicKey
+	Signature *ciphersuite.RawSignature
 }
 
 // Unlink requests the conode to remove the link from its Internal
 // table of links. The signature has to be on the message
 // "unlink:" + the byte-representation of the public key to remove.
 type Unlink struct {
-	Public    kyber.Point
-	Signature []byte
+	Public    *ciphersuite.RawPublicKey
+	Signature *ciphersuite.RawSignature
 }
 
 // Listlink requests a list of all public keys stored in this
@@ -304,7 +304,7 @@ type Listlink struct{}
 // do administrative tasks on this conode. If the list is empty,
 // then this node is not secured.
 type ListlinkReply struct {
-	Publics []kyber.Point
+	Publics []*ciphersuite.RawPublicKey
 }
 
 // EmptyReply is an empty reply. If there was an error in the
@@ -342,20 +342,20 @@ type AddFollow struct {
 	Follow      FollowType
 	NewChain    PolicyNewChain
 	Conode      *network.ServerIdentity
-	Signature   []byte
+	Signature   *ciphersuite.RawSignature
 }
 
 // DelFollow removes a skipchain from following. The Signature is on the SkipchainID.
 type DelFollow struct {
 	SkipchainID SkipBlockID
-	Signature   []byte
+	Signature   *ciphersuite.RawSignature
 }
 
 // ListFollow returns all followed lists all skipchains we follow.
 // The signature has to be on the following message:
 // "listfollow:" + the public key of the conode
 type ListFollow struct {
-	Signature []byte
+	Signature *ciphersuite.RawSignature
 }
 
 // ListFollowReply returns the genesis-blocks of all skipchains we follow

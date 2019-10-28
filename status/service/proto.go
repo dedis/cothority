@@ -2,6 +2,7 @@ package status
 
 import (
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/network"
 )
 
@@ -38,7 +39,7 @@ type CheckConnectivity struct {
 	Timeout    int64
 	FindFaulty bool
 	List       []*network.ServerIdentity
-	Signature  []byte
+	Signature  *ciphersuite.RawSignature
 }
 
 // CheckConnectivityReply is the minimum list of all nodes that can contact each

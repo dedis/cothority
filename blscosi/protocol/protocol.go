@@ -352,14 +352,7 @@ func (p *BlsCosi) collectSignatures() (ResponseMap, error) {
 			public, index := searchPublicKey(p.TreeNodeInstance, res.ServerIdentity)
 			if public != nil {
 				if _, ok := responseMap[index]; !ok {
-					sig := p.suite.Signature()
-					err := sig.Unpack(res.Response.Signature)
-					if err != nil {
-						log.Error(err)
-						break
-					}
-
-					count := p.suite.Count(sig)
+					count := p.suite.Count(res.Signature)
 					numSignature += count
 					numFailure += res.SubtreeCount() + 1 - count
 
@@ -409,7 +402,7 @@ func (p *BlsCosi) generateSignature(responses ResponseMap) (ciphersuite.Signatur
 	_, index := searchPublicKey(p.TreeNodeInstance, p.ServerIdentity())
 	// fill the map with the Root signature
 	responses[index] = &Response{
-		Signature: personalSig.Pack(),
+		Signature: personalSig.Raw(),
 	}
 
 	// Aggregate all signatures
@@ -443,13 +436,7 @@ func (p *BlsCosi) makeAggregateResponse(responses ResponseMap) (ciphersuite.Sign
 			continue
 		}
 
-		sig := p.suite.Signature()
-		err := sig.Unpack(res.Signature)
-		if err != nil {
-			return nil, err
-		}
-
-		signatures = append(signatures, sig)
+		signatures = append(signatures, res.Signature)
 	}
 
 	aggSig, err := p.suite.AggregateSignatures(signatures, p.PublicKeys())

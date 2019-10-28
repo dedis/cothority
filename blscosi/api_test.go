@@ -26,15 +26,11 @@ func TestClient_SignatureRequest(t *testing.T) {
 		reply, err := client.SignatureRequest(newRoster, msg)
 		require.Nil(t, err, "Couldn't send")
 
-		sig := testSuite.Signature()
-		require.NoError(t, sig.Unpack(reply.Signature))
-
-		publics, err := newRoster.PublicKeys(onet.NewCipherSuiteMapper(testSuite, ServiceName))
-		require.NoError(t, err)
+		publics := newRoster.PublicKeys(ServiceName)
 
 		// verify the response still
-		pubkey, err := testSuite.AggregatePublicKeys(publics, sig)
+		pubkey, err := testSuite.AggregatePublicKeys(publics, reply.Signature)
 		require.NoError(t, err)
-		require.NoError(t, testSuite.Verify(pubkey, sig, msg))
+		require.NoError(t, testSuite.Verify(pubkey, reply.Signature, msg))
 	}
 }

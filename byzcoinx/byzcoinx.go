@@ -14,8 +14,8 @@ import (
 	"go.dedis.ch/cothority/v4/cosuite"
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/onet/ciphersuite"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 	"golang.org/x/xerrors"
 )
@@ -56,7 +56,7 @@ type ByzCoinX struct {
 // FinalSignature holds the message Msg and its signature
 type FinalSignature struct {
 	Msg []byte
-	Sig ciphersuite.Signature
+	Sig *ciphersuite.RawSignature
 }
 
 type phase int
@@ -208,7 +208,7 @@ func (bft *ByzCoinX) Dispatch() error {
 		return xerrors.New("threshold not achieved")
 	}
 
-	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
+	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig.Raw()}
 	return nil
 }
 

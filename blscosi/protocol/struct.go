@@ -134,7 +134,7 @@ type StructAnnouncement struct {
 
 // Response is the blscosi response message.
 type Response struct {
-	Signature *ciphersuite.CipherData
+	Signature *ciphersuite.RawSignature
 }
 
 // StructResponse just contains Response and the data necessary to identify and
@@ -146,7 +146,7 @@ type StructResponse struct {
 
 // Refusal is the signed refusal response from a given node.
 type Refusal struct {
-	Signature *ciphersuite.CipherData
+	Signature *ciphersuite.RawSignature
 }
 
 // StructRefusal contains the refusal and the treenode that sent it.

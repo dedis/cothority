@@ -169,7 +169,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig.Signature = &ciphersuite.CipherData{}
+	sig.Signature = ciphersuite.NewRawSignature("", []byte{})
 	sig.Signature.UnmarshalText([]byte(sigStr.Signature))
 
 	fGroup, err := os.Open(groupToml)

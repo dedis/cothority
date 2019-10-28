@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v4/cosuite"
-	"go.dedis.ch/onet/ciphersuite"
 	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v4/ciphersuite"
 	"go.dedis.ch/onet/v4/log"
 )
 
