@@ -37,6 +37,22 @@ var cmds = cli.Commands{
 					},
 				},
 			},
+			{
+				Name:   "info",
+				Usage:  "prints info about an lts instance",
+				Action: dkgInfo,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:   "bc",
+						EnvVar: "BC",
+						Usage:  "the ByzCoin config to use (required)",
+					},
+					cli.StringFlag{
+						Name:  "instid, i",
+						Usage: "the instance id of the spawned LTS contract",
+					},
+				},
+			},
 		},
 	},
 	{
