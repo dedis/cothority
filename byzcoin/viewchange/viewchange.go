@@ -1,5 +1,5 @@
 // Package viewchange implements the view-change algorithm found in the PBFT
-// paper (OSDI99). The implementation is specific our use-case, meaning that
+// paper (OSDI99). The implementation is specific to our use-case, meaning that
 // our views are represented by skipblocks. However, it is possible to create
 // an interface that abstracts the underlying data-structure of a view.
 //
@@ -29,7 +29,7 @@ import (
 
 // maxTimeout is an upper bound for the view change timeout as it is increasing
 // exponentially.
-const maxTimeout = 5 * time.Minute
+const maxTimeout = 1 * time.Minute
 
 // View assume that the context are the same.
 type View struct {
@@ -167,12 +167,17 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
 				// receiving 2*f+1 view-change messages.
-				// Watch out for overflow: When ctr gets to be too high, math.Pow(2, float64(str))
+				// Watch out for overflow: When ctr gets to be too high,
+				// math.Pow(2, float64(ctr))
 				// will be too high, and timeout will end up negative.
-				timeout := time.Duration(math.Pow(2, float64(ctr))) * initialDuration
-				if timeout < 0 || timeout.Seconds() > maxTimeout.Seconds() {
-					timeout = maxTimeout
+				timeout := maxTimeout
+				backoff := float64(ctr - 2*f)
+				if backoff < math.Log2(float64(maxTimeout/initialDuration)) {
+					timeout = time.Duration(math.Pow(2, backoff)) *
+						initialDuration
 				}
+				log.Lvlf2("backoff = %f - timout: %s", backoff,
+					timeout.String())
 
 				timer.Reset(timeout)
 				meta.nextStateFor(ctr)
@@ -180,8 +185,8 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				case c.startTimerChan <- ctr:
 				default:
 				}
-				// If i am the leader, send the new-view
-				// message, which means starting ftcosi.
+				// If I am the leader, send the new-view message,
+				// which means starting ftcosi.
 				if c.isLeader(meta.currOf(ctr)) {
 					c.sendNewViewReq(meta.getProof(ctr))
 				}
