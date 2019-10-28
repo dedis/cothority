@@ -140,7 +140,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
-	return reply, cothority.ErrorOrNil(err, "sending DecryptKey message: %v")
+	return reply, cothority.ErrorOrNil(err, "sending DecryptKey message")
 }
 
 // WaitProof calls the byzcoin client's wait proof
