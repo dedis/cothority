@@ -21,6 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/cothority/v4/blscosi/protocol"
 	"go.dedis.ch/cothority/v4/byzcoinx"
@@ -1564,11 +1566,11 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	s.closedMutex.Lock()
 	defer s.closedMutex.Unlock()
 	if s.closed {
-		return errors.New("service is closed")
+		return xerrors.New("service is closed")
 	}
 	pfl, ok := msg.(*PropagateForwardLink)
 	if !ok {
-		return errors.New("Couldn't convert to a ForwardLink propagation")
+		return xerrors.New("couldn't convert to a ForwardLink propagation")
 	}
 
 	// Get the block to update the list of FLs
@@ -1576,29 +1578,35 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 	if sb == nil {
 		// Here we assume the block must be there because it should
 		// have caught up during the signature request
-		return errors.New("Couldn't get the block to attach the forward link")
+		return xerrors.New("couldn't get the block to attach the forward link")
 	}
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {
-		return err
+		return xerrors.Errorf("couldn't add forward-link: %v", err)
 	}
 
-	// Update the forward link list of the block. The link is verified
-	// before the update.
-	id := s.db.Store(sb)
-	if id == nil {
-		return errors.New("failed to store the block")
-	}
+	blocks := []*SkipBlock{sb}
 
-	// Add the block if available
-	if sb := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To); sb != nil {
-		id := s.db.Store(sb)
-		if id == nil {
-			return errors.New("failed to store the block")
+	if pfl.Height == 0 {
+		newBlock := s.blockBuffer.get(sb.SkipChainID(), pfl.ForwardLink.To)
+		if newBlock == nil {
+			return xerrors.New("cannot store forward-link if there is no" +
+				" corresponding block")
 		}
+		log.Lvl2("Clearing block")
 		s.blockBuffer.clear(sb.SkipChainID())
+		blocks = append(blocks, newBlock)
 	}
+
+	// Update the forward link of the previous latest block and add the new
+	// block.
+	log.Lvl2("Storing new forward-link and eventual new block")
+	if _, err := s.db.StoreBlocks(blocks); err != nil {
+		return xerrors.Errorf("error while storing forward-link and new block"+
+			": %v", err)
+	}
+
 	return nil
 }
 
