@@ -151,7 +151,7 @@ type stateTrie struct {
 func loadStateTrie(db *bbolt.DB, bucket []byte) (*stateTrie, error) {
 	t, err := trie.LoadTrie(trie.NewDiskDB(db, bucket))
 	if err != nil {
-		return nil, xerrors.Errorf("loading trie: %v")
+		return nil, xerrors.Errorf("loading trie: %v", err)
 	}
 	return &stateTrie{Trie: *t}, nil
 }
@@ -161,7 +161,7 @@ func loadStateTrie(db *bbolt.DB, bucket []byte) (*stateTrie, error) {
 func newStateTrie(db *bbolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 	t, err := trie.NewTrie(trie.NewDiskDB(db, bucket), nonce)
 	if err != nil {
-		return nil, xerrors.Errorf("creating trie: %v")
+		return nil, xerrors.Errorf("creating trie: %v", err)
 	}
 	return &stateTrie{Trie: *t}, nil
 }
@@ -187,13 +187,13 @@ func (t *stateTrie) VerifiedStoreAll(scs StateChanges, index int, version Versio
 		indexBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(indexBuf, uint32(index))
 		if err := t.SetMetadataWithBucket([]byte(trieIndexKey), indexBuf, b); err != nil {
-			return xerrors.Errorf("storing index: %v")
+			return xerrors.Errorf("storing index: %v", err)
 		}
 
 		versionBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(versionBuf, uint32(version))
 		if err := t.SetMetadataWithBucket([]byte(trieVersionKey), versionBuf, b); err != nil {
-			return xerrors.Errorf("storing version: %v")
+			return xerrors.Errorf("storing version: %v", err)
 		}
 
 		if expectedRoot != nil && !bytes.Equal(t.GetRootWithBucket(b), expectedRoot) {
@@ -209,7 +209,7 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
-		err = xerrors.Errorf("reading trie: %v")
+		err = xerrors.Errorf("reading trie: %v", err)
 		return
 	}
 	if buf == nil {
@@ -220,7 +220,7 @@ func (t *stateTrie) GetValues(key []byte) (value []byte, version uint64, contrac
 	var vals StateChangeBody
 	vals, err = decodeStateChangeBody(buf)
 	if err != nil {
-		err = xerrors.Errorf("decoding body: %v")
+		err = xerrors.Errorf("decoding body: %v", err)
 		return
 	}
 
