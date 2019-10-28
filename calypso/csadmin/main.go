@@ -170,6 +170,55 @@ func dkgStart(c *cli.Context) error {
 	return nil
 }
 
+// dkgInfo - prints information about the lts stored in the given instance
+func dkgInfo(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return xerrors.New("--bc flag is required")
+	}
+
+	_, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return xerrors.New("failed to load config: " + err.Error())
+	}
+
+	instidstr := c.String("instid")
+	if instidstr == "" {
+		return xerrors.New("please provide an LTS instance ID with --instid")
+	}
+
+	instid, err := hex.DecodeString(instidstr)
+	if err != nil {
+		return xerrors.New("failed to decode LTS instance id: " + err.Error())
+	}
+
+	resp, err := cl.GetProof(instid)
+	if err != nil {
+		return xerrors.New("failed to get proof: " + err.Error())
+	}
+	exist, err := resp.Proof.InclusionProof.Exists(instid)
+	if err != nil {
+		return xerrors.New("failed to get inclusion proof: " + err.Error())
+	}
+	if !exist {
+		return xerrors.New("proof for the given \"--instid\" not found")
+	}
+	val, cid, _, err := resp.Proof.Get(instid)
+	if err != nil {
+		return xerrors.New("couldn't get values: " + err.Error())
+	}
+	if cid != calypso.ContractLongTermSecretID {
+		return xerrors.New("given instanceID is not from an LTS contract")
+	}
+	var ltsInfo calypso.LtsInstanceInfo
+	err = protobuf.Decode(val, &ltsInfo)
+	if err != nil {
+		return xerrors.New("couldn't decode info: " + err.Error())
+	}
+	log.Info("lts-roster is: ", ltsInfo.Roster.List)
+	return nil
+}
+
 // reencrypt decrypts the encrypted secret of a write instance and re-encrypts
 // it under the specified key of the write instance. If the proofs of the write
 // and read instances are correct, it then outputs a DecryptKeyReply. With the

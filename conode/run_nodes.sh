@@ -14,7 +14,7 @@ show_all="true"
 show_time="false"
 single=""
 
-while getopts "h?v:n:p:i:d:qftsc" opt; do
+while getopts "h?v:n:p:i:d:qftsca" opt; do
     case "$opt" in
     h|\?)
         echo "Allowed arguments:
@@ -29,7 +29,8 @@ while getopts "h?v:n:p:i:d:qftsc" opt; do
         -d data dir to store private keys, databases and logs (.)
         -q quiet all non-leader nodes
         -s don't start failing nodes again
-        -f flush databases and start from scratch"
+        -f flush databases and start from scratch
+        -a allow insecure lts creations"
         exit 0
         ;;
     v)  verbose=$OPTARG
@@ -52,6 +53,8 @@ while getopts "h?v:n:p:i:d:qftsc" opt; do
     s)  single="true"
         ;;
     c)  export DEBUG_COLOR=true
+        ;;
+    a)  export COTHORITY_ALLOW_INSECURE_ADMIN=1
         ;;
     esac
 done

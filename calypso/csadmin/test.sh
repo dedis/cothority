@@ -26,6 +26,7 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v4/calypso
     build $APPDIR/../../byzcoin/bcadmin
+    run testInfo
     run testAuth
     run testContractLTS
     run testDkgStart
@@ -34,6 +35,17 @@ main(){
     run testReencrypt
     run testDecrypt
     stopTest
+}
+
+testInfo(){
+    rm -f config/*
+    runCoBG 1 2 3
+    runBA create public.toml --interval .5s
+    bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+    OUTRES=`runCA0 contract lts spawn --bc config/bc-*`
+    LTS_ID=`echo "$OUTRES" | sed -n '2p'`
+    testGrep "tls://localhost:2002" runCA dkg info --bc config/bc-* \
+         --instid $LTS_ID
 }
 
 testAuth(){
