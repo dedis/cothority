@@ -167,16 +167,20 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
 				// receiving 2*f+1 view-change messages.
-				// Watch out for overflow: When ctr gets to be too high,
-				// math.Pow(2, float64(ctr))
-				// will be too high, and timeout will end up negative.
 				timeout := maxTimeout
-				backoff := float64(ctr - 2*f)
-				if backoff < math.Log2(float64(maxTimeout/initialDuration)) {
+				backoff := float64(ctr)
+				// Do some maths to make sure that it will not calculate a value
+				// bigger than maxTimeout.
+				//   maxTimeout = 2**backoff * initialDuration
+				//   maxTimeout / initialDuration = 2**backoff
+				//   log2(maxtimeout / initialDuration) = backoff
+				// So as long as backoff is smaller than this log, all is fine.
+				if backoff < math.Log2(float64(maxTimeout)/
+					float64(initialDuration)) {
 					timeout = time.Duration(math.Pow(2, backoff)) *
 						initialDuration
 				}
-				log.Lvlf2("backoff = %f - timout: %s", backoff,
+				log.Lvlf2("backoff = %f - timeout: %s", backoff,
 					timeout.String())
 
 				timer.Reset(timeout)
