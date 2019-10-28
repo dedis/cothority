@@ -446,3 +446,9 @@ message DebugRemoveRequest {
   required bytes byzcoinid = 1;
   required bytes signature = 2;
 }
+
+// DebugResetRequest asks the conode to reset any dangling forward-links
+message DebugResetRequest {
+  required bytes byzcoinid = 1;
+  required bytes signature = 2;
+}

@@ -27,31 +27,42 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
-    run testDbReplay
-    run testDbMerge
-    run testDbCatchup
-    run testDebugBlock
-    run testLink
-    run testLinkScenario
-    run testCoin
-    run testRoster
-    run testCreateStoreRead
-    run testAddDarc
-    run testDarcAddDeferred
-    run testDarcAddRuleMinimum
-    run testRuleDarc
-    run testAddDarcFromOtherOne
-    run testAddDarcWithOwner
-    run testExpression
-    run testLinkPermission
-    run testQR
-    run testUpdateDarcDesc
-    run testResolveiid
-    run testContractValue
-    run testContractDeferred
-    run testContractConfig
-    run testContractName
+    run testReset
+#    run testDbReplay
+#    run testDbMerge
+#    run testDbCatchup
+#    run testDebugBlock
+#    run testLink
+#    run testLinkScenario
+#    run testCoin
+#    run testRoster
+#    run testCreateStoreRead
+#    run testAddDarc
+#    run testDarcAddDeferred
+#    run testDarcAddRuleMinimum
+#    run testRuleDarc
+#    run testAddDarcFromOtherOne
+#    run testAddDarcWithOwner
+#    run testExpression
+#    run testLinkPermission
+#    run testQR
+#    run testUpdateDarcDesc
+#    run testResolveiid
+#    run testContractValue
+#    run testContractDeferred
+#    run testContractConfig
+#    run testContractName
     stopTest
+}
+
+testReset(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+
+  testFail runBA debug resetBlock co1/private.toml $bcID
 }
 
 testDbReplay(){

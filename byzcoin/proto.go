@@ -467,3 +467,9 @@ type DebugRemoveRequest struct {
 	ByzCoinID []byte
 	Signature []byte
 }
+
+// DebugResetRequest asks the conode to reset any dangling forward-links
+type DebugResetRequest struct {
+	ByzCoinID []byte
+	Signature []byte
+}

@@ -672,6 +672,22 @@ func DebugRemove(si *network.ServerIdentity, byzcoinID skipchain.SkipBlockID) er
 	return cothority.ErrorOrNil(err, "request failed")
 }
 
+// DebugReset removes dangling forward-links from the latest block
+func DebugReset(si *network.ServerIdentity,
+	byzcoinID skipchain.SkipBlockID) error {
+	msg := append(byzcoinID, []byte("reset")...)
+	sig, err := schnorr.Sign(cothority.Suite, si.GetPrivate(), msg)
+	if err != nil {
+		return xerrors.Errorf("sign error: %v", err)
+	}
+	request := &DebugResetRequest{
+		ByzCoinID: byzcoinID,
+		Signature: sig,
+	}
+	err = onet.NewClient(cothority.Suite, ServiceName).SendProtobuf(si, request, nil)
+	return cothority.ErrorOrNil(err, "request failed")
+}
+
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis Darc and block. It will contain rules for spawning and evolving the
 // darc contract.

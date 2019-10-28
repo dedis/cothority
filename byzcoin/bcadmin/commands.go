@@ -202,6 +202,20 @@ var cmds = cli.Commands{
 				},
 			},
 			{
+				Name: "resetBlock",
+				Usage: "Resets the forward-links of a block if the" +
+					" corresponding blocks don't exist. " +
+					"Unless --apply is passed, nothing is done.",
+				Action:    debugReset,
+				ArgsUsage: "private.toml bcID",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "apply",
+						Usage: "actually applies the change",
+					},
+				},
+			},
+			{
 				Name:   "list",
 				Usage:  "Lists all byzcoin instances",
 				Action: debugList,

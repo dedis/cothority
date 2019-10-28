@@ -930,6 +930,34 @@ func (s *Service) DebugRemove(req *DebugRemoveRequest) (*DebugResponse, error) {
 	return &DebugResponse{}, nil
 }
 
+// ErrNoDangling indicates that the latest skipblock was valid
+var ErrNoDangling = xerrors.New("no dangling forward-links")
+
+// DebugReset removes dangling forward-links in the latest block
+func (s *Service) DebugReset(req *DebugResetRequest) (*DebugResponse, error) {
+	msg := append(req.ByzCoinID, []byte("reset")...)
+	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg,
+		req.Signature); err != nil {
+		log.Error("Signature failure:", err)
+		return nil, xerrors.Errorf("verifying signature: %v", err)
+	}
+	sb, err := s.db().GetLatestByID(req.ByzCoinID)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get latest block: %v", err)
+	}
+	if len(sb.ForwardLink) == 0 {
+		return nil, ErrNoDangling
+	}
+	sb.ForwardLink = []*skipchain.ForwardLink{}
+	err = s.db().RemoveBlock(sb.Hash)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't remove block: %v", err)
+	}
+	s.db().Store(sb)
+
+	return &DebugResponse{}, nil
+}
+
 // SetPropagationTimeout overrides the default propagation timeout that is used
 // when a new block is announced to the nodes as well as the skipchain
 // propagation timeout.
@@ -2870,7 +2898,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.CheckStateChangeValidity,
 		s.ResolveInstanceID,
 		s.Debug,
-		s.DebugRemove)
+		s.DebugRemove,
+		s.DebugReset)
 	if err != nil {
 		return nil, err
 	}

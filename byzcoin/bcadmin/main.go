@@ -1192,6 +1192,58 @@ func debugDump(c *cli.Context) error {
 	return nil
 }
 
+func debugReset(c *cli.Context) error {
+	if c.NArg() < 2 {
+		return xerrors.New("please give the following arguments: private.toml byzcoin-id")
+	}
+
+	ccfg, err := app.LoadCothority(c.Args().First())
+	if err != nil {
+		return err
+	}
+	si, err := ccfg.GetServerIdentity()
+	if err != nil {
+		return err
+	}
+	bcidBuf, err := hex.DecodeString(c.Args().Get(1))
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	bcid := skipchain.SkipBlockID(bcidBuf)
+
+	cl := skipchain.NewClient()
+	ro := onet.NewRoster([]*network.ServerIdentity{si})
+	id := bcid
+	for {
+		sb, err := cl.GetSingleBlock(ro, id)
+		if err != nil {
+			if id.Equal(bcid) {
+				return xerrors.Errorf("couldn't get update chain: %v", err)
+			}
+			break
+		}
+		log.Print("Got block", sb.Index)
+		if len(sb.ForwardLink) > 0 {
+			id = sb.ForwardLink[len(sb.ForwardLink)-1].To
+		} else {
+			return xerrors.New("nothing to reset - latest block has 0 forwardlinks")
+		}
+	}
+
+	if c.Bool("apply") {
+		err = byzcoin.DebugReset(si, bcid)
+		if err != nil {
+			return err
+		}
+		log.Infof("Successfully reset last block of ByzCoinID %x from %s", bcid,
+			si.Address)
+	} else {
+		log.Info("Call with --apply to actually reset the block")
+	}
+	return nil
+}
+
 func debugRemove(c *cli.Context) error {
 	if c.NArg() < 2 {
 		return xerrors.New("please give the following arguments: private.toml byzcoin-id")
