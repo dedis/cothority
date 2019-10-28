@@ -117,7 +117,8 @@ func (o *Setup) Dispatch() error {
 	if err != nil {
 		return err
 	}
-	// TODO: "This will fail as soon as we start doing things with thresold." - nicolas
+	// TODO: "This will fail as soon as we start doing things with threshold.
+	//  " - nicolas
 	for i := 0; i < o.DKG.ExpectedDeals(); i++ {
 		err := o.allDeal(<-o.structDeal)
 		if err != nil {

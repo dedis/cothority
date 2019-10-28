@@ -493,6 +493,12 @@ func (s *Service) GetProof(req *GetProof) (*GetProofResponse, error) {
 		s.catchingLock.Unlock()
 	}()
 
+	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
+	if s.closed {
+		return nil, xerrors.New("cannot get proof while in closed state")
+	}
+
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
 		return nil, xerrors.New("cannot find skipblock while getting proof")

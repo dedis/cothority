@@ -645,6 +645,66 @@ func (c *Client) ResolveInstanceID(darcID darc.ID, name string) (InstanceID, err
 	return reply.InstanceID, cothority.ErrorOrNil(err, "request failed")
 }
 
+// WaitPropagation contacts all nodes in the cl.Roster until they all
+// have the same latest block. If there is an error when calling
+// `GetProof`, the error will be ignored. This helps when waiting
+// for the propagation, but only a subset of the nodes are actually
+// participating in the consensus.
+// If index >= 0,  it waits to have at least this block present in all nodes.
+func (c *Client) WaitPropagation(index int) error {
+	var sb skipchain.SkipBlock
+	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
+	if index > 0 {
+		sb.Index = index
+	}
+searchLatest:
+	for i := 0; i < 100; i++ {
+		log.Lvl2("Starting search")
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		for node := range c.Roster.List {
+			log.Lvlf2("Searching node %d for block %d", node, sb.Index)
+			if err := c.UseNode(node); err != nil {
+				return xerrors.Errorf("couldn't set node: %+v", err)
+			}
+			pr, err := c.GetProof(make([]byte, 32))
+			if err != nil {
+				log.Warn("error while searching for node - ignoring")
+				continue
+			}
+			if pr.Proof.Latest.Index > sb.Index {
+				sb = pr.Proof.Latest
+				log.Lvl2("Found new block:", sb.Index)
+				cc, err := c.GetChainConfig()
+				if err != nil {
+					log.Warnf("Couldn't get chain config: %+v", err)
+					continue searchLatest
+				}
+				same, err := c.Roster.Equal(&cc.Roster)
+				if err != nil {
+					return xerrors.Errorf("couldn't compare rosters: %+v", err)
+				}
+				if !same {
+					c.Roster = cc.Roster
+					continue searchLatest
+				}
+				if node > 0 {
+					continue searchLatest
+				}
+			} else if pr.Proof.Latest.Index < sb.Index {
+				log.Lvlf2("Node %d returned earlier block: %d", node,
+					pr.Proof.Latest.Index)
+				continue searchLatest
+			} else {
+				log.Lvl2("Node", node, "returned same block as other nodes")
+			}
+		}
+		return nil
+	}
+	return xerrors.New("didn't get the same blocks from everybody within 10 seconds")
+}
+
 // Debug can be used to dump things from a byzcoin service. If byzcoinID is nil, it will return all
 // existing byzcoin instances. If byzcoinID is given, it will return all instances for that ID.
 func Debug(url string, byzcoinID *skipchain.SkipBlockID) (*DebugResponse, error) {

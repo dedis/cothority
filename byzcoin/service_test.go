@@ -2716,6 +2716,13 @@ func (s *ser) deleteDBs(t *testing.T, index int) {
 	require.NoError(t, bc.startAllChains())
 }
 
+// Waits to have a coherent view in all nodes with at least the block
+// 'index' held by all nodes.
+func (s *ser) waitPropagation(t *testing.T, index int) {
+	require.NoError(t, NewClient(s.genesis.Hash,
+		*s.roster).WaitPropagation(index))
+}
+
 func deleteDB(s *onet.ServiceProcessor, key []byte) error {
 	db, stBucket := s.GetAdditionalBucket(key)
 	return db.Update(func(tx *bbolt.Tx) error {

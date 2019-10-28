@@ -7,17 +7,13 @@ import (
 	"math/big"
 	"os"
 	"strings"
-	"time"
 
 	"golang.org/x/xerrors"
-
-	"go.dedis.ch/cothority/v3/skipchain"
-	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3/log"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/protobuf"
 )
 
@@ -146,64 +142,14 @@ func CombinationAnds(list []string, m int) []string {
 	return list
 }
 
-// WaitPropagation contacts all nodes in the cl.Roster until they all
-// have the same latest block. If there is an error when calling
-// `GetProof`, the error will be ignored. This helps when waiting
-// for the propagation, but only a subset of the nodes are actually
-// participating in the consensus.
+// WaitPropagation checks if the "--wait" argument is given, and only if this
+// is true, it will make sure that all nodes have a coherent view of the chain.
 func WaitPropagation(c *cli.Context, cl *byzcoin.Client) error {
 	if !c.GlobalBool("wait") {
 		return nil
 	}
 
-	var sb skipchain.SkipBlock
-	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
-searchLatest:
-	for i := 0; i < 100; i++ {
-		log.Lvl2("Starting search")
-		if i > 0 {
-			time.Sleep(100 * time.Millisecond)
-		}
-		for node := range cl.Roster.List {
-			log.Lvl2("Searching node", node)
-			if err := cl.UseNode(node); err != nil {
-				return xerrors.Errorf("couldn't set node: %+v", err)
-			}
-			pr, err := cl.GetProof(make([]byte, 32))
-			if err != nil {
-				log.Warn("error while searching for node - ignoring")
-				continue searchLatest
-			}
-			if pr.Proof.Latest.Index > sb.Index {
-				sb = pr.Proof.Latest
-				log.Lvl2("Found new block:", sb.Index)
-				cc, err := cl.GetChainConfig()
-				if err != nil {
-					log.Warnf("Couldn't get chain config: %+v", err)
-					continue searchLatest
-				}
-				same, err := cl.Roster.Equal(&cc.Roster)
-				if err != nil {
-					return xerrors.Errorf("couldn't compare rosters: %+v", err)
-				}
-				if !same {
-					cl.Roster = cc.Roster
-					continue searchLatest
-				}
-				if node > 0 {
-					continue searchLatest
-				}
-			} else if pr.Proof.Latest.Index < sb.Index {
-				log.Lvlf2("Node %d returned earlier block: %d", node,
-					pr.Proof.Latest.Index)
-				continue searchLatest
-			} else {
-				log.Lvl2("Node", node, "returned same block as other nodes")
-			}
-		}
-		return nil
-	}
-	return xerrors.New("didn't get the same blocks from everybody within 10 seconds")
+	return cl.WaitPropagation(0)
 }
 
 // We are recursively building the leaves of a tree that contains every
