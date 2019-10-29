@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,6 +22,11 @@ import (
 // ConfigPath points to where the files will be stored by default.
 var ConfigPath = "."
 
+// This var is used to check if an identity is empty. It helps providing some
+// insights to users in special cases, for example when using "bcadmin link"
+// that ends up using an empty identity if none is provided.
+var emptyID = make([]byte, 32)
+
 // BcaName is used for cliApp.Name and the default config folder of bcadmin.
 const BcaName = "bcadmin"
 
@@ -34,8 +41,13 @@ type Config struct {
 }
 
 // LoadKey returns the signer of a given identity. It searches it in the
-// ConfigPath.
+// ConfigPath. If the identity is empty it return an error.
 func LoadKey(id darc.Identity) (*darc.Signer, error) {
+	// Check if this is an empty identity. Note: we expect an identity to use 32
+	// bytes
+	if bytes.Equal(id.GetPublicBytes(), emptyID) {
+		return nil, xerrors.New("failed to load the key because the identity is empty")
+	}
 	// Find private key file.
 	fn := fmt.Sprintf("key-%s.cfg", id)
 	fn = filepath.Join(ConfigPath, fn)
@@ -110,6 +122,23 @@ func SaveConfig(cfg Config) (string, error) {
 	}
 
 	return fn, nil
+}
+
+// SafeSaveConfig does the same as SaveConfig but it checks if the file already
+// exist and returns an error if this is the case.
+func SafeSaveConfig(cfg Config) (string, error) {
+	os.MkdirAll(ConfigPath, 0755)
+
+	fn := fmt.Sprintf("bc-%x.cfg", cfg.ByzCoinID)
+	fn = filepath.Join(ConfigPath, fn)
+	_, err := os.Stat(fn)
+	if os.IsNotExist(err) {
+		return SaveConfig((cfg))
+	}
+	if err != nil {
+		return "", errors.New("failed to check if file exist: " + err.Error())
+	}
+	return "", fmt.Errorf("file already exist, we refuse to overwrite '%s'", fn)
 }
 
 // LoadConfig returns a config read from the file and an initialized

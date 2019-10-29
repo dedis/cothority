@@ -30,18 +30,22 @@ var cmds = cli.Commands{
 
 	{
 		Name:        "link",
-		Usage:       "create a BC config file that sets the specified roster, darc and identity",
+		Usage:       "create a BC config file that sets the specified roster, darc and identity. If only the first argument is provided it just prints the byzcoin-ids.",
 		Description: "If no identity is provided, it will use an empty one. Same for the darc param. This allows one that has no private key to perform basic operations that do not require authentication.",
 		Aliases:     []string{"login"},
 		ArgsUsage:   "roster.toml [byzcoin id]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "the darc id to be saved (defaults to an empty darc)",
+				Usage: "the darc id to be saved. If not provided, it will use the genesis darc.",
 			},
 			cli.StringFlag{
 				Name:  "identity, id",
 				Usage: "the identity to be saved (defaults to an empty identity)",
+			},
+			cli.BoolFlag{
+				Name:  "force, f",
+				Usage: "if set, it will overwrite the config file if already present",
 			},
 		},
 		Action: link,
@@ -456,6 +460,10 @@ var cmds = cli.Commands{
 					cli.BoolFlag{
 						Name:  "delete",
 						Usage: "delete the rule",
+					},
+					cli.BoolFlag{
+						Name:  "restricted, r",
+						Usage: "evolves the darc in a restricted mode, ie. NOT using the invoke:darc.evolve_unrestricted command",
 					},
 				},
 			},
