@@ -284,7 +284,7 @@ func NameGet(c *cli.Context) error {
 	err = protobuf.DecodeWithConstructors(value, &namingBody,
 		network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return xerrors.Errorf("couldn't decode ContractNamingBody: ", err)
+		return xerrors.Errorf("couldn't decode ContractNamingBody: %v", err)
 	}
 
 	log.Infof("Here is the naming data:\n%s", namingBody)
