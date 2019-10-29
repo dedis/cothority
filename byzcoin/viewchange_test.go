@@ -218,7 +218,7 @@ func TestViewChange_LostSync(t *testing.T) {
 	}
 	require.NoError(t, req.Sign(s.services[0].ServerIdentity().GetPrivate()))
 
-	//log.OutputToBuf()
+	log.OutputToBuf()
 	defer log.OutputToOs()
 
 	err = s.services[0].SendRaw(target, req)

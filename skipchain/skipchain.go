@@ -1580,6 +1580,7 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		// have caught up during the signature request
 		return xerrors.New("couldn't get the block to attach the forward link")
 	}
+	log.Lvlf2("from: %d - pfl: %+v", sb.Index, pfl)
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {
@@ -1594,9 +1595,10 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 			return xerrors.New("cannot store forward-link if there is no" +
 				" corresponding block")
 		}
+		blocks = append(blocks, newBlock)
+
 		log.Lvl2("Clearing block")
 		s.blockBuffer.clear(sb.SkipChainID())
-		blocks = append(blocks, newBlock)
 	}
 
 	// Update the forward link of the previous latest block and add the new
