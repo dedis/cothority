@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v4/byzcoin/viewchange"
-	"go.dedis.ch/cothority/v4/skipchain"
 	"go.dedis.ch/onet/v4/log"
 )
 
@@ -44,13 +43,6 @@ func TestViewChange_Basic3(t *testing.T) {
 	testViewChange(t, 10, 3, 4*testInterval)
 }
 
-func testWaitPropagation(id skipchain.SkipBlockID, service *skipchain.Service, interval time.Duration) {
-	var sb *skipchain.SkipBlock
-	for doCatchUp := false; !doCatchUp && sb == nil; sb, doCatchUp = service.WaitBlock(id, nil) {
-		time.Sleep(interval)
-	}
-}
-
 func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
 	rw := time.Duration(3)
 	s := newSerN(t, 1, interval, nHosts, rw)
@@ -82,7 +74,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	for i := 0; i < nFailures; i++ {
 		time.Sleep(time.Duration(math.Pow(2, float64(i+1))) * s.interval * rw)
 	}
-	testWaitPropagation(s.genesis.Hash, s.services[nFailures].skService(), s.interval)
+	s.waitPropagation(t, 0)
 	config, err := s.services[nFailures].LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	log.Lvl2("Verifying roster", config.Roster.List)
@@ -97,9 +89,8 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// check that the leader is updated for all nodes
 	// Note: check is done after a tx has been sent so that nodes catch up if the
 	// propagation failed
+	s.waitPropagation(t, 0)
 	for _, service := range s.services[nFailures:] {
-		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
-
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)
@@ -129,7 +120,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
 		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 	}
-	testWaitPropagation(s.genesis.Hash, s.services[nFailures].skService(), s.interval)
+	s.waitPropagation(t, 0)
 
 	log.Lvl1("Sending 1st tx")
 	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
@@ -189,7 +180,7 @@ func TestViewChange_LostSync(t *testing.T) {
 		},
 		Signature: []byte{},
 	}
-	req.Sign(s.services[0].ServerIdentity().GetPrivate())
+	require.NoError(t, req.Sign(s.services[0].ServerIdentity().GetPrivate()))
 
 	err := s.services[0].SendRaw(target, req)
 	require.NoError(t, err)
@@ -225,7 +216,7 @@ func TestViewChange_LostSync(t *testing.T) {
 			LeaderIndex: 3,
 		},
 	}
-	req.Sign(s.services[0].ServerIdentity().GetPrivate())
+	require.NoError(t, req.Sign(s.services[0].ServerIdentity().GetPrivate()))
 
 	log.OutputToBuf()
 	defer log.OutputToOs()
@@ -247,9 +238,8 @@ func TestViewChange_LostSync(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	s.waitPropagation(t, 2)
 	for _, service := range s.services {
-		testWaitPropagation(s.genesis.Hash, service.skService(), s.interval)
-
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.genesis.SkipChainID())
 		require.NoError(t, err)

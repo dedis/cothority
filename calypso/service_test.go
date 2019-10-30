@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v4"
 	"go.dedis.ch/cothority/v4/byzcoin"
@@ -514,7 +516,20 @@ func (s *ts) closeAll(t *testing.T) {
 	s.local.CloseAll()
 }
 
+// The key might still be reconstructed at some nodes, so try one second later,
+// if the first one fails.
 func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
+	key, err := s.reconstructKeyFunc()
+	if err == nil {
+		return key
+	}
+	time.Sleep(time.Second)
+	key, err = s.reconstructKeyFunc()
+	require.NoError(t, err)
+	return key
+}
+
+func (s *ts) reconstructKeyFunc() (kyber.Scalar, error) {
 	id := s.ltsReply.InstanceID
 	var sshares []*share.PriShare
 	for i := range s.services {
@@ -530,8 +545,12 @@ func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
 	}
 	n := len(s.ltsRoster.List)
 	th := n - (n-1)/3
-	require.Equal(t, n, len(sshares))
+	if n != len(sshares) {
+		return nil, xerrors.New("not correct amount of shares")
+	}
 	sec, err := share.RecoverSecret(cothority.Suite, sshares, th, n)
-	require.NoError(t, err)
-	return sec
+	if err != nil {
+		return nil, xerrors.Errorf("while recovering secret: %v", err)
+	}
+	return sec, nil
 }
