@@ -161,7 +161,10 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	// Our own proof might not be signed, so sign it.
 	for i := range proof {
 		if proof[i].SignerID.Equal(s.ServerIdentity().ID) && len(proof[i].Signature) == 0 {
-			proof[i].Sign(s.getPrivateKey())
+			err := proof[i].Sign(s.getPrivateKey())
+			if err != nil {
+				log.Error(s.ServerIdentity(), "Couldn't sign our proof")
+			}
 		}
 	}
 
@@ -169,6 +172,17 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	req := viewchange.NewViewReq{
 		Roster: *rotateRoster(sb.Roster, proof[0].View.LeaderIndex),
 		Proof:  proof,
+	}
+
+	log.Lvl2(s.ServerIdentity(), "Got", len(proof), "proofs")
+	pl, err := protobuf.Encode(&req)
+	if err != nil {
+		log.Error("Couldn't encode request:", err)
+		return
+	}
+	if !s.verifyViewChange(req.Hash(), pl) {
+		log.Error("Will not ask for view change I cannot verify")
+		return
 	}
 
 	go func() {
@@ -287,6 +301,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	cosiProto.CreateProtocol = s.CreateProtocol
 	cosiProto.Timeout = interval * 2
 
+	log.Lvl2("Starting protocol for getting leadership", newRoster.List)
 	if err := cosiProto.Start(); err != nil {
 		return nil, xerrors.Errorf("starting protocol: %v", err)
 	}
@@ -325,6 +340,13 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		signers := make(map[[16]byte]bool)
 		views := make(map[string]bool)
 		for _, p := range req.Proof {
+			ind, si := req.Roster.Search(p.SignerID)
+			if ind >= 0 {
+				log.Lvl2("Got view-change signature from", si)
+			} else {
+				log.Lvl2("Got view-change signature from invalid node")
+				continue
+			}
 			signers[p.SignerID] = true
 			views[string(p.View.Hash())] = true
 		}
@@ -332,7 +354,8 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	}()
 	f := s.getFaultThreshold(sb.Hash)
 	if uniqueSigners <= 2*f {
-		log.Error(s.ServerIdentity(), "not enough proofs: %v <= %v", uniqueSigners, 2*f)
+		log.Errorf("%s: not enough proofs: %v <= %v",
+			s.ServerIdentity(), uniqueSigners, 2*f)
 		return false
 	}
 	if uniqueViews != 1 {
