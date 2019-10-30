@@ -1580,7 +1580,8 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		// have caught up during the signature request
 		return xerrors.New("couldn't get the block to attach the forward link")
 	}
-	log.Lvlf2("from: %d - pfl: %+v", sb.Index, pfl)
+	log.Lvlf2("Adding Forwardlink to block %d: (%x height:%d %x)",
+		sb.Index, pfl.Height, pfl.ForwardLink.From, pfl.ForwardLink.To)
 
 	err := sb.AddForwardLink(pfl.ForwardLink, pfl.Height)
 	if err != nil {
@@ -1597,8 +1598,12 @@ func (s *Service) propagateForwardLinkHandler(msg network.Message) error {
 		}
 		blocks = append(blocks, newBlock)
 
-		log.Lvl2("Clearing block")
-		s.blockBuffer.clear(sb.SkipChainID())
+		// The buffer needs to be cleared only once the new block has been
+		// stored, else byzcoin will think the block is missing.
+		defer func() {
+			log.Lvl2("Clearing block")
+			s.blockBuffer.clear(sb.SkipChainID())
+		}()
 	}
 
 	// Update the forward link of the previous latest block and add the new
