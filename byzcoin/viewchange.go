@@ -354,8 +354,8 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 	}()
 	f := s.getFaultThreshold(sb.Hash)
 	if uniqueSigners <= 2*f {
-		log.Errorf("%s: not enough proofs: %v <= %v",
-			s.ServerIdentity(), uniqueSigners, 2*f)
+		log.Errorf("%s: not enough proofs: %v < %v",
+			s.ServerIdentity(), uniqueSigners, 2*f+1)
 		return false
 	}
 	if uniqueViews != 1 {
