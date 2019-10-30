@@ -20,6 +20,8 @@ import (
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
+	"golang.org/x/xerrors"
+
 	bbolt "go.etcd.io/bbolt"
 	uuid "gopkg.in/satori/go.uuid.v1"
 )
@@ -774,6 +776,9 @@ func (db *SkipBlockDB) GetStatus() *onet.Status {
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	var result *SkipBlock
+	if sbID == nil {
+		return nil
+	}
 	err := db.View(func(tx *bbolt.Tx) error {
 		sb, err := db.getFromTx(tx, sbID)
 		if err != nil {
@@ -1284,7 +1289,11 @@ func (db *SkipBlockDB) storeToTx(tx *bbolt.Tx, sb *SkipBlock) error {
 // An error is thrown if marshalling fails.
 // The caller must ensure that this function is called from within a valid transaction.
 func (db *SkipBlockDB) getFromTx(tx *bbolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
-	val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
+	if sbID == nil {
+		return nil, xerrors.New("cannot look up skipblock with ID == nil")
+	}
+
+	val := tx.Bucket(db.bucketName).Get(sbID)
 	if val == nil {
 		return nil, nil
 	}

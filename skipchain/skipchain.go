@@ -957,9 +957,24 @@ func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, error) {
 	return reply, nil
 }
 
+// ChainHasBlock returns true if the given chain has the block id, either in
+// the database or in the blockBuffer. In the latter case, it means that the
+// block has been proposed and is waiting to be accepted.
+func (s *Service) ChainHasBlock(sid SkipBlockID, id SkipBlockID) bool {
+	return s.db.GetByID(id) != nil ||
+		s.blockBuffer.get(sid, id) != nil
+}
+
+// ChainIsProcessing returns true if the given chain has a block in the
+// blockBuffer.
+func (s *Service) ChainIsProcessing(sid SkipBlockID) bool {
+	return s.blockBuffer.has(sid)
+}
+
 // WaitBlock returns a block by its ID instantly if already stored in the DB
 // or check if the block is inside the buffer. If the block is known, false will
 // be returned because a catch up is not necessary, true otherwise.
+// DEPRECATED
 func (s *Service) WaitBlock(sid SkipBlockID, id SkipBlockID) (*SkipBlock, bool) {
 	sb := s.db.GetByID(id)
 	if sb != nil {
@@ -982,6 +997,11 @@ func (s *Service) GetDB() *SkipBlockDB {
 // NewProtocol intercepts the creation of the skipblock protocol and
 // initialises the necessary variables.
 func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfig) (pi onet.ProtocolInstance, err error) {
+	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
+	if s.closed {
+		return nil, xerrors.New("don't process protocols if closed")
+	}
 	if ti.ProtocolName() == ProtocolExtendRoster {
 		// Start by getting latest blocks of all followers
 		pi, err = NewProtocolExtendRoster(ti)
@@ -1055,8 +1075,10 @@ func (s *Service) TestRestart() error {
 	//s.verifiers = map[VerifierID]SkipBlockVerifier{}
 	s.propTimeout = defaultPropagateTimeout
 	s.blockBuffer = newSkipBlockBuffer()
+	s.closedMutex.Lock()
 	s.closed = false
 	s.closing = make(chan bool)
+	s.closedMutex.Unlock()
 	return s.tryLoad()
 }
 

@@ -307,6 +307,7 @@ func TestClient_NoPhantomSkipchain(t *testing.T) {
 	gac, err = c.GetAllByzCoinIDs(roster.List[0])
 	require.NoError(t, err)
 	require.Equal(t, 1, len(gac.IDs))
+	require.NoError(t, l.WaitDone(time.Second))
 }
 
 // Insure that the decoder will return an error if the reply

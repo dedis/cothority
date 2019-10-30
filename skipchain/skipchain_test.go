@@ -1436,36 +1436,37 @@ func TestRosterAddCausesSync(t *testing.T) {
 	}
 }
 
-func TestService_WaitBlock(t *testing.T) {
+func TestService_ChainBlock(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	_, ro, service := local.MakeSRS(cothority.Suite, 1, skipchainSID)
 
 	s := service.(*Service)
 
-	sb, doCatchUp := s.WaitBlock(SkipBlockID{}, nil)
-	require.Nil(t, sb)
-	require.True(t, doCatchUp)
+	isProcessing := s.ChainIsProcessing(SkipBlockID{})
+	require.False(t, isProcessing)
+	hasBlock := s.ChainHasBlock(SkipBlockID{}, SkipBlockID{})
+	require.False(t, hasBlock)
 
 	sbRoot, err := makeGenesisRoster(s, ro)
 	require.NoError(t, err)
 
-	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, sbRoot.Hash)
-	require.NotNil(t, sb)
-	require.False(t, doCatchUp)
-
-	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, SkipBlockID{})
-	require.Nil(t, sb)
-	require.True(t, doCatchUp)
+	isProcessing = s.ChainIsProcessing(sbRoot.Hash)
+	require.False(t, isProcessing)
+	hasBlock = s.ChainHasBlock(sbRoot.Hash, sbRoot.Hash)
+	require.True(t, hasBlock)
+	hasBlock = s.ChainHasBlock(sbRoot.Hash, SkipBlockID{})
+	require.False(t, hasBlock)
 
 	newSb := NewSkipBlock()
 	newSb.Index = 1
 	newSb.GenesisID = sbRoot.Hash
 	newSb.updateHash()
 	s.blockBuffer.add(newSb)
-	sb, doCatchUp = s.WaitBlock(sbRoot.Hash, newSb.Hash)
-	require.Nil(t, sb)
-	require.False(t, doCatchUp)
+	isProcessing = s.ChainIsProcessing(sbRoot.Hash)
+	require.True(t, isProcessing)
+	hasBlock = s.ChainHasBlock(sbRoot.Hash, newSb.Hash)
+	require.True(t, hasBlock)
 }
 
 // The test scenario is the following:
@@ -1537,6 +1538,8 @@ func TestService_MissingForwardLinks(t *testing.T) {
 	require.NoError(t, err)
 	// C4 is re-inserted and should then update the missing forward link with the new block.
 	require.Equal(t, 2, len(sbAtIndex2FromC4.SkipBlock.ForwardLink))
+
+	require.NoError(t, local.WaitDone(time.Second))
 }
 
 func TestService_ForwardLinkVerification(t *testing.T) {
@@ -1594,6 +1597,8 @@ func TestService_ForwardLinkVerification(t *testing.T) {
 	fs.TargetHeight = 0
 	require.False(t, s.bftForwardLink([]byte{}, marshal(fs)))
 	require.Contains(t, log.GetStdErr(), "target height does not match")
+
+	require.NoError(t, local.WaitDone(time.Second))
 }
 
 // Test if the optimization works as expected for a normal situation.

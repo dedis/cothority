@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -139,6 +140,8 @@ func TestSkipBlock_InvalidForwardLinks(t *testing.T) {
 	// Try to store a new block with too many forward-links
 	s.db.Store(gb2)
 	require.Contains(t, log.GetStdErr(), "found 1 forward-links for a height of 0")
+
+	require.NoError(t, local.WaitDone(time.Second))
 }
 
 func TestSkipBlock_WrongSignatures(t *testing.T) {

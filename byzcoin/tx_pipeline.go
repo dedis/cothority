@@ -110,7 +110,11 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 		return nil, xerrors.Errorf("reading config: %v", err)
 	}
 
-	_, isNotProcessingBlock := s.skService().WaitBlock(s.scID, nil)
+	if s.skService().ChainIsProcessing(s.scID) {
+		// When a block is processed, wait for the block to be done
+		time.Sleep(bcConfig.BlockInterval / 2)
+		return &collectTxResult{Txs: nil, CommonVersion: CurrentVersion - 1}, nil
+	}
 
 	latest, err := s.db().GetLatestByID(s.scID)
 	if err != nil {
@@ -140,11 +144,6 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	root := proto.(*CollectTxProtocol)
 	root.SkipchainID = s.scID
 	root.LatestID = latest.Hash
-	// When a block is processed, we prevent conodes to send us back transactions
-	// until the next collection.
-	if !isNotProcessingBlock {
-		root.MaxNumTxs = 0
-	}
 
 	log.Lvl3("Asking", root.Roster().List, "for Txs")
 	if err := root.Start(); err != nil {
