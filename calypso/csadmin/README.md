@@ -47,12 +47,14 @@ $ csadmin authorize <private.toml> <byzcoin id>
 
 **2) Create an instance of LTS**
 
-Spawn a new instance of the LTS contract:
+Spawn a new instance of the LTS contract and show the information about the
+contract as read from byzcoin:
 
 ```bash
 $ csadmin contract lts spawn # uses the default admin darc and key
 > Spawned new LTS contract. Its instance id is: 
 > <lts instance id>
+$ csadmin dkg info --bc bc-*.cfg --instid <lts instance id>
 ```
 
 **3) Start a new DKG**
