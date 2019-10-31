@@ -891,7 +891,7 @@ func darcCdesc(c *cli.Context) error {
 		return err
 	}
 
-	dstr := c.String("dstr")
+	dstr := c.String("darc")
 	if dstr == "" {
 		dstr = cfg.AdminDarc.GetIdentityString()
 	}

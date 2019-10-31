@@ -497,8 +497,8 @@ testUpdateDarcDesc() {
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
-  testOK runBA darc cdesc --desc "New description" --darc "$ID"
-  testGrep "New description" runBA darc show
+  testOK runBA darc cdesc --desc "New description" --darc "$ID" --sign "$KEY"
+  testGrep "New description" runBA darc show --darc "$ID"
 }
 
 # Rely on:

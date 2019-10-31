@@ -359,6 +359,10 @@ var cmds = cli.Commands{
 						Usage: "the id of the darc to edit (config admin darc by default)",
 					},
 					cli.StringFlag{
+						Name:  "sign, signer",
+						Usage: "public key which will sign the request (default: the ledger admin identity)",
+					},
+					cli.StringFlag{
 						Name:  "desc",
 						Usage: "the new description of the darc (required)",
 					},
