@@ -139,9 +139,11 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 			Personhood:  rq.NewPoll.Personhood,
 			PollID:      rq.NewPoll.PollID,
 		}
-		_, err := s.getPopContract(rq.ByzCoinID, np.Personhood.Slice())
-		if err != nil {
-			return nil, err
+		if !np.Personhood.Equal(byzcoin.ConfigInstanceID) {
+			_, err := s.getPopContract(rq.ByzCoinID, np.Personhood.Slice())
+			if err != nil {
+				return nil, err
+			}
 		}
 		//np.PollID = random.Bits(256, true, random.New())
 		sps.Polls = append(sps.Polls, &np)
@@ -149,11 +151,13 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 	case rq.List != nil:
 		pr := &PollResponse{Polls: []PollStruct{}}
 		for _, p := range sps.Polls {
-			member := false
-			for _, id := range rq.List.PartyIDs {
-				if id.Equal(p.Personhood) {
-					member = true
-					break
+			member := p.Personhood.Equal(byzcoin.ConfigInstanceID)
+			if !member {
+				for _, id := range rq.List.PartyIDs {
+					if id.Equal(p.Personhood) {
+						member = true
+						break
+					}
 				}
 			}
 			if member {
@@ -180,12 +184,20 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 		msg := append([]byte("Choice"), byte(rq.Answer.Choice))
 		scope := append([]byte("Poll"), append(rq.ByzCoinID, poll.PollID...)...)
 		scopeHash := sha256.Sum256(scope)
-		ph, err := s.getPopContract(rq.ByzCoinID, poll.Personhood.Slice())
+		var ph *ContractPopParty
+		var err error
+		if poll.Personhood.Equal(byzcoin.ConfigInstanceID) {
+			ph, err = s.getPopContract(rq.ByzCoinID, rq.Answer.PartyID.Slice())
+		} else {
+			ph, err = s.getPopContract(rq.ByzCoinID, poll.Personhood.Slice())
+		}
 		if err != nil {
+			log.Error(err)
 			return nil, err
 		}
 		tag, err := anon.Verify(&suiteBlake2s{}, msg, ph.Attendees.Keys, scopeHash[:], rq.Answer.LRS)
 		if err != nil {
+			log.Error(err)
 			return nil, err
 		}
 		var update bool
@@ -201,6 +213,26 @@ func (s *Service) Poll(rq *Poll) (*PollResponse, error) {
 			poll.Chosen = append(poll.Chosen, PollChoice{Choice: rq.Answer.Choice, LRSTag: tag})
 		}
 		return &PollResponse{Polls: []PollStruct{*poll}}, s.save()
+	case rq.Delete != nil:
+		ok, err := s.verifySignature(rq.ByzCoinID, rq.Delete.Identity, rq.Delete.PollID, rq.Delete.Signature)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, errors.New("user is not allowed to do admin things")
+		}
+		for bcID, polls := range s.storage.Polls {
+			if bcID == string(rq.ByzCoinID) {
+				for i, poll := range polls.Polls {
+					if bytes.Compare(poll.PollID, rq.Delete.PollID) == 0 {
+						polls.Polls = append(polls.Polls[0:i], polls.Polls[i+1:]...)
+						break
+					}
+				}
+				return &PollResponse{Polls: []PollStruct{}}, s.save()
+			}
+		}
+		return nil, errors.New("didn't find poll to delete");
 	default:
 		s.storage.Polls[string(rq.ByzCoinID)] = &storagePolls{Polls: []*PollStruct{}}
 		return &PollResponse{Polls: []PollStruct{}}, s.save()
@@ -240,6 +272,17 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 	if rq.NewRoPaSci != nil {
 		s.storage.RoPaSci = append(s.storage.RoPaSci, rq.NewRoPaSci)
 	}
+	if rq.Lock != nil {
+		for _, rps := range s.storage.RoPaSci {
+			if rps.RoPaSciID.Equal(rq.Lock.RoPaSciID) {
+				if rps.Locked == 0 {
+					rps.Locked = time.Now().Unix()
+					return &RoPaSciListResponse{RoPaScis: []RoPaSci{*rps}}, nil
+				}
+			}
+		}
+		return nil, errors.New("couldn't lock this ropasci")
+	}
 	var roPaScis []RoPaSci
 	for i := 0; i < len(s.storage.RoPaSci); i++ {
 		rps := s.storage.RoPaSci[i]
@@ -271,13 +314,43 @@ func (s *Service) RoPaSciList(rq *RoPaSciList) (*RoPaSciListResponse, error) {
 			i--
 			continue
 		}
-		roPaScis = append(roPaScis, *rps)
+		if rps.Locked == 0 || time.Now().Sub(time.Unix(rps.Locked, 0)) > time.Minute {
+			rps.Locked = 0
+			roPaScis = append(roPaScis, *rps)
+		}
 	}
 	err := s.save()
 	if err != nil {
 		return nil, err
 	}
 	return &RoPaSciListResponse{RoPaScis: roPaScis}, nil
+}
+
+// TODO: Check signature
+func (s *Service) verifySignature(bcID skipchain.SkipBlockID, identity darc.Identity,
+	msg, signature []byte) (bool, error) {
+	log.Error("testing-mode")
+	return true, nil
+	// This is a hardcoded admin darc.
+	//admin, err := hex.DecodeString("b11b8ef2a60d4bd15d1b2859c40f8f2bd6ad14c7ed6860fa4409a024e86e6f50")
+	// This is the official, OpenHouse2019 admin key
+	admin, err := hex.DecodeString("28aa9504ad3d781611b57d98607e1bca25b1c92f3b32a08a7e341c3866db4675")
+	log.ErrFatal(err)
+	bc := s.Service(byzcoin.ServiceName).(*byzcoin.Service)
+	auth, err := bc.CheckAuthorization(&byzcoin.CheckAuthorization{
+		Version:    byzcoin.CurrentVersion,
+		ByzCoinID:  bcID,
+		DarcID:     admin,
+		Identities: []darc.Identity{identity},
+	})
+	if err != nil {
+		return false, err
+	}
+	sign := false
+	for _, action := range auth.Actions {
+		sign = sign || action == "_sign"
+	}
+	return sign, nil
 }
 
 // PartyList can either store a new party in the list, or just return the list of
@@ -292,6 +365,19 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 	if rq.NewParty != nil {
 		s.storage.Parties[string(rq.NewParty.InstanceID.Slice())] = rq.NewParty
 	}
+	if rq.PartyDelete != nil {
+		if party := s.storage.Parties[string(rq.PartyDelete.PartyID.Slice())]; party != nil {
+			sign, err := s.verifySignature(party.ByzCoinID, rq.PartyDelete.Identity,
+				rq.PartyDelete.PartyID.Slice(), rq.PartyDelete.Signature)
+			if err != nil {
+				return nil, err
+			}
+			if !sign {
+				return nil, errors.New("this identity is not part of the admin-darc")
+			}
+			delete(s.storage.Parties, string(rq.PartyDelete.PartyID.Slice()))
+		}
+	}
 	var parties []Party
 	for _, p := range s.storage.Parties {
 		party, err := getParty(p)
@@ -305,6 +391,30 @@ func (s *Service) PartyList(rq *PartyList) (*PartyListResponse, error) {
 		return nil, err
 	}
 	return &PartyListResponse{Parties: parties}, nil
+}
+
+// Challenge is a special endpoint for the OpenHouse2019 event and allows for signing up
+// people and comparing their results.
+func (s *Service) Challenge(rq *Challenge) (*ChallengeReply, error) {
+	log.Lvlf2("Challenge: %+v", rq)
+	if rq.Update != nil {
+		s.storage.Challenge[string(rq.Update.Credential.Slice())] = rq.Update
+		err := s.save()
+		if err != nil {
+			return nil, err
+		}
+	}
+	reply := &ChallengeReply{}
+	reply.List = make([]ChallengeCandidate, 0, len(s.storage.Challenge))
+	for _, ch := range s.storage.Challenge {
+		reply.List = append(reply.List, *ch)
+	}
+	sort.Slice(reply.List, func(i, j int) bool {
+		return reply.List[i].Score > reply.List[j].Score
+	})
+	log.Print(reply)
+	return reply, nil
+	//return nil, nil
 }
 
 func (s *Service) byzcoinService() *byzcoin.Service {
@@ -333,7 +443,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll, s.RoPaSciList, s.PartyList); err != nil {
+	if err := s.RegisterHandlers(s.Capabilities, s.Meetup, s.Poll, s.RoPaSciList, s.PartyList,
+		s.Challenge); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 
@@ -348,5 +459,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if len(s.storage.Polls) == 0 {
 		s.storage.Polls = make(map[string]*storagePolls)
 	}
-	return s, nil
+	if len(s.storage.Challenge) == 0 {
+		s.storage.Challenge = make(map[string]*ChallengeCandidate)
+	}
+	return s, s.save()
 }
