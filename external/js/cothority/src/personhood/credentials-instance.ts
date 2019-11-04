@@ -122,7 +122,7 @@ export default class CredentialsInstance extends Instance {
     /**
      * Update the data of the crendetial instance by fetching the proof
      *
-     * @returns a promise resolving with the instance
+     * @returns a promise resolving with the instance on success
      */
     async update(): Promise<CredentialsInstance> {
         const inst = await Instance.fromByzcoin(this.rpc, this.id);
