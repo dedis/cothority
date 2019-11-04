@@ -113,10 +113,8 @@ jobs:
           branch: master
         provider: script
         script: >-
-          cd external/js/kyber && npm ci && npm run link && cd ../../.. &&
           cd external/js/cothority &&
           npm ci &&
-          npm link @dedis/kyber &&
           npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
           ./publish.sh --tag dev
 
