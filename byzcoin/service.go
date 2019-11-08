@@ -2162,15 +2162,17 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	return
 }
 
+// addError simply stores the given error using the hash with signatures of the
+// given instruction as the key.
+func (s *Service) addError(tx ClientTransaction, err error) {
+	s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
+}
+
 // processOneTx takes one transaction and creates a set of StateChanges. It
 // also returns the temporary StateTrie with the StateChanges applied. Any data
 // from the trie should be read from sst and not the service.
-func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID skipchain.SkipBlockID) (newStateChanges StateChanges, newStateTrie *stagingStateTrie, err error) {
-	defer func() {
-		if err != nil {
-			s.txErrorBuf.add(tx.Instructions.HashWithSignatures(), err.Error())
-		}
-	}()
+func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
+	scID skipchain.SkipBlockID) (StateChanges, *stagingStateTrie, error) {
 
 	// Make a new trie for each instruction. If the instruction is
 	// sucessfully implemented and changes applied, then keep it
@@ -2180,9 +2182,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 	var statesTemp StateChanges
 	var cin []Coin
 	for _, instr := range tx.Instructions {
-		var scs StateChanges
-		var cout []Coin
-		scs, cout, err = s.executeInstruction(sst, cin, instr, h, scID)
+		scs, cout, err := s.executeInstruction(sst, cin, instr, h, scID)
 		if err != nil {
 			_, _, cid, _, err2 := sst.GetValues(instr.InstanceID.Slice())
 			if err2 != nil {
@@ -2190,12 +2190,16 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 			}
 			err = xerrors.Errorf("%s Contract %s got %x and returned error: %v",
 				s.ServerIdentity(), cid, instr.Hash(), err)
-			return
+			s.addError(tx, err)
+			return nil, nil, err
 		}
-		var counterScs StateChanges
-		if counterScs, err = incrementSignerCounters(sst, instr.SignerIdentities); err != nil {
-			err = xerrors.Errorf("%s failed to update signature counters: %v", s.ServerIdentity(), err)
-			return
+
+		counterScs, err := incrementSignerCounters(sst, instr.SignerIdentities)
+		if err != nil {
+			err = xerrors.Errorf("%s failed to update signature counters: %v",
+				s.ServerIdentity(), err)
+			s.addError(tx, err)
+			return nil, nil, err
 		}
 
 		// Verify the validity of the state-changes:
@@ -2223,22 +2227,30 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 				_, _, contractID, _, err = sst.GetValues(instr.InstanceID.Slice())
 				if err != nil {
 					err = xerrors.Errorf("%s couldn't get contractID from the "+
-						"following instruction: %x", s.ServerIdentity(), instr.Hash())
-					return
+						"following instruction: %x (with instanceID %x)",
+						s.ServerIdentity(), instr.Hash(), instr.InstanceID.Slice())
+					s.addError(tx, err)
+					return nil, nil, err
 				}
-				err = xerrors.Errorf("%s: contract %s %s", s.ServerIdentity(), contractID, reason)
-				return
+				err = xerrors.Errorf("%s: contract %s %s %x", s.ServerIdentity(),
+					contractID, reason, sc.InstanceID)
+				s.addError(tx, err)
+				return nil, nil, err
 			}
-			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction, sc.InstanceID, sc.ContractID)
+			log.Lvlf2("StateChange %s for id %x - contract: %s", sc.StateAction,
+				sc.InstanceID, sc.ContractID)
 			err = sst.StoreAll(StateChanges{sc})
 			if err != nil {
 				err = xerrors.Errorf("%s StoreAll failed: %v", s.ServerIdentity(), err)
-				return
+				s.addError(tx, err)
+				return nil, nil, err
 			}
 		}
 		if err = sst.StoreAll(counterScs); err != nil {
-			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v", s.ServerIdentity(), err)
-			return
+			err = xerrors.Errorf("%s StoreAll failed to add counter changes: %v",
+				s.ServerIdentity(), err)
+			s.addError(tx, err)
+			return nil, nil, err
 		}
 		statesTemp = append(statesTemp, scs...)
 		statesTemp = append(statesTemp, counterScs...)
@@ -2248,12 +2260,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction, scID
 		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
 	}
 
-	newStateChanges = statesTemp
-	newStateTrie = sst
-	if err != nil {
-		panic("programmer error: error should be nil if we get to this point")
-	}
-	return
+	return statesTemp, sst, nil
 }
 
 // GetContractConstructor gets the contract constructor of the contract
