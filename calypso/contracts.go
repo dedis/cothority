@@ -221,9 +221,7 @@ func intersectRosters(r1, r2 *onet.Roster) int {
 // VerifyInstruction uses a specific verification based on attr in the case its
 // a read spawn
 func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
-	log.Info("Hello from the verify instruction")
 	if inst.GetType() == byzcoin.SpawnType && inst.Spawn.ContractID == ContractReadID {
-		log.Info("Hello 2 from the verify instruction")
 		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: c.MakeAttrInterpreters(rst, inst)})
 	}
 	return inst.VerifyWithOption(rst, ctxHash, nil)
