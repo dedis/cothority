@@ -1,7 +1,7 @@
 import { Message, util } from "protobufjs/light";
-import shuffle from "shuffle-array";
 import URL from "url-parse";
 import Log from "../log";
+import { Nodes } from "./nodes";
 import { Roster } from "./proto";
 import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
 
@@ -17,7 +17,7 @@ export function setFactory(generator: (path: string) => WebSocketAdapter): void 
 }
 
 /**
- * A connection allows to send a message to one or more distant peer
+ * A connection allows to send a message to one or more distant peers
  */
 export interface IConnection {
     /**
@@ -39,14 +39,20 @@ export interface IConnection {
      * @param value Timeout in milliseconds
      */
     setTimeout(value: number): void;
+
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
 }
 
 /**
- * Single peer connection
+ * Single peer connection to one single node.
  */
-export class WebSocketConnection implements IConnection {
-    private url: string;
-    private service: string;
+export class WebSocketConnection {
+    private readonly url: string;
+    private readonly service: string;
     private timeout: number;
 
     /**
@@ -92,9 +98,12 @@ export class WebSocketConnection implements IConnection {
             const ws = factory(path);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
-            const timer = setTimeout(() => ws.close(1002, "timeout"), this.timeout);
+            const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
-            ws.onOpen(() => ws.send(bytes));
+            ws.onOpen(() => {
+                Log.lvl3("Sending message to", path);
+                ws.send(bytes);
+            });
 
             ws.onMessage((data: Buffer) => {
                 clearTimeout(timer);
@@ -122,7 +131,6 @@ export class WebSocketConnection implements IConnection {
                 // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
                 // to non-null in case of error.
                 if (code !== 1000 || reason) {
-                    Log.error("Got close:", code, reason);
                     reject(new Error(reason));
                 }
             });
@@ -139,29 +147,45 @@ export class WebSocketConnection implements IConnection {
 /**
  * Multi peer connection that tries all nodes one after another. It can send the command to more
  * than one node in parallel and return the first success if 'parallel' i > 1.
+ *
+ * It uses the Nodes class to manage which nodes will be contacted.
  */
-export class RosterWSConnection {
-    private addresses: string[];
-    private connectionsActive: WebSocketConnection[];
-    private connectionsPool: WebSocketConnection[];
+export class RosterWSConnection implements IConnection {
+    // Can be set to override the default parallel value
+    static defaultParallel: number = 3;
+    // debugging variable
+    private static totalConnNbr = 0;
+    private static nodes: Map<string, Nodes> = new Map<string, Nodes>();
+    nodes: Nodes;
+    private readonly connNbr: number;
+    private msgNbr = 0;
+    private parallel: number;
 
     /**
      * @param r         The roster to use
      * @param service   The name of the service to reach
-     * @param parallel how many nodes to contact in parallel
+     * @param parallel  How many nodes to contact in parallel. Can be changed afterwards
      */
-    constructor(r: Roster, private service: string, parallel: number = 2) {
-        if (parallel < 1) {
-            throw new Error("parallel must be >= 1");
+    constructor(r: Roster, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
+        this.setParallel(parallel);
+        const rID = r.id.toString("hex");
+        if (!RosterWSConnection.nodes.has(rID)) {
+            RosterWSConnection.nodes.set(rID, new Nodes(r));
         }
-        this.addresses = r.list.map((conode) => conode.getWebSocketAddress());
-        shuffle(this.addresses);
-        // Initialize the pool of connections
-        this.connectionsPool = this.addresses.map((addr) => new WebSocketConnection(addr, service));
-        // And take the first 'parallel' connections
-        this.connectionsActive = this.connectionsPool.splice(0, parallel);
-        // Upon failure of a connection, it is pushed to the end of the connectionsPool, and a
-        // new connection is taken from the beginning of the connectionsPool.
+        this.nodes = RosterWSConnection.nodes.get(rID);
+        this.connNbr = RosterWSConnection.totalConnNbr;
+        RosterWSConnection.totalConnNbr++;
+    }
+
+    /**
+     * Set a new parameter for how many nodes should be contacted in parallel.
+     * @param p
+     */
+    setParallel(p: number) {
+        if (p < 1) {
+            throw new Error("Parallel needs to be bigger or equal to 1");
+        }
+        this.parallel = p;
     }
 
     /**
@@ -175,35 +199,42 @@ export class RosterWSConnection {
      */
     async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         const errors: string[] = [];
-        let rotate = this.addresses.length - this.connectionsActive.length;
+        const msgNbr = this.msgNbr;
+        this.msgNbr++;
+        const list = this.nodes.newList(this.service, this.parallel);
+        const pool = list.active;
+
+        Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
+            pool.map((conn) => conn.getURL()));
 
         // Get the first reply - need to take care not to return a reject too soon, else
         // all other promises will be ignored.
         // The promises that never 'resolve' or 'reject' will later be collected by GC:
         // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
-        return Promise.race(this.connectionsActive.map((_, i) => {
+        return Promise.race(pool.map((conn) => {
             return new Promise<T>(async (resolve, reject) => {
                 do {
+                    const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
                     try {
-                        const sub = await this.connectionsActive[i].send(message, reply);
-                        // Signal to other connections that have an error that they don't need
-                        // to retry.
-                        rotate = -1;
-                        resolve(sub as T);
+                        Log.lvl3(idStr, "sending");
+                        const sub = await conn.send(message, reply);
+                        Log.lvl3(idStr, "received OK");
+
+                        if (list.done(conn) === 0) {
+                            Log.lvl3(idStr, "first to receive");
+                            resolve(sub as T);
+                        }
+                        return;
                     } catch (e) {
+                        Log.lvl3(idStr, "has error", e);
                         errors.push(e);
-                        if (errors.length === this.addresses.length) {
-                            // It's the last connection that also threw an error, so let's quit
+                        conn = list.replace(conn);
+                        if (errors.length >= list.length / 2) {
+                            // More than half of the nodes threw an error - quit.
                             reject(errors);
                         }
-                        rotate--;
-                        if (rotate >= 0) {
-                            // Take the oldest connection that hasn't been used yet
-                            this.connectionsPool.push(this.connectionsActive[i]);
-                            this.connectionsActive[i] = this.connectionsPool.shift();
-                        }
                     }
-                } while (rotate >= 0);
+                } while (conn !== undefined);
             });
         }));
     }
@@ -212,19 +243,14 @@ export class RosterWSConnection {
      * To be conform with an IConnection
      */
     getURL(): string {
-        return this.connectionsActive[0].getURL();
+        return this.nodes.newList(this.service, 1).active[0].getURL();
     }
 
     /**
      * To be conform with an IConnection - sets the timeout on all connections.
      */
     setTimeout(value: number) {
-        this.connectionsPool.forEach((conn) => {
-            conn.setTimeout(value);
-        });
-        this.connectionsActive.forEach((conn) => {
-            conn.setTimeout(value);
-        });
+        this.nodes.setTimeout(value);
     }
 }
 
@@ -241,6 +267,6 @@ export class LeaderConnection extends WebSocketConnection {
             throw new Error("Roster should have at least one node");
         }
 
-        super(roster.list[0].address, service);
+        super(roster.list[0].getWebSocketAddress(), service);
     }
 }
