@@ -4,18 +4,20 @@ import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
 import Signer from "../darc/signer";
-import Log from "../log";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
 import { InstanceID } from "./instance";
 
 export interface ICounterUpdater {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]>;
+    updateCachedCounters(signers: IIdentity[]): Promise<Long[]>;
+    getNextCounter(signer: IIdentity): Long;
 }
 
 /**
  * List of instructions to send to a byzcoin chain
  */
 export default class ClientTransaction extends Message<ClientTransaction> {
+
     /**
      * @see README#Message classes
      */
@@ -78,20 +80,14 @@ export default class ClientTransaction extends Message<ClientTransaction> {
 
         // Get all counters from all signers of all instructions and map them into an object.
         const uniqueSigners: IIdentity[] = _.uniq(_.flatten(signers));
-        const counters = await rpc.getSignerCounters(uniqueSigners, 1);
-
-        const signerCounters: {[key: string]: any} = {};
-        uniqueSigners.forEach((us, i) => {
-            signerCounters[us.toString()] = counters[i];
-        });
+        await rpc.updateCachedCounters(uniqueSigners);
 
         // Iterate over the instructions, and store the appropriate signers and counters, while
         // increasing those that have been used.
         for (let i = 0; i < this.instructions.length; i++) {
             signers[i].forEach((signer) => {
                 this.instructions[i].signerIdentities.push(IdentityWrapper.fromIdentity(signer));
-                this.instructions[i].signerCounter.push(signerCounters[signer.toString()]);
-                signerCounters[signer.toString()] = signerCounters[signer.toString()].add(1);
+                this.instructions[i].signerCounter.push(rpc.getNextCounter(signer));
             });
         }
     }
