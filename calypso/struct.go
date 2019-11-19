@@ -13,9 +13,10 @@ import (
 )
 
 func init() {
+	// Ceyhun
 	network.RegisterMessages(CreateLTS{}, CreateLTSReply{},
 		Authorize{}, AuthorizeReply{},
-		DecryptKey{}, DecryptKeyReply{})
+		DecryptKey{}, DecryptKeyReply{}, DecryptKeyNT{}, DecryptKeyNTReply{})
 }
 
 type suite interface {

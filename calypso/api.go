@@ -143,6 +143,16 @@ func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error)
 	return reply, cothority.ErrorOrNil(err, "sending DecryptKey message")
 }
 
+// Ceyhun
+// DecryptKeyNT does the same job as DecryptKey, except every node in SMC
+// performs the Lagrange interpolation to recover the secret. If reenc is false,
+// then the secret is not re-encrypted with the public key of the reader.
+func (c *Client) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, err error) {
+	reply = &DecryptKeyNTReply{}
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dknr, reply)
+	return reply, cothority.ErrorOrNil(err, "sending DecryptKeyNTReply message")
+}
+
 // WaitProof calls the byzcoin client's wait proof
 func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 	value []byte) (*byzcoin.Proof, error) {

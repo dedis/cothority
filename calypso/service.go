@@ -562,6 +562,107 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	return
 }
 
+func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, err error) {
+	//reply = &DecryptKeyReply{}
+	reply = &DecryptKeyNTReply{}
+	//log.Lvl2(s.ServerIdentity(), "Re-encrypt the key to the public key of the reader")
+
+	var read Read
+	if err := dknr.Read.VerifyAndDecode(cothority.Suite, ContractReadID, &read); err != nil {
+		return nil, xerrors.New("didn't get a read instance: " + err.Error())
+	}
+
+	var write Write
+	if err := dknr.Write.VerifyAndDecode(cothority.Suite, ContractWriteID, &write); err != nil {
+		return nil, xerrors.New("didn't get a write instance: " + err.Error())
+	}
+	if !read.Write.Equal(byzcoin.NewInstanceID(dknr.Write.InclusionProof.Key())) {
+		return nil, xerrors.New("read doesn't point to passed write")
+	}
+	s.storage.Lock()
+	id := write.LTSID
+	roster := s.storage.Rosters[id]
+	if roster == nil {
+		s.storage.Unlock()
+		return nil,
+			xerrors.Errorf("don't know the LTSID '%v' stored in write", id)
+	}
+	s.storage.Unlock()
+
+	if err = s.verifyProof(&dknr.Read); err != nil {
+		return nil, xerrors.Errorf(
+			"read proof cannot be verified to come from scID: %v",
+			err)
+	}
+	if err = s.verifyProof(&dknr.Write); err != nil {
+		return nil, xerrors.Errorf(
+			"write proof cannot be verified to come from scID: %v",
+			err)
+	}
+
+	// Start ocsnt-protocol to re-encrypt the file's symmetric key under the
+	// reader's public key.
+	nodes := len(roster.List)
+	threshold := nodes - (nodes-1)/3
+	tree := roster.GenerateStar()
+	pi, err := s.CreateProtocol(protocol.NameOCSNT, tree)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create ocsnt-protocol: %v", err)
+	}
+	ocsntProto := pi.(*protocol.OCSNT)
+	ocsntProto.U = write.U
+	verificationData := &vData{
+		Proof: dknr.Read,
+	}
+	if dknr.Reenc {
+		ocsntProto.Xc = read.Xc
+	} else {
+		ocsntProto.Xc = cothority.Suite.Point().Null()
+	}
+	log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsntProto.Xc)
+	ocsntProto.VerificationData, err = protobuf.Encode(verificationData)
+	if err != nil {
+		return nil,
+			xerrors.Errorf("couldn't marshal verification data: %v", err)
+	}
+
+	// Make sure everything used from the s.Storage structure is copied, so
+	// there will be no races.
+	s.storage.Lock()
+	ocsntProto.Shared = s.storage.Shared[id]
+	pp := s.storage.Polys[id]
+	reply.X = s.storage.Shared[id].X.Clone()
+	var commits []kyber.Point
+	for _, c := range pp.Commits {
+		commits = append(commits, c.Clone())
+	}
+	ocsntProto.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
+	s.storage.Unlock()
+
+	log.Lvl3("Starting reencryption protocol")
+	err = ocsntProto.SetConfig(&onet.GenericConfig{Data: id.Slice()})
+	if err != nil {
+		return nil,
+			xerrors.Errorf("failed to set config for ocs-protocol: %v", err)
+	}
+	err = ocsntProto.Start()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to start ocs-protocol: %v", err)
+	}
+	if !<-ocsntProto.Reencrypted {
+		return nil, xerrors.New("reencryption got refused")
+	}
+	log.Lvl3("Reencryption protocol is done.")
+	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsntProto.Uis,
+		threshold, nodes)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to recover commit: %v", err)
+	}
+	reply.C = write.C
+	log.Lvl3("Successfully reencrypted the key")
+	return
+}
+
 // GetLTSReply returns the CreateLTSReply message of a previous LTS.
 func (s *Service) GetLTSReply(req *GetLTSReply) (*CreateLTSReply, error) {
 	log.Lvlf2("Getting LTS Reply for ID: %v", req.LTSID)
@@ -793,7 +894,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		genesisBlocks:    make(map[string]*skipchain.SkipBlock),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey,
+	// Ceyhun
+	if err := s.RegisterHandlers(s.CreateLTS, s.ReshareLTS, s.DecryptKey, s.DecryptKeyNT,
 		s.GetLTSReply, s.Authorise, s.Authorize); err != nil {
 		return nil, xerrors.New("couldn't register messages")
 	}

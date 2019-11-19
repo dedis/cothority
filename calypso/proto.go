@@ -121,6 +121,19 @@ type DecryptKey struct {
 	Write byzcoin.Proof
 }
 
+// Ceyhun
+type DecryptKeyNT struct {
+	// Read is the proof that he has been accepted to read the secret.
+	Read byzcoin.Proof
+	// Write is the proof containing the write request.
+	Write byzcoin.Proof
+	// This can be the hash of the execution plan (works as a nonce so that
+	// the contents of this struct can be used to uniquely identify the
+	// request)
+	Key   []byte
+	Reenc bool
+}
+
 // DecryptKeyReply is returned if the service verified successfully that the
 // decryption request is valid.
 type DecryptKeyReply struct {
@@ -130,6 +143,16 @@ type DecryptKeyReply struct {
 	XhatEnc kyber.Point
 	// X is the aggregate public key of the LTS used.
 	X kyber.Point
+}
+
+// Ceyhun
+// DecryptKeyReply is returned if the service verified successfully that the
+// decryption request is valid.
+type DecryptKeyNTReply struct {
+	C       kyber.Point
+	XhatEnc kyber.Point
+	X       kyber.Point
+	// TODO: Add BLS signature
 }
 
 // GetLTSReply asks for the shared public key of the corresponding LTSID
