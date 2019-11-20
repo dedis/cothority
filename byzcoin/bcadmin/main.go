@@ -108,11 +108,13 @@ func create(c *cli.Context) error {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 
-	req, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, r, []string{"spawn:longTermSecret"}, owner.Identity())
+	req, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, r,
+		[]string{"spawn:longTermSecret"}, owner.Identity())
 	if err != nil {
 		log.Error(err)
 		return err
 	}
+
 	req.BlockInterval = interval
 
 	cl, resp, err := byzcoin.NewLedger(req, false)
@@ -214,7 +216,8 @@ func link(c *cli.Context) error {
 		}
 	}
 	if cl == nil {
-		return xerrors.New("didn't manage to find a node with a valid copy of the given skipchain-id")
+		return xerrors.New("didn't manage to find a node with a valid copy " +
+			"of the given skipchain-id")
 	}
 
 	newDarc := &darc.Darc{}
@@ -384,8 +387,9 @@ func latest(c *cli.Context) error {
 	}
 
 	sb := p.Proof.Latest
-	log.Infof("Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n\tBackLinks: %d\n\tRoster: %s\n\n",
-		sb.Index, sb.Height, len(sb.BackLinkIDs), fmtRoster(sb.Roster))
+	log.Infof("Last block:\n\tIndex: %d\n\tBlockMaxHeight: %d\n"+
+		"\tBackLinks: %d\n\tRoster: %s\n\n", sb.Index, sb.Height,
+		len(sb.BackLinkIDs), fmtRoster(sb.Roster))
 
 	if c.Bool("roster") {
 		g := &app.Group{Roster: sb.Roster}
@@ -414,7 +418,9 @@ func latest(c *cli.Context) error {
 			return err
 		}
 
-		fmt.Fprintf(c.App.Writer, "Header:\n\tTrieRoot: %x\n\tTimestamp: %d\n\tVersion: %d\n", header.TrieRoot, header.Timestamp, header.Version)
+		fmt.Fprintf(c.App.Writer, "Header:\n\tTrieRoot: %x\n"+
+			"\tTimestamp: %d\n\tVersion: %d\n", header.TrieRoot,
+			header.Timestamp, header.Version)
 	}
 
 	return err
@@ -434,15 +440,19 @@ func fmtRoster(r *onet.Roster) string {
 
 func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.Signer,
 	proof byzcoin.Proof, chainCfg byzcoin.ChainConfig, err error) {
+
 	if c.NArg() < 2 {
-		err = xerrors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg")
+		err = xerrors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg")
 		return
 	}
+
 	cfg, cl, err = lib.LoadConfig(c.Args().First())
 	if err != nil {
 		err = xerrors.Errorf("couldn't load config file: %v", err)
 		return
 	}
+
 	signer, err = lib.LoadSigner(c.Args().Get(1))
 	if err != nil {
 		err = xerrors.Errorf("couldn't load key-xxx.cfg: %v", err)
@@ -455,6 +465,7 @@ func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.
 		err = xerrors.Errorf("couldn't get proof for chainConfig: %v", err)
 		return
 	}
+
 	proof = pr.Proof
 
 	_, value, _, _, err := proof.KeyValue()
@@ -462,18 +473,23 @@ func getBcKey(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.
 		err = xerrors.Errorf("couldn't get value out of proof: %v", err)
 		return
 	}
-	err = protobuf.DecodeWithConstructors(value, &chainCfg, network.DefaultConstructors(cothority.Suite))
+
+	err = protobuf.DecodeWithConstructors(value, &chainCfg,
+		network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		err = xerrors.Errorf("couldn't decode chainConfig: %v", err)
 		return
 	}
+
 	cl.Roster = chainCfg.Roster
 
 	return
 }
 
-func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client, signer *darc.Signer,
-	proof byzcoin.Proof, chainCfg byzcoin.ChainConfig, pub *network.ServerIdentity, err error) {
+func getBcKeyPub(c *cli.Context) (cfg lib.Config, cl *byzcoin.Client,
+	signer *darc.Signer, proof byzcoin.Proof, chainCfg byzcoin.ChainConfig,
+	pub *network.ServerIdentity, err error) {
+
 	cfg, cl, signer, proof, chainCfg, err = getBcKey(c)
 	if err != nil {
 		return
@@ -571,7 +587,8 @@ func config(c *cli.Context) error {
 
 func mint(c *cli.Context) error {
 	if c.NArg() < 4 {
-		return xerrors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg pubkey coins")
+		return xerrors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg pubkey coins")
 	}
 	cfg, cl, signer, _, _, err := getBcKey(c)
 	if err != nil {
@@ -607,25 +624,34 @@ func mint(c *cli.Context) error {
 	}
 	if !p.Proof.InclusionProof.Match(account.Slice()) {
 		log.Info("Creating darc and coin")
+
 		pub := cothority.Suite.Point()
 		err = pub.UnmarshalBinary(pubBuf)
 		if err != nil {
 			return err
 		}
+
 		pubI := darc.NewIdentityEd25519(pub)
 		rules := darc.NewRules()
-		err = rules.AddRule(darc.Action("spawn:coin"), expression.Expr(signer.Identity().String()))
+
+		err = rules.AddRule(darc.Action("spawn:coin"),
+			expression.Expr(signer.Identity().String()))
 		if err != nil {
 			return err
 		}
-		err = rules.AddRule(darc.Action("invoke:coin.transfer"), expression.Expr(pubI.String()))
+
+		err = rules.AddRule(darc.Action("invoke:coin.transfer"),
+			expression.Expr(pubI.String()))
 		if err != nil {
 			return err
 		}
-		err = rules.AddRule(darc.Action("invoke:coin.mint"), expression.Expr(signer.Identity().String()))
+
+		err = rules.AddRule(darc.Action("invoke:coin.mint"),
+			expression.Expr(signer.Identity().String()))
 		if err != nil {
 			return err
 		}
+
 		d := darc.NewDarc(rules, []byte("new coin for mba"))
 		dBuf, err := d.ToProto()
 		if err != nil {
@@ -719,7 +745,8 @@ func mint(c *cli.Context) error {
 
 func rosterAdd(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return xerrors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg newServer.toml")
+		return xerrors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg newServer.toml")
 	}
 	_, cl, signer, _, chainConfig, pub, err := getBcKeyPub(c)
 	if err != nil {
@@ -745,7 +772,8 @@ func rosterAdd(c *cli.Context) error {
 
 func rosterDel(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return xerrors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg serverToDelete.toml")
+		return xerrors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg serverToDelete.toml")
 	}
 	_, cl, signer, _, chainConfig, pub, err := getBcKeyPub(c)
 	if err != nil {
@@ -776,7 +804,8 @@ func rosterDel(c *cli.Context) error {
 
 func rosterLeader(c *cli.Context) error {
 	if c.NArg() < 3 {
-		return xerrors.New("please give the following arguments: bc-xxx.cfg key-xxx.cfg newLeader.toml")
+		return xerrors.New("please give the following arguments: " +
+			"bc-xxx.cfg key-xxx.cfg newLeader.toml")
 	}
 	_, cl, signer, _, chainConfig, pub, err := getBcKeyPub(c)
 	if err != nil {
@@ -1117,7 +1146,8 @@ func debugList(c *cli.Context) error {
 				if err != nil {
 					return err
 				}
-				urls = append(urls, fmt.Sprintf("http://%s:%d", si.Address.Host(), p+1))
+				urls = append(urls, fmt.Sprintf("http://%s:%d",
+					si.Address.Host(), p+1))
 			}
 		}
 	} else {
@@ -1164,7 +1194,8 @@ func debugList(c *cli.Context) error {
 				time.Unix(headerLatest.Timestamp/1e9, 0),
 				rb.Latest.Hash[:])
 			if c.Bool("verbose") {
-				log.Infof("\tRoster: %s\n\tGenesis block header: %+v\n\tLatest block header: %+v",
+				log.Infof("\tRoster: %s\n\tGenesis block header: %+v\n"+
+					"\tLatest block header: %+v",
 					rb.Latest.Roster.List,
 					rb.Genesis.SkipBlockFix,
 					rb.Latest.SkipBlockFix)
@@ -1195,7 +1226,8 @@ func debugDump(c *cli.Context) error {
 		return bytes.Compare(resp.Dump[i].Key, resp.Dump[j].Key) < 0
 	})
 	for _, inst := range resp.Dump {
-		log.Infof("%x / %d: %s", inst.Key, inst.State.Version, string(inst.State.ContractID))
+		log.Infof("%x / %d: %s", inst.Key, inst.State.Version,
+			string(inst.State.ContractID))
 		if c.Bool("verbose") {
 			switch inst.State.ContractID {
 			case byzcoin.ContractDarcID:
@@ -1655,7 +1687,8 @@ func getInfo(c *cli.Context) error {
 		"\tByzCoinID: %x\n"+
 		"\tDarc Base ID: %x\n"+
 		"\tIdentity: %s\n",
-		bcArg, cfg.Roster.List, cfg.ByzCoinID, cfg.AdminDarc.GetBaseID(), cfg.AdminIdentity.String())
+		bcArg, cfg.Roster.List, cfg.ByzCoinID, cfg.AdminDarc.GetBaseID(),
+		cfg.AdminIdentity.String())
 
 	return nil
 }
@@ -1752,7 +1785,8 @@ func getInstance(c *cli.Context) error {
 		instanceData = fmt.Sprintf("%x", instanceData)
 	}
 
-	log.Infof("Key:\n- %x\nValue:\n- %s\nContractID:\n- %s\nDarcID:\n- %x", keyBuf, instanceData, contractID, darcID)
+	log.Infof("Key:\n- %x\nValue:\n- %s\nContractID:\n- %s\nDarcID:\n- %x",
+		keyBuf, instanceData, contractID, darcID)
 
 	return nil
 }
