@@ -48,6 +48,7 @@ main(){
     run testQR
     run testUpdateDarcDesc
     run testResolveiid
+    run testInstructionGet
     run testContractValue
     run testContractDeferred
     run testContractConfig
@@ -543,6 +544,17 @@ $VALUE_INSTANCE_ID"
   # Let's get the content of the value contract
   OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
   testGrep "Hello world" echo "$OUTRES"
+}
+
+# In this test we simply get the config instance
+testInstructionGet() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000 --hex
 }
 
 main

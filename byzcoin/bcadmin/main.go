@@ -1700,6 +1700,63 @@ func resolveiid(c *cli.Context) error {
 	return nil
 }
 
+// getInstance checks the proof at the given instance ID and prints the instance
+// if it is found
+func getInstance(c *cli.Context) error {
+
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return xerrors.New("--bc flag is required")
+	}
+
+	_, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	instID := c.String("instid")
+	if instID == "" {
+		return xerrors.New("--instid flag is required")
+	}
+	instIDBuf, err := hex.DecodeString(instID)
+	if err != nil {
+		return xerrors.New("failed to decode the instID string " + instID)
+	}
+
+	pr, err := cl.GetProofFromLatest(instIDBuf)
+	if err != nil {
+		return xerrors.Errorf("couldn't get proof: %v", err)
+	}
+	proof := pr.Proof
+
+	exist, err := proof.InclusionProof.Exists(instIDBuf)
+	if err != nil {
+		return xerrors.Errorf("error while checking if proof exist: %v", err)
+	}
+	if !exist {
+		return xerrors.New("proof not found")
+	}
+
+	match := proof.InclusionProof.Match(instIDBuf)
+	if !match {
+		return xerrors.New("proof does not match")
+	}
+
+	keyBuf, resultBuf, contractID, darcID, err := proof.KeyValue()
+	if err != nil {
+		return xerrors.Errorf("couldn't get value out of proof: %v", err)
+	}
+
+	instanceData := string(resultBuf)
+	if c.Bool("hex") {
+		instanceData = fmt.Sprintf("%x", instanceData)
+	}
+
+	log.Infof("Key:\n- %x\nValue:\n- %s\nContractID:\n- %s\nDarcID:\n- %x", keyBuf, instanceData, contractID, darcID)
+
+	return nil
+}
+
 type configPrivate struct {
 	Owner darc.Signer
 }
