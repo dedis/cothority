@@ -8,7 +8,7 @@ DBG_APP=2
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v4/cosi/service
+    buildConode go.dedis.ch/cothority/v3/cosi/service
     rm -rf cl*
     mkdir cl{1,2,3}
     run testBuild

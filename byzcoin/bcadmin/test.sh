@@ -25,7 +25,7 @@ export BC_WAIT=true
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v4/byzcoin go.dedis.ch/cothority/v4/byzcoin/contracts
+    buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
     run testReset
     run testDbReplay
