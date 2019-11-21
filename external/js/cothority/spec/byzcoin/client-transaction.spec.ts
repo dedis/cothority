@@ -8,6 +8,13 @@ const updater = new class {
     getSignerCounters(signers: IIdentity[], increment: number): Promise<Long[]> {
         return Promise.resolve(signers.map(() => Long.fromNumber(increment)));
     }
+    updateCachedCounters(signers: IIdentity[]): Promise<Long[]> {
+        return this.getSignerCounters(signers, 1);
+    }
+    getNextCounter(signer: IIdentity): Long {
+        return Long.fromNumber(1);
+    }
+
 }();
 
 describe("ClientTransaction Tests", () => {
