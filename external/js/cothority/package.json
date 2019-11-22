@@ -60,7 +60,6 @@
     "@babel/preset-env": "^7.3.1",
     "@types/bn.js": "^4.11.4",
     "@types/dockerode": "^2.5.11",
-    "@types/elliptic": "^6.4.2",
     "@types/jasmine": "^3.3.5",
     "@types/lodash": "^4.14.139",
     "@types/long": "^4.0.0",
