@@ -1,6 +1,7 @@
 package bevm
 
 import (
+	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -68,9 +69,10 @@ func Test_SpawnAndDelete(t *testing.T) {
 
 	// Deploy a Candy contract
 	candySupply := big.NewInt(100)
-	candyContract, err := NewEvmContract(getContractPath(t, "Candy"))
+	candyContract, err := NewEvmContract(
+		"Candy", getContractData(t, "Candy", "abi"), getContractData(t, "Candy", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
+	_, err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
 	require.Nil(t, err)
 
 	// Delete the BEvm instance
@@ -141,24 +143,24 @@ func Test_InvokeCandyContract(t *testing.T) {
 
 	// Deploy a Candy contract
 	candySupply := big.NewInt(100)
-	candyContract, err := NewEvmContract(getContractPath(t, "Candy"))
+	candyContract, err := NewEvmContract(
+		"Candy", getContractData(t, "Candy", "abi"), getContractData(t, "Candy", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
+	candyInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
 	require.Nil(t, err)
 
 	// Get initial candy balance
-	candyBalance := big.NewInt(0)
-	err = bevmClient.Call(a, &candyBalance, candyContract, "getRemainingCandies")
+	candyBalance, err := bevmClient.Call(a, candyInstance, "getRemainingCandies")
 	require.Nil(t, err)
 	require.Equal(t, candySupply, candyBalance)
 
 	// Eat 10 candies
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, "eatCandy", big.NewInt(10))
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, candyInstance, "eatCandy", big.NewInt(10))
 	require.Nil(t, err)
 
 	// Get remaining candies
 	expectedCandyBalance := big.NewInt(90)
-	err = bevmClient.Call(a, &candyBalance, candyContract, "getRemainingCandies")
+	candyBalance, err = bevmClient.Call(a, candyInstance, "getRemainingCandies")
 	require.Nil(t, err)
 	require.Equal(t, expectedCandyBalance, candyBalance)
 }
@@ -187,15 +189,15 @@ func Test_Time(t *testing.T) {
 	require.Nil(t, err)
 
 	// Deploy a TimeTest contract
-	contract, err := NewEvmContract(getContractPath(t, "TimeTest"))
+	contract, err := NewEvmContract(
+		"TimeTest", getContractData(t, "TimeTest", "abi"), getContractData(t, "TimeTest", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, contract)
+	timeTestInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, contract)
 	require.Nil(t, err)
 
 	// Get current block time
 	expectedTime := big.NewInt(12345) // Currently hardcoded in getContext()
-	time := big.NewInt(0)
-	err = bevmClient.Call(a, &time, contract, "getTime")
+	time, err := bevmClient.Call(a, timeTestInstance, "getTime")
 	require.Nil(t, err)
 	require.Equal(t, expectedTime, time)
 }
@@ -228,54 +230,52 @@ func Test_InvokeTokenContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
-	erc20Contract, err := NewEvmContract(getContractPath(t, "ERC20Token"))
+	erc20Contract, err := NewEvmContract(
+		"ERC20Token", getContractData(t, "ERC20Token", "abi"), getContractData(t, "ERC20Token", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
+	erc20Instance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
 	require.Nil(t, err)
 
 	// Retrieve the total supply
-	supply := big.NewInt(0)
-	err = bevmClient.Call(a, &supply, erc20Contract, "totalSupply")
+	supply, err := bevmClient.Call(a, erc20Instance, "totalSupply")
 	require.Nil(t, err)
 
-	balance := big.NewInt(0)
-
 	// A's initial balance should be the total supply, as he is the owner
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", a.Address)
+	balance, err := bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
 	require.Nil(t, err)
 	require.Equal(t, supply, balance)
 
 	// B's initial balance should be empty
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", b.Address)
+	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
 	require.Nil(t, err)
-	assertBigInt0(t, balance)
+	assertBigInt0(t, balance.(*big.Int))
 
 	// Transfer 100 tokens from A to B
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", b.Address, big.NewInt(100))
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Instance, "transfer", b.Address, big.NewInt(100))
 	require.Nil(t, err)
 
 	// Check the new balances
-	newA := new(big.Int).Sub(supply, big.NewInt(100))
+	newA := new(big.Int).Sub(supply.(*big.Int), big.NewInt(100))
 	newB := big.NewInt(100)
 
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", a.Address)
+	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
 	require.Nil(t, err)
 	require.Equal(t, newA, balance)
 
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", b.Address)
+	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
 	require.Nil(t, err)
 	require.Equal(t, newB, balance)
 
 	// Try to transfer 101 tokens from B to A; this should be rejected by the EVM
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, b, erc20Contract, "transfer", a.Address, big.NewInt(101))
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, b, erc20Instance, "transfer", a.Address, big.NewInt(101))
 	require.Nil(t, err)
 
 	// Check that the balances have not changed
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", a.Address)
+	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
 	require.Nil(t, err)
 	require.Equal(t, newA, balance)
 
-	err = bevmClient.Call(a, &balance, erc20Contract, "balanceOf", b.Address)
+	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
 	require.Nil(t, err)
 	require.Equal(t, newB, balance)
 }
@@ -307,31 +307,33 @@ func Test_InvokeLoanContract(t *testing.T) {
 	require.Nil(t, err)
 
 	// Deploy an ERC20 Token contract
-	erc20Contract, err := NewEvmContract(getContractPath(t, "ERC20Token"))
+	erc20Contract, err := NewEvmContract(
+		"ERC20Token", getContractData(t, "ERC20Token", "abi"), getContractData(t, "ERC20Token", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
+	erc20Instance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
 	require.Nil(t, err)
 
 	// Deploy a Loan contract
 	guarantee := big.NewInt(10000)
 	loanAmount := big.NewInt(1.5 * WeiPerEther)
 
-	loanContract, err := NewEvmContract(getContractPath(t, "LoanContract"))
+	loanContract, err := NewEvmContract(
+		"LoanContract", getContractData(t, "LoanContract", "abi"), getContractData(t, "LoanContract", "bin"))
 	require.Nil(t, err)
-	err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract,
+	loanInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract,
 		loanAmount,            // wantedAmount: the amount in Ether that the borrower wants to borrow
 		big.NewInt(0),         // interest: the amount in Ether that the borrower will pay pack in addition to the borrowed amount
 		guarantee,             // tokenAmount: the number of tokens provided by the borrower as guarantee
 		"TestCoin",            // tokenName: the name of the tokens used as guarantee
-		erc20Contract.Address, // tokenContractAddress: the address of the ERC20 contract handling the tokens used as guarantee
+		erc20Instance.Address, // tokenContractAddress: the address of the ERC20 contract handling the tokens used as guarantee
 		big.NewInt(0),         // length: the duration of the loan, in days
 	)
 	require.Nil(t, err)
 
 	getBalances := func(from *EvmAccount, address common.Address) (tokenBalance, balance *big.Int) {
-		tokenBalance = big.NewInt(0)
-		err = bevmClient.Call(from, &tokenBalance, erc20Contract, "balanceOf", address)
+		result, err := bevmClient.Call(from, erc20Instance, "balanceOf", address)
 		require.Nil(t, err)
+		tokenBalance = result.(*big.Int)
 		balance, err = bevmClient.GetAccountBalance(address)
 		require.Nil(t, err)
 		return
@@ -341,28 +343,28 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	// Initially, the guarantee is empty
 	initTokBalA, _ := getBalances(a, a.Address)
-	tokBal, _ = getBalances(a, loanContract.Address)
+	tokBal, _ = getBalances(a, loanInstance.Address)
 	assertBigInt0(t, tokBal)
 
 	// Transfer tokens from A as a guarantee (A owns all the tokens as he deployed the Token contract)
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract, "transfer", loanContract.Address, guarantee)
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Instance, "transfer", loanInstance.Address, guarantee)
 	require.Nil(t, err)
 
 	tokBal, _ = getBalances(a, a.Address)
 	expected := new(big.Int).Sub(initTokBalA, guarantee)
 	require.Equal(t, expected, tokBal)
 
-	tokBal, _ = getBalances(a, loanContract.Address)
+	tokBal, _ = getBalances(a, loanInstance.Address)
 	require.Equal(t, guarantee, tokBal)
 
 	// Check that there are enough tokens
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract, "checkTokens")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, loanInstance, "checkTokens")
 	require.Nil(t, err)
 
 	// Lend
 	_, initEtherBalA := getBalances(a, a.Address)
 
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), b, loanContract, "lend")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), b, loanInstance, "lend")
 	require.Nil(t, err)
 
 	_, bal = getBalances(a, a.Address)
@@ -372,7 +374,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	// Pay back
 	_, initEtherBalB := getBalances(a, b.Address)
 
-	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), a, loanContract, "payback")
+	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), a, loanInstance, "payback")
 	require.Nil(t, err)
 
 	_, bal = getBalances(a, b.Address)
@@ -441,7 +443,7 @@ func assertBigInt0(t *testing.T, actual *big.Int) {
 	require.Equal(t, 0, big.NewInt(0).Cmp(actual))
 }
 
-func getContractPath(t *testing.T, name string) string {
+func getContractData(t *testing.T, name string, extension string) string {
 	// Test contracts are located in the "testdata" subdirectory, in a
 	// subdirectory named after the contract, and in files named
 	// <name>_sol_<name>.{abi,bin}
@@ -449,5 +451,10 @@ func getContractPath(t *testing.T, name string) string {
 	curDir, err := os.Getwd()
 	require.Nil(t, err)
 
-	return filepath.Join(curDir, "testdata", name, name+"_sol_"+name)
+	path := filepath.Join(curDir, "testdata", name, name+"_sol_"+name+"."+extension)
+
+	data, err := ioutil.ReadFile(path)
+	require.Nil(t, err)
+
+	return string(data)
 }
