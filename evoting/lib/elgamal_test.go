@@ -3,11 +3,11 @@ package lib
 import (
 	"testing"
 
-	"go.dedis.ch/kyber/v4/util/random"
+	"go.dedis.ch/kyber/v3/util/random"
 
 	"github.com/stretchr/testify/assert"
 
-	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v3"
 )
 
 func TestElGamal(t *testing.T) {

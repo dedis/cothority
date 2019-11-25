@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v3/log"
 )
 
 func newEvmMemDb() (*state.StateDB, error) {

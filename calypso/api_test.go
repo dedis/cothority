@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"go.dedis.ch/kyber/v4/sign/schnorr"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/darc/expression"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/onet/v3"
 )
 
 // Tests the client function CreateLTS

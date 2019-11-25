@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/cothority/v4/byzcoin/trie"
-	"go.dedis.ch/cothority/v4/darc"
+	"go.dedis.ch/cothority/v3/byzcoin/trie"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/protobuf"
 )
 

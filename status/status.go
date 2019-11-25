@@ -15,11 +15,11 @@ import (
 	"time"
 
 	cli "github.com/urfave/cli"
-	status "go.dedis.ch/cothority/v4/status/service"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/app"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	status "go.dedis.ch/cothority/v3/status/service"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 func main() {

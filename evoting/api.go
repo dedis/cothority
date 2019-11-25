@@ -3,9 +3,9 @@
 package evoting
 
 import (
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/onet/v3"
 
-	"go.dedis.ch/cothority/v4"
+	"go.dedis.ch/cothority/v3"
 )
 
 // ServiceName is the identifier of the service (application name).

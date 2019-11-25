@@ -3,8 +3,8 @@ package messaging
 import (
 	"testing"
 
-	"go.dedis.ch/kyber/v4/suites"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/kyber/v3/suites"
+	"go.dedis.ch/onet/v3/log"
 )
 
 var tSuite = suites.MustFind("Ed25519")

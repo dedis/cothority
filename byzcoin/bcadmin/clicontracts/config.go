@@ -4,15 +4,15 @@ import (
 	"strings"
 	"time"
 
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
 	"github.com/urfave/cli"
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/byzcoin/bcadmin/lib"
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
 
