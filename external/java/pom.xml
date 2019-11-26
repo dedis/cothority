@@ -5,7 +5,7 @@
 
     <groupId>ch.epfl.dedis</groupId>
     <artifactId>cothority</artifactId>
-    <version>3.3.1</version>
+    <version>3.4.0</version>
     <name>Cothority client library for Java</name>
     <description>A client library for communicating with cothorities (a collective authority).</description>
     <url>https://github.com/dedis/cothority</url>
