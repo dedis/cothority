@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
@@ -16,12 +17,12 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/personhood"
+	"go.dedis.ch/onet/v3/app"
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
-
-	"github.com/urfave/cli"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -57,6 +58,24 @@ var spawnerFlags = cli.FlagsByName{
 }
 
 var cmds = cli.Commands{
+	{
+		Name:  "adminDarcIDs",
+		Usage: "get and set admin darc IDs",
+		Subcommands: cli.Commands{
+			{
+				Name:      "get",
+				Usage:     "show admin darc IDs",
+				Action:    adminDarcIDsGet,
+				ArgsUsage: "bc-xxx.cfg",
+			},
+			{
+				Name:      "set",
+				Usage:     "set admin darc IDs",
+				Action:    adminDarcIDsSet,
+				ArgsUsage: "bc-xxx.cfg key-xxx.cfg id1 id2 ...",
+			},
+		},
+	},
 	{
 		Name:      "spawner",
 		Usage:     "create a new spawner-instance",
@@ -132,7 +151,10 @@ func init() {
 }
 
 func main() {
-	log.ErrFatal(cliApp.Run(os.Args))
+	err := cliApp.Run(os.Args)
+	if err != nil {
+		log.Fatalf("Error while running app: %+v", err)
+	}
 }
 
 func spawnerUpdate(c *cli.Context) error {
@@ -503,6 +525,70 @@ func show(c *cli.Context) error {
 		log.Infof("\t[%s] = %s", c.Name, strings.Join(atts, "\n\t\t"))
 	}
 	return err
+}
+
+func adminDarcIDsGet(c *cli.Context) error {
+	if c.NArg() != 1 {
+		return errors.New("please give the following argument: public.toml")
+	}
+
+	pt, err := os.Open(c.Args().First())
+	if err != nil {
+		return xerrors.Errorf("couldn't open file: %v", err)
+	}
+	group, err := app.ReadGroupDescToml(pt)
+	if err != nil {
+		return xerrors.Errorf("wrong public.toml: %v", err)
+	}
+	if len(group.Roster.List) == 0 {
+		return xerrors.New("no server defined")
+	}
+
+	cl := personhood.NewClient()
+	log.Info("Fetching all admin-darc-IDs")
+	rep, errs := cl.GetAdminDarcIDs(group.Roster.List[0])
+	if len(errs) > 0 {
+		return xerrors.Errorf("got error while fetching ids: %s", errs)
+	}
+	for i, id := range rep.AdminDarcIDs {
+		log.Infof("Admin darc ID #%d: %x", i, id[:])
+	}
+
+	return nil
+}
+
+func adminDarcIDsSet(c *cli.Context) error {
+	if c.NArg() == 0 {
+		return errors.New("please give the following arguments: private.toml" +
+			" [id1 [id2...]]")
+	}
+
+	ccfg, err := app.LoadCothority(c.Args().First())
+	if err != nil {
+		return err
+	}
+	si, err := ccfg.GetServerIdentity()
+	if err != nil {
+		return err
+	}
+
+	dids := make([]darc.ID, c.NArg()-1)
+	for i, idStr := range c.Args()[1:] {
+		did, err := hex.DecodeString(idStr)
+		if err != nil {
+			return xerrors.Errorf("couldn't parse id %d: %v", i, err)
+		}
+		dids[i] = did
+	}
+
+	cl := personhood.NewClient()
+	errs := cl.SetAdminDarcIDs(si, dids, si.GetPrivate())
+	if len(errs) > 0 {
+		return xerrors.Errorf("couldn't set admin darc IDs: %+v", errs)
+	}
+	log.Info("Successfully set admin darc IDs")
+
+	return nil
 }
 
 func combineInstrsAndSign(cl *byzcoin.Client, signer darc.Signer, instrs ...byzcoin.Instruction) (byzcoin.ClientTransaction, error) {

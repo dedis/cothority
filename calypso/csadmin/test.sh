@@ -24,7 +24,7 @@ export BC_WAIT=true
 
 main(){
     startTest
-    buildConode go.dedis.ch/cothority/v4/calypso
+    buildConode go.dedis.ch/cothority/v3/calypso
     build $APPDIR/../../byzcoin/bcadmin
     run testInfo
     run testAuth
