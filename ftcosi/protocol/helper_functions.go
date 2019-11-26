@@ -3,11 +3,11 @@ package protocol
 import (
 	"fmt"
 
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/sign/cosi"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/sign/cosi"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 )
 
 // aggregateCommitments returns an aggregated commitment and an aggregated mask

@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.dedis.ch/kyber/v4/pairing"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/app"
-	"go.dedis.ch/onet/v4/network"
+	"go.dedis.ch/kyber/v3/pairing"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/app"
+	"go.dedis.ch/onet/v3/network"
 )
 
 var testSuite = pairing.NewSuiteBn256()

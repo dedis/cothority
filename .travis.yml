@@ -37,7 +37,7 @@ stages:
   - lint
   - build
   - test
-  # - deploy
+  - deploy
 
 jobs:
   include:
@@ -94,29 +94,29 @@ jobs:
         - npm link @dedis/kyber
         - npm run test
 
-    # - stage: deploy
-    #   name: "NPM: js > kyber"
-    #   <<: *stage_deploy_npm
-    #   deploy:
-    #     on:
-    #       branch: master
-    #     provider: script
-    #     script: >-
-    #       cd external/js/kyber &&
-    #       npm ci &&
-    #       npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-    #       ./publish.sh --tag dev
-    # - name: "NPM: js > cothority"
-    #   <<: *stage_deploy_npm
-    #   deploy:
-    #     on:
-    #       branch: master
-    #     provider: script
-    #     script: >-
-    #       cd external/js/cothority &&
-    #       npm ci &&
-    #       npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
-    #       ./publish.sh --tag dev
+    - stage: deploy
+      name: "NPM: js > kyber"
+      <<: *stage_deploy_npm
+      deploy:
+        on:
+          branch: master
+        provider: script
+        script: >-
+          cd external/js/kyber &&
+          npm ci &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
+    - name: "NPM: js > cothority"
+      <<: *stage_deploy_npm
+      deploy:
+        on:
+          branch: master
+        provider: script
+        script: >-
+          cd external/js/cothority &&
+          npm ci &&
+          npm version prerelease --preid=p`date +%y%m.%d%H.%M%S` &&
+          ./publish.sh --tag dev
 
 notifications:
   email: false

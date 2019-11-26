@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"go.dedis.ch/cothority/v4/darc"
-	"go.dedis.ch/cothority/v4/darc/expression"
+	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/darc/expression"
 )
 
 func Example() {
