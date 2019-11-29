@@ -1681,14 +1681,9 @@ func getInfo(c *cli.Context) error {
 		return err
 	}
 
-	log.Infof("BC configuration:\n"+
-		"\tCongig path: %s\n"+
-		"\tRoster: %s\n"+
-		"\tByzCoinID: %x\n"+
-		"\tDarc Base ID: %x\n"+
-		"\tIdentity: %s\n",
-		bcArg, cfg.Roster.List, cfg.ByzCoinID, cfg.AdminDarc.GetBaseID(),
-		cfg.AdminIdentity.String())
+	log.Infof("%s\n"+
+		"- BC:%s\n",
+		cfg.String(), bcArg)
 
 	return nil
 }
@@ -1785,8 +1780,13 @@ func getInstance(c *cli.Context) error {
 		instanceData = fmt.Sprintf("%x", instanceData)
 	}
 
-	log.Infof("Key:\n- %x\nValue:\n- %s\nContractID:\n- %s\nDarcID:\n- %x",
-		keyBuf, instanceData, contractID, darcID)
+	out := new(strings.Builder)
+	out.WriteString("- Instance:\n")
+	fmt.Fprintf(out, "-- Key: %x\n", keyBuf)
+	fmt.Fprintf(out, "-- Value: %s\n", instanceData)
+	fmt.Fprintf(out, "-- ContranctID: %s\n", contractID)
+	fmt.Fprintf(out, "-- DarcID: %x\n", darcID)
+	log.Info(out.String())
 
 	return nil
 }
