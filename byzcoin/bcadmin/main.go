@@ -1682,7 +1682,7 @@ func getInfo(c *cli.Context) error {
 	}
 
 	log.Infof("%s\n"+
-		"- BC:%s\n",
+		"- BC: %s\n",
 		cfg.String(), bcArg)
 
 	return nil
