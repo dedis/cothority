@@ -56,6 +56,7 @@ main(){
     stopTest
 }
 
+# TODO: https://github.com/dedis/cothority/issues/2150
 testReset(){
   rm -f config/* *.db
   runCoBG 1 2 3
@@ -66,7 +67,8 @@ testReset(){
   db=service_storage/$( ls service_storage | tail -n 1 )
   runBA config --blockSize 1000000 $bc $key
 
-  runBA db resetBlock $db $bcID
+  pkill -9 conode
+  testFail runBA db resetBlock $db $bcID
 }
 
 testDbReplay(){

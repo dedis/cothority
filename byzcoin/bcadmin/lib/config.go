@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -38,6 +39,19 @@ type Config struct {
 	ByzCoinID     skipchain.SkipBlockID
 	AdminDarc     darc.Darc
 	AdminIdentity darc.Identity
+}
+
+func (c Config) String() string {
+	out := new(strings.Builder)
+	out.WriteString("- Config:\n")
+	out.WriteString("-- Roster:\n")
+	for _, serverIdentity := range c.Roster.List {
+		fmt.Fprintf(out, "--- %s\n", serverIdentity.String())
+	}
+	fmt.Fprintf(out, "-- ByzCoinID: %x\n", c.ByzCoinID)
+	fmt.Fprintf(out, "-- AdminDarc: %x\n", c.AdminDarc.GetBaseID())
+	fmt.Fprintf(out, "-- Identity: %s", c.AdminIdentity.String())
+	return out.String()
 }
 
 // LoadKey returns the signer of a given identity. It searches it in the
