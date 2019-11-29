@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import { BrowserWebSocketAdapter } from "../../src/network";
 import { LeaderConnection, RosterWSConnection, setFactory, WebSocketConnection } from "../../src/network/connection";
 import { Roster, ServerIdentity } from "../../src/network/proto";
