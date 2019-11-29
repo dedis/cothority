@@ -1,5 +1,5 @@
 import { Point, PointFactory, Scalar } from "@dedis/kyber";
-import { Message, Properties } from "protobufjs";
+import { Message, Properties } from "protobufjs/light";
 import { Argument, ClientTransaction, InstanceID, Instruction, Proof } from "../byzcoin";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import { Signer } from "../darc";
