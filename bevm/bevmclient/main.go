@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,7 +43,8 @@ var cmds = cli.Commands{
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "account-name",
-				Usage: "account name; default is the account address in hex",
+				Value: "account",
+				Usage: "account name",
 			},
 		},
 		Action: createAccount,
@@ -51,13 +53,13 @@ var cmds = cli.Commands{
 		Name:      "credit_account",
 		Usage:     "credit a BEvm account",
 		Aliases:   []string{"ma"},
-		ArgsUsage: "",
+		ArgsUsage: "<amount in Ether>",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "bc",
 				EnvVar:   "BC",
-				Required: true,
 				Usage:    "ByzCoin config to use",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
@@ -69,25 +71,45 @@ var cmds = cli.Commands{
 				Value: "account",
 				Usage: "account name",
 			},
-			cli.Uint64Flag{
-				Name:  "amount",
-				Value: 5,
-				Usage: "amount in Ether with which to credit the account",
-			},
 		},
 		Action: creditAccount,
 	},
 	{
-		Name:      "deploy_contract",
-		Usage:     "deploy a BEvm contract",
-		Aliases:   []string{"dc"},
+		Name:      "get_account_balance",
+		Usage:     "retrieve the balance of a BEvm account",
+		Aliases:   []string{"ba"},
 		ArgsUsage: "",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "bc",
 				EnvVar:   "BC",
-				Required: true,
 				Usage:    "ByzCoin config to use",
+				Required: true,
+			},
+			cli.StringFlag{
+				Name:     "bevm-id",
+				Usage:    "BEvm instance ID to use",
+				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "account-name",
+				Value: "account",
+				Usage: "account name",
+			},
+		},
+		Action: getAccountBalance,
+	},
+	{
+		Name:      "deploy_contract",
+		Usage:     "deploy a BEvm contract",
+		Aliases:   []string{"dc"},
+		ArgsUsage: "<abi file> <bytecode file>",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:     "bc",
+				EnvVar:   "BC",
+				Usage:    "ByzCoin config to use",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
@@ -113,16 +135,6 @@ var cmds = cli.Commands{
 				Name:  "amount",
 				Value: 0,
 				Usage: "amount in Ether to send to the contract once deployed",
-			},
-			cli.StringFlag{
-				Name:     "abi",
-				Usage:    "contract ABI file",
-				Required: true,
-			},
-			cli.StringFlag{
-				Name:     "bin",
-				Usage:    "contract bytecode file",
-				Required: true,
 			},
 		},
 		Action: deployContract,
@@ -134,9 +146,10 @@ var cmds = cli.Commands{
 		ArgsUsage: "",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "bc",
-				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (required)",
+				Name:     "bc",
+				EnvVar:   "BC",
+				Usage:    "ByzCoin config to use",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
@@ -168,11 +181,6 @@ var cmds = cli.Commands{
 				Value: "contract",
 				Usage: "contract name",
 			},
-			cli.StringFlag{
-				Name:     "method",
-				Usage:    "contract method name",
-				Required: true,
-			},
 		},
 		Action: executeTransaction,
 	},
@@ -180,12 +188,13 @@ var cmds = cli.Commands{
 		Name:      "call",
 		Usage:     "call a view method on a BEvm contract instance",
 		Aliases:   []string{"xc"},
-		ArgsUsage: "",
+		ArgsUsage: "<methodname> [<arg>...]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "bc",
-				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (required)",
+				Name:     "bc",
+				EnvVar:   "BC",
+				Usage:    "ByzCoin config to use",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
@@ -201,11 +210,6 @@ var cmds = cli.Commands{
 				Name:  "contract-name",
 				Value: "contract",
 				Usage: "contract name",
-			},
-			cli.StringFlag{
-				Name:     "method",
-				Usage:    "contract method name",
-				Required: true,
 			},
 		},
 		Action: executeCall,
@@ -251,35 +255,6 @@ func main() {
 		log.Fatal(err)
 	}
 	return
-}
-
-func spawn(c *cli.Context) error {
-	bcArg := c.String("bc")
-	if bcArg == "" {
-		return errors.New("--bc flag is required")
-	}
-
-	cfg, cl, err := lib.LoadConfig(bcArg)
-	if err != nil {
-		return err
-	}
-
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
-	if err != nil {
-		return err
-	}
-
-	bevmInstID, err := bevm.NewBEvm(cl, *signer, &cfg.AdminDarc)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n", bevmInstID)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type userEvmAccount struct {
@@ -374,81 +349,18 @@ func readContractFile(name string) (*bevm.EvmContractInstance, error) {
 	return &contractInstance, nil
 }
 
-func createAccount(ctx *cli.Context) error {
-	// Retrieve arguments
-
-	name := ctx.String("name")
-
-	// Perform command
-
-	pk, err := crypto.GenerateKey()
+func getBevmClient(file string, bevmID []byte) (*bevm.Client, error) {
+	cfg, cl, err := lib.LoadConfig(file)
 	if err != nil {
-		return err // FIXME: use xerrors
-	}
-
-	account, err := bevm.NewEvmAccount(common.Bytes2Hex(crypto.FromECDSA(pk)))
-	if err != nil {
-		return err
-	}
-
-	if name == "" {
-		name = account.Address.String()
-	}
-
-	fmt.Printf("New account \"%s\" created at address: %s\n", name, account.Address.String())
-
-	return writeAccountFile(account, name)
-}
-
-func creditAccount(ctx *cli.Context) error {
-	// Retrieve arguments
-
-	bcArg := ctx.String("bc")
-	if bcArg == "" {
-		return errors.New("--bc flag is required")
-	}
-
-	bevmID, err := hex.DecodeString(ctx.String("bevm-id"))
-	if err != nil {
-		return err
-	}
-
-	account, err := readAccountFile(ctx.String("account-name"))
-	if err != nil {
-		return err
-	}
-
-	amount := ctx.Uint64("amount")
-
-	// Perform command
-
-	cfg, cl, err := lib.LoadConfig(bcArg)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	signer, err := lib.LoadKey(cfg.AdminIdentity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
-	if err != nil {
-		return err
-	}
-
-	err = bevmClient.CreditAccount(big.NewInt(int64(amount*bevm.WeiPerEther)), account.Address)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(ctx.App.Writer, "Credited account %s with %d Ether\n",
-		account.Address.Hex(), amount)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
 }
 
 func decodeArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, error) {
@@ -477,58 +389,167 @@ func decodeArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, error) 
 	return args, nil
 }
 
-func deployContract(ctx *cli.Context) error {
+func createAccount(ctx *cli.Context) error {
 	// Retrieve arguments
-	bcArg := ctx.String("bc")
-	bevmID := ctx.String("bevm-id")
-	accountName := ctx.String("account-name")
-	gasLimit := ctx.Uint64("gas-limit")
-	gasPrice := ctx.Uint64("gas-price")
-	amount := ctx.Uint64("amount")
-	abiFilepath := ctx.String("abi")
-	binFilepath := ctx.String("bin")
+
+	name := ctx.String("name")
 
 	// Perform command
+
+	pk, err := crypto.GenerateKey()
+	if err != nil {
+		return err // FIXME: use xerrors
+	}
+
+	account, err := bevm.NewEvmAccount(common.Bytes2Hex(crypto.FromECDSA(pk)))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("New account \"%s\" created at address: %s\n", name, account.Address.String())
+
+	return writeAccountFile(account, name)
+}
+
+func creditAccount(ctx *cli.Context) error {
+	// Retrieve options and arguments
+
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
+	accountName := ctx.String("account-name")
+
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
 
 	account, err := readAccountFile(accountName)
 	if err != nil {
 		return err
 	}
 
+	if !ctx.Args().Present() {
+		return errors.New("Missing amount value")
+	}
+
+	amountStr := ctx.Args().First()
+	amount, err := strconv.ParseUint(amountStr, 0, 64)
+	if err != nil {
+		return err
+	}
+
+	// Perform command
+
+	bevmClient, err := getBevmClient(bcFile, bevmID)
+	if err != nil {
+		return err
+	}
+
+	err = bevmClient.CreditAccount(big.NewInt(int64(amount*bevm.WeiPerEther)), account.Address)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(ctx.App.Writer, "Credited account %s with %d Ether\n",
+		account.Address.Hex(), amount)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getAccountBalance(ctx *cli.Context) error {
+	// Retrieve options and arguments
+
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
+	accountName := ctx.String("account-name")
+
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
+
+	account, err := readAccountFile(accountName)
+	if err != nil {
+		return err
+	}
+
+	// Perform command
+
+	bevmClient, err := getBevmClient(bcFile, bevmID)
+	if err != nil {
+		return err
+	}
+
+	amount, err := bevmClient.GetAccountBalance(account.Address)
+	if err != nil {
+		return err
+	}
+
+	var amountEther, amountWei big.Int
+	amountEther.DivMod(amount, big.NewInt(bevm.WeiPerEther), &amountWei)
+	_, err = fmt.Fprintf(ctx.App.Writer, "Balance of account %s: %v Ether, %v Wei\n",
+		account.Address.Hex(), amountEther.String(), amountWei.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func deployContract(ctx *cli.Context) error {
+	// Retrieve options and arguments
+
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
+	accountName := ctx.String("account-name")
+	gasLimit := ctx.Uint64("gas-limit")
+	gasPrice := ctx.Uint64("gas-price")
+	amount := ctx.Uint64("amount")
+
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
+
+	account, err := readAccountFile(accountName)
+	if err != nil {
+		return err
+	}
+
+	if ctx.NArg() != 2 {
+		return errors.New("Missing some argument")
+	}
+
+	abiFilepath := ctx.Args().Get(0)
+	binFilepath := ctx.Args().Get(1)
+
 	abiData, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
 		return errors.New("error reading contract ABI: " + err.Error())
 	}
+
 	binData, err := ioutil.ReadFile(binFilepath)
 	if err != nil {
 		return errors.New("error reading contract Bytecode: " + err.Error())
 	}
+
 	contract, err := bevm.NewEvmContract("newContract", string(abiData), string(binData))
 	if err != nil {
 		return err
 	}
 
-	cfg, cl, err := lib.LoadConfig(bcArg)
+	userArgs := ctx.Args()[2:]
+	args, err := decodeArgs(userArgs, contract.Abi.Constructor.Inputs)
 	if err != nil {
 		return err
 	}
 
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
-	if err != nil {
-		return err
-	}
+	// Perform command
 
-	bevmIID, err := hex.DecodeString(bevmID)
-	if err != nil {
-		return err
-	}
-
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmIID))
-	if err != nil {
-		return err
-	}
-
-	args, err := decodeArgs(ctx.Args(), contract.Abi.Constructor.Inputs)
+	bevmClient, err := getBevmClient(bcFile, bevmID)
 	if err != nil {
 		return err
 	}
@@ -557,17 +578,20 @@ func deployContract(ctx *cli.Context) error {
 }
 
 func executeTransaction(ctx *cli.Context) error {
-	// Retrieve arguments
-	bcArg := ctx.String("bc")
-	bevmID := ctx.String("bevm-id")
+	// Retrieve options and arguments
+
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
 	accountName := ctx.String("account-name")
 	gasLimit := ctx.Uint64("gas-limit")
 	gasPrice := ctx.Uint64("gas-price")
 	amount := ctx.Uint64("amount")
 	contractName := ctx.String("contract-name")
-	method := ctx.String("method")
 
-	// Perform command
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
 
 	account, err := readAccountFile(accountName)
 	if err != nil {
@@ -579,31 +603,25 @@ func executeTransaction(ctx *cli.Context) error {
 		return err
 	}
 
-	cfg, cl, err := lib.LoadConfig(bcArg)
-	if err != nil {
-		return err
+	if ctx.NArg() == 0 {
+		return errors.New("Missing method name")
 	}
 
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
-	if err != nil {
-		return err
-	}
-
-	bevmIID, err := hex.DecodeString(bevmID)
-	if err != nil {
-		return err
-	}
-
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmIID))
-	if err != nil {
-		return err
-	}
-
+	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
 		return xerrors.Errorf("Method \"%s\" does not exist for this contract", method)
 	}
-	args, err := decodeArgs(ctx.Args(), methodAbi.Inputs)
+
+	userArgs := ctx.Args().Tail()
+	args, err := decodeArgs(userArgs, methodAbi.Inputs)
+	if err != nil {
+		return err
+	}
+
+	// Perform command
+
+	bevmClient, err := getBevmClient(bcFile, bevmID)
 	if err != nil {
 		return err
 	}
@@ -627,14 +645,17 @@ func executeTransaction(ctx *cli.Context) error {
 }
 
 func executeCall(ctx *cli.Context) error {
-	// Retrieve arguments
-	bcArg := ctx.String("bc")
-	bevmID := ctx.String("bevm-id")
+	// Retrieve options and arguments
+
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
 	accountName := ctx.String("account-name")
 	contractName := ctx.String("contract-name")
-	method := ctx.String("method")
 
-	// Perform command
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
 
 	account, err := readAccountFile(accountName)
 	if err != nil {
@@ -646,46 +667,35 @@ func executeCall(ctx *cli.Context) error {
 		return err
 	}
 
-	cfg, cl, err := lib.LoadConfig(bcArg)
-	if err != nil {
-		return err
+	if ctx.NArg() == 0 {
+		return errors.New("Missing method name")
 	}
 
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
-	if err != nil {
-		return err
-	}
-
-	bevmIID, err := hex.DecodeString(bevmID)
-	if err != nil {
-		return err
-	}
-
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmIID))
-	if err != nil {
-		return err
-	}
-
+	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
 		return xerrors.Errorf("Method \"%s\" does not exist for this contract", method)
 	}
-	args, err := decodeArgs(ctx.Args(), methodAbi.Inputs)
+
+	userArgs := ctx.Args().Tail()
+	args, err := decodeArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
 		return err
 	}
 
-	// FIXME: handle multiple types
-	// result := getResultVariable()
+	// Perform command
+
+	bevmClient, err := getBevmClient(bcFile, bevmID)
+	if err != nil {
+		return err
+	}
+
 	result, err := bevmClient.Call(account, contractInstance, method, args...)
-	// result, err := decodeResult(func(result interface{}) error {
-	// 	return bevmClient.Call(account, &result, contractInstance, method, args...)
-	// }, methodAbi.Outputs)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(ctx.App.Writer, "call executed; return value: %v\n", result)
+	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n", result, reflect.TypeOf(result))
 	if err != nil {
 		return err
 	}
