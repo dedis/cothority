@@ -21,7 +21,7 @@ import (
 func createAccount(ctx *cli.Context) error {
 	// Retrieve arguments
 
-	name := ctx.String("name")
+	name := ctx.String("account-name")
 
 	// Perform command
 
@@ -45,6 +45,7 @@ func creditAccount(ctx *cli.Context) error {
 
 	bcFile := ctx.String("bc")
 	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
 	accountName := ctx.String("account-name")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
@@ -69,12 +70,15 @@ func creditAccount(ctx *cli.Context) error {
 
 	// Perform command
 
-	bevmClient, err := getBevmClient(bcFile, bevmID)
+	bevmClient, err := getBevmClient(bcFile, signerStr, bevmID)
 	if err != nil {
 		return err
 	}
 
-	err = bevmClient.CreditAccount(big.NewInt(int64(amount*bevm.WeiPerEther)), account.Address)
+	amountBig := big.NewInt(int64(amount))
+	amountBig.Mul(amountBig, big.NewInt(bevm.WeiPerEther))
+
+	err = bevmClient.CreditAccount(amountBig, account.Address)
 	if err != nil {
 		return err
 	}
@@ -93,6 +97,7 @@ func getAccountBalance(ctx *cli.Context) error {
 
 	bcFile := ctx.String("bc")
 	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
 	accountName := ctx.String("account-name")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
@@ -107,7 +112,7 @@ func getAccountBalance(ctx *cli.Context) error {
 
 	// Perform command
 
-	bevmClient, err := getBevmClient(bcFile, bevmID)
+	bevmClient, err := getBevmClient(bcFile, signerStr, bevmID)
 	if err != nil {
 		return err
 	}
@@ -133,6 +138,7 @@ func deployContract(ctx *cli.Context) error {
 
 	bcFile := ctx.String("bc")
 	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
 	accountName := ctx.String("account-name")
 	gasLimit := ctx.Uint64("gas-limit")
 	gasPrice := ctx.Uint64("gas-price")
@@ -148,7 +154,7 @@ func deployContract(ctx *cli.Context) error {
 		return err
 	}
 
-	if ctx.NArg() != 2 {
+	if ctx.NArg() < 2 {
 		return errors.New("Missing some argument")
 	}
 
@@ -178,7 +184,7 @@ func deployContract(ctx *cli.Context) error {
 
 	// Perform command
 
-	bevmClient, err := getBevmClient(bcFile, bevmID)
+	bevmClient, err := getBevmClient(bcFile, signerStr, bevmID)
 	if err != nil {
 		return err
 	}
@@ -211,6 +217,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	bcFile := ctx.String("bc")
 	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
 	accountName := ctx.String("account-name")
 	gasLimit := ctx.Uint64("gas-limit")
 	gasPrice := ctx.Uint64("gas-price")
@@ -250,7 +257,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	// Perform command
 
-	bevmClient, err := getBevmClient(bcFile, bevmID)
+	bevmClient, err := getBevmClient(bcFile, signerStr, bevmID)
 	if err != nil {
 		return err
 	}
@@ -278,6 +285,7 @@ func executeCall(ctx *cli.Context) error {
 
 	bcFile := ctx.String("bc")
 	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
 	accountName := ctx.String("account-name")
 	contractName := ctx.String("contract-name")
 
@@ -314,7 +322,7 @@ func executeCall(ctx *cli.Context) error {
 
 	// Perform command
 
-	bevmClient, err := getBevmClient(bcFile, bevmID)
+	bevmClient, err := getBevmClient(bcFile, signerStr, bevmID)
 	if err != nil {
 		return err
 	}

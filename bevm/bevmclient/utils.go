@@ -13,6 +13,7 @@ import (
 	"go.dedis.ch/cothority/v3/bevm"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
@@ -113,13 +114,18 @@ func readContractFile(name string) (*bevm.EvmContractInstance, error) {
 	return &contractInstance, nil
 }
 
-func getBevmClient(file string, bevmID []byte) (*bevm.Client, error) {
-	cfg, cl, err := lib.LoadConfig(file)
+func getBevmClient(configFile string, signerStr string, bevmID []byte) (*bevm.Client, error) {
+	cfg, cl, err := lib.LoadConfig(configFile)
 	if err != nil {
 		return nil, err
 	}
 
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
+	var signer *darc.Signer
+	if signerStr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(signerStr)
+	}
 	if err != nil {
 		return nil, err
 	}

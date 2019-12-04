@@ -33,8 +33,13 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
+				EnvVar:   "BEVM_ID",
 				Usage:    "BEvm instance ID to use",
 				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "account-name",
@@ -58,8 +63,13 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
+				EnvVar:   "BEVM_ID",
 				Usage:    "BEvm instance ID to use",
 				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "account-name",
@@ -83,8 +93,13 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
+				EnvVar:   "BEVM_ID",
 				Usage:    "BEvm instance ID to use",
 				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "account-name",
@@ -113,7 +128,7 @@ var cmds = cli.Commands{
 		Name:      "transaction",
 		Usage:     "execute a transaction on a BEvm contract instance",
 		Aliases:   []string{"xt"},
-		ArgsUsage: "",
+		ArgsUsage: "<methodname> [<arg>...]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:     "bc",
@@ -123,8 +138,13 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
+				EnvVar:   "BEVM_ID",
 				Usage:    "BEvm instance ID to use",
 				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "account-name",
@@ -168,8 +188,13 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:     "bevm-id",
+				EnvVar:   "BEVM_ID",
 				Usage:    "BEvm instance ID to use",
 				Required: true,
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "account-name",
