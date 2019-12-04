@@ -36,7 +36,7 @@ func createAccount(ctx *cli.Context) error {
 
 	fmt.Printf("New account \"%s\" created at address: %s\n", name, account.Address.String())
 
-	return writeAccountFile(account, name)
+	return writeAccountFile(account, name, true)
 }
 
 func creditAccount(ctx *cli.Context) error {
@@ -150,12 +150,12 @@ func deployContract(ctx *cli.Context) error {
 		return err
 	}
 
-	err = writeAccountFile(opt.account, opt.accountName)
+	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
 		return err
 	}
 
-	err = writeContractFile(contractInstance, abiFilepath, "contract")
+	err = writeContractFile(contractInstance, abiFilepath, "contract", true)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func executeTransaction(ctx *cli.Context) error {
 		return err
 	}
 
-	err = writeAccountFile(opt.account, opt.accountName)
+	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
 		return err
 	}

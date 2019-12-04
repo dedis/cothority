@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"go.dedis.ch/cothority/v3/bevm"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -28,7 +30,24 @@ type userEvmAccount struct {
 	Nonce      uint64
 }
 
-func writeAccountFile(account *bevm.EvmAccount, name string) error {
+func writeFile(file string, data []byte, check bool) error {
+	if check {
+		fileInfo, err := os.Stat(file)
+		if !os.IsNotExist(err) {
+			newName := file + "." + fileInfo.ModTime().Format(time.RFC3339)
+			fmt.Fprintf(os.Stderr, "WARNING: Previous file exists and is being renamed to '%s'\n", newName)
+
+			err = os.Rename(file, newName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return ioutil.WriteFile(file, data, 0600)
+}
+
+func writeAccountFile(account *bevm.EvmAccount, name string, check bool) error {
 	tmp := userEvmAccount{
 		PrivateKey: hex.EncodeToString(crypto.FromECDSA(account.PrivateKey)),
 		Nonce:      account.Nonce,
@@ -39,7 +58,7 @@ func writeAccountFile(account *bevm.EvmAccount, name string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(fmt.Sprintf("%s.bevm_account", name), jsonData, 0600)
+	return writeFile(fmt.Sprintf("%s.bevm_account", name), jsonData, check)
 }
 
 func readAccountFile(name string) (*bevm.EvmAccount, error) {
@@ -69,7 +88,7 @@ type userEvmContract struct {
 	Address common.Address
 }
 
-func writeContractFile(contractInstance *bevm.EvmContractInstance, abiFilepath string, name string) error {
+func writeContractFile(contractInstance *bevm.EvmContractInstance, abiFilepath string, name string, check bool) error {
 	jsonAbi, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
 		return errors.New("error reading contract ABI: " + err.Error())
@@ -85,7 +104,7 @@ func writeContractFile(contractInstance *bevm.EvmContractInstance, abiFilepath s
 		return err
 	}
 
-	return ioutil.WriteFile(fmt.Sprintf("%s.bevm_contract", name), jsonData, 0600)
+	return writeFile(fmt.Sprintf("%s.bevm_contract", name), jsonData, check)
 }
 
 func readContractFile(name string) (*bevm.EvmContractInstance, error) {
