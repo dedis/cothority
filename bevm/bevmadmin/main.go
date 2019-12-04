@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"time"
 
 	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/bevm"
+	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/cfgpath"
@@ -32,8 +35,42 @@ var cmds = cli.Commands{
 				EnvVar: "BC",
 				Usage:  "the ByzCoin config to use (required)",
 			},
+			cli.StringFlag{
+				Name:  "darc",
+				Usage: "DARC with the right to spawn a value contract (default is the admin DARC)",
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
+			},
+			cli.StringFlag{
+				Name:  "out_id",
+				Usage: "output file for the BEvm id (optional)",
+			},
 		},
 		Action: spawn,
+	},
+	{
+		Name:      "delete",
+		Usage:     "delete a BEvm instance",
+		Aliases:   []string{"s"},
+		ArgsUsage: "",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config to use (required)",
+			},
+			cli.StringFlag{
+				Name:  "sign",
+				Usage: "public key of the signing entity (default is the admin public key)",
+			},
+			cli.StringFlag{
+				Name:  "bevm-id",
+				Usage: "BEvm instance ID to delete",
+			},
+		},
+		Action: delete,
 	},
 }
 
@@ -89,17 +126,89 @@ func spawn(c *cli.Context) error {
 		return err
 	}
 
-	signer, err := lib.LoadKey(cfg.AdminIdentity)
+	var signer *darc.Signer
+	signerStr := c.String("sign")
+	if signerStr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(signerStr)
+	}
 	if err != nil {
 		return err
 	}
 
-	bevmInstID, err := bevm.NewBEvm(cl, *signer, &cfg.AdminDarc)
+	var darc *darc.Darc
+	darcStr := c.String("darc")
+	if darcStr == "" {
+		darc = &cfg.AdminDarc
+	} else {
+		darc, err = lib.GetDarcByString(cl, darcStr)
+		if err != nil {
+			return err
+		}
+	}
+
+	bevmInstID, err := bevm.NewBEvm(cl, *signer, darc)
 	if err != nil {
 		return err
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n", bevmInstID)
+	if err != nil {
+		return err
+	}
+
+	// Save ID in file if provided
+	outFile := c.String("out_id")
+	if outFile != "" {
+		err = ioutil.WriteFile(outFile, []byte(bevmInstID.String()), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func delete(c *cli.Context) error {
+	bcArg := c.String("bc")
+	if bcArg == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	cfg, cl, err := lib.LoadConfig(bcArg)
+	if err != nil {
+		return err
+	}
+
+	var signer *darc.Signer
+	signerStr := c.String("sign")
+	if signerStr == "" {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+	} else {
+		signer, err = lib.LoadKeyFromString(signerStr)
+	}
+	if err != nil {
+		return err
+	}
+
+	bevmIDStr := c.String("bevm-id")
+
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return err
+	}
+	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
+	if err != nil {
+		return err
+	}
+
+	err = bevmClient.Delete()
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(c.App.Writer, "Delete BEvm instance with ID: %s\n", bevmIDStr)
 	if err != nil {
 		return err
 	}
