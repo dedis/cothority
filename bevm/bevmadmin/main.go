@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -31,9 +30,10 @@ var cmds = cli.Commands{
 		ArgsUsage: "",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "bc",
-				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (required)",
+				Name:     "bc",
+				EnvVar:   "BC",
+				Usage:    "the ByzCoin config to use (required)",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:  "darc",
@@ -57,9 +57,10 @@ var cmds = cli.Commands{
 		ArgsUsage: "",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "bc",
-				EnvVar: "BC",
-				Usage:  "the ByzCoin config to use (required)",
+				Name:     "bc",
+				EnvVar:   "BC",
+				Usage:    "the ByzCoin config to use (required)",
+				Required: true,
 			},
 			cli.StringFlag{
 				Name:  "sign",
@@ -116,12 +117,9 @@ func main() {
 }
 
 func spawn(c *cli.Context) error {
-	bcArg := c.String("bc")
-	if bcArg == "" {
-		return errors.New("--bc flag is required")
-	}
+	bcFile := c.String("bc")
 
-	cfg, cl, err := lib.LoadConfig(bcArg)
+	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
 		return err
 	}
@@ -171,12 +169,9 @@ func spawn(c *cli.Context) error {
 }
 
 func delete(c *cli.Context) error {
-	bcArg := c.String("bc")
-	if bcArg == "" {
-		return errors.New("--bc flag is required")
-	}
+	bcFile := c.String("bc")
 
-	cfg, cl, err := lib.LoadConfig(bcArg)
+	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
 		return err
 	}

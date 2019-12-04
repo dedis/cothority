@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	cli "github.com/urfave/cli"
 )
 
 type userEvmAccount struct {
@@ -114,26 +115,72 @@ func readContractFile(name string) (*bevm.EvmContractInstance, error) {
 	return &contractInstance, nil
 }
 
-func getBevmClient(configFile string, signerStr string, bevmID []byte) (*bevm.Client, error) {
-	cfg, cl, err := lib.LoadConfig(configFile)
+type commonOptions struct {
+	account     *bevm.EvmAccount
+	accountName string
+	bevmClient  *bevm.Client
+}
+
+func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
+	bcFile := ctx.String("bc")
+	bevmIDStr := ctx.String("bevm-id")
+	signerStr := ctx.String("sign")
+	accountName := ctx.String("account-name")
+
+	bevmID, err := hex.DecodeString(bevmIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
 		return nil, err
 	}
 
 	var signer *darc.Signer
-	if signerStr == "" {
-		signer, err = lib.LoadKey(cfg.AdminIdentity)
-	} else {
+	if signerStr != "" {
 		signer, err = lib.LoadKeyFromString(signerStr)
+	} else {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
+	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := readAccountFile(accountName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &commonOptions{
+		account:     account,
+		accountName: accountName,
+		bevmClient:  bevmClient,
+	}, nil
 }
 
-func decodeArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, error) {
+func getBevmClient(configFile string, signer *darc.Signer, bevmID byzcoin.InstanceID) (*bevm.Client, error) {
+	cfg, cl, err := lib.LoadConfig(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if signer == nil {
+		signer, err = lib.LoadKey(cfg.AdminIdentity)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return bevm.NewClient(cl, *signer, bevmID)
+}
+
+func decodeEvmArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, error) {
 	args := make([]interface{}, len(encodedArgs))
 	for i, argJSON := range encodedArgs {
 		var arg interface{}

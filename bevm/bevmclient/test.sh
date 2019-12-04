@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Usage: 
+# Usage:
 #   ./test [options]
 # Options:
 #   -b   re-builds bcadmin package
