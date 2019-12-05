@@ -100,6 +100,8 @@ function print_field( optional, typ, name, ind ){
 	sub(/^time.Duration$/, "sint64", typ)
 	sub(/^kyber.Point$/, "bytes", typ)
 	sub(/^kyber.Scalar$/, "bytes", typ)
+	sub(/^float64$/, "double", typ)
+	sub(/^float32$/, "float", typ)
 	sub(/^int32$/, "sint32", typ)
 	sub(/^int64$/, "sint64", typ)
 	sub(/^int$/, "sint32", typ)
