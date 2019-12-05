@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import { eddsa } from "elliptic";
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { Point } from "../../index";
 import { BNType } from '../../constants';
 import Ed25519Scalar from "./scalar";

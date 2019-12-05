@@ -1,4 +1,4 @@
-import BN = require("bn.js");
+import BN from "bn.js";
 import NistPoint from "./point";
 import NistScalar from "./scalar";
 import Weierstrass from "./curve";

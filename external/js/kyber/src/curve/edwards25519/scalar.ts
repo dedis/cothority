@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import Ed25519 from "./curve";
 import { int } from "../../random"
 import { Scalar } from "../../index";

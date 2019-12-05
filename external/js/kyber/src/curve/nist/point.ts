@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { zeroBN, BNType } from "../../constants";
 import { Point } from "../../index";
 import Weierstrass from "./curve";

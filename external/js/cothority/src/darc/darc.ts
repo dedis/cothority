@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import Long from "long";
 import { Message, Properties } from "protobufjs/light";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";

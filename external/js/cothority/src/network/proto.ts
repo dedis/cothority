@@ -1,5 +1,5 @@
 import { Point, PointFactory } from "@dedis/kyber";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
 import UUID from "pure-uuid";
 import toml from "toml";

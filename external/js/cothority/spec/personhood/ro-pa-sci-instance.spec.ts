@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import Long from "long";
 import ByzCoinRPC from "../../src/byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../../src/byzcoin/client-transaction";
