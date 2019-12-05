@@ -135,7 +135,7 @@ export class Logger {
             errMsg = e.message;
         }
         if (e instanceof Error) {
-            for (let i = 1; i < e.stack.split("\n").length; i++) {
+            for (let i = this.stackFrameOffset; i < e.stack.split("\n").length - this.stackFrameOffset; i++) {
                 this.out("C : " + this.printCaller(e, i) + " -> " + this.joinArgs(args));
             }
         } else {
