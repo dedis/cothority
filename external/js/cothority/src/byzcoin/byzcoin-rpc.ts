@@ -3,7 +3,7 @@ import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, LeaderConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -29,7 +29,23 @@ export const currentVersion = 2;
 
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
+/**
+ * ByzCoinRPC represents one byzcoin-representation.
+ *
+ * TODO:
+ * Split this into two classes:
+ * - one with only static methods mapped to the API of byzcoin
+ * - one representing a single byzcoin-instance
+ */
 export default class ByzCoinRPC implements ICounterUpdater {
+
+    get latest(): SkipBlock {
+        return new SkipBlock(this._latest);
+    }
+
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
     static readonly serviceName = "ByzCoin";
 
     /**
@@ -58,20 +74,24 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     /**
      * Recreate a byzcoin RPC from a given roster
-     * @param roster        The roster to ask for the config and darc
+     * @param nodes either a roster or an initialized connection
      * @param skipchainID   The genesis block identifier
      * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
      * @param interval how long to wait between two attempts in waitMatch.
      * @param latest if given, use this to prove the current state of the blockchain. Needs to be trusted!
      * @returns a promise that resolves with the initialized ByzCoin instance
      */
-    static async fromByzcoin(roster: Roster, skipchainID: Buffer, waitMatch: number = 0, interval: number = 1000,
-                             latest?: SkipBlock):
+    static async fromByzcoin(nodes: Roster | IConnection, skipchainID: Buffer, waitMatch: number = 0,
+                             interval: number = 1000, latest?: SkipBlock):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
-        rpc.conn = new RosterWSConnection(roster, ByzCoinRPC.serviceName);
+        if (nodes instanceof Roster) {
+            rpc.conn = new RosterWSConnection(nodes, ByzCoinRPC.serviceName);
+        } else {
+            rpc.conn = nodes.copy(ByzCoinRPC.serviceName);
+        }
 
-        const skipchain = new SkipchainRPC(roster);
+        const skipchain = new SkipchainRPC(rpc.conn);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
         rpc._latest = latest !== undefined ? latest : rpc.genesis;
 
@@ -103,23 +123,15 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const ret = await leader.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
         return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
     }
-
     private static staticCounters = new Map<string, Map<string, Long>>();
-    private _latest: SkipBlock;
     private genesisDarc: Darc;
     private config: ChainConfig;
     private genesis: SkipBlock;
     private conn: IConnection;
 
+    private _latest: SkipBlock;
+
     protected constructor() {
-    }
-
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
-    }
-
-    get latest(): SkipBlock {
-        return new SkipBlock(this._latest);
     }
 
     /**
@@ -161,7 +173,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param p nodes to contact in parallel
      */
     setParallel(p: number) {
-         this.conn.setParallel(p);
+        this.conn.setParallel(p);
     }
 
     /**
