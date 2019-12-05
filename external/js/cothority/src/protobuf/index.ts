@@ -82,5 +82,14 @@ export function registerMessage(
  * @param json The definition imported from a json file
  */
 export function addJSON(json: INamespace): void {
-    root.addJSON(json.nested);
+    const temp = protobuf.Root.fromJSON(json);
+
+    for (const nested of root.nestedArray) {
+        const ns = temp.lookup(nested.name, protobuf.Namespace);
+        if (ns !== null) {
+            temp.remove(ns);
+        }
+    }
+
+    root.add(temp);
 }
