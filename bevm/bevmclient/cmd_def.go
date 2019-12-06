@@ -63,7 +63,7 @@ var cmds = cli.Commands{
 		Name:      "deploy_contract",
 		Usage:     "deploy a BEvm contract",
 		Aliases:   []string{"dc"},
-		ArgsUsage: "<abi file> <bytecode file>",
+		ArgsUsage: "<abi file> <bytecode file> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.Uint64Flag{
 				Name:  "gas-limit",
@@ -87,7 +87,7 @@ var cmds = cli.Commands{
 		Name:      "transaction",
 		Usage:     "execute a transaction on a BEvm contract instance",
 		Aliases:   []string{"xt"},
-		ArgsUsage: "<methodname> [<arg>...]",
+		ArgsUsage: "<transaction name> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.Uint64Flag{
 				Name:  "gas-limit",
@@ -116,7 +116,7 @@ var cmds = cli.Commands{
 		Name:      "call",
 		Usage:     "call a view method on a BEvm contract instance",
 		Aliases:   []string{"xc"},
-		ArgsUsage: "<methodname> [<arg>...]",
+		ArgsUsage: "<view method name> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.StringFlag{
 				Name:  "contract-name",
