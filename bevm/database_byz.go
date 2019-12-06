@@ -12,15 +12,17 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 
-// ByzDatabase is the Ethereum state database distributed among ByzCoin value instances.
-// It captures the common data between the client and server versions.
+// ByzDatabase is the Ethereum state database distributed among ByzCoin value
+// instances.  It captures the common data between the client and server
+// versions.
 type ByzDatabase struct {
 	bevmIID byzcoin.InstanceID // ID of the associated BEVM contract instance
 }
 
 // Compute the ByzCoin EVM value instance ID
 func (db *ByzDatabase) getValueInstanceID(key []byte) byzcoin.InstanceID {
-	// The instance ID of a value instance is given by the hash of the contract instance ID and the key
+	// The instance ID of a value instance is given by the hash of the contract
+	// instance ID and the key
 
 	h := sha256.New()
 	h.Write(db.bevmIID[:])
@@ -140,14 +142,16 @@ func keyMapToList(keyMap map[string]bool) []string {
 	for key := range keyMap {
 		keyList = append(keyList, key)
 	}
-	// The list must be sorted as Go maps traversal order is inherently non-deterministic
+	// The list must be sorted as Go maps traversal order is inherently
+	// non-deterministic
 	sort.Strings(keyList)
 
 	return keyList
 }
 
 // NewServerByzDatabase creates a new ByzDatabase for server use
-func NewServerByzDatabase(bevmIID byzcoin.InstanceID, keyList []string, roStateTrie byzcoin.ReadOnlyStateTrie) (*ServerByzDatabase, error) {
+func NewServerByzDatabase(bevmIID byzcoin.InstanceID, keyList []string,
+	roStateTrie byzcoin.ReadOnlyStateTrie) (*ServerByzDatabase, error) {
 	return &ServerByzDatabase{
 		ByzDatabase: ByzDatabase{
 			bevmIID: bevmIID,

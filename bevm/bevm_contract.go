@@ -15,10 +15,12 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// ContractBEvmID identifies the ByzCoin contract that handles Ethereum contracts
+// ContractBEvmID identifies the ByzCoin contract that handles Ethereum
+// contracts
 var ContractBEvmID = "bevm"
 
-// ContractBEvmValueID identifies the ByzCoin contract that handles EVM state database values
+// ContractBEvmValueID identifies the ByzCoin contract that handles EVM state
+// database values
 var ContractBEvmValueID = "bevm_value"
 
 var nilAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
@@ -30,7 +32,8 @@ type contractBEvm struct {
 }
 
 // ByzCoin contract state for BEvm values
-// This contract is only a byproduct of BEvm state changes; it does not support Spawn or Invoke
+// This contract is only a byproduct of BEvm state changes; it does not support
+// Spawn or Invoke
 type contractBEvmValue struct {
 	byzcoin.BasicContract
 }
@@ -47,14 +50,16 @@ func contractBEvmFromBytes(in []byte) (byzcoin.Contract, error) {
 	return contract, nil
 }
 
-// State is the BEvm main contract persisted information, able to handle the EVM state database
+// State is the BEvm main contract persisted information, able to handle the
+// EVM state database
 type State struct {
 	RootHash common.Hash // Hash of the last commit in the EVM state database
 	KeyList  []string    // List of keys contained in the EVM state database
 }
 
 // NewEvmDb creates a new EVM state database from the contract state
-func NewEvmDb(es *State, roStateTrie byzcoin.ReadOnlyStateTrie, instanceID byzcoin.InstanceID) (*state.StateDB, error) {
+func NewEvmDb(es *State, roStateTrie byzcoin.ReadOnlyStateTrie,
+	instanceID byzcoin.InstanceID) (*state.StateDB, error) {
 	byzDb, err := NewServerByzDatabase(instanceID, es.KeyList, roStateTrie)
 	if err != nil {
 		return nil, xerrors.Errorf("creating new ServerByzDatabase: %v", err)
@@ -94,8 +99,10 @@ func NewContractState(stateDb *state.StateDB) (*State, []byzcoin.StateChange, er
 	return &State{RootHash: root, KeyList: keyList}, stateChanges, nil
 }
 
-// DeleteValues returns a list of state changes to delete all the values in the EVM state database
-func DeleteValues(keyList []string, stateDb *state.StateDB) ([]byzcoin.StateChange, error) {
+// DeleteValues returns a list of state changes to delete all the values in the
+// EVM state database
+func DeleteValues(keyList []string,
+	stateDb *state.StateDB) ([]byzcoin.StateChange, error) {
 	// Retrieve the low-level database
 	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
@@ -118,14 +125,17 @@ func DeleteValues(keyList []string, stateDb *state.StateDB) ([]byzcoin.StateChan
 
 	// Sanity check: the resulted list of keys should be empty
 	if len(keyList) != 0 {
-		return nil, xerrors.New("internal error: DeleteValues() does not produce an empty key list")
+		return nil, xerrors.New("internal error: DeleteValues() does not " +
+			"produce an empty key list")
 	}
 
 	return stateChanges, nil
 }
 
 // Spawn creates a new BEvm contract
-func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
 	cout = coins
 
 	// Convention for newly-spawned instances
@@ -147,7 +157,8 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruc
 	}
 	// State changes to ByzCoin contain a single Create
 	sc = []byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Create, instanceID, ContractBEvmID, contractData, darc.ID(inst.InstanceID.Slice())),
+		byzcoin.NewStateChange(byzcoin.Create, instanceID, ContractBEvmID,
+			contractData, darc.ID(inst.InstanceID.Slice())),
 	}
 
 	return
@@ -165,7 +176,9 @@ func checkArguments(inst byzcoin.Instruction, names ...string) error {
 }
 
 // Invoke calls a method on an existing BEvm contract
-func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
 	cout = coins
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
@@ -200,13 +213,17 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			return nil, nil, xerrors.Errorf("encoding BEvm contract state: %v", err)
 		}
 
-		// State changes to ByzCoin contain the Update to the main contract state, plus whatever changes
-		// were produced by the EVM on its state database.
+		// State changes to ByzCoin contain the Update to the main contract
+		// state, plus whatever changes were produced by the EVM on its state
+		// database.
 		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID, contractData, darcID),
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+				ContractBEvmID, contractData, darcID),
 		}, stateChanges...)
 
-	case "transaction": // Perform an Ethereum transaction (contract method call with state change)
+	case "transaction":
+		// Perform an Ethereum transaction (contract method call with state
+		// change)
 		err := checkArguments(inst, "tx")
 		if err != nil {
 			return nil, nil, xerrors.Errorf("validating 'transaction' arguments: %v", err)
@@ -241,10 +258,12 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instru
 			return nil, nil, xerrors.Errorf("encoding BEvm contract state: %v", err)
 		}
 
-		// State changes to ByzCoin contain the Update to the main contract state, plus whatever changes
-		// were produced by the EVM on its state database.
+		// State changes to ByzCoin contain the Update to the main contract
+		// state, plus whatever changes were produced by the EVM on its state
+		// database.
 		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID, contractData, darcID),
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID,
+				contractData, darcID),
 		}, stateChanges...)
 
 	default:
@@ -261,7 +280,8 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 	chainConfig := getChainConfig()
 	vmConfig := getVMConfig()
 
-	// GasPool tracks the amount of gas available during execution of the transactions in a block
+	// GasPool tracks the amount of gas available during execution of the
+	// transactions in a block
 	gp := new(core.GasPool).AddGas(uint64(1e18))
 	usedGas := uint64(0)
 	ug := &usedGas
@@ -280,7 +300,8 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 	}
 
 	// Apply transaction to the general EVM state
-	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc, &nilAddress, gp, stateDb, header, tx, ug, vmConfig)
+	receipt, usedGas, err := core.ApplyTransaction(chainConfig, bc,
+		&nilAddress, gp, stateDb, header, tx, ug, vmConfig)
 	if err != nil {
 		return nil, xerrors.Errorf("applying transaction to EVM: %v", err)
 	}
@@ -289,7 +310,9 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 }
 
 // Delete deletes an existing BEvm contract
-func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
+	inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange,
+	cout []byzcoin.Coin, err error) {
 	cout = coins
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())

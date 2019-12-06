@@ -63,14 +63,17 @@ func (contract EvmContract) packConstructor(args ...interface{}) ([]byte, error)
 }
 
 func (contractInstance EvmContractInstance) String() string {
-	return fmt.Sprintf("EvmContractInstance[%s @%s]", contractInstance.Parent.name, contractInstance.Address.Hex())
+	return fmt.Sprintf("EvmContractInstance[%s @%s]",
+		contractInstance.Parent.name, contractInstance.Address.Hex())
 }
 
-func (contractInstance EvmContractInstance) packMethod(method string, args ...interface{}) ([]byte, error) {
+func (contractInstance EvmContractInstance) packMethod(method string,
+	args ...interface{}) ([]byte, error) {
 	return contractInstance.Parent.Abi.Pack(method, args...)
 }
 
-func (contractInstance EvmContractInstance) unpackResult(method string, resultBytes []byte) (interface{}, error) {
+func (contractInstance EvmContractInstance) unpackResult(method string,
+	resultBytes []byte) (interface{}, error) {
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
 		return nil, xerrors.Errorf("method \"%s\" does not exist for this contract", method)
@@ -139,13 +142,15 @@ type Client struct {
 }
 
 // NewBEvm creates a new ByzCoin EVM instance
-func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (byzcoin.InstanceID, error) {
+func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (
+	byzcoin.InstanceID, error) {
 	instanceID := byzcoin.NewInstanceID(nil)
 
-	tx, err := spawnBEvm(bcClient, signer, byzcoin.NewInstanceID(gDarc.GetBaseID()), &byzcoin.Spawn{
-		ContractID: ContractBEvmID,
-		Args:       byzcoin.Arguments{},
-	})
+	tx, err := spawnBEvm(bcClient, signer,
+		byzcoin.NewInstanceID(gDarc.GetBaseID()), &byzcoin.Spawn{
+			ContractID: ContractBEvmID,
+			Args:       byzcoin.Arguments{},
+		})
 	if err != nil {
 		return instanceID, xerrors.Errorf("executing ByzCoin spawn: %v", err)
 	}
@@ -155,8 +160,10 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (by
 	return instanceID, nil
 }
 
-// NewClient creates a new ByzCoin EVM client, connected to the given ByzCoin instance
-func NewClient(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.InstanceID) (*Client, error) {
+// NewClient creates a new ByzCoin EVM client, connected to the given ByzCoin
+// instance
+func NewClient(bcClient *byzcoin.Client, signer darc.Signer,
+	instanceID byzcoin.InstanceID) (*Client, error) {
 	return &Client{
 		bcClient:   bcClient,
 		signer:     signer,
@@ -177,7 +184,9 @@ func (client *Client) Delete() error {
 }
 
 // Deploy deploys a new Ethereum contract on the EVM
-func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64, account *EvmAccount, contract *EvmContract, args ...interface{}) (*EvmContractInstance, error) {
+func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64,
+	account *EvmAccount, contract *EvmContract, args ...interface{}) (
+	*EvmContractInstance, error) {
 	log.Lvlf2(">>> Deploy EVM contract '%s'", contract)
 	defer log.Lvlf2("<<< Deploy EVM contract '%s'", contract)
 
@@ -187,7 +196,8 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64, 
 	}
 
 	callData := append(contract.Bytecode, packedArgs...)
-	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
+	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(amount)),
+		gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
 		return nil, xerrors.Errorf("preparing EVM transaction for contract deployment: %v", err)
@@ -210,8 +220,11 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64, 
 	return contractInstance, nil
 }
 
-// Transaction performs a new transaction (contract method call with state change) on the EVM
-func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, amount uint64, account *EvmAccount, contractInstance *EvmContractInstance, method string, args ...interface{}) error {
+// Transaction performs a new transaction (contract method call with state
+// change) on the EVM
+func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int,
+	amount uint64, account *EvmAccount, contractInstance *EvmContractInstance,
+	method string, args ...interface{}) error {
 	log.Lvlf2(">>> EVM method '%s()' on %s", method, contractInstance)
 	defer log.Lvlf2("<<< EVM method '%s()' on %s", method, contractInstance)
 
@@ -220,7 +233,8 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int, amount uin
 		return xerrors.Errorf("packing contract method '%s': %v", method, err)
 	}
 
-	tx := types.NewTransaction(account.Nonce, contractInstance.Address, big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
+	tx := types.NewTransaction(account.Nonce, contractInstance.Address,
+		big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
 		return xerrors.Errorf("preparing EVM transaction for method execution: %v", err)
@@ -259,7 +273,8 @@ func (client *Client) Call(account *EvmAccount, contractInstance *EvmContractIns
 	evm := vm.NewEVM(getContext(), stateDb, getChainConfig(), getVMConfig())
 
 	// Perform the call (1 Ether should be enough for everyone [tm]...)
-	ret, _, err := evm.Call(vm.AccountRef(account.Address), contractInstance.Address, callData, uint64(1*WeiPerEther), big.NewInt(0))
+	ret, _, err := evm.Call(vm.AccountRef(account.Address),
+		contractInstance.Address, callData, uint64(1*WeiPerEther), big.NewInt(0))
 	if err != nil {
 		return nil, xerrors.Errorf("executing EVM view method: %v", err)
 	}
@@ -388,8 +403,10 @@ func (client *Client) deleteBEvm(instr *byzcoin.Delete) (*byzcoin.ClientTransact
 	return execByzCoinTx(client.bcClient, client.signer, client.instanceID, nil, nil, instr)
 }
 
-func execByzCoinTx(bcClient *byzcoin.Client, signer darc.Signer, instanceID byzcoin.InstanceID,
-	spawnInstr *byzcoin.Spawn, invokeInstr *byzcoin.Invoke, deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
+func execByzCoinTx(bcClient *byzcoin.Client,
+	signer darc.Signer, instanceID byzcoin.InstanceID,
+	spawnInstr *byzcoin.Spawn, invokeInstr *byzcoin.Invoke,
+	deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
 	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
 	if err != nil {
 		return nil, xerrors.Errorf("retrieving signer counters: %v", err)

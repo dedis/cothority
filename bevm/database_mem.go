@@ -88,7 +88,8 @@ func (db *MemDatabase) Dump() ([]byte, error) {
 // Put implements Putter.Put()
 func (db *MemDatabase) Put(key []byte, value []byte) error {
 	db.lock.Lock()
-	log.Lvlf3("MemDatabase.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
+	log.Lvlf3("MemDatabase.Put(key=%v, value=%v)",
+		hex.EncodeToString(key), hex.EncodeToString(value))
 	defer db.lock.Unlock()
 
 	return db.put(key, value)

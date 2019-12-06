@@ -87,7 +87,8 @@ type userEvmContract struct {
 	Address common.Address
 }
 
-func writeContractFile(contractInstance *bevm.EvmContractInstance, abiFilepath string, name string, check bool) error {
+func writeContractFile(contractInstance *bevm.EvmContractInstance,
+	abiFilepath string, name string, check bool) error {
 	jsonAbi, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
 		return xerrors.Errorf("reading contract ABI: %v", err)

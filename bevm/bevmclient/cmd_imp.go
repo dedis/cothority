@@ -205,7 +205,8 @@ func executeTransaction(ctx *cli.Context) error {
 	// Perform command
 
 	err = opt.bevmClient.Transaction(
-		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account, contractInstance, method, args...)
+		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account,
+		contractInstance, method, args...)
 	if err != nil {
 		return xerrors.Errorf("executing contract transaction: %v", err)
 	}
