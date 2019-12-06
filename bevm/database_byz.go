@@ -2,13 +2,12 @@ package bevm
 
 import (
 	"crypto/sha256"
-	"errors"
-	"fmt"
 	"sort"
 	"sync"
 
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/ethdb"
 )
@@ -58,7 +57,7 @@ func NewClientByzDatabase(bevmIID byzcoin.InstanceID, client *byzcoin.Client) (*
 
 // Put implements Putter.Put()
 func (db *ClientByzDatabase) Put(key []byte, value []byte) error {
-	return errors.New("Put() not allowed on ClientByzDatabase")
+	return xerrors.New("Put() not allowed on ClientByzDatabase")
 }
 
 // Retrieve the value from a BEVM value instance
@@ -68,19 +67,19 @@ func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	// Retrieve the proof of the BEvmValue instance
 	proofResponse, err := db.client.GetProof(instID[:])
 	if err != nil {
-		return nil, errors.New("error retrieving BEvmValue instance: " + err.Error())
+		return nil, xerrors.Errorf("retrieving BEvmValue instance: %v", err)
 	}
 
 	// Validate the proof
 	err = proofResponse.Proof.Verify(db.client.ID)
 	if err != nil {
-		return nil, errors.New("error verifying BEvmValue instance proof: " + err.Error())
+		return nil, xerrors.Errorf("verifying BEvmValue instance proof: %v", err)
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, errors.New("error getting BEvmValue instance value: " + err.Error())
+		return nil, xerrors.Errorf("getting BEvmValue instance value: %v", err)
 	}
 
 	return value, nil
@@ -97,7 +96,7 @@ func (db *ClientByzDatabase) Has(key []byte) (bool, error) {
 func (db *ClientByzDatabase) Get(key []byte) ([]byte, error) {
 	value, err := db.getBEvmValue(key)
 	if err != nil {
-		return nil, fmt.Errorf("error getting value for key '%v': %s", key, err.Error())
+		return nil, xerrors.Errorf("getting value for key '%v': %v", key, err)
 	}
 
 	return value, nil
@@ -105,7 +104,7 @@ func (db *ClientByzDatabase) Get(key []byte) ([]byte, error) {
 
 // Delete implements Deleter.Delete()
 func (db *ClientByzDatabase) Delete(key []byte) error {
-	return errors.New("Delete() not allowed on ClientByzDatabase")
+	return xerrors.New("Delete() not allowed on ClientByzDatabase")
 }
 
 // NewBatch implements NewBatch()
@@ -173,7 +172,7 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	for _, s := range db.stateChanges {
 		k := string(s.Key())
 		if val, ok := keyMap[k]; ok && val != string(s.Value) {
-			return nil, nil, errors.New("internal error: the set of changes produced by the EVM is not unique on keys")
+			return nil, nil, xerrors.New("internal error: the set of changes produced by the EVM is not unique on keys")
 		}
 		keyMap[k] = string(s.Value)
 	}
@@ -196,7 +195,7 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 		case byzcoin.Remove:
 			nbRemove++
 		default:
-			return nil, nil, fmt.Errorf("unknown StateChange action: %d", s.StateAction)
+			return nil, nil, xerrors.Errorf("unknown StateChange action: %d", s.StateAction)
 		}
 	}
 	log.Lvlf2("%d state changes (%d Create, %d Update, %d Remove), %d entries in store",
@@ -253,7 +252,7 @@ func (db *ServerByzDatabase) Get(key []byte) ([]byte, error) {
 
 	value, _, _, _, err := db.roStateTrie.GetValues(instID[:])
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("reading value from state trie: %v", err)
 	}
 
 	return value, nil

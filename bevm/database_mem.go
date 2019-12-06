@@ -19,15 +19,15 @@ package bevm
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"sort"
 	"sync"
 
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
-	"go.dedis.ch/protobuf"
 )
 
 // ---------------------------------------------------------------------------
@@ -55,7 +55,7 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding memdb: %v", err)
 	}
 
 	DB := &MemDatabase{
@@ -122,7 +122,7 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 		return common.CopyBytes(entry), nil
 	}
 
-	return nil, errors.New("not found")
+	return nil, xerrors.Errorf("key '%s' not found", hex.EncodeToString(key))
 }
 
 // Delete implements Deleter.Delete()
