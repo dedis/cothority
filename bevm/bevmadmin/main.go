@@ -16,6 +16,7 @@ import (
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -121,7 +122,7 @@ func spawn(c *cli.Context) error {
 
 	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading ByzCoin config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -132,7 +133,7 @@ func spawn(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(signerStr)
 	}
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading signer key: %v", err)
 	}
 
 	var darc *darc.Darc
@@ -142,18 +143,18 @@ func spawn(c *cli.Context) error {
 	} else {
 		darc, err = lib.GetDarcByString(cl, darcStr)
 		if err != nil {
-			return err
+			return xerrors.Errorf("loading DARC data: %v", err)
 		}
 	}
 
 	bevmInstID, err := bevm.NewBEvm(cl, *signer, darc)
 	if err != nil {
-		return err
+		return xerrors.Errorf("spawning new BEvm instance: %v", err)
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n", bevmInstID)
 	if err != nil {
-		return err
+		return xerrors.Errorf("writing report msg: %v", err)
 	}
 
 	// Save ID in file if provided
@@ -161,7 +162,7 @@ func spawn(c *cli.Context) error {
 	if outFile != "" {
 		err = ioutil.WriteFile(outFile, []byte(bevmInstID.String()), 0644)
 		if err != nil {
-			return err
+			return xerrors.Errorf("writing ID to file: %v", err)
 		}
 	}
 
@@ -173,7 +174,7 @@ func delete(c *cli.Context) error {
 
 	cfg, cl, err := lib.LoadConfig(bcFile)
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading ByzCoin config: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -184,28 +185,28 @@ func delete(c *cli.Context) error {
 		signer, err = lib.LoadKeyFromString(signerStr)
 	}
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading signer key: %v", err)
 	}
 
 	bevmIDStr := c.String("bevm-id")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
 	if err != nil {
-		return err
+		return xerrors.Errorf("decoding BEvm ID: %v", err)
 	}
 	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
 	if err != nil {
-		return err
+		return xerrors.Errorf("retrieving BEvm client instance: %v", err)
 	}
 
 	err = bevmClient.Delete()
 	if err != nil {
-		return err
+		return xerrors.Errorf("deleting BEvm instance: %v", err)
 	}
 
 	_, err = fmt.Fprintf(c.App.Writer, "Delete BEvm instance with ID: %s\n", bevmIDStr)
 	if err != nil {
-		return err
+		return xerrors.Errorf("writing report msg: %v", err)
 	}
 
 	return nil
