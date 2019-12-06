@@ -112,6 +112,7 @@ func deployContract(ctx *cli.Context) error {
 	gasLimit := ctx.Uint64("gas-limit")
 	gasPrice := ctx.Uint64("gas-price")
 	amount := ctx.Uint64("amount")
+	contractName := ctx.String("contract-name")
 
 	if ctx.NArg() < 2 {
 		return xerrors.Errorf("missing some argument (expected 2, got %d)", ctx.NArg())
@@ -154,7 +155,7 @@ func deployContract(ctx *cli.Context) error {
 		return xerrors.Errorf("writing account file: %v", err)
 	}
 
-	err = writeContractFile(contractInstance, abiFilepath, "contract", true)
+	err = writeContractFile(contractInstance, abiFilepath, contractName, true)
 	if err != nil {
 		return xerrors.Errorf("writing contract file: %v", err)
 	}

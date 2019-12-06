@@ -80,6 +80,11 @@ var cmds = cli.Commands{
 				Value: 0,
 				Usage: "amount in Ether to send to the contract once deployed",
 			},
+			cli.StringFlag{
+				Name:  "contract-name",
+				Value: "contract",
+				Usage: "contract name",
+			},
 		),
 		Action: deployContract,
 	},
