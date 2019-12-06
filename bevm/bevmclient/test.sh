@@ -5,11 +5,15 @@
 # Options:
 #   -b   re-builds bcadmin package
 
+# shellcheck disable=SC2034  # Used in libtest.sh
 DBG_TEST=1
+# shellcheck disable=SC2034  # Used in libtest.sh
 DBG_SRV=2
 DBG_APP=2
 
+# shellcheck disable=SC2034  # Used in libtest.sh
 NBR_SERVERS=4
+# shellcheck disable=SC2034  # Used in libtest.sh
 NBR_SERVERS_GROUP=3
 
 # Clears some env. variables
@@ -23,20 +27,13 @@ export BC_WAIT=true
 main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/bevm
-    build $APPDIR/../bevmadmin
-    build $APPDIR/../../byzcoin/bcadmin
+    build "${APPDIR}/../bevmadmin"
+    build "${APPDIR}/../../byzcoin/bcadmin"
     [[ ! -x ./bevmadmin ]] && exit 1
     [[ ! -x ./bevmclient ]] && exit 1
 
     run testBevmInteraction
     stopTest
-}
-
-testTest(){
-    rm -f config/*
-    runCoBG 1 2 3
-    runBcAdmin create public.toml --interval .5s
-    bcID=$( ls config/bc-* | sed -e "s/.*bc-\(.*\).cfg/\1/" )
 }
 
 initBevm(){
@@ -52,36 +49,36 @@ initBevm(){
     runBcAdmin darc add \
         --unrestricted \
         --desc "BEvm Darc" \
-        --identity ${BEVM_ADMIN} \
+        --identity "${BEVM_ADMIN}" \
         --out_id ./bevm_darc_id.txt
     BEVM_DARC=$( cat ./bevm_darc_id.txt )
 
     # Initialize BEvm Darc
     # 'spawn' and 'delete' granted to BEVM_ADMIN
     runBcAdmin darc rule \
-        --sign ${BEVM_ADMIN} \
-        --darc ${BEVM_DARC} \
+        --sign "${BEVM_ADMIN}" \
+        --darc "${BEVM_DARC}" \
         --rule "spawn:bevm" \
-        --identity ${BEVM_ADMIN}
+        --identity "${BEVM_ADMIN}"
     runBcAdmin darc rule \
-        --sign ${BEVM_ADMIN} \
-        --darc ${BEVM_DARC} \
+        --sign "${BEVM_ADMIN}" \
+        --darc "${BEVM_DARC}" \
         --rule "delete:bevm" \
-        --identity ${BEVM_ADMIN}
+        --identity "${BEVM_ADMIN}"
     # 'credit' and 'transaction' granted to BEVM_USER
     runBcAdmin darc rule \
-        --sign ${BEVM_ADMIN} \
-        --darc ${BEVM_DARC} \
+        --sign "${BEVM_ADMIN}" \
+        --darc "${BEVM_DARC}" \
         --rule "invoke:bevm.credit" \
-        --identity ${BEVM_USER}
+        --identity "${BEVM_USER}"
     runBcAdmin darc rule \
-        --sign ${BEVM_ADMIN} \
-        --darc ${BEVM_DARC} \
+        --sign "${BEVM_ADMIN}" \
+        --darc "${BEVM_DARC}" \
         --rule "invoke:bevm.transaction" \
-        --identity ${BEVM_USER}
+        --identity "${BEVM_USER}"
     # Check
     runBcAdmin darc show \
-        --darc ${BEVM_DARC}
+        --darc "${BEVM_DARC}"
 }
 
 testBevmInteraction(){
@@ -96,8 +93,8 @@ testBevmInteraction(){
 
     # Create BEvm instance
     testOK runBevmAdmin spawn \
-        --sign ${BEVM_ADMIN} \
-        --darc ${BEVM_DARC} \
+        --sign "${BEVM_ADMIN}" \
+        --darc "${BEVM_DARC}" \
         --out_id ./bevm_instance_id.txt
     export BEVM_ID=$( cat ./bevm_instance_id.txt )
 
@@ -107,59 +104,59 @@ testBevmInteraction(){
     # Credit account
     # Cannot credit as BEVM_ADMIN
     testFail runBevmClient credit_account \
-        --sign ${BEVM_ADMIN} \
+        --sign "${BEVM_ADMIN}" \
         10
     testOK runBevmClient credit_account \
-        --sign ${BEVM_USER} \
+        --sign "${BEVM_USER}" \
         10
 
     # Check account balance
     testGrep "10 Ether, 0 Wei" runBevmClient get_account_balance \
-        --sign ${BEVM_USER}
+        --sign "${BEVM_USER}"
 
     # Deploy Candy contract
     testOK runBevmClient deploy_contract \
-        --sign ${BEVM_USER} \
-        ${APPDIR}/../testdata/Candy/Candy_sol_Candy.abi \
-        ${APPDIR}/../testdata/Candy/Candy_sol_Candy.bin \
+        --sign "${BEVM_USER}" \
+        "${APPDIR}/../testdata/Candy/Candy_sol_Candy.abi" \
+        "${APPDIR}/../testdata/Candy/Candy_sol_Candy.bin" \
         100
 
     # Check Candy balance
     testGrep " 100 " runBevmClient call \
-        --sign ${BEVM_USER} \
+        --sign "${BEVM_USER}" \
         getRemainingCandies
 
     # Eat some candy
     testOK runBevmClient transaction \
-        --sign ${BEVM_USER} \
+        --sign "${BEVM_USER}" \
         eatCandy \
         58
 
     # Check Candy balance
     testGrep " 42 " runBevmClient call \
-        --sign ${BEVM_USER} \
+        --sign "${BEVM_USER}" \
         getRemainingCandies
 
     # Delete BEvm instance
     # Cannot delete as BEVM_USER
     testFail runBevmAdmin delete \
-        --sign ${BEVM_USER} \
-        --bevm-id ${BEVM_ID}
+        --sign "${BEVM_USER}" \
+        --bevm-id "${BEVM_ID}"
     testOK runBevmAdmin delete \
-        --sign ${BEVM_ADMIN} \
-        --bevm-id ${BEVM_ID}
+        --sign "${BEVM_ADMIN}" \
+        --bevm-id "${BEVM_ID}"
 }
 
 runBcAdmin(){
-    ./bcadmin --config config/ --debug $DBG_APP "$@"
+    ./bcadmin --config config/ --debug "${DBG_APP}" "$@"
 }
 
 runBevmAdmin(){
-    ./bevmadmin --config config/ --debug $DBG_APP "$@"
+    ./bevmadmin --config config/ --debug "${DBG_APP}" "$@"
 }
 
 runBevmClient(){
-    ./bevmclient --config config/ --debug $DBG_APP "$@"
+    ./bevmclient --config config/ --debug "${DBG_APP}" "$@"
 }
 
 main

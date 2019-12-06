@@ -54,7 +54,7 @@ func writeAccountFile(account *bevm.EvmAccount, name string, check bool) error {
 
 	jsonData, err := json.Marshal(tmp)
 	if err != nil {
-		return xerrors.Errorf("marshalling account data: %v")
+		return xerrors.Errorf("marshalling account data: %v", err)
 	}
 
 	return writeFile(fmt.Sprintf("%s.bevm_account", name), jsonData, check)
