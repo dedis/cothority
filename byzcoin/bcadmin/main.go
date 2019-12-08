@@ -21,6 +21,7 @@ import (
 	"github.com/qantik/qrgo"
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
+	_ "go.dedis.ch/cothority/v3/bevm"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/byzcoin/contracts"

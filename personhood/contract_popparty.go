@@ -98,7 +98,7 @@ func (c ContractPopParty) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		return nil, nil, errors.New("couldn't get darc: " + err.Error())
 	}
 	var expr expression.Expr
-	if rst.GetVersion() < 2 {
+	if rst.GetVersion() < 3 {
 		expr = d.Rules.Get("invoke:finalize")
 	} else {
 		expr = d.Rules.Get("invoke:popParty.finalize")
