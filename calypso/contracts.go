@@ -241,7 +241,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			return err
 		}
 		purposesStr := vals.Get("purposes")
-		usesStr := vals.Get("uses")
+		// usesStr := vals.Get("uses")
 
 		projectInstID := inst.Spawn.Args.Search("projectInstID")
 		if projectInstID == nil {
@@ -260,21 +260,21 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 
 		purposes := strings.Split(purposesStr, ",")
 		log.Info("here are the Darc purposes: ", purposes)
-		uses := strings.Split(usesStr, ",")
+		// uses := strings.Split(usesStr, ",")
 
 		errorMessages := make([]string, 0)
-		for _, purpose := range projectC.Purposes {
-			if !stringInSlice(purpose, purposes) {
-				errorMessages = append(errorMessages,
-					fmt.Sprintf("the purpose '%s' is not allowed", purpose))
-			}
-		}
-		for _, use := range projectC.Uses {
-			if !stringInSlice(use, uses) {
-				errorMessages = append(errorMessages,
-					fmt.Sprintf("the use '%s' is not allowed", use))
-			}
-		}
+		// for _, purpose := range projectC.Purposes {
+		// 	if !stringInSlice(purpose, purposes) {
+		// 		errorMessages = append(errorMessages,
+		// 			fmt.Sprintf("the purpose '%s' is not allowed", purpose))
+		// 	}
+		// }
+		// for _, use := range projectC.Uses {
+		// 	if !stringInSlice(use, uses) {
+		// 		errorMessages = append(errorMessages,
+		// 			fmt.Sprintf("the use '%s' is not allowed", use))
+		// 	}
+		// }
 
 		if len(errorMessages) != 0 {
 			return fmt.Errorf("validation of attributes failed: %s", strings.Join(errorMessages, ", "))
