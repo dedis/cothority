@@ -17,7 +17,9 @@ export function setFactory(generator: (path: string) => WebSocketAdapter): void 
 }
 
 /**
- * A connection allows to send a message to one or more distant peers
+ * A connection allows to send a message to one or more distant peers. It has a default
+ * service it is connected to, and can only be used to send messages to that service.
+ * To change service, a copy has to be created using the copy method.
  */
 export interface IConnection {
     /**
@@ -45,12 +47,18 @@ export interface IConnection {
      * @param p number of nodes to contact in parallel
      */
     setParallel(p: number): void;
+
+    /**
+     * Creates a copy of the connection, but usable with the given service.
+     * @param service
+     */
+    copy(service: string): IConnection;
 }
 
 /**
  * Single peer connection to one single node.
  */
-export class WebSocketConnection {
+export class WebSocketConnection implements IConnection {
     private readonly url: string;
     private readonly service: string;
     private timeout: number;
@@ -142,6 +150,16 @@ export class WebSocketConnection {
             });
         });
     }
+
+    setParallel(p: number): void {
+        if (p > 1) {
+            throw new Error("Single connection doesn't support more than one parallel");
+        }
+    }
+
+    copy(service: string): IConnection {
+        return new WebSocketConnection(this.url, service);
+    }
 }
 
 /**
@@ -160,19 +178,27 @@ export class RosterWSConnection implements IConnection {
     private readonly connNbr: number;
     private msgNbr = 0;
     private parallel: number;
+    private rID: string;
 
     /**
-     * @param r         The roster to use
+     * @param r         The roster to use or the rID of the Nodes
      * @param service   The name of the service to reach
      * @param parallel  How many nodes to contact in parallel. Can be changed afterwards
      */
-    constructor(r: Roster, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
+    constructor(r: Roster | string, private service: string, parallel: number = RosterWSConnection.defaultParallel) {
         this.setParallel(parallel);
-        const rID = r.id.toString("hex");
-        if (!RosterWSConnection.nodes.has(rID)) {
-            RosterWSConnection.nodes.set(rID, new Nodes(r));
+        if (r instanceof Roster) {
+            this.rID = r.id.toString("hex");
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r));
+            }
+        } else {
+            this.rID = r;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                throw new Error("unknown roster-ID");
+            }
         }
-        this.nodes = RosterWSConnection.nodes.get(rID);
+        this.nodes = RosterWSConnection.nodes.get(this.rID);
         this.connNbr = RosterWSConnection.totalConnNbr;
         RosterWSConnection.totalConnNbr++;
     }
@@ -251,6 +277,10 @@ export class RosterWSConnection implements IConnection {
      */
     setTimeout(value: number) {
         this.nodes.setTimeout(value);
+    }
+
+    copy(service: string): IConnection {
+        return new RosterWSConnection(this.rID, service, this.parallel);
     }
 }
 
