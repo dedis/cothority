@@ -41,7 +41,7 @@ export class OnChainSecretInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return OnChainSecretInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return OnChainSecretInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -96,7 +96,7 @@ export class CalypsoWriteInstance extends Instance {
         await ctx.updateCountersAndSign(bc, [signers]);
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CalypsoWriteInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return CalypsoWriteInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -160,7 +160,7 @@ export class CalypsoReadInstance extends Instance {
         await ctx.updateCountersAndSign(bc, ctxSigners);
         await bc.sendTransactionAndWait(ctx);
 
-        return CalypsoReadInstance.fromByzcoin(bc, ctx.instructions[ctx.instructions.length - 1].deriveId());
+        return CalypsoReadInstance.fromByzcoin(bc, ctx.instructions[ctx.instructions.length - 1].deriveId(), 1);
     }
 
     /**
@@ -169,8 +169,9 @@ export class CalypsoReadInstance extends Instance {
      * @param iid   The instance ID
      * @returns a promise that resolves with the coin instance
      */
-    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID): Promise<CalypsoReadInstance> {
-        return new CalypsoReadInstance(bc, await Instance.fromByzcoin(bc, iid));
+    static async fromByzcoin(bc: ByzCoinRPC, iid: InstanceID, waitMatch: number = 0, interval: number = 1000):
+        Promise<CalypsoReadInstance> {
+        return new CalypsoReadInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
     read: Read;
 

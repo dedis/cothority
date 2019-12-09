@@ -71,10 +71,9 @@ export default class SpawnerInstance extends Instance {
         const inst = Instruction.createSpawn(darcID, this.contractID, args);
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         await ctx.updateCountersAndSign(bc, [signers]);
-
         await bc.sendTransactionAndWait(ctx);
 
-        return this.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return this.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
