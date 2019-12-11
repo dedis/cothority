@@ -14,6 +14,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ContractWriteID references a write contract system-wide.
@@ -236,12 +237,10 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		// Expecting an 'attr' of form:
 		// purposes=purpose1,purpose2&uses=use1,use2,use4
 		// which, once parsed, gives map[purposes:[purpose1,purpose2] uses:[use1,use2]]
-		vals, err := url.ParseQuery(attr)
+		parsedQuery, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
 		}
-		purposesStr := vals.Get("purposes")
-		// usesStr := vals.Get("uses")
 
 		projectInstID := inst.Spawn.Args.Search("projectInstID")
 		if projectInstID == nil {
@@ -258,26 +257,22 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			return errors.New("failed to decode project instance: " + err.Error())
 		}
 
-		purposes := strings.Split(purposesStr, ",")
-		log.Info("here are the Darc purposes: ", purposes)
-		// uses := strings.Split(usesStr, ",")
-
-		errorMessages := make([]string, 0)
-		// for _, purpose := range projectC.Purposes {
-		// 	if !stringInSlice(purpose, purposes) {
-		// 		errorMessages = append(errorMessages,
-		// 			fmt.Sprintf("the purpose '%s' is not allowed", purpose))
-		// 	}
-		// }
-		// for _, use := range projectC.Uses {
-		// 	if !stringInSlice(use, uses) {
-		// 		errorMessages = append(errorMessages,
-		// 			fmt.Sprintf("the use '%s' is not allowed", use))
-		// 	}
-		// }
-
-		if len(errorMessages) != 0 {
-			return fmt.Errorf("validation of attributes failed: %s", strings.Join(errorMessages, ", "))
+		// Each attribute should have a corresponding Metadata.Attribute that
+		// has a corresponding value.
+		for key, vals := range parsedQuery {
+			if len(vals) != 1 {
+				return xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
+					"vals: %v", len(vals), key, vals)
+			}
+			val := vals[0]
+			attr, found := projectC.Metadata.GetAttribute(key)
+			if !found {
+				return xerrors.Errorf("Attribute with key '%s' not found", key)
+			}
+			if attr.Value != "" && attr.Value != val {
+				return xerrors.Errorf("Attribute with key '%s' does not have "+
+					"a matching value. Expected '%s', got '%s'", key, val, attr.Value)
+			}
 		}
 
 		return nil
