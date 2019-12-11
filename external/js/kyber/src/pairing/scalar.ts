@@ -1,8 +1,8 @@
-import { randomBytes } from 'crypto';
-import BN from 'bn.js';
-import { Scalar } from '../index';
-import { p } from './constants';
-import { int } from '../random';
+import BN from "bn.js";
+import { randomBytes } from "crypto";
+import { Scalar } from "../index";
+import { int } from "../random";
+import { p } from "./constants";
 
 export type BNType = number | string | number[] | Buffer | BN;
 
@@ -81,7 +81,7 @@ export default class BN256Scalar implements Scalar {
     /** @inheritdoc */
     pick(callback?: (length: number) => Buffer): BN256Scalar {
         callback = callback || randomBytes;
-        
+
         const bytes = int(p, callback);
         this.setBytes(bytes);
         return this;
@@ -95,7 +95,7 @@ export default class BN256Scalar implements Scalar {
 
     /** @inheritdoc */
     marshalBinary(): Buffer {
-        return this.v.toArrayLike(Buffer, 'be', 32);
+        return this.v.toArrayLike(Buffer, "be", 32);
     }
 
     /** @inheritdoc */
@@ -104,7 +104,7 @@ export default class BN256Scalar implements Scalar {
     }
 
     /** @inheritdoc */
-    marshalSize(): number{
+    marshalSize(): number {
         return 32;
     }
 

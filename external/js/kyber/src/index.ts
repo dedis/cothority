@@ -1,8 +1,9 @@
 import * as curve from "./curve";
-import * as sign from "./sign";
 import * as pairing from "./pairing";
-import PointFactory from './point-factory';
+import PointFactory from "./point-factory";
+import * as sign from "./sign";
 
+// tslint:disable-next-line
 export interface Group {
   /**
    * Get the length of the buffer after marshaling the scalar
@@ -29,6 +30,7 @@ export interface Group {
   point(): Point;
 }
 
+// tslint:disable-next-line
 export interface Point {
   /**
    * Make a point set to the neutral element
@@ -152,6 +154,7 @@ export interface Point {
   toProto(): Buffer;
 }
 
+// tslint:disable-next-line
 export interface Scalar {
   /**
    * Returns the binary representation (big endian) of the scalar
@@ -268,11 +271,11 @@ export {
   sign,
   pairing,
   PointFactory,
-}
+};
 
 export default {
-  curve,
-  sign,
-  pairing,
   PointFactory,
-}
+  curve,
+  pairing,
+  sign,
+};

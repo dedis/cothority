@@ -1,11 +1,11 @@
-import GfP2 from './gfp2';
 import {
     xiTo2PMinus2Over3,
-    xiToPMinus1Over3,
     xiTo2PSquaredMinus2Over3,
+    xiToPMinus1Over3,
     xiToPSquaredMinus1Over3,
-} from './constants';
-import GfP from './gfp';
+} from "./constants";
+import GfP from "./gfp";
+import GfP2 from "./gfp2";
 
 /**
  * Group field of size p^6
@@ -13,14 +13,12 @@ import GfP from './gfp';
  * a new object.
  */
 export default class GfP6 {
-    private static ZERO = new GfP6();
-    private static ONE = new GfP6(GfP2.zero(), GfP2.zero(), GfP2.one());
 
     /**
      * Get the addition identity for this group field
      * @returns the element
      */
-    public static zero(): GfP6 {
+    static zero(): GfP6 {
         return GfP6.ZERO;
     }
 
@@ -28,9 +26,11 @@ export default class GfP6 {
      * Get the multiplication identity for this group field
      * @returns the element
      */
-    public static one(): GfP6 {
+    static one(): GfP6 {
         return GfP6.ONE;
     }
+    private static ZERO = new GfP6();
+    private static ONE = new GfP6(GfP2.zero(), GfP2.zero(), GfP2.one());
 
     private x: GfP2;
     private y: GfP2;
@@ -185,7 +185,7 @@ export default class GfP6 {
 
     mulTau(): GfP6 {
         const tz = this.x.mulXi();
-        
+
         return new GfP6(this.y, this.z, tz);
     }
 

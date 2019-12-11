@@ -1,7 +1,7 @@
 // https://github.com/jsverify/jsverify/blob/master/helpers/jasmineHelpers2.js
-import * as jsc from 'jsverify';
+import * as jsc from "jsverify";
 
-beforeEach(function () {
+beforeEach(() => {
   "use strict";
 
   function message(r: jsc.Result<any>) {
@@ -9,32 +9,30 @@ beforeEach(function () {
   }
 
   jasmine.addMatchers({
-    toHold: function () {
-      return {
-        compare: function (actual: any, done: any) {
-          var r = jsc.check(actual, { tests: 100 });
-          if (done) {
-            Promise.resolve().then(function () { return r; }).then(function (v) {
-              // TODO: update jsverify after the fix is merged: https://github.com/jsverify/jsverify/pull/283
-              // @ts-ignore
-              if (v === true) {
-                done();
-              } else {
-                done.fail(message(v));
-              }
-            });
-            return {
-              pass: true,
-            };
-          }
-          return {
-            // TODO: update jsverify after the fix is merged
+    toHold: () => ({
+      compare(actual: any, done: any) {
+        const r = jsc.check(actual, {tests: 100});
+        if (done) {
+          Promise.resolve().then(() => r).then((v) => {
+            // TODO: update jsverify after the fix is merged: https://github.com/jsverify/jsverify/pull/283
             // @ts-ignore
-            pass: r === true,
-            message: message(r),
+            if (v === true) {
+              done();
+            } else {
+              done.fail(message(v));
+            }
+          });
+          return {
+            pass: true,
           };
-        },
-      };
-    },
+        }
+        return {
+          message: message(r),
+          // TODO: update jsverify after the fix is merged
+          // @ts-ignore
+          pass: r === true,
+        };
+      },
+    }),
   });
 });

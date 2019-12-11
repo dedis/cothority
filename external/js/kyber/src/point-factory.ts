@@ -1,9 +1,10 @@
 import { Point } from ".";
-import { BN256G1Point, BN256G2Point } from "./pairing/point";
 import Ed25519Point from "./curve/edwards25519/point";
+import { BN256G1Point, BN256G2Point } from "./pairing/point";
 
+// tslint:disable-next-line
 interface GeneratorMap {
-    [k: string]: () => Point
+    [k: string]: () => Point;
 }
 
 /**
@@ -13,8 +14,8 @@ interface GeneratorMap {
  * them back if required.
  */
 export class PointFactory {
-    private static SUITE_ED25519 = 'Ed25519';
-    private static SUITE_BN256 = 'bn256.adapter';
+    private static SUITE_ED25519 = "Ed25519";
+    private static SUITE_BN256 = "bn256.adapter";
 
     private tags: GeneratorMap;
     private suites: GeneratorMap;
@@ -35,11 +36,11 @@ export class PointFactory {
     /**
      * Decode a point using the 8 first bytes to look up the
      * correct instance
-     * 
+     *
      * @param buf bytes to decode
      * @returns the point
      */
-    public fromProto(buf: Buffer): Point {
+    fromProto(buf: Buffer): Point {
         const tag = buf.slice(0, 8).toString();
         const generator = this.tags[tag];
 
@@ -47,32 +48,32 @@ export class PointFactory {
             const point = generator();
             point.unmarshalBinary(buf.slice(8));
 
-            return point
+            return point;
         }
 
-        throw new Error('unknown tag for the point');
+        throw new Error("unknown tag for the point");
     }
 
     /**
      * Decode the point stored as an hexadecimal string by using
      * the suite as a reference for the point instance
-     * 
+     *
      * @param suite Name of the suite to use
      * @param pub   The point encoded as an hex-string
      * @returns the point
      */
-    public fromToml(suite: string, pub: string): Point {
+    fromToml(suite: string, pub: string): Point {
         const generator = this.suites[suite];
 
         if (generator) {
             const point = generator();
-            const buf = Buffer.from(pub, 'hex');
+            const buf = Buffer.from(pub, "hex");
             point.unmarshalBinary(buf);
 
             return point;
         }
 
-        throw new Error('unknown suite for the point');
+        throw new Error("unknown suite for the point");
     }
 }
 

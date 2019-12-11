@@ -1,6 +1,6 @@
-import jsc from 'jsverify';
-import Nist from '../../../src/curve/nist';
-import { schnorr } from '../../../src/sign';
+import * as jsc from "jsverify";
+import Nist from "../../../src/curve/nist";
+import { schnorr } from "../../../src/sign";
 
 const { Curve, Params } = Nist;
 const { sign, verify } = schnorr;
@@ -14,8 +14,8 @@ describe("Schnorr Signature", () => {
     const message = Buffer.from([1, 2, 3, 4]);
 
     it("returns a signature with good size", () => {
-        var sig = sign(group, secretKey, message);
-        var sigSize = scalarLen + pointLen;
+        const sig = sign(group, secretKey, message);
+        const sigSize = scalarLen + pointLen;
 
         expect(sig).toEqual(jasmine.any(Buffer));
         expect(sig.length).toBe(sigSize);
@@ -53,15 +53,15 @@ describe("Schnorr Signature", () => {
 
     it("returns true for a well formed signature", () => {
         const prop = jsc.forall(jsc.string, jsc.array(jsc.nat), (msg, k) => {
-            const message = Buffer.from(msg);
-            const secret = group.scalar().pick()
+            const msgBuf = Buffer.from(msg);
+            const secret = group.scalar().pick();
             const pub = group.point().mul(secret, null);
 
-            const sig = sign(group, secret, message);
-            const res = verify(group, pub, message, sig);
+            const sig = sign(group, secret, msgBuf);
+            const res = verify(group, pub, msgBuf, sig);
 
             if (!res) {
-                console.log("failing scalar: "+secret.toString());
+                throw new Error("failing scalar: " + secret.toString());
             }
 
             return res;

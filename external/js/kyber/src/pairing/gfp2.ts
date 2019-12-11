@@ -1,6 +1,6 @@
-import BN from 'bn.js';
-import GfP from './gfp';
-import { p } from './constants';
+import BN from "bn.js";
+import { p } from "./constants";
+import GfP from "./gfp";
 
 type BNType = Buffer | string | number | BN;
 
@@ -10,16 +10,16 @@ type BNType = Buffer | string | number | BN;
  * a new object.
  */
 export default class GfP2 {
-    private static ZERO = new GfP2(0, 0);
-    private static ONE = new GfP2(0, 1);
 
-    public static zero(): GfP2 {
+    static zero(): GfP2 {
         return GfP2.ZERO;
     }
 
-    public static one(): GfP2 {
+    static one(): GfP2 {
         return GfP2.ONE;
     }
+    private static ZERO = new GfP2(0, 0);
+    private static ONE = new GfP2(0, 1);
 
     private x: GfP;
     private y: GfP;
@@ -167,7 +167,7 @@ export default class GfP2 {
      */
     invert(): GfP2 {
         let t = this.y.mul(this.y);
-        let t2 = this.x.mul(this.x);
+        const t2 = this.x.mul(this.x);
         t = t.add(t2);
 
         const inv = t.invmod(p);

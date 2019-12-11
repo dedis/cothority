@@ -1,7 +1,7 @@
-import BN from 'bn.js';
-import GfP6 from './gfp6';
-import GfP from './gfp';
-import { xiToPMinus1Over6, xiToPSquaredMinus1Over6 } from './constants';
+import BN from "bn.js";
+import { xiToPMinus1Over6, xiToPSquaredMinus1Over6 } from "./constants";
+import GfP from "./gfp";
+import GfP6 from "./gfp6";
 
 /**
  * Group field element of size p^12
@@ -9,14 +9,12 @@ import { xiToPMinus1Over6, xiToPSquaredMinus1Over6 } from './constants';
  * a new object.
  */
 export default class GfP12 {
-    private static ZERO = new GfP12(GfP6.zero(), GfP6.zero());
-    private static ONE = new GfP12(GfP6.zero(), GfP6.one());
 
     /**
      * Get the addition identity for this group field
      * @returns the zero element
      */
-    public static zero(): GfP12 {
+    static zero(): GfP12 {
         return GfP12.ZERO;
     }
 
@@ -24,9 +22,11 @@ export default class GfP12 {
      * Get the multiplication identity for this group field
      * @returns the one element
      */
-    public static one(): GfP12 {
+    static one(): GfP12 {
         return GfP12.ONE;
     }
+    private static ZERO = new GfP12(GfP6.zero(), GfP6.zero());
+    private static ONE = new GfP12(GfP6.zero(), GfP6.one());
 
     private x: GfP6;
     private y: GfP6;
@@ -156,7 +156,7 @@ export default class GfP12 {
      */
     exp(k: BN): GfP12 {
         let sum = GfP12.one();
-        let t : GfP12;
+        let t: GfP12;
 
         for (let i = k.bitLength() - 1; i >= 0; i--) {
             t = sum.square();

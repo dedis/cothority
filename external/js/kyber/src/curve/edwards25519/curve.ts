@@ -1,9 +1,9 @@
-import { Group, Scalar, Point } from "../../index";
+import BN from "bn.js";
+import { createHash, randomBytes } from "crypto";
+import { curve, eddsa } from "elliptic";
+import { Group, Point, Scalar } from "../../index";
 import Ed25519Point from "./point";
-import Ed25519Scalar from "./scalar"
-import { randomBytes, createHash } from "crypto";
-import { eddsa, curve } from "elliptic";
-import BN from 'bn.js';
+import Ed25519Scalar from "./scalar";
 
 const ec = new eddsa("ed25519");
 const orderRed = BN.red(ec.curve.n);
@@ -53,9 +53,11 @@ export default class Ed25519 implements Group {
         const hash = createHash("sha512");
         hash.update(bytes);
         const scalar = Buffer.from(hash.digest());
+        // tslint:disable
         scalar[0] &= 0xf8;
         scalar[31] &= 0x3f;
         scalar[31] |= 0x40;
+        // tslint:enable
 
         return this.scalar().setBytes(scalar);
     }

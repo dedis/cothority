@@ -1,10 +1,36 @@
-import { BLAKE2Xs } from '@stablelib/blake2xs';
-import { curve, Scalar, Point } from "../..";
-import { cloneDeep } from 'lodash';
+// tslint:disable:variable-name
+import { BLAKE2Xs } from "@stablelib/blake2xs";
+import { cloneDeep } from "lodash";
+import { curve, Point, Scalar } from "../..";
 
-export const Suite = curve.newCurve('edwards25519');
+// tslint:disable-next-line
+export const Suite = curve.newCurve("edwards25519");
 
 export class RingSig {
+
+    static fromBytes(signatureBuffer: Buffer, isLinkableSig: boolean): RingSig {
+        const scalarMarshalSize = Suite.scalarLen();
+        const pointMarshalSize = Suite.pointLen();
+
+        const c0 = Suite.scalar();
+        c0.unmarshalBinary(signatureBuffer.slice(0, pointMarshalSize));
+
+        const S: Scalar[] = [];
+        const endIndex = isLinkableSig ? signatureBuffer.length - pointMarshalSize : signatureBuffer.length;
+        for (let i = pointMarshalSize; i < endIndex; i += scalarMarshalSize) {
+            const t = Suite.scalar();
+            t.unmarshalBinary(signatureBuffer.slice(i, i + scalarMarshalSize));
+            S.push(t);
+        }
+
+        if (isLinkableSig) {
+            const tag = Suite.point();
+            tag.unmarshalBinary(signatureBuffer.slice(endIndex));
+            return new RingSig(c0, S, tag);
+        }
+
+        return new RingSig(c0, S);
+    }
     readonly c0: Scalar;
     readonly s: Scalar[];
     readonly tag: Point;
@@ -16,11 +42,11 @@ export class RingSig {
     }
 
     encode(): Buffer {
-        let bufs: Buffer[] = [];
+        const bufs: Buffer[] = [];
 
         bufs.push(this.c0.marshalBinary());
 
-        for (let scalar of this.s) {
+        for (const scalar of this.s) {
             bufs.push(scalar.marshalBinary());
         }
 
@@ -30,63 +56,39 @@ export class RingSig {
 
         return Buffer.concat(bufs);
     }
-
-    public static fromBytes(signatureBuffer: Buffer, isLinkableSig: boolean): RingSig {
-        let scalarMarshalSize = Suite.scalarLen();
-        let pointMarshalSize = Suite.pointLen();
-    
-        const c0 = Suite.scalar()
-        c0.unmarshalBinary(signatureBuffer.slice(0, pointMarshalSize));
-    
-        let S: Scalar[] = [];
-        let endIndex = isLinkableSig ? signatureBuffer.length - pointMarshalSize : signatureBuffer.length;
-        for (let i = pointMarshalSize; i < endIndex; i += scalarMarshalSize) {
-            const t = Suite.scalar();
-            t.unmarshalBinary(signatureBuffer.slice(i, i + scalarMarshalSize));
-            S.push(t);
-        }
-    
-        if (isLinkableSig) {
-            const tag = Suite.point();
-            tag.unmarshalBinary(signatureBuffer.slice(endIndex));
-            return new RingSig(c0, S, tag);
-        }
-    
-        return new RingSig(c0, S);
-    }
 }
 
 export function sign(message: Buffer, anonymitySet: Point[], secret: Scalar, linkScope?: Buffer) {
-    let hasLS = linkScope && (linkScope !== null);
+    const hasLS = linkScope && (linkScope !== null);
 
-    let pi = findSecretIndex(anonymitySet, secret);
-    let n = anonymitySet.length;
-    let L = anonymitySet.slice(0);
+    const pi = findSecretIndex(anonymitySet, secret);
+    const n = anonymitySet.length;
+    const L = anonymitySet.slice(0);
 
     let linkBase;
     let linkTag: Point;
     if (hasLS) {
-        let linkStream = new BLAKE2Xs(undefined, {key: linkScope});
+        const linkStream = new BLAKE2Xs(undefined, {key: linkScope});
         linkBase = Suite.point().pick(createStreamFromBlake(linkStream));
         linkTag = Suite.point().mul(secret, linkBase);
     }
 
-    let H1pre = signH1pre(linkScope, linkTag, message);
+    const H1pre = signH1pre(linkScope, linkTag, message);
 
-    let u = Suite.scalar().pick();
-    let UB = Suite.point().mul(u);
+    const u = Suite.scalar().pick();
+    const UB = Suite.point().mul(u);
     let UL;
     if (hasLS) {
         UL = Suite.point().mul(u, linkBase);
     }
 
-    let s: Scalar[] = [];
-    let c: Scalar[] = [];
+    const s: Scalar[] = [];
+    const c: Scalar[] = [];
 
     c[(pi + 1) % n] = signH1(H1pre, UB, UL);
 
-    let P = Suite.point();
-    let PG = Suite.point();
+    const P = Suite.point();
+    const PG = Suite.point();
     let PH: Point;
     if (hasLS) {
         PH = Suite.point();
@@ -106,30 +108,31 @@ export function sign(message: Buffer, anonymitySet: Point[], secret: Scalar, lin
 }
 
 export function verify(message: Buffer, anonymitySet: Point[], signatureBuffer: Buffer, linkScope?: Buffer): boolean {
-    let n = anonymitySet.length;
-    let L = anonymitySet.slice(0);
+    const n = anonymitySet.length;
+    const L = anonymitySet.slice(0);
 
-    let linkBase, linkTag;
-    let sig = RingSig.fromBytes(signatureBuffer, !!linkScope);
-    if (anonymitySet.length != sig.s.length) {
+    let linkBase;
+    let linkTag;
+    const sig = RingSig.fromBytes(signatureBuffer, !!linkScope);
+    if (anonymitySet.length !== sig.s.length) {
         throw new Error("given anonymity set and signature anonymity set not of equal length");
     }
 
     if (linkScope) {
-        let linkStream = new BLAKE2Xs(undefined, {key: linkScope});
+        const linkStream = new BLAKE2Xs(undefined, {key: linkScope});
         linkBase = Suite.point().pick(createStreamFromBlake(linkStream));
         linkTag = sig.tag;
     }
 
-    let H1pre = signH1pre(linkScope, linkTag, message);
+    const H1pre = signH1pre(linkScope, linkTag, message);
 
-    let P, PG, PH: Point;
-    P = Suite.point();
-    PG = Suite.point();
+    let PH: Point;
+    const P = Suite.point();
+    const PG = Suite.point();
     if (linkScope) {
         PH = Suite.point();
     }
-    let s = sig.s;
+    const s = sig.s;
     let ci = sig.c0;
     for (let i = 0; i < n; i++) {
         PG.add(PG.mul(s[i]), P.mul(ci, L[i]));
@@ -147,8 +150,8 @@ export function verify(message: Buffer, anonymitySet: Point[], signatureBuffer: 
 
 function findSecretIndex(keys: Point[], privateKey: Scalar): number {
     const pubKey = Suite.point().base().mul(privateKey);
-    const pi = keys.findIndex(pub => pub.equals(pubKey));
-    if (pi < 0){
+    const pi = keys.findIndex((pub) => pub.equals(pubKey));
+    if (pi < 0) {
         throw new Error("didn't find public key in anonymity set");
     }
 
@@ -157,7 +160,7 @@ function findSecretIndex(keys: Point[], privateKey: Scalar): number {
 
 function createStreamFromBlake(blakeInstance: BLAKE2Xs): (l: number) => Buffer {
     function getNextBytes(count: number): Buffer {
-        let array = new Uint8Array(count);
+        const array = new Uint8Array(count);
         blakeInstance.stream(array);
 
         return Buffer.from(array);

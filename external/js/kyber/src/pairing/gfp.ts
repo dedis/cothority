@@ -1,5 +1,5 @@
-import BN from 'bn.js';
-import { BNType } from '../constants';
+import BN from "bn.js";
+import { BNType } from "../constants";
 
 /**
  * Field of size p
@@ -150,7 +150,7 @@ export default class GfP {
      * @returns the buffer
      */
     toBytes(): Buffer {
-        return this.v.toArrayLike(Buffer, 'be', GfP.ELEM_SIZE);
+        return this.v.toArrayLike(Buffer, "be", GfP.ELEM_SIZE);
     }
 
     /**
@@ -166,6 +166,6 @@ export default class GfP {
      * @returns the hex shape in a string
      */
     toHex(): string {
-        return this.v.toString('hex');
+        return this.v.toString("hex");
     }
 }

@@ -1,4 +1,5 @@
-import { Point } from '../.';
+// tslint:disable:no-bitwise
+import { Point } from "../.";
 
 /**
  * Masks are used alongside with aggregated signatures to announce which peer
@@ -31,7 +32,7 @@ export default class Mask {
 
     /**
      * Return the number of participants, in other words the number of 1s in the mask
-     * 
+     *
      * @return the number of participants
      */
     getCountEnabled(): number {
@@ -49,7 +50,7 @@ export default class Mask {
 
     /**
      * Return the total number of public keys assigned to the mask
-     * 
+     *
      * @return the total number of public keys
      */
     getCountTotal(): number {
@@ -58,13 +59,13 @@ export default class Mask {
 
     /**
      * Return true if the bit at the given index is enabled
-     * 
+     *
      * @param i The index
      * @return true if the bit is enabled, false otherwise
      */
     isIndexEnabled(i: number): boolean {
         if (i < 0 || i >= this.publics.length) {
-            throw new Error('index out of bound');
+            throw new Error("index out of bound");
         }
 
         const k = i >> 3;
