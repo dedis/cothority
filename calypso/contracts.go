@@ -232,11 +232,83 @@ func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byz
 // the purposes and uses
 func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) darc.AttrInterpreters {
 	log.Info("Hello from the MakeAttrInterpreters")
-	cb := func(attr string) error {
+	// The allowed rule checks if all the selected attributes by the data
+	// scientist are allowed the the data owner. Note that the list of
+	// attributes described by the allowed rule contains the attributes of type
+	// "allowed" (obviously), but also the attributes of type "must_have". We
+	// can therefore see the "must_have" type of attributes as a specialization
+	// of the "allowed" one.
+	al := func(attr string) error {
 		log.Info("Hello from the inside MakeAttrInterpreters")
 		// Expecting an 'attr' of form:
-		// purposes=purpose1,purpose2&uses=use1,use2,use4
-		// which, once parsed, gives map[purposes:[purpose1,purpose2] uses:[use1,use2]]
+		// attribute_id=checked&attribute_id2=hello+world&
+		// which, once parsed, gives map[attribute_id:[checked] attribute_id2:[hello+world]]
+		parsedQuery, err := url.ParseQuery(attr)
+		if err != nil {
+			return err
+		}
+
+		projectInstID := inst.Spawn.Args.Search("projectInstID")
+		if projectInstID == nil {
+			return errors.New("argument 'projectInstID' not found")
+		}
+
+		projectC := projectc.ProjectData{}
+		projectBuf, _, _, _, err := rst.GetValues(projectInstID)
+		if err != nil {
+			return fmt.Errorf("failed to get the given project instance '%x': %s", projectInstID, err.Error())
+		}
+		err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return errors.New("failed to decode project instance: " + err.Error())
+		}
+
+		// Each attribute should have a corresponding Metadata.Attribute that
+		// has a corresponding value.
+		isAllowed := func(parsedQuery url.Values, name, value string) (bool, error) {
+			for key, vals := range parsedQuery {
+				if len(vals) != 1 {
+					return false, xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
+						"vals: %v", len(vals), key, vals)
+				}
+				val := vals[0]
+				attr, found := projectC.Metadata.GetAttribute(key)
+				if !found {
+					continue
+				}
+				if attr.Value != "" && attr.Value != val {
+					return false, xerrors.Errorf("Found an allowed attribute "+
+						"with key '%s', but it does not have a matching value. "+
+						"Expected '%s', got '%s'", key, val, attr.Value)
+				}
+				return true, nil
+			}
+			return false, nil
+		}
+
+		// Here we assume there is no sub-attributes
+		for _, ag := range projectC.Metadata.AttributesGroups {
+			for _, attr := range ag.Attributes {
+				isAllowed, err := isAllowed(parsedQuery, attr.ID, attr.Value)
+				if err != nil {
+					return xerrors.Errorf("failed to check allowed attribute '%s': %v", attr.ID, err)
+				}
+				if !isAllowed {
+					return xerrors.Errorf("attribute '%s' is not in the attr:allowed white list", attr.ID)
+				}
+			}
+		}
+
+		return nil
+	}
+
+	// Here we check if the specified "must have" attributes that the data owner
+	// set appear in the selected attributes from the data scientist.
+	mh := func(attr string) error {
+		log.Info("Hello from the inside MakeAttrInterpreters")
+		// Expecting an 'attr' of form:
+		// attribute_id=checked&attribute_id2=hello+world&
+		// which, once parsed, gives map[attribute_id:[checked] attribute_id2:[hello+world]]
 		parsedQuery, err := url.ParseQuery(attr)
 		if err != nil {
 			return err
@@ -267,18 +339,16 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			val := vals[0]
 			attr, found := projectC.Metadata.GetAttribute(key)
 			if !found {
-				return xerrors.Errorf("Attribute with key '%s' not found", key)
+				return xerrors.Errorf("Must have attribute with key '%s' not found", key)
 			}
 			if attr.Value != "" && attr.Value != val {
-				return xerrors.Errorf("Attribute with key '%s' does not have "+
+				return xerrors.Errorf("Must have attribute with key '%s' does not have "+
 					"a matching value. Expected '%s', got '%s'", key, val, attr.Value)
 			}
 		}
-
 		return nil
-
 	}
-	return darc.AttrInterpreters{"allowed": cb}
+	return darc.AttrInterpreters{"allowed": al, "must_have": mh}
 }
 
 func stringInSlice(a string, list []string) bool {

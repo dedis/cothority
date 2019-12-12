@@ -19,6 +19,7 @@ require (
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8
+	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 	gopkg.in/urfave/cli.v1 v1.20.0
