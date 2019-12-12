@@ -244,7 +244,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 
 		projectInstID := inst.Spawn.Args.Search("projectInstID")
 		if projectInstID == nil {
-			return errors.New("argument 'projectInstID' not found")
+			return xerrors.New("argument 'projectInstID' not found")
 		}
 
 		projectC := projectc.ProjectData{}
@@ -254,7 +254,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		}
 		err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return errors.New("failed to decode project instance: " + err.Error())
+			return xerrors.New("failed to decode project instance: " + err.Error())
 		}
 
 		// Each attribute should have a corresponding Metadata.Attribute that
@@ -310,7 +310,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 
 		projectInstID := inst.Spawn.Args.Search("projectInstID")
 		if projectInstID == nil {
-			return errors.New("argument 'projectInstID' not found")
+			return xerrors.New("argument 'projectInstID' not found")
 		}
 
 		projectC := projectc.ProjectData{}
@@ -320,7 +320,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		}
 		err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			return errors.New("failed to decode project instance: " + err.Error())
+			return xerrors.Errorf("failed to decode project instance: %v", err)
 		}
 
 		// Each attribute should have a corresponding Metadata.Attribute that
