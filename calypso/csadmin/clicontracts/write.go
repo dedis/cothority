@@ -250,12 +250,12 @@ func WriteGet(c *cli.Context) error {
 	if c.Bool("export") {
 		_, buf, _, _, err := proof.KeyValue()
 		if err != nil {
-			return errors.New("failed to get value from proof: " + err.Error())
+			return xerrors.Errorf("failed to get value from proof: %v", err)
 		}
 		reader := bytes.NewReader(buf)
 		_, err = io.Copy(os.Stdout, reader)
 		if err != nil {
-			return errors.New("failed to copy to stdout: " + err.Error())
+			return xerrors.Errorf("failed to copy to stdout: %v", err)
 		}
 		return nil
 	}

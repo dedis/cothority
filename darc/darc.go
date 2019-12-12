@@ -53,6 +53,7 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
@@ -629,6 +630,7 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 }
 
 func evalAttr(s string, attrFuncs AttrInterpreters) error {
+	log.Infof("here is the AttrInterpreters:\n%v", attrFuncs)
 	tokens := strings.SplitN(s, ":", 3)
 	if len(tokens) != 3 {
 		return errors.New("attr has an invalid format")

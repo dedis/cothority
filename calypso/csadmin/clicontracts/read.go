@@ -115,7 +115,7 @@ func ReadSpawn(c *cli.Context) error {
 	projectInstID := c.String("projectInstID")
 	projectInstIDBuff, err := hex.DecodeString(projectInstID)
 	if err != nil {
-		return errors.New("failed to decode the projectInstID string")
+		return xerrors.New("failed to decode the projectInstID string")
 	}
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())

@@ -342,7 +342,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		}
 		return nil
 	}
-	return darc.AttrInterpreters{"allowed": al, "must_have": mh}
+	return darc.AttrInterpreters{"must_have": mh, "allowed": al}
 }
 
 func stringInSlice(a string, list []string) bool {
