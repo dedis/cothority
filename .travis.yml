@@ -39,6 +39,18 @@ jobs:
       script:
         - make -C conode verify
         - GO111MODULE=on make test_{fmt,lint}
+    - name: "js > kyber"
+      <<: *language_js
+      script:
+        - cd external/js/kyber
+        - npm ci
+        - npm run linter
+    - name: "js > cothority"
+      <<: *language_js
+      script:
+        - cd external/js/cothority
+        - npm ci
+        - npm run linter
 
     - stage: build
       name: "go 1.12"
