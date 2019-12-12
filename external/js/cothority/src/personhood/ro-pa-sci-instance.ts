@@ -40,6 +40,14 @@ export default class RoPaSciInstance extends Instance {
 
     static readonly contractID = "ropasci";
 
+    static fromObject(rpc: ByzCoinRPC, obj: any) {
+        const inst = Instance.fromBytes(obj.instance);
+        const rps = new RoPaSciInstance(rpc, inst);
+        rps.fillUp = obj.fillUp;
+        rps.firstMove = obj.firstMove;
+        return rps;
+    }
+
     /**
      * Fetch the proof for the given instance and create a
      * RoPaSciInstance from it
@@ -55,8 +63,8 @@ export default class RoPaSciInstance extends Instance {
         return new RoPaSciInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
     struct: RoPaSciStruct;
-    private fillUp: Buffer;
-    private firstMove: number;
+    private fillUp: Buffer | undefined;
+    private firstMove: number | undefined;
 
     constructor(private rpc: ByzCoinRPC, inst: Instance) {
         super(inst);
@@ -136,7 +144,7 @@ export default class RoPaSciInstance extends Instance {
         const priv = curve25519.scalar().pick();
         const pub = curve25519.point().mul(priv);
         if (this.isCalypso()) {
-            if (lts !== undefined) {
+            if (lts === undefined) {
                 throw new Error("need LTS for calypso-ropascis");
             }
             args.push(new Argument({name: "public", value: pub.marshalBinary()}));
@@ -221,6 +229,14 @@ export default class RoPaSciInstance extends Instance {
         this.data = inst.data;
         this.struct = RoPaSciStruct.decode(this.data);
         return this;
+    }
+
+    toObject(): any {
+        return{
+            fillUp: this.fillUp,
+            firstMove: this.firstMove,
+            instance: this.toBytes(),
+        };
     }
 }
 
