@@ -1,19 +1,20 @@
+// tslint:disable:no-bitwise
 import BN from "bn.js";
-import { eddsa } from "elliptic";
 import { randomBytes } from "crypto";
+import { eddsa } from "elliptic";
+import { BNType } from "../../constants";
 import { Point } from "../../index";
-import { BNType } from '../../constants';
 import Ed25519Scalar from "./scalar";
 
 const ec = new eddsa("ed25519");
 
 export default class Ed25519Point implements Point {
-    public static MARSHAL_ID = Buffer.from('ed.point');
+    static MARSHAL_ID = Buffer.from("ed.point");
 
     // TODO: this should be private
     ref: {
         point: any,
-    }
+    };
 
     constructor(X?: BNType, Y?: BNType, Z?: BNType, T?: BNType) {
         if (X instanceof Buffer) {
@@ -88,32 +89,32 @@ export default class Ed25519Point implements Point {
 
         callback = callback || randomBytes;
 
-        let point_obj = new Ed25519Point();
+        const pointObj = new Ed25519Point();
         while (true) {
             const buff = callback(32);
 
             if (dl > 0) {
                 buff[0] = dl; // encode length in lower 8 bits
-                data.copy(buff, 1) // copy data into buff starting from the 2nd position
+                data.copy(buff, 1); // copy data into buff starting from the 2nd position
             }
 
             try {
-                point_obj.unmarshalBinary(buff);
+                pointObj.unmarshalBinary(buff);
             } catch (e) {
                 continue; // try again
             }
-            if (dl == 0) {
-                point_obj.ref.point = point_obj.ref.point.mul(new BN(8));
-                if (point_obj.ref.point.isInfinity()) {
+            if (dl === 0) {
+                pointObj.ref.point = pointObj.ref.point.mul(new BN(8));
+                if (pointObj.ref.point.isInfinity()) {
                     continue; // unlucky
                 }
-                return point_obj;
+                return pointObj;
             }
 
-            let q = point_obj.clone();
+            const q = pointObj.clone();
             q.ref.point = q.ref.point.mul(ec.curve.n);
             if (q.ref.point.isInfinity()) {
-                return point_obj;
+                return pointObj;
             }
         }
     }
@@ -184,7 +185,7 @@ export default class Ed25519Point implements Point {
         const odd = buff[31] >> 7 === 1;
 
         buff[31] &= 0x7f;
-        let bnp = new BN(buff, 16, "le");
+        const bnp = new BN(buff, 16, "le");
         if (bnp.cmp(ec.curve.p) >= 0) {
             throw new Error("bytes > p");
         }
@@ -192,14 +193,14 @@ export default class Ed25519Point implements Point {
     }
 
     inspect(): string {
-        return this.toString()
+        return this.toString();
     }
 
     /** @inheritdoc */
     equals(p2: Ed25519Point): boolean {
         const b1 = this.marshalBinary();
         const b2 = p2.marshalBinary();
-        for (var i = 0; i < 32; i++) {
+        for (let i = 0; i < 32; i++) {
             if (b1[i] !== b2[i]) {
                 return false;
             }
@@ -210,7 +211,7 @@ export default class Ed25519Point implements Point {
     /** @inheritdoc */
     toString(): string {
         const bytes = this.marshalBinary();
-        return Array.from(bytes, b => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+        return Array.from(bytes, (b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
     }
 
     /** @inheritdoc */

@@ -1,5 +1,5 @@
-import { BN256G1Point, BN256G2Point } from '../../pairing/point';
-import BN256Scalar from '../../pairing/scalar';
+import { BN256G1Point, BN256G2Point } from "../../pairing/point";
+import BN256Scalar from "../../pairing/scalar";
 
 export type BlsSignature = Buffer;
 

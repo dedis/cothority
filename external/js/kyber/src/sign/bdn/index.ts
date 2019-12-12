@@ -12,38 +12,38 @@ export type BdnSignature = Buffer;
 
 /**
  * Generate the list of coefficients for the list of public keys
- * 
+ *
  * @param pubkeys The list of public keys
  * @return The list of coefficients as BigNumber
  */
 export function hashPointToR(pubkeys: Point[]): BN[] {
-    const peers = pubkeys.map(p => p.marshalBinary())
+    const peers = pubkeys.map((p) => p.marshalBinary());
 
-    const xof = new BLAKE2Xs()
-    peers.forEach(p => xof.update(p))
+    const xof = new BLAKE2Xs();
+    peers.forEach((p) => xof.update(p));
 
-    const out = Buffer.allocUnsafe(COEF_SIZE * peers.length)
-    xof.stream(out)
+    const out = Buffer.allocUnsafe(COEF_SIZE * peers.length);
+    xof.stream(out);
 
-    const coefs = []
+    const coefs = [];
     for (let i = 0; i < peers.length; i++) {
-        coefs[i] = new BN(out.slice(i * COEF_SIZE, (i + 1) * COEF_SIZE), 'le')
+        coefs[i] = new BN(out.slice(i * COEF_SIZE, (i + 1) * COEF_SIZE), "le");
     }
 
-    return coefs
+    return coefs;
 }
 
 /**
  * Aggregate the list of points according to the mask participation.
  * The length of the mask and the list of points must match. Intermediate
  * non-participating points can be null.
- * 
+ *
  * @param mask      The mask with the participation
  * @param points    The list of points to aggregate
  */
 function aggregatePoints(mask: Mask, points: Point[]) {
     if (mask.getCountTotal() !== points.length) {
-        throw new Error("Length of mask and points does not match")
+        throw new Error("Length of mask and points does not match");
     }
 
     const coefs = hashPointToR(mask.publics);
@@ -70,7 +70,7 @@ function aggregatePoints(mask: Mask, points: Point[]) {
 
 /**
  * Aggregate the public keys of the mask
- * 
+ *
  * @param mask The mask with the participation and the list of points
  * @return The new point representing the aggregation
  */
@@ -80,7 +80,7 @@ export function aggregatePublicKeys(mask: Mask): Point {
 
 /**
  * Aggregate a list of signatures according to the given mask
- * 
+ *
  * @param mask The mask with the participation
  * @param sigs The signatures as bytes
  * @return The new point representing the aggregation
@@ -101,7 +101,7 @@ export function aggregateSignatures(mask: Mask, sigs: Buffer[]) {
 
 /**
  * Sign the message using the given secret
- * 
+ *
  * @param msg       The Message to sign
  * @param secret    The secret key
  * @return The BDN signature
@@ -113,7 +113,7 @@ export function sign(msg: Buffer, secret: BN256Scalar): BdnSignature {
 /**
  * Verify the given signature against the message using the mask
  * to aggregate the public keys
- * 
+ *
  * @param msg   The message
  * @param mask  The mask with the public keys
  * @param sig   The signature as bytes

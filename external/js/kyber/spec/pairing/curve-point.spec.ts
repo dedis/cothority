@@ -1,9 +1,9 @@
-import BN from 'bn.js';
-import CurvePoint from '../../src/pairing/curve-point';
-import { order } from '../../src/pairing/constants';
+import BN from "bn.js";
+import { order } from "../../src/pairing/constants";
+import CurvePoint from "../../src/pairing/curve-point";
 
-describe('BN256 Curve Point', () => {
-    it('should add one', () => {
+describe("BN256 Curve Point", () => {
+    it("should add one", () => {
         const one = new CurvePoint();
         one.mul(CurvePoint.generator, new BN(1));
 
@@ -19,7 +19,7 @@ describe('BN256 Curve Point', () => {
         expect(one.isOnCurve()).toBeTruthy();
     });
 
-    it('should add and double', () => {
+    it("should add and double", () => {
         const a = new CurvePoint();
         a.mul(CurvePoint.generator, new BN(123456789));
 
@@ -33,7 +33,7 @@ describe('BN256 Curve Point', () => {
         expect(aa.getY().equals(d.getY())).toBeTruthy();
     });
 
-    it('should add infinity', () => {
+    it("should add infinity", () => {
         const inf = new CurvePoint();
         inf.setInfinity();
         expect(inf.isInfinity()).toBeTruthy();
@@ -51,19 +51,19 @@ describe('BN256 Curve Point', () => {
         expect(t.getY().equals(one.getY())).toBeTruthy();
     });
 
-    it('should make basic operations', () => {
+    it("should make basic operations", () => {
         const g = new CurvePoint();
         g.copy(CurvePoint.generator);
 
-        const x = new BN('32498273234');
-        const X = new CurvePoint()
+        const x = new BN("32498273234");
+        const X = new CurvePoint();
         X.mul(g, x);
 
-        const y = new BN('98732423523');
-        const Y = new CurvePoint()
+        const y = new BN("98732423523");
+        const Y = new CurvePoint();
         Y.mul(g, y);
 
-        const s1 = new CurvePoint()
+        const s1 = new CurvePoint();
         s1.mul(X, y);
         s1.makeAffine();
 
@@ -75,7 +75,7 @@ describe('BN256 Curve Point', () => {
         expect(s2.getX().compareTo(s1.getX())).toBe(0);
     });
 
-    it('should negate the point', () => {
+    it("should negate the point", () => {
         const p = new CurvePoint();
         p.mul(CurvePoint.generator, new BN(12345));
 
@@ -90,13 +90,13 @@ describe('BN256 Curve Point', () => {
         expect(p.getY().equals(nnp.getY())).toBeTruthy();
     });
 
-    it('should make the point affine', () => {
+    it("should make the point affine", () => {
         const p = new CurvePoint();
         p.makeAffine();
         expect(p.isInfinity()).toBeTruthy();
     });
 
-    it('should test the equality', () => {
+    it("should test the equality", () => {
         const p = new CurvePoint();
         p.mul(CurvePoint.generator, new BN(123));
 
@@ -112,10 +112,10 @@ describe('BN256 Curve Point', () => {
         expect(p.equals(null)).toBeFalsy();
     });
 
-    it('should stringify', () => {
+    it("should stringify", () => {
         const p = new CurvePoint();
         p.setInfinity();
 
-        expect(p.toString()).toBe('(0,1)');
+        expect(p.toString()).toBe("(0,1)");
     });
 });

@@ -1,9 +1,9 @@
-import BN = require('bn.js');
-import GfP12 from '../../src/pairing/gfp12';
-import GfP6 from '../../src/pairing/gfp6';
-import GfP2 from '../../src/pairing/gfp2';
+import BN = require("bn.js");
+import GfP12 from "../../src/pairing/gfp12";
+import GfP2 from "../../src/pairing/gfp2";
+import GfP6 from "../../src/pairing/gfp6";
 
-describe('GfP12', () => {
+describe("GfP12", () => {
     const a = new GfP12(
         new GfP6(
             new GfP2("239846234862342323958623", "2359862352529835623"),
@@ -17,7 +17,7 @@ describe('GfP12', () => {
         ),
     );
 
-    it('should generate one and zero', () => {
+    it("should generate one and zero", () => {
         const one = GfP12.one();
         const zero = GfP12.zero();
 
@@ -28,7 +28,7 @@ describe('GfP12', () => {
         expect(zero.isOne()).toBeFalsy();
     });
 
-    it('should invert', () => {
+    it("should invert", () => {
         const inv = a.invert();
         const b = inv.mul(a);
 
@@ -36,7 +36,7 @@ describe('GfP12', () => {
         expect(inv.invert().equals(a)).toBeTruthy();
     });
 
-    it('should square and multiply', () => {
+    it("should square and multiply", () => {
         const s = a.square().square();
         const m = a.mul(a).mul(a).mul(a);
         const e = a.exp(new BN(4));
@@ -45,14 +45,14 @@ describe('GfP12', () => {
         expect(s.equals(e)).toBeTruthy();
     });
 
-    it('should add and subtract', () => {
+    it("should add and subtract", () => {
         const aa = a.add(a);
-        
+
         expect(aa.equals(a)).toBeFalsy();
         expect(aa.sub(a).equals(a)).toBeTruthy();
     });
 
-    it('should get the negative and conjugate', () => {
+    it("should get the negative and conjugate", () => {
         const n = a.neg();
         const c = a.conjugate();
 
@@ -60,9 +60,9 @@ describe('GfP12', () => {
         expect(c.conjugate().equals(a)).toBeTruthy();
     });
 
-    it('should stringify', () => {
+    it("should stringify", () => {
         const one = GfP12.one();
 
-        expect(one.toString()).toBe('(((0,0), (0,0), (0,0)), ((0,0), (0,0), (0,1)))');
+        expect(one.toString()).toBe("(((0,0), (0,0), (0,0)), ((0,0), (0,0), (0,1)))");
     });
 });
