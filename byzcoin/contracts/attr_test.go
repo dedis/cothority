@@ -1,8 +1,6 @@
 package contracts
 
 import (
-	"errors"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -15,6 +13,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -37,7 +36,7 @@ type contractAttrValue struct {
 	value []byte
 }
 
-func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
+func notImpl(what string) error { return xerrors.Errorf("this contract does not implement %v", what) }
 
 func (c contractAttrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
@@ -81,7 +80,7 @@ func (c contractAttrValue) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.In
 		}
 		return
 	default:
-		return nil, nil, errors.New("Value contract can only update")
+		return nil, nil, xerrors.New("Value contract can only update")
 	}
 }
 
@@ -96,17 +95,17 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 
 		s := string(c.value)
 		if !strings.HasPrefix(s, prefix) {
-			return errors.New("wrong prefix")
+			return xerrors.New("wrong prefix")
 		}
 		if !strings.HasSuffix(s, suffix) {
-			return errors.New("wrong suffix")
+			return xerrors.New("wrong suffix")
 		}
 		return nil
 	}
 	cbSigScheme := func(attr string) error {
 		roSC, ok := rst.(byzcoin.ReadOnlySkipChain)
 		if !ok {
-			return errors.New("cannot access read only skipchain")
+			return xerrors.New("cannot access read only skipchain")
 		}
 		sb, err := roSC.GetLatest()
 		if err != nil {
@@ -124,27 +123,27 @@ func (c contractAttrValue) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst
 				return err
 			}
 			if !sb0.Equal(gen) {
-				return errors.New("genesis block is not at index 0")
+				return xerrors.New("genesis block is not at index 0")
 			}
 			sb2, err := roSC.GetBlock(sb.Hash)
 			if err != nil {
 				return err
 			}
 			if !sb2.Equal(sb) {
-				return errors.New("sb and sb2 should be the same")
+				return xerrors.New("sb and sb2 should be the same")
 			}
 		}
 
 		sigSchemeBuf := inst.Invoke.Args.Search("sigscheme")
 		if len(sigSchemeBuf) == 0 {
-			return errors.New("cannot find sigscheme argument")
+			return xerrors.New("cannot find sigscheme argument")
 		}
 		sigScheme, err := strconv.Atoi(string(sigSchemeBuf))
 		if err != nil {
 			return err
 		}
 		if int(sb.SignatureScheme) != sigScheme {
-			return errors.New("signature scheme did not match")
+			return xerrors.New("signature scheme did not match")
 		}
 		return nil
 	}
@@ -199,7 +198,6 @@ func TestAttrCustomRule(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the existing value matches the attr requirement
 	myvalue = []byte("abcd5678")
@@ -220,7 +218,6 @@ func TestAttrCustomRule(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - the new value does not match the attr requirement
 	myvalue = []byte("abcdefxzy")
@@ -242,7 +239,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "wrong suffix")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submitting empty sigscheme
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -263,7 +259,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "cannot find sigscheme argument")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - submit a wrong sigscheme
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -288,7 +283,6 @@ func TestAttrCustomRule(t *testing.T) {
 	resp, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "signature scheme did not match")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - the correct sigscheme is used
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
@@ -312,7 +306,6 @@ func TestAttrCustomRule(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }
 
 func TestAttrBlockIndex(t *testing.T) {
@@ -353,7 +346,6 @@ func TestAttrBlockIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	myID := ctx.Instructions[0].DeriveID("")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke ok - we're within the block interval
 	myvalue = []byte("abcde888fgxyz")
@@ -374,7 +366,6 @@ func TestAttrBlockIndex(t *testing.T) {
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 
 	// Invoke fail - we are outside the block interval
 	myvalue = []byte("abcde8888fxzy")
@@ -396,5 +387,4 @@ func TestAttrBlockIndex(t *testing.T) {
 	resp, err := cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 	require.Contains(t, resp.Error, "does not fit in the interval")
-	require.NoError(t, local.WaitDone(genesisMsg.BlockInterval))
 }

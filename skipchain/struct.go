@@ -795,6 +795,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	var result []SkipBlockID
 	err := db.Update(func(tx *bbolt.Tx) error {
 		for i, sb := range blocks {
+			log.Lvlf2("Storing skipblock %d / %x", sb.Index, sb.Hash)
 			sbOld, err := db.getFromTx(tx, sb.Hash)
 			if err != nil {
 				return errors.New("failed to get skipblock with error: " + err.Error())
@@ -1255,6 +1256,14 @@ func (db *SkipBlockDB) RemoveSkipchain(scid SkipBlockID) error {
 			}
 			sb = next
 		}
+	})
+}
+
+// RemoveBlock removes the given block from the database.
+func (db *SkipBlockDB) RemoveBlock(blockID SkipBlockID) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.Delete(blockID)
 	})
 }
 

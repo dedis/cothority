@@ -31,11 +31,8 @@ type Client struct {
 // NewClient creates a new client to talk to the eventlog service.
 // Fields DarcID, Instance, and Signers must be filled in before use.
 func NewClient(ol *byzcoin.Client) *Client {
-	var bc byzcoin.Client
-	bc = *ol
-	bc.UseNode(0)
 	return &Client{
-		ByzCoin:    &bc,
+		ByzCoin:    ol,
 		c:          onet.NewClient(cothority.Suite, ServiceName),
 		sc:         skipchain.NewClient(),
 		signerCtrs: nil,
@@ -110,9 +107,10 @@ func (c *Client) nextCtrs() []uint64 {
 // via GetEvent.
 type LogID []byte
 
-// Log asks the service to log events.
+// Log asks the service to log events. The client needs to wait for the log to
+// be included for the next log to be accepted.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	return c.LogAndWait(0, ev...)
+	return c.LogAndWait(10, ev...)
 }
 
 // LogAndWait sends a request to log the events and waits for N block intervals

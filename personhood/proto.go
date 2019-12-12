@@ -2,6 +2,7 @@ package personhood
 
 import (
 	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3"
@@ -15,6 +16,7 @@ import (
 //
 // import "byzcoin.proto";
 // import "onet.proto";
+// import "darc.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "Personhood";
@@ -24,6 +26,14 @@ import (
 type PartyList struct {
 	NewParty    *Party
 	WipeParties *bool
+	PartyDelete *PartyDelete
+}
+
+// PartyDelete can be sent from one of the admins to remove a party.
+type PartyDelete struct {
+	PartyID   byzcoin.InstanceID
+	Identity  darc.Identity
+	Signature []byte
 }
 
 // PartyListResponse holds a list of all known parties so far. Only parties in PreBarrier
@@ -47,6 +57,10 @@ type Party struct {
 type RoPaSciList struct {
 	NewRoPaSci *RoPaSci
 	Wipe       *bool
+	// RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+	// After 1 minute, the game is again released. If the given game is not available,
+	// another one will be presented, when available.
+	Lock *RoPaSci
 }
 
 // RoPaSciListResponse returns a list of all known, unfinished RockPaperScissors
@@ -59,6 +73,7 @@ type RoPaSciListResponse struct {
 type RoPaSci struct {
 	ByzcoinID skipchain.SkipBlockID
 	RoPaSciID byzcoin.InstanceID
+	Locked    int64 `protobuf:"opt"`
 }
 
 // StringReply can be used by all calls that need a string to be returned
@@ -72,12 +87,12 @@ type RoPaSciStruct struct {
 	Description         string
 	Stake               byzcoin.Coin
 	FirstPlayerHash     []byte
-	FirstPlayer         int                `protobuf:"opt"`
-	SecondPlayer        int                `protobuf:"opt"`
-	SecondPlayerAccount byzcoin.InstanceID `protobuf:"opt"`
-	FirstPlayerAccount  byzcoin.InstanceID `protobuf:"opt"`
-	CalypsoWrite        byzcoin.InstanceID `protobuf:"opt"`
-	CalypsoRead         byzcoin.InstanceID `protobuf:"opt"`
+	FirstPlayer         int                 `protobuf:"opt"`
+	SecondPlayer        int                 `protobuf:"opt"`
+	SecondPlayerAccount byzcoin.InstanceID  `protobuf:"opt"`
+	FirstPlayerAccount  *byzcoin.InstanceID `protobuf:"opt"`
+	CalypsoWrite        *byzcoin.InstanceID `protobuf:"opt"`
+	CalypsoRead         *byzcoin.InstanceID `protobuf:"opt"`
 }
 
 // CredentialStruct holds a slice of credentials.
@@ -178,6 +193,16 @@ type Poll struct {
 	NewPoll   *PollStruct
 	List      *PollList
 	Answer    *PollAnswer
+	Delete    *PollDelete
+}
+
+// PollDelete has the poll to be deleted, and the signature proving that
+// the client has the right to do so.
+// The signature is a Schnorr signature on the PollID.
+type PollDelete struct {
+	Identity  darc.Identity
+	PollID    []byte
+	Signature []byte
 }
 
 // PollList returns all known storagePolls for this byzcoinID
@@ -191,9 +216,10 @@ type PollList struct {
 // And the message must be
 //   'Choice' + byte(Choice)
 type PollAnswer struct {
-	PollID []byte
-	Choice int
-	LRS    []byte
+	PollID  []byte
+	Choice  int
+	LRS     []byte
+	PartyID byzcoin.InstanceID `protobuf:"opt"`
 }
 
 // PollStruct represents one poll with answers.
@@ -259,4 +285,46 @@ type Meetup struct {
 // MeetupResponse contains all users from the last x minutes.
 type MeetupResponse struct {
 	Users []UserLocation
+}
+
+// Challenge allows a participant to sign up and to fetch the latest list of scores.
+type Challenge struct {
+	Update *ChallengeCandidate
+}
+
+// ChallengeCandidate is the information the client sends to the server.
+// Some of the information is not verifiable for the moment (meetups and references).
+type ChallengeCandidate struct {
+	Credential byzcoin.InstanceID
+	Score      int
+	Signup     int64
+}
+
+// ChallengeReply is sent back to the client and holds a list of pairs of Credential/Score
+// to display on the client's phone.
+type ChallengeReply struct {
+	List []ChallengeCandidate
+}
+
+// GetAdminDarcIDs returns a slice of adminDarcs that are allowed to delete the
+// polls and add a party.
+type GetAdminDarcIDs struct {
+}
+
+// GetAdminDarcIDsReply returns the list of adminDarcs that are allowed to
+// delete the polls and add a party.
+type GetAdminDarcIDsReply struct {
+	AdminDarcIDs []darc.ID
+}
+
+// SetAdminDarcIDs sets the list of admin darcs.
+// The signature must be on
+//   sha256( AdminDarcID[0] | AdminDarcID[1] | ... )
+type SetAdminDarcIDs struct {
+	NewAdminDarcIDs []darc.ID
+	Signature       []byte
+}
+
+// SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
+type SetAdminDarcIDsReply struct {
 }

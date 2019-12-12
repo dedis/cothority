@@ -26,7 +26,7 @@ import (
 
 // TestContractRoPaSci does a classical Rock-Paper-Scissors game and checks that all
 // combinations give the correct payout.
-func TestContractPoPaSci(t *testing.T) {
+func TestContractRoPaSci(t *testing.T) {
 	s := newS(t)
 	defer s.Close()
 
@@ -59,7 +59,7 @@ func TestContractPoPaSci(t *testing.T) {
 // TestContractRoPaSciCalypso uses the calypso-Rock-Paper-Scissors that stores the
 // prehash of player 1 in a CalypsoWrite, so that player 2 doesn't have to wait for
 // player 1 to reveal.
-func TestContractPoPaSciCalypso(t *testing.T) {
+func TestContractRoPaSciCalypso(t *testing.T) {
 	s := newS(t)
 	defer s.Close()
 
@@ -79,10 +79,10 @@ func TestContractPoPaSciCalypso(t *testing.T) {
 				sr.coin2.coin.Value += 100
 			}
 			rps := sr.newCalypsoRPS(move1, sr.coin1.id, 100)
-			ret := rps.calypsoSecond(move2, sr.coin2.id)
-			wrProof, err := s.cl.GetProof(ret.CalypsoWrite.Slice())
+			ret, atr := rps.calypsoSecond(move2, sr.coin2.id)
+			wrProof, err := s.cl.GetProofAfter(ret.CalypsoWrite.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
-			rdProof, err := s.cl.GetProof(ret.CalypsoRead.Slice())
+			rdProof, err := s.cl.GetProofAfter(ret.CalypsoRead.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
 			dkr, err := sr.ca.DecryptKey(&calypso.DecryptKey{
 				Read:  rdProof.Proof,
@@ -182,7 +182,7 @@ func (sr *testRPS) newCalypsoRPS(move int, coinID byzcoin.InstanceID, stake uint
 	ropasci := RoPaSciStruct{
 		Description:        "test",
 		FirstPlayerHash:    moveHash[:],
-		FirstPlayerAccount: sr.coin1.id,
+		FirstPlayerAccount: &sr.coin1.id,
 	}
 	ropasciBuf, err := protobuf.Encode(&ropasci)
 	require.NoError(sr.t, err)
@@ -269,13 +269,14 @@ func (r *rps) confirm(preHash []byte) {
 
 // calypsoSecond is for a calypso RoPaSci, where the 2nd player gets a CalypsoRead instance
 // with which he can reveal/confirm the game.
-func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSciStruct) {
+func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (*RoPaSciStruct, *byzcoin.AddTxResponse) {
 	coinsBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(coinsBuf, r.stake)
 	r.keypair = darc.NewSignerEd25519(nil, nil)
 	pubBuf, err := r.keypair.Ed25519.Point.MarshalBinary()
 	require.NoError(r.t, err)
-	r.addTx(
+
+	_, atr := r.addTx(
 		byzcoin.Instruction{
 			InstanceID: coinID,
 			Invoke: &byzcoin.Invoke{ContractID: contracts.ContractCoinID,
@@ -297,11 +298,12 @@ func (r *rps) calypsoSecond(move int, coinID byzcoin.InstanceID) (rpsRet RoPaSci
 			},
 		},
 	)
-	pr, err := r.cl.GetProof(r.id.Slice())
+	pr, err := r.cl.GetProofAfter(r.id.Slice(), false, &atr.Proof.Latest)
 	require.NoError(r.t, err)
 	_, val, cid, _, err := pr.Proof.KeyValue()
 	require.NoError(r.t, err)
 	require.Equal(r.t, ContractRoPaSciID, cid)
+	var rpsRet RoPaSciStruct
 	require.NoError(r.t, protobuf.Decode(val, &rpsRet))
-	return
+	return &rpsRet, atr
 }

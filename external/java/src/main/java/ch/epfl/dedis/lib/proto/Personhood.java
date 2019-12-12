@@ -39,6 +39,19 @@ public final class Personhood {
      * <code>optional bool wipeparties = 2;</code>
      */
     boolean getWipeparties();
+
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    boolean hasPartydelete();
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.PartyDelete getPartydelete();
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder getPartydeleteOrBuilder();
   }
   /**
    * <pre>
@@ -101,6 +114,19 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               wipeparties_ = input.readBool();
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = partydelete_.toBuilder();
+              }
+              partydelete_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.PartyDelete.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(partydelete_);
+                partydelete_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
             default: {
@@ -172,6 +198,27 @@ public final class Personhood {
       return wipeparties_;
     }
 
+    public static final int PARTYDELETE_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.Personhood.PartyDelete partydelete_;
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    public boolean hasPartydelete() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.PartyDelete getPartydelete() {
+      return partydelete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance() : partydelete_;
+    }
+    /**
+     * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder getPartydeleteOrBuilder() {
+      return partydelete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance() : partydelete_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -181,6 +228,12 @@ public final class Personhood {
 
       if (hasNewparty()) {
         if (!getNewparty().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasPartydelete()) {
+        if (!getPartydelete().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -198,6 +251,9 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBool(2, wipeparties_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getPartydelete());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -214,6 +270,10 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, wipeparties_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getPartydelete());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -241,6 +301,11 @@ public final class Personhood {
         result = result && (getWipeparties()
             == other.getWipeparties());
       }
+      result = result && (hasPartydelete() == other.hasPartydelete());
+      if (hasPartydelete()) {
+        result = result && getPartydelete()
+            .equals(other.getPartydelete());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -260,6 +325,10 @@ public final class Personhood {
         hash = (37 * hash) + WIPEPARTIES_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
             getWipeparties());
+      }
+      if (hasPartydelete()) {
+        hash = (37 * hash) + PARTYDELETE_FIELD_NUMBER;
+        hash = (53 * hash) + getPartydelete().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -395,6 +464,7 @@ public final class Personhood {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getNewpartyFieldBuilder();
+          getPartydeleteFieldBuilder();
         }
       }
       @java.lang.Override
@@ -408,6 +478,12 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000001);
         wipeparties_ = false;
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (partydeleteBuilder_ == null) {
+          partydelete_ = null;
+        } else {
+          partydeleteBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -448,6 +524,14 @@ public final class Personhood {
           to_bitField0_ |= 0x00000002;
         }
         result.wipeparties_ = wipeparties_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (partydeleteBuilder_ == null) {
+          result.partydelete_ = partydelete_;
+        } else {
+          result.partydelete_ = partydeleteBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -503,6 +587,9 @@ public final class Personhood {
         if (other.hasWipeparties()) {
           setWipeparties(other.getWipeparties());
         }
+        if (other.hasPartydelete()) {
+          mergePartydelete(other.getPartydelete());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -512,6 +599,11 @@ public final class Personhood {
       public final boolean isInitialized() {
         if (hasNewparty()) {
           if (!getNewparty().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasPartydelete()) {
+          if (!getPartydelete().isInitialized()) {
             return false;
           }
         }
@@ -687,6 +779,124 @@ public final class Personhood {
         onChanged();
         return this;
       }
+
+      private ch.epfl.dedis.lib.proto.Personhood.PartyDelete partydelete_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.PartyDelete, ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder> partydeleteBuilder_;
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public boolean hasPartydelete() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDelete getPartydelete() {
+        if (partydeleteBuilder_ == null) {
+          return partydelete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance() : partydelete_;
+        } else {
+          return partydeleteBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public Builder setPartydelete(ch.epfl.dedis.lib.proto.Personhood.PartyDelete value) {
+        if (partydeleteBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          partydelete_ = value;
+          onChanged();
+        } else {
+          partydeleteBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public Builder setPartydelete(
+          ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder builderForValue) {
+        if (partydeleteBuilder_ == null) {
+          partydelete_ = builderForValue.build();
+          onChanged();
+        } else {
+          partydeleteBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public Builder mergePartydelete(ch.epfl.dedis.lib.proto.Personhood.PartyDelete value) {
+        if (partydeleteBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              partydelete_ != null &&
+              partydelete_ != ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance()) {
+            partydelete_ =
+              ch.epfl.dedis.lib.proto.Personhood.PartyDelete.newBuilder(partydelete_).mergeFrom(value).buildPartial();
+          } else {
+            partydelete_ = value;
+          }
+          onChanged();
+        } else {
+          partydeleteBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public Builder clearPartydelete() {
+        if (partydeleteBuilder_ == null) {
+          partydelete_ = null;
+          onChanged();
+        } else {
+          partydeleteBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder getPartydeleteBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getPartydeleteFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder getPartydeleteOrBuilder() {
+        if (partydeleteBuilder_ != null) {
+          return partydeleteBuilder_.getMessageOrBuilder();
+        } else {
+          return partydelete_ == null ?
+              ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance() : partydelete_;
+        }
+      }
+      /**
+       * <code>optional .personhood.PartyDelete partydelete = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.PartyDelete, ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder> 
+          getPartydeleteFieldBuilder() {
+        if (partydeleteBuilder_ == null) {
+          partydeleteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Personhood.PartyDelete, ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder>(
+                  getPartydelete(),
+                  getParentForChildren(),
+                  isClean());
+          partydelete_ = null;
+        }
+        return partydeleteBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -735,6 +945,839 @@ public final class Personhood {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.PartyList getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PartyDeleteOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.PartyDelete)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    boolean hasIdentity();
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity();
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder();
+
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * PartyDelete can be sent from one of the admins to remove a party.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.PartyDelete}
+   */
+  public  static final class PartyDelete extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.PartyDelete)
+      PartyDeleteOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PartyDelete.newBuilder() to construct.
+    private PartyDelete(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PartyDelete() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PartyDelete(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = identity_.toBuilder();
+              }
+              identity_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(identity_);
+                identity_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PartyDelete_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PartyDelete_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.PartyDelete.class, ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    public static final int IDENTITY_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.lib.proto.DarcProto.Identity identity_;
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    public boolean hasIdentity() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity() {
+      return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+    }
+    /**
+     * <code>required .darc.Identity identity = 2;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder() {
+      return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasIdentity()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getIdentity().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getIdentity());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getIdentity());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.PartyDelete)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.PartyDelete other = (ch.epfl.dedis.lib.proto.Personhood.PartyDelete) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && (hasIdentity() == other.hasIdentity());
+      if (hasIdentity()) {
+        result = result && getIdentity()
+            .equals(other.getIdentity());
+      }
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      if (hasIdentity()) {
+        hash = (37 * hash) + IDENTITY_FIELD_NUMBER;
+        hash = (53 * hash) + getIdentity().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.PartyDelete prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PartyDelete can be sent from one of the admins to remove a party.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.PartyDelete}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.PartyDelete)
+        ch.epfl.dedis.lib.proto.Personhood.PartyDeleteOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PartyDelete_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PartyDelete_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.PartyDelete.class, ch.epfl.dedis.lib.proto.Personhood.PartyDelete.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.PartyDelete.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getIdentityFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (identityBuilder_ == null) {
+          identity_ = null;
+        } else {
+          identityBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PartyDelete_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDelete getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDelete build() {
+        ch.epfl.dedis.lib.proto.Personhood.PartyDelete result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PartyDelete buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.PartyDelete result = new ch.epfl.dedis.lib.proto.Personhood.PartyDelete(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (identityBuilder_ == null) {
+          result.identity_ = identity_;
+        } else {
+          result.identity_ = identityBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.PartyDelete) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.PartyDelete)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.PartyDelete other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.PartyDelete.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        if (other.hasIdentity()) {
+          mergeIdentity(other.getIdentity());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        if (!hasIdentity()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        if (!getIdentity().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.PartyDelete parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.PartyDelete) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.DarcProto.Identity identity_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> identityBuilder_;
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public boolean hasIdentity() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity() {
+        if (identityBuilder_ == null) {
+          return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+        } else {
+          return identityBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public Builder setIdentity(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (identityBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          identity_ = value;
+          onChanged();
+        } else {
+          identityBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public Builder setIdentity(
+          ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder builderForValue) {
+        if (identityBuilder_ == null) {
+          identity_ = builderForValue.build();
+          onChanged();
+        } else {
+          identityBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public Builder mergeIdentity(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (identityBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              identity_ != null &&
+              identity_ != ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance()) {
+            identity_ =
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.newBuilder(identity_).mergeFrom(value).buildPartial();
+          } else {
+            identity_ = value;
+          }
+          onChanged();
+        } else {
+          identityBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public Builder clearIdentity() {
+        if (identityBuilder_ == null) {
+          identity_ = null;
+          onChanged();
+        } else {
+          identityBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder getIdentityBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getIdentityFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder() {
+        if (identityBuilder_ != null) {
+          return identityBuilder_.getMessageOrBuilder();
+        } else {
+          return identity_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+        }
+      }
+      /**
+       * <code>required .darc.Identity identity = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          getIdentityFieldBuilder() {
+        if (identityBuilder_ == null) {
+          identityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
+                  getIdentity(),
+                  getParentForChildren(),
+                  isClean());
+          identity_ = null;
+        }
+        return identityBuilder_;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.PartyDelete)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.PartyDelete)
+    private static final ch.epfl.dedis.lib.proto.Personhood.PartyDelete DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.PartyDelete();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.PartyDelete getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PartyDelete>
+        PARSER = new com.google.protobuf.AbstractParser<PartyDelete>() {
+      @java.lang.Override
+      public PartyDelete parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PartyDelete(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PartyDelete> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PartyDelete> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.PartyDelete getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -2525,6 +3568,37 @@ public final class Personhood {
      * <code>optional bool wipe = 2;</code>
      */
     boolean getWipe();
+
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    boolean hasLock();
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.RoPaSci getLock();
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder getLockOrBuilder();
   }
   /**
    * <pre>
@@ -2587,6 +3661,19 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               wipe_ = input.readBool();
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = lock_.toBuilder();
+              }
+              lock_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.RoPaSci.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(lock_);
+                lock_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
             default: {
@@ -2658,6 +3745,45 @@ public final class Personhood {
       return wipe_;
     }
 
+    public static final int LOCK_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.lib.proto.Personhood.RoPaSci lock_;
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    public boolean hasLock() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.RoPaSci getLock() {
+      return lock_ == null ? ch.epfl.dedis.lib.proto.Personhood.RoPaSci.getDefaultInstance() : lock_;
+    }
+    /**
+     * <pre>
+     * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+     * After 1 minute, the game is again released. If the given game is not available,
+     * another one will be presented, when available.
+     * </pre>
+     *
+     * <code>optional .personhood.RoPaSci lock = 3;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder getLockOrBuilder() {
+      return lock_ == null ? ch.epfl.dedis.lib.proto.Personhood.RoPaSci.getDefaultInstance() : lock_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2667,6 +3793,12 @@ public final class Personhood {
 
       if (hasNewropasci()) {
         if (!getNewropasci().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasLock()) {
+        if (!getLock().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -2684,6 +3816,9 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBool(2, wipe_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getLock());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2700,6 +3835,10 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(2, wipe_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getLock());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2727,6 +3866,11 @@ public final class Personhood {
         result = result && (getWipe()
             == other.getWipe());
       }
+      result = result && (hasLock() == other.hasLock());
+      if (hasLock()) {
+        result = result && getLock()
+            .equals(other.getLock());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2746,6 +3890,10 @@ public final class Personhood {
         hash = (37 * hash) + WIPE_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
             getWipe());
+      }
+      if (hasLock()) {
+        hash = (37 * hash) + LOCK_FIELD_NUMBER;
+        hash = (53 * hash) + getLock().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2881,6 +4029,7 @@ public final class Personhood {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getNewropasciFieldBuilder();
+          getLockFieldBuilder();
         }
       }
       @java.lang.Override
@@ -2894,6 +4043,12 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000001);
         wipe_ = false;
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (lockBuilder_ == null) {
+          lock_ = null;
+        } else {
+          lockBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -2934,6 +4089,14 @@ public final class Personhood {
           to_bitField0_ |= 0x00000002;
         }
         result.wipe_ = wipe_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (lockBuilder_ == null) {
+          result.lock_ = lock_;
+        } else {
+          result.lock_ = lockBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2989,6 +4152,9 @@ public final class Personhood {
         if (other.hasWipe()) {
           setWipe(other.getWipe());
         }
+        if (other.hasLock()) {
+          mergeLock(other.getLock());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2998,6 +4164,11 @@ public final class Personhood {
       public final boolean isInitialized() {
         if (hasNewropasci()) {
           if (!getNewropasci().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasLock()) {
+          if (!getLock().isInitialized()) {
             return false;
           }
         }
@@ -3172,6 +4343,178 @@ public final class Personhood {
         wipe_ = false;
         onChanged();
         return this;
+      }
+
+      private ch.epfl.dedis.lib.proto.Personhood.RoPaSci lock_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> lockBuilder_;
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public boolean hasLock() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.RoPaSci getLock() {
+        if (lockBuilder_ == null) {
+          return lock_ == null ? ch.epfl.dedis.lib.proto.Personhood.RoPaSci.getDefaultInstance() : lock_;
+        } else {
+          return lockBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public Builder setLock(ch.epfl.dedis.lib.proto.Personhood.RoPaSci value) {
+        if (lockBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          lock_ = value;
+          onChanged();
+        } else {
+          lockBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public Builder setLock(
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder builderForValue) {
+        if (lockBuilder_ == null) {
+          lock_ = builderForValue.build();
+          onChanged();
+        } else {
+          lockBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public Builder mergeLock(ch.epfl.dedis.lib.proto.Personhood.RoPaSci value) {
+        if (lockBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              lock_ != null &&
+              lock_ != ch.epfl.dedis.lib.proto.Personhood.RoPaSci.getDefaultInstance()) {
+            lock_ =
+              ch.epfl.dedis.lib.proto.Personhood.RoPaSci.newBuilder(lock_).mergeFrom(value).buildPartial();
+          } else {
+            lock_ = value;
+          }
+          onChanged();
+        } else {
+          lockBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public Builder clearLock() {
+        if (lockBuilder_ == null) {
+          lock_ = null;
+          onChanged();
+        } else {
+          lockBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder getLockBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getLockFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder getLockOrBuilder() {
+        if (lockBuilder_ != null) {
+          return lockBuilder_.getMessageOrBuilder();
+        } else {
+          return lock_ == null ?
+              ch.epfl.dedis.lib.proto.Personhood.RoPaSci.getDefaultInstance() : lock_;
+        }
+      }
+      /**
+       * <pre>
+       * RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+       * After 1 minute, the game is again released. If the given game is not available,
+       * another one will be presented, when available.
+       * </pre>
+       *
+       * <code>optional .personhood.RoPaSci lock = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder> 
+          getLockFieldBuilder() {
+        if (lockBuilder_ == null) {
+          lockBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Personhood.RoPaSci, ch.epfl.dedis.lib.proto.Personhood.RoPaSci.Builder, ch.epfl.dedis.lib.proto.Personhood.RoPaSciOrBuilder>(
+                  getLock(),
+                  getParentForChildren(),
+                  isClean());
+          lock_ = null;
+        }
+        return lockBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -4050,6 +5393,15 @@ public final class Personhood {
      * <code>required bytes ropasciid = 2;</code>
      */
     com.google.protobuf.ByteString getRopasciid();
+
+    /**
+     * <code>optional sint64 locked = 3;</code>
+     */
+    boolean hasLocked();
+    /**
+     * <code>optional sint64 locked = 3;</code>
+     */
+    long getLocked();
   }
   /**
    * <pre>
@@ -4070,6 +5422,7 @@ public final class Personhood {
     private RoPaSci() {
       byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       ropasciid_ = com.google.protobuf.ByteString.EMPTY;
+      locked_ = 0L;
     }
 
     @java.lang.Override
@@ -4104,6 +5457,11 @@ public final class Personhood {
             case 18: {
               bitField0_ |= 0x00000002;
               ropasciid_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              locked_ = input.readSInt64();
               break;
             }
             default: {
@@ -4169,6 +5527,21 @@ public final class Personhood {
       return ropasciid_;
     }
 
+    public static final int LOCKED_FIELD_NUMBER = 3;
+    private long locked_;
+    /**
+     * <code>optional sint64 locked = 3;</code>
+     */
+    public boolean hasLocked() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional sint64 locked = 3;</code>
+     */
+    public long getLocked() {
+      return locked_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -4197,6 +5570,9 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, ropasciid_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeSInt64(3, locked_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -4213,6 +5589,10 @@ public final class Personhood {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, ropasciid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(3, locked_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4240,6 +5620,11 @@ public final class Personhood {
         result = result && getRopasciid()
             .equals(other.getRopasciid());
       }
+      result = result && (hasLocked() == other.hasLocked());
+      if (hasLocked()) {
+        result = result && (getLocked()
+            == other.getLocked());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -4258,6 +5643,11 @@ public final class Personhood {
       if (hasRopasciid()) {
         hash = (37 * hash) + ROPASCIID_FIELD_NUMBER;
         hash = (53 * hash) + getRopasciid().hashCode();
+      }
+      if (hasLocked()) {
+        hash = (37 * hash) + LOCKED_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getLocked());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4400,6 +5790,8 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000001);
         ropasciid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        locked_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -4436,6 +5828,10 @@ public final class Personhood {
           to_bitField0_ |= 0x00000002;
         }
         result.ropasciid_ = ropasciid_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.locked_ = locked_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4490,6 +5886,9 @@ public final class Personhood {
         }
         if (other.hasRopasciid()) {
           setRopasciid(other.getRopasciid());
+        }
+        if (other.hasLocked()) {
+          setLocked(other.getLocked());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4593,6 +5992,38 @@ public final class Personhood {
       public Builder clearRopasciid() {
         bitField0_ = (bitField0_ & ~0x00000002);
         ropasciid_ = getDefaultInstance().getRopasciid();
+        onChanged();
+        return this;
+      }
+
+      private long locked_ ;
+      /**
+       * <code>optional sint64 locked = 3;</code>
+       */
+      public boolean hasLocked() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional sint64 locked = 3;</code>
+       */
+      public long getLocked() {
+        return locked_;
+      }
+      /**
+       * <code>optional sint64 locked = 3;</code>
+       */
+      public Builder setLocked(long value) {
+        bitField0_ |= 0x00000004;
+        locked_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional sint64 locked = 3;</code>
+       */
+      public Builder clearLocked() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        locked_ = 0L;
         onChanged();
         return this;
       }
@@ -17142,6 +18573,19 @@ public final class Personhood {
      * <code>optional .personhood.PollAnswer answer = 4;</code>
      */
     ch.epfl.dedis.lib.proto.Personhood.PollAnswerOrBuilder getAnswerOrBuilder();
+
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    boolean hasDelete();
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.PollDelete getDelete();
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder getDeleteOrBuilder();
   }
   /**
    * <pre>
@@ -17229,6 +18673,19 @@ public final class Personhood {
                 answer_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+                subBuilder = delete_.toBuilder();
+              }
+              delete_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.PollDelete.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(delete_);
+                delete_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000010;
               break;
             }
             default: {
@@ -17342,6 +18799,27 @@ public final class Personhood {
       return answer_ == null ? ch.epfl.dedis.lib.proto.Personhood.PollAnswer.getDefaultInstance() : answer_;
     }
 
+    public static final int DELETE_FIELD_NUMBER = 5;
+    private ch.epfl.dedis.lib.proto.Personhood.PollDelete delete_;
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    public boolean hasDelete() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.PollDelete getDelete() {
+      return delete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance() : delete_;
+    }
+    /**
+     * <code>optional .personhood.PollDelete delete = 5;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder getDeleteOrBuilder() {
+      return delete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance() : delete_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -17365,6 +18843,12 @@ public final class Personhood {
           return false;
         }
       }
+      if (hasDelete()) {
+        if (!getDelete().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -17383,6 +18867,9 @@ public final class Personhood {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(4, getAnswer());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, getDelete());
       }
       unknownFields.writeTo(output);
     }
@@ -17408,6 +18895,10 @@ public final class Personhood {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getAnswer());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getDelete());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -17445,6 +18936,11 @@ public final class Personhood {
         result = result && getAnswer()
             .equals(other.getAnswer());
       }
+      result = result && (hasDelete() == other.hasDelete());
+      if (hasDelete()) {
+        result = result && getDelete()
+            .equals(other.getDelete());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -17471,6 +18967,10 @@ public final class Personhood {
       if (hasAnswer()) {
         hash = (37 * hash) + ANSWER_FIELD_NUMBER;
         hash = (53 * hash) + getAnswer().hashCode();
+      }
+      if (hasDelete()) {
+        hash = (37 * hash) + DELETE_FIELD_NUMBER;
+        hash = (53 * hash) + getDelete().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -17607,6 +19107,7 @@ public final class Personhood {
           getNewpollFieldBuilder();
           getListFieldBuilder();
           getAnswerFieldBuilder();
+          getDeleteFieldBuilder();
         }
       }
       @java.lang.Override
@@ -17632,6 +19133,12 @@ public final class Personhood {
           answerBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (deleteBuilder_ == null) {
+          delete_ = null;
+        } else {
+          deleteBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -17687,6 +19194,14 @@ public final class Personhood {
           result.answer_ = answer_;
         } else {
           result.answer_ = answerBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        if (deleteBuilder_ == null) {
+          result.delete_ = delete_;
+        } else {
+          result.delete_ = deleteBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -17749,6 +19264,9 @@ public final class Personhood {
         if (other.hasAnswer()) {
           mergeAnswer(other.getAnswer());
         }
+        if (other.hasDelete()) {
+          mergeDelete(other.getDelete());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -17766,6 +19284,11 @@ public final class Personhood {
         }
         if (hasAnswer()) {
           if (!getAnswer().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasDelete()) {
+          if (!getDelete().isInitialized()) {
             return false;
           }
         }
@@ -18180,6 +19703,124 @@ public final class Personhood {
         }
         return answerBuilder_;
       }
+
+      private ch.epfl.dedis.lib.proto.Personhood.PollDelete delete_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.PollDelete, ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder> deleteBuilder_;
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public boolean hasDelete() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PollDelete getDelete() {
+        if (deleteBuilder_ == null) {
+          return delete_ == null ? ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance() : delete_;
+        } else {
+          return deleteBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public Builder setDelete(ch.epfl.dedis.lib.proto.Personhood.PollDelete value) {
+        if (deleteBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          delete_ = value;
+          onChanged();
+        } else {
+          deleteBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public Builder setDelete(
+          ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder builderForValue) {
+        if (deleteBuilder_ == null) {
+          delete_ = builderForValue.build();
+          onChanged();
+        } else {
+          deleteBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public Builder mergeDelete(ch.epfl.dedis.lib.proto.Personhood.PollDelete value) {
+        if (deleteBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+              delete_ != null &&
+              delete_ != ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance()) {
+            delete_ =
+              ch.epfl.dedis.lib.proto.Personhood.PollDelete.newBuilder(delete_).mergeFrom(value).buildPartial();
+          } else {
+            delete_ = value;
+          }
+          onChanged();
+        } else {
+          deleteBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public Builder clearDelete() {
+        if (deleteBuilder_ == null) {
+          delete_ = null;
+          onChanged();
+        } else {
+          deleteBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder getDeleteBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getDeleteFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder getDeleteOrBuilder() {
+        if (deleteBuilder_ != null) {
+          return deleteBuilder_.getMessageOrBuilder();
+        } else {
+          return delete_ == null ?
+              ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance() : delete_;
+        }
+      }
+      /**
+       * <code>optional .personhood.PollDelete delete = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.PollDelete, ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder> 
+          getDeleteFieldBuilder() {
+        if (deleteBuilder_ == null) {
+          deleteBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Personhood.PollDelete, ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder, ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder>(
+                  getDelete(),
+                  getParentForChildren(),
+                  isClean());
+          delete_ = null;
+        }
+        return deleteBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -18228,6 +19869,843 @@ public final class Personhood {
 
     @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Poll getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PollDeleteOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.PollDelete)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    boolean hasIdentity();
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity();
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder();
+
+    /**
+     * <code>required bytes pollid = 2;</code>
+     */
+    boolean hasPollid();
+    /**
+     * <code>required bytes pollid = 2;</code>
+     */
+    com.google.protobuf.ByteString getPollid();
+
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * PollDelete has the poll to be deleted, and the signature proving that
+   * the client has the right to do so.
+   * The signature is a Schnorr signature on the PollID.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.PollDelete}
+   */
+  public  static final class PollDelete extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.PollDelete)
+      PollDeleteOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PollDelete.newBuilder() to construct.
+    private PollDelete(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PollDelete() {
+      pollid_ = com.google.protobuf.ByteString.EMPTY;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PollDelete(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = identity_.toBuilder();
+              }
+              identity_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(identity_);
+                identity_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              pollid_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PollDelete_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PollDelete_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.PollDelete.class, ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int IDENTITY_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.DarcProto.Identity identity_;
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    public boolean hasIdentity() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity() {
+      return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+    }
+    /**
+     * <code>required .darc.Identity identity = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder() {
+      return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+    }
+
+    public static final int POLLID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString pollid_;
+    /**
+     * <code>required bytes pollid = 2;</code>
+     */
+    public boolean hasPollid() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes pollid = 2;</code>
+     */
+    public com.google.protobuf.ByteString getPollid() {
+      return pollid_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bytes signature = 3;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasIdentity()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPollid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getIdentity().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getIdentity());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, pollid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getIdentity());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, pollid_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.PollDelete)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.PollDelete other = (ch.epfl.dedis.lib.proto.Personhood.PollDelete) obj;
+
+      boolean result = true;
+      result = result && (hasIdentity() == other.hasIdentity());
+      if (hasIdentity()) {
+        result = result && getIdentity()
+            .equals(other.getIdentity());
+      }
+      result = result && (hasPollid() == other.hasPollid());
+      if (hasPollid()) {
+        result = result && getPollid()
+            .equals(other.getPollid());
+      }
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasIdentity()) {
+        hash = (37 * hash) + IDENTITY_FIELD_NUMBER;
+        hash = (53 * hash) + getIdentity().hashCode();
+      }
+      if (hasPollid()) {
+        hash = (37 * hash) + POLLID_FIELD_NUMBER;
+        hash = (53 * hash) + getPollid().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.PollDelete prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PollDelete has the poll to be deleted, and the signature proving that
+     * the client has the right to do so.
+     * The signature is a Schnorr signature on the PollID.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.PollDelete}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.PollDelete)
+        ch.epfl.dedis.lib.proto.Personhood.PollDeleteOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PollDelete_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PollDelete_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.PollDelete.class, ch.epfl.dedis.lib.proto.Personhood.PollDelete.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.PollDelete.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getIdentityFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (identityBuilder_ == null) {
+          identity_ = null;
+        } else {
+          identityBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        pollid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_PollDelete_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PollDelete getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PollDelete build() {
+        ch.epfl.dedis.lib.proto.Personhood.PollDelete result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.PollDelete buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.PollDelete result = new ch.epfl.dedis.lib.proto.Personhood.PollDelete(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (identityBuilder_ == null) {
+          result.identity_ = identity_;
+        } else {
+          result.identity_ = identityBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.pollid_ = pollid_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.PollDelete) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.PollDelete)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.PollDelete other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.PollDelete.getDefaultInstance()) return this;
+        if (other.hasIdentity()) {
+          mergeIdentity(other.getIdentity());
+        }
+        if (other.hasPollid()) {
+          setPollid(other.getPollid());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasIdentity()) {
+          return false;
+        }
+        if (!hasPollid()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        if (!getIdentity().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.PollDelete parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.PollDelete) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.DarcProto.Identity identity_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> identityBuilder_;
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public boolean hasIdentity() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity getIdentity() {
+        if (identityBuilder_ == null) {
+          return identity_ == null ? ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+        } else {
+          return identityBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public Builder setIdentity(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (identityBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          identity_ = value;
+          onChanged();
+        } else {
+          identityBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public Builder setIdentity(
+          ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder builderForValue) {
+        if (identityBuilder_ == null) {
+          identity_ = builderForValue.build();
+          onChanged();
+        } else {
+          identityBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public Builder mergeIdentity(ch.epfl.dedis.lib.proto.DarcProto.Identity value) {
+        if (identityBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              identity_ != null &&
+              identity_ != ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance()) {
+            identity_ =
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.newBuilder(identity_).mergeFrom(value).buildPartial();
+          } else {
+            identity_ = value;
+          }
+          onChanged();
+        } else {
+          identityBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public Builder clearIdentity() {
+        if (identityBuilder_ == null) {
+          identity_ = null;
+          onChanged();
+        } else {
+          identityBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder getIdentityBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getIdentityFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder() {
+        if (identityBuilder_ != null) {
+          return identityBuilder_.getMessageOrBuilder();
+        } else {
+          return identity_ == null ?
+              ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance() : identity_;
+        }
+      }
+      /**
+       * <code>required .darc.Identity identity = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder> 
+          getIdentityFieldBuilder() {
+        if (identityBuilder_ == null) {
+          identityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.DarcProto.Identity, ch.epfl.dedis.lib.proto.DarcProto.Identity.Builder, ch.epfl.dedis.lib.proto.DarcProto.IdentityOrBuilder>(
+                  getIdentity(),
+                  getParentForChildren(),
+                  isClean());
+          identity_ = null;
+        }
+        return identityBuilder_;
+      }
+
+      private com.google.protobuf.ByteString pollid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes pollid = 2;</code>
+       */
+      public boolean hasPollid() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes pollid = 2;</code>
+       */
+      public com.google.protobuf.ByteString getPollid() {
+        return pollid_;
+      }
+      /**
+       * <code>required bytes pollid = 2;</code>
+       */
+      public Builder setPollid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        pollid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes pollid = 2;</code>
+       */
+      public Builder clearPollid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        pollid_ = getDefaultInstance().getPollid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.PollDelete)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.PollDelete)
+    private static final ch.epfl.dedis.lib.proto.Personhood.PollDelete DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.PollDelete();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.PollDelete getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PollDelete>
+        PARSER = new com.google.protobuf.AbstractParser<PollDelete>() {
+      @java.lang.Override
+      public PollDelete parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PollDelete(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PollDelete> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PollDelete> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.PollDelete getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -18840,6 +21318,15 @@ public final class Personhood {
      * <code>required bytes lrs = 3;</code>
      */
     com.google.protobuf.ByteString getLrs();
+
+    /**
+     * <code>optional bytes partyid = 4;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>optional bytes partyid = 4;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
   }
   /**
    * <pre>
@@ -18865,6 +21352,7 @@ public final class Personhood {
       pollid_ = com.google.protobuf.ByteString.EMPTY;
       choice_ = 0;
       lrs_ = com.google.protobuf.ByteString.EMPTY;
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -18904,6 +21392,11 @@ public final class Personhood {
             case 26: {
               bitField0_ |= 0x00000004;
               lrs_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              partyid_ = input.readBytes();
               break;
             }
             default: {
@@ -18984,6 +21477,21 @@ public final class Personhood {
       return lrs_;
     }
 
+    public static final int PARTYID_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>optional bytes partyid = 4;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional bytes partyid = 4;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -19019,6 +21527,9 @@ public final class Personhood {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, lrs_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, partyid_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -19039,6 +21550,10 @@ public final class Personhood {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, lrs_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, partyid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -19071,6 +21586,11 @@ public final class Personhood {
         result = result && getLrs()
             .equals(other.getLrs());
       }
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -19093,6 +21613,10 @@ public final class Personhood {
       if (hasLrs()) {
         hash = (37 * hash) + LRS_FIELD_NUMBER;
         hash = (53 * hash) + getLrs().hashCode();
+      }
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -19241,6 +21765,8 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000002);
         lrs_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -19281,6 +21807,10 @@ public final class Personhood {
           to_bitField0_ |= 0x00000004;
         }
         result.lrs_ = lrs_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.partyid_ = partyid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -19338,6 +21868,9 @@ public final class Personhood {
         }
         if (other.hasLrs()) {
           setLrs(other.getLrs());
+        }
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -19476,6 +22009,41 @@ public final class Personhood {
       public Builder clearLrs() {
         bitField0_ = (bitField0_ & ~0x00000004);
         lrs_ = getDefaultInstance().getLrs();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes partyid = 4;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bytes partyid = 4;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>optional bytes partyid = 4;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes partyid = 4;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        partyid_ = getDefaultInstance().getPartyid();
         onChanged();
         return this;
       }
@@ -27015,11 +29583,4271 @@ public final class Personhood {
 
   }
 
+  public interface ChallengeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.Challenge)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    boolean hasUpdate();
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getUpdate();
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getUpdateOrBuilder();
+  }
+  /**
+   * <pre>
+   * Challenge allows a participant to sign up and to fetch the latest list of scores.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.Challenge}
+   */
+  public  static final class Challenge extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.Challenge)
+      ChallengeOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Challenge.newBuilder() to construct.
+    private Challenge(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Challenge() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Challenge(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = update_.toBuilder();
+              }
+              update_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(update_);
+                update_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Challenge_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Challenge_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.Challenge.class, ch.epfl.dedis.lib.proto.Personhood.Challenge.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int UPDATE_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate update_;
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    public boolean hasUpdate() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getUpdate() {
+      return update_ == null ? ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance() : update_;
+    }
+    /**
+     * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getUpdateOrBuilder() {
+      return update_ == null ? ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance() : update_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (hasUpdate()) {
+        if (!getUpdate().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getUpdate());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getUpdate());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.Challenge)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.Challenge other = (ch.epfl.dedis.lib.proto.Personhood.Challenge) obj;
+
+      boolean result = true;
+      result = result && (hasUpdate() == other.hasUpdate());
+      if (hasUpdate()) {
+        result = result && getUpdate()
+            .equals(other.getUpdate());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasUpdate()) {
+        hash = (37 * hash) + UPDATE_FIELD_NUMBER;
+        hash = (53 * hash) + getUpdate().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.Challenge prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Challenge allows a participant to sign up and to fetch the latest list of scores.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.Challenge}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.Challenge)
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Challenge_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Challenge_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.Challenge.class, ch.epfl.dedis.lib.proto.Personhood.Challenge.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.Challenge.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getUpdateFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (updateBuilder_ == null) {
+          update_ = null;
+        } else {
+          updateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Challenge_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.Challenge getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.Challenge.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.Challenge build() {
+        ch.epfl.dedis.lib.proto.Personhood.Challenge result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.Challenge buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.Challenge result = new ch.epfl.dedis.lib.proto.Personhood.Challenge(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (updateBuilder_ == null) {
+          result.update_ = update_;
+        } else {
+          result.update_ = updateBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.Challenge) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.Challenge)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.Challenge other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.Challenge.getDefaultInstance()) return this;
+        if (other.hasUpdate()) {
+          mergeUpdate(other.getUpdate());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (hasUpdate()) {
+          if (!getUpdate().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.Challenge parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.Challenge) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate update_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> updateBuilder_;
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public boolean hasUpdate() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getUpdate() {
+        if (updateBuilder_ == null) {
+          return update_ == null ? ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance() : update_;
+        } else {
+          return updateBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public Builder setUpdate(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate value) {
+        if (updateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          update_ = value;
+          onChanged();
+        } else {
+          updateBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public Builder setUpdate(
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder builderForValue) {
+        if (updateBuilder_ == null) {
+          update_ = builderForValue.build();
+          onChanged();
+        } else {
+          updateBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public Builder mergeUpdate(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate value) {
+        if (updateBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              update_ != null &&
+              update_ != ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance()) {
+            update_ =
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.newBuilder(update_).mergeFrom(value).buildPartial();
+          } else {
+            update_ = value;
+          }
+          onChanged();
+        } else {
+          updateBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public Builder clearUpdate() {
+        if (updateBuilder_ == null) {
+          update_ = null;
+          onChanged();
+        } else {
+          updateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder getUpdateBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getUpdateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getUpdateOrBuilder() {
+        if (updateBuilder_ != null) {
+          return updateBuilder_.getMessageOrBuilder();
+        } else {
+          return update_ == null ?
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance() : update_;
+        }
+      }
+      /**
+       * <code>optional .personhood.ChallengeCandidate update = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> 
+          getUpdateFieldBuilder() {
+        if (updateBuilder_ == null) {
+          updateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder>(
+                  getUpdate(),
+                  getParentForChildren(),
+                  isClean());
+          update_ = null;
+        }
+        return updateBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.Challenge)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.Challenge)
+    private static final ch.epfl.dedis.lib.proto.Personhood.Challenge DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.Challenge();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.Challenge getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Challenge>
+        PARSER = new com.google.protobuf.AbstractParser<Challenge>() {
+      @java.lang.Override
+      public Challenge parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Challenge(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Challenge> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Challenge> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.Challenge getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ChallengeCandidateOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.ChallengeCandidate)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes credential = 1;</code>
+     */
+    boolean hasCredential();
+    /**
+     * <code>required bytes credential = 1;</code>
+     */
+    com.google.protobuf.ByteString getCredential();
+
+    /**
+     * <code>required sint32 score = 2;</code>
+     */
+    boolean hasScore();
+    /**
+     * <code>required sint32 score = 2;</code>
+     */
+    int getScore();
+
+    /**
+     * <code>required sint64 signup = 3;</code>
+     */
+    boolean hasSignup();
+    /**
+     * <code>required sint64 signup = 3;</code>
+     */
+    long getSignup();
+  }
+  /**
+   * <pre>
+   * ChallengeCandidate is the information the client sends to the server.
+   * Some of the information is not verifiable for the moment (meetups and references).
+   * </pre>
+   *
+   * Protobuf type {@code personhood.ChallengeCandidate}
+   */
+  public  static final class ChallengeCandidate extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.ChallengeCandidate)
+      ChallengeCandidateOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ChallengeCandidate.newBuilder() to construct.
+    private ChallengeCandidate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ChallengeCandidate() {
+      credential_ = com.google.protobuf.ByteString.EMPTY;
+      score_ = 0;
+      signup_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ChallengeCandidate(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              credential_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              score_ = input.readSInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              signup_ = input.readSInt64();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeCandidate_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeCandidate_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.class, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int CREDENTIAL_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString credential_;
+    /**
+     * <code>required bytes credential = 1;</code>
+     */
+    public boolean hasCredential() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes credential = 1;</code>
+     */
+    public com.google.protobuf.ByteString getCredential() {
+      return credential_;
+    }
+
+    public static final int SCORE_FIELD_NUMBER = 2;
+    private int score_;
+    /**
+     * <code>required sint32 score = 2;</code>
+     */
+    public boolean hasScore() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required sint32 score = 2;</code>
+     */
+    public int getScore() {
+      return score_;
+    }
+
+    public static final int SIGNUP_FIELD_NUMBER = 3;
+    private long signup_;
+    /**
+     * <code>required sint64 signup = 3;</code>
+     */
+    public boolean hasSignup() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required sint64 signup = 3;</code>
+     */
+    public long getSignup() {
+      return signup_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasCredential()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasScore()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignup()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, credential_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeSInt32(2, score_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeSInt64(3, signup_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, credential_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(2, score_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(3, signup_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate other = (ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate) obj;
+
+      boolean result = true;
+      result = result && (hasCredential() == other.hasCredential());
+      if (hasCredential()) {
+        result = result && getCredential()
+            .equals(other.getCredential());
+      }
+      result = result && (hasScore() == other.hasScore());
+      if (hasScore()) {
+        result = result && (getScore()
+            == other.getScore());
+      }
+      result = result && (hasSignup() == other.hasSignup());
+      if (hasSignup()) {
+        result = result && (getSignup()
+            == other.getSignup());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasCredential()) {
+        hash = (37 * hash) + CREDENTIAL_FIELD_NUMBER;
+        hash = (53 * hash) + getCredential().hashCode();
+      }
+      if (hasScore()) {
+        hash = (37 * hash) + SCORE_FIELD_NUMBER;
+        hash = (53 * hash) + getScore();
+      }
+      if (hasSignup()) {
+        hash = (37 * hash) + SIGNUP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getSignup());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * ChallengeCandidate is the information the client sends to the server.
+     * Some of the information is not verifiable for the moment (meetups and references).
+     * </pre>
+     *
+     * Protobuf type {@code personhood.ChallengeCandidate}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.ChallengeCandidate)
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeCandidate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeCandidate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.class, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        credential_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        score_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signup_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeCandidate_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate build() {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate result = new ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.credential_ = credential_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.score_ = score_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.signup_ = signup_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance()) return this;
+        if (other.hasCredential()) {
+          setCredential(other.getCredential());
+        }
+        if (other.hasScore()) {
+          setScore(other.getScore());
+        }
+        if (other.hasSignup()) {
+          setSignup(other.getSignup());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasCredential()) {
+          return false;
+        }
+        if (!hasScore()) {
+          return false;
+        }
+        if (!hasSignup()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString credential_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes credential = 1;</code>
+       */
+      public boolean hasCredential() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes credential = 1;</code>
+       */
+      public com.google.protobuf.ByteString getCredential() {
+        return credential_;
+      }
+      /**
+       * <code>required bytes credential = 1;</code>
+       */
+      public Builder setCredential(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        credential_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes credential = 1;</code>
+       */
+      public Builder clearCredential() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        credential_ = getDefaultInstance().getCredential();
+        onChanged();
+        return this;
+      }
+
+      private int score_ ;
+      /**
+       * <code>required sint32 score = 2;</code>
+       */
+      public boolean hasScore() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required sint32 score = 2;</code>
+       */
+      public int getScore() {
+        return score_;
+      }
+      /**
+       * <code>required sint32 score = 2;</code>
+       */
+      public Builder setScore(int value) {
+        bitField0_ |= 0x00000002;
+        score_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint32 score = 2;</code>
+       */
+      public Builder clearScore() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        score_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private long signup_ ;
+      /**
+       * <code>required sint64 signup = 3;</code>
+       */
+      public boolean hasSignup() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required sint64 signup = 3;</code>
+       */
+      public long getSignup() {
+        return signup_;
+      }
+      /**
+       * <code>required sint64 signup = 3;</code>
+       */
+      public Builder setSignup(long value) {
+        bitField0_ |= 0x00000004;
+        signup_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint64 signup = 3;</code>
+       */
+      public Builder clearSignup() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        signup_ = 0L;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.ChallengeCandidate)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.ChallengeCandidate)
+    private static final ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ChallengeCandidate>
+        PARSER = new com.google.protobuf.AbstractParser<ChallengeCandidate>() {
+      @java.lang.Override
+      public ChallengeCandidate parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ChallengeCandidate(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ChallengeCandidate> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ChallengeCandidate> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ChallengeReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.ChallengeReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> 
+        getListList();
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getList(int index);
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    int getListCount();
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> 
+        getListOrBuilderList();
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getListOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * ChallengeReply is sent back to the client and holds a list of pairs of Credential/Score
+   * to display on the client's phone.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.ChallengeReply}
+   */
+  public  static final class ChallengeReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.ChallengeReply)
+      ChallengeReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ChallengeReply.newBuilder() to construct.
+    private ChallengeReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ChallengeReply() {
+      list_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ChallengeReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              list_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          list_ = java.util.Collections.unmodifiableList(list_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.class, ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.Builder.class);
+    }
+
+    public static final int LIST_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> list_;
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> getListList() {
+      return list_;
+    }
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> 
+        getListOrBuilderList() {
+      return list_;
+    }
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    public int getListCount() {
+      return list_.size();
+    }
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getList(int index) {
+      return list_.get(index);
+    }
+    /**
+     * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getListOrBuilder(
+        int index) {
+      return list_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getListCount(); i++) {
+        if (!getList(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < list_.size(); i++) {
+        output.writeMessage(1, list_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < list_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, list_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.ChallengeReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.ChallengeReply other = (ch.epfl.dedis.lib.proto.Personhood.ChallengeReply) obj;
+
+      boolean result = true;
+      result = result && getListList()
+          .equals(other.getListList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getListCount() > 0) {
+        hash = (37 * hash) + LIST_FIELD_NUMBER;
+        hash = (53 * hash) + getListList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ChallengeReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * ChallengeReply is sent back to the client and holds a list of pairs of Credential/Score
+     * to display on the client's phone.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.ChallengeReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.ChallengeReply)
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.class, ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getListFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (listBuilder_ == null) {
+          list_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          listBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ChallengeReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeReply build() {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeReply result = new ch.epfl.dedis.lib.proto.Personhood.ChallengeReply(this);
+        int from_bitField0_ = bitField0_;
+        if (listBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            list_ = java.util.Collections.unmodifiableList(list_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.list_ = list_;
+        } else {
+          result.list_ = listBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ChallengeReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ChallengeReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.ChallengeReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.ChallengeReply.getDefaultInstance()) return this;
+        if (listBuilder_ == null) {
+          if (!other.list_.isEmpty()) {
+            if (list_.isEmpty()) {
+              list_ = other.list_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureListIsMutable();
+              list_.addAll(other.list_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.list_.isEmpty()) {
+            if (listBuilder_.isEmpty()) {
+              listBuilder_.dispose();
+              listBuilder_ = null;
+              list_ = other.list_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              listBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getListFieldBuilder() : null;
+            } else {
+              listBuilder_.addAllMessages(other.list_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        for (int i = 0; i < getListCount(); i++) {
+          if (!getList(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.ChallengeReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.ChallengeReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> list_ =
+        java.util.Collections.emptyList();
+      private void ensureListIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate>(list_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> listBuilder_;
+
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> getListList() {
+        if (listBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(list_);
+        } else {
+          return listBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public int getListCount() {
+        if (listBuilder_ == null) {
+          return list_.size();
+        } else {
+          return listBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate getList(int index) {
+        if (listBuilder_ == null) {
+          return list_.get(index);
+        } else {
+          return listBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder setList(
+          int index, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.set(index, value);
+          onChanged();
+        } else {
+          listBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder setList(
+          int index, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder addList(ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.add(value);
+          onChanged();
+        } else {
+          listBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder addList(
+          int index, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate value) {
+        if (listBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureListIsMutable();
+          list_.add(index, value);
+          onChanged();
+        } else {
+          listBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder addList(
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.add(builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder addList(
+          int index, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder builderForValue) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          listBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder addAllList(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate> values) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, list_);
+          onChanged();
+        } else {
+          listBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder clearList() {
+        if (listBuilder_ == null) {
+          list_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          listBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public Builder removeList(int index) {
+        if (listBuilder_ == null) {
+          ensureListIsMutable();
+          list_.remove(index);
+          onChanged();
+        } else {
+          listBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder getListBuilder(
+          int index) {
+        return getListFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder getListOrBuilder(
+          int index) {
+        if (listBuilder_ == null) {
+          return list_.get(index);  } else {
+          return listBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> 
+           getListOrBuilderList() {
+        if (listBuilder_ != null) {
+          return listBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(list_);
+        }
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder addListBuilder() {
+        return getListFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder addListBuilder(
+          int index) {
+        return getListFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .personhood.ChallengeCandidate list = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder> 
+           getListBuilderList() {
+        return getListFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder> 
+          getListFieldBuilder() {
+        if (listBuilder_ == null) {
+          listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidate.Builder, ch.epfl.dedis.lib.proto.Personhood.ChallengeCandidateOrBuilder>(
+                  list_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          list_ = null;
+        }
+        return listBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.ChallengeReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.ChallengeReply)
+    private static final ch.epfl.dedis.lib.proto.Personhood.ChallengeReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.ChallengeReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.ChallengeReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<ChallengeReply>
+        PARSER = new com.google.protobuf.AbstractParser<ChallengeReply>() {
+      @java.lang.Override
+      public ChallengeReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ChallengeReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<ChallengeReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ChallengeReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.ChallengeReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetAdminDarcIDsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.GetAdminDarcIDs)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetAdminDarcIDs returns a slice of adminDarcs that are allowed to delete the
+   * polls and add a party.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.GetAdminDarcIDs}
+   */
+  public  static final class GetAdminDarcIDs extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.GetAdminDarcIDs)
+      GetAdminDarcIDsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAdminDarcIDs.newBuilder() to construct.
+    private GetAdminDarcIDs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAdminDarcIDs() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAdminDarcIDs(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDs_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDs_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.class, ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs other = (ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAdminDarcIDs returns a slice of adminDarcs that are allowed to delete the
+     * polls and add a party.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.GetAdminDarcIDs}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.GetAdminDarcIDs)
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDs_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDs_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.class, ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDs_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs build() {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs result = new ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.GetAdminDarcIDs)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.GetAdminDarcIDs)
+    private static final ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAdminDarcIDs>
+        PARSER = new com.google.protobuf.AbstractParser<GetAdminDarcIDs>() {
+      @java.lang.Override
+      public GetAdminDarcIDs parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAdminDarcIDs(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAdminDarcIDs> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAdminDarcIDs> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDs getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetAdminDarcIDsReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.GetAdminDarcIDsReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getAdmindarcidsList();
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    int getAdmindarcidsCount();
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    com.google.protobuf.ByteString getAdmindarcids(int index);
+  }
+  /**
+   * <pre>
+   * GetAdminDarcIDsReply returns the list of adminDarcs that are allowed to
+   * delete the polls and add a party.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.GetAdminDarcIDsReply}
+   */
+  public  static final class GetAdminDarcIDsReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.GetAdminDarcIDsReply)
+      GetAdminDarcIDsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAdminDarcIDsReply.newBuilder() to construct.
+    private GetAdminDarcIDsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAdminDarcIDsReply() {
+      admindarcids_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAdminDarcIDsReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                admindarcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              admindarcids_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          admindarcids_ = java.util.Collections.unmodifiableList(admindarcids_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDsReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDsReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.class, ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.Builder.class);
+    }
+
+    public static final int ADMINDARCIDS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> admindarcids_;
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getAdmindarcidsList() {
+      return admindarcids_;
+    }
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    public int getAdmindarcidsCount() {
+      return admindarcids_.size();
+    }
+    /**
+     * <code>repeated bytes admindarcids = 1;</code>
+     */
+    public com.google.protobuf.ByteString getAdmindarcids(int index) {
+      return admindarcids_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < admindarcids_.size(); i++) {
+        output.writeBytes(1, admindarcids_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < admindarcids_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(admindarcids_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getAdmindarcidsList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply other = (ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply) obj;
+
+      boolean result = true;
+      result = result && getAdmindarcidsList()
+          .equals(other.getAdmindarcidsList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getAdmindarcidsCount() > 0) {
+        hash = (37 * hash) + ADMINDARCIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getAdmindarcidsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAdminDarcIDsReply returns the list of adminDarcs that are allowed to
+     * delete the polls and add a party.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.GetAdminDarcIDsReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.GetAdminDarcIDsReply)
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDsReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.class, ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        admindarcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_GetAdminDarcIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply build() {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply result = new ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          admindarcids_ = java.util.Collections.unmodifiableList(admindarcids_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.admindarcids_ = admindarcids_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply.getDefaultInstance()) return this;
+        if (!other.admindarcids_.isEmpty()) {
+          if (admindarcids_.isEmpty()) {
+            admindarcids_ = other.admindarcids_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureAdmindarcidsIsMutable();
+            admindarcids_.addAll(other.admindarcids_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> admindarcids_ = java.util.Collections.emptyList();
+      private void ensureAdmindarcidsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          admindarcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>(admindarcids_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getAdmindarcidsList() {
+        return java.util.Collections.unmodifiableList(admindarcids_);
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public int getAdmindarcidsCount() {
+        return admindarcids_.size();
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public com.google.protobuf.ByteString getAdmindarcids(int index) {
+        return admindarcids_.get(index);
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public Builder setAdmindarcids(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdmindarcidsIsMutable();
+        admindarcids_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public Builder addAdmindarcids(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureAdmindarcidsIsMutable();
+        admindarcids_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public Builder addAllAdmindarcids(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureAdmindarcidsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, admindarcids_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes admindarcids = 1;</code>
+       */
+      public Builder clearAdmindarcids() {
+        admindarcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.GetAdminDarcIDsReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.GetAdminDarcIDsReply)
+    private static final ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAdminDarcIDsReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetAdminDarcIDsReply>() {
+      @java.lang.Override
+      public GetAdminDarcIDsReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAdminDarcIDsReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAdminDarcIDsReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAdminDarcIDsReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.GetAdminDarcIDsReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SetAdminDarcIDsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.SetAdminDarcIDs)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getNewadmindarcidsList();
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    int getNewadmindarcidsCount();
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    com.google.protobuf.ByteString getNewadmindarcids(int index);
+
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * SetAdminDarcIDs sets the list of admin darcs.
+   * The signature must be on
+   *   sha256( AdminDarcID[0] | AdminDarcID[1] | ... )
+   * </pre>
+   *
+   * Protobuf type {@code personhood.SetAdminDarcIDs}
+   */
+  public  static final class SetAdminDarcIDs extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.SetAdminDarcIDs)
+      SetAdminDarcIDsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SetAdminDarcIDs.newBuilder() to construct.
+    private SetAdminDarcIDs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SetAdminDarcIDs() {
+      newadmindarcids_ = java.util.Collections.emptyList();
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SetAdminDarcIDs(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                newadmindarcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              newadmindarcids_.add(input.readBytes());
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000001;
+              signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          newadmindarcids_ = java.util.Collections.unmodifiableList(newadmindarcids_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDs_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDs_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.class, ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int NEWADMINDARCIDS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> newadmindarcids_;
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getNewadmindarcidsList() {
+      return newadmindarcids_;
+    }
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    public int getNewadmindarcidsCount() {
+      return newadmindarcids_.size();
+    }
+    /**
+     * <code>repeated bytes newadmindarcids = 1;</code>
+     */
+    public com.google.protobuf.ByteString getNewadmindarcids(int index) {
+      return newadmindarcids_.get(index);
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes signature = 2;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < newadmindarcids_.size(); i++) {
+        output.writeBytes(1, newadmindarcids_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(2, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < newadmindarcids_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(newadmindarcids_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getNewadmindarcidsList().size();
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs other = (ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs) obj;
+
+      boolean result = true;
+      result = result && getNewadmindarcidsList()
+          .equals(other.getNewadmindarcidsList());
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getNewadmindarcidsCount() > 0) {
+        hash = (37 * hash) + NEWADMINDARCIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getNewadmindarcidsList().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SetAdminDarcIDs sets the list of admin darcs.
+     * The signature must be on
+     *   sha256( AdminDarcID[0] | AdminDarcID[1] | ... )
+     * </pre>
+     *
+     * Protobuf type {@code personhood.SetAdminDarcIDs}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.SetAdminDarcIDs)
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDs_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDs_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.class, ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        newadmindarcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDs_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs build() {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs result = new ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          newadmindarcids_ = java.util.Collections.unmodifiableList(newadmindarcids_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.newadmindarcids_ = newadmindarcids_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs.getDefaultInstance()) return this;
+        if (!other.newadmindarcids_.isEmpty()) {
+          if (newadmindarcids_.isEmpty()) {
+            newadmindarcids_ = other.newadmindarcids_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureNewadmindarcidsIsMutable();
+            newadmindarcids_.addAll(other.newadmindarcids_);
+          }
+          onChanged();
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasSignature()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> newadmindarcids_ = java.util.Collections.emptyList();
+      private void ensureNewadmindarcidsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          newadmindarcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>(newadmindarcids_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getNewadmindarcidsList() {
+        return java.util.Collections.unmodifiableList(newadmindarcids_);
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public int getNewadmindarcidsCount() {
+        return newadmindarcids_.size();
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public com.google.protobuf.ByteString getNewadmindarcids(int index) {
+        return newadmindarcids_.get(index);
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public Builder setNewadmindarcids(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureNewadmindarcidsIsMutable();
+        newadmindarcids_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public Builder addNewadmindarcids(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureNewadmindarcidsIsMutable();
+        newadmindarcids_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public Builder addAllNewadmindarcids(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureNewadmindarcidsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, newadmindarcids_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes newadmindarcids = 1;</code>
+       */
+      public Builder clearNewadmindarcids() {
+        newadmindarcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.SetAdminDarcIDs)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.SetAdminDarcIDs)
+    private static final ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SetAdminDarcIDs>
+        PARSER = new com.google.protobuf.AbstractParser<SetAdminDarcIDs>() {
+      @java.lang.Override
+      public SetAdminDarcIDs parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SetAdminDarcIDs(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SetAdminDarcIDs> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SetAdminDarcIDs> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDs getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SetAdminDarcIDsReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:personhood.SetAdminDarcIDsReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
+   * </pre>
+   *
+   * Protobuf type {@code personhood.SetAdminDarcIDsReply}
+   */
+  public  static final class SetAdminDarcIDsReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:personhood.SetAdminDarcIDsReply)
+      SetAdminDarcIDsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SetAdminDarcIDsReply.newBuilder() to construct.
+    private SetAdminDarcIDsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SetAdminDarcIDsReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SetAdminDarcIDsReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDsReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDsReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.class, ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply other = (ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
+     * </pre>
+     *
+     * Protobuf type {@code personhood.SetAdminDarcIDsReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:personhood.SetAdminDarcIDsReply)
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDsReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.class, ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SetAdminDarcIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply build() {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply buildPartial() {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply result = new ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply other) {
+        if (other == ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:personhood.SetAdminDarcIDsReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:personhood.SetAdminDarcIDsReply)
+    private static final ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SetAdminDarcIDsReply>
+        PARSER = new com.google.protobuf.AbstractParser<SetAdminDarcIDsReply>() {
+      @java.lang.Override
+      public SetAdminDarcIDsReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SetAdminDarcIDsReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SetAdminDarcIDsReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SetAdminDarcIDsReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.Personhood.SetAdminDarcIDsReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_PartyList_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_PartyList_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_PartyDelete_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_PartyDelete_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_PartyListResponse_descriptor;
   private static final 
@@ -27106,6 +33934,11 @@ public final class Personhood {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_Poll_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_PollDelete_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_PollDelete_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_personhood_PollList_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -27160,6 +33993,41 @@ public final class Personhood {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_personhood_MeetupResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_Challenge_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_Challenge_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_ChallengeCandidate_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_ChallengeCandidate_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_ChallengeReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_ChallengeReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_GetAdminDarcIDs_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_GetAdminDarcIDs_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_GetAdminDarcIDsReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_GetAdminDarcIDsReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_SetAdminDarcIDs_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_SetAdminDarcIDs_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_personhood_SetAdminDarcIDsReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_personhood_SetAdminDarcIDsReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -27170,71 +34038,88 @@ public final class Personhood {
   static {
     java.lang.String[] descriptorData = {
       "\n\020personhood.proto\022\npersonhood\032\rbyzcoin." +
-      "proto\032\nonet.proto\"E\n\tPartyList\022#\n\010newpar" +
-      "ty\030\001 \001(\0132\021.personhood.Party\022\023\n\013wipeparti" +
-      "es\030\002 \001(\010\"7\n\021PartyListResponse\022\"\n\007parties" +
-      "\030\001 \003(\0132\021.personhood.Party\"L\n\005Party\022\034\n\006ro" +
-      "ster\030\001 \002(\0132\014.onet.Roster\022\021\n\tbyzcoinid\030\002 " +
-      "\002(\014\022\022\n\ninstanceid\030\003 \002(\014\"D\n\013RoPaSciList\022\'" +
-      "\n\nnewropasci\030\001 \001(\0132\023.personhood.RoPaSci\022" +
-      "\014\n\004wipe\030\002 \001(\010\"<\n\023RoPaSciListResponse\022%\n\010" +
-      "ropascis\030\001 \003(\0132\023.personhood.RoPaSci\"/\n\007R" +
-      "oPaSci\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tropasciid\030\002" +
-      " \002(\014\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"\352\001\n\rR" +
-      "oPaSciStruct\022\023\n\013description\030\001 \002(\t\022\034\n\005sta" +
-      "ke\030\002 \002(\0132\r.byzcoin.Coin\022\027\n\017firstplayerha" +
-      "sh\030\003 \002(\014\022\023\n\013firstplayer\030\004 \001(\021\022\024\n\014secondp" +
-      "layer\030\005 \001(\021\022\033\n\023secondplayeraccount\030\006 \001(\014" +
-      "\022\032\n\022firstplayeraccount\030\007 \001(\014\022\024\n\014calypsow" +
-      "rite\030\010 \001(\014\022\023\n\013calypsoread\030\t \001(\014\"?\n\020Crede" +
-      "ntialStruct\022+\n\013credentials\030\001 \003(\0132\026.perso" +
-      "nhood.Credential\"E\n\nCredential\022\014\n\004name\030\001" +
-      " \002(\t\022)\n\nattributes\030\002 \003(\0132\025.personhood.At" +
-      "tribute\"(\n\tAttribute\022\014\n\004name\030\001 \002(\t\022\r\n\005va" +
-      "lue\030\002 \002(\014\"\272\002\n\rSpawnerStruct\022\037\n\010costdarc\030" +
-      "\001 \002(\0132\r.byzcoin.Coin\022\037\n\010costcoin\030\002 \002(\0132\r" +
-      ".byzcoin.Coin\022%\n\016costcredential\030\003 \002(\0132\r." +
-      "byzcoin.Coin\022 \n\tcostparty\030\004 \002(\0132\r.byzcoi" +
-      "n.Coin\022\023\n\013beneficiary\030\005 \002(\014\022\"\n\013costropas" +
-      "ci\030\006 \001(\0132\r.byzcoin.Coin\022!\n\ncostcwrite\030\007 " +
-      "\001(\0132\r.byzcoin.Coin\022 \n\tcostcread\030\010 \001(\0132\r." +
-      "byzcoin.Coin\022 \n\tcostvalue\030\t \001(\0132\r.byzcoi" +
-      "n.Coin\"\370\001\n\016PopPartyStruct\022\r\n\005state\030\001 \002(\021" +
-      "\022\022\n\norganizers\030\002 \002(\021\022\025\n\rfinalizations\030\003 " +
-      "\003(\t\022(\n\013description\030\004 \002(\0132\023.personhood.Po" +
-      "pDesc\022(\n\tattendees\030\005 \002(\0132\025.personhood.At" +
-      "tendees\022\"\n\006miners\030\006 \003(\0132\022.personhood.LRS" +
-      "Tag\022\024\n\014miningreward\030\007 \002(\004\022\020\n\010previous\030\010 " +
-      "\001(\014\022\014\n\004next\030\t \001(\014\"L\n\007PopDesc\022\014\n\004name\030\001 \002" +
-      "(\t\022\017\n\007purpose\030\002 \002(\t\022\020\n\010datetime\030\003 \002(\004\022\020\n" +
-      "\010location\030\004 \002(\t\"]\n\016FinalStatement\022!\n\004des" +
-      "c\030\001 \001(\0132\023.personhood.PopDesc\022(\n\tattendee" +
-      "s\030\002 \002(\0132\025.personhood.Attendees\"\031\n\tAttend" +
-      "ees\022\014\n\004keys\030\001 \003(\014\"\025\n\006LRSTag\022\013\n\003tag\030\001 \002(\014" +
-      "\"\216\001\n\004Poll\022\021\n\tbyzcoinid\030\001 \002(\014\022\'\n\007newpoll\030" +
-      "\002 \001(\0132\026.personhood.PollStruct\022\"\n\004list\030\003 " +
-      "\001(\0132\024.personhood.PollList\022&\n\006answer\030\004 \001(" +
-      "\0132\026.personhood.PollAnswer\"\034\n\010PollList\022\020\n" +
-      "\010partyids\030\001 \003(\014\"9\n\nPollAnswer\022\016\n\006pollid\030" +
-      "\001 \002(\014\022\016\n\006choice\030\002 \002(\021\022\013\n\003lrs\030\003 \002(\014\"\215\001\n\nP" +
-      "ollStruct\022\022\n\npersonhood\030\001 \002(\014\022\016\n\006pollid\030" +
-      "\002 \001(\014\022\r\n\005title\030\003 \002(\t\022\023\n\013description\030\004 \002(" +
-      "\t\022\017\n\007choices\030\005 \003(\t\022&\n\006chosen\030\006 \003(\0132\026.per" +
-      "sonhood.PollChoice\",\n\nPollChoice\022\016\n\006choi" +
-      "ce\030\001 \002(\021\022\016\n\006lrstag\030\002 \002(\014\"5\n\014PollResponse" +
-      "\022%\n\005polls\030\001 \003(\0132\026.personhood.PollStruct\"" +
-      "\016\n\014Capabilities\"D\n\024CapabilitiesResponse\022" +
-      ",\n\014capabilities\030\001 \003(\0132\026.personhood.Capab" +
-      "ility\"/\n\nCapability\022\020\n\010endpoint\030\001 \002(\t\022\017\n" +
-      "\007version\030\002 \002(\014\"\212\001\n\014UserLocation\022\021\n\tpubli" +
-      "ckey\030\001 \002(\014\022\025\n\rcredentialiid\030\002 \001(\014\0220\n\ncre" +
-      "dential\030\003 \001(\0132\034.personhood.CredentialStr" +
-      "uct\022\020\n\010location\030\004 \001(\t\022\014\n\004time\030\005 \002(\022\"F\n\006M" +
-      "eetup\022.\n\014userlocation\030\001 \001(\0132\030.personhood" +
-      ".UserLocation\022\014\n\004wipe\030\002 \001(\010\"9\n\016MeetupRes" +
-      "ponse\022\'\n\005users\030\001 \003(\0132\030.personhood.UserLo" +
-      "cationB%\n\027ch.epfl.dedis.lib.protoB\nPerso" +
-      "nhood"
+      "proto\032\nonet.proto\032\ndarc.proto\"s\n\tPartyLi" +
+      "st\022#\n\010newparty\030\001 \001(\0132\021.personhood.Party\022" +
+      "\023\n\013wipeparties\030\002 \001(\010\022,\n\013partydelete\030\003 \001(" +
+      "\0132\027.personhood.PartyDelete\"S\n\013PartyDelet" +
+      "e\022\017\n\007partyid\030\001 \002(\014\022 \n\010identity\030\002 \002(\0132\016.d" +
+      "arc.Identity\022\021\n\tsignature\030\003 \002(\014\"7\n\021Party" +
+      "ListResponse\022\"\n\007parties\030\001 \003(\0132\021.personho" +
+      "od.Party\"L\n\005Party\022\034\n\006roster\030\001 \002(\0132\014.onet" +
+      ".Roster\022\021\n\tbyzcoinid\030\002 \002(\014\022\022\n\ninstanceid" +
+      "\030\003 \002(\014\"g\n\013RoPaSciList\022\'\n\nnewropasci\030\001 \001(" +
+      "\0132\023.personhood.RoPaSci\022\014\n\004wipe\030\002 \001(\010\022!\n\004" +
+      "lock\030\003 \001(\0132\023.personhood.RoPaSci\"<\n\023RoPaS" +
+      "ciListResponse\022%\n\010ropascis\030\001 \003(\0132\023.perso" +
+      "nhood.RoPaSci\"?\n\007RoPaSci\022\021\n\tbyzcoinid\030\001 " +
+      "\002(\014\022\021\n\tropasciid\030\002 \002(\014\022\016\n\006locked\030\003 \001(\022\"\034" +
+      "\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"\352\001\n\rRoPaSci" +
+      "Struct\022\023\n\013description\030\001 \002(\t\022\034\n\005stake\030\002 \002" +
+      "(\0132\r.byzcoin.Coin\022\027\n\017firstplayerhash\030\003 \002" +
+      "(\014\022\023\n\013firstplayer\030\004 \001(\021\022\024\n\014secondplayer\030" +
+      "\005 \001(\021\022\033\n\023secondplayeraccount\030\006 \001(\014\022\032\n\022fi" +
+      "rstplayeraccount\030\007 \001(\014\022\024\n\014calypsowrite\030\010" +
+      " \001(\014\022\023\n\013calypsoread\030\t \001(\014\"?\n\020CredentialS" +
+      "truct\022+\n\013credentials\030\001 \003(\0132\026.personhood." +
+      "Credential\"E\n\nCredential\022\014\n\004name\030\001 \002(\t\022)" +
+      "\n\nattributes\030\002 \003(\0132\025.personhood.Attribut" +
+      "e\"(\n\tAttribute\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 " +
+      "\002(\014\"\272\002\n\rSpawnerStruct\022\037\n\010costdarc\030\001 \002(\0132" +
+      "\r.byzcoin.Coin\022\037\n\010costcoin\030\002 \002(\0132\r.byzco" +
+      "in.Coin\022%\n\016costcredential\030\003 \002(\0132\r.byzcoi" +
+      "n.Coin\022 \n\tcostparty\030\004 \002(\0132\r.byzcoin.Coin" +
+      "\022\023\n\013beneficiary\030\005 \002(\014\022\"\n\013costropasci\030\006 \001" +
+      "(\0132\r.byzcoin.Coin\022!\n\ncostcwrite\030\007 \001(\0132\r." +
+      "byzcoin.Coin\022 \n\tcostcread\030\010 \001(\0132\r.byzcoi" +
+      "n.Coin\022 \n\tcostvalue\030\t \001(\0132\r.byzcoin.Coin" +
+      "\"\370\001\n\016PopPartyStruct\022\r\n\005state\030\001 \002(\021\022\022\n\nor" +
+      "ganizers\030\002 \002(\021\022\025\n\rfinalizations\030\003 \003(\t\022(\n" +
+      "\013description\030\004 \002(\0132\023.personhood.PopDesc\022" +
+      "(\n\tattendees\030\005 \002(\0132\025.personhood.Attendee" +
+      "s\022\"\n\006miners\030\006 \003(\0132\022.personhood.LRSTag\022\024\n" +
+      "\014miningreward\030\007 \002(\004\022\020\n\010previous\030\010 \001(\014\022\014\n" +
+      "\004next\030\t \001(\014\"L\n\007PopDesc\022\014\n\004name\030\001 \002(\t\022\017\n\007" +
+      "purpose\030\002 \002(\t\022\020\n\010datetime\030\003 \002(\004\022\020\n\010locat" +
+      "ion\030\004 \002(\t\"]\n\016FinalStatement\022!\n\004desc\030\001 \001(" +
+      "\0132\023.personhood.PopDesc\022(\n\tattendees\030\002 \002(" +
+      "\0132\025.personhood.Attendees\"\031\n\tAttendees\022\014\n" +
+      "\004keys\030\001 \003(\014\"\025\n\006LRSTag\022\013\n\003tag\030\001 \002(\014\"\266\001\n\004P" +
+      "oll\022\021\n\tbyzcoinid\030\001 \002(\014\022\'\n\007newpoll\030\002 \001(\0132" +
+      "\026.personhood.PollStruct\022\"\n\004list\030\003 \001(\0132\024." +
+      "personhood.PollList\022&\n\006answer\030\004 \001(\0132\026.pe" +
+      "rsonhood.PollAnswer\022&\n\006delete\030\005 \001(\0132\026.pe" +
+      "rsonhood.PollDelete\"Q\n\nPollDelete\022 \n\010ide" +
+      "ntity\030\001 \002(\0132\016.darc.Identity\022\016\n\006pollid\030\002 " +
+      "\002(\014\022\021\n\tsignature\030\003 \002(\014\"\034\n\010PollList\022\020\n\010pa" +
+      "rtyids\030\001 \003(\014\"J\n\nPollAnswer\022\016\n\006pollid\030\001 \002" +
+      "(\014\022\016\n\006choice\030\002 \002(\021\022\013\n\003lrs\030\003 \002(\014\022\017\n\007party" +
+      "id\030\004 \001(\014\"\215\001\n\nPollStruct\022\022\n\npersonhood\030\001 " +
+      "\002(\014\022\016\n\006pollid\030\002 \001(\014\022\r\n\005title\030\003 \002(\t\022\023\n\013de" +
+      "scription\030\004 \002(\t\022\017\n\007choices\030\005 \003(\t\022&\n\006chos" +
+      "en\030\006 \003(\0132\026.personhood.PollChoice\",\n\nPoll" +
+      "Choice\022\016\n\006choice\030\001 \002(\021\022\016\n\006lrstag\030\002 \002(\014\"5" +
+      "\n\014PollResponse\022%\n\005polls\030\001 \003(\0132\026.personho" +
+      "od.PollStruct\"\016\n\014Capabilities\"D\n\024Capabil" +
+      "itiesResponse\022,\n\014capabilities\030\001 \003(\0132\026.pe" +
+      "rsonhood.Capability\"/\n\nCapability\022\020\n\010end" +
+      "point\030\001 \002(\t\022\017\n\007version\030\002 \002(\014\"\212\001\n\014UserLoc" +
+      "ation\022\021\n\tpublickey\030\001 \002(\014\022\025\n\rcredentialii" +
+      "d\030\002 \001(\014\0220\n\ncredential\030\003 \001(\0132\034.personhood" +
+      ".CredentialStruct\022\020\n\010location\030\004 \001(\t\022\014\n\004t" +
+      "ime\030\005 \002(\022\"F\n\006Meetup\022.\n\014userlocation\030\001 \001(" +
+      "\0132\030.personhood.UserLocation\022\014\n\004wipe\030\002 \001(" +
+      "\010\"9\n\016MeetupResponse\022\'\n\005users\030\001 \003(\0132\030.per" +
+      "sonhood.UserLocation\";\n\tChallenge\022.\n\006upd" +
+      "ate\030\001 \001(\0132\036.personhood.ChallengeCandidat" +
+      "e\"G\n\022ChallengeCandidate\022\022\n\ncredential\030\001 " +
+      "\002(\014\022\r\n\005score\030\002 \002(\021\022\016\n\006signup\030\003 \002(\022\">\n\016Ch" +
+      "allengeReply\022,\n\004list\030\001 \003(\0132\036.personhood." +
+      "ChallengeCandidate\"\021\n\017GetAdminDarcIDs\",\n" +
+      "\024GetAdminDarcIDsReply\022\024\n\014admindarcids\030\001 " +
+      "\003(\014\"=\n\017SetAdminDarcIDs\022\027\n\017newadmindarcid" +
+      "s\030\001 \003(\014\022\021\n\tsignature\030\002 \002(\014\"\026\n\024SetAdminDa" +
+      "rcIDsReplyB%\n\027ch.epfl.dedis.lib.protoB\nP" +
+      "ersonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -27249,183 +34134,239 @@ public final class Personhood {
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor(),
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
+          ch.epfl.dedis.lib.proto.DarcProto.getDescriptor(),
         }, assigner);
     internal_static_personhood_PartyList_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_personhood_PartyList_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PartyList_descriptor,
-        new java.lang.String[] { "Newparty", "Wipeparties", });
-    internal_static_personhood_PartyListResponse_descriptor =
+        new java.lang.String[] { "Newparty", "Wipeparties", "Partydelete", });
+    internal_static_personhood_PartyDelete_descriptor =
       getDescriptor().getMessageTypes().get(1);
+    internal_static_personhood_PartyDelete_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_PartyDelete_descriptor,
+        new java.lang.String[] { "Partyid", "Identity", "Signature", });
+    internal_static_personhood_PartyListResponse_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_personhood_PartyListResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PartyListResponse_descriptor,
         new java.lang.String[] { "Parties", });
     internal_static_personhood_Party_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_personhood_Party_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Party_descriptor,
         new java.lang.String[] { "Roster", "Byzcoinid", "Instanceid", });
     internal_static_personhood_RoPaSciList_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_personhood_RoPaSciList_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_RoPaSciList_descriptor,
-        new java.lang.String[] { "Newropasci", "Wipe", });
+        new java.lang.String[] { "Newropasci", "Wipe", "Lock", });
     internal_static_personhood_RoPaSciListResponse_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_personhood_RoPaSciListResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_RoPaSciListResponse_descriptor,
         new java.lang.String[] { "Ropascis", });
     internal_static_personhood_RoPaSci_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_personhood_RoPaSci_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_RoPaSci_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Ropasciid", });
+        new java.lang.String[] { "Byzcoinid", "Ropasciid", "Locked", });
     internal_static_personhood_StringReply_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_personhood_StringReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_StringReply_descriptor,
         new java.lang.String[] { "Reply", });
     internal_static_personhood_RoPaSciStruct_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_personhood_RoPaSciStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_RoPaSciStruct_descriptor,
         new java.lang.String[] { "Description", "Stake", "Firstplayerhash", "Firstplayer", "Secondplayer", "Secondplayeraccount", "Firstplayeraccount", "Calypsowrite", "Calypsoread", });
     internal_static_personhood_CredentialStruct_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_personhood_CredentialStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_CredentialStruct_descriptor,
         new java.lang.String[] { "Credentials", });
     internal_static_personhood_Credential_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_personhood_Credential_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Credential_descriptor,
         new java.lang.String[] { "Name", "Attributes", });
     internal_static_personhood_Attribute_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_personhood_Attribute_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Attribute_descriptor,
         new java.lang.String[] { "Name", "Value", });
     internal_static_personhood_SpawnerStruct_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_personhood_SpawnerStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_SpawnerStruct_descriptor,
         new java.lang.String[] { "Costdarc", "Costcoin", "Costcredential", "Costparty", "Beneficiary", "Costropasci", "Costcwrite", "Costcread", "Costvalue", });
     internal_static_personhood_PopPartyStruct_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_personhood_PopPartyStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PopPartyStruct_descriptor,
         new java.lang.String[] { "State", "Organizers", "Finalizations", "Description", "Attendees", "Miners", "Miningreward", "Previous", "Next", });
     internal_static_personhood_PopDesc_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_personhood_PopDesc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PopDesc_descriptor,
         new java.lang.String[] { "Name", "Purpose", "Datetime", "Location", });
     internal_static_personhood_FinalStatement_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_personhood_FinalStatement_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_FinalStatement_descriptor,
         new java.lang.String[] { "Desc", "Attendees", });
     internal_static_personhood_Attendees_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_personhood_Attendees_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Attendees_descriptor,
         new java.lang.String[] { "Keys", });
     internal_static_personhood_LRSTag_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_personhood_LRSTag_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_LRSTag_descriptor,
         new java.lang.String[] { "Tag", });
     internal_static_personhood_Poll_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_personhood_Poll_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Poll_descriptor,
-        new java.lang.String[] { "Byzcoinid", "Newpoll", "List", "Answer", });
+        new java.lang.String[] { "Byzcoinid", "Newpoll", "List", "Answer", "Delete", });
+    internal_static_personhood_PollDelete_descriptor =
+      getDescriptor().getMessageTypes().get(19);
+    internal_static_personhood_PollDelete_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_PollDelete_descriptor,
+        new java.lang.String[] { "Identity", "Pollid", "Signature", });
     internal_static_personhood_PollList_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_personhood_PollList_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PollList_descriptor,
         new java.lang.String[] { "Partyids", });
     internal_static_personhood_PollAnswer_descriptor =
-      getDescriptor().getMessageTypes().get(19);
+      getDescriptor().getMessageTypes().get(21);
     internal_static_personhood_PollAnswer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PollAnswer_descriptor,
-        new java.lang.String[] { "Pollid", "Choice", "Lrs", });
+        new java.lang.String[] { "Pollid", "Choice", "Lrs", "Partyid", });
     internal_static_personhood_PollStruct_descriptor =
-      getDescriptor().getMessageTypes().get(20);
+      getDescriptor().getMessageTypes().get(22);
     internal_static_personhood_PollStruct_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PollStruct_descriptor,
         new java.lang.String[] { "Personhood", "Pollid", "Title", "Description", "Choices", "Chosen", });
     internal_static_personhood_PollChoice_descriptor =
-      getDescriptor().getMessageTypes().get(21);
+      getDescriptor().getMessageTypes().get(23);
     internal_static_personhood_PollChoice_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PollChoice_descriptor,
         new java.lang.String[] { "Choice", "Lrstag", });
     internal_static_personhood_PollResponse_descriptor =
-      getDescriptor().getMessageTypes().get(22);
+      getDescriptor().getMessageTypes().get(24);
     internal_static_personhood_PollResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_PollResponse_descriptor,
         new java.lang.String[] { "Polls", });
     internal_static_personhood_Capabilities_descriptor =
-      getDescriptor().getMessageTypes().get(23);
+      getDescriptor().getMessageTypes().get(25);
     internal_static_personhood_Capabilities_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Capabilities_descriptor,
         new java.lang.String[] { });
     internal_static_personhood_CapabilitiesResponse_descriptor =
-      getDescriptor().getMessageTypes().get(24);
+      getDescriptor().getMessageTypes().get(26);
     internal_static_personhood_CapabilitiesResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_CapabilitiesResponse_descriptor,
         new java.lang.String[] { "Capabilities", });
     internal_static_personhood_Capability_descriptor =
-      getDescriptor().getMessageTypes().get(25);
+      getDescriptor().getMessageTypes().get(27);
     internal_static_personhood_Capability_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Capability_descriptor,
         new java.lang.String[] { "Endpoint", "Version", });
     internal_static_personhood_UserLocation_descriptor =
-      getDescriptor().getMessageTypes().get(26);
+      getDescriptor().getMessageTypes().get(28);
     internal_static_personhood_UserLocation_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_UserLocation_descriptor,
         new java.lang.String[] { "Publickey", "Credentialiid", "Credential", "Location", "Time", });
     internal_static_personhood_Meetup_descriptor =
-      getDescriptor().getMessageTypes().get(27);
+      getDescriptor().getMessageTypes().get(29);
     internal_static_personhood_Meetup_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Meetup_descriptor,
         new java.lang.String[] { "Userlocation", "Wipe", });
     internal_static_personhood_MeetupResponse_descriptor =
-      getDescriptor().getMessageTypes().get(28);
+      getDescriptor().getMessageTypes().get(30);
     internal_static_personhood_MeetupResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_MeetupResponse_descriptor,
         new java.lang.String[] { "Users", });
+    internal_static_personhood_Challenge_descriptor =
+      getDescriptor().getMessageTypes().get(31);
+    internal_static_personhood_Challenge_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_Challenge_descriptor,
+        new java.lang.String[] { "Update", });
+    internal_static_personhood_ChallengeCandidate_descriptor =
+      getDescriptor().getMessageTypes().get(32);
+    internal_static_personhood_ChallengeCandidate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_ChallengeCandidate_descriptor,
+        new java.lang.String[] { "Credential", "Score", "Signup", });
+    internal_static_personhood_ChallengeReply_descriptor =
+      getDescriptor().getMessageTypes().get(33);
+    internal_static_personhood_ChallengeReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_ChallengeReply_descriptor,
+        new java.lang.String[] { "List", });
+    internal_static_personhood_GetAdminDarcIDs_descriptor =
+      getDescriptor().getMessageTypes().get(34);
+    internal_static_personhood_GetAdminDarcIDs_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_GetAdminDarcIDs_descriptor,
+        new java.lang.String[] { });
+    internal_static_personhood_GetAdminDarcIDsReply_descriptor =
+      getDescriptor().getMessageTypes().get(35);
+    internal_static_personhood_GetAdminDarcIDsReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_GetAdminDarcIDsReply_descriptor,
+        new java.lang.String[] { "Admindarcids", });
+    internal_static_personhood_SetAdminDarcIDs_descriptor =
+      getDescriptor().getMessageTypes().get(36);
+    internal_static_personhood_SetAdminDarcIDs_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_SetAdminDarcIDs_descriptor,
+        new java.lang.String[] { "Newadmindarcids", "Signature", });
+    internal_static_personhood_SetAdminDarcIDsReply_descriptor =
+      getDescriptor().getMessageTypes().get(37);
+    internal_static_personhood_SetAdminDarcIDsReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_personhood_SetAdminDarcIDsReply_descriptor,
+        new java.lang.String[] { });
     ch.epfl.dedis.lib.proto.ByzCoinProto.getDescriptor();
     ch.epfl.dedis.lib.proto.OnetProto.getDescriptor();
+    ch.epfl.dedis.lib.proto.DarcProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

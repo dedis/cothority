@@ -87,6 +87,9 @@ toc() {
         level="$(echo "$line" | $SED -E 's/^(#+).*/\1/; s/#/  /g; s/^  //')"
         title="$(echo "$line" | $SED -E 's/^#+ //')"
         anchor="$(echo "$title" | tr '[:upper:] ' '[:lower:]-' | tr -d "$INVALID_CHARS")"
+        # removing emojii from anchors
+        # found in https://apps.timwhitlock.info/emoji/tables/unicode
+        anchor="$(echo -e "$anchor" | $SED -E 's/[😁-🙏✂-➰🚀-🛀Ⓜ-🉑©-🗿😀-😶🚁-🛅🌍-🕧]//g')"
 
         # Check that new lines introduced are not duplicated. If so, introduce a
         # number at the end copying doctoc behavior.
@@ -132,10 +135,9 @@ insert() {
     # Check if there is a block that begins with $start_toc and ends with
     # $end_toc. We ensure there is a correct and single pair of opening/closing
     # delimiters.
-    awk -v start="^$start_toc$" -v end="^$end_toc$" 'BEGIN { status=1; start_c=0; end_c=0 }
+    S=$(awk -v start="^$start_toc$" -v end="^$end_toc$" 'BEGIN { status=-1; start_c=0; end_c=0 }
         { if ($0 ~ start && start_c > 0) { 
-            print "ERROR: found more than 1 opening toc block. Please fix that"; 
-            status=2; exit
+            start_c+=1; status=10; exit
           }
           if ($0 ~ start) {
               start_c+=1
@@ -144,18 +146,39 @@ insert() {
               end_c+=1; status=0 
           }
           if (start_c == 0 && $0 ~ end) {
-              print "ERROR: found a closing block before an opening one. Please fix that"; 
-              status=2; exit
+              status=11; exit
           }
           if (end_c > 1 ) {
-              print "ERROR: found more than 1 closing block. Please fix that"; 
-              status=2; exit
+              status=12; exit
           }
-        } END {exit status }' $1
-    check_status=$?
-    # If the exit status is 2, that means something went bad and we must abort.
-    [ $check_status -eq 2 ] && exit 1
-    if [ $check_status -eq 0 ]; then
+        } END { 
+            if (start_c == 1 && end_c == 0) {
+                status=13
+            }
+            print status }' $1)
+    
+    # If the status S is >=10, that means something went bad and we must abort.
+    if [ $S -ge 10 ]; then 
+        echo "got an error while checking the opening/closing tags:"
+
+        case $S in
+            10)      
+                echo " - found more than 1 opening tag. Please fix that"
+                ;;
+            11)      
+                echo " - found a closing tag before an opening one. Please fix that"
+                ;;
+            12)
+                echo " - found more than 1 closing tag. Please fix that"
+                ;; 
+            13)
+                echo " - found only an opening tag. Please fix that"
+                ;; 
+        esac
+        exit 1
+    fi
+
+    if [ $S -eq 0 ]; then
         # ":a" creates label 'a'
         # "N" append the next line to the pattern space
         # "$!" if not the last line

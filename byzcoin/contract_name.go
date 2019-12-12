@@ -3,7 +3,6 @@ package byzcoin
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // ContractNamingID is the ID of the naming contract. This contract is a
@@ -60,7 +60,7 @@ func contractNamingFromBytes(in []byte) (Contract, error) {
 	err := protobuf.DecodeWithConstructors(in, &c.ContractNamingBody, network.DefaultConstructors(cothority.Suite))
 
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("decoding: %v", err)
 	}
 	return c, nil
 }
@@ -68,11 +68,11 @@ func contractNamingFromBytes(in []byte) (Contract, error) {
 func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) error {
 	pr, err := rst.GetProof(NamingInstanceID.Slice())
 	if err != nil {
-		return errors.New("failed to get proof of NamingInstanceID: " + err.Error())
+		return xerrors.Errorf("failed to get proof of NamingInstanceID: %v", err)
 	}
 	ok, err := pr.Exists(NamingInstanceID.Slice())
 	if err != nil {
-		return errors.New("failed to see if proof exists: " + err.Error())
+		return xerrors.Errorf("failed to see if proof exists: %v", err)
 	}
 
 	// The naming contract does not exist yet, so we need to create a
@@ -89,15 +89,15 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 
 	// Check the number of signers match with the number of signatures.
 	if len(inst.SignerIdentities) != len(inst.Signatures) {
-		return errors.New("lengh of identities does not match the length of signatures")
+		return xerrors.New("lengh of identities does not match the length of signatures")
 	}
 	if len(inst.Signatures) == 0 {
-		return errors.New("no signatures - nothing to verify")
+		return xerrors.New("no signatures - nothing to verify")
 	}
 
 	// Check the signature counters.
 	if err := verifySignerCounters(rst, inst.SignerCounter, inst.SignerIdentities); err != nil {
-		return errors.New("failed to verify the counters: " + err.Error())
+		return xerrors.Errorf("failed to verify the counters: %v", err)
 	}
 
 	// Get the darc, we have to do it differently than the normal
@@ -105,26 +105,26 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 	// that guards the instance ID in the instruction.
 	if inst.Invoke == nil {
 		// TODO this needs to be changed when we add delete
-		return errors.New("only invoke is supported")
+		return xerrors.New("only invoke is supported")
 	}
 	value := inst.Invoke.Args.Search("instanceID")
 	if value == nil {
-		return errors.New("argument instanceID is missing")
+		return xerrors.New("argument instanceID is missing")
 	}
 	_, _, cID, dID, err := rst.GetValues(value)
 	if err != nil {
-		return fmt.Errorf("failed to get the rst values of %s: %s", value, err.Error())
+		return xerrors.Errorf("failed to get the rst values of %s: %v", value, err)
 	}
 	d, err := LoadDarcFromTrie(rst, dID)
 	if err != nil {
-		return errors.New("failed to load darc from tries: " + err.Error())
+		return xerrors.Errorf("failed to load darc from tries: %v", err)
 	}
 
 	// Check that the darc has the right permission to allow naming.
 	action := "_name:" + cID
 	ex := d.Rules.Get(darc.Action(action))
 	if len(ex) == 0 {
-		return fmt.Errorf("action '%v' does not exist", action)
+		return xerrors.Errorf("action '%v' does not exist", action)
 	}
 
 	// Save the identities that provide good signatures.
@@ -135,7 +135,7 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		}
 	}
 	if len(goodIdentities) == 0 {
-		return errors.New("all signatures failed to verify")
+		return xerrors.New("all signatures failed to verify")
 	}
 
 	// Evaluate the expression using the good signatures.
@@ -153,7 +153,8 @@ func (c *contractNaming) VerifyInstruction(rst ReadOnlyStateTrie, inst Instructi
 		}
 		return d
 	}
-	return darc.EvalExpr(ex, getDarc, goodIdentities...)
+	err = darc.EvalExpr(ex, getDarc, goodIdentities...)
+	return cothority.ErrorOrNil(err, "darc evaluation")
 }
 
 func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
@@ -162,7 +163,7 @@ func (c *contractNaming) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []
 	// For the very first pointer, we use the default InstanceID value.
 	buf, err = protobuf.Encode(&ContractNamingBody{Latest: InstanceID{}})
 	if err != nil {
-		return
+		return nil, nil, xerrors.Errorf("encoding: %v", err)
 	}
 	sc = []StateChange{
 		// We do not need a darc ID because the verification works
@@ -185,23 +186,20 @@ type contractNamingEntry struct {
 	Removed bool
 }
 
-func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
-	cout = coins
-
+func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	switch inst.Invoke.Command {
 	case "add":
 		iID := inst.Invoke.Args.Search("instanceID")
 		var dID darc.ID
-		_, _, _, dID, err = rst.GetValues(iID)
+		_, _, _, dID, err := rst.GetValues(iID)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 
 		// Construct the key.
 		name := inst.Invoke.Args.Search("name")
 		if len(name) == 0 {
-			err = errors.New("the name cannot be empty")
-			return
+			return nil, nil, xerrors.New("the name cannot be empty")
 		}
 		h := sha256.New()
 		h.Write(dID)
@@ -212,18 +210,16 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		// Check that we are not overwriting.
 		var oldEntryBuf []byte
 		oldEntryBuf, _, _, _, err = rst.GetValues(key.Slice())
-		if err != errKeyNotSet {
+		if !xerrors.Is(err, errKeyNotSet) {
 			oldEntry := contractNamingEntry{}
 			err = protobuf.Decode(oldEntryBuf, &oldEntry)
 			if err != nil {
-				return
+				return nil, nil, xerrors.Errorf("decoding: %v", err)
 			}
 			if oldEntry.Removed {
-				err = errors.New("cannot create a name that existed before")
-				return
+				return nil, nil, xerrors.New("cannot create a name that existed before")
 			}
-			err = errors.New("this name already exists")
-			return
+			return nil, nil, xerrors.New("this name already exists")
 		}
 
 		// Construct the value.
@@ -234,7 +230,7 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var entryBuf []byte
 		entryBuf, err = protobuf.Encode(&entry)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("encoding: %v", err)
 		}
 
 		// Create the new naming contract buffer where the pointer to
@@ -242,28 +238,27 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var contractBuf []byte
 		contractBuf, err = protobuf.Encode(&ContractNamingBody{Latest: key})
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("encoding: %v", err)
 		}
 
 		// Create the state change.
-		sc = []StateChange{
+		sc := StateChanges{
 			NewStateChange(Create, key, "", entryBuf, nil),
 			NewStateChange(Update, NamingInstanceID, ContractNamingID, contractBuf, nil),
 		}
-		return
+		return sc, coins, nil
 	case "remove":
 		iID := inst.Invoke.Args.Search("instanceID")
 		var dID darc.ID
-		_, _, _, dID, err = rst.GetValues(iID)
+		_, _, _, dID, err := rst.GetValues(iID)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 
 		// Construct the key.
 		name := inst.Invoke.Args.Search("name")
 		if len(name) == 0 {
-			err = errors.New("the name cannot be empty")
-			return
+			return nil, nil, xerrors.New("the name cannot be empty")
 		}
 		h := sha256.New()
 		h.Write(dID)
@@ -275,16 +270,15 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var oldEntryBuf []byte
 		oldEntryBuf, _, _, _, err = rst.GetValues(key.Slice())
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("reading trie: %v", err)
 		}
 		oldEntry := contractNamingEntry{}
 		err = protobuf.Decode(oldEntryBuf, &oldEntry)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("decoding: %v", err)
 		}
 		if oldEntry.Removed {
-			err = errors.New("this entry is already removed")
-			return
+			return nil, nil, xerrors.New("this entry is already removed")
 		}
 
 		// Construct the value.
@@ -292,15 +286,14 @@ func (c *contractNaming) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins [
 		var entryBuf []byte
 		entryBuf, err = protobuf.Encode(&oldEntry)
 		if err != nil {
-			return
+			return nil, nil, xerrors.Errorf("encoding: %v", err)
 		}
 
-		sc = []StateChange{
+		sc := StateChanges{
 			NewStateChange(Update, key, "", entryBuf, nil),
 		}
-		return
+		return sc, coins, nil
 	default:
-		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
-		return
+		return nil, nil, xerrors.New("invalid invoke command: " + inst.Invoke.Command)
 	}
 }

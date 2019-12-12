@@ -1,10 +1,16 @@
 import { Message, Properties } from "protobufjs/light";
+
+import { LongTermSecret } from "../calypso";
+
+import { curve } from "@dedis/kyber";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";
 import CoinInstance, { Coin } from "../byzcoin/contracts/coin-instance";
 import Instance, { InstanceID } from "../byzcoin/instance";
 import Signer from "../darc/signer";
 import { EMPTY_BUFFER, registerMessage } from "../protobuf";
+
+const curve25519 = curve.newCurve("edwards25519");
 
 export default class RoPaSciInstance extends Instance {
 
@@ -31,7 +37,16 @@ export default class RoPaSciInstance extends Instance {
     get adversaryChoice(): number {
         return this.struct.secondPlayer;
     }
+
     static readonly contractID = "ropasci";
+
+    static fromObject(rpc: ByzCoinRPC, obj: any) {
+        const inst = Instance.fromBytes(obj.instance);
+        const rps = new RoPaSciInstance(rpc, inst);
+        rps.fillUp = obj.fillUp;
+        rps.firstMove = obj.firstMove;
+        return rps;
+    }
 
     /**
      * Fetch the proof for the given instance and create a
@@ -47,10 +62,9 @@ export default class RoPaSciInstance extends Instance {
         Promise<RoPaSciInstance> {
         return new RoPaSciInstance(bc, await Instance.fromByzcoin(bc, iid, waitMatch, interval));
     }
-
     struct: RoPaSciStruct;
-    private fillUp: Buffer;
-    private firstMove: number;
+    private fillUp: Buffer | undefined;
+    private firstMove: number | undefined;
 
     constructor(private rpc: ByzCoinRPC, inst: Instance) {
         super(inst);
@@ -75,7 +89,7 @@ export default class RoPaSciInstance extends Instance {
     /**
      * Returns the firstMove and the fillUp values.
      */
-    getChoice(): [number, Buffer] {
+    getChoice(): [number, Buffer | undefined] {
         return [this.firstMove, this.fillUp ? Buffer.from(this.fillUp) : undefined];
     }
 
@@ -89,6 +103,25 @@ export default class RoPaSciInstance extends Instance {
     }
 
     /**
+     * returns true if there is a CalypsoWrite instance stored.
+     */
+    isCalypso(): boolean {
+        return !this.struct.calypsoWrite.equals(Buffer.alloc(32));
+    }
+
+    /**
+     * ourGame returns if this game belongs to the given coin.
+     * @param coinID
+     */
+    ourGame(coinID: InstanceID): boolean {
+        const player1 = this.struct.firstPlayerAccount;
+        if (player1 !== undefined && !player1.equals(Buffer.alloc(32))) {
+            return player1.equals(coinID);
+        }
+        return this.getChoice()[1] !== undefined;
+    }
+
+    /**
      * Play the adversary move
      *
      * @param coin      The CoinInstance of the second player
@@ -96,12 +129,25 @@ export default class RoPaSciInstance extends Instance {
      * @param choice    The choice of the second player
      * @returns a promise that resolves on success, or rejects with the error
      */
-    async second(coin: CoinInstance, signer: Signer, choice: number): Promise<void> {
+    async second(coin: CoinInstance, signer: Signer, choice: number, lts?: LongTermSecret): Promise<void> {
         if (!coin.name.equals(this.struct.stake.name)) {
             throw new Error("not correct coin-type for player 2");
         }
         if (coin.value.lessThan(this.struct.stake.value)) {
             throw new Error("don't have enough coins to match stake");
+        }
+
+        const args = [
+            new Argument({name: "account", value: coin.id}),
+            new Argument({name: "choice", value: Buffer.from([choice % 3])}),
+        ];
+        const priv = curve25519.scalar().pick();
+        const pub = curve25519.point().mul(priv);
+        if (this.isCalypso()) {
+            if (lts === undefined) {
+                throw new Error("need LTS for calypso-ropascis");
+            }
+            args.push(new Argument({name: "public", value: pub.marshalBinary()}));
         }
 
         const ctx = ClientTransaction.make(
@@ -121,15 +167,22 @@ export default class RoPaSciInstance extends Instance {
                 this.id,
                 RoPaSciInstance.contractID,
                 "second",
-                [
-                    new Argument({name: "account", value: coin.id}),
-                    new Argument({name: "choice", value: Buffer.from([choice % 3])}),
-                ],
+                args,
             ),
         );
         await ctx.updateCountersAndSign(this.rpc, [[signer], []]);
 
         await this.rpc.sendTransactionAndWait(ctx);
+        await this.update();
+        if (this.isCalypso()) {
+            const dreply = await lts.reencryptKey(await this.rpc.getProof(this.struct.calypsoWrite),
+                await this.rpc.getProof(this.struct.calypsoRead));
+            const preHash = await dreply.decrypt(priv);
+            this.firstMove = preHash[0];
+            this.fillUp = Buffer.allocUnsafe(31);
+            preHash.slice(1).copy(this.fillUp);
+            await this.confirm(coin);
+        }
     }
 
     /**
@@ -144,7 +197,7 @@ export default class RoPaSciInstance extends Instance {
             throw new Error("not correct coin-type for player 1");
         }
 
-        const preHash = Buffer.alloc(32, 0);
+        const preHash = Buffer.alloc(this.fillUp.length + 1, 0);
         preHash[0] = this.firstMove % 3;
         this.fillUp.copy(preHash, 1);
         const ctx = ClientTransaction.make(this.rpc.getProtocolVersion(), Instruction.createInvoke(
@@ -177,12 +230,21 @@ export default class RoPaSciInstance extends Instance {
         this.struct = RoPaSciStruct.decode(this.data);
         return this;
     }
+
+    toObject(): any {
+        return{
+            fillUp: this.fillUp,
+            firstMove: this.firstMove,
+            instance: this.toBytes(),
+        };
+    }
 }
 
 /**
  * Data hold by a rock-paper-scissors instance
  */
 export class RoPaSciStruct extends Message<RoPaSciStruct> {
+
     /**
      * @see README#Message classes
      */
@@ -196,6 +258,9 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
     readonly firstPlayer: number;
     readonly secondPlayer: number;
     readonly secondPlayerAccount: Buffer;
+    readonly firstPlayerAccount: Buffer | undefined;
+    readonly calypsoWrite: Buffer;
+    readonly calypsoRead: Buffer;
 
     constructor(props?: Properties<RoPaSciStruct>) {
         super(props);
@@ -236,6 +301,33 @@ export class RoPaSciStruct extends Message<RoPaSciStruct> {
             },
             set(value: Buffer) {
                 this.secondPlayerAccount = value;
+            },
+        });
+
+        Object.defineProperty(this, "firstplayeraccount", {
+            get(): Buffer {
+                return this.firstPlayerAccount;
+            },
+            set(value: Buffer) {
+                this.firstPlayerAccount = value;
+            },
+        });
+
+        Object.defineProperty(this, "calypsowrite", {
+            get(): Buffer {
+                return this.calypsoWrite;
+            },
+            set(value: Buffer) {
+                this.calypsoWrite = value;
+            },
+        });
+
+        Object.defineProperty(this, "calypsoread", {
+            get(): Buffer {
+                return this.calypsoRead;
+            },
+            set(value: Buffer) {
+                this.calypsoRead = value;
             },
         });
     }

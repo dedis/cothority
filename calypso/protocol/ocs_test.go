@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -16,6 +15,7 @@ import (
 	"go.dedis.ch/kyber/v3/util/random"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 var tSuite = cothority.Suite
@@ -165,7 +165,7 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 	case NameOCS:
 		pi, err := NewOCS(tn)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("creating new OCS instance: %v", err)
 		}
 		ocs := pi.(*OCS)
 		ocs.Shared = s.Shared
@@ -174,7 +174,7 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 		}
 		return ocs, nil
 	default:
-		return nil, errors.New("unknown protocol for this service")
+		return nil, xerrors.New("unknown protocol for this service")
 	}
 }
 
@@ -249,7 +249,7 @@ func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber
 		keyPart, err := keyPointHat.Data()
 		log.Lvl3("keyPart:", keyPart)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("getting data from keypoint: %v", err)
 		}
 		key = append(key, keyPart...)
 	}

@@ -2,9 +2,13 @@ package byzcoin
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"time"
 
+	"go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
+
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/kyber/v3/pairing"
 
 	"go.dedis.ch/cothority/v3/skipchain"
@@ -14,11 +18,11 @@ import (
 )
 
 // BlockFetcherFunc is a function that takes the roster and the block ID as parameter
-// and return the block or an error
-type BlockFetcherFunc func(roster *onet.Roster, sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
+// and returns the block or an error
+type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
-func replayError(sb *skipchain.SkipBlock, msg string) error {
-	return fmt.Errorf("replay failed in block at index %d with message: %s", sb.Index, msg)
+func replayError(sb *skipchain.SkipBlock, err error) error {
+	return cothority.ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
 }
 
 // ReplayState builds the state changes from the genesis of the given skipchain ID until
@@ -26,93 +30,144 @@ func replayError(sb *skipchain.SkipBlock, msg string) error {
 // If a client wants to replay the states until the block at index x, the callback function
 // must be implemented to return nil when the next block has the index x.
 func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
-	sb, err := cb(ro, id)
-	if err != nil {
-		return nil, fmt.Errorf("fail to get the first block: %s", err.Error())
-	}
+	return s.ReplayStateCont(id, cb)
+}
 
-	if sb.Index != 0 {
-		// It could be possible to start from a non-genesis block but you need to download
-		// the state trie first from a conode in addition to the block
-		return nil, fmt.Errorf("must start from genesis block but found index %d", sb.Index)
+var replayTrie = "replayTrie"
+
+// ReplayStateDB creates a stateTrie tied to the boltdb and the bucket. Every
+// change to the statetrie will be reflected in the db, allowing for saving
+// and resuming replays.
+func (s *Service) ReplayStateDB(db *bbolt.DB, bucket []byte,
+	genesis *skipchain.SkipBlock) (int, error) {
+	if len(s.stateTries) == 0 {
+		s.stateTries = make(map[string]*stateTrie)
+	}
+	var st *stateTrie
+	if genesis == nil {
+		var err error
+		st, err = loadStateTrie(db, bucket)
+		if err != nil {
+			return 0, xerrors.Errorf("couldn't load state trie: %+v", err)
+		}
+	} else {
+		var dBody DataBody
+		err := protobuf.Decode(genesis.Payload, &dBody)
+		if err != nil {
+			return 0, xerrors.Errorf("couldn't decode payload: %+v", err)
+		}
+		nonce, err := loadNonceFromTxs(dBody.TxResults)
+		if err != nil {
+			return 0, xerrors.Errorf("couldn't get nonce: %+v", err)
+		}
+		st, err = newStateTrie(db, bucket, nonce)
+		if err != nil {
+			return 0, xerrors.Errorf("couldn't get new state trie: %+v", err)
+		}
+	}
+	s.stateTries[replayTrie] = st
+	return st.GetIndex(), nil
+}
+
+// ReplayStateCont builds the state changes from the genesis of the given
+// skipchain ID until the callback returns nil or a block without forward
+// links.
+// If a client wants to replay the states until the block at index x, the
+// callback function must be implemented to return nil when the next block has
+// the index x.
+func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
+	sb, err := cb(id)
+	if err != nil {
+		return nil, xerrors.Errorf("fail to get the first block: %v", err)
 	}
 
 	var st *stateTrie
-	roster := onet.NewRoster(ro.List)
-	if roster == nil {
-		return nil, errors.New("not enough valid server identities to make a roster")
+	if len(s.stateTries) > 0 {
+		st = s.stateTries[replayTrie]
+	}
+	if st == nil {
+		if sb.Index != 0 {
+			// It could be possible to start from a non-genesis block but you need to download
+			// the state trie first from a conode in addition to the block
+			return nil, xerrors.Errorf("must start from genesis block but found index %d", sb.Index)
+		}
+	} else if st.GetIndex()+1 != sb.Index {
+		return nil, xerrors.Errorf("got a skipblock with index %d for trie with"+
+			" index %d", sb.Index, st.GetIndex()+1)
 	}
 
 	for sb != nil {
 		log.Infof("Replaying block at index %d", sb.Index)
 
-		// As the roster evolves along the chain, it may happen that a roster
-		// is completly offline and then we keep learning which conode happened
-		// to participate so that we can try to ask for the block even if the
-		// most up-to-date roster is offline.
-		roster = roster.Concat(sb.Roster.List...)
-
 		if sb.Payload != nil {
 			var dBody DataBody
 			err := protobuf.Decode(sb.Payload, &dBody)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, err)
 			}
 			var dHead DataHeader
 			err = protobuf.Decode(sb.Data, &dHead)
 			if err != nil {
-				return nil, replayError(sb, err.Error())
+				return nil, replayError(sb, err)
 			}
 
 			dBody.TxResults.SetVersion(dHead.Version)
 
 			if !bytes.Equal(dHead.ClientTransactionHash, dBody.TxResults.Hash()) {
-				return nil, replayError(sb, "client transaction hash does not match")
+				return nil, replayError(sb, xerrors.New("client transaction hash does not match"))
 			}
 
-			if sb.Index == 0 {
+			if sb.Index == 0 && st == nil {
 				nonce, err := loadNonceFromTxs(dBody.TxResults)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, err)
 				}
 				st, err = newMemStateTrie(nonce)
 				if err != nil {
-					return nil, replayError(sb, err.Error())
+					return nil, replayError(sb, err)
 				}
 			}
 
 			sst := st.MakeStagingStateTrie()
 
+			var scs StateChanges
+			txAccepted := 0
 			for _, tx := range dBody.TxResults {
 				if tx.Accepted {
-					var scs StateChanges
-					scs, sst, err = s.processOneTx(sst, tx.ClientTransaction, id)
+					txAccepted++
+					var scsTmp StateChanges
+					scsTmp, sst, err = s.processOneTx(sst, tx.ClientTransaction,
+						id)
 					if err != nil {
-						return nil, replayError(sb, err.Error())
+						return nil, replayError(sb, err)
 					}
 
-					err = st.StoreAll(scs, sb.Index, dHead.Version)
-					if err != nil {
-						return nil, replayError(sb, err.Error())
+					scs = append(scs, scsTmp...)
+				} else {
+					_, _, err = s.processOneTx(sst, tx.ClientTransaction, id)
+					if err == nil {
+						return nil, replayError(sb, xerrors.New("refused transaction passes"))
 					}
 				}
 			}
 
 			if !bytes.Equal(dHead.TrieRoot, sst.GetRoot()) {
-				log.Lvl1("Failing block:", sb.Index)
+				log.Infof("Failing block-index: %d - block-version: %d",
+					sb.Index, dHead.Version)
 				var body DataBody
 				errDecode := protobuf.Decode(sb.Payload, &body)
 				if errDecode != nil {
 					log.Error("couldn't decode body:", errDecode)
 				} else {
 					for i, tx := range body.TxResults {
-						log.Lvlf1("Transaction %d: %t", i, tx.Accepted)
+						log.Infof("Transaction %d: %t", i, tx.Accepted)
 						for j, ct := range tx.ClientTransaction.Instructions {
-							log.Lvlf1("Instruction %d: %s", j, ct)
+							log.Infof("Instruction %d: %s", j, ct)
 						}
 					}
 				}
-				return nil, replayError(sb, "merkle tree root doesn't match with trie root")
+				err = xerrors.New("merkle tree root doesn't match with trie root")
+				return nil, replayError(sb, err)
 			}
 
 			log.Lvl2("Checking links for block", sb.Index)
@@ -126,17 +181,25 @@ func (s *Service) ReplayState(id skipchain.SkipBlockID, ro *onet.Roster, cb Bloc
 				err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
 				if err != nil {
 					log.Errorf("Found error in forward-link: '%s' - #%d: %+v", err, j, fl)
-					return nil, err
+					return nil, xerrors.Errorf("invalid forward-link: %v", err)
 				}
 			}
+
+			err = st.StoreAll(scs, sb.Index, dHead.Version)
+			if err != nil {
+				return nil, replayError(sb, err)
+			}
+			t := time.Unix(dHead.Timestamp/1e9, 0)
+			log.Infof("Got correct block from %s with %d/%d txs",
+				t.String(), len(dBody.TxResults), txAccepted)
 		}
 
 		if len(sb.ForwardLink) > 0 {
 			// The level 0 forward link must be used as we need to rebuild the global
 			// states for each block.
-			sb, err = cb(roster, sb.ForwardLink[0].To)
+			sb, err = cb(sb.ForwardLink[0].To)
 			if err != nil {
-				return nil, fmt.Errorf("replay failed to get the next block: %s", err.Error())
+				return nil, xerrors.Errorf("replay failed to get the next block: %v", err)
 			}
 		} else {
 			sb = nil

@@ -52,7 +52,7 @@ async function createInstance(
     await rpc.sendTransactionAndWait(ctx);
 
     const iid = ctx.instructions[1].deriveId();
-    const instance = await RoPaSciInstance.fromByzcoin(rpc, iid);
+    const instance = await RoPaSciInstance.fromByzcoin(rpc, iid, 1);
     instance.setChoice(1, fillup);
 
     return instance;

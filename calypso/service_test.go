@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -45,7 +47,6 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 	nodes := 4
 	s := newTSWithExtras(t, nodes, nodes)
 	defer s.closeAll(t)
-	require.NoError(t, s.cl.UseNode(0))
 	require.NotNil(t, s.ltsReply.ByzCoinID)
 	require.NotNil(t, s.ltsReply.InstanceID)
 	require.NotNil(t, s.ltsReply.X)
@@ -153,7 +154,6 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			}
 			s := newTSWithExtras(t, nodes, 1)
 			defer s.closeAll(t)
-			require.NoError(t, s.cl.UseNode(0))
 			require.NotNil(t, s.ltsReply.ByzCoinID)
 			require.NotNil(t, s.ltsReply.InstanceID)
 			require.NotNil(t, s.ltsReply.X)
@@ -181,11 +181,11 @@ func TestService_ReshareLTS_OneMore(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NoError(t, ctx.FillSignersAndSignWith(s.signer))
-			_, err = s.cl.AddTransactionAndWait(ctx, 4)
+			atr, err := s.cl.AddTransactionAndWait(ctx, 4)
 			require.NoError(t, err)
 
 			// Get the proof and start resharing
-			proof, err := s.cl.GetProof(s.ltsReply.InstanceID.Slice())
+			proof, err := s.cl.GetProofAfter(s.ltsReply.InstanceID.Slice(), true, &atr.Proof.Latest)
 			require.NoError(t, err)
 
 			log.Lvl1("first reshare")
@@ -516,7 +516,20 @@ func (s *ts) closeAll(t *testing.T) {
 	s.local.CloseAll()
 }
 
+// The key might still be reconstructed at some nodes, so try one second later,
+// if the first one fails.
 func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
+	key, err := s.reconstructKeyFunc()
+	if err == nil {
+		return key
+	}
+	time.Sleep(time.Second)
+	key, err = s.reconstructKeyFunc()
+	require.NoError(t, err)
+	return key
+}
+
+func (s *ts) reconstructKeyFunc() (kyber.Scalar, error) {
 	id := s.ltsReply.InstanceID
 	var sshares []*share.PriShare
 	for i := range s.services {
@@ -532,8 +545,12 @@ func (s *ts) reconstructKey(t *testing.T) kyber.Scalar {
 	}
 	n := len(s.ltsRoster.List)
 	th := n - (n-1)/3
-	require.Equal(t, n, len(sshares))
+	if n != len(sshares) {
+		return nil, xerrors.New("not correct amount of shares")
+	}
 	sec, err := share.RecoverSecret(cothority.Suite, sshares, th, n)
-	require.NoError(t, err)
-	return sec
+	if err != nil {
+		return nil, xerrors.Errorf("while recovering secret: %v", err)
+	}
+	return sec, nil
 }

@@ -1,9 +1,9 @@
-import { createHash } from 'crypto';
-import BN from 'bn.js';
-import GfP from './gfp';
-import { p } from './constants';
-import { modSqrt } from '../utils/tonelli-shanks';
-import { BNType, oneBN } from '../constants';
+import BN from "bn.js";
+import { createHash } from "crypto";
+import { BNType, oneBN } from "../constants";
+import { modSqrt } from "../utils/tonelli-shanks";
+import { p } from "./constants";
+import GfP from "./gfp";
 
 const curveB = new GfP(3);
 
@@ -19,10 +19,10 @@ export default class CurvePoint {
      * @returns a valid point
      */
     static hashToPoint(msg: Buffer): CurvePoint {
-        const h = createHash('sha256');
+        const h = createHash("sha256");
         h.update(msg);
 
-        let x = new BN(h.digest(), null, 'be').mod(p);
+        let x = new BN(h.digest(), null, "be").mod(p);
 
         for (;;) {
             const xxx = x.mul(x).mul(x).mod(p);
@@ -36,7 +36,7 @@ export default class CurvePoint {
             x = x.add(oneBN);
         }
     }
-    
+
     private x: GfP;
     private y: GfP;
     private z: GfP;
@@ -82,7 +82,7 @@ export default class CurvePoint {
             yy = yy.mod(p);
         }
 
-        return yy.signum() == 0;
+        return yy.signum() === 0;
     }
 
     /**
@@ -110,7 +110,7 @@ export default class CurvePoint {
      */
     add(a: CurvePoint, b: CurvePoint): void {
         if (a.isInfinity()) {
-            this.copy(b)
+            this.copy(b);
             return;
         }
 
@@ -250,14 +250,14 @@ export default class CurvePoint {
 
     /**
      * Fill the point with the values of a
-     * @param p the point to copy
+     * @param cp the point to copy
      */
-    copy(p: CurvePoint): void {
+    copy(cp: CurvePoint): void {
         // immutable objects so we can copy them
-        this.x = p.x;
-        this.y = p.y;
-        this.z = p.z;
-        this.t = p.t;
+        this.x = cp.x;
+        this.y = cp.y;
+        this.z = cp.z;
+        this.t = cp.t;
     }
 
     /**
@@ -265,10 +265,10 @@ export default class CurvePoint {
      * @returns a clone of the point
      */
     clone(): CurvePoint {
-        const p = new CurvePoint();
-        p.copy(this);
+        const cp = new CurvePoint();
+        cp.copy(this);
 
-        return p;
+        return cp;
     }
 
     /**
@@ -295,9 +295,9 @@ export default class CurvePoint {
      * @returns the string representation
      */
     toString(): string {
-        const p = this.clone();
-        p.makeAffine();
+        const cp = this.clone();
+        cp.makeAffine();
 
-        return `(${p.getX().toString()},${p.getY().toString()})`;
+        return `(${cp.getX().toString()},${cp.getY().toString()})`;
     }
 }

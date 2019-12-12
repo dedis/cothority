@@ -1,20 +1,20 @@
-import { randomBytes } from 'crypto';
-import { Point } from '../index';
-import { G1, G2, GT, BNType } from './bn';
-import BN256Scalar from './scalar';
+import { randomBytes } from "crypto";
+import { Point } from "../index";
+import { BNType, G1, G2, GT } from "./bn";
+import BN256Scalar from "./scalar";
 
 /**
  * Implementation of the point interface for G1
  */
 export class BN256G1Point implements Point {
-    public static MARSHAL_ID = Buffer.from('bn256.g1');
+    static MARSHAL_ID = Buffer.from("bn256.g1");
 
     /**
      * Hash the message into a point
      * @param msg The message to hash
      * @returns a valid point
      */
-    public static hashToPoint(msg: Buffer): BN256G1Point {
+    static hashToPoint(msg: Buffer): BN256G1Point {
         const p = new BN256G1Point();
         p.g1 = G1.hashToPoint(msg);
 
@@ -71,17 +71,17 @@ export class BN256G1Point implements Point {
 
     /** @inheritdoc */
     embedLen(): number {
-        throw new Error('Not implemented');
+        throw new Error("Not implemented");
     }
 
     /** @inheritdoc */
     embed(data: Buffer, callback?: (length: number) => Buffer): BN256G1Point {
-        throw new Error('Not implemented');
+        throw new Error("Not implemented");
     }
 
     /** @inheritdoc */
     data(): Buffer {
-        throw new Error('Not implemented');
+        throw new Error("Not implemented");
     }
 
     /** @inheritdoc */
@@ -155,7 +155,7 @@ export class BN256G1Point implements Point {
  * Implementation of the point interface for G2
  */
 export class BN256G2Point implements Point {
-    public static MARSHAL_ID = Buffer.from('bn256.g2');
+    static MARSHAL_ID = Buffer.from("bn256.g2");
 
     private g2: G2;
 

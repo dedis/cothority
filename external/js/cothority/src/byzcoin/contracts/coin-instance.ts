@@ -59,7 +59,7 @@ export default class CoinInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return CoinInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**

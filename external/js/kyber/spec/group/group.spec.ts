@@ -1,9 +1,9 @@
 import {
     availableCurves,
-    newCurve,
     edwards25519,
+    newCurve,
     nist,
-} from '../../src/curve';
+} from "../../src/curve";
 
 describe("curves", () => {
     it("are all listed", () => {

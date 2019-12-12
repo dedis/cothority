@@ -19,3 +19,6 @@ external/java/.project
 .vscode
 *.db
 *.cfg
+
+# cloned
+/Coding

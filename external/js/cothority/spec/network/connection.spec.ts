@@ -1,4 +1,4 @@
-import { Message } from "protobufjs";
+import { Message } from "protobufjs/light";
 import { BrowserWebSocketAdapter } from "../../src/network";
 import { LeaderConnection, RosterWSConnection, setFactory, WebSocketConnection } from "../../src/network/connection";
 import { Roster, ServerIdentity } from "../../src/network/proto";
@@ -10,6 +10,11 @@ class UnregisteredMessage extends Message<UnregisteredMessage> {}
 describe("WebSocketAdapter Tests", () => {
     afterAll(() => {
         setFactory((path: string) => new BrowserWebSocketAdapter(path));
+
+        globalThis.location = {
+            ...globalThis.location,
+            protocol: "",
+        };
     });
 
     it("should send and receive data", async () => {
@@ -67,8 +72,8 @@ describe("WebSocketAdapter Tests", () => {
         });
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
@@ -82,8 +87,8 @@ describe("WebSocketAdapter Tests", () => {
         setFactory(() => new TestWebSocket(null, new Error(), 1000));
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
@@ -95,14 +100,27 @@ describe("WebSocketAdapter Tests", () => {
     it("should send a request to the leader", async () => {
         const roster = new Roster({
             list: [
-                new ServerIdentity({address: "a", public: ROSTER.list[0].public}),
-                new ServerIdentity({address: "b", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://a:1234", public: ROSTER.list[0].public}),
+                new ServerIdentity({address: "tls://b:1234", public: ROSTER.list[0].public}),
             ],
         });
 
         const conn = new LeaderConnection(roster, "");
-        expect(conn.getURL()).toBe("a");
+        expect(conn.getURL()).toBe("ws://a:1235");
 
         expect(() => new LeaderConnection(new Roster(), "")).toThrow();
+    });
+
+    it("should switch to wss in https context", async () => {
+        const conn = new WebSocketConnection("ws://a:1234", "");
+        expect(conn.getURL()).toBe("ws://a:1234");
+
+        globalThis.location = {
+            ...globalThis.location,
+            protocol: "https:",
+        };
+
+        const conn2 = new WebSocketConnection("ws://a:1234", "");
+        expect(conn2.getURL()).toBe("wss://a:1234");
     });
 });

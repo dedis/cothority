@@ -3,17 +3,14 @@ package lib
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
-	"fmt"
 	"io"
 	"math/big"
 	"os"
 	"strings"
-	"time"
 
-	"go.dedis.ch/cothority/v3/skipchain"
+	"golang.org/x/xerrors"
+
 	"go.dedis.ch/kyber/v3/util/random"
-	"go.dedis.ch/onet/v3/log"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -24,7 +21,7 @@ import (
 // StringToDarcID converts a string representation of a DARC to a byte array
 func StringToDarcID(id string) ([]byte, error) {
 	if id == "" {
-		return nil, errors.New("no string given")
+		return nil, xerrors.New("no string given")
 	}
 	if strings.HasPrefix(id, "darc:") {
 		id = id[5:]
@@ -36,7 +33,7 @@ func StringToDarcID(id string) ([]byte, error) {
 // byte array
 func StringToEd25519Buf(pub string) ([]byte, error) {
 	if pub == "" {
-		return nil, errors.New("no string given")
+		return nil, xerrors.New("no string given")
 	}
 	if strings.HasPrefix(pub, "ed25519:") {
 		pub = pub[8:]
@@ -64,10 +61,10 @@ func GetDarcByID(cl *byzcoin.Client, id []byte) (*darc.Darc, error) {
 
 	vs, cid, _, err := p.Get(id)
 	if err != nil {
-		return nil, fmt.Errorf("could not find darc for %x", id)
+		return nil, xerrors.Errorf("could not find darc for %x", id)
 	}
 	if cid != byzcoin.ContractDarcID {
-		return nil, fmt.Errorf("unexpected contract %v, expected a darc", cid)
+		return nil, xerrors.Errorf("unexpected contract %v, expected a darc", cid)
 	}
 
 	d, err := darc.NewFromProtobuf(vs)
@@ -97,12 +94,12 @@ func ExportTransaction(tx byzcoin.ClientTransaction) error {
 	tx.Instructions = instrs
 	buf, err := protobuf.Encode(&tx)
 	if err != nil {
-		return errors.New("failed to encode tx: " + err.Error())
+		return xerrors.Errorf("failed to encode tx: %v", err)
 	}
 	reader := bytes.NewReader(buf)
 	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
-		return errors.New("failed to copy to stdout: " + err.Error())
+		return xerrors.Errorf("failed to copy to stdout: %v", err)
 	}
 	return nil
 }
@@ -146,54 +143,14 @@ func CombinationAnds(list []string, m int) []string {
 	return list
 }
 
-// WaitPropagation contacts all nodes in the cl.Roster until they all
-// have the same latest block. If there is an error when calling
-// `GetProof`, the error will be ignored. This helps when waiting
-// for the propagation, but only a subset of the nodes are actually
-// participating in the consensus.
+// WaitPropagation checks if the "--wait" argument is given, and only if this
+// is true, it will make sure that all nodes have a coherent view of the chain.
 func WaitPropagation(c *cli.Context, cl *byzcoin.Client) error {
 	if !c.GlobalBool("wait") {
 		return nil
 	}
 
-	var sb skipchain.SkipBlock
-	sb.SkipBlockFix = &skipchain.SkipBlockFix{}
-searchLatest:
-	for i := 0; i < 100; i++ {
-		log.Lvl2("Starting search")
-		if i > 0 {
-			time.Sleep(100 * time.Millisecond)
-		}
-		for node := range cl.Roster.List {
-			log.Lvl2("Searching node", node)
-			if err := cl.UseNode(node); err != nil {
-				return err
-			}
-			_, err := cl.GetProof(make([]byte, 32))
-			if err != nil {
-				log.Warn("error while searching for node - ignoring")
-				//continue searchLatest
-			}
-			if cl.Latest.Index > sb.Index {
-				sb = *cl.Latest
-				log.Lvl2("Found new block:", sb.Index)
-				cc, err := cl.GetChainConfig()
-				if err != nil {
-					return err
-				}
-				cl.Roster = cc.Roster
-				if node > 0 {
-					continue searchLatest
-				}
-			} else if cl.Latest.Index < sb.Index {
-				log.Lvlf2("Node %d returned earlier block: %d", node, cl.Latest.Index)
-				continue searchLatest
-			}
-			log.Lvl2("Node", node, "returned same block as other nodes")
-		}
-		return nil
-	}
-	return errors.New("didn't get the same blocks from everybody within 10 seconds")
+	return cl.WaitPropagation(0)
 }
 
 // We are recursively building the leaves of a tree that contains every

@@ -77,6 +77,8 @@ func (c *ContractRoPaSci) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst 
 	return nil
 }
 
+var emptyInstance = byzcoin.NewInstanceID(nil)
+
 // Spawn creates a new RoPaSci contract. The following arguments must be set:
 //  - struct that holds a protobuf-encoded byte slice of RoPaSciStruct
 func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
@@ -111,7 +113,8 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	c.FirstPlayer = -1
 	cout[0].Value = 0
 	if secret := inst.Spawn.Args.Search("secret"); secret != nil {
-		if c.FirstPlayerAccount.Equal(byzcoin.ConfigInstanceID) {
+		if c.FirstPlayerAccount == nil ||
+			c.FirstPlayerAccount.Equal(emptyInstance) {
 			return nil, nil, errors.New("need to have FirstPlayerAccount when using calypso")
 		}
 		var write calypso.Write
@@ -123,9 +126,15 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 		if err = write.CheckProof(cothority.Suite, writeCommit[:]); err != nil {
 			return nil, nil, errors.New("proof of write failed: " + err.Error())
 		}
-		c.CalypsoWrite = inst.DeriveID(calypso.ContractWriteID)
-		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, c.CalypsoWrite,
+		cw := inst.DeriveID(calypso.ContractWriteID)
+		c.CalypsoWrite = &cw
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, *c.CalypsoWrite,
 			calypso.ContractWriteID, secret, writeCommit[:]))
+		c.CalypsoRead = &emptyInstance
+	} else if rst.GetVersion() > 0 {
+		c.CalypsoRead = &emptyInstance
+		c.CalypsoWrite = &emptyInstance
+		c.FirstPlayerAccount = &emptyInstance
 	}
 	rpsBuf, err = protobuf.Encode(&c.RoPaSciStruct)
 	if err != nil {
@@ -145,7 +154,6 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 //   - add a 'recover' for the second player, in case the first player doesn't confirm
 func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
-
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
@@ -189,7 +197,8 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 		c.SecondPlayerAccount = byzcoin.NewInstanceID(account)
 		c.SecondPlayer = int(choice[0]) % 3
 
-		if !c.CalypsoWrite.Equal(byzcoin.ConfigInstanceID) {
+		if c.CalypsoWrite != nil &&
+			!c.CalypsoWrite.Equal(emptyInstance) {
 			pub2Buf := inst.Invoke.Args.Search("public")
 			if pub2Buf == nil {
 				return nil, nil, errors.New("need 'public' for calypso-ropasci")
@@ -199,16 +208,18 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 				return nil, nil, errors.New("couldn't get public key: " + err.Error())
 			}
 			read := &calypso.Read{
-				Write: c.CalypsoWrite,
+				Write: *c.CalypsoWrite,
 				Xc:    xc,
 			}
 			readBuf, err := protobuf.Encode(read)
 			if err != nil {
 				return nil, nil, errors.New("couldn't encode read: " + err.Error())
 			}
-			c.CalypsoRead = sha256.Sum256(c.CalypsoWrite[:])
+			cr := byzcoin.InstanceID(sha256.Sum256(c.CalypsoWrite[:]))
+			c.CalypsoRead = &cr
 			_, _, _, writeCommit, err := rst.GetValues(c.CalypsoWrite[:])
-			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, c.CalypsoRead, calypso.ContractReadID,
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create,
+				*c.CalypsoRead, calypso.ContractReadID,
 				readBuf, writeCommit))
 		}
 
@@ -221,8 +232,10 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 		if bytes.Compare(c.FirstPlayerHash, fph[:]) != 0 {
 			return nil, nil, errors.New("wrong prehash for first player")
 		}
-		firstAccountBuf := c.FirstPlayerAccount.Slice()
-		if c.CalypsoWrite.Equal(byzcoin.ConfigInstanceID) {
+		var firstAccountBuf []byte
+		if c.CalypsoWrite != nil && !c.CalypsoWrite.Equal(emptyInstance) {
+			firstAccountBuf = c.FirstPlayerAccount.Slice()
+		} else {
 			firstAccountBuf = inst.Invoke.Args.Search("account")
 			if len(firstAccountBuf) != 32 {
 				return nil, nil, errors.New("wrong account for player 1")

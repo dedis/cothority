@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3/darc"
+	"golang.org/x/xerrors"
 )
 
 // TestStateTrie is a sanity check for setting and retrieving keys, values and
@@ -35,7 +36,7 @@ func TestStateTrie(t *testing.T) {
 	// store with bad expected root hash should fail, value should not be inside
 	require.Error(t, st.VerifiedStoreAll([]StateChange{sc}, 5, CurrentVersion, []byte("badhash")))
 	_, _, _, _, err = st.GetValues(key)
-	require.Equal(t, errKeyNotSet, err)
+	require.True(t, xerrors.Is(err, errKeyNotSet))
 
 	// store the state changes normally using StoreAll and it should work
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 5, CurrentVersion))
@@ -45,7 +46,7 @@ func TestStateTrie(t *testing.T) {
 	require.Equal(t, st.GetIndex(), 6)
 
 	_, _, _, _, err = st.GetValues(append(key, byte(0)))
-	require.Equal(t, errKeyNotSet, err)
+	require.True(t, xerrors.Is(err, errKeyNotSet))
 
 	val, ver, cid, did, err := st.GetValues(key)
 	require.Equal(t, value, val)

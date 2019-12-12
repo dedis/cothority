@@ -3,9 +3,9 @@ package trie
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
 
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 type nodeType int
@@ -40,11 +40,11 @@ func newInteriorNode(left, right []byte) interiorNode {
 
 func decodeInteriorNode(buf []byte) (node interiorNode, err error) {
 	if len(buf) == 0 {
-		err = errors.New("empty buffer")
+		err = xerrors.New("empty buffer")
 		return
 	}
 	if nodeType(buf[0]) != typeInterior {
-		err = errors.New("wrong node type")
+		err = xerrors.New("wrong node type")
 		return
 	}
 	if err = protobuf.Decode(buf[1:], &node); err != nil {
@@ -81,11 +81,11 @@ func (n *emptyNode) encode() ([]byte, error) {
 
 func decodeEmptyNode(buf []byte) (node emptyNode, err error) {
 	if len(buf) == 0 {
-		err = errors.New("empty buffer")
+		err = xerrors.New("empty buffer")
 		return
 	}
 	if nodeType(buf[0]) != typeEmpty {
-		err = errors.New("wrong node type")
+		err = xerrors.New("wrong node type")
 		return
 	}
 	if err = protobuf.Decode(buf[1:], &node); err != nil {
@@ -127,11 +127,11 @@ func (n *leafNode) encode() ([]byte, error) {
 
 func decodeLeafNode(buf []byte) (node leafNode, err error) {
 	if len(buf) == 0 {
-		err = errors.New("empty buffer")
+		err = xerrors.New("empty buffer")
 		return
 	}
 	if nodeType(buf[0]) != typeLeaf {
-		err = errors.New("wrong node type")
+		err = xerrors.New("wrong node type")
 		return
 	}
 	if err = protobuf.Decode(buf[1:], &node); err != nil {

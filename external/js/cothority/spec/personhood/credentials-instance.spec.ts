@@ -21,7 +21,7 @@ async function createInstance(rpc: ByzCoinRPC, signers: Signer[], darc: Darc, cr
 
     await rpc.sendTransactionAndWait(ctx);
 
-    return CredentialsInstance.fromByzcoin(rpc, ctx.instructions[0].deriveId());
+    return CredentialsInstance.fromByzcoin(rpc, ctx.instructions[0].deriveId(), 1);
 }
 
 describe("CredentialsInstance Tests", () => {

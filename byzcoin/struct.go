@@ -3,17 +3,18 @@ package byzcoin
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 )
 
 const defaultMaxSize = (1 << 31) - 1 // maximum 32-bit int
@@ -22,7 +23,7 @@ const prefixLength = 32              // bytes
 const cleanThreshold = 0.8
 
 var bucketStateChangeStorage = []byte("statechangestorage")
-var errLengthInstanceID = errors.New("InstanceID must have 32 bytes")
+var errLengthInstanceID = xerrors.New("InstanceID must have 32 bytes")
 
 // StateChangeEntry is the object stored to keep track of instance history. It
 // contains the state change and the block index
@@ -132,7 +133,7 @@ func (s *stateChangeStorage) calculateSize() error {
 	return s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(s.bucket)
 		if b == nil {
-			return errors.New("Missing bucket")
+			return xerrors.New("Missing bucket")
 		}
 
 		return b.ForEach(func(scid, v []byte) error {
@@ -167,7 +168,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 		b := tx.Bucket(s.bucket)
 		if b == nil {
-			return errors.New("Missing bucket")
+			return xerrors.New("Missing bucket")
 		}
 
 		// loop until enough blocks have been cleaned
@@ -189,7 +190,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 					err := binary.Read(buf, binary.BigEndian, &idx)
 					if err != nil {
-						return err
+						return xerrors.Errorf("decoding index: %v", err)
 					}
 
 					if oldestIndex == -1 || oldestIndex > idx {
@@ -207,12 +208,12 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 					err := binary.Read(buf, binary.BigEndian, &idx)
 					if err != nil {
-						return err
+						return xerrors.Errorf("decoding index: %v", err)
 					}
 
 					if oldestIndex == idx {
 						if err := c.Delete(); err != nil {
-							return err
+							return xerrors.Errorf("deleting pair: %v", err)
 						}
 
 						size -= len(v)
@@ -225,7 +226,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 				if scb.Stats().KeyN == 0 {
 					if err := b.DeleteBucket(scid); err != nil {
-						return err
+						return xerrors.Errorf("deleting bucket: %v", err)
 					}
 				}
 
@@ -233,7 +234,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 			})
 
 			if err != nil {
-				return err
+				return xerrors.Errorf("processing pairs: %v", err)
 			}
 		}
 
@@ -241,7 +242,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 	})
 
 	if err != nil {
-		return err
+		return xerrors.Errorf("tx error: %v", err)
 	}
 
 	s.size = size
@@ -274,7 +275,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				// The key is built using BigEndian order
 				err := binary.Write(&buf, binary.BigEndian, thres)
 				if err != nil {
-					return err
+					return xerrors.Errorf("encoding threshold: %v", err)
 				}
 				index := buf.Bytes()
 
@@ -282,7 +283,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				for k, v := c.Seek(sc.InstanceID); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Next() {
 					if bytes.Compare(k[len(k)-len(index):], index) <= 0 {
 						if err := c.Delete(); err != nil {
-							return err
+							return xerrors.Errorf("deleting item: %v", err)
 						}
 						size -= len(v)
 					}
@@ -297,7 +298,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 		s.size = size
 	}
 
-	return err
+	return cothority.ErrorOrNil(err, "tx error")
 }
 
 // this generates a storage key using the instance ID and the version
@@ -305,19 +306,19 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, err
 	b := bytes.Buffer{}
 	_, err := b.Write(iid)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing id: %v", err)
 	}
 
 	// BigEndian is used here because of the byte-sorted order of
 	// BoltDB when iterating over the keys
 	err = binary.Write(&b, binary.BigEndian, ver)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing version: %v", err)
 	}
 
 	err = binary.Write(&b, binary.BigEndian, idx)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("writing index: %v", err)
 	}
 
 	return b.Bytes(), nil
@@ -339,7 +340,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 	// Run a cleaning procedure first to insure we're not above the limit
 	err := s.cleanBySize()
 	if err != nil {
-		return fmt.Errorf("error when cleaning: %v", err)
+		return xerrors.Errorf("error when cleaning: %v", err)
 	}
 
 	size := s.size
@@ -351,12 +352,12 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		for i, sc := range scs {
 			if len(sc.InstanceID) != prefixLength {
 				// as we use it as a prefix, all must have the same length
-				return errLengthInstanceID
+				return cothority.WrapError(errLengthInstanceID)
 			}
 
 			key, err := s.key(sc.InstanceID, sc.Version, int64(sb.Index))
 			if err != nil {
-				return err
+				return xerrors.Errorf("key: %v", err)
 			}
 
 			now := time.Now()
@@ -367,7 +368,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 				Timestamp:   now,
 			})
 			if err != nil {
-				return err
+				return xerrors.Errorf("encoding: %v", err)
 			}
 
 			// get the previous value to recalculate the size
@@ -375,7 +376,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 
 			err = b.Put(key, buf)
 			if err != nil {
-				return err
+				return xerrors.Errorf("writing item: %v", err)
 			}
 
 			// optimization for cleaning to avoir recomputing the size
@@ -385,12 +386,12 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		return nil
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("tx error: %v", err)
 	}
 
 	s.size = size
 
-	return s.cleanByBlock(scs, sb)
+	return cothority.ErrorOrNil(s.cleanByBlock(scs, sb), "cleaning")
 }
 
 // This will return the list of state changes for the given instance
@@ -398,7 +399,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		return nil, errLengthInstanceID
+		return nil, cothority.WrapError(errLengthInstanceID)
 	}
 
 	err = s.db.View(func(tx *bbolt.Tx) error {
@@ -413,7 +414,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 			var sce StateChangeEntry
 			err = protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			entries = append(entries, sce)
@@ -422,6 +423,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entr
 		return nil
 	})
 
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -432,12 +434,13 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = errLengthInstanceID
+		err = cothority.WrapError(errLengthInstanceID)
 		return
 	}
 
 	key, err := s.key(iid, ver, int64(0))
 	if err != nil {
+		err = xerrors.Errorf("key: %v", err)
 		return
 	}
 
@@ -452,7 +455,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 		if k != nil && bytes.HasPrefix(k, prefix) {
 			err := protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			ok = true
@@ -461,6 +464,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 		return nil
 	})
 
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -486,7 +490,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 				var sce StateChangeEntry
 				err = protobuf.Decode(v, &sce)
 				if err != nil {
-					return err
+					return xerrors.Errorf("decoding: %v", err)
 				}
 
 				entries = append(entries, sce)
@@ -497,6 +501,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 	})
 
 	sort.Sort(entries)
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -506,7 +511,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 	s.Lock()
 	defer s.Unlock()
 	if len(iid) != prefixLength {
-		err = errLengthInstanceID
+		err = cothority.WrapError(errLengthInstanceID)
 		return
 	}
 
@@ -524,7 +529,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		if bytes.HasPrefix(k, iid) {
 			err := protobuf.Decode(v, &sce)
 			if err != nil {
-				return err
+				return xerrors.Errorf("decoding: %v", err)
 			}
 
 			ok = true
@@ -532,6 +537,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 		return nil
 	})
 
+	err = cothority.ErrorOrNil(err, "tx error")
 	return
 }
 
@@ -540,7 +546,7 @@ func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce
 func (c *Coin) SafeAdd(a uint64) error {
 	s1 := c.Value + a
 	if s1 < c.Value || s1 < a {
-		return errors.New("uint64 overflow")
+		return xerrors.New("uint64 overflow")
 	}
 	c.Value = s1
 	return nil
@@ -553,96 +559,94 @@ func (c *Coin) SafeSub(a uint64) error {
 		c.Value -= a
 		return nil
 	}
-	return errors.New("uint64 underflow")
+	return xerrors.New("uint64 underflow")
 }
+
+type notification struct {
+	block  *skipchain.SkipBlock
+	txs    TxResults
+	hashes [][]byte
+}
+
+func (n *notification) getTx(id []byte) *TxResult {
+	for i, h := range n.hashes {
+		if bytes.Equal(h, id) {
+			return &n.txs[i]
+		}
+	}
+
+	return nil
+}
+
+type waitChannel = chan *notification
 
 type bcNotifications struct {
 	sync.Mutex
-	// waitChannels will be informed by Service.updateTrieCallback that a
-	// given ClientTransaction has been included. updateTrieCallback will
-	// send true for a valid ClientTransaction and false for an invalid
-	// ClientTransaction.
-	waitChannels map[string]chan bool
 	// blockListeners will be notified every time a block is created.
 	// It is up to them to filter out block creations on chains they are not
 	// interested in.
-	blockListeners []chan skipchain.SkipBlockID
+	blockListeners []waitChannel
 }
 
-func (bc *bcNotifications) createWaitChannel(ctxHash []byte) chan bool {
-	bc.Lock()
-	defer bc.Unlock()
-	ch := make(chan bool, 1)
-	bc.waitChannels[string(ctxHash)] = ch
-	return ch
-}
-
-func (bc *bcNotifications) informWaitChannel(ctxHash []byte, valid bool) {
-	bc.Lock()
-	defer bc.Unlock()
-	ch := bc.waitChannels[string(ctxHash)]
-	if ch != nil {
-		ch <- valid
+func (bc *bcNotifications) informBlock(block *skipchain.SkipBlock, txs TxResults) {
+	hashes := make([][]byte, len(txs))
+	for i, tx := range txs {
+		// Pre-computed hash to save some computation load.
+		hashes[i] = tx.ClientTransaction.Instructions.Hash()
 	}
-}
 
-func (bc *bcNotifications) deleteWaitChannel(ctxHash []byte) {
-	bc.Lock()
-	defer bc.Unlock()
-	delete(bc.waitChannels, string(ctxHash))
-}
+	notif := &notification{
+		block:  block,
+		txs:    txs,
+		hashes: hashes,
+	}
 
-func (bc *bcNotifications) informBlock(id skipchain.SkipBlockID) {
 	bc.Lock()
 	defer bc.Unlock()
 	for _, x := range bc.blockListeners {
-		if x != nil {
-			x <- id
-		}
+		x <- notif
 	}
 }
 
-func (bc *bcNotifications) registerForBlocks(ch chan skipchain.SkipBlockID) int {
+func (bc *bcNotifications) registerForBlocks() waitChannel {
 	bc.Lock()
 	defer bc.Unlock()
 
-	for i := 0; i < len(bc.blockListeners); i++ {
-		if bc.blockListeners[i] == nil {
-			bc.blockListeners[i] = ch
-			return i
-		}
-	}
-
-	// If we got here, no empty spots left, append and return the position of the
-	// new element (on startup: after append(nil, ch), len == 1, so len-1 = index 0.
+	ch := make(waitChannel, 1)
 	bc.blockListeners = append(bc.blockListeners, ch)
-	return len(bc.blockListeners) - 1
+
+	return ch
 }
 
-func (bc *bcNotifications) unregisterForBlocks(i int) {
+func (bc *bcNotifications) unregisterForBlocks(ch waitChannel) {
 	bc.Lock()
 	defer bc.Unlock()
-	bc.blockListeners[i] = nil
+
+	for i, listener := range bc.blockListeners {
+		if listener == ch {
+			bc.blockListeners = append(bc.blockListeners[0:i], bc.blockListeners[i+1:]...)
+		}
+	}
 }
 
 func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 	if c.BlockInterval <= 0 {
-		return errors.New("block interval is less or equal to zero")
+		return xerrors.New("block interval is less or equal to zero")
 	}
 	// too small would make it impossible to even send through a config update tx to fix it,
 	// so don't allow that.
 	if c.MaxBlockSize < 16000 {
-		return errors.New("max block size is less than 16000")
+		return xerrors.New("max block size is less than 16000")
 	}
 	// onet/network.MaxPacketSize is 10 megs, leave some headroom anyway.
 	if c.MaxBlockSize > 8*1e6 {
-		return errors.New("max block size is greater than 8 megs")
+		return xerrors.New("max block size is greater than 8 megs")
 	}
 	if len(c.Roster.List) < 3 {
-		return errors.New("need at least 3 nodes to have a majority")
+		return xerrors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
-		return old.checkNewRoster(c.Roster)
+		return cothority.ErrorOrNil(old.checkNewRoster(c.Roster), "roster check: %v")
 	}
 	return nil
 }
@@ -654,7 +658,7 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 	// Check new leader was in old roster
 	if index, _ := c.Roster.Search(newRoster.List[0].ID); index < 0 {
-		return errors.New("new leader must be in previous roster")
+		return xerrors.New("new leader must be in previous roster")
 	}
 
 	// Check we don't change more than one node
@@ -668,7 +672,7 @@ func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
 		}
 	}
 	if len(oldList.List)+added > 1 {
-		return errors.New("can only change one node at a time - adding or removing")
+		return xerrors.New("can only change one node at a time - adding or removing")
 	}
 	return nil
 }

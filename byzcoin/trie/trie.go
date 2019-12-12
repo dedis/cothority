@@ -3,7 +3,8 @@ package trie
 import (
 	"bytes"
 	"crypto/sha256"
-	"errors"
+
+	"golang.org/x/xerrors"
 )
 
 // Trie implements the Merkle prefix tree described in the coniks paper.
@@ -32,18 +33,18 @@ func LoadTrie(db DB) (*Trie, error) {
 		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
-			return errors.New("trie-error: db-nonce does not exist")
+			return xerrors.New("trie-error: db-nonce does not exist")
 		}
 		nonce = clone(nonceBuf)
 
 		// check the root node and that the value exists
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
-			return errors.New("trie-error: root does not exist")
+			return xerrors.New("trie-error: root does not exist")
 		}
 		rootVal := b.Get([]byte(rootKey))
 		if rootVal == nil {
-			return errors.New("trie-error: invalid reference to root")
+			return xerrors.New("trie-error: invalid reference to root")
 		}
 		return nil
 	})
@@ -63,7 +64,7 @@ func NewTrie(db DB, nonce []byte) (*Trie, error) {
 		// create the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf != nil {
-			return errors.New("nonce already exists")
+			return xerrors.New("nonce already exists")
 		}
 		if err := b.Put([]byte(nonceKey), nonce); err != nil {
 			return err
@@ -72,7 +73,7 @@ func NewTrie(db DB, nonce []byte) (*Trie, error) {
 		// create the root node
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey != nil {
-			return errors.New("root already exists")
+			return xerrors.New("root already exists")
 		}
 		err := newRootNode(b, nonce)
 		if err != nil {
@@ -187,7 +188,7 @@ func (t *Trie) BatchWithBucket(pairs []KVPair, b Bucket) error {
 				return err
 			}
 		default:
-			return errors.New("no such operation")
+			return xerrors.New("no such operation")
 		}
 	}
 	return nil
@@ -206,7 +207,7 @@ func (t *Trie) SetWithBucket(key []byte, value []byte, b Bucket) error {
 func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("node key does not exist in set")
+		return nil, xerrors.New("node key does not exist in set")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -295,7 +296,7 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		}
 		return node.hash(), nil
 	}
-	return nil, errors.New("invalid node type")
+	return nil, xerrors.New("invalid node type")
 }
 
 func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b Bucket) ([]byte, error) {
@@ -386,7 +387,7 @@ func (t *Trie) Delete(key []byte) error {
 func (t *Trie) DeleteWithBucket(key []byte, b Bucket) error {
 	rootKey := t.GetRootWithBucket(b)
 	if rootKey == nil {
-		return errors.New("no root key")
+		return xerrors.New("no root key")
 	}
 	newRoot, err := t.del(0, rootKey, t.binSlice(key), key, b)
 	if err != nil {
@@ -418,7 +419,7 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 func (t *Trie) GetWithBucket(key []byte, b Bucket) ([]byte, error) {
 	rootKey := t.GetRootWithBucket(b)
 	if rootKey == nil {
-		return nil, errors.New("no root key")
+		return nil, xerrors.New("no root key")
 	}
 	val, err := t.get(0, rootKey, t.binSlice(key), key, b)
 	if err != nil {
@@ -430,7 +431,7 @@ func (t *Trie) GetWithBucket(key []byte, b Bucket) ([]byte, error) {
 func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("node key does not exist in get")
+		return nil, xerrors.New("node key does not exist in get")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -457,7 +458,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket)
 		}
 		return t.get(depth+1, node.Right, bits, key, b)
 	}
-	return nil, errors.New("invalid node type")
+	return nil, xerrors.New("invalid node type")
 }
 
 // MakeStagingTrie creates a lazy copy of the trie for staging operations.
@@ -487,7 +488,7 @@ func (t *Trie) CopyTo(target Bucket) error {
 func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("node key does not exist in del")
+		return nil, xerrors.New("node key does not exist in del")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -563,7 +564,7 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket)
 		}
 		return node.hash(), b.Put(node.hash(), nodeBuf)
 	}
-	return nil, errors.New("invalid node type")
+	return nil, xerrors.New("invalid node type")
 }
 
 // ForEach runs the callback cb on every key/value pair of the trie. The
@@ -574,7 +575,7 @@ func (t *Trie) ForEach(cb func(k, v []byte) error) error {
 	return t.db.View(func(b Bucket) error {
 		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
-			return errors.New("no root key")
+			return xerrors.New("no root key")
 		}
 		return t.dfs(&p, rootKey, b)
 	})
@@ -586,7 +587,7 @@ func (t *Trie) IsValid() error {
 	err := t.db.View(func(b Bucket) error {
 		rootKey := t.GetRootWithBucket(b)
 		if rootKey == nil {
-			return errors.New("no root key")
+			return xerrors.New("no root key")
 		}
 		return t.dfs(&p, rootKey, b)
 	})
@@ -608,7 +609,7 @@ func (t *Trie) IsValid() error {
 			return err
 		}
 		if !ok {
-			return errors.New("got absence proof")
+			return xerrors.New("got absence proof")
 		}
 	}
 
@@ -625,7 +626,7 @@ func (t *Trie) IsValid() error {
 	}
 	if total != p.total+2 {
 		// plus 2 because there are two well-known keys
-		return errors.New("dangling nodes")
+		return xerrors.New("dangling nodes")
 	}
 	return nil
 }

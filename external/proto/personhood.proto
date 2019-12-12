@@ -3,6 +3,7 @@ package personhood;
 
 import "byzcoin.proto";
 import "onet.proto";
+import "darc.proto";
 
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "Personhood";
@@ -12,6 +13,14 @@ option java_outer_classname = "Personhood";
 message PartyList {
   optional Party newparty = 1;
   optional bool wipeparties = 2;
+  optional PartyDelete partydelete = 3;
+}
+
+// PartyDelete can be sent from one of the admins to remove a party.
+message PartyDelete {
+  required bytes partyid = 1;
+  required darc.Identity identity = 2;
+  required bytes signature = 3;
 }
 
 // PartyListResponse holds a list of all known parties so far. Only parties in PreBarrier
@@ -35,6 +44,10 @@ message Party {
 message RoPaSciList {
   optional RoPaSci newropasci = 1;
   optional bool wipe = 2;
+  // RoPaSciLock allows to ask to lock a ropasci-game and take 1 minute to reply.
+  // After 1 minute, the game is again released. If the given game is not available,
+  // another one will be presented, when available.
+  optional RoPaSci lock = 3;
 }
 
 // RoPaSciListResponse returns a list of all known, unfinished RockPaperScissors
@@ -47,6 +60,7 @@ message RoPaSciListResponse {
 message RoPaSci {
   required bytes byzcoinid = 1;
   required bytes ropasciid = 2;
+  optional sint64 locked = 3;
 }
 
 // StringReply can be used by all calls that need a string to be returned
@@ -166,6 +180,16 @@ message Poll {
   optional PollStruct newpoll = 2;
   optional PollList list = 3;
   optional PollAnswer answer = 4;
+  optional PollDelete delete = 5;
+}
+
+// PollDelete has the poll to be deleted, and the signature proving that
+// the client has the right to do so.
+// The signature is a Schnorr signature on the PollID.
+message PollDelete {
+  required darc.Identity identity = 1;
+  required bytes pollid = 2;
+  required bytes signature = 3;
 }
 
 // PollList returns all known storagePolls for this byzcoinID
@@ -182,6 +206,7 @@ message PollAnswer {
   required bytes pollid = 1;
   required sint32 choice = 2;
   required bytes lrs = 3;
+  optional bytes partyid = 4;
 }
 
 // PollStruct represents one poll with answers.
@@ -247,4 +272,46 @@ message Meetup {
 // MeetupResponse contains all users from the last x minutes.
 message MeetupResponse {
   repeated UserLocation users = 1;
+}
+
+// Challenge allows a participant to sign up and to fetch the latest list of scores.
+message Challenge {
+  optional ChallengeCandidate update = 1;
+}
+
+// ChallengeCandidate is the information the client sends to the server.
+// Some of the information is not verifiable for the moment (meetups and references).
+message ChallengeCandidate {
+  required bytes credential = 1;
+  required sint32 score = 2;
+  required sint64 signup = 3;
+}
+
+// ChallengeReply is sent back to the client and holds a list of pairs of Credential/Score
+// to display on the client's phone.
+message ChallengeReply {
+  repeated ChallengeCandidate list = 1;
+}
+
+// GetAdminDarcIDs returns a slice of adminDarcs that are allowed to delete the
+// polls and add a party.
+message GetAdminDarcIDs {
+}
+
+// GetAdminDarcIDsReply returns the list of adminDarcs that are allowed to
+// delete the polls and add a party.
+message GetAdminDarcIDsReply {
+  repeated bytes admindarcids = 1;
+}
+
+// SetAdminDarcIDs sets the list of admin darcs.
+// The signature must be on
+//   sha256( AdminDarcID[0] | AdminDarcID[1] | ... )
+message SetAdminDarcIDs {
+  repeated bytes newadmindarcids = 1;
+  required bytes signature = 2;
+}
+
+// SetAdminDarcIDsReply indicates a correct storage of the AdminDarcIDs.
+message SetAdminDarcIDsReply {
 }

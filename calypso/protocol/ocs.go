@@ -7,7 +7,6 @@ paper-draft about onchain-secrets (called BlockMage).
 
 import (
 	"crypto/sha256"
-	"errors"
 	"sync"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 func init() {
@@ -59,7 +59,7 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("registring handlers: %v", err)
 	}
 	return o, nil
 }
@@ -69,11 +69,11 @@ func (o *OCS) Start() error {
 	log.Lvl3("Starting Protocol")
 	if o.Shared == nil {
 		o.finish(false)
-		return errors.New("please initialize Shared first")
+		return xerrors.New("please initialize Shared first")
 	}
 	if o.U == nil {
 		o.finish(false)
-		return errors.New("please initialize U first")
+		return xerrors.New("please initialize U first")
 	}
 	rc := &Reencrypt{
 		U:  o.U,
@@ -85,7 +85,7 @@ func (o *OCS) Start() error {
 	if o.Verify != nil {
 		if !o.Verify(rc) {
 			o.finish(false)
-			return errors.New("refused to reencrypt")
+			return xerrors.New("refused to reencrypt")
 		}
 	}
 	o.timeout = time.AfterFunc(1*time.Minute, func() {
@@ -95,7 +95,7 @@ func (o *OCS) Start() error {
 	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
-		return errors.New("too many nodes failed in broadcast")
+		return xerrors.New("too many nodes failed in broadcast")
 	}
 	return nil
 }
@@ -106,15 +106,13 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	log.Lvl3(o.Name() + ": starting reencrypt")
 	defer o.Done()
 
-	ui, err := o.getUI(r.U, r.Xc)
-	if err != nil {
-		return nil
-	}
+	ui := o.getUI(r.U, r.Xc)
 
 	if o.Verify != nil {
 		if !o.Verify(&r.Reencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
-			return o.SendToParent(&ReencryptReply{})
+			return cothority.ErrorOrNil(o.SendToParent(&ReencryptReply{}),
+				"sending ReencryptReply to parent")
 		}
 	}
 
@@ -128,11 +126,14 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	hiHat.MarshalTo(hash)
 	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 
-	return o.SendToParent(&ReencryptReply{
-		Ui: ui,
-		Ei: ei,
-		Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
-	})
+	return cothority.ErrorOrNil(
+		o.SendToParent(&ReencryptReply{
+			Ui: ui,
+			Ei: ei,
+			Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
+		}),
+		"sending ReencryptReply to parent",
+	)
 }
 
 // reencryptReply is the root-node waiting for all replies and generating
@@ -152,11 +153,7 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 	// minus one to exclude the root
 	if len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
-		var err error
-		o.Uis[0], err = o.getUI(o.U, o.Xc)
-		if err != nil {
-			return err
-		}
+		o.Uis[0] = o.getUI(o.U, o.Xc)
 
 		for _, r := range o.replies {
 			// Verify proofs
@@ -192,13 +189,13 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 	return nil
 }
 
-func (o *OCS) getUI(U, Xc kyber.Point) (*share.PubShare, error) {
+func (o *OCS) getUI(U, Xc kyber.Point) *share.PubShare {
 	v := cothority.Suite.Point().Mul(o.Shared.V, U)
 	v.Add(v, cothority.Suite.Point().Mul(o.Shared.V, Xc))
 	return &share.PubShare{
 		I: o.Shared.Index,
 		V: v,
-	}, nil
+	}
 }
 
 func (o *OCS) finish(result bool) {

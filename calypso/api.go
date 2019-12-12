@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -50,7 +51,7 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 	// Make the transaction and get its proof
 	buf, err := protobuf.Encode(&LtsInstanceInfo{*ltsRoster})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding roster: %v", err)
 	}
 	inst := byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(darcID),
@@ -69,14 +70,18 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 		Instructions: []byzcoin.Instruction{inst},
 	}
 	if err := tx.FillSignersAndSignWith(signers...); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("signing txn: %v", err)
 	}
-	if _, err := c.bcClient.AddTransactionAndWait(tx, 10); err != nil {
-		return nil, err
-	}
-	resp, err := c.bcClient.GetProof(tx.Instructions[0].DeriveID("").Slice())
+
+	atr, err := c.bcClient.AddTransactionAndWait(tx, 10)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("adding transaction: %v", err)
+	}
+
+	id := tx.Instructions[0].DeriveID("").Slice()
+	resp, err := c.bcClient.GetProofAfter(id, true, &atr.Proof.Latest)
+	if err != nil {
+		return nil, xerrors.Errorf("getting txn proof: %v", err)
 	}
 
 	// Start the DKG
@@ -85,7 +90,7 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 		Proof: resp.Proof,
 	}, reply)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("send CreateLTS message: %v", err)
 	}
 	return reply, nil
 }
@@ -94,7 +99,10 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 // from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
 // Deprecated: please use Authorize.
 func (c *Client) Authorise(who *network.ServerIdentity, what skipchain.SkipBlockID) error {
-	return c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil)
+	return cothority.ErrorOrNil(
+		c.c.SendProtobuf(who, &Authorize{ByzCoinID: what}, nil),
+		"send Authorize message",
+	)
 }
 
 // Authorize adds a ByzCoinID to the list of authorized IDs in the server. To
@@ -113,7 +121,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 	binary.LittleEndian.PutUint64(msg[32:], uint64(ts))
 	sig, err := schnorr.Sign(cothority.Suite, who.GetPrivate(), msg)
 	if err != nil {
-		return err
+		return xerrors.Errorf("creating schnorr signature: %v", err)
 	}
 	err = c.c.SendProtobuf(who, &Authorize{
 		ByzCoinID: what,
@@ -121,7 +129,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 		Signature: sig,
 	}, reply)
 	if err != nil {
-		return err
+		return xerrors.Errorf("sending Authorize message: %v", err)
 	}
 	return nil
 }
@@ -132,10 +140,7 @@ func (c *Client) Authorize(who *network.ServerIdentity, what skipchain.SkipBlock
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
-	if err != nil {
-		return nil, err
-	}
-	return reply, nil
+	return reply, cothority.ErrorOrNil(err, "sending DecryptKey message")
 }
 
 // WaitProof calls the byzcoin client's wait proof
@@ -158,12 +163,9 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 	darc darc.Darc, wait int) (reply *WriteReply, err error) {
 	reply = &WriteReply{}
-	if err != nil {
-		return nil, err
-	}
 	writeBuf, err := protobuf.Encode(write)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding Write message: %v", err)
 	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
@@ -179,13 +181,13 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 	//Sign the transaction
 	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("signing txn: %v", err)
 	}
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	//Delegate the work to the byzcoin client
 	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("adding txn: %v", err)
 	}
 	return reply, err
 }
@@ -211,12 +213,9 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 	reply = &ReadReply{}
 	readBuf, err = protobuf.Encode(read)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("encoding Read message: %v", err)
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
@@ -228,13 +227,14 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 		}},
 	}
 	err = ctx.FillSignersAndSignWith(signer)
-	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("signing txn: %v", err)
 	}
+
+	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("adding txn: %v", err)
 	}
 	return reply, nil
 }
@@ -253,13 +253,9 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
 	reply *byzcoin.AddTxResponse, err error) {
-	reply = &byzcoin.AddTxResponse{}
-	if err != nil {
-		return nil, err
-	}
 	darcBuf, err := spawnDarc.ToProto()
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("serializing darc to protobuf: %v", err)
 	}
 
 	ctx := byzcoin.ClientTransaction{
@@ -277,9 +273,11 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	}
 	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("signing txn: %v", err)
 	}
-	return c.bcClient.AddTransactionAndWait(ctx, wait)
+
+	reply, err = c.bcClient.AddTransactionAndWait(ctx, wait)
+	return reply, cothority.ErrorOrNil(err, "adding txn")
 }
 
 // RecoverKey is used to recover the secret key once it has been
@@ -303,5 +301,8 @@ func (r *DecryptKeyReply) RecoverKey(xc kyber.Scalar) (key []byte, err error) {
 	// Decrypt r.C to keyPointHat
 	XhatInv.Add(r.C, XhatInv)
 	key, err = XhatInv.Data()
+	if err != nil {
+		err = xerrors.Errorf("extracting data from point: %v", err)
+	}
 	return
 }

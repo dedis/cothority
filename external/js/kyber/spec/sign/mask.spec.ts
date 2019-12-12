@@ -1,8 +1,8 @@
-import { BN256G2Point } from '../../src/pairing/point';
-import Mask from '../../src/sign/mask';
+import { BN256G2Point } from "../../src/pairing/point";
+import Mask from "../../src/sign/mask";
 
-describe('Mask Tests', () => {
-    it('should create the correct aggregation', () => {
+describe("Mask Tests", () => {
+    it("should create the correct aggregation", () => {
         const mask = Buffer.from([0b01010101, 0b00000001]);
         const publics: BN256G2Point[] = [];
 
@@ -33,20 +33,20 @@ describe('Mask Tests', () => {
         expect(mask.getCountEnabled()).toBe(enabled);
     }
 
-    it('should return correct counts', () => {
+    it("should return correct counts", () => {
         const publics = [];
         for (let i = 0; i < 16; i++) {
             publics.push(new BN256G2Point());
         }
 
-        const vectors: [Mask, number, number][] = [
+        const vectors: Array<[Mask, number, number]> = [
             [new Mask(publics.slice(0, 1), Buffer.from([0])), 1, 0],
             [new Mask(publics.slice(0, 5), Buffer.from([0b10101])), 5, 3],
             [new Mask(publics, Buffer.from([0b11111111, 0b11])), 16, 10],
         ];
 
-        for (let i = 0; i < vectors.length; i++) {
-            testMaskCount(vectors[i][0], vectors[i][1], vectors[i][2])
+        for (const vector of vectors) {
+            testMaskCount(vector[0], vector[1], vector[2]);
         }
-    })
+    });
 });

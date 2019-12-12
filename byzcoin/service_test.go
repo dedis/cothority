@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -214,6 +214,8 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	})
 	transactionOK(t, akvresp, err)
 	require.Equal(t, CurrentVersion, akvresp.Version)
+	require.NotNil(t, akvresp.Proof)
+	require.NoError(t, akvresp.Proof.VerifyFromBlock(s.genesis))
 
 	// add the second tx
 	log.Lvl1("adding the second tx")
@@ -707,7 +709,7 @@ func TestService_WrongSigner(t *testing.T) {
 	})
 	// Expect it to not be accepted, because only s.signer is in the Darc
 	require.NoError(t, err)
-	require.Contains(t, resp.Error, "instruction verification failed: expression evaluated to false")
+	require.Contains(t, resp.Error, "instruction verification failed: evaluating darc: expression evaluated to false")
 }
 
 // Test that inter-instruction dependencies are correctly handled.
@@ -748,7 +750,7 @@ func TestService_Depending(t *testing.T) {
 	require.NoError(t, err)
 	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
-	require.Equal(t, errKeyNotSet, err)
+	require.True(t, xerrors.Is(err, errKeyNotSet))
 
 	// We need to wait a bit for the propagation to finish because the
 	// skipchain service might decide to update forward links by adding
@@ -1148,7 +1150,7 @@ func TestService_StateChange(t *testing.T) {
 		case SpawnType:
 			// create the object if it doesn't exist
 			if inst.Spawn.ContractID != "add" {
-				return nil, nil, errors.New("can only spawn add contracts")
+				return nil, nil, xerrors.New("can only spawn add contracts")
 			}
 			binary.PutVarint(zeroBuf, 0)
 			return []StateChange{
@@ -1179,7 +1181,7 @@ func TestService_StateChange(t *testing.T) {
 				},
 			}, nil, nil
 		}
-		return nil, nil, errors.New("need spawn or invoke")
+		return nil, nil, xerrors.New("need spawn or invoke")
 	}
 	s.service().testRegisterContract("add", adaptorNoVerify(f))
 
@@ -1867,7 +1869,6 @@ func TestService_SetConfigRosterReplace(t *testing.T) {
 		ctx, _ := createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
 		counter++
 		cl := NewClient(s.genesis.SkipChainID(), *goodRoster)
-		require.NoError(t, cl.UseNode(0))
 		resp, err := cl.AddTransactionAndWait(ctx, 10)
 		transactionOK(t, resp, err)
 
@@ -2290,7 +2291,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the version is correctly increased for multiple state changes
 		var scs []StateChange
-		if _, _, _, _, err := cdb.GetValues(iid.Slice()); err == errKeyNotSet {
+		if _, _, _, _, err := cdb.GetValues(iid.Slice()); xerrors.Is(err, errKeyNotSet) {
 			scs = []StateChange{{
 				StateAction: Create,
 				InstanceID:  iid[:],
@@ -2715,6 +2716,13 @@ func (s *ser) deleteDBs(t *testing.T, index int) {
 	require.NoError(t, bc.startAllChains())
 }
 
+// Waits to have a coherent view in all nodes with at least the block
+// 'index' held by all nodes.
+func (s *ser) waitPropagation(t *testing.T, index int) {
+	require.NoError(t, NewClient(s.genesis.Hash,
+		*s.roster).WaitPropagation(index))
+}
+
 func deleteDB(s *onet.ServiceProcessor, key []byte) error {
 	db, stBucket := s.GetAdditionalBucket(key)
 	return db.Update(func(tx *bbolt.Tx) error {
@@ -2841,7 +2849,7 @@ func adaptorNoVerify(cb func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) 
 }
 
 func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	return nil, nil, errors.New("this invalid contract always returns an error")
+	return nil, nil, xerrors.New("this invalid contract always returns an error")
 }
 
 func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
@@ -2893,7 +2901,7 @@ func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]S
 	}
 
 	if rst.GetVersion() != Version(inst.Spawn.Args[0].Value[0]) {
-		return nil, nil, errors.New("wrong byzcoin version")
+		return nil, nil, xerrors.New("wrong byzcoin version")
 	}
 
 	sc := NewStateChange(Create, NewInstanceID(inst.Hash()), versionContract, inst.Spawn.Args[0].Value, darcID)

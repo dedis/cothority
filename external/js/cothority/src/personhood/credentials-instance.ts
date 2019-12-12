@@ -66,7 +66,7 @@ export default class CredentialsInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return CredentialsInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return CredentialsInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -122,7 +122,7 @@ export default class CredentialsInstance extends Instance {
     /**
      * Update the data of the crendetial instance by fetching the proof
      *
-     * @returns a promise resolving with the instance
+     * @returns a promise resolving with the instance on success
      */
     async update(): Promise<CredentialsInstance> {
         const inst = await Instance.fromByzcoin(this.rpc, this.id);
@@ -368,6 +368,11 @@ export class Credential extends Message<Credential> {
             this.attributes = [];
         }
         this.attributes = this.attributes.slice();
+    }
+
+    toString(): string {
+        return `${this.name}= ` +
+            this.attributes.map((a) => `${a.name}=${a.value.toString("hex")}`).join(" - ");
     }
 }
 

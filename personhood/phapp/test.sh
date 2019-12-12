@@ -18,11 +18,27 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts go.dedis.ch/cothority/v3/personhood
     build $APPDIR/../../byzcoin/bcadmin
+    run testSetAdminDarcIDs
     run testSpawner
     run testWipe
     # TODO: fix the credential instance ID mess
     # run testRegister
     stopTest
+}
+
+testSetAdminDarcIDs(){
+  rm -f config/*
+  runCoBG 1 2
+  testFail runPH adminDarcIDs get
+  testOK runPH adminDarcIDs get co1/public.toml
+  testFail runPH adminDarcIDs set
+  testFail runPH adminDarcIDs set co1/public.toml
+  testOK runPH adminDarcIDs set co1/private.toml
+  testOK runPH adminDarcIDs set co1/private.toml 1234
+  testGrep 1234 runPH adminDarcIDs get co1/public.toml
+  testNGrep 1234 runPH adminDarcIDs get co2/public.toml
+  testOK runPH adminDarcIDs set co1/private.toml
+  testNGrep 1234 runPH adminDarcIDs get co1/public.toml
 }
 
 testSpawner(){

@@ -3,21 +3,20 @@ package byzcoin
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
-	"fmt"
 
 	"go.dedis.ch/cothority/v3/darc"
+	"golang.org/x/xerrors"
 )
 
 // getSignerCounter returns 0 if the key is not set, otherwise it loads the
 // counter from the Trie.
 func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 	val, _, _, _, err := st.GetValues(publicVersionKey(id))
-	if err == errKeyNotSet {
+	if xerrors.Is(err, errKeyNotSet) {
 		return 0, nil
 	}
 	if err != nil {
-		return 0, err
+		return 0, xerrors.Errorf("reading trie: %v", err)
 	}
 	ver := binary.LittleEndian.Uint64(val)
 	return ver, nil
@@ -31,7 +30,7 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 		id := id.String()
 		ver, err := getSignerCounter(st, id)
 		if err != nil {
-			return scs, err
+			return scs, xerrors.Errorf("reading counter: %v", err)
 		}
 		verBuf := make([]byte, 8)
 		// If ver is the highest uint64, then it'll overflow and go
@@ -60,22 +59,22 @@ func incrementSignerCounters(st ReadOnlyStateTrie, ids []darc.Identity) (StateCh
 // respect to the current counters.
 func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, ids []darc.Identity) error {
 	if len(counters) != len(ids) {
-		return errors.New("lengths of the counters and signatures are not the same")
+		return xerrors.New("lengths of the counters and signatures are not the same")
 	}
 	for i, counter := range counters {
 		if !ids[i].PrimaryIdentity() {
-			return errors.New("not a primary identity")
+			return xerrors.New("not a primary identity")
 		}
 		id := ids[i].String()
 		c, err := getSignerCounter(st, id)
 		if err != nil {
-			return err
+			return xerrors.Errorf("reading counter: %v", err)
 		}
 		// If c is the highest uint64, then it'll overflow and go back
 		// to 0, this is the intended behaviour, otherwise the client
 		// will not be able to make more transactions.
 		if counter != c+1 {
-			return fmt.Errorf("for pk %s, got counter=%v, but need %v", id, counter, c+1)
+			return xerrors.Errorf("for pk %s, got counter=%v, but need %v", id, counter, c+1)
 		}
 	}
 	return nil

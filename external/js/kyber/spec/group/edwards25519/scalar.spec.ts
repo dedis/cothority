@@ -1,15 +1,17 @@
-import BN = require('bn.js');
-import Curve from '../../../src/curve/edwards25519/curve';
-import Scalar from '../../../src/curve/edwards25519/scalar';
-import { PRNG } from '../../helpers/utils';
+import BN = require("bn.js");
+import Curve from "../../../src/curve/edwards25519/curve";
+import Scalar from "../../../src/curve/edwards25519/scalar";
+import { PRNG } from "../../helpers/utils";
 
 describe("Ed25519 Scalar", () => {
     const prng = new PRNG(42);
     const curve = new Curve();
     // prettier-ignore
-    const b1 = Buffer.from([101, 216, 110, 23, 127, 7, 203, 250, 206, 170, 55, 91, 97, 239, 222, 159, 41, 250, 129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 171]);
+    const b1 = Buffer.from([101, 216, 110, 23, 127, 7, 203, 250, 206, 170, 55, 91, 97, 239, 222, 159, 41, 250,
+        129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 171]);
     // prettier-ignore
-    const b2 = Buffer.from([88, 146, 91, 18, 158, 90, 102, 25, 82, 85, 219, 232, 60, 253, 138, 65, 183, 2, 157, 218, 70, 58, 193, 179, 212, 232, 104, 98, 125, 202, 176, 9]);
+    const b2 = Buffer.from([88, 146, 91, 18, 158, 90, 102, 25, 82, 85, 219, 232, 60, 253, 138, 65, 183, 2, 157,
+        218, 70, 58, 193, 179, 212, 232, 104, 98, 125, 202, 176, 9]);
 
     it("should set the scalar reading bytes from little endian array", () => {
         const bytes = Buffer.from([2, 4, 8, 10]);
@@ -21,11 +23,12 @@ describe("Ed25519 Scalar", () => {
 
     it("should reduce to number to mod Q", () => {
         // prettier-ignore
-        const bytes = Buffer.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]);
+        const bytes = Buffer.from([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]);
         const s = curve.scalar().setBytes(bytes) as Scalar;
         const target = new BN(
             "0ffffffffffffffffffffffffffffffec6ef5bf4737dcf70d6ec31748d98951c",
-            16
+            16,
         );
 
         expect(s.ref.arr.fromRed().cmp(target)).toBe(0);
@@ -75,7 +78,8 @@ describe("Ed25519 Scalar", () => {
         const sum = curve.scalar().add(s1, s2);
 
         // prettier-ignore
-        const target = Buffer.from([142, 79, 58, 43, 251, 31, 103, 75, 235, 66, 111, 67, 13, 48, 213, 251, 223, 252, 30, 150, 83, 181, 96, 87, 34, 5, 98, 17, 87, 61, 173, 5]);
+        const target = Buffer.from([142, 79, 58, 43, 251, 31, 103, 75, 235, 66, 111, 67, 13, 48, 213, 251, 223,
+            252, 30, 150, 83, 181, 96, 87, 34, 5, 98, 17, 87, 61, 173, 5]);
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
@@ -87,7 +91,8 @@ describe("Ed25519 Scalar", () => {
         const s2 = curve.scalar().setBytes(b2);
         const diff = curve.scalar().sub(s1, s2);
         // prettier-ignore
-        const target = Buffer.from([203, 254, 120, 99, 217, 205, 172, 112, 29, 53, 176, 20, 114, 47, 158, 141, 113, 247, 228, 224, 197, 64, 222, 239, 120, 51, 144, 76, 92, 168, 75, 2]);
+        const target = Buffer.from([203, 254, 120, 99, 217, 205, 172, 112, 29, 53, 176, 20, 114, 47, 158, 141,
+            113, 247, 228, 224, 197, 64, 222, 239, 120, 51, 144, 76, 92, 168, 75, 2]);
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
@@ -99,7 +104,8 @@ describe("Ed25519 Scalar", () => {
         const neg = curve.scalar().neg(s1);
 
         // prettier-ignore
-        const target = Buffer.from([202, 66, 33, 231, 162, 58, 255, 205, 102, 18, 108, 165, 47, 205, 181, 69, 215, 5, 126, 68, 243, 132, 96, 92, 178, 227, 6, 81, 38, 141, 3, 4]);
+        const target = Buffer.from([202, 66, 33, 231, 162, 58, 255, 205, 102, 18, 108, 165, 47, 205, 181, 69,
+            215, 5, 126, 68, 243, 132, 96, 92, 178, 227, 6, 81, 38, 141, 3, 4]);
         const s2 = curve.scalar();
         s2.unmarshalBinary(target);
 
@@ -110,7 +116,8 @@ describe("Ed25519 Scalar", () => {
         const one = curve.scalar().one();
         const bytes = one.marshalBinary();
         // prettier-ignore
-        const target = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        const target = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0]);
 
         expect(bytes).toEqual(target);
     });
@@ -121,7 +128,8 @@ describe("Ed25519 Scalar", () => {
         const prod = curve.scalar().mul(s1, s2);
 
         // prettier-ignore
-        const target = Buffer.from([34, 211, 107, 76, 100, 86, 13, 215, 123, 147, 172, 207, 230, 235, 139, 24, 48, 176, 64, 192, 65, 15, 67, 221, 226, 55, 42, 236, 84, 151, 8, 7]);
+        const target = Buffer.from([34, 211, 107, 76, 100, 86, 13, 215, 123, 147, 172, 207, 230, 235, 139, 24,
+            48, 176, 64, 192, 65, 15, 67, 221, 226, 55, 42, 236, 84, 151, 8, 7]);
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
@@ -134,7 +142,8 @@ describe("Ed25519 Scalar", () => {
         const quotient = curve.scalar().div(s1, s2);
 
         // prettier-ignore
-        const target = Buffer.from([145, 191, 30, 22, 157, 168, 12, 162, 220, 120, 243, 189, 108, 219, 155, 180, 153, 9, 224, 106, 128, 43, 50, 228, 38, 190, 218, 139, 185, 250, 4, 4]);
+        const target = Buffer.from([145, 191, 30, 22, 157, 168, 12, 162, 220, 120, 243, 189, 108, 219, 155,
+            180, 153, 9, 224, 106, 128, 43, 50, 228, 38, 190, 218, 139, 185, 250, 4, 4]);
         const s3 = curve.scalar();
         s3.unmarshalBinary(target);
 
@@ -146,7 +155,8 @@ describe("Ed25519 Scalar", () => {
         const inv = curve.scalar().inv(s1);
 
         // prettier-ignore
-        const target = Buffer.from([154, 16, 208, 201, 223, 62, 219, 72, 103, 81, 202, 115, 69, 207, 192, 15, 46, 182, 202, 37, 102, 233, 116, 118, 239, 127, 234, 84, 12, 32, 206, 5]);
+        const target = Buffer.from([154, 16, 208, 201, 223, 62, 219, 72, 103, 81, 202, 115, 69, 207, 192, 15,
+            46, 182, 202, 37, 102, 233, 116, 118, 239, 127, 234, 84, 12, 32, 206, 5]);
         const s2 = curve.scalar();
         s2.unmarshalBinary(target);
 
@@ -158,7 +168,8 @@ describe("Ed25519 Scalar", () => {
         const s1 = curve.scalar().pick(prng.pseudoRandomBytes);
 
         // prettier-ignore
-        const bytes = Buffer.from([231, 30, 187, 110, 193, 139, 10, 170, 126, 79, 112, 41, 212, 167, 34, 46, 227, 253, 241, 189, 81, 181, 199, 179, 13, 151, 183, 143, 196, 244, 208, 1]);
+        const bytes = Buffer.from([231, 30, 187, 110, 193, 139, 10, 170, 126, 79, 112, 41, 212, 167, 34, 46,
+            227, 253, 241, 189, 81, 181, 199, 179, 13, 151, 183, 143, 196, 244, 208, 1]);
         const target = curve.scalar();
         target.unmarshalBinary(bytes);
 
@@ -170,7 +181,8 @@ describe("Ed25519 Scalar", () => {
         s1.unmarshalBinary(b1);
         const m = s1.marshalBinary();
         // prettier-ignore
-        const target = Buffer.from([35, 145, 212, 117, 119, 40, 19, 138, 111, 138, 139, 253, 174, 44, 41, 207, 40, 250, 129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 11]);
+        const target = Buffer.from([35, 145, 212, 117, 119, 40, 19, 138, 111, 138, 139, 253, 174, 44, 41, 207,
+            40, 250, 129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 11]);
 
         expect(m).toEqual(target);
     });
@@ -179,7 +191,8 @@ describe("Ed25519 Scalar", () => {
         const s1 = curve.scalar();
         s1.unmarshalBinary(b1);
         // prettier-ignore
-        const target = Buffer.from([35, 145, 212, 117, 119, 40, 19, 138, 111, 138, 139, 253, 174, 44, 41, 207, 40, 250, 129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 11]);
+        const target = Buffer.from([35, 145, 212, 117, 119, 40, 19, 138, 111, 138, 139, 253, 174, 44, 41, 207,
+            40, 250, 129, 187, 12, 123, 159, 163, 77, 28, 249, 174, 217, 114, 252, 11]);
         const bytes = s1.marshalBinary();
 
         expect(bytes).toEqual(target);
@@ -210,8 +223,8 @@ describe("Ed25519 Scalar", () => {
 
     // TODO: discrepency
     xit("should print the string representation of zero scalar", () => {
-        let s1 = curve.scalar().zero() as Scalar;
-        let target = "";
+        const s1 = curve.scalar().zero() as Scalar;
+        const target = "";
         expect(s1.toString()).toBe(target);
     });
 

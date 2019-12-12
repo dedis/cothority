@@ -1,3 +1,4 @@
+import Log from "../../src/log";
 import { SkipBlock, SkipchainRPC } from "../../src/skipchain";
 import { ROSTER, startConodes } from "../support/conondes";
 
@@ -48,7 +49,7 @@ describe("SkipchainRPC Tests", () => {
             await rpc2.addBlock(genesis.hash, Buffer.from("def"));
         }
 
-        const chain = await rpc.getUpdateChain(genesis.hash);
+        const chain = await rpc2.getUpdateChain(genesis.hash);
         expect(chain.length).toBe(7);
     });
 
@@ -79,7 +80,7 @@ describe("SkipchainRPC Tests", () => {
             .toBeRejected();
         await expectAsync(rejectContains(rpc.getSkipBlock(Buffer.from([1, 2, 3])), "No such block"))
             .toBeResolved();
-        await expectAsync(rejectContains(rpc.getLatestBlock(Buffer.from([1, 2, 3])), "Couldn't find latest skipblock"))
+        await expectAsync(rejectContains(rpc.getLatestBlock(Buffer.from([1, 2, 3])), "couldn't find latest skipblock"))
             .toBeResolved();
     });
 

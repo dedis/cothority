@@ -27,7 +27,6 @@ func TestService_Naming(t *testing.T) {
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
 	require.Nil(t, err)
-	require.NoError(t, cl.UseNode(0))
 
 	// Spawn the naming instance
 	spawnNamingTx, err := cl.CreateTransaction(Instruction{

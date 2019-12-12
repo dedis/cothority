@@ -79,6 +79,10 @@ message AddTxRequest {
   // How many block-intervals to wait for inclusion -
   // missing value or 0 means return immediately.
   optional sint32 inclusionwait = 4;
+  // ProofFrom is used to ask a proof from a given block. If this field
+  // is empty, the proof will start from the genesis block. The proof is
+  // returned only when InclusionWait is above 0.
+  optional bytes prooffrom = 5;
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.
@@ -87,6 +91,8 @@ message AddTxResponse {
   required sint32 version = 1;
   // Error message describes why the transaction failed.
   optional string error = 2;
+  // Proof of the block with the transaction.
+  optional Proof proof = 3;
 }
 
 // GetProof returns the proof that the given key is in the trie.
@@ -98,6 +104,9 @@ message GetProof {
   // ID is any block that is known to us in the skipchain, can be the genesis
   // block or any later block. The proof returned will be starting at this block.
   required bytes id = 3;
+  // MustContainBlock when provided informs the server that the proof
+  // should include this block.
+  optional bytes mustcontainblock = 4;
 }
 
 // GetProofResponse can be used together with the Genesis block to proof that

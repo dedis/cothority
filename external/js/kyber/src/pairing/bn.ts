@@ -1,10 +1,10 @@
-import BN from 'bn.js';
-import CurvePoint from './curve-point';
-import TwistPoint from './twist-point';
-import GfP2 from './gfp2';
-import GfP12 from './gfp12';
-import GfP6 from './gfp6';
-import { optimalAte } from './opt-ate';
+import BN from "bn.js";
+import CurvePoint from "./curve-point";
+import GfP12 from "./gfp12";
+import GfP2 from "./gfp2";
+import GfP6 from "./gfp6";
+import { optimalAte } from "./opt-ate";
+import TwistPoint from "./twist-point";
 
 export type BNType = number | string | number[] | Buffer | BN;
 
@@ -18,14 +18,14 @@ export class G1 {
      * @param msg The message to hash
      * @returns a valid point
      */
-    public static hashToPoint(msg: Buffer): G1 {
+    static hashToPoint(msg: Buffer): G1 {
         const g1 = new G1();
         g1.p = CurvePoint.hashToPoint(msg);
 
         return g1;
     }
 
-    private static ELEM_SIZE = 256/8;
+    private static ELEM_SIZE = 256 / 8;
     private static MARSHAL_SIZE = G1.ELEM_SIZE * 2;
 
     private p: CurvePoint;
@@ -135,8 +135,8 @@ export class G1 {
      * @param bytes the buffer
      */
     unmarshal(bytes: Buffer): void {
-        if (bytes.length != G1.MARSHAL_SIZE) {
-            throw new Error('wrong buffer size for a G1 point');
+        if (bytes.length !== G1.MARSHAL_SIZE) {
+            throw new Error("wrong buffer size for a G1 point");
         }
 
         this.p = new CurvePoint(bytes.slice(0, G1.ELEM_SIZE), bytes.slice(G1.ELEM_SIZE), 1, 1);
@@ -147,7 +147,7 @@ export class G1 {
         }
 
         if (!this.p.isOnCurve()) {
-            throw new Error('malformed G1 point');
+            throw new Error("malformed G1 point");
         }
     }
 
@@ -299,7 +299,7 @@ export class G2 {
      */
     unmarshal(bytes: Buffer): void {
         if (bytes.length !== G2.MARSHAL_SIZE) {
-            throw new Error('wrong buffer size for G2 point');
+            throw new Error("wrong buffer size for G2 point");
         }
 
         const xxBytes = bytes.slice(0, G2.ELEM_SIZE);
@@ -318,9 +318,9 @@ export class G2 {
             this.p.setInfinity();
             return;
         }
-        
+
         if (!this.p.isOnCurve()) {
-            throw new Error('malformed G2 point');
+            throw new Error("malformed G2 point");
         }
     }
 
@@ -362,16 +362,16 @@ export class G2 {
  * object and then every modification is done in-place.
  */
 export class GT {
-    private static ELEM_SIZE = 256 / 8;
-    private static MARSHAL_SIZE = GT.ELEM_SIZE * 12;
 
-    public static pair(g1: G1, g2: G2): GT {
+    static pair(g1: G1, g2: G2): GT {
         return optimalAte(g1, g2);
     }
 
-    public static one(): GT {
+    static one(): GT {
         return new GT(GfP12.one());
     }
+    private static ELEM_SIZE = 256 / 8;
+    private static MARSHAL_SIZE = GT.ELEM_SIZE * 12;
 
     private g: GfP12;
 
@@ -445,22 +445,22 @@ export class GT {
      */
     unmarshal(bytes: Buffer): void {
         if (bytes.length !== GT.MARSHAL_SIZE) {
-            throw new Error('wrong buffer size for a GT point');
+            throw new Error("wrong buffer size for a GT point");
         }
 
         const n = GT.ELEM_SIZE;
         const xxxBytes = bytes.slice(0, n);
-        const xxyBytes = bytes.slice(n, n*2);
-        const xyxBytes = bytes.slice(n*2, n*3);
-        const xyyBytes = bytes.slice(n*3, n*4);
-        const xzxBytes = bytes.slice(n*4, n*5);
-        const xzyBytes = bytes.slice(n*5, n*6);
-        const yxxBytes = bytes.slice(n*6, n*7);
-        const yxyBytes = bytes.slice(n*7, n*8);
-        const yyxBytes = bytes.slice(n*8, n*9);
-        const yyyBytes = bytes.slice(n*9, n*10);
-        const yzxBytes = bytes.slice(n*10, n*11);
-        const yzyBytes = bytes.slice(n*11);
+        const xxyBytes = bytes.slice(n, n * 2);
+        const xyxBytes = bytes.slice(n * 2, n * 3);
+        const xyyBytes = bytes.slice(n * 3, n * 4);
+        const xzxBytes = bytes.slice(n * 4, n * 5);
+        const xzyBytes = bytes.slice(n * 5, n * 6);
+        const yxxBytes = bytes.slice(n * 6, n * 7);
+        const yxyBytes = bytes.slice(n * 7, n * 8);
+        const yyxBytes = bytes.slice(n * 8, n * 9);
+        const yyyBytes = bytes.slice(n * 9, n * 10);
+        const yzxBytes = bytes.slice(n * 10, n * 11);
+        const yzyBytes = bytes.slice(n * 11);
 
         this.g = new GfP12(
             new GfP6(new GfP2(xxxBytes, xxyBytes), new GfP2(xyxBytes, xyyBytes), new GfP2(xzxBytes, xzyBytes)),

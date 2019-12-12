@@ -7,19 +7,13 @@ const lvlStr = ["E ", "W ", "I ", "!4", "!3", "!2", "!1", "P ", " 1", " 2", " 3"
 
 export class Logger {
 
-    set lvl(l) {
-        this._lvl = l;
-    }
-
-    get lvl() {
-        return this._lvl;
-    }
-    _lvl: number;
+    lvl: number;
     stackFrameOffset: number = 0;
 
-    constructor(lvl: number) {
-        this._lvl = lvl === undefined ? defaultLvl : lvl;
+    constructor(lvl: number | undefined) {
+        this.lvl = lvl === undefined ? defaultLvl : lvl;
     }
+
     out = (...str: string[]) => {
         // tslint:disable-next-line
         console.log(str.join(" "));
@@ -62,7 +56,7 @@ export class Logger {
     printCaller(err: (Error | string), i: number): any {
         try {
             const stack = (err as Error).stack.split("\n");
-            const method = stack[i].trim().replace(/^at */, "").split("(");
+            const method = stack[i + this.stackFrameOffset].trim().replace(/^at */, "").split("(");
             let module = "unknown";
             let file = method[0].replace(/^.*\//g, "");
             if (method.length > 1) {
@@ -71,18 +65,18 @@ export class Logger {
             }
 
             // @ts-ignore
-            return (file).padEnd(20);
+            return (file).padEnd(30);
         } catch (e) {
-            return this.out("Couldn't get stack - " + e.toString(), (i + 2).toString());
+            return this.out("Couldn't get stack - " + e.toString(), (i + 2 + this.stackFrameOffset).toString());
         }
     }
 
     printLvl(l: number, args: any) {
         let indent = Math.abs(l);
         indent = indent >= 5 ? 0 : indent;
-        if (l <= this._lvl) {
+        if (l <= this.lvl) {
             // tslint:disable-next-line
-            this.out(lvlStr[l + 7] + ": " + this.printCaller(new Error(), 3+this.stackFrameOffset) +
+            this.out(lvlStr[l + 7] + ": " + this.printCaller(new Error(), 3) +
                 " -> " + " ".repeat(indent * 2) + this.joinArgs(args));
         }
     }
@@ -137,40 +131,23 @@ export class Logger {
 
     catch(e: (Error | string), ...args: any) {
         let errMsg = e;
-        if ((e as Error).message) {
-            errMsg = (e as Error).message;
+        if (e instanceof Error) {
+            errMsg = e.message;
         }
-        if ((e as Error).stack) {
-            for (let i = 1; i < (e as Error).stack.split("\n").length; i++) {
-                if (i > 1) {
-                    errMsg = "";
-                }
-                this.out("C : " + this.printCaller(e, i) + " -> (" + errMsg + ") " +
-                    this.joinArgs(args));
+        if (e instanceof Error) {
+            for (let i = this.stackFrameOffset; i < e.stack.split("\n").length - this.stackFrameOffset; i++) {
+                this.out("C : " + this.printCaller(e, i) + " -> " + this.joinArgs(args));
             }
         } else {
-            this.out("C : " + this.printCaller(e, 1) + " -> (" + errMsg + ") " +
-                this.joinArgs(args));
+            this.out("C : " + this.printCaller(new Error(), 2) + " -> (" + errMsg + ")");
         }
     }
 
     rcatch(e: (Error | string), ...args: any): Promise<any> {
-        let errMsg = e;
-        if ((e as Error).message) {
-            errMsg = (e as Error).message;
-        }
-        if ((e as Error).stack) {
-            for (let i = 1; i < (e as Error).stack.split("\n").length; i++) {
-                if (i > 1) {
-                    errMsg = "";
-                }
-                this.out("C : " + this.printCaller(e, i) + " -> (" + errMsg + ") " +
-                    this.joinArgs(args));
-            }
-        } else {
-            this.out("C : " + this.printCaller(e, 1) + " -> (" + errMsg + ") " +
-                this.joinArgs(args));
-        }
+        this.stackFrameOffset++;
+        this.catch(e, ...args);
+        this.stackFrameOffset--;
+        const errMsg = e instanceof Error ? e.message : e;
         return Promise.reject(errMsg.toString().replace(/Error: /, ""));
     }
 }

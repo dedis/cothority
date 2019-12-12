@@ -51,6 +51,11 @@ The last major version was v2, which is end of life as of June 2019.
 As of Oct 2019, work is starting on v4. It will be released in Feb 2020, with
 an end of life in June 2021.
 
+As a general rule, the current and last versions of Go are tested and expected
+to work to compile Cothority. If you encounter problems with older versions of
+the Go toolchain, please report them via a Github issue and we will try to solve
+them on a best-effort basis.
+
 ### Release v3.1.0
 
 The release introduces the notion of signature scheme for a given skipchain so that
@@ -99,6 +104,15 @@ Javascript/Typescript
 ```javascript
 const tx = ClientTransaction.make(rpc.getProtocolVersion(), instr1, instr2);
 ```
+
+### Release v3.3.0
+
+An *experimental* contract has been added to ByzCoin making it possible to use
+Ethereum contracts. See directory `bevm`.
+
+The ByzCoin client-side API version number has changed from 1 to 2. Callers
+should use the new version in their requests, but the change is backwards
+compatible and old clients will still work.
 
 # Documentation
 
@@ -235,42 +249,14 @@ Now you can run it by giving the definition of the dedis-cothority on the comman
 status -g dedis-cothority.toml
 ```
 
-## Collective Signing
-
-Another service available is fault-tolerant collective signing, or ftCoSi. It
-requests a collective signature from a set of conodes. The signature is created
-on a given input data. For installation, type:
-
-```
-go install ./blscosi/blscosi
-```
-
-Now you can create a file and have it signed by the cothority:
-
-```
-date > /tmp/my_file
-blscosi sign -g dedis-cothority.toml /tmp/my_file | tee sig.json
-```
-
-And later somebody can verify the signature is correct by running the following command:
-
-```
-blscosi verify -g dedis-cothority.toml --signature sig.json /tmp/my_file
-```
-
-If everything is correct, it should print
-
-```
-[+] OK: Signature is valid.
-```
-
 # Participating in the cothority
 
 There are different ways to participate in the cothority project. A first step
 is to simply test the different CLI applications in this repository and tell us
 what were your difficulties or what you would like to use them for.
 
-A next step is to set up your own conode and participate in the
+A next step is to set up your own conode and participate in consensus
+operations on skipchains or ledgers.
 
 ## Setting up your own conode
 

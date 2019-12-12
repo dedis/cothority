@@ -1,10 +1,10 @@
-import BN from 'bn.js';
-import jsc from 'jsverify';
-import BN256Scalar from '../../src/pairing/scalar';
-import { p } from '../../src/pairing/constants';
+import BN from "bn.js";
+import jsc from "jsverify";
+import { p } from "../../src/pairing/constants";
+import BN256Scalar from "../../src/pairing/scalar";
 
-describe('BN256 Scalar Tests', () => {
-    it('should add', () => {
+describe("BN256 Scalar Tests", () => {
+    it("should add", () => {
         const prop = jsc.forall(jsc.integer, jsc.integer, (a, b) => {
             const sA = new BN256Scalar(a);
             const sB = new BN256Scalar(b);
@@ -19,7 +19,7 @@ describe('BN256 Scalar Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should subtract', () => {
+    it("should subtract", () => {
         const prop = jsc.forall(jsc.integer, jsc.integer, (a, b) => {
             const sA = new BN256Scalar(a);
             const sB = new BN256Scalar(b);
@@ -33,7 +33,7 @@ describe('BN256 Scalar Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should multiply', () => {
+    it("should multiply", () => {
         const prop = jsc.forall(jsc.integer, jsc.integer, (a, b) => {
             const sA = new BN256Scalar(a);
             const sB = new BN256Scalar(b);
@@ -47,10 +47,10 @@ describe('BN256 Scalar Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should divide', () => {
+    it("should divide", () => {
         const prop = jsc.forall(jsc.nat, jsc.nat, (a, b) => {
-            const sA = new BN256Scalar(a*(b+1));
-            const sB = new BN256Scalar(b+1);
+            const sA = new BN256Scalar(a * (b + 1));
+            const sB = new BN256Scalar(b + 1);
             const res = new BN256Scalar();
             res.div(sA, sB);
 
@@ -61,14 +61,14 @@ describe('BN256 Scalar Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should get the negative', () => {
+    it("should get the negative", () => {
         const a = new BN256Scalar(-1);
         const n = new BN256Scalar().neg(a);
 
-        expect(n.equals(new BN256Scalar().one()))
+        expect(n.equals(new BN256Scalar().one()));
     });
 
-    it('should get the inverse', () => {
+    it("should get the inverse", () => {
         const a = new BN256Scalar(123);
         const inv = new BN256Scalar().inv(a);
 
@@ -76,7 +76,7 @@ describe('BN256 Scalar Tests', () => {
         expect(one.equals(new BN256Scalar().one())).toBeTruthy();
     });
 
-    it('should marshal and unmarshal', () => {
+    it("should marshal and unmarshal", () => {
         const prop = jsc.forall(jsc.integer, (num) => {
             const a = new BN256Scalar(num);
             const buf = a.marshalBinary();
@@ -91,7 +91,7 @@ describe('BN256 Scalar Tests', () => {
         expect(prop).toHold();
     });
 
-    it('should get a random scalar', () => {
+    it("should get a random scalar", () => {
         for (let i = 0; i < 100; i++) {
             const a = new BN256Scalar().pick();
             const b = new BN256Scalar().pick();
@@ -100,7 +100,7 @@ describe('BN256 Scalar Tests', () => {
         }
     });
 
-    it('should clone', () => {
+    it("should clone", () => {
         const a = new BN256Scalar(123);
         const b = new BN256Scalar().set(a);
 

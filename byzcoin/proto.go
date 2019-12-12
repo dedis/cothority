@@ -99,6 +99,10 @@ type AddTxRequest struct {
 	// How many block-intervals to wait for inclusion -
 	// missing value or 0 means return immediately.
 	InclusionWait int `protobuf:"opt"`
+	// ProofFrom is used to ask a proof from a given block. If this field
+	// is empty, the proof will start from the genesis block. The proof is
+	// returned only when InclusionWait is above 0.
+	ProofFrom skipchain.SkipBlockID `protobuf:"opt"`
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.
@@ -107,6 +111,8 @@ type AddTxResponse struct {
 	Version Version
 	// Error message describes why the transaction failed.
 	Error string `protobuf:"opt"`
+	// Proof of the block with the transaction.
+	Proof *Proof `protobuf:"opt"`
 }
 
 // GetProof returns the proof that the given key is in the trie.
@@ -118,6 +124,9 @@ type GetProof struct {
 	// ID is any block that is known to us in the skipchain, can be the genesis
 	// block or any later block. The proof returned will be starting at this block.
 	ID skipchain.SkipBlockID
+	// MustContainBlock when provided informs the server that the proof
+	// should include this block.
+	MustContainBlock skipchain.SkipBlockID `protobuf:"opt"`
 }
 
 // GetProofResponse can be used together with the Genesis block to proof that

@@ -1,8 +1,8 @@
-import Nist from '../../../src/curve/nist';
+import Nist from "../../../src/curve/nist";
 
 const { Curve, Params, Scalar, Point } = Nist;
 
-describe('Nist curve', () => {
+describe("Nist curve", () => {
     const curve = new Curve(Params.p256);
 
     it("should return the name of the curve", () => {

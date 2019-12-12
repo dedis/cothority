@@ -1,4 +1,4 @@
-import { Properties } from "protobufjs";
+import { Properties } from "protobufjs/light";
 import ByzCoinRPC from "./byzcoin-rpc";
 import Proof from "./proof";
 

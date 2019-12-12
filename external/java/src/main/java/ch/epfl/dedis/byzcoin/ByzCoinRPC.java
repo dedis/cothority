@@ -51,7 +51,7 @@ public class ByzCoinRPC {
     private SkipchainRPC skipchain;
 
     private Subscription subscription;
-    public static final int currentVersion = 1;
+    public static final int currentVersion = 2;
     final String[] darcContractIDs = new String[]{"darc"};
 
     private static final Logger logger = LoggerFactory.getLogger(ByzCoinRPC.class);

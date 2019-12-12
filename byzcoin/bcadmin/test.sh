@@ -5,8 +5,8 @@
 # Options:
 #   -b   re-builds bcadmin package
 
-DBG_TEST=1
-DBG_SRV=2
+DBG_TEST=2
+DBG_SRV=1
 DBG_BCADMIN=2
 
 NBR_SERVERS=4
@@ -27,7 +27,11 @@ main(){
     startTest
     buildConode go.dedis.ch/cothority/v3/byzcoin go.dedis.ch/cothority/v3/byzcoin/contracts
     [[ ! -x ./bcadmin ]] && exit 1
-    run testReplay
+    run testReset
+    run testDbReplay
+    run testDbMerge
+    run testDbCatchup
+    run testDebugBlock
     run testLink
     run testLinkScenario
     run testCoin
@@ -44,6 +48,7 @@ main(){
     run testQR
     run testUpdateDarcDesc
     run testResolveiid
+    run testInstructionGet
     run testContractValue
     run testContractDeferred
     run testContractConfig
@@ -51,24 +56,101 @@ main(){
     stopTest
 }
 
-testReplay(){
+# TODO: https://github.com/dedis/cothority/issues/2150
+testReset(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  db=service_storage/$( ls service_storage | tail -n 1 )
+  runBA config --blockSize 1000000 $bc $key
+
+  pkill -9 conode
+  testFail runBA db resetBlock $db $bcID
+}
+
+testDbReplay(){
+  rm -f config/* *.db
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testFail runBA db replay conode.db $bcID
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
+
+  testOK runBA mint $bc $key $keyPub 1000
+  testOK runBA mint $bc $key $keyPub 1000
+
+  # replay with more than 1 block
+  runBA db catchup conode.db $bcID http://localhost:2003
+  testNGrep "Replaying block at index 0" runBA db replay conode.db $bcID --cont
+  testReGrep "Replaying block at index 1"
+  testGrep "Replaying block at index 0" runBA db replay conode.db $bcID
+  testOK runBA db replay conode.db $bcID --cont
+}
+
+testDbMerge(){
   rm -f config/*
   runCoBG 1 2 3
   testOK runBA create public.toml --interval .5s
-  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   bc=config/bc*cfg
   key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
   keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
-  testOK runBA debug replay http://localhost:2003
 
-  # replay with only the genesis block
-  testOK runBA debug replay http://localhost:2003 $bcID
+  db=$( ls $CONODE_SERVICE_PATH/* | head -n 1 )
+  pkill conode 2> /dev/null
 
-  for i in $( seq 10 ); do
-    testOK runBA mint $bc $key $keyPub 1000
-  done
-  # replay with more than 1 block
-  testOK runBA debug replay http://localhost:2003 $bcID
+  testOK runBA db merge conode.db $bcID $db
+  testGrep "Last block is: 0" runBA db status conode.db $bcID
+
+  runCoBG 1 2 3
+  testOK runBA mint $bc $key $keyPub 1000
+
+  pkill conode 2> /dev/null
+  testOK runBA db merge conode.db $bcID $db
+  testGrep "Last block is: 3" runBA db status conode.db $bcID
+}
+
+testDbCatchup(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Last block is: 0" runBA db status conode.db $bcID
+  testOK runBA mint $bc $key $keyPub 1000
+  testOK runBA db catchup conode.db $bcID http://localhost:2003
+  testGrep "Last block is: 3" runBA db status conode.db $bcID
+}
+
+testDebugBlock(){
+  rm -f config/*
+  runCoBG 1 2 3
+  testOK runBA create public.toml --interval .5s
+  bc=config/bc*cfg
+  key=config/key*cfg
+  bcID=$( echo $bc | sed -e "s/.*bc-\(.*\).cfg/\1/" )
+  keyPub=$( echo $key | sed -e "s/.*:\(.*\).cfg/\1/" )
+
+  testOK runBA debug block --bcCfg $bc --blockIndex 0
+  testGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
+  runBA config --blockSize 1000000 $bc $key
+  testNGrep "no block with index" runBA debug block --bcCfg $bc --blockIndex 1
+  testNGrep "no block with index" runBA debug block \
+    --url http://localhost:2003 --bcID $bcID --blockIndex 1
+  testGrep "Command: update_config" runBA debug block --bcCfg $bc --blockIndex 1 \
+    --txDetails
 }
 
 testLink(){
@@ -87,6 +169,11 @@ testLink(){
   testNGrep $bcIDWrong runBA -c linkDir link public.toml
   testFail runBA -c linkDir link public.toml $bcIDWrong
   testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should fail since it would overwrite the file
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # should pass with the --force option
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   testFile linkDir/bc*
 }
 
@@ -101,6 +188,7 @@ testLinkScenario(){
   runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
   eval $SED
   [ -z "$BC" ] && exit 1
+  rm -rf linkDir
 
   # Create new client
   runBA key --save newkey.id
@@ -124,9 +212,15 @@ testLinkScenario(){
   # Let's try now to link with the client darc and identity. This will make that
   # default --darc and --sign will be the client's darc and identiity
   bcID=$( echo $BC | sed -e "s/.*bc-\(.*\).cfg/\1/" )
-  testOK runBA link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  testOK runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # See if we can overwrite it withtout --force
+  testFail runBA -c linkDir link --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+  # Now we should be able to overwrite
+  testOK runBA -c linkDir link --force --darc $( cat darc.id ) --identity $( cat newkey.id ) public.toml $bcID
+
   # The final test
-  testOK runBA contract value spawn --value "shoud pass"
+  newBc="linkDir/$(ls linkDir | head -1)"
+  testOK runBA contract value spawn --value "shoud pass" --bc "$newBc"
 
   testOK unset BC
 }
@@ -148,6 +242,7 @@ testRoster(){
   bc=config/bc*cfg
   key=config/key*cfg
   testOK runBA latest $bc
+
   # Adding an already added roster should raise an error
   testFail runBA roster add $bc $key co1/public.toml
   testOK runBA roster add $bc $key co4/public.toml
@@ -308,6 +403,21 @@ testRuleDarc(){
   testGrep "spawn:xxx - \"ed25519:abc | ed25519:aef\"" runBA darc show -darc "$ID"
   testOK runBA darc rule -delete -rule spawn:xxx -darc "$ID" -sign "$KEY"
   testNGrep "spawn:xxx" runBA darc show -darc "$ID"
+
+  # re-add the rule to check the restricted mode
+  testOK runBA darc rule -rule spawn:xxx -identity ed25519:abc -darc "$ID" -sign "$KEY"
+  # removing the unrestricted rule
+  testOK runBA darc rule -delete -rule "invoke:darc.evolve_unrestricted" -darc "$ID" -sign "$KEY"
+  # now, without using the --restricted flag, it shouldn't be possible to update
+  # the darc. Then we try we the --restricted flag.
+  testFail runBA darc rule -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -replace -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  # same for deleting
+  testFail runBA darc rule -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+  testOK runBA darc rule --restricted -delete -rule spawn:xxx -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
+
+  # test the particular case of the _sign action
+  testOK runBA darc rule --restricted -replace -rule _sign -identity "ed25519:abc | ed25519:aef" -darc "$ID" -sign "$KEY"
 }
 
 testAddDarcFromOtherOne(){
@@ -359,11 +469,11 @@ testExpression(){
 }
 
 runBA(){
-  ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
+  dbgRun ./bcadmin -c config/ --debug $DBG_BCADMIN "$@"
 }
 
 runBA0(){
-  ./bcadmin -c config/ --debug 0 "$@"
+  dbgRun ./bcadmin -c config/ --debug 0 "$@"
 }
 
 testQR() {
@@ -390,8 +500,8 @@ testUpdateDarcDesc() {
   testOK runBA darc add -out_id ./darc_id.txt -out_key ./darc_key.txt -desc testing
   ID=`cat ./darc_id.txt`
   KEY=`cat ./darc_key.txt`
-  testOK runBA darc cdesc --desc "New description" --darc "$ID"
-  testGrep "New description" runBA darc show
+  testOK runBA darc cdesc --desc "New description" --darc "$ID" --sign "$KEY"
+  testGrep "New description" runBA darc show --darc "$ID"
 }
 
 # Rely on:
@@ -436,6 +546,17 @@ $VALUE_INSTANCE_ID"
   # Let's get the content of the value contract
   OUTRES=`runBA0 contract value get --instid "$VALUE_INSTANCE_ID"`
   testGrep "Hello world" echo "$OUTRES"
+}
+
+# In this test we simply get the config instance
+testInstructionGet() {
+  runCoBG 1 2 3
+  runGrepSed "export BC=" "" runBA create --roster public.toml --interval .5s
+  eval $SED
+  [ -z "$BC" ] && exit 1
+
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000
+  testOK runBA0 instance get -i 0000000000000000000000000000000000000000000000000000000000000000 --hex
 }
 
 main

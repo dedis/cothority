@@ -17,6 +17,7 @@ import (
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	bbolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 )
 
 func TestNewProof(t *testing.T) {
@@ -45,16 +46,16 @@ func TestVerify(t *testing.T) {
 	require.Equal(t, s.key, key)
 	require.Equal(t, s.value, val)
 
-	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
+	require.True(t, xerrors.Is(p.Verify(s.genesis2.SkipChainID()), ErrorVerifySkipchain))
 
 	p.Latest.BaseHeight = 123
-	require.Equal(t, ErrorVerifyHash, p.Verify(s.genesis.SkipChainID()))
+	require.True(t, xerrors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyHash))
 
 	p.Latest.Data, err = protobuf.Encode(&DataHeader{
 		TrieRoot: getSBID("123"),
 	})
 	require.Nil(t, err)
-	require.Equal(t, ErrorVerifyTrieRoot, p.Verify(s.genesis.SkipChainID()))
+	require.True(t, xerrors.Is(p.Verify(s.genesis.SkipChainID()), ErrorVerifyTrieRoot))
 }
 
 type sc struct {

@@ -3,7 +3,7 @@ import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, RosterWSConnection, WebSocketConnection } from "../network/connection";
+import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -25,11 +25,29 @@ import {
     GetSignerCountersResponse,
 } from "./proto/requests";
 
-export const currentVersion = 1;
+export const currentVersion = 2;
 
 const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
 
+/**
+ * ByzCoinRPC represents one byzcoin-representation.
+ *
+ * TODO:
+ * Split this into two classes:
+ * - one with only static methods mapped to the API of byzcoin
+ * - one representing a single byzcoin-instance
+ */
 export default class ByzCoinRPC implements ICounterUpdater {
+
+    get latest(): SkipBlock {
+        return new SkipBlock(this._latest);
+    }
+
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
+    static readonly serviceName = "ByzCoin";
+
     /**
      * Helper to create a genesis darc
      * @param signers       Authorized signers
@@ -56,42 +74,44 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
     /**
      * Recreate a byzcoin RPC from a given roster
-     * @param roster        The roster to ask for the config and darc
+     * @param nodes either a roster or an initialized connection
      * @param skipchainID   The genesis block identifier
      * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
      * @param interval how long to wait between two attempts in waitMatch.
+     * @param latest if given, use this to prove the current state of the blockchain. Needs to be trusted!
      * @returns a promise that resolves with the initialized ByzCoin instance
      */
-    static async fromByzcoin(roster: Roster, skipchainID: Buffer, waitMatch: number = 0, interval: number = 1000):
+    static async fromByzcoin(nodes: Roster | IConnection, skipchainID: Buffer, waitMatch: number = 0,
+                             interval: number = 1000, latest?: SkipBlock):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
-        rpc.conn = new RosterWSConnection(roster, "ByzCoin");
+        if (nodes instanceof Roster) {
+            rpc.conn = new RosterWSConnection(nodes, ByzCoinRPC.serviceName);
+        } else {
+            rpc.conn = nodes.copy(ByzCoinRPC.serviceName);
+        }
 
-        const skipchain = new SkipchainRPC(roster);
+        const skipchain = new SkipchainRPC(rpc.conn);
         rpc.genesis = await skipchain.getSkipBlock(skipchainID);
-        rpc.latest = rpc.genesis;
+        rpc._latest = latest !== undefined ? latest : rpc.genesis;
 
-        const ccProof = await rpc.getProof(CONFIG_INSTANCE_ID, waitMatch, interval);
+        const ccProof = await rpc.getProofFromLatest(CONFIG_INSTANCE_ID, waitMatch, interval);
         rpc.config = ChainConfig.fromProof(ccProof);
-
         const di = await DarcInstance.fromByzcoin(rpc, ccProof.stateChangeBody.darcID, waitMatch, interval);
+
         rpc.genesisDarc = di.darc;
 
         return rpc;
     }
 
     /**
-     * Create a new byzcoin chain and return a associated RPC
+     * Create a new byzcoin chain and returns an associated RPC
      * @param roster        The roster to use to create the genesis block
      * @param darc          The genesis darc
      * @param blockInterval The interval of block creation in nanoseconds
      */
     static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
-        const rpc = new ByzCoinRPC();
-        rpc.conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), "ByzCoin");
-        rpc.genesisDarc = darc;
-        rpc.config = new ChainConfig({blockInterval});
-
+        const leader = new LeaderConnection(roster, ByzCoinRPC.serviceName);
         const req = new CreateGenesisBlock({
             blockInterval,
             darcContractIDs: [DarcInstance.contractID],
@@ -100,24 +120,18 @@ export default class ByzCoinRPC implements ICounterUpdater {
             version: currentVersion,
         });
 
-        const ret = await rpc.conn.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
-        rpc.genesis = ret.skipblock;
-        rpc.latest = ret.skipblock;
-        await rpc.updateConfig();
-
-        return rpc;
+        const ret = await leader.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
+        return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
     }
-
+    private static staticCounters = new Map<string, Map<string, Long>>();
     private genesisDarc: Darc;
     private config: ChainConfig;
     private genesis: SkipBlock;
-    private latest: SkipBlock;
     private conn: IConnection;
 
-    protected constructor() {}
+    private _latest: SkipBlock;
 
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
+    protected constructor() {
     }
 
     /**
@@ -149,9 +163,17 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * latest block known by the RPC client.
      */
     getProtocolVersion(): number {
-        const header = DataHeader.decode(this.latest.data);
+        const header = DataHeader.decode(this._latest.data);
 
         return header.version;
+    }
+
+    /**
+     * Defines how many nodes will be contacted in parallel when sending a message
+     * @param p nodes to contact in parallel
+     */
+    setParallel(p: number) {
+        this.conn.setParallel(p);
     }
 
     /**
@@ -172,9 +194,21 @@ export default class ByzCoinRPC implements ICounterUpdater {
             transaction,
             version: currentVersion,
         });
+        const counters = this.counters();
 
         // The error might be in the response, so we look for it and then reject the promise.
         const resp = await this.conn.send(req, AddTxResponse) as AddTxResponse;
+        // If the transaction has been successful, we update all cached counters. If the transaction
+        // failed, all involved counters are reset and will have to be fetched again.
+        transaction.instructions.forEach((instruction) => {
+            instruction.signerIdentities.forEach((signer, i) => {
+                if (resp.error.length === 0) {
+                    counters.set(signer.toString(), instruction.signerCounter[i]);
+                } else {
+                    counters.delete(signer.toString());
+                }
+            });
+        });
         if (resp.error.length === 0) {
             return Promise.resolve(resp);
         }
@@ -225,11 +259,11 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @return a promise that resolves with the proof, rejecting otherwise
      */
     async getProofFromLatest(id: Buffer, waitMatch: number = 0, interval: number = 1000): Promise<Proof> {
-        if (!this.latest) {
+        if (this._latest === undefined) {
             throw new Error("no latest block found");
         }
 
-        return this.getProofFrom(this.latest, id, waitMatch, interval);
+        return this.getProofFrom(this._latest, id, waitMatch, interval);
     }
 
     /**
@@ -239,6 +273,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * you must use getProof in order to create a complete standalone
      * proof starting from the genesis block.
      *
+     * @param from skipblock to start
      * @param id the instance key
      * @param waitMatch number of milliseconds to wait if the proof is false
      * @param interval how long to wait before checking for a match again
@@ -265,7 +300,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
             throw err;
         }
 
-        this.latest = reply.proof.latest;
+        this._latest = reply.proof.latest;
 
         return reply.proof;
     }
@@ -284,7 +319,47 @@ export default class ByzCoinRPC implements ICounterUpdater {
         });
 
         const rep = await this.conn.send<GetSignerCountersResponse>(req, GetSignerCountersResponse);
+        const counters = this.counters();
+        ids.forEach((counter, i) => counters.set(counter.toString(), rep.counters[i]));
         return rep.counters.map((c) => c.add(add));
+    }
+
+    /**
+     * This keeps track of the know counters, thus speeding up signing with known keys. It
+     * also solves the problem of counters sometimes being out of synch with the chain.
+     * After the call returns, all signers are in ClientTransaction.counters.
+     *
+     * @param rpc should allow updates for counters
+     * @param signers the signers needed
+     */
+    async updateCachedCounters(signers: IIdentity[]): Promise<Long[]> {
+        const counters = this.counters();
+        const newSigners = signers.filter((signer) => {
+            return counters.has(signer.toString()) === false;
+        });
+        if (newSigners.length > 0) {
+            await this.getSignerCounters(newSigners, 0);
+        }
+        return signers.map((signer) => {
+            return counters.get(signer.toString());
+        });
+    }
+
+    /**
+     * Clears the counters, in case of an error.
+     */
+    clearCounters() {
+        this.counters().clear();
+    }
+
+    /**
+     * Returns the next value for the counter and updates the cache.
+     */
+    getNextCounter(signer: IIdentity): Long {
+        const counters = this.counters();
+        const c = counters.get(signer.toString()).add(1);
+        counters.set(signer.toString(), c);
+        return c;
     }
 
     /**
@@ -309,5 +384,13 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const reply = await this.conn.send<CheckAuthorizationResponse>(req, CheckAuthorizationResponse);
         return reply.actions;
+    }
+
+    private counters(): Map<string, Long> {
+        const idStr = this.genesisID.toString("hex");
+        if (!ByzCoinRPC.staticCounters.has(idStr)) {
+            ByzCoinRPC.staticCounters.set(idStr, new Map<string, Long>());
+        }
+        return ByzCoinRPC.staticCounters.get(idStr);
     }
 }

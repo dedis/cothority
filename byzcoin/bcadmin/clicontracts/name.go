@@ -2,7 +2,6 @@ package clicontracts
 
 import (
 	"encoding/hex"
-	"errors"
 
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
@@ -12,13 +11,14 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 // NameSpawn is used to spawn the name contract (can only be done once)
 func NameSpawn(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -28,7 +28,7 @@ func NameSpawn(c *cli.Context) error {
 
 	gDarc, err := cl.GetGenDarc()
 	if err != nil {
-		return errors.New("failed to get genesis darc: " + err.Error())
+		return xerrors.Errorf("failed to get genesis darc: %v", err)
 	}
 
 	var signer *darc.Signer
@@ -55,12 +55,12 @@ func NameSpawn(c *cli.Context) error {
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {
-		return errors.New("failed to fill signer: " + err.Error())
+		return xerrors.Errorf("failed to fill signer: %v", err)
 	}
 
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
-		return errors.New("failed to add transaction and wait: " + err.Error())
+		return xerrors.Errorf("failed to add transaction and wait: %v", err)
 	}
 
 	instID := ctx.Instructions[0].DeriveID("").Slice()
@@ -73,7 +73,7 @@ func NameSpawn(c *cli.Context) error {
 func NameInvokeAdd(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -95,18 +95,18 @@ func NameInvokeAdd(c *cli.Context) error {
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return errors.New("failed to get signer counters: " + err.Error())
+		return xerrors.Errorf("failed to get signer counters: %v", err)
 	}
 
 	name := c.String("name")
 	if name == "" {
-		return errors.New("--name flag is required")
+		return xerrors.New("--name flag is required")
 	}
 
 	instIDs := c.StringSlice("instid")
 
 	if len(instIDs) == 0 {
-		return errors.New("--instid flag is required")
+		return xerrors.New("--instid flag is required")
 	}
 
 	append := c.Bool("append")
@@ -121,7 +121,7 @@ func NameInvokeAdd(c *cli.Context) error {
 	for i, instID := range instIDs {
 		instIDBuf, err := hex.DecodeString(instID)
 		if err != nil {
-			return errors.New("failed to decode the instID string" + instID)
+			return xerrors.New("failed to decode the instID string" + instID)
 		}
 
 		usedName := name
@@ -178,7 +178,7 @@ func NameInvokeAdd(c *cli.Context) error {
 func NameInvokeRemove(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	cfg, cl, err := lib.LoadConfig(bcArg)
@@ -200,22 +200,22 @@ func NameInvokeRemove(c *cli.Context) error {
 
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return errors.New("failed to get signer counters: " + err.Error())
+		return xerrors.Errorf("failed to get signer counters: %v", err)
 	}
 
 	name := c.String("name")
 	if name == "" {
-		return errors.New("--name flag is required")
+		return xerrors.New("--name flag is required")
 	}
 
 	instID := c.String("instid")
 	if instID == "" {
-		return errors.New("--instid flag required")
+		return xerrors.New("--instid flag required")
 	}
 
 	instIDBuf, err := hex.DecodeString(instID)
 	if err != nil {
-		return errors.New("failed to decode the instID string" + instID)
+		return xerrors.New("failed to decode the instID string" + instID)
 	}
 
 	ctx, err := cl.CreateTransaction(byzcoin.Instruction{
@@ -261,7 +261,7 @@ func NameInvokeRemove(c *cli.Context) error {
 func NameGet(c *cli.Context) error {
 	bcArg := c.String("bc")
 	if bcArg == "" {
-		return errors.New("--bc flag is required")
+		return xerrors.New("--bc flag is required")
 	}
 
 	_, cl, err := lib.LoadConfig(bcArg)
@@ -272,19 +272,19 @@ func NameGet(c *cli.Context) error {
 	// Get the latest name instance value
 	pr, err := cl.GetProofFromLatest(byzcoin.NamingInstanceID.Slice())
 	if err != nil {
-		return errors.New("couldn't get proof for NamingInstanceID: " + err.Error())
+		return xerrors.Errorf("couldn't get proof for NamingInstanceID: %v", err)
 	}
 	proof := pr.Proof
 
 	_, value, _, _, err := proof.KeyValue()
 	if err != nil {
-		return errors.New("couldn't get value out of proof: " + err.Error())
+		return xerrors.Errorf("couldn't get value out of proof: %v", err)
 	}
 	namingBody := byzcoin.ContractNamingBody{}
 	err = protobuf.DecodeWithConstructors(value, &namingBody,
 		network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		return errors.New("couldn't decode ContractNamingBody: " + err.Error())
+		return xerrors.Errorf("couldn't decode ContractNamingBody: %v", err)
 	}
 
 	log.Infof("Here is the naming data:\n%s", namingBody)

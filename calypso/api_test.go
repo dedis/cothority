@@ -34,7 +34,6 @@ func TestClient_CreateLTS(t *testing.T) {
 	// Create the clients
 	c, _, err := byzcoin.NewLedger(msg, false)
 	require.Nil(t, err)
-	require.NoError(t, c.UseNode(0))
 	calypsoClient := NewClient(c)
 	for _, who := range roster.List {
 		err := calypsoClient.Authorize(who, c.ID)
@@ -127,7 +126,6 @@ func TestClient_Calypso(t *testing.T) {
 	//Create Ledger
 	c, _, err := byzcoin.NewLedger(msg, false)
 	require.Nil(t, err)
-	require.NoError(t, c.UseNode(0))
 	//Create a Calypso Client (Byzcoin + Onet)
 	calypsoClient := NewClient(c)
 

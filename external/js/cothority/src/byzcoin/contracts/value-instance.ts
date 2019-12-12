@@ -35,7 +35,7 @@ export default class ValueInstance extends Instance {
 
         await bc.sendTransactionAndWait(ctx, 10);
 
-        return ValueInstance.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return ValueInstance.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**

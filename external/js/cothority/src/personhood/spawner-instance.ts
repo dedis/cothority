@@ -71,10 +71,9 @@ export default class SpawnerInstance extends Instance {
         const inst = Instruction.createSpawn(darcID, this.contractID, args);
         const ctx = ClientTransaction.make(bc.getProtocolVersion(), inst);
         await ctx.updateCountersAndSign(bc, [signers]);
-
         await bc.sendTransactionAndWait(ctx);
 
-        return this.fromByzcoin(bc, ctx.instructions[0].deriveId());
+        return this.fromByzcoin(bc, ctx.instructions[0].deriveId(), 1);
     }
 
     /**
@@ -339,7 +338,7 @@ export default class SpawnerInstance extends Instance {
      * @returns a promise that resolves with the new instance
      */
     async spawnRoPaSci(params: ICreateRoPaSci): Promise<RoPaSciInstance> {
-        const {desc, coin, signers, stake, choice, fillup} = params;
+        const {desc, coin, signers, stake, choice, fillup, calypso} = params;
 
         if (fillup.length !== 31) {
             throw new Error("need exactly 31 bytes for fillUp");
@@ -350,18 +349,30 @@ export default class SpawnerInstance extends Instance {
             throw new Error("account balance not high enough for that stake");
         }
 
+        const preHash = Buffer.allocUnsafe(32);
+        preHash.writeInt8(choice % 3, 0);
+        fillup.copy(preHash, 1);
         const fph = createHash("sha256");
-        fph.update(Buffer.from([choice % 3]));
-        fph.update(fillup);
+        fph.update(preHash);
         const rps = new RoPaSciStruct({
             description: desc,
             firstPlayer: -1,
+            firstPlayerAccount: calypso !== undefined ? coin.id : undefined,
             firstPlayerHash: fph.digest(),
             secondPlayer: -1,
             secondPlayerAccount: Buffer.alloc(32),
             stake: c,
         });
 
+        const rpsArgs = [new Argument({name: "struct", value: rps.toBytes()})];
+        if (calypso !== undefined) {
+            const wcH = createHash("sha256");
+            wcH.update(rps.firstPlayerHash);
+            const writeCommit = wcH.digest();
+            const w = await Write.createWrite(calypso.id, writeCommit, calypso.X, preHash.slice(0, 28));
+            const writeBuf = Write.encode(w).finish();
+            rpsArgs.push(new Argument({name: "secret", value: Buffer.from(writeBuf)}));
+        }
         const ctx = ClientTransaction.make(
             this.rpc.getProtocolVersion(),
             Instruction.createInvoke(
@@ -373,7 +384,7 @@ export default class SpawnerInstance extends Instance {
             Instruction.createSpawn(
                 this.id,
                 RoPaSciInstance.contractID,
-                [new Argument({name: "struct", value: rps.toBytes()})],
+                rpsArgs,
             ),
         );
         await ctx.updateCountersAndSign(this.rpc, [signers, []]);
@@ -628,6 +639,7 @@ interface ICreateRoPaSci {
     stake: Long;
     choice: number;
     fillup: Buffer;
+    calypso?: LongTermSecret;
 
     [k: string]: any;
 }

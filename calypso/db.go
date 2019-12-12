@@ -1,14 +1,15 @@
 package calypso
 
 import (
-	"errors"
 	"sync"
 
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
 	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 const dbVersion = 1
@@ -37,7 +38,7 @@ func (s *Service) save() error {
 	err := s.Save(storageKey, s.storage)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
-		return err
+		return xerrors.Errorf("saving data: %v", err)
 	}
 	return nil
 }
@@ -48,7 +49,7 @@ func (s *Service) tryLoad() error {
 	s.storage = &storage{}
 	ver, err := s.LoadVersion()
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading configuration: %v", err)
 	}
 
 	// Make sure we don't have any unallocated maps.
@@ -77,13 +78,13 @@ func (s *Service) tryLoad() error {
 	if ver < dbVersion {
 		// There is no version 0. Save empty storage and update version number.
 		if err = s.save(); err != nil {
-			return err
+			return xerrors.Errorf("saving storage: %v", err)
 		}
-		return s.SaveVersion(dbVersion)
+		return cothority.ErrorOrNil(s.SaveVersion(dbVersion), "saving version")
 	}
 	msg, err := s.Load(storageKey)
 	if err != nil {
-		return err
+		return xerrors.Errorf("loading storage: %v", err)
 	}
 	if msg == nil {
 		return nil
@@ -91,7 +92,7 @@ func (s *Service) tryLoad() error {
 	var ok bool
 	s.storage, ok = msg.(*storage)
 	if !ok {
-		return errors.New("data of wrong type")
+		return xerrors.New("data of wrong type")
 	}
 	return nil
 }
