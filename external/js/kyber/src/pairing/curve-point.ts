@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { BNType, oneBN } from "../constants";
 import { modSqrt } from "../utils/tonelli-shanks";
 import { p } from "./constants";

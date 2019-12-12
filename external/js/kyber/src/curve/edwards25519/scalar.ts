@@ -1,6 +1,6 @@
 // tslint:disable:no-bitwise
 import BN from "bn.js";
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { Scalar } from "../../index";
 import { int } from "../../random";
 import Ed25519 from "./curve";

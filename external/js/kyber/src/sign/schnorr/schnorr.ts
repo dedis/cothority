@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { Group, Point, Scalar } from "../../index";
 
 /**
