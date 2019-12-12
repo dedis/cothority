@@ -248,6 +248,9 @@ func executeCall(ctx *cli.Context) error {
 	if !ok {
 		return xerrors.Errorf("view method \"%s\" does not exist for this contract", method)
 	}
+	if !methodAbi.Const {
+		return xerrors.Errorf("callable \"%s\" is not a view method", method)
+	}
 
 	userArgs := ctx.Args().Tail()
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
