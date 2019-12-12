@@ -1,6 +1,6 @@
 import { curve, Point, Scalar, sign } from "@dedis/kyber";
 import Ed25519Scalar from "@dedis/kyber/curve/edwards25519/scalar";
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import Log from "../log";
 import IdentityEd25519 from "./identity-ed25519";
 import ISigner from "./signer";

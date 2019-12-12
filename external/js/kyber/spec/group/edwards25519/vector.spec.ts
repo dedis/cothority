@@ -1,5 +1,5 @@
 import BN = require("bn.js");
-import * as crypto from "crypto";
+import * as crypto from "crypto-browserify";
 import * as fs from "fs";
 import Curve from "../../../src/curve/edwards25519/curve";
 import { hexToBuffer, unhexlify } from "../../helpers/utils";

@@ -1,6 +1,6 @@
 import { Point, sign } from "@dedis/kyber";
 import { BN256G1Point, BN256G2Point } from "@dedis/kyber/pairing/point";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
 import { Roster } from "../network/proto";
 import { registerMessage } from "../protobuf";

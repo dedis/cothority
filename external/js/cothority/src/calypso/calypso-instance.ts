@@ -1,5 +1,5 @@
 import { curve, Point, Scalar } from "@dedis/kyber";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import Keccak from "keccak";
 import { Message, Properties } from "protobufjs/light";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
