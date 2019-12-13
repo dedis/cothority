@@ -266,7 +266,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			if attr.Value == "" {
 				return nil
 			}
-			// ok := false
+			ok := false
 			for key, vals := range parsedQuery {
 				log.Info("checking key:", key)
 				if key != attr.ID {
@@ -287,12 +287,13 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 					// 	"Expected '%s', got '%s'", attr.ID, val, attr.Value)
 					break
 				}
-				// ok = true
-				// break
+				ok = true
+				break
 			}
-			// if !ok {
-			// 	return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
-			// }
+			if !ok {
+				attr.AddFailedReason(fmt.Sprintf("attribute '%s' not allowed", attr.ID))
+				// return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
+			}
 			for _, subAttr := range attr.Attributes {
 				if attr.RuleType != "allowed" {
 					continue
