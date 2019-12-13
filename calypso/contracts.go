@@ -260,44 +260,48 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 
 		// Each attribute selected by the data scientist should be in the
 		// attr:allowed list
-		var isAllowed func(url.Values, *catalogc.Attribute) (bool, error)
-		isAllowed = func(parsedQuery url.Values, attr *catalogc.Attribute) (bool, error) {
+		var isAllowed func(url.Values, *catalogc.Attribute) error
+		isAllowed = func(parsedQuery url.Values, attr *catalogc.Attribute) error {
+			log.Info("checking allowed attribute:", attr.ID)
+			if attr.Value == "" {
+				return nil
+			}
+			ok := false
 			for key, vals := range parsedQuery {
+				log.Info("checking key:", key)
 				if key != attr.ID {
 					continue
 				}
 				if len(vals) != 1 {
-					return false, xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
+					return xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
 						"vals: %v", len(vals), key, vals)
 				}
 				val := vals[0]
 				if attr.Value != "" && attr.Value != val {
-					return false, xerrors.Errorf("Requested an attribute "+
+					return xerrors.Errorf("Requested an attribute "+
 						"with id '%s', we found it but the values don't match. "+
 						"Expected '%s', got '%s'", attr.ID, val, attr.Value)
 				}
+				ok = true
 				break
 			}
+			if !ok {
+				return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
+			}
 			for _, subAttr := range attr.Attributes {
-				ok, err := isAllowed(parsedQuery, subAttr)
+				err = isAllowed(parsedQuery, subAttr)
 				if err != nil {
-					return false, xerrors.Errorf("%v", err)
-				}
-				if !ok {
-					return false, nil
+					return xerrors.Errorf("attribute '%s' not allowed", subAttr.ID)
 				}
 			}
-			return true, nil
+			return nil
 		}
 
 		for _, ag := range projectC.Metadata.AttributesGroups {
 			for _, attr := range ag.Attributes {
-				isAllowed, err := isAllowed(parsedQuery, attr)
+				err := isAllowed(parsedQuery, attr)
 				if err != nil {
-					return xerrors.Errorf("failed to check allowed attribute '%s': %v", attr.ID, err)
-				}
-				if !isAllowed {
-					return xerrors.Errorf("attribute '%s' is not in the attr:allowed white list", attr.ID)
+					return xerrors.Errorf("failed to check an allowed attribute: %v", err)
 				}
 			}
 		}
@@ -344,7 +348,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			if !found {
 				return xerrors.Errorf("Must have attribute with key '%s' not found", key)
 			}
-			if attr.Value != "" && attr.Value != val {
+			if val != "" && attr.Value != val {
 				return xerrors.Errorf("Must have attribute with key '%s' does not have "+
 					"a matching value. Expected '%s', got '%s'", key, val, attr.Value)
 			}
