@@ -266,7 +266,7 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			if attr.Value == "" {
 				return nil
 			}
-			ok := false
+			// ok := false
 			for key, vals := range parsedQuery {
 				log.Info("checking key:", key)
 				if key != attr.ID {
@@ -278,24 +278,29 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				}
 				val := vals[0]
 				if attr.Value != "" && attr.Value != val {
-					return xerrors.Errorf("Requested an attribute "+
-						"with id '%s', we found it but the values don't match. "+
-						"Expected '%s', got '%s'", attr.ID, val, attr.Value)
+					attr.AddFailedReason(fmt.Sprintf(
+						"For dataset '%s': Attribute '%s' must have value '%s', "+
+							"but we found value '%s'", inst.InstanceID.String(),
+						attr.ID, val, attr.Value))
+					// return xerrors.Errorf("Requested an attribute "+
+					// 	"with id '%s', we found it but the values don't match. "+
+					// 	"Expected '%s', got '%s'", attr.ID, val, attr.Value)
+					break
 				}
-				ok = true
-				break
+				// ok = true
+				// break
 			}
-			if !ok {
-				return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
-			}
+			// if !ok {
+			// 	return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
+			// }
 			for _, subAttr := range attr.Attributes {
 				if attr.RuleType != "allowed" {
 					continue
 				}
-				err = isAllowed(parsedQuery, subAttr)
-				if err != nil {
-					return xerrors.Errorf("attribute '%s' not allowed", subAttr.ID)
-				}
+				isAllowed(parsedQuery, subAttr)
+				// if err != nil {
+				// 	return xerrors.Errorf("attribute '%s' not allowed", subAttr.ID)
+				// }
 			}
 			return nil
 		}
@@ -308,11 +313,18 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				if attr.RuleType != "allowed" {
 					continue
 				}
-				err := isAllowed(parsedQuery, attr)
-				if err != nil {
-					return xerrors.Errorf("failed to check an allowed attribute: %v", err)
-				}
+				isAllowed(parsedQuery, attr)
+				// if err != nil {
+				// 	return xerrors.Errorf("failed to check an allowed attribute: %v", err)
+				// }
 			}
+		}
+
+		failedReasons := projectC.Metadata.FailedReasons()
+		if failedReasons != "" {
+			return xerrors.Errorf("attr:allowed verification failed, you can "+
+				"check the failedReasons field of each attribute to learn more. "+
+				"Here is a summary:\n%s", failedReasons)
 		}
 
 		return nil
