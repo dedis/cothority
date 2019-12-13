@@ -289,6 +289,9 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
 			}
 			for _, subAttr := range attr.Attributes {
+				if attr.RuleType != "allowed" {
+					continue
+				}
 				err = isAllowed(parsedQuery, subAttr)
 				if err != nil {
 					return xerrors.Errorf("attribute '%s' not allowed", subAttr.ID)
@@ -299,6 +302,12 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 
 		for _, ag := range projectC.Metadata.AttributesGroups {
 			for _, attr := range ag.Attributes {
+				// The "must_have" attributes must be checked by the other rule,
+				// because the user can actually check more "must_have"
+				// attributes that are required.
+				if attr.RuleType != "allowed" {
+					continue
+				}
 				err := isAllowed(parsedQuery, attr)
 				if err != nil {
 					return xerrors.Errorf("failed to check an allowed attribute: %v", err)
