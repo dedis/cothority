@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/dedis/odyssey/catalogc"
 	"github.com/dedis/odyssey/projectc"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
@@ -257,33 +258,41 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			return xerrors.New("failed to decode project instance: " + err.Error())
 		}
 
-		// Each attribute should have a corresponding Metadata.Attribute that
-		// has a corresponding value.
-		isAllowed := func(parsedQuery url.Values, name, value string) (bool, error) {
+		// Each attribute selected by the data scientist should be in the
+		// attr:allowed list
+		var isAllowed func(url.Values, *catalogc.Attribute) (bool, error)
+		isAllowed = func(parsedQuery url.Values, attr *catalogc.Attribute) (bool, error) {
 			for key, vals := range parsedQuery {
+				if key != attr.ID {
+					continue
+				}
 				if len(vals) != 1 {
 					return false, xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
 						"vals: %v", len(vals), key, vals)
 				}
 				val := vals[0]
-				attr, found := projectC.Metadata.GetAttribute(key)
-				if !found {
-					continue
-				}
 				if attr.Value != "" && attr.Value != val {
-					return false, xerrors.Errorf("Found an allowed attribute "+
-						"with key '%s', but it does not have a matching value. "+
-						"Expected '%s', got '%s'", key, val, attr.Value)
+					return false, xerrors.Errorf("Requested an attribute "+
+						"with id '%s', we found it but the values don't match. "+
+						"Expected '%s', got '%s'", attr.ID, val, attr.Value)
 				}
-				return true, nil
+				break
 			}
-			return false, nil
+			for _, subAttr := range attr.Attributes {
+				ok, err := isAllowed(parsedQuery, subAttr)
+				if err != nil {
+					return false, xerrors.Errorf("%v", err)
+				}
+				if !ok {
+					return false, nil
+				}
+			}
+			return true, nil
 		}
 
-		// Here we assume there is no sub-attributes
 		for _, ag := range projectC.Metadata.AttributesGroups {
 			for _, attr := range ag.Attributes {
-				isAllowed, err := isAllowed(parsedQuery, attr.ID, attr.Value)
+				isAllowed, err := isAllowed(parsedQuery, attr)
 				if err != nil {
 					return xerrors.Errorf("failed to check allowed attribute '%s': %v", attr.ID, err)
 				}
