@@ -291,7 +291,8 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				break
 			}
 			if !ok {
-				attr.AddFailedReason(fmt.Sprintf("attribute '%s' not allowed", attr.ID))
+				attr.AddFailedReason(fmt.Sprintf("For dataset '%s': "+
+					"attribute '%s' not allowed", inst.InstanceID.String(), attr.ID))
 				// return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
 			}
 			for _, subAttr := range attr.Attributes {
