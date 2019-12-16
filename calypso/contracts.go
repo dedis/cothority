@@ -262,7 +262,6 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		// attr:allowed list
 		var isAllowed func(url.Values, *catalogc.Attribute) error
 		isAllowed = func(parsedQuery url.Values, attr *catalogc.Attribute) error {
-			log.Info("checking allowed attribute:", attr.ID)
 			if attr.Value == "" {
 				return nil
 			}
@@ -279,9 +278,9 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				val := vals[0]
 				if attr.Value != "" && attr.Value != val {
 					attr.AddFailedReason(fmt.Sprintf(
-						"For dataset '%s': Attribute '%s' must have value '%s', "+
-							"but we found value '%s'", inst.InstanceID.String(),
-						attr.ID, val, attr.Value))
+						"Attribute '%s' must have value '%s', "+
+							"but we found value '%s' ror dataset '%s': ",
+						attr.ID, val, attr.Value, inst.InstanceID.String()))
 					// return xerrors.Errorf("Requested an attribute "+
 					// 	"with id '%s', we found it but the values don't match. "+
 					// 	"Expected '%s', got '%s'", attr.ID, val, attr.Value)
@@ -291,8 +290,8 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				break
 			}
 			if !ok {
-				attr.AddFailedReason(fmt.Sprintf("For dataset '%s': "+
-					"attribute '%s' not allowed", inst.InstanceID.String(), attr.ID))
+				attr.AddFailedReason(fmt.Sprintf("Attribute '%s' not allowed "+
+					"for dataset '%s'", attr.ID, inst.InstanceID.String()))
 				// return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
 			}
 			for _, subAttr := range attr.Attributes {
@@ -335,7 +334,6 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 	// Here we check if the specified "must have" attributes that the data owner
 	// set appear in the selected attributes from the data scientist.
 	mh := func(attr string) error {
-		log.Info("Hello from the inside MakeAttrInterpreters")
 		// Expecting an 'attr' of form:
 		// attribute_id=checked&attribute_id2=hello+world&
 		// which, once parsed, gives map[attribute_id:[checked] attribute_id2:[hello+world]]
@@ -369,11 +367,13 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			val := vals[0]
 			attr, found := projectC.Metadata.GetAttribute(key)
 			if !found {
-				return xerrors.Errorf("Must have attribute with key '%s' not found", key)
+				return xerrors.Errorf("Must-have attribute with key '%s' not "+
+					"found in the project metadata", key)
 			}
 			if val != "" && attr.Value != val {
-				return xerrors.Errorf("Must have attribute with key '%s' does not have "+
-					"a matching value. Expected '%s', got '%s'", key, val, attr.Value)
+				attr.AddFailedReason(fmt.Sprintf("Must-have attribute with "+
+					"key '%s' does not have a matching value. Expected '%s', "+
+					"got '%s'", key, val, attr.Value))
 			}
 		}
 		return nil
