@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -251,12 +252,16 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 		projectC := projectc.ProjectData{}
 		projectBuf, _, _, _, err := rst.GetValues(projectInstID)
 		if err != nil {
-			return fmt.Errorf("failed to get the given project instance '%x': %s", projectInstID, err.Error())
+			return fmt.Errorf("failed to get the given project instance '%x': %s",
+				projectInstID, err.Error())
 		}
-		err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(projectBuf, &projectC,
+			network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return xerrors.New("failed to decode project instance: " + err.Error())
 		}
+
+		failedReasons := catalogc.FailedReasons{}
 
 		// Each attribute selected by the data scientist should be in the
 		// attr:allowed list
@@ -277,22 +282,17 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 				}
 				val := vals[0]
 				if attr.Value != "" && attr.Value != val {
-					attr.AddFailedReason(fmt.Sprintf(
-						"Attribute '%s' must have value '%s', "+
-							"but we found value '%s' ror dataset '%s': ",
-						attr.ID, val, attr.Value, inst.InstanceID.String()))
-					// return xerrors.Errorf("Requested an attribute "+
-					// 	"with id '%s', we found it but the values don't match. "+
-					// 	"Expected '%s', got '%s'", attr.ID, val, attr.Value)
+					failedReasons.AddReason(attr.ID, fmt.Sprintf(
+						"must have value '%s', but we found value '%s'",
+						val, attr.Value), inst.InstanceID.String())
 					break
 				}
 				ok = true
 				break
 			}
 			if !ok {
-				attr.AddFailedReason(fmt.Sprintf("Attribute '%s' not allowed "+
-					"for dataset '%s'", attr.ID, inst.InstanceID.String()))
-				// return xerrors.Errorf("attribute '%s' not allowed", attr.ID)
+				failedReasons.AddReason(attr.ID, "This attribute is not allowed",
+					inst.InstanceID.String())
 			}
 			for _, subAttr := range attr.Attributes {
 				if attr.RuleType != "allowed" {
@@ -321,11 +321,15 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			}
 		}
 
-		failedReasons := projectC.Metadata.FailedReasons()
-		if failedReasons != "" {
-			return xerrors.Errorf("attr:allowed verification failed, you can "+
-				"check the failedReasons field of each attribute to learn more. "+
-				"Here is a summary:\n%s", failedReasons)
+		if !failedReasons.IsEmpty() {
+			jsonStr, err := json.Marshal(failedReasons)
+			if err != nil {
+				return xerrors.Errorf("attr:allowed verification failed " +
+					"and we couldn't convert the failed reasons to JSON. " +
+					"Here is string representation: " + failedReasons.String())
+			}
+			return xerrors.Errorf("attr:allowed verification failed, here "+
+				"is why:\n%s", string(jsonStr))
 		}
 
 		return nil
@@ -357,6 +361,8 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 			return xerrors.Errorf("failed to decode project instance: %v", err)
 		}
 
+		failedReasons := catalogc.FailedReasons{}
+
 		// Each attribute should have a corresponding Metadata.Attribute that
 		// has a corresponding value.
 		for key, vals := range parsedQuery {
@@ -371,17 +377,20 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 					"found in the project metadata", key)
 			}
 			if val != "" && attr.Value != val {
-				attr.AddFailedReason(fmt.Sprintf("Must-have attribute with "+
-					"key '%s' does not have a matching value. Expected '%s', "+
-					"got '%s'", key, val, attr.Value))
+				failedReasons.AddReason(key, fmt.Sprintf("Expected '%s', got "+
+					"'%s'", val, attr.Value), inst.InstanceID.String())
 			}
 		}
 
-		failedReasons := projectC.Metadata.FailedReasons()
-		if failedReasons != "" {
-			return xerrors.Errorf("attr:must_have verification failed, you can "+
-				"check the failedReasons field of each attribute to learn more. "+
-				"Here is a summary:\n%s", failedReasons)
+		if !failedReasons.IsEmpty() {
+			jsonStr, err := json.Marshal(failedReasons)
+			if err != nil {
+				return xerrors.Errorf("attr:must_have verification failed " +
+					"and we couldn't convert the failed reasons to JSON. " +
+					"Here is string representation: " + failedReasons.String())
+			}
+			return xerrors.Errorf("attr:must_have verification failed, here "+
+				"is why:\n%s", string(jsonStr))
 		}
 
 		return nil
