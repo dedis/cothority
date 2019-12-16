@@ -376,6 +376,14 @@ func (c ContractWrite) MakeAttrInterpreters(rst byzcoin.ReadOnlyStateTrie, inst 
 					"got '%s'", key, val, attr.Value))
 			}
 		}
+
+		failedReasons := projectC.Metadata.FailedReasons()
+		if failedReasons != "" {
+			return xerrors.Errorf("attr:must_have verification failed, you can "+
+				"check the failedReasons field of each attribute to learn more. "+
+				"Here is a summary:\n%s", failedReasons)
+		}
+
 		return nil
 	}
 	return darc.AttrInterpreters{"must_have": mh, "allowed": al}
