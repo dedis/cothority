@@ -150,7 +150,7 @@ func deployContract(ctx *cli.Context) error {
 			"constructor: expected %d, got %d",
 			len(constrAbi.Inputs), len(userArgs))
 	}
-	args, err := decodeEvmArgs(userArgs, constrAbi.Inputs)
+	args, err := bevm.DecodeEvmArgs(userArgs, constrAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("failed to decode contract constructor "+
 			"arguments: %v", err)
@@ -216,7 +216,7 @@ func executeTransaction(ctx *cli.Context) error {
 		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
 			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
 	}
-	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
+	args, err := bevm.DecodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("failed to decode contract transaction "+
 			"arguments: %v", err)
@@ -278,7 +278,7 @@ func executeCall(ctx *cli.Context) error {
 		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
 			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
 	}
-	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
+	args, err := bevm.DecodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("failed to decode contract view method "+
 			"arguments: %v", err)

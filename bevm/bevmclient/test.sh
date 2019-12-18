@@ -119,7 +119,7 @@ testBevmInteraction(){
         --sign "${BEVM_USER}" \
         "${APPDIR}/../testdata/Candy/Candy_sol_Candy.abi" \
         "${APPDIR}/../testdata/Candy/Candy_sol_Candy.bin" \
-        100
+        '"100"'
 
     # Check Candy balance
     testGrep " 100 " runBevmClient call \
@@ -130,7 +130,7 @@ testBevmInteraction(){
     testOK runBevmClient transaction \
         --sign "${BEVM_USER}" \
         eatCandy \
-        58
+        '"58"'
 
     # Check Candy balance
     testGrep " 42 " runBevmClient call \

@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -15,7 +13,6 @@ import (
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
 	"go.dedis.ch/cothority/v3/darc"
-	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -193,35 +190,4 @@ func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 		accountName: accountName,
 		bevmClient:  bevmClient,
 	}, nil
-}
-
-func decodeEvmArgs(encodedArgs []string, abi abi.Arguments) (
-	[]interface{}, error) {
-	args := make([]interface{}, len(encodedArgs))
-	for i, argJSON := range encodedArgs {
-		var arg interface{}
-		err := json.Unmarshal([]byte(argJSON), &arg)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to decode args for "+
-				"EVM invocation: %v", err)
-		}
-
-		switch abi[i].Type.String() {
-		case "uint256":
-			// The JSON unmarshaller decodes numbers as 'float64'; the EVM
-			// expects BigInt
-			args[i] = big.NewInt(int64(arg.(float64)))
-		case "address":
-			args[i] = common.HexToAddress(arg.(string))
-		default:
-			return nil, xerrors.Errorf("unsupported argument type: %s",
-				abi[i].Type)
-		}
-
-		log.Lvlf2("arg #%d: %v (%s) --%v--> %v (%v)",
-			i, arg, reflect.TypeOf(arg).Kind(), abi[i].Type, args[i],
-			reflect.TypeOf(args[i]).Kind())
-	}
-
-	return args, nil
 }

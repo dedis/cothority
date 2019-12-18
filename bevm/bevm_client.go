@@ -2,8 +2,10 @@ package bevm
 
 import (
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -84,30 +86,83 @@ func (contractInstance EvmContractInstance) unpackResult(method string,
 	}
 
 	abiOutputs := methodAbi.Outputs
+
 	switch len(abiOutputs) {
 	case 0:
 		return nil, nil
 
 	case 1:
-		switch abiOutputs[0].Type.String() {
-		case "uint256":
-			// Solidity's uint256 is BigInt in the EVM
-			result := big.NewInt(0)
-			err := contractInstance.Parent.Abi.Unpack(&result, method,
-				resultBytes)
-			if err != nil {
-				return nil, xerrors.Errorf("failed to unpack result "+
-					"from EVM: %v", err)
-			}
+		// Create a pointer to the desired type
+		result := reflect.New(abiOutputs[0].Type.Type)
 
-			return result, nil
-		default:
-			return nil, xerrors.Errorf("unsupported result type: %s",
-				abiOutputs[0].Type)
+		err := contractInstance.Parent.Abi.Unpack(result.Interface(),
+			method, resultBytes)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to unpack single "+
+				"result of EVM execution: %v", err)
 		}
 
+		// Dereference the result pointer
+		return result.Elem().Interface(), nil
+
 	default:
-		return nil, xerrors.New("tuple return values not supported")
+		// Abi.Unpack() on multiple values supports a struct or array/slice as
+		// cwstructure into which the result is stored. Struct is cleaner, but
+		// it does not support unnamed outputs ("or purely underscored"). If
+		// this is needed, an array implementation, commented out, follows.
+
+		// Build a struct naming the fields after the outputs
+		var fields []reflect.StructField
+		for _, output := range abiOutputs {
+			// Adapt names to what Abi.Unpack() does
+			name := abi.ToCamelCase(output.Name)
+
+			fields = append(fields, reflect.StructField{
+				Name: name,
+				Type: output.Type.Type,
+			})
+		}
+
+		structType := reflect.StructOf(fields)
+		s := reflect.New(structType)
+
+		err := contractInstance.Parent.Abi.Unpack(s.Interface(),
+			method, resultBytes)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to unpack multiple "+
+				"result of EVM execution: %v", err)
+		}
+
+		// Dereference the result pointer
+		return s.Elem().Interface(), nil
+
+		// // Build an array of interface{}
+		// var empty interface{}
+		// arrType := reflect.ArrayOf(len(abiOutputs),
+		// 	reflect.ValueOf(&empty).Type().Elem())
+		// result := reflect.New(arrType)
+
+		// // Create a value of the desired type for each output
+		// for i, output := range abiOutputs {
+		// 	val := reflect.New(output.Type.Type)
+		// 	result.Elem().Index(i).Set(val)
+		// }
+
+		// err := contractInstance.Parent.Abi.Unpack(result.Interface(),
+		// 	method, resultBytes)
+		// if err != nil {
+		// 	return nil, xerrors.Errorf("unpacking multiple result: %v", err)
+		// }
+
+		// for i := range abiOutputs {
+		// 	val := result.Elem().Index(i)
+		// 	// Need to dereference values twice:
+		// 	// val is interface{}, *val is *type, **val is type
+		// 	val.Set(val.Elem().Elem())
+		// }
+
+		// // Dereference the result pointer
+		// return result.Elem().Interface(), nil
 	}
 }
 
@@ -342,6 +397,145 @@ func (client *Client) GetAccountBalance(address common.Address) (
 	log.Lvlf2("Balance of '%x' is %d wei", address, balance)
 
 	return balance, nil
+}
+
+// ---------------------------------------------------------------------------
+// Utility functions
+
+// DecodeEvmArgs decodes a list of arguments encoded in JSON into Go values,
+// suitable to be used as arguments to contract transactions and calls.
+// This can be useful for command-line tools or calls serialized over the
+// network.
+func DecodeEvmArgs(encodedArgs []string, abi abi.Arguments) (
+	[]interface{}, error) {
+	args := make([]interface{}, len(encodedArgs))
+
+	for i, argJSON := range encodedArgs {
+		var arg interface{}
+		err := json.Unmarshal([]byte(argJSON), &arg)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to decode JSON-encoded "+
+				"arguments for EVM call: %v", err)
+		}
+
+		abiTypeStr := abi[i].Type.String()
+		arrayBracket := strings.IndexRune(abiTypeStr, '[')
+		if arrayBracket == -1 {
+			args[i], err = decodeEvmValue(abiTypeStr, abi[i].Type.Type, arg)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to decode simple-type "+
+					"value for EVM call: %v", err)
+			}
+		} else {
+			args[i], err = decodeEvmArray(abiTypeStr[:arrayBracket], abi[i], arg)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to decode array-type "+
+					"value for EVM call: %v", err)
+			}
+		}
+
+		log.Lvlf2("arg #%d: %v (%s) --%v--> %v (%v)",
+			i, arg, reflect.TypeOf(arg).Kind(), abi[i].Type, args[i],
+			reflect.TypeOf(args[i]).Kind())
+	}
+
+	return args, nil
+}
+
+func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
+	interface{}, error) {
+	var decodedArg interface{}
+
+	switch abiType {
+	case "uint", "uint256", "uint128", "int", "int256", "int128":
+		// We use strings to ensure big numbers are handled properly in JSON
+		argAsString, ok := arg.(string)
+		if !ok {
+			return nil, xerrors.Errorf("received '%v' for value of type "+
+				"'%s', expected to be a JSON string", arg, abiType)
+		}
+
+		val, ok := big.NewInt(0).SetString(argAsString, 0)
+		if !ok {
+			return nil, xerrors.Errorf("invalid big number value: %v", arg)
+		}
+
+		decodedArg = val
+
+	case "uint32", "uint16", "uint8":
+		// The JSON unmarshaller decodes numbers as 'float64', while the EVM
+		// expects uint{32,16,8}
+		argAsFloat, ok := arg.(float64)
+		if !ok {
+			return nil, xerrors.Errorf("received '%v' for value of type "+
+				"'%s', expected to be a JSON number", arg, abiType)
+		}
+
+		v := reflect.New(argType).Elem()
+		v.SetUint(uint64(argAsFloat))
+
+		decodedArg = v.Interface()
+
+	case "int32", "int16", "int8":
+		// The JSON unmarshaller decodes numbers as 'float64', while the EVM
+		// expects int{32,16,8}
+		argAsFloat, ok := arg.(float64)
+		if !ok {
+			return nil, xerrors.Errorf("value '%v' of type '%s' should be "+
+				"passed as a JSON number", arg, abiType)
+		}
+
+		v := reflect.New(argType).Elem()
+		v.SetInt(int64(argAsFloat))
+
+		decodedArg = v.Interface()
+
+	case "address":
+		argAsString, ok := arg.(string)
+		if !ok {
+			return nil, xerrors.Errorf("received '%v' for value of type "+
+				"'%s', expected to be a JSON string", arg, abiType)
+		}
+
+		decodedArg = common.HexToAddress(argAsString)
+
+	case "string":
+		decodedArg = arg.(string)
+
+	default:
+		return nil, xerrors.Errorf("unsupported type for EVM argument "+
+			"value: %s", abiType)
+	}
+
+	return decodedArg, nil
+}
+
+func decodeEvmArray(abiType string, abi abi.Argument, arg interface{}) (
+	interface{}, error) {
+	// Create a pointer to the desired array type and dereference it
+	arr := reflect.New(abi.Type.Type).Elem()
+
+	argAsArray, ok := arg.([]interface{})
+	if !ok {
+		return nil, xerrors.Errorf("received '%v' for value of type "+
+			"'%s[%d]', expected to be a JSON array", arg, abiType, arr.Len())
+	}
+	if len(argAsArray) != arr.Len() {
+		return nil, xerrors.Errorf("incorrect array size %d for value of "+
+			"type '%s[%d]'", len(argAsArray), abiType, arr.Len())
+	}
+
+	// Decode the elements and fill the array
+	for i := 0; i < arr.Len(); i++ {
+		val, err := decodeEvmValue(abiType, abi.Type.Type.Elem(), argAsArray[i])
+		if err != nil {
+			return nil, xerrors.Errorf("failed to decode element of "+
+				"EVM array value: %v", err)
+		}
+		arr.Index(i).Set(reflect.ValueOf(val))
+	}
+
+	return arr.Interface(), nil
 }
 
 // ---------------------------------------------------------------------------
