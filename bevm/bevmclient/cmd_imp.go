@@ -140,8 +140,14 @@ func deployContract(ctx *cli.Context) error {
 		return xerrors.Errorf("creating new BEvm contract: %v", err)
 	}
 
+	constrAbi := contract.Abi.Constructor
 	userArgs := ctx.Args()[2:]
-	args, err := decodeEvmArgs(userArgs, contract.Abi.Constructor.Inputs)
+	if len(userArgs) != len(constrAbi.Inputs) {
+		return xerrors.Errorf("wrong number of arguments for contract "+
+			"constructor: expected %d, got %d",
+			len(constrAbi.Inputs), len(userArgs))
+	}
+	args, err := decodeEvmArgs(userArgs, constrAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("decoding contract constructor arguments: %v", err)
 	}
@@ -202,6 +208,10 @@ func executeTransaction(ctx *cli.Context) error {
 	}
 
 	userArgs := ctx.Args().Tail()
+	if len(userArgs) != len(methodAbi.Inputs) {
+		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
+			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
+	}
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("decoding contract transaction "+
@@ -260,6 +270,10 @@ func executeCall(ctx *cli.Context) error {
 	}
 
 	userArgs := ctx.Args().Tail()
+	if len(userArgs) != len(methodAbi.Inputs) {
+		return xerrors.Errorf("wrong number of arguments for \"%s\": "+
+			"expected %d, got %d", method, len(methodAbi.Inputs), len(userArgs))
+	}
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
 		return xerrors.Errorf("decoding contract view method "+
