@@ -189,7 +189,7 @@ func (client *Client) Delete() error {
 }
 
 // Deploy deploys a new Ethereum contract on the EVM
-func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64,
+func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 	account *EvmAccount, contract *EvmContract, args ...interface{}) (
 	*EvmContractInstance, error) {
 	log.Lvlf2(">>> Deploy EVM contract '%s'", contract)
@@ -202,7 +202,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64,
 
 	callData := append(contract.Bytecode, packedArgs...)
 	tx := types.NewContractCreation(account.Nonce, big.NewInt(int64(amount)),
-		gasLimit, gasPrice, callData)
+		gasLimit, big.NewInt(int64(gasPrice)), callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
 		return nil, xerrors.Errorf("preparing EVM transaction for "+
@@ -229,7 +229,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice *big.Int, amount uint64,
 
 // Transaction performs a new transaction (contract method call with state
 // change) on the EVM
-func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int,
+func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 	amount uint64, account *EvmAccount, contractInstance *EvmContractInstance,
 	method string, args ...interface{}) error {
 	log.Lvlf2(">>> EVM method '%s()' on %s", method, contractInstance)
@@ -241,7 +241,8 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice *big.Int,
 	}
 
 	tx := types.NewTransaction(account.Nonce, contractInstance.Address,
-		big.NewInt(int64(amount)), gasLimit, gasPrice, callData)
+		big.NewInt(int64(amount)), gasLimit, big.NewInt(int64(gasPrice)),
+		callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
 		return xerrors.Errorf("preparing EVM transaction for "+

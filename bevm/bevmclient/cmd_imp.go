@@ -149,8 +149,7 @@ func deployContract(ctx *cli.Context) error {
 	// Perform command
 
 	contractInstance, err := opt.bevmClient.Deploy(
-		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account,
-		contract, args...)
+		gasLimit, gasPrice, amount, opt.account, contract, args...)
 	if err != nil {
 		return xerrors.Errorf("deploying new BEvm contract: %v", err)
 	}
@@ -212,8 +211,8 @@ func executeTransaction(ctx *cli.Context) error {
 	// Perform command
 
 	err = opt.bevmClient.Transaction(
-		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account,
-		contractInstance, method, args...)
+		gasLimit, gasPrice, amount, opt.account, contractInstance,
+		method, args...)
 	if err != nil {
 		return xerrors.Errorf("executing contract transaction: %v", err)
 	}
