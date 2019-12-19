@@ -317,7 +317,6 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version) er
 				return fmt.Errorf("couldn't decode coin %s: %s", cost.name, err)
 			}
 		} else {
-			log.Print(v)
 			if v > 1 {
 				cost.coin.Name = contracts.CoinName
 				cost.coin.Value = 100
@@ -334,6 +333,5 @@ func (ss *SpawnerStruct) parseArgs(args byzcoin.Arguments, v byzcoin.Version) er
 	if args.Search("costValue") == nil {
 		ss.CostValue = nil
 	}
-	log.Printf("%+v", ss.CostCWrite)
 	return nil
 }

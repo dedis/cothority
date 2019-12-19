@@ -21,6 +21,15 @@ import (
 // and returns the block or an error
 type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 
+// BlockFetcher is an interface that can be passed to ReplayStateLog so that
+// the output of the replay can be adapted to what the user wants.
+type BlockFetcher interface {
+	BlockFetcherFunc(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
+	LogNewBlock(sb *skipchain.SkipBlock)
+	LogAppliedBlock(sb *skipchain.SkipBlock, head DataHeader, body DataBody)
+	LogWarn(sb *skipchain.SkipBlock, msg, dump string)
+}
+
 func replayError(sb *skipchain.SkipBlock, err error) error {
 	return cothority.ErrorOrNilSkip(err, fmt.Sprintf("replay failed in block at index %d with message", sb.Index), 2)
 }
@@ -69,14 +78,15 @@ func (s *Service) ReplayStateDB(db *bbolt.DB, bucket []byte,
 	return st.GetIndex(), nil
 }
 
-// ReplayStateCont builds the state changes from the genesis of the given
+// ReplayStateContLog builds the state changes from the genesis of the given
 // skipchain ID until the callback returns nil or a block without forward
 // links.
 // If a client wants to replay the states until the block at index x, the
 // callback function must be implemented to return nil when the next block has
 // the index x.
-func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
-	sb, err := cb(id)
+func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
+	bf BlockFetcher) (ReadOnlyStateTrie, error) {
+	sb, err := bf.BlockFetcherFunc(id)
 	if err != nil {
 		return nil, xerrors.Errorf("fail to get the first block: %v", err)
 	}
@@ -97,7 +107,7 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 	}
 
 	for sb != nil {
-		log.Infof("Replaying block at index %d", sb.Index)
+		bf.LogNewBlock(sb)
 
 		if sb.Payload != nil {
 			var dBody DataBody
@@ -152,7 +162,7 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 			}
 
 			if !bytes.Equal(dHead.TrieRoot, sst.GetRoot()) {
-				log.Infof("Failing block-index: %d - block-version: %d",
+				log.Errorf("Failing block-index: %d - block-version: %d",
 					sb.Index, dHead.Version)
 				var body DataBody
 				errDecode := protobuf.Decode(sb.Payload, &body)
@@ -175,7 +185,9 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 			for j, fl := range sb.ForwardLink {
 				if fl.From == nil || fl.To == nil ||
 					len(fl.From) == 0 || len(fl.To) == 0 {
-					log.Warnf("Forward-link %d looks broken: %+v", j, fl)
+					bf.LogWarn(sb,
+						fmt.Sprintf("Forward-link %d looks broken", j),
+						fmt.Sprintf("%+v", fl))
 					continue
 				}
 				err = fl.VerifyWithScheme(pairing.NewSuiteBn256(), pubs, sb.SignatureScheme)
@@ -189,15 +201,13 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 			if err != nil {
 				return nil, replayError(sb, err)
 			}
-			t := time.Unix(dHead.Timestamp/1e9, 0)
-			log.Infof("Got correct block from %s with %d/%d txs",
-				t.String(), len(dBody.TxResults), txAccepted)
+			bf.LogAppliedBlock(sb, dHead, dBody)
 		}
 
 		if len(sb.ForwardLink) > 0 {
 			// The level 0 forward link must be used as we need to rebuild the global
 			// states for each block.
-			sb, err = cb(sb.ForwardLink[0].To)
+			sb, err = bf.BlockFetcherFunc(sb.ForwardLink[0].To)
 			if err != nil {
 				return nil, xerrors.Errorf("replay failed to get the next block: %v", err)
 			}
@@ -207,4 +217,42 @@ func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc)
 	}
 
 	return st, nil
+}
+
+// ReplayStateCont is a wrapper over ReplayStateContLog and outputs every
+// block to the std-output.
+func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
+	return s.ReplayStateContLog(id, stdFetcher{cb})
+}
+
+// stdFetcher is a fetcher method that outputs using the onet.log library.
+type stdFetcher struct {
+	cb BlockFetcherFunc
+}
+
+func (sf stdFetcher) BlockFetcherFunc(sib skipchain.SkipBlockID) (*skipchain.
+	SkipBlock, error) {
+	return sf.cb(sib)
+}
+
+func (sf stdFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
+	log.Infof("Replaying block at index %d", sb.Index)
+}
+
+func (sf stdFetcher) LogWarn(sb *skipchain.SkipBlock, msg, dump string) {
+	log.Infof(msg, dump)
+}
+
+func (sf stdFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
+	head DataHeader, body DataBody) {
+	txAccepted := 0
+	for _, tx := range body.TxResults {
+		if tx.Accepted {
+			txAccepted++
+		}
+	}
+	t := time.Unix(head.Timestamp/1e9, 0)
+	log.Infof("Got correct block from %s with %d txs, "+
+		"out of which %d txs got accepted",
+		t.String(), len(body.TxResults), txAccepted)
 }

@@ -2257,7 +2257,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 		cin = cout
 	}
 	if len(cin) != 0 {
-		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
+		log.Lvl2(s.ServerIdentity(), "Leftover coins detected, discarding.")
 	}
 
 	return statesTemp, sst, nil
