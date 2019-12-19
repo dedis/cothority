@@ -95,27 +95,27 @@ testBevmInteraction(){
     testOK runBevmAdmin spawn \
         --sign "${BEVM_ADMIN}" \
         --darc "${BEVM_DARC}" \
-        --out_id ./bevm_instance_id.txt
+        --outID ./bevm_instance_id.txt
     export BEVM_ID=$( cat ./bevm_instance_id.txt )
 
     # Create BEvm account
-    testOK runBevmClient create_account
+    testOK runBevmClient createAccount
 
     # Credit account
     # Cannot credit as BEVM_ADMIN
-    testFail runBevmClient credit_account \
+    testFail runBevmClient creditAccount \
         --sign "${BEVM_ADMIN}" \
         10
-    testOK runBevmClient credit_account \
+    testOK runBevmClient creditAccount \
         --sign "${BEVM_USER}" \
         10
 
     # Check account balance
-    testGrep "10 Ether, 0 Wei" runBevmClient get_account_balance \
+    testGrep "10 Ether, 0 Wei" runBevmClient getAccountBalance \
         --sign "${BEVM_USER}"
 
     # Deploy Candy contract
-    testOK runBevmClient deploy_contract \
+    testOK runBevmClient deployContract \
         --sign "${BEVM_USER}" \
         "${APPDIR}/../testdata/Candy/Candy_sol_Candy.abi" \
         "${APPDIR}/../testdata/Candy/Candy_sol_Candy.bin" \
@@ -141,10 +141,10 @@ testBevmInteraction(){
     # Cannot delete as BEVM_USER
     testFail runBevmAdmin delete \
         --sign "${BEVM_USER}" \
-        --bevm-id "${BEVM_ID}"
+        --bevmID "${BEVM_ID}"
     testOK runBevmAdmin delete \
         --sign "${BEVM_ADMIN}" \
-        --bevm-id "${BEVM_ID}"
+        --bevmID "${BEVM_ID}"
 }
 
 runBcAdmin(){

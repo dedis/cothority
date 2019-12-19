@@ -142,9 +142,9 @@ type commonOptions struct {
 
 func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 	bcFile := ctx.String("bc")
-	bevmIDStr := ctx.String("bevm-id")
+	bevmIDStr := ctx.String("bevmID")
 	signerStr := ctx.String("sign")
-	accountName := ctx.String("account-name")
+	accountName := ctx.String("accountName")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
 	if err != nil {

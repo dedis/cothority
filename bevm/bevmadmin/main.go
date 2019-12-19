@@ -38,14 +38,14 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "darc",
-				Usage: "DARC with the right to spawn a value contract (default is the admin DARC)",
+				Usage: "DARC with the right to spawn a BEvm contract (default is the admin DARC)",
 			},
 			cli.StringFlag{
 				Name:  "sign",
 				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
-				Name:  "out_id",
+				Name:  "outID",
 				Usage: "output file for the BEvm id (optional)",
 			},
 		},
@@ -68,7 +68,7 @@ var cmds = cli.Commands{
 				Usage: "public key of the signing entity (default is the admin public key)",
 			},
 			cli.StringFlag{
-				Name:  "bevm-id",
+				Name:  "bevmID, i",
 				Usage: "BEvm instance ID to delete",
 			},
 		},
@@ -139,12 +139,11 @@ func spawn(c *cli.Context) error {
 	var darc *darc.Darc
 	darcStr := c.String("darc")
 	if darcStr == "" {
-		darc = &cfg.AdminDarc
-	} else {
-		darc, err = lib.GetDarcByString(cl, darcStr)
-		if err != nil {
-			return xerrors.Errorf("loading DARC data: %v", err)
-		}
+		darcStr = cfg.AdminDarc.GetIdentityString()
+	}
+	darc, err = lib.GetDarcByString(cl, darcStr)
+	if err != nil {
+		return xerrors.Errorf("loading DARC data: %v", err)
 	}
 
 	bevmInstID, err := bevm.NewBEvm(cl, *signer, darc)
@@ -158,7 +157,7 @@ func spawn(c *cli.Context) error {
 	}
 
 	// Save ID in file if provided
-	outFile := c.String("out_id")
+	outFile := c.String("outID")
 	if outFile != "" {
 		err = ioutil.WriteFile(outFile, []byte(bevmInstID.String()), 0644)
 		if err != nil {
@@ -188,7 +187,7 @@ func delete(c *cli.Context) error {
 		return xerrors.Errorf("loading signer key: %v", err)
 	}
 
-	bevmIDStr := c.String("bevm-id")
+	bevmIDStr := c.String("bevmID")
 
 	bevmID, err := hex.DecodeString(bevmIDStr)
 	if err != nil {

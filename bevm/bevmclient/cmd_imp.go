@@ -19,7 +19,7 @@ import (
 func createAccount(ctx *cli.Context) error {
 	// Retrieve arguments
 
-	name := ctx.String("account-name")
+	name := ctx.String("accountName")
 
 	// Perform command
 
@@ -109,13 +109,13 @@ func deployContract(ctx *cli.Context) error {
 		return xerrors.Errorf("handling options: %v", err)
 	}
 
-	gasLimit := ctx.Uint64("gas-limit")
-	gasPrice := ctx.Uint64("gas-price")
+	gasLimit := ctx.Uint64("gasLimit")
+	gasPrice := ctx.Uint64("gasPrice")
 	amount := ctx.Uint64("amount")
-	contractName := ctx.String("contract-name")
+	contractName := ctx.String("contractName")
 
 	if ctx.NArg() < 2 {
-		return xerrors.Errorf("missing some argument (expected 2, got %d)", ctx.NArg())
+		return xerrors.Errorf("missing some argument (expected at least 2, got %d)", ctx.NArg())
 	}
 
 	abiFilepath := ctx.Args().Get(0)
@@ -176,10 +176,10 @@ func executeTransaction(ctx *cli.Context) error {
 		return xerrors.Errorf("handling options: %v", err)
 	}
 
-	gasLimit := ctx.Uint64("gas-limit")
-	gasPrice := ctx.Uint64("gas-price")
+	gasLimit := ctx.Uint64("gasLimit")
+	gasPrice := ctx.Uint64("gasPrice")
 	amount := ctx.Uint64("amount")
-	contractName := ctx.String("contract-name")
+	contractName := ctx.String("contractName")
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {
@@ -232,7 +232,7 @@ func executeCall(ctx *cli.Context) error {
 		return xerrors.Errorf("handling options: %v", err)
 	}
 
-	contractName := ctx.String("contract-name")
+	contractName := ctx.String("contractName")
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {

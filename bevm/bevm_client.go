@@ -38,7 +38,7 @@ type EvmContractInstance struct {
 	Address common.Address
 }
 
-// NewEvmContract creates a new EvmContract and stores its ABY and bytecode.
+// NewEvmContract creates a new EvmContract and stores its ABI and bytecode.
 func NewEvmContract(name string, abiJSON string, binData string) (*EvmContract, error) {
 	contractAbi, err := abi.JSON(strings.NewReader(abiJSON))
 	if err != nil {

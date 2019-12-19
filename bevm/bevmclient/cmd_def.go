@@ -12,7 +12,7 @@ var commonFlags = []cli.Flag{
 		Required: true,
 	},
 	cli.StringFlag{
-		Name:     "bevm-id",
+		Name:     "bevmID, i",
 		EnvVar:   "BEVM_ID",
 		Usage:    "BEvm instance ID to use",
 		Required: true,
@@ -22,7 +22,7 @@ var commonFlags = []cli.Flag{
 		Usage: "public key of the signing entity (default is the admin public key)",
 	},
 	cli.StringFlag{
-		Name:  "account-name",
+		Name:  "accountName, an",
 		Value: "account",
 		Usage: "account name",
 	},
@@ -30,13 +30,13 @@ var commonFlags = []cli.Flag{
 
 var cmds = cli.Commands{
 	{
-		Name:      "create_account",
+		Name:      "createAccount",
 		Usage:     "create a new BEvm account",
 		Aliases:   []string{"ca"},
 		ArgsUsage: "",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "account-name",
+				Name:  "accountName, an",
 				Value: "account",
 				Usage: "account name",
 			},
@@ -44,7 +44,7 @@ var cmds = cli.Commands{
 		Action: createAccount,
 	},
 	{
-		Name:      "credit_account",
+		Name:      "creditAccount",
 		Usage:     "credit a BEvm account",
 		Aliases:   []string{"ma"},
 		ArgsUsage: "<amount in Ether>",
@@ -52,7 +52,7 @@ var cmds = cli.Commands{
 		Action:    creditAccount,
 	},
 	{
-		Name:      "get_account_balance",
+		Name:      "getAccountBalance",
 		Usage:     "retrieve the balance of a BEvm account",
 		Aliases:   []string{"ba"},
 		ArgsUsage: "",
@@ -60,18 +60,18 @@ var cmds = cli.Commands{
 		Action:    getAccountBalance,
 	},
 	{
-		Name:      "deploy_contract",
+		Name:      "deployContract",
 		Usage:     "deploy a BEvm contract",
 		Aliases:   []string{"dc"},
 		ArgsUsage: "<abi file> <bytecode file> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.Uint64Flag{
-				Name:  "gas-limit",
+				Name:  "gasLimit",
 				Value: 1e7,
 				Usage: "gas limit for the transaction",
 			},
 			cli.Uint64Flag{
-				Name:  "gas-price",
+				Name:  "gasPrice",
 				Value: 1,
 				Usage: "gas price for the transaction",
 			},
@@ -81,7 +81,7 @@ var cmds = cli.Commands{
 				Usage: "amount in Ether to send to the contract once deployed",
 			},
 			cli.StringFlag{
-				Name:  "contract-name",
+				Name:  "contractName, cn",
 				Value: "contract",
 				Usage: "contract name",
 			},
@@ -95,22 +95,22 @@ var cmds = cli.Commands{
 		ArgsUsage: "<transaction name> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.Uint64Flag{
-				Name:  "gas-limit",
+				Name:  "gasLimit",
 				Value: 1e7,
 				Usage: "gas limit for the transaction",
 			},
 			cli.Uint64Flag{
-				Name:  "gas-price",
+				Name:  "gasPrice",
 				Value: 1,
 				Usage: "gas price for the transaction",
 			},
 			cli.Uint64Flag{
 				Name:  "amount",
 				Value: 0,
-				Usage: "amount in Ether to send to the contract once deployed",
+				Usage: "amount in Ether to send to the contract",
 			},
 			cli.StringFlag{
-				Name:  "contract-name",
+				Name:  "contractName, cn",
 				Value: "contract",
 				Usage: "contract name",
 			},
@@ -124,7 +124,7 @@ var cmds = cli.Commands{
 		ArgsUsage: "<view method name> [<arg>...]",
 		Flags: append(commonFlags,
 			cli.StringFlag{
-				Name:  "contract-name",
+				Name:  "contractName, cn",
 				Value: "contract",
 				Usage: "contract name",
 			},

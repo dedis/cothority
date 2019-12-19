@@ -8,33 +8,33 @@ bevmclient
 
 For the details on all the options and arguments, invoke the tool using the `--help` option.
 
-## Create a BEvm account
+## Creating a BEvm account
 Assuming ByzCoin config and key files in the current directory (see [bcadmin](https://github.com/dedis/cothority/blob/master/byzcoin/bcadmin/README.md) for details):
 ```bash
-bevmclient create_account --account-name <MyAccount>
+bevmclient createAccount --accountName <MyAccount>
 ```
 
-## Credit a BEvm account
+## Crediting a BEvm account
 ```bash
-bevmclient --config . credit_account --bc bc-<ByzCoinID>.cfg --bevm-id <BEvm instance ID> --account-name <MyAccount> <amount>
+bevmclient --config . creditAccount --bc bc-<ByzCoinID>.cfg --bevmID <BEvm instance ID> --accountName <MyAccount> <amount>
 ```
 
-## Retrieve the balance of a BEvm account
+## Retrieving the balance of a BEvm account
 ```bash
-bevmclient --config . get_account_balance --bc bc-<ByzCoinID>.cfg --bevm-id <BEvm instance ID> --account-name <MyAccount>
+bevmclient --config . getAccountBalance --bc bc-<ByzCoinID>.cfg --bevmID <BEvm instance ID> --accountName <MyAccount>
 ```
 
-## Deploy a BEvm contract
+## Deploying a BEvm contract
 ```bash
-bevmclient --config . deploy_contract --bc bc-<ByzCoinID>.cfg --bevm-id <BEvm instance ID> --account-name <MyAccount> --conjtract-name <MyContract> <ABI file> <bytecode file> [<arg>...]
+bevmclient --config . deployContract --bc bc-<ByzCoinID>.cfg --bevmID <BEvm instance ID> --accountName <MyAccount> --contractName <MyContract> <ABI file> <bytecode file> [<arg>...]
 ```
 
-## Execute a transaction on a deployed BEvm contract instance
+## Executing a transaction on a deployed BEvm contract instance
 ```bash
-bevmclient --config . transaction --bc bc-<ByzCoinID>.cfg --bevm-id <BEvm instance ID> --account-name <MyAccount> --contract-name <MyContract> <transaction name> [<arg>...]
+bevmclient --config . transaction --bc bc-<ByzCoinID>.cfg --bevmID <BEvm instance ID> --accountName <MyAccount> --contractName <MyContract> <transaction name> [<arg>...]
 ```
 
-## Execute a view method on a deployed BEvm contract instance
+## Executing a view method on a deployed BEvm contract instance
 ```bash
-bevmclient --config . call --bc bc-<ByzCoinID>.cfg --bevm-id <BEvm instance ID> --account-name <MyAccount> --contract-name <MyContract> <view method name> [<arg>...]
+bevmclient --config . call --bc bc-<ByzCoinID>.cfg --bevmID <BEvm instance ID> --accountName <MyAccount> --contractName <MyContract> <view method name> [<arg>...]
 ```
