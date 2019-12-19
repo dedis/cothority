@@ -70,20 +70,22 @@ func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	// Retrieve the proof of the BEvmValue instance
 	proofResponse, err := db.client.GetProof(instID[:])
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving BEvmValue instance: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve BEvmValue "+
+			"instance for EVM state DB: %v", err)
 	}
 
 	// Validate the proof
 	err = proofResponse.Proof.Verify(db.client.ID)
 	if err != nil {
-		return nil, xerrors.Errorf("verifying BEvmValue instance "+
-			"proof: %v", err)
+		return nil, xerrors.Errorf("failed to verify BEvmValue "+
+			"instance proof: %v", err)
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, xerrors.Errorf("getting BEvmValue instance value: %v", err)
+		return nil, xerrors.Errorf("failed to get BEvmValue "+
+			"instance value: %v", err)
 	}
 
 	return value, nil
@@ -100,7 +102,8 @@ func (db *ClientByzDatabase) Has(key []byte) (bool, error) {
 func (db *ClientByzDatabase) Get(key []byte) ([]byte, error) {
 	value, err := db.getBEvmValue(key)
 	if err != nil {
-		return nil, xerrors.Errorf("getting value for key '%v': %v", key, err)
+		return nil, xerrors.Errorf("failed to get EVM State DB value for "+
+			"key '%v': %v", key, err)
 	}
 
 	return value, nil
@@ -265,7 +268,8 @@ func (db *ServerByzDatabase) Get(key []byte) ([]byte, error) {
 
 	value, _, _, _, err := db.roStateTrie.GetValues(instID[:])
 	if err != nil {
-		return nil, xerrors.Errorf("reading value from state trie: %v", err)
+		return nil, xerrors.Errorf("failed to read value from ByzCoin "+
+			"state trie: %v", err)
 	}
 
 	return value, nil

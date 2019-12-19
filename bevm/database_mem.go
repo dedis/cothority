@@ -55,7 +55,8 @@ func NewMemDatabase(data []byte) (*MemDatabase, error) {
 
 	err := protobuf.Decode(data, kvs)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding memdb: %v", err)
+		return nil, xerrors.Errorf("failed to decode in-memory EVM "+
+			"state DB: %v", err)
 	}
 
 	DB := &MemDatabase{
@@ -123,7 +124,8 @@ func (db *MemDatabase) Get(key []byte) ([]byte, error) {
 		return common.CopyBytes(entry), nil
 	}
 
-	return nil, xerrors.Errorf("key '%s' not found", hex.EncodeToString(key))
+	return nil, xerrors.Errorf("key '%s' not found in EVM state DB",
+		hex.EncodeToString(key))
 }
 
 // Delete implements Deleter.Delete()

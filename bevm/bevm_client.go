@@ -43,7 +43,8 @@ func NewEvmContract(name string, abiJSON string, binData string) (
 	*EvmContract, error) {
 	contractAbi, err := abi.JSON(strings.NewReader(abiJSON))
 	if err != nil {
-		return nil, xerrors.Errorf("decoding contract ABI JSON: %v", err)
+		return nil, xerrors.Errorf("failed to decode JSON for "+
+			"contract ABI: %v", err)
 	}
 
 	contractBytecode := common.Hex2Bytes(binData)
@@ -95,7 +96,8 @@ func (contractInstance EvmContractInstance) unpackResult(method string,
 			err := contractInstance.Parent.Abi.Unpack(&result, method,
 				resultBytes)
 			if err != nil {
-				return nil, xerrors.Errorf("unpacking result: %v", err)
+				return nil, xerrors.Errorf("failed to unpack result "+
+					"from EVM: %v", err)
 			}
 
 			return result, nil
@@ -122,7 +124,8 @@ type EvmAccount struct {
 func NewEvmAccount(privateKey string) (*EvmAccount, error) {
 	privKey, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding private key: %v", err)
+		return nil, xerrors.Errorf("failed to decode private "+
+			"key for account creation: %v", err)
 	}
 
 	address := crypto.PubkeyToAddress(privKey.PublicKey)
@@ -157,7 +160,8 @@ func NewBEvm(bcClient *byzcoin.Client, signer darc.Signer, gDarc *darc.Darc) (
 			Args:       byzcoin.Arguments{},
 		})
 	if err != nil {
-		return instanceID, xerrors.Errorf("executing ByzCoin spawn: %v", err)
+		return instanceID, xerrors.Errorf("failed to execute ByzCoin "+
+			"spawn command for BEvm contract: %v", err)
 	}
 
 	instanceID = tx.Instructions[0].DeriveID("")
@@ -182,7 +186,8 @@ func (client *Client) Delete() error {
 		ContractID: ContractBEvmID,
 	})
 	if err != nil {
-		return xerrors.Errorf("executing ByzCoin delete: %v", err)
+		return xerrors.Errorf("failed to execute ByzCoin "+
+			"delete command for BEvm instance: %v", err)
 	}
 
 	return nil
@@ -197,7 +202,8 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 
 	packedArgs, err := contract.packConstructor(args...)
 	if err != nil {
-		return nil, xerrors.Errorf("packing contract constructor: %v", err)
+		return nil, xerrors.Errorf("failed to pack arguments for "+
+			"contract constructor: %v", err)
 	}
 
 	callData := append(contract.Bytecode, packedArgs...)
@@ -205,7 +211,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 		gasLimit, big.NewInt(int64(gasPrice)), callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return nil, xerrors.Errorf("preparing EVM transaction for "+
+		return nil, xerrors.Errorf("failed to prepare EVM transaction for "+
 			"contract deployment: %v", err)
 	}
 
@@ -213,7 +219,7 @@ func (client *Client) Deploy(gasLimit uint64, gasPrice uint64, amount uint64,
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("sending ByzCoin transaction for "+
+		return nil, xerrors.Errorf("failed to invoke ByzCoin transaction for "+
 			"EVM contract deployment: %v", err)
 	}
 
@@ -237,7 +243,8 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 
 	callData, err := contractInstance.packMethod(method, args...)
 	if err != nil {
-		return xerrors.Errorf("packing contract method '%s': %v", method, err)
+		return xerrors.Errorf("failed to pack arguments for contract "+
+			"method '%s': %v", method, err)
 	}
 
 	tx := types.NewTransaction(account.Nonce, contractInstance.Address,
@@ -245,7 +252,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 		callData)
 	signedTxBuffer, err := account.signAndMarshalTx(tx)
 	if err != nil {
-		return xerrors.Errorf("preparing EVM transaction for "+
+		return xerrors.Errorf("failed to prepare EVM transaction for "+
 			"method execution: %v", err)
 	}
 
@@ -253,7 +260,7 @@ func (client *Client) Transaction(gasLimit uint64, gasPrice uint64,
 		{Name: "tx", Value: signedTxBuffer},
 	})
 	if err != nil {
-		return xerrors.Errorf("sending ByzCoin transaction for "+
+		return xerrors.Errorf("failed to invoke ByzCoin transaction for "+
 			"EVM method execution: %v", err)
 	}
 
@@ -274,14 +281,14 @@ func (client *Client) Call(account *EvmAccount,
 	// Pack the method call and arguments
 	callData, err := contractInstance.packMethod(method, args...)
 	if err != nil {
-		return nil, xerrors.Errorf("error packing contract view "+
-			"method '%s': %v", method, err)
+		return nil, xerrors.Errorf("failed to pack arguments for contract "+
+			"view method '%s': %v", method, err)
 	}
 
 	// Retrieve the EVM state
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving EVM state: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve EVM state: %v", err)
 	}
 
 	// Instantiate a new EVM
@@ -292,13 +299,15 @@ func (client *Client) Call(account *EvmAccount,
 		contractInstance.Address, callData, uint64(1*WeiPerEther),
 		big.NewInt(0))
 	if err != nil {
-		return nil, xerrors.Errorf("executing EVM view method: %v", err)
+		return nil, xerrors.Errorf("failed to executing EVM view "+
+			"method: %v", err)
 	}
 
 	// Unpack the result into the caller's variable
 	result, err := contractInstance.unpackResult(method, ret)
 	if err != nil {
-		return nil, xerrors.Errorf("unpacking EVM view method result: %v", err)
+		return nil, xerrors.Errorf("failed to unpack EVM view "+
+			"method result: %v", err)
 	}
 
 	return result, nil
@@ -312,7 +321,7 @@ func (client *Client) CreditAccount(amount *big.Int,
 		{Name: "amount", Value: amount.Bytes()},
 	})
 	if err != nil {
-		return xerrors.Errorf("crediting account: %v", err)
+		return xerrors.Errorf("failed to credit EVM account: %v", err)
 	}
 
 	log.Lvlf2("Credited %d wei on '%x'", amount, address)
@@ -325,7 +334,7 @@ func (client *Client) GetAccountBalance(address common.Address) (
 	*big.Int, error) {
 	stateDb, err := getEvmDb(client.bcClient, client.instanceID)
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving EVM state: %v", err)
+		return nil, xerrors.Errorf("failed toretrieve EVM state: %v", err)
 	}
 
 	balance := stateDb.GetBalance(address)
@@ -346,12 +355,12 @@ func (account EvmAccount) signAndMarshalTx(tx *types.Transaction) (
 
 	signedTx, err := types.SignTx(tx, signer, account.PrivateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("signing EVM transaction: %v", err)
+		return nil, xerrors.Errorf("failed to sign EVM transaction: %v", err)
 	}
 
 	signedBuffer, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, xerrors.Errorf("marshalling EVM transaction "+
+		return nil, xerrors.Errorf("failed to serialize EVM transaction "+
 			"to JSON: %v", err)
 	}
 
@@ -364,32 +373,35 @@ func getEvmDb(bcClient *byzcoin.Client, instID byzcoin.InstanceID) (
 	// Retrieve the proof of the Byzcoin instance
 	proofResponse, err := bcClient.GetProof(instID[:])
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving BEvm instance: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve BEvm instance: %v", err)
 	}
 
 	// Validate the proof
 	err = proofResponse.Proof.Verify(bcClient.ID)
 	if err != nil {
-		return nil, xerrors.Errorf("verifying BEvm instance proof: %v", err)
+		return nil, xerrors.Errorf("failed to verify BEvm instance "+
+			"proof: %v", err)
 	}
 
 	// Extract the value from the proof
 	_, value, _, _, err := proofResponse.Proof.KeyValue()
 	if err != nil {
-		return nil, xerrors.Errorf("getting BEvm instance value: %v", err)
+		return nil, xerrors.Errorf("failed to get BEvm instance value: %v", err)
 	}
 
 	// Decode the proof value into an EVM State
 	var bs State
 	err = protobuf.Decode(value, &bs)
 	if err != nil {
-		return nil, xerrors.Errorf("decoding BEvm instance value: %v", err)
+		return nil, xerrors.Errorf("failed to decode BEvm instance "+
+			"value: %v", err)
 	}
 
 	// Create a client ByzDB instance
 	byzDb, err := NewClientByzDatabase(instID, bcClient)
 	if err != nil {
-		return nil, xerrors.Errorf("creating a new ByzDB instance: %v", err)
+		return nil, xerrors.Errorf("failed to creatw a new ByzDB "+
+			"instance: %v", err)
 	}
 
 	db := state.NewDatabase(byzDb)
@@ -405,7 +417,8 @@ func (client *Client) invoke(command string, args byzcoin.Arguments) error {
 		Args:       args,
 	})
 	if err != nil {
-		return xerrors.Errorf("executing ByzCoin invoke: %v", err)
+		return xerrors.Errorf("failed to execute ByzCoin invoke "+
+			"instruction: %v", err)
 	}
 
 	return nil
@@ -435,7 +448,8 @@ func execByzCoinTx(bcClient *byzcoin.Client,
 	deleteInstr *byzcoin.Delete) (*byzcoin.ClientTransaction, error) {
 	counters, err := bcClient.GetSignerCounters(signer.Identity().String())
 	if err != nil {
-		return nil, xerrors.Errorf("retrieving signer counters: %v", err)
+		return nil, xerrors.Errorf("failed to retrieve signer "+
+			"counters from ByzCoin: %v", err)
 	}
 
 	tx, err := bcClient.CreateTransaction(byzcoin.Instruction{
@@ -446,19 +460,22 @@ func execByzCoinTx(bcClient *byzcoin.Client,
 		Delete:        deleteInstr,
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("creating ByzCoin transaction: %v", err)
+		return nil, xerrors.Errorf("failed to create ByzCoin "+
+			"transaction: %v", err)
 	}
 
 	err = tx.FillSignersAndSignWith(signer)
 	if err != nil {
-		return nil, xerrors.Errorf("signing ByzCoin transaction: %v", err)
+		return nil, xerrors.Errorf("failed to sign ByzCoin "+
+			"transaction: %v", err)
 	}
 
 	// Sending this transaction to ByzCoin does not directly include it in the
 	// global state - first we must wait for the new block to be created.
 	_, err = bcClient.AddTransactionAndWait(tx, 5)
 	if err != nil {
-		return nil, xerrors.Errorf("sending ByzCoin transaction: %v", err)
+		return nil, xerrors.Errorf("failed to send ByzCoin "+
+			"transaction: %v", err)
 	}
 
 	return &tx, nil

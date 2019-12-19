@@ -33,7 +33,7 @@ func newServiceBEvm(c *onet.Context) (onet.Service, error) {
 
 	err := byzcoin.RegisterContract(c, ContractBEvmID, contractBEvmFromBytes)
 	if err != nil {
-		return nil, xerrors.Errorf("registering BEvm contract: %v", err)
+		return nil, xerrors.Errorf("failed to registe BEvm contract: %v", err)
 	}
 
 	return s, nil
@@ -47,7 +47,8 @@ func newServiceBEvmValue(c *onet.Context) (onet.Service, error) {
 	// BEvmValue does not support explicit creation, so we can pass nil
 	err := byzcoin.RegisterContract(c, ContractBEvmValueID, nil)
 	if err != nil {
-		return nil, xerrors.Errorf("registering BEvmValue contract: %v", err)
+		return nil, xerrors.Errorf("failed to register BEvmValue "+
+			"contract: %v", err)
 	}
 
 	return s, nil

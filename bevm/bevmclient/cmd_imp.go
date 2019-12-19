@@ -25,12 +25,12 @@ func createAccount(ctx *cli.Context) error {
 
 	pk, err := crypto.GenerateKey()
 	if err != nil {
-		return xerrors.Errorf("generating EVM account key: %v", err)
+		return xerrors.Errorf("failed to generate EVM account key: %v", err)
 	}
 
 	account, err := bevm.NewEvmAccount(common.Bytes2Hex(crypto.FromECDSA(pk)))
 	if err != nil {
-		return xerrors.Errorf("creating new EVM account: %v", err)
+		return xerrors.Errorf("failed to create new EVM account: %v", err)
 	}
 
 	fmt.Printf("New account \"%s\" created at address: %s\n",
@@ -44,17 +44,17 @@ func creditAccount(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("handling options: %v", err)
+		return xerrors.Errorf("failed to handle provided options: %v", err)
 	}
 
 	if !ctx.Args().Present() {
-		return xerrors.New("missing amount argument")
+		return xerrors.New("missing <amount> argument")
 	}
 
 	amountStr := ctx.Args().First()
 	amount, err := strconv.ParseUint(amountStr, 0, 64)
 	if err != nil {
-		return xerrors.Errorf("parsing amount value: %v", err)
+		return xerrors.Errorf("failed to parse <amount> value: %v", err)
 	}
 
 	// Perform command
@@ -64,13 +64,13 @@ func creditAccount(ctx *cli.Context) error {
 
 	err = opt.bevmClient.CreditAccount(amountBig, opt.account.Address)
 	if err != nil {
-		return xerrors.Errorf("crediting BEvm account: %v", err)
+		return xerrors.Errorf("failed to credit BEvm account: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "Credited account %s with %d Ether\n",
 		opt.account.Address.Hex(), amount)
 	if err != nil {
-		return xerrors.Errorf("writing report msg: %v", err)
+		return xerrors.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -81,14 +81,15 @@ func getAccountBalance(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("handling options: %v", err)
+		return xerrors.Errorf("failed to handle provided options: %v", err)
 	}
 
 	// Perform command
 
 	amount, err := opt.bevmClient.GetAccountBalance(opt.account.Address)
 	if err != nil {
-		return xerrors.Errorf("retrieving BEvm account balance: %v", err)
+		return xerrors.Errorf("failed to retrieve BEvm account "+
+			"balance: %v", err)
 	}
 
 	var amountEther, amountWei big.Int
@@ -97,7 +98,7 @@ func getAccountBalance(ctx *cli.Context) error {
 		"Balance of account %s: %v Ether, %v Wei\n",
 		opt.account.Address.Hex(), amountEther.String(), amountWei.String())
 	if err != nil {
-		return xerrors.Errorf("writing report msg: %v", err)
+		return xerrors.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -108,7 +109,7 @@ func deployContract(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("handling options: %v", err)
+		return xerrors.Errorf("failed to handle provided options: %v", err)
 	}
 
 	gasLimit := ctx.Uint64("gasLimit")
@@ -126,18 +127,20 @@ func deployContract(ctx *cli.Context) error {
 
 	abiData, err := ioutil.ReadFile(abiFilepath)
 	if err != nil {
-		return xerrors.Errorf("reading contract ABI: %v", err)
+		return xerrors.Errorf("failed to read contract ABI from "+
+			"provided file: %v", err)
 	}
 
 	binData, err := ioutil.ReadFile(binFilepath)
 	if err != nil {
-		return xerrors.Errorf("reading contract Bytecode: %v", err)
+		return xerrors.Errorf("failed to read contract Bytecode "+
+			"from provided file: %v", err)
 	}
 
 	contract, err := bevm.NewEvmContract("newContract",
 		string(abiData), string(binData))
 	if err != nil {
-		return xerrors.Errorf("creating new BEvm contract: %v", err)
+		return xerrors.Errorf("failed to create new BEvm contract: %v", err)
 	}
 
 	constrAbi := contract.Abi.Constructor
@@ -149,7 +152,8 @@ func deployContract(ctx *cli.Context) error {
 	}
 	args, err := decodeEvmArgs(userArgs, constrAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("decoding contract constructor arguments: %v", err)
+		return xerrors.Errorf("failed to decode contract constructor "+
+			"arguments: %v", err)
 	}
 
 	// Perform command
@@ -157,22 +161,22 @@ func deployContract(ctx *cli.Context) error {
 	contractInstance, err := opt.bevmClient.Deploy(
 		gasLimit, gasPrice, amount, opt.account, contract, args...)
 	if err != nil {
-		return xerrors.Errorf("deploying new BEvm contract: %v", err)
+		return xerrors.Errorf("failed to deploy new BEvm contract: %v", err)
 	}
 
 	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
-		return xerrors.Errorf("writing account file: %v", err)
+		return xerrors.Errorf("failed to save account information: %v", err)
 	}
 
 	err = writeContractFile(contractInstance, abiFilepath, contractName, true)
 	if err != nil {
-		return xerrors.Errorf("writing contract file: %v", err)
+		return xerrors.Errorf("failed to save contract information: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "%s deployed\n", contractInstance)
 	if err != nil {
-		return xerrors.Errorf("writing report msg: %v", err)
+		return xerrors.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -183,7 +187,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("handling options: %v", err)
+		return xerrors.Errorf("failed to handle pprovided options: %v", err)
 	}
 
 	gasLimit := ctx.Uint64("gasLimit")
@@ -193,7 +197,7 @@ func executeTransaction(ctx *cli.Context) error {
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {
-		return xerrors.Errorf("reading contract file: %v", err)
+		return xerrors.Errorf("failed to load contract information: %v", err)
 	}
 
 	if ctx.NArg() == 0 {
@@ -214,7 +218,7 @@ func executeTransaction(ctx *cli.Context) error {
 	}
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("decoding contract transaction "+
+		return xerrors.Errorf("failed to decode contract transaction "+
 			"arguments: %v", err)
 	}
 
@@ -224,17 +228,17 @@ func executeTransaction(ctx *cli.Context) error {
 		gasLimit, gasPrice, amount, opt.account, contractInstance,
 		method, args...)
 	if err != nil {
-		return xerrors.Errorf("executing contract transaction: %v", err)
+		return xerrors.Errorf("failed to execute contract transaction: %v", err)
 	}
 
 	err = writeAccountFile(opt.account, opt.accountName, false)
 	if err != nil {
-		return xerrors.Errorf("writing account file: %v", err)
+		return xerrors.Errorf("failed to save account information: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "transaction executed\n")
 	if err != nil {
-		return xerrors.Errorf("writing report msg: %v", err)
+		return xerrors.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
@@ -245,14 +249,14 @@ func executeCall(ctx *cli.Context) error {
 
 	opt, err := handleCommonOptions(ctx)
 	if err != nil {
-		return xerrors.Errorf("handling options: %v", err)
+		return xerrors.Errorf("failed to handle provided options: %v", err)
 	}
 
 	contractName := ctx.String("contractName")
 
 	contractInstance, err := readContractFile(contractName)
 	if err != nil {
-		return xerrors.Errorf("reading contract file: %v", err)
+		return xerrors.Errorf("failed to load contract information: %v", err)
 	}
 
 	if ctx.NArg() == 0 {
@@ -276,7 +280,7 @@ func executeCall(ctx *cli.Context) error {
 	}
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("decoding contract view method "+
+		return xerrors.Errorf("failed to decode contract view method "+
 			"arguments: %v", err)
 	}
 
@@ -285,13 +289,13 @@ func executeCall(ctx *cli.Context) error {
 	result, err := opt.bevmClient.Call(opt.account, contractInstance,
 		method, args...)
 	if err != nil {
-		return xerrors.Errorf("executing view method: %v", err)
+		return xerrors.Errorf("failed to execute view method: %v", err)
 	}
 
 	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n",
 		result, reflect.TypeOf(result))
 	if err != nil {
-		return xerrors.Errorf("writing report msg: %v", err)
+		return xerrors.Errorf("failed to write report msg: %v", err)
 	}
 
 	return nil
