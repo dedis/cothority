@@ -32,15 +32,18 @@ type userEvmAccount struct {
 func writeFile(file string, data []byte, check bool) error {
 	if check {
 		fileInfo, err := os.Stat(file)
-		if !os.IsNotExist(err) {
+		if err == nil {
+			// No error --> the file exists
 			newName := file + "." + fileInfo.ModTime().Format(time.RFC3339)
 			fmt.Fprintf(os.Stderr, "WARNING: Previous file exists "+
 				"and is being renamed to '%s'\n", newName)
 
 			err = os.Rename(file, newName)
 			if err != nil {
-				return xerrors.Errorf("writing file: %v", err)
+				return xerrors.Errorf("renaming file: %v", err)
 			}
+		} else if !os.IsNotExist(err) {
+			return xerrors.Errorf("stat-ing file: %v", err)
 		}
 	}
 
