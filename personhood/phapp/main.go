@@ -9,11 +9,13 @@ import (
 	"regexp"
 	"strings"
 
+	"go.dedis.ch/cothority/v3/personhood/contracts"
+
 	"github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/byzcoin/bcadmin/lib"
-	"go.dedis.ch/cothority/v3/byzcoin/contracts"
+	byz_contracts "go.dedis.ch/cothority/v3/byzcoin/contracts"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/cothority/v3/personhood"
@@ -182,7 +184,7 @@ func spawnerUpdate(c *cli.Context) error {
 	var args byzcoin.Arguments
 	for _, cn := range []string{"Darc", "Coin", "Credential", "Party", "RoPaSci"} {
 		coin := &byzcoin.Coin{
-			Name:  personhood.SpawnerCoin,
+			Name:  contracts.SpawnerCoin,
 			Value: c.Uint64(strings.ToLower(cn)),
 		}
 		buf, err := protobuf.Encode(coin)
@@ -197,7 +199,7 @@ func spawnerUpdate(c *cli.Context) error {
 	ctx, err := combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(spIIDBuf),
 		Invoke: &byzcoin.Invoke{
-			ContractID: personhood.ContractCredentialID,
+			ContractID: contracts.ContractCredentialID,
 			Command:    "update",
 			Args:       args,
 		},
@@ -234,7 +236,7 @@ func spawner(c *cli.Context) error {
 	var args byzcoin.Arguments
 	for _, cn := range []string{"Darc", "Coin", "Credential", "Party"} {
 		coin := &byzcoin.Coin{
-			Name:  personhood.SpawnerCoin,
+			Name:  contracts.SpawnerCoin,
 			Value: c.Uint64(strings.ToLower(cn)),
 		}
 		buf, err := protobuf.Encode(coin)
@@ -249,7 +251,7 @@ func spawner(c *cli.Context) error {
 	ctx, err := combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(cfg.AdminDarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
-			ContractID: personhood.ContractSpawnerID,
+			ContractID: contracts.ContractSpawnerID,
 			Args:       args,
 		},
 	})
@@ -369,7 +371,7 @@ func register(c *cli.Context) error {
 	id := darc.NewIdentityEd25519(pub)
 	rules := darc.InitRulesWith([]darc.Identity{id}, []darc.Identity{id}, "invoke:"+byzcoin.ContractDarcID+".evolve")
 	expr := id.String()
-	for _, s := range []string{personhood.ContractCredentialID + ".update", contracts.ContractCoinID + ".fetch", contracts.ContractCoinID + ".transfer"} {
+	for _, s := range []string{contracts.ContractCredentialID + ".update", byz_contracts.ContractCoinID + ".fetch", byz_contracts.ContractCoinID + ".transfer"} {
 		rules.AddRule(darc.Action("invoke:"+s), expression.Expr(expr))
 	}
 	d := darc.NewDarc(rules, []byte("user "+alias))
@@ -397,17 +399,17 @@ func register(c *cli.Context) error {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(contracts.ContractCoinID))
+	h.Write([]byte(byz_contracts.ContractCoinID))
 	h.Write(d.GetBaseID())
 	coinIID := h.Sum(nil)
 	log.Infof("Creating Coin for user: %x", coinIID)
 	ctx, err = combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
 		InstanceID: gdID,
 		Spawn: &byzcoin.Spawn{
-			ContractID: contracts.ContractCoinID,
+			ContractID: byz_contracts.ContractCoinID,
 			Args: byzcoin.Arguments{{
 				Name:  "type",
-				Value: personhood.SpawnerCoin.Slice(),
+				Value: contracts.SpawnerCoin.Slice(),
 			}, {
 				Name:  "public",
 				Value: d.GetBaseID(),
@@ -426,25 +428,25 @@ func register(c *cli.Context) error {
 	}
 
 	h = sha256.New()
-	h.Write([]byte(personhood.ContractCredentialID))
+	h.Write([]byte(contracts.ContractCredentialID))
 	h.Write(d.GetBaseID())
 	credIID := h.Sum(nil)
-	cred := personhood.CredentialStruct{
-		Credentials: []personhood.Credential{{
+	cred := contracts.CredentialStruct{
+		Credentials: []contracts.Credential{{
 			Name: "public",
-			Attributes: []personhood.Attribute{{
+			Attributes: []contracts.Attribute{{
 				Name:  "ed25519",
 				Value: pubBuf,
 			}}},
 			{
 				Name: "darc",
-				Attributes: []personhood.Attribute{{
+				Attributes: []contracts.Attribute{{
 					Name:  "darcID",
 					Value: d.GetBaseID(),
 				}}},
 			{
 				Name: "coin",
-				Attributes: []personhood.Attribute{{
+				Attributes: []contracts.Attribute{{
 					Name:  "coinIID",
 					Value: coinIID,
 				}}},
@@ -455,7 +457,7 @@ func register(c *cli.Context) error {
 	ctx, err = combineInstrsAndSign(cl, *signer, byzcoin.Instruction{
 		InstanceID: gdID,
 		Spawn: &byzcoin.Spawn{
-			ContractID: personhood.ContractCredentialID,
+			ContractID: contracts.ContractCredentialID,
 			Args: byzcoin.Arguments{{
 				Name:  "darcIDBuf",
 				Value: d.GetBaseID(),
@@ -508,16 +510,16 @@ func show(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if cid != personhood.ContractCredentialID {
+	if cid != contracts.ContractCredentialID {
 		return errors.New("the instance at this IID is not a credential, but: " + cid)
 	}
-	cred, err := personhood.ContractCredentialFromBytes(val)
+	cred, err := contracts.ContractCredentialFromBytes(val)
 	if err != nil {
 		return err
 	}
 
 	log.Infof("Credentials of %x", credBuf)
-	for _, c := range cred.(*personhood.ContractCredential).Credentials {
+	for _, c := range cred.(*contracts.ContractCredential).Credentials {
 		var atts []string
 		for _, a := range c.Attributes {
 			atts = append(atts, fmt.Sprintf("%s: %x", a.Name, a.Value))
@@ -627,7 +629,7 @@ func verifyAdminDarc(cl *byzcoin.Client, cfg lib.Config, signer darc.Signer) err
 	}
 	found := 0
 	spawners := []string{"credential", "coin", "spawner"}
-	invokes := []string{personhood.ContractCredentialID + ".update"}
+	invokes := []string{contracts.ContractCredentialID + ".update"}
 	actions := regexp.MustCompile("(spawn:" +
 		strings.Join(spawners, "|spawn:") +
 		"|invoke:" + strings.Join(invokes, "|invoke:") + ")")

@@ -1,9 +1,13 @@
-package personhood
+package contracts
 
 import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+
+	"go.dedis.ch/kyber/v3"
+
+	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/calypso"
@@ -87,6 +91,7 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	var darcID darc.ID
 	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
+		err = xerrors.Errorf("couldn't get darc: %+v", err)
 		return
 	}
 
@@ -122,6 +127,10 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 		if err != nil {
 			return nil, nil, errors.New("couldn't unmarshal secret: " + err.Error())
 		}
+		// TODO: don't depend on the firstPlayerHash,
+		//  but on the instanceID of the RoPaSci.
+		//  As the current instanceID includes the hash of the first player,
+		//  the new instanceID should be the sha256(c.FirstPlayerHash).
 		writeCommit := sha256.Sum256(c.FirstPlayerHash)
 		if err = write.CheckProof(cothority.Suite, writeCommit[:]); err != nil {
 			return nil, nil, errors.New("proof of write failed: " + err.Error())
@@ -144,14 +153,50 @@ func (c ContractRoPaSci) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	return
 }
 
+// NewInstructionRoPaSciSpawn returns a new instruction that is ready to be
+// sent to byzcoin to spawn a new rock-paper-scissors instance.
+func NewInstructionRoPaSciSpawn(did darc.ID, srps RoPaSciStruct) (
+	inst byzcoin.Instruction, err error) {
+
+	inst.InstanceID = byzcoin.NewInstanceID(did)
+	sBuf, err := protobuf.Encode(&srps)
+	if err != nil {
+		err = xerrors.Errorf("couldn't encode rpsStruct: %+v", err)
+		return
+	}
+	inst.Spawn = &byzcoin.Spawn{
+		ContractID: ContractCredentialID,
+		Args: byzcoin.Arguments{
+			newArg("struct", sBuf),
+		},
+	}
+	return
+}
+
+// NewInstructionRoPaSciSpawnSecret returns a new instruction that is ready
+// to be sent to byzcoin to spawn a new rock-paper-scissors instance.
+// It also takes a 'secret' argument that represents what the first player
+// will store on byzcoin so that the second player can reveal the game.
+func NewInstructionRoPaSciSpawnSecret(did darc.ID,
+	srps RoPaSciStruct, secret calypso.Write) (
+	inst byzcoin.Instruction, err error) {
+	inst, err = NewInstructionRoPaSciSpawn(did, srps)
+	if err != nil {
+		return
+	}
+	sBuf, err := protobuf.Encode(&secret)
+	if err != nil {
+		err = xerrors.Errorf("couldn't encode secret: %+v", err)
+	}
+	inst.Spawn.Args = append(inst.Spawn.Args, newArg("secret", sBuf))
+	return
+}
+
 // Invoke allows to play the RoPaSci game. It takes one of the following commands:
 //  - second to add a second move to the instance. The 'account' argument must point to an
 //    account that will be used to pay out the reward
 //  - confirm is sent by the first player and uses the 'prehash' argument to prove what the move
 //    was. If the first player wins, the coins go to the coin instance in 'account'
-//
-//  TODO:
-//   - add a 'recover' for the second player, in case the first player doesn't confirm
 func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 	var darcID darc.ID
@@ -199,6 +244,12 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 
 		if c.CalypsoWrite != nil &&
 			!c.CalypsoWrite.Equal(emptyInstance) {
+			// TODO: instead of giving a public key here,
+			//  the system could re-encrypt to the base point,
+			//  so that anybody can confirm the game,
+			//  including the service itself, in case of a draw,
+			//  where none of the players wants to let the system have its
+			//  money.
 			pub2Buf := inst.Invoke.Args.Search("public")
 			if pub2Buf == nil {
 				return nil, nil, errors.New("need 'public' for calypso-ropasci")
@@ -297,6 +348,65 @@ func (c *ContractRoPaSci) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Ins
 	sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 		ContractRoPaSciID, buf, darcID))
 	return
+}
+
+// NewInstructionRoPaSciInvokeSecond returns a new instruction that can be
+// sent to byzcoin for continuation of a rock-paper-sicssors game.
+func NewInstructionRoPaSciInvokeSecond(acc byzcoin.InstanceID,
+	choice int) byzcoin.Instruction {
+	return byzcoin.Instruction{
+		InstanceID: emptyInstance,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractRoPaSciID,
+			Command:    "second",
+			Args: byzcoin.Arguments{
+				newArg("account", acc[:]),
+				newArg("choice", []byte{byte(choice)}),
+			},
+		},
+	}
+}
+
+// NewInstructionRoPaSciInvokeSecondSecret returns a new instruction that can be
+// sent to byzcoin for continuation of a rock-paper-sicssors game.
+// It also takes a public key that will be used to re-encrypt the player1's
+// prehash against.
+func NewInstructionRoPaSciInvokeSecondSecret(acc byzcoin.InstanceID,
+	choice int, pub kyber.Point) (*byzcoin.Instruction, error) {
+	pubBuf, err := pub.MarshalBinary()
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't marshal the point: %+v", err)
+	}
+	return &byzcoin.Instruction{
+		InstanceID: emptyInstance,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractRoPaSciID,
+			Command:    "second",
+			Args: byzcoin.Arguments{
+				newArg("account", acc[:]),
+				newArg("choice", []byte{byte(choice)}),
+				newArg("public", pubBuf),
+			},
+		},
+	}, nil
+}
+
+// NewInstructionRoPaSciInvokeConfirm returns an instruction that can be sent
+// to byzcoin to confirm/reveal a rock-paper-scissors game,
+// either by player 1 or by player 2.
+func NewInstructionRoPaSciInvokeConfirm(acc byzcoin.InstanceID,
+	prehash []byte) byzcoin.Instruction {
+	return byzcoin.Instruction{
+		InstanceID: emptyInstance,
+		Invoke: &byzcoin.Invoke{
+			ContractID: ContractRoPaSciID,
+			Command:    "confirm",
+			Args: byzcoin.Arguments{
+				newArg("account", acc[:]),
+				newArg("prehash", prehash),
+			},
+		},
+	}
 }
 
 // Delete removes an existing RoPaSci instance
