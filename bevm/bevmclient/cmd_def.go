@@ -18,8 +18,9 @@ var commonFlags = []cli.Flag{
 		Required: true,
 	},
 	cli.StringFlag{
-		Name:  "sign",
-		Usage: "public key of the signing entity (default is the admin public key)",
+		Name: "sign",
+		Usage: "public key of the signing entity (default is the admin " +
+			"public key)",
 	},
 	cli.StringFlag{
 		Name:  "accountName, an",

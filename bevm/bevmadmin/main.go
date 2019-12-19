@@ -37,12 +37,14 @@ var cmds = cli.Commands{
 				Required: true,
 			},
 			cli.StringFlag{
-				Name:  "darc",
-				Usage: "DARC with the right to spawn a BEvm contract (default is the admin DARC)",
+				Name: "darc",
+				Usage: "DARC with the right to spawn a BEvm contract " +
+					"(default is the admin DARC)",
 			},
 			cli.StringFlag{
-				Name:  "sign",
-				Usage: "public key of the signing entity (default is the admin public key)",
+				Name: "sign",
+				Usage: "public key of the signing entity (default is " +
+					"the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "outID",
@@ -64,8 +66,9 @@ var cmds = cli.Commands{
 				Required: true,
 			},
 			cli.StringFlag{
-				Name:  "sign",
-				Usage: "public key of the signing entity (default is the admin public key)",
+				Name: "sign",
+				Usage: "public key of the signing entity (default is " +
+					"the admin public key)",
 			},
 			cli.StringFlag{
 				Name:  "bevmID, i",
@@ -151,7 +154,8 @@ func spawn(c *cli.Context) error {
 		return xerrors.Errorf("spawning new BEvm instance: %v", err)
 	}
 
-	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n", bevmInstID)
+	_, err = fmt.Fprintf(c.App.Writer, "Created BEvm instance with ID: %s\n",
+		bevmInstID)
 	if err != nil {
 		return xerrors.Errorf("writing report msg: %v", err)
 	}
@@ -193,7 +197,8 @@ func delete(c *cli.Context) error {
 	if err != nil {
 		return xerrors.Errorf("decoding BEvm ID: %v", err)
 	}
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
+	bevmClient, err := bevm.NewClient(cl, *signer,
+		byzcoin.NewInstanceID(bevmID))
 	if err != nil {
 		return xerrors.Errorf("retrieving BEvm client instance: %v", err)
 	}
@@ -203,7 +208,8 @@ func delete(c *cli.Context) error {
 		return xerrors.Errorf("deleting BEvm instance: %v", err)
 	}
 
-	_, err = fmt.Fprintf(c.App.Writer, "Delete BEvm instance with ID: %s\n", bevmIDStr)
+	_, err = fmt.Fprintf(c.App.Writer, "Delete BEvm instance with ID: %s\n",
+		bevmIDStr)
 	if err != nil {
 		return xerrors.Errorf("writing report msg: %v", err)
 	}

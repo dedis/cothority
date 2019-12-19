@@ -46,7 +46,8 @@ type ClientByzDatabase struct {
 }
 
 // NewClientByzDatabase creates a new ByzDatabase for client use
-func NewClientByzDatabase(bevmIID byzcoin.InstanceID, client *byzcoin.Client) (*ClientByzDatabase, error) {
+func NewClientByzDatabase(bevmIID byzcoin.InstanceID, client *byzcoin.Client) (
+	*ClientByzDatabase, error) {
 	return &ClientByzDatabase{
 		ByzDatabase: ByzDatabase{
 			bevmIID: bevmIID,
@@ -75,7 +76,8 @@ func (db *ClientByzDatabase) getBEvmValue(key []byte) ([]byte, error) {
 	// Validate the proof
 	err = proofResponse.Proof.Verify(db.client.ID)
 	if err != nil {
-		return nil, xerrors.Errorf("verifying BEvmValue instance proof: %v", err)
+		return nil, xerrors.Errorf("verifying BEvmValue instance "+
+			"proof: %v", err)
 	}
 
 	// Extract the value from the proof
@@ -121,10 +123,13 @@ func (db *ClientByzDatabase) NewBatch() ethdb.Batch {
 // (read/write) use, updating ByzCoin via StateChanges
 type ServerByzDatabase struct {
 	ByzDatabase
-	roStateTrie  byzcoin.ReadOnlyStateTrie
-	stateChanges []byzcoin.StateChange // List of state changes to apply
-	keyMap       map[string]bool       // Keeps track of existing value instances (identified by their key)
-	lock         sync.RWMutex          // Protects concurrent access to 'keyMap' and 'stateChanges'
+	roStateTrie byzcoin.ReadOnlyStateTrie
+	// List of state changes to apply
+	stateChanges []byzcoin.StateChange
+	// Keeps track of existing value instances (identified by their key)
+	keyMap map[string]bool
+	// Protects concurrent access to 'keyMap' and 'stateChanges'
+	lock sync.RWMutex
 }
 
 func keyListToMap(keyList []string) map[string]bool {
@@ -176,14 +181,16 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 	for _, s := range db.stateChanges {
 		k := string(s.Key())
 		if val, ok := keyMap[k]; ok && val != string(s.Value) {
-			return nil, nil, xerrors.New("internal error: the set of changes produced by the EVM is not unique on keys")
+			return nil, nil, xerrors.New("internal error: the set of " +
+				"changes produced by the EVM is not unique on keys")
 		}
 		keyMap[k] = string(s.Value)
 	}
 
 	// All good, let's sort by keys
 	sort.SliceStable(db.stateChanges, func(i, j int) bool {
-		return string(db.stateChanges[i].Key()) < string(db.stateChanges[j].Key())
+		return string(db.stateChanges[i].Key()) <
+			string(db.stateChanges[j].Key())
 	})
 
 	keyList := keyMapToList(db.keyMap)
@@ -199,10 +206,12 @@ func (db *ServerByzDatabase) Dump() ([]byzcoin.StateChange, []string, error) {
 		case byzcoin.Remove:
 			nbRemove++
 		default:
-			return nil, nil, xerrors.Errorf("unknown StateChange action: %d", s.StateAction)
+			return nil, nil, xerrors.Errorf("unknown StateChange "+
+				"action: %d", s.StateAction)
 		}
 	}
-	log.Lvlf2("%d state changes (%d Create, %d Update, %d Remove), %d entries in store",
+	log.Lvlf2("%d state changes (%d Create, %d Update, %d Remove), %d "+
+		"entries in store",
 		len(db.stateChanges), nbCreate, nbUpdate, nbRemove, len(keyList))
 
 	return db.stateChanges, keyList, nil

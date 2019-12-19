@@ -23,7 +23,8 @@ var ContractBEvmID = "bevm"
 // database values
 var ContractBEvmValueID = "bevm_value"
 
-var nilAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+var nilAddress = common.HexToAddress(
+	"0x0000000000000000000000000000000000000000")
 
 // ByzCoin contract state for BEvm
 type contractBEvm struct {
@@ -71,7 +72,8 @@ func NewEvmDb(es *State, roStateTrie byzcoin.ReadOnlyStateTrie,
 }
 
 // NewContractState create a new contract state from the EVM state database
-func NewContractState(stateDb *state.StateDB) (*State, []byzcoin.StateChange, error) {
+func NewContractState(stateDb *state.StateDB) (*State,
+	[]byzcoin.StateChange, error) {
 	// Commit the underlying databases first
 	root, err := stateDb.Commit(true)
 	if err != nil {
@@ -86,7 +88,8 @@ func NewContractState(stateDb *state.StateDB) (*State, []byzcoin.StateChange, er
 	// Retrieve the low-level database
 	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
-		return nil, nil, xerrors.New("internal error: EVM State DB is not of expected type")
+		return nil, nil, xerrors.New("internal error: EVM State DB is not " +
+			"of expected type")
 	}
 
 	// Dump the low-level database contents changes
@@ -106,7 +109,8 @@ func DeleteValues(keyList []string,
 	// Retrieve the low-level database
 	byzDb, ok := stateDb.Database().TrieDB().DiskDB().(*ServerByzDatabase)
 	if !ok {
-		return nil, xerrors.New("internal error: EVM State DB is not of expected type")
+		return nil, xerrors.New("internal error: EVM State DB is not " +
+			"of expected type")
 	}
 
 	// Delete all the values
@@ -148,7 +152,8 @@ func (c *contractBEvm) Spawn(rst byzcoin.ReadOnlyStateTrie,
 
 	contractState, _, err := NewContractState(stateDb)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("creating new BEvm contract state: %v", err)
+		return nil, nil,
+			xerrors.Errorf("creating new BEvm contract state: %v", err)
 	}
 
 	contractData, err := protobuf.Encode(contractState)
@@ -195,7 +200,8 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 	case "credit": // Credit an Ethereum account
 		err := checkArguments(inst, "address", "amount")
 		if err != nil {
-			return nil, nil, xerrors.Errorf("validating 'credit' arguments: %v", err)
+			return nil, nil,
+				xerrors.Errorf("validating 'credit' arguments: %v", err)
 		}
 
 		address := common.BytesToAddress(inst.Invoke.Args.Search("address"))
@@ -205,12 +211,14 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("creating new BEvm contract state: %v", err)
+			return nil, nil,
+				xerrors.Errorf("creating new BEvm contract state: %v", err)
 		}
 
 		contractData, err := protobuf.Encode(contractState)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("encoding BEvm contract state: %v", err)
+			return nil, nil,
+				xerrors.Errorf("encoding BEvm contract state: %v", err)
 		}
 
 		// State changes to ByzCoin contain the Update to the main contract
@@ -226,7 +234,8 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 		// change)
 		err := checkArguments(inst, "tx")
 		if err != nil {
-			return nil, nil, xerrors.Errorf("validating 'transaction' arguments: %v", err)
+			return nil, nil,
+				xerrors.Errorf("validating 'transaction' arguments: %v", err)
 		}
 
 		var ethTx types.Transaction
@@ -237,11 +246,13 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		txReceipt, err := sendTx(&ethTx, stateDb)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("sending transaction to EVM: %v", err)
+			return nil, nil,
+				xerrors.Errorf("sending transaction to EVM: %v", err)
 		}
 
 		if txReceipt.ContractAddress.Hex() != nilAddress.Hex() {
-			log.Lvlf2("Contract deployed at '%s'", txReceipt.ContractAddress.Hex())
+			log.Lvlf2("Contract deployed at '%s'",
+				txReceipt.ContractAddress.Hex())
 		} else {
 			log.Lvlf2("Transaction to '%s'", ethTx.To().Hex())
 		}
@@ -250,20 +261,22 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 
 		contractState, stateChanges, err := NewContractState(stateDb)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("creating new BEvm contract state: %v", err)
+			return nil, nil,
+				xerrors.Errorf("creating new BEvm contract state: %v", err)
 		}
 
 		contractData, err := protobuf.Encode(contractState)
 		if err != nil {
-			return nil, nil, xerrors.Errorf("encoding BEvm contract state: %v", err)
+			return nil, nil,
+				xerrors.Errorf("encoding BEvm contract state: %v", err)
 		}
 
 		// State changes to ByzCoin contain the Update to the main contract
 		// state, plus whatever changes were produced by the EVM on its state
 		// database.
 		sc = append([]byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractBEvmID,
-				contractData, darcID),
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+				ContractBEvmID, contractData, darcID),
 		}, stateChanges...)
 
 	default:
@@ -274,7 +287,8 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 }
 
 // Helper function that sends a transaction to the EVM
-func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, error) {
+func sendTx(tx *types.Transaction, stateDb *state.StateDB) (
+	*types.Receipt, error) {
 
 	// Gets parameters defined in params
 	chainConfig := getChainConfig()
@@ -286,8 +300,8 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB) (*types.Receipt, erro
 	usedGas := uint64(0)
 	ug := &usedGas
 
-	// ChainContext supports retrieving headers and consensus parameters from the
-	// current blockchain to be used during transaction processing.
+	// ChainContext supports retrieving headers and consensus parameters from
+	// the current blockchain to be used during transaction processing.
 	var bc core.ChainContext
 
 	// Header represents a block header in the Ethereum blockchain.
@@ -327,13 +341,15 @@ func (c *contractBEvm) Delete(rst byzcoin.ReadOnlyStateTrie,
 
 	stateChanges, err := DeleteValues(c.State.KeyList, stateDb)
 	if err != nil {
-		return nil, nil, xerrors.Errorf("deleting values in EVM state DB: %v", err)
+		return nil, nil,
+			xerrors.Errorf("deleting values in EVM state DB: %v", err)
 	}
 
 	// State changes to ByzCoin contain the Delete of the main contract state,
 	// plus the Delete of all the BEvmValue contracts known to it.
 	sc = append([]byzcoin.StateChange{
-		byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractBEvmID, nil, darcID),
+		byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID,
+			ContractBEvmID, nil, darcID),
 	}, stateChanges...)
 
 	return

@@ -34,7 +34,8 @@ func writeFile(file string, data []byte, check bool) error {
 		fileInfo, err := os.Stat(file)
 		if !os.IsNotExist(err) {
 			newName := file + "." + fileInfo.ModTime().Format(time.RFC3339)
-			fmt.Fprintf(os.Stderr, "WARNING: Previous file exists and is being renamed to '%s'\n", newName)
+			fmt.Fprintf(os.Stderr, "WARNING: Previous file exists "+
+				"and is being renamed to '%s'\n", newName)
 
 			err = os.Rename(file, newName)
 			if err != nil {
@@ -74,7 +75,8 @@ func readAccountFile(name string) (*bevm.EvmAccount, error) {
 
 	account, err := bevm.NewEvmAccount(tmp.PrivateKey)
 	if err != nil {
-		return nil, xerrors.Errorf("creating new account from file data: %v", err)
+		return nil, xerrors.Errorf("creating new account from "+
+			"file data: %v", err)
 	}
 
 	account.Nonce = tmp.Nonce
@@ -166,7 +168,8 @@ func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 		return nil, xerrors.Errorf("loading signer key: %v", err)
 	}
 
-	bevmClient, err := bevm.NewClient(cl, *signer, byzcoin.NewInstanceID(bevmID))
+	bevmClient, err := bevm.NewClient(cl, *signer,
+		byzcoin.NewInstanceID(bevmID))
 	if err != nil {
 		return nil, xerrors.Errorf("retrieving BEvm client instance: %v", err)
 	}
@@ -183,7 +186,8 @@ func handleCommonOptions(ctx *cli.Context) (*commonOptions, error) {
 	}, nil
 }
 
-func decodeEvmArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, error) {
+func decodeEvmArgs(encodedArgs []string, abi abi.Arguments) (
+	[]interface{}, error) {
 	args := make([]interface{}, len(encodedArgs))
 	for i, argJSON := range encodedArgs {
 		var arg interface{}
@@ -194,16 +198,19 @@ func decodeEvmArgs(encodedArgs []string, abi abi.Arguments) ([]interface{}, erro
 
 		switch abi[i].Type.String() {
 		case "uint256":
-			// The JSON unmarshaller decodes numbers as 'float64'; the EVM expects BigInt
+			// The JSON unmarshaller decodes numbers as 'float64'; the EVM
+			// expects BigInt
 			args[i] = big.NewInt(int64(arg.(float64)))
 		case "address":
 			args[i] = common.HexToAddress(arg.(string))
 		default:
-			return nil, xerrors.Errorf("unsupported argument type: %s", abi[i].Type)
+			return nil, xerrors.Errorf("unsupported argument type: %s",
+				abi[i].Type)
 		}
 
 		log.Lvlf2("arg #%d: %v (%s) --%v--> %v (%v)",
-			i, arg, reflect.TypeOf(arg).Kind(), abi[i].Type, args[i], reflect.TypeOf(args[i]).Kind())
+			i, arg, reflect.TypeOf(arg).Kind(), abi[i].Type, args[i],
+			reflect.TypeOf(args[i]).Kind())
 	}
 
 	return args, nil

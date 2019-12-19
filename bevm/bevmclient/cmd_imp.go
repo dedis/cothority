@@ -33,7 +33,8 @@ func createAccount(ctx *cli.Context) error {
 		return xerrors.Errorf("creating new EVM account: %v", err)
 	}
 
-	fmt.Printf("New account \"%s\" created at address: %s\n", name, account.Address.String())
+	fmt.Printf("New account \"%s\" created at address: %s\n",
+		name, account.Address.String())
 
 	return writeAccountFile(account, name, true)
 }
@@ -92,7 +93,8 @@ func getAccountBalance(ctx *cli.Context) error {
 
 	var amountEther, amountWei big.Int
 	amountEther.DivMod(amount, big.NewInt(bevm.WeiPerEther), &amountWei)
-	_, err = fmt.Fprintf(ctx.App.Writer, "Balance of account %s: %v Ether, %v Wei\n",
+	_, err = fmt.Fprintf(ctx.App.Writer,
+		"Balance of account %s: %v Ether, %v Wei\n",
 		opt.account.Address.Hex(), amountEther.String(), amountWei.String())
 	if err != nil {
 		return xerrors.Errorf("writing report msg: %v", err)
@@ -115,7 +117,8 @@ func deployContract(ctx *cli.Context) error {
 	contractName := ctx.String("contractName")
 
 	if ctx.NArg() < 2 {
-		return xerrors.Errorf("missing some argument (expected at least 2, got %d)", ctx.NArg())
+		return xerrors.Errorf("missing some argument (expected at least 2, "+
+			"got %d)", ctx.NArg())
 	}
 
 	abiFilepath := ctx.Args().Get(0)
@@ -131,7 +134,8 @@ func deployContract(ctx *cli.Context) error {
 		return xerrors.Errorf("reading contract Bytecode: %v", err)
 	}
 
-	contract, err := bevm.NewEvmContract("newContract", string(abiData), string(binData))
+	contract, err := bevm.NewEvmContract("newContract",
+		string(abiData), string(binData))
 	if err != nil {
 		return xerrors.Errorf("creating new BEvm contract: %v", err)
 	}
@@ -145,7 +149,8 @@ func deployContract(ctx *cli.Context) error {
 	// Perform command
 
 	contractInstance, err := opt.bevmClient.Deploy(
-		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account, contract, args...)
+		gasLimit, big.NewInt(int64(gasPrice)), amount, opt.account,
+		contract, args...)
 	if err != nil {
 		return xerrors.Errorf("deploying new BEvm contract: %v", err)
 	}
@@ -193,13 +198,15 @@ func executeTransaction(ctx *cli.Context) error {
 	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
-		return xerrors.Errorf("transaction \"%s\" does not exist for this contract", method)
+		return xerrors.Errorf("transaction \"%s\" does not exist "+
+			"for this contract", method)
 	}
 
 	userArgs := ctx.Args().Tail()
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("decoding contract transaction arguments: %v", err)
+		return xerrors.Errorf("decoding contract transaction "+
+			"arguments: %v", err)
 	}
 
 	// Perform command
@@ -246,7 +253,8 @@ func executeCall(ctx *cli.Context) error {
 	method := ctx.Args().First()
 	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
 	if !ok {
-		return xerrors.Errorf("view method \"%s\" does not exist for this contract", method)
+		return xerrors.Errorf("view method \"%s\" does not exist for this "+
+			"contract", method)
 	}
 	if !methodAbi.Const {
 		return xerrors.Errorf("callable \"%s\" is not a view method", method)
@@ -255,17 +263,20 @@ func executeCall(ctx *cli.Context) error {
 	userArgs := ctx.Args().Tail()
 	args, err := decodeEvmArgs(userArgs, methodAbi.Inputs)
 	if err != nil {
-		return xerrors.Errorf("decoding contract view method arguments: %v", err)
+		return xerrors.Errorf("decoding contract view method "+
+			"arguments: %v", err)
 	}
 
 	// Perform command
 
-	result, err := opt.bevmClient.Call(opt.account, contractInstance, method, args...)
+	result, err := opt.bevmClient.Call(opt.account, contractInstance,
+		method, args...)
 	if err != nil {
 		return xerrors.Errorf("executing view method: %v", err)
 	}
 
-	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n", result, reflect.TypeOf(result))
+	_, err = fmt.Fprintf(ctx.App.Writer, "call return value: %v [%s]\n",
+		result, reflect.TypeOf(result))
 	if err != nil {
 		return xerrors.Errorf("writing report msg: %v", err)
 	}
