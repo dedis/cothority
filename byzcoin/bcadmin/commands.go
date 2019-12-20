@@ -660,6 +660,11 @@ var cmds = cli.Commands{
 						Name:  "blocks",
 						Usage: "how many blocks to apply",
 					},
+					cli.IntFlag{
+						Name:  "summarize, sum",
+						Usage: "summarize this many blocks in output",
+						Value: 1,
+					},
 				},
 			},
 			{
