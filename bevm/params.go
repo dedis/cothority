@@ -11,16 +11,18 @@ import (
 func getChainConfig() *params.ChainConfig {
 	// ChainConfig (adapted from Rinkeby test net)
 	chainconfig := &params.ChainConfig{
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(0),
-		DAOForkBlock:        nil,
-		DAOForkSupport:      false,
-		EIP150Block:         nil,
-		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000"),
-		EIP155Block:         big.NewInt(0),
-		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0),
-		ConstantinopleBlock: big.NewInt(0), // Enable new Constantinople instructions
+		ChainID:        big.NewInt(1),
+		HomesteadBlock: big.NewInt(0),
+		DAOForkBlock:   nil,
+		DAOForkSupport: false,
+		EIP150Block:    nil,
+		EIP150Hash: common.HexToHash(
+			"0x0000000000000000000000000000000000000000"),
+		EIP155Block:    big.NewInt(0),
+		EIP158Block:    big.NewInt(0),
+		ByzantiumBlock: big.NewInt(0),
+		// Enable new Constantinople instructions
+		ConstantinopleBlock: big.NewInt(0),
 		Clique: &params.CliqueConfig{
 			Period: 15,
 			Epoch:  30000,
@@ -57,9 +59,14 @@ func getVMConfig() vm.Config {
 func getContext() vm.Context {
 	placeHolder := common.HexToAddress("0")
 	return vm.Context{
-		CanTransfer: func(vm.StateDB, common.Address, *big.Int) bool { return true },
-		Transfer:    func(vm.StateDB, common.Address, common.Address, *big.Int) {},
-		GetHash:     func(uint64) common.Hash { return common.HexToHash("0") },
+		CanTransfer: func(vm.StateDB, common.Address, *big.Int) bool {
+			return true
+		},
+		Transfer: func(vm.StateDB, common.Address, common.Address, *big.Int) {
+		},
+		GetHash: func(uint64) common.Hash {
+			return common.HexToHash("0")
+		},
 		Origin:      placeHolder,
 		GasPrice:    big.NewInt(0),
 		Coinbase:    placeHolder,
