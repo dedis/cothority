@@ -134,7 +134,7 @@ func dbReplay(c *cli.Context) error {
 
 	log.Info("Replaying blocks")
 	_, err = fb.service.ReplayStateContLog(start,
-		&sumFetcher{sum: c.Int("summarize"), bff: fb.blockFetcher})
+		&sumFetcher{summarizeBlocks: c.Int("summarize"), bff: fb.blockFetcher})
 	if err != nil {
 		return xerrors.Errorf("couldn't replay blocks: %+v", err)
 	}
@@ -144,25 +144,25 @@ func dbReplay(c *cli.Context) error {
 }
 
 type sumFetcher struct {
-	sum            int
-	bff            byzcoin.BlockFetcherFunc
-	txs            int
-	accepted       int
-	blocks         int
-	timeLastBlock  int64
-	timeLastSum    int64
-	maxTPS         float64
-	maxBlockSize   int
-	totalBlockSize int
+	summarizeBlocks int
+	bff             byzcoin.BlockFetcherFunc
+	totalTXs        int
+	accepted        int
+	seenBlocks      int
+	timeLastBlock   int64
+	timeLastSum     int64
+	maxTPS          float64
+	maxBlockSize    int
+	totalBlockSize  int
 }
 
-func (sf sumFetcher) BlockFetcherFunc(sib skipchain.SkipBlockID) (*skipchain.
+func (sf sumFetcher) BlockFetcherFunc(sid skipchain.SkipBlockID) (*skipchain.
 	SkipBlock, error) {
-	return sf.bff(sib)
+	return sf.bff(sid)
 }
 
 func (sf sumFetcher) LogNewBlock(sb *skipchain.SkipBlock) {
-	if sf.sum == 1 {
+	if sf.summarizeBlocks == 1 {
 		log.Infof("Replaying block at index %d", sb.Index)
 	}
 }
@@ -180,21 +180,22 @@ func (sf *sumFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
 		}
 	}
 	buf, err := protobuf.Encode(sb)
-	if err == nil && sf.sum > 1 {
+	log.ErrFatal(err, "while encoding block")
+	if sf.summarizeBlocks > 1 {
 		sf.totalBlockSize += len(buf)
 		if len(buf) > sf.maxBlockSize {
 			sf.maxBlockSize = len(buf)
 		}
 	}
-	sf.txs += len(body.TxResults)
-	sf.blocks++
+	sf.totalTXs += len(body.TxResults)
+	sf.seenBlocks++
 	if sf.timeLastBlock == 0 {
 		sf.timeLastBlock = head.Timestamp
 		sf.timeLastSum = head.Timestamp
 		sf.maxTPS = 0
 	}
 
-	if sf.sum > 1 && head.Timestamp != sf.timeLastBlock {
+	if sf.summarizeBlocks > 1 && head.Timestamp != sf.timeLastBlock {
 		tpsBlock := float64(len(body.TxResults)) /
 			float64((head.Timestamp-sf.timeLastBlock)/1e9)
 		if tpsBlock > sf.maxTPS {
@@ -203,27 +204,27 @@ func (sf *sumFetcher) LogAppliedBlock(sb *skipchain.SkipBlock,
 		sf.timeLastBlock = head.Timestamp
 	}
 
-	if sb.Index%sf.sum == (sf.sum - 1) {
+	if sb.Index%sf.summarizeBlocks == (sf.summarizeBlocks - 1) {
 		tStr := time.Unix(head.Timestamp/1e9, 0).String()
-		tpsMean := float64(sf.txs) /
+		tpsMean := float64(sf.totalTXs) /
 			float64((head.Timestamp-sf.timeLastSum)/1e9)
-		if sf.sum > 1 {
+		if sf.summarizeBlocks > 1 {
 			log.Infof("Processed blocks %d.."+
 				"%d [%s]: Txs total/accepted = %d/%d - "+
 				"tps max/mean: %.1f/%.1f\n"+
 				"\troster-size: %d, max/mean block size: %d/%d",
-				sb.Index-sf.blocks+1, sb.Index, tStr,
-				sf.txs, sf.accepted, sf.maxTPS, tpsMean,
+				sb.Index-sf.seenBlocks+1, sb.Index, tStr,
+				sf.totalTXs, sf.accepted, sf.maxTPS, tpsMean,
 				len(sb.Roster.List),
-				sf.maxBlockSize, sf.totalBlockSize/sf.sum)
+				sf.maxBlockSize, sf.totalBlockSize/sf.summarizeBlocks)
 		} else {
 			log.Infof("Got correct block from %s with %d txs, "+
 				"out of which %d txs got accepted. Tps: %.1f",
-				tStr, sf.txs, sf.accepted, tpsMean)
+				tStr, sf.totalTXs, sf.accepted, tpsMean)
 		}
-		sf.txs = 0
+		sf.totalTXs = 0
 		sf.accepted = 0
-		sf.blocks = 0
+		sf.seenBlocks = 0
 		sf.timeLastBlock = head.Timestamp
 		sf.timeLastSum = head.Timestamp
 		sf.maxTPS = 0.0

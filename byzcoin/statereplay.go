@@ -24,7 +24,7 @@ type BlockFetcherFunc func(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, err
 // BlockFetcher is an interface that can be passed to ReplayStateLog so that
 // the output of the replay can be adapted to what the user wants.
 type BlockFetcher interface {
-	BlockFetcherFunc(sib skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
+	BlockFetcherFunc(sid skipchain.SkipBlockID) (*skipchain.SkipBlock, error)
 	LogNewBlock(sb *skipchain.SkipBlock)
 	LogAppliedBlock(sb *skipchain.SkipBlock, head DataHeader, body DataBody)
 	LogWarn(sb *skipchain.SkipBlock, msg, dump string)
@@ -221,7 +221,8 @@ func (s *Service) ReplayStateContLog(id skipchain.SkipBlockID,
 
 // ReplayStateCont is a wrapper over ReplayStateContLog and outputs every
 // block to the std-output.
-func (s *Service) ReplayStateCont(id skipchain.SkipBlockID, cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
+func (s *Service) ReplayStateCont(id skipchain.SkipBlockID,
+	cb BlockFetcherFunc) (ReadOnlyStateTrie, error) {
 	return s.ReplayStateContLog(id, stdFetcher{cb})
 }
 
