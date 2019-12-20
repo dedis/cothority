@@ -1,4 +1,4 @@
-package personhood
+package contracts
 
 import (
 	"crypto/sha256"

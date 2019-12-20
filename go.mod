@@ -24,6 +24,7 @@ require (
 	go.dedis.ch/onet/v3 v3.0.31
 	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.3
+	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
