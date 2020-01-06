@@ -481,8 +481,8 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 		// expects int{32,16,8}
 		argAsFloat, ok := arg.(float64)
 		if !ok {
-			return nil, xerrors.Errorf("value '%v' of type '%s' should be "+
-				"passed as a JSON number", arg, abiType)
+			return nil, xerrors.Errorf("received '%v' for value of type "+
+				"'%s', expected to be a JSON number", arg, abiType)
 		}
 
 		v := reflect.New(argType).Elem()
@@ -500,7 +500,13 @@ func decodeEvmValue(abiType string, argType reflect.Type, arg interface{}) (
 		decodedArg = common.HexToAddress(argAsString)
 
 	case "string":
-		decodedArg = arg.(string)
+		argAsString, ok := arg.(string)
+		if !ok {
+			return nil, xerrors.Errorf("received '%v' for value of type "+
+				"'%s', expected to be a JSON string", arg, abiType)
+		}
+
+		decodedArg = argAsString
 
 	default:
 		return nil, xerrors.Errorf("unsupported type for EVM argument "+
