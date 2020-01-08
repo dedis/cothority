@@ -46,6 +46,27 @@ describe("BN256 Point Tests", () => {
         expect(prop).toHold();
     });
 
+    it("should yield the same point by negative addition and multiplication", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarNegUnit = new BN256Scalar().one();
+            scalarNegUnit.neg(scalarNegUnit);
+            const pointNegUnit = new BN256G1Point().mul(scalarNegUnit, base);
+
+            const scalarSuber = new BN256Scalar().zero();
+            const pointSuber = new BN256G1Point().null();
+            for (let i = 0; i < target; i++) {
+                scalarSuber.add(scalarSuber, scalarNegUnit);
+                pointSuber.add(pointSuber, pointNegUnit);
+            }
+
+            return pointSuber.equals(new BN256G1Point().mul(scalarSuber, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
     it("should not modify params with add/sub/neg/mul", () => {
         const prop = jsc.forall(jsc.uint8, (target) => {
             const pointRef = new BN256G1Point(target);
