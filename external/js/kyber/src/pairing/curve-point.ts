@@ -202,15 +202,11 @@ export default class CurvePoint {
      */
     mul(a: CurvePoint, scalar: BN): void {
         const sum = new CurvePoint();
-        sum.setInfinity();
-        const t = new CurvePoint();
 
-        for (let i = scalar.bitLength(); i >= 0; i--) {
-            t.dbl(sum);
+        for (let i = scalar.bitLength() - 1; i >= 0; i--) {
+            sum.dbl(sum);
             if (scalar.testn(i)) {
-                sum.add(t, a);
-            } else {
-                sum.copy(t);
+                sum.add(sum, a);
             }
         }
 
