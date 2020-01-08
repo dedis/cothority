@@ -46,6 +46,25 @@ describe("BN256 Point Tests", () => {
         expect(prop).toHold();
     });
 
+    it("should not modify params with add/sub/neg/mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const pointRef = new BN256G1Point(target);
+            const scalarRef = new BN256Scalar(target);
+            const point = pointRef.clone();
+            const scalar = scalarRef.clone()
+
+            point.clone().add(point, point);
+            point.clone().sub(point, point);
+            point.clone().neg(point);
+            point.clone().mul(scalar, point);
+
+            return pointRef.equals(point) && scalarRef.equals(scalar);
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
     it("should add and multiply g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G1Point(a);
