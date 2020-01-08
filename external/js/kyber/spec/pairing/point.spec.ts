@@ -26,6 +26,26 @@ describe("BN256 Point Tests", () => {
         expect(prop).toHold();
     });
 
+    it("should yield the same point by addition and mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarUnit = new BN256Scalar().one();
+            const pointUnit = new BN256G1Point().mul(scalarUnit, base);
+
+            const scalarAdder = new BN256Scalar();
+            const pointAdder = new BN256G1Point();
+            for (let i = 0; i < target; i++) {
+                scalarAdder.add(scalarAdder, scalarUnit);
+                pointAdder.add(pointAdder, pointUnit);
+            }
+
+            return pointAdder.equals(new BN256G1Point().mul(scalarAdder, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
     it("should add and multiply g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G1Point(a);
