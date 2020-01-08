@@ -172,7 +172,10 @@ export default class CurvePoint {
         const B = a.y.sqr().mod(p);
         const C = B.sqr().mod(p);
 
-        let t = a.x.add(B);
+        let t = a.y.mul(a.z).mod(p);
+        this.z = t.add(t).mod(p);
+
+        t = a.x.add(B);
         let t2 = t.sqr().mod(p);
         t = t2.sub(A);
         t2 = t.sub(C);
@@ -190,9 +193,6 @@ export default class CurvePoint {
         this.y = d.sub(this.x);
         t2 = e.mul(this.y).mod(p);
         this.y = t2.sub(t).mod(p);
-
-        t = a.y.mul(a.z).mod(p);
-        this.z = t.add(t).mod(p);
     }
 
     /**
