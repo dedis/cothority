@@ -72,7 +72,7 @@ describe("BN256 Point Tests", () => {
             const pointRef = new BN256G1Point(target);
             const scalarRef = new BN256Scalar(target);
             const point = pointRef.clone();
-            const scalar = scalarRef.clone()
+            const scalar = scalarRef.clone();
 
             point.clone().add(point, point);
             point.clone().sub(point, point);
