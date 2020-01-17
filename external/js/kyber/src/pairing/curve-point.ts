@@ -240,7 +240,7 @@ export default class CurvePoint {
      */
     negative(a: CurvePoint): void {
         this.x = a.x;
-        this.y = a.y.negate();
+        this.y = a.y.negate().mod(p);
         this.z = a.z;
     }
 
