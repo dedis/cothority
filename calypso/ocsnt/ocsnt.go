@@ -87,7 +87,6 @@ func (o *OCSNT) Start() error {
 		prc.VerificationData = &o.VerificationData
 	}
 	if o.Verify != nil {
-		//if !o.Verify(prc.VerificationData, prc.Xc, prc.U, prc.DKID) {
 		if !o.Verify(prc) {
 			o.finish(false)
 			return xerrors.New("refused to reencrypt")
