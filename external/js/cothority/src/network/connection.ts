@@ -43,16 +43,18 @@ export interface IConnection {
     setTimeout(value: number): void;
 
     /**
-     * Sets how many nodes will be contacted in parallel
-     * @param p number of nodes to contact in parallel
-     */
-    setParallel(p: number): void;
-
-    /**
      * Creates a copy of the connection, but usable with the given service.
      * @param service
      */
     copy(service: string): IConnection;
+
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @deprecated - don't use IConnection for that, but rather directly a
+     * RosterWSConnection.
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
 }
 
 /**
@@ -151,14 +153,18 @@ export class WebSocketConnection implements IConnection {
         });
     }
 
+    copy(service: string): IConnection {
+        return new WebSocketConnection(this.url, service);
+    }
+
+    /**
+     * @deprecated - use directly a RosterWSConnection if you want that
+     * @param p
+     */
     setParallel(p: number): void {
         if (p > 1) {
             throw new Error("Single connection doesn't support more than one parallel");
         }
-    }
-
-    copy(service: string): IConnection {
-        return new WebSocketConnection(this.url, service);
     }
 }
 
@@ -279,8 +285,35 @@ export class RosterWSConnection implements IConnection {
         this.nodes.setTimeout(value);
     }
 
-    copy(service: string): IConnection {
+    /**
+     * Return a new RosterWSConnection for the given service.
+     * @param service
+     */
+    copy(service: string): RosterWSConnection {
         return new RosterWSConnection(this.rID, service, this.parallel);
+    }
+
+    /**
+     * Invalidate a given address.
+     * @param address
+     */
+    invalidate(address: string): void {
+        this.nodes.gotError(address);
+    }
+
+    /**
+     * Update roster for this connection.
+     * @param r
+     */
+    setRoster(r: Roster) {
+        const newID = r.id.toString("hex");
+        if (newID !== this.rID) {
+            this.rID = newID;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r, this.nodes));
+            }
+            this.nodes = RosterWSConnection.nodes.get(this.rID);
+        }
     }
 }
 

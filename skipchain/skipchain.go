@@ -525,7 +525,6 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 			// latest Roster to keep traversing.
 			break
 		}
-
 		if next.Index <= block.Index {
 			return nil, ErrorInconsistentForwardLink
 		}
@@ -533,6 +532,17 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
+
+	// Remove all blocks from the end of the result until a block is found
+	// where this node is part of.
+	for b := len(blocks) - 1; b > 0; b-- {
+		if i, _ := blocks[b].Roster.Search(s.ServerIdentity().ID); i < 0 {
+			blocks = blocks[:b]
+		} else {
+			break
+		}
+	}
+
 	log.Lvlf3("Found %d blocks", len(blocks))
 	reply := &GetUpdateChainReply{Update: blocks}
 
