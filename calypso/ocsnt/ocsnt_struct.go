@@ -11,7 +11,6 @@ import (
 OCSNT_struct holds all messages for the onchain-secret protocol.
 */
 
-// NameOCSNT can be used from other packages to refer to this protocol.
 const NameOCSNT = "OCSNT"
 
 func init() {
