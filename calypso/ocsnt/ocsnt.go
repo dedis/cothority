@@ -59,7 +59,6 @@ func NewOCSNT(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		Total:            total,
 		Threshold:        total - (total-1)/3,
 	}
-	//err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
 	err := o.RegisterHandlers(o.partialReencrypt, o.partialReencryptReply)
 	if err != nil {
 		return nil, xerrors.Errorf("registring handlers: %v", err)
