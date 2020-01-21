@@ -2,6 +2,7 @@ package calypso
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 
 	"go.dedis.ch/cothority/v4/byzcoin"
@@ -13,10 +14,9 @@ import (
 )
 
 func init() {
-	// Ceyhun
-	network.RegisterMessages(CreateLTS{}, CreateLTSReply{},
-		Authorize{}, AuthorizeReply{},
-		DecryptKey{}, DecryptKeyReply{}, DecryptKeyNT{}, DecryptKeyNTReply{})
+	network.RegisterMessages(CreateLTS{}, CreateLTSReply{}, Authorize{},
+		AuthorizeReply{}, DecryptKey{}, DecryptKeyReply{}, DecryptKeyNT{},
+		DecryptKeyNTReply{})
 }
 
 type suite interface {
@@ -96,6 +96,24 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 
 	return fmt.Errorf("recreated proof is not equal to stored proof:\n"+
 		"%s\n%s", e.String(), wr.E.String())
+}
+
+func GenerateDKID(iid []byte, xc kyber.Point, u kyber.Point) (string, error) {
+	var dkid string
+	xcBytes, err := xc.MarshalBinary()
+	if err != nil {
+		return dkid, err
+	}
+	uBytes, err := u.MarshalBinary()
+	if err != nil {
+		return dkid, err
+	}
+	h := sha256.New()
+	h.Write(iid)
+	h.Write(xcBytes)
+	h.Write(uBytes)
+	dkid = hex.EncodeToString(h.Sum(nil))
+	return dkid, nil
 }
 
 type newLtsConfig struct {

@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -302,6 +303,41 @@ func TestService_DecryptKey(t *testing.T) {
 	keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key2, keyCopy2)
+}
+
+func TestService_DecryptKeyNT(t *testing.T) {
+	s := newTS(t, 5)
+	defer s.closeAll(t)
+
+	key1 := []byte("secret key 1")
+	prWr1 := s.addWriteAndWait(t, key1)
+	prRe1 := s.addReadAndWait(t, prWr1, s.signer.Ed25519.Point)
+	//key2 := []byte("secret key 2")
+	//prWr2 := s.addWriteAndWait(t, key2)
+	//prRe2 := s.addReadAndWait(t, prWr2, s.signer.Ed25519.Point)
+
+	//_, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
+	//_, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "abbas", IsReenc: false, Read: *prRe1, Write: *prWr2})
+	//require.NotNil(t, err)
+	//_, err = s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "kamil", IsReenc: false, Read: *prRe2, Write: *prWr1})
+	//require.NotNil(t, err)
+
+	dk1, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "ocsnt-test1", IsReenc: false, Read: *prRe1, Write: *prWr1})
+	require.Nil(t, err)
+	require.True(t, dk1.X.Equal(s.ltsReply.X))
+	fmt.Println(dk1.XhatEnc.Data())
+	fmt.Println(dk1.Signature)
+
+	//keyCopy1, err := dk1.RecoverKey(s.signer.Ed25519.Secret)
+	//require.Nil(t, err)
+	//require.Equal(t, key1, keyCopy1)
+
+	//dk2, err := s.services[0].DecryptKeyNT(&DecryptKey{Read: *prRe2, Write: *prWr2})
+	//require.Nil(t, err)
+	//require.True(t, dk2.X.Equal(s.ltsReply.X))
+	//keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
+	//require.Nil(t, err)
+	//require.Equal(t, key2, keyCopy2)
 }
 
 // TestService_DecryptEphemeralKey requests a read to a different key than the

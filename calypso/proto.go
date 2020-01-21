@@ -1,10 +1,11 @@
 package calypso
 
 import (
-	"go.dedis.ch/cothority/v4/byzcoin"
-	"go.dedis.ch/cothority/v4/skipchain"
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/onet/v4"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/skipchain"
+	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/onet/v3"
 )
 
 // PROTOSTART
@@ -146,13 +147,23 @@ type DecryptKeyReply struct {
 }
 
 // Ceyhun
-// DecryptKeyReply is returned if the service verified successfully that the
-// decryption request is valid.
+type DecryptKeyNT struct {
+	// This can be the hash of the execution plan (works as a nonce so that
+	// the contents of this struct can be used to uniquely identify the
+	// request)
+	DKID    string
+	IsReenc bool
+	// Read is the proof that he has been accepted to read the secret.
+	Read byzcoin.Proof
+	// Write is the proof containing the write request.
+	Write byzcoin.Proof
+}
+
 type DecryptKeyNTReply struct {
-	C       kyber.Point
-	XhatEnc kyber.Point
-	X       kyber.Point
-	// TODO: Add BLS signature
+	C         kyber.Point
+	XhatEnc   kyber.Point
+	X         kyber.Point
+	Signature protocol.BlsSignature
 }
 
 // GetLTSReply asks for the shared public key of the corresponding LTSID

@@ -24,6 +24,8 @@ func init() {
 // allow reencryption.
 type VerifyRequest func(rc *Reencrypt) bool
 
+//type VerifyRequest func(vd *[]byte, xc kyber.Point) bool
+
 // Reencrypt asks for a re-encryption share from a node
 type Reencrypt struct {
 	// U is the point from the write-request

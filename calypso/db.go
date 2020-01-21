@@ -3,12 +3,12 @@ package calypso
 import (
 	"sync"
 
-	"go.dedis.ch/cothority/v4"
-	"go.dedis.ch/cothority/v4/byzcoin"
-	dkgprotocol "go.dedis.ch/cothority/v4/dkg/pedersen"
-	dkg "go.dedis.ch/kyber/v4/share/dkg/pedersen"
-	"go.dedis.ch/onet/v4"
-	"go.dedis.ch/onet/v4/log"
+	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/byzcoin"
+	dkgprotocol "go.dedis.ch/cothority/v3/dkg/pedersen"
+	dkg "go.dedis.ch/kyber/v3/share/dkg/pedersen"
+	"go.dedis.ch/onet/v3"
+	"go.dedis.ch/onet/v3/log"
 	"golang.org/x/xerrors"
 )
 
@@ -27,6 +27,9 @@ type storage struct {
 	Rosters map[byzcoin.InstanceID]*onet.Roster
 	Replies map[byzcoin.InstanceID]*CreateLTSReply
 	DKS     map[byzcoin.InstanceID]*dkg.DistKeyShare
+
+	// Ceyhun
+	//Reencryptions map[string]kyber.Point
 
 	sync.Mutex
 }
@@ -72,6 +75,9 @@ func (s *Service) tryLoad() error {
 		if len(s.storage.AuthorisedByzCoinIDs) == 0 {
 			s.storage.AuthorisedByzCoinIDs = make(map[string]bool)
 		}
+		//if len(s.storage.Reencryptions) == 0 {
+		//s.storage.Reencryptions = make(map[string]kyber.Point)
+		//}
 	}()
 
 	// In the future, we'll make database upgrades below.
