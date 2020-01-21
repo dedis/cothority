@@ -706,7 +706,6 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 
 	// Start ocsnt-protocol to re-encrypt the file's symmetric key under the
 	// reader's public key.
-	//tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
 	tree := roster.GenerateStar()
 	pi, err := s.CreateProtocol(ocsnt.NameOCSNT, tree)
 	if err != nil {
