@@ -153,6 +153,15 @@ func (c *Client) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, err
 	return reply, cothority.ErrorOrNil(err, "sending DecryptKeyNTReply message")
 }
 
+func (c *Client) DecryptNTKey(dkn *DecryptKeyNT) (reply *DecryptKeyNTReply, err error) {
+	reply = &DecryptKeyNTReply{}
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkn, reply)
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
 // WaitProof calls the byzcoin client's wait proof
 func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 	value []byte) (*byzcoin.Proof, error) {

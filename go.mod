@@ -1,5 +1,7 @@
 module go.dedis.ch/cothority/v3
 
+go 1.13
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/allegro/bigcache v1.2.1 // indirect
@@ -23,7 +25,9 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.0
 	go.dedis.ch/kyber/v3 v3.0.11
+	go.dedis.ch/kyber/v4 v4.0.0-pre2
 	go.dedis.ch/onet/v3 v3.0.31
+	go.dedis.ch/onet/v4 v4.0.0-pre1
 	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
@@ -34,5 +38,3 @@ require (
 	gopkg.in/satori/go.uuid.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
 )
-
-go 1.13

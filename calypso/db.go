@@ -28,6 +28,9 @@ type storage struct {
 	Replies map[byzcoin.InstanceID]*CreateLTSReply
 	DKS     map[byzcoin.InstanceID]*dkg.DistKeyShare
 
+	// Ceyhun
+	//Reencryptions map[string]kyber.Point
+
 	sync.Mutex
 }
 
@@ -72,6 +75,9 @@ func (s *Service) tryLoad() error {
 		if len(s.storage.AuthorisedByzCoinIDs) == 0 {
 			s.storage.AuthorisedByzCoinIDs = make(map[string]bool)
 		}
+		//if len(s.storage.Reencryptions) == 0 {
+		//s.storage.Reencryptions = make(map[string]kyber.Point)
+		//}
 	}()
 
 	// In the future, we'll make database upgrades below.
