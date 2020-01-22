@@ -656,6 +656,7 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 	if !<-ocsntProto.Reencrypted {
 		return nil, xerrors.New("reencryption got refused")
 	}
+	time.Sleep(5 * time.Second)
 	// Reencryption terminated successfully. Store the result at the
 	// dummy service to use it later when running the collective
 	// signing protocol
@@ -739,6 +740,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			log.Lvlf3("%v got shared %v on inst %v", s.ServerIdentity(), shared, id)
 			s.storage.Lock()
 			s.storage.Shared[id] = shared
+			s.storage.Polys[id] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 			s.storage.DKS[id] = dks
 			s.storage.Replies[id] = reply
 			s.storage.Rosters[id] = tn.Roster()

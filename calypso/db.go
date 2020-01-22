@@ -28,9 +28,6 @@ type storage struct {
 	Replies map[byzcoin.InstanceID]*CreateLTSReply
 	DKS     map[byzcoin.InstanceID]*dkg.DistKeyShare
 
-	// Ceyhun
-	//Reencryptions map[string]kyber.Point
-
 	sync.Mutex
 }
 

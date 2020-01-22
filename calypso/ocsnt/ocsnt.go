@@ -59,7 +59,6 @@ func NewOCSNT(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		Total:            total,
 		Threshold:        total - (total-1)/3,
 	}
-	//err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
 	err := o.RegisterHandlers(o.partialReencrypt, o.partialReencryptReply)
 	if err != nil {
 		return nil, xerrors.Errorf("registring handlers: %v", err)
@@ -88,7 +87,6 @@ func (o *OCSNT) Start() error {
 		prc.VerificationData = &o.VerificationData
 	}
 	if o.Verify != nil {
-		//if !o.Verify(prc.VerificationData, prc.Xc, prc.U, prc.DKID) {
 		if !o.Verify(prc) {
 			o.finish(false)
 			return xerrors.New("refused to reencrypt")
@@ -101,6 +99,7 @@ func (o *OCSNT) Start() error {
 	errs := o.Broadcast(prc)
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
+		//fmt.Println("Some nodes failed with error(s):", errs)
 		return xerrors.New("too many nodes failed in broadcast")
 	}
 	return nil
@@ -115,34 +114,33 @@ func (o *OCSNT) partialReencrypt(prc structPartialReencrypt) error {
 	total := len(o.Roster().List)
 	o.Total = total
 	o.Threshold = total - (total-1)/3
-	o.DKID = prc.PartialReencrypt.DKID
 	o.IsReenc = prc.PartialReencrypt.IsReenc
+	o.DKID = prc.PartialReencrypt.DKID
+	o.U = prc.U
+	if prc.IsReenc {
+		o.Xc = prc.Xc
+	} else {
+		o.Xc = cothority.Suite.Point().Null()
+	}
 
 	if o.Verify != nil {
-		//if !o.Verify(prc.PartialReencrypt.VerificationData,
-		//prc.PartialReencrypt.Xc, prc.PartialReencrypt.U, prc.PartialReencrypt.DKID) {
 		if !o.Verify(&prc.PartialReencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to do the partial reencryption")
+			//fmt.Println(o.ServerIdentity(), "refused to do the partial reencryption")
 			errs := o.Broadcast(&PartialReencryptReply{})
 			if len(errs) > (o.Total-1)/3 {
 				log.Errorf("Some nodes failed with error(s) %v", errs)
+				//fmt.Println("Some nodes failed with error(s)", errs)
 				return xerrors.New("too many nodes failed in broadcast empty PartialReencryptReply")
 			}
 			return nil
 		}
 	}
 
-	var xc kyber.Point
-	if prc.IsReenc {
-		xc = prc.Xc
-	} else {
-		xc = cothority.Suite.Point().Null()
-	}
-	ui := o.getUI(prc.U, xc)
-
+	ui := o.getUI(o.U, o.Xc)
 	// Calculating proofs
 	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
-	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(prc.U, xc))
+	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(o.U, o.Xc))
 	hiHat := cothority.Suite.Point().Mul(si, nil)
 	hash := sha256.New()
 	ui.V.MarshalTo(hash)
@@ -150,6 +148,7 @@ func (o *OCSNT) partialReencrypt(prc structPartialReencrypt) error {
 	hiHat.MarshalTo(hash)
 	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 
+	log.LLvl3(o.ServerIdentity(), "is about to broadcast", ei.String())
 	errs := o.Broadcast(&PartialReencryptReply{
 		Ui: ui,
 		Ei: ei,
@@ -157,17 +156,20 @@ func (o *OCSNT) partialReencrypt(prc structPartialReencrypt) error {
 	})
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
+		//fmt.Println("Some nodes failed with error(s)", errs)
 		return xerrors.New("too many nodes failed in broadcast PartialReencryptReply")
 	}
 	return nil
 }
 
 func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
+	log.LLvl3(o.ServerIdentity(), "received partialReencryptReply from", prr.PartialReencryptReply.Ui)
 	if prr.PartialReencryptReply.Ui == nil {
 		log.Lvl2("Node", prr.ServerIdentity, "refused to reply")
 		o.Failures++
 		if o.Failures > o.Total-o.Threshold {
 			log.Lvl2(prr.ServerIdentity, "couldn't get enough shares")
+			//fmt.Println(prr.ServerIdentity, "couldn't get enough shares")
 			o.finish(false)
 		}
 		return nil
@@ -183,12 +185,10 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 	// minus one to exclude myself
 	if len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
-		//o.Uis[0] = o.getUI(o.U, o.Xc)
 		o.Uis[0] = o.getUI(o.U, xc)
 
 		for _, r := range o.replies {
 			// Verify proofs
-			//ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, o.Xc))
 			ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, xc))
 			uiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), r.Ui.V)
 			uiHat := cothority.Suite.Point().Add(ufi, uiei)
@@ -206,6 +206,7 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 				o.Uis[r.Ui.I] = r.Ui
 			} else {
 				log.Lvl1("Received invalid share from node", r.Ui.I)
+				//fmt.Println("Received invalid share from node", r.Ui.I)
 			}
 		}
 		xhatEnc, err := share.RecoverCommit(cothority.Suite, o.Uis, o.Threshold, len(o.Roster().List))
@@ -214,6 +215,7 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 			o.finish(false)
 		} else {
 			o.XhatEnc = xhatEnc
+			log.LLvl3(o.ServerIdentity(), "computed xhatenc:", o.XhatEnc.String())
 			o.finish(true)
 		}
 	}

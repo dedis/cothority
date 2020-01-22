@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -17,6 +18,7 @@ import (
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 )
 
@@ -322,7 +324,9 @@ func TestService_DecryptKeyNT(t *testing.T) {
 	//_, err = s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "kamil", IsReenc: false, Read: *prRe2, Write: *prWr1})
 	//require.NotNil(t, err)
 
-	dk1, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "ocsnt-test1", IsReenc: false, Read: *prRe1, Write: *prWr1})
+	dkid, err := generateID(prWr1, prRe1)
+	require.NoError(t, err)
+	dk1, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid, IsReenc: false, Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 	fmt.Println(dk1.XhatEnc.Data())
@@ -338,6 +342,37 @@ func TestService_DecryptKeyNT(t *testing.T) {
 	//keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
 	//require.Nil(t, err)
 	//require.Equal(t, key2, keyCopy2)
+}
+
+func generateID(prW *byzcoin.Proof, prRe *byzcoin.Proof) (string, error) {
+	var id string
+	_, v0, contractID, _, err := prRe.KeyValue()
+	if err != nil {
+		return id, errors.New("proof cannot return values: " + err.Error())
+	}
+	if contractID != ContractReadID {
+		return id, errors.New("proof doesn't point to read instance")
+	}
+	var r Read
+	err = protobuf.DecodeWithConstructors(v0, &r, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return id, errors.New("couldn't decode read data: " + err.Error())
+	}
+	_, v0, contractID, _, err = prW.KeyValue()
+	if err != nil {
+		return id, errors.New("proof cannot return values: " + err.Error())
+	}
+	if contractID != ContractWriteID {
+		return id, errors.New("proof doesn't point to write instance")
+	}
+	var w Write
+	err = protobuf.DecodeWithConstructors(v0, &w, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return id, errors.New("couldn't decode write data: " + err.Error())
+	}
+	id, err = GenerateDKID(r.Write[:], r.Xc, w.U)
+	fmt.Println("DKID:", id)
+	return id, err
 }
 
 // TestService_DecryptEphemeralKey requests a read to a different key than the

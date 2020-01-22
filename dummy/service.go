@@ -15,6 +15,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 var pairingSuite = suites.MustFind("bn256.Adapter").(*pairing.SuiteBn256)
@@ -40,7 +41,7 @@ func init() {
 	var err error
 	dummyID, err = onet.RegisterNewServiceWithSuite(ServiceName, pairingSuite, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&DummyRequest{}, &DummyReply{})
+	network.RegisterMessages(&storage{}, &DummyRequest{}, &DummyReply{})
 }
 
 func (s *Service) DummyRequest(req *DummyRequest) (*DummyReply, error) {
@@ -100,8 +101,10 @@ func (s *Service) dummyVerification(msg []byte, data []byte) bool {
 		return false
 	}
 	if bytes.Equal(msg, ddHash) {
+		log.LLvl3("DKID in dummyverification is:", dd.DKID)
 		storedXhatEnc := s.GetReencryption(dd.DKID)
 		if storedXhatEnc != nil {
+			log.LLvl3(s.ServerIdentity(), "===========> found reencryption")
 			if storedXhatEnc.Equal(dd.XhatEnc) {
 				return true
 			} else {
@@ -208,6 +211,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		log.Errorf("Cannot register protocol %s: %v", dummyFtCosi, err)
 		return nil, err
+	}
+	err = s.tryLoad()
+	if err != nil {
+		log.Error(err)
+		return nil, xerrors.Errorf("loading configuration: %v", err)
 	}
 	return s, nil
 }
