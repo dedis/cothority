@@ -656,7 +656,6 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 	if !<-ocsntProto.Reencrypted {
 		return nil, xerrors.New("reencryption got refused")
 	}
-	time.Sleep(5 * time.Second)
 	// Reencryption terminated successfully. Store the result at the
 	// dummy service to use it later when running the collective
 	// signing protocol
@@ -665,12 +664,13 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 		log.Errorf("Saving reencryption result in storage failed: %v", err)
 		return nil, err
 	}
-	log.Lvl3("Reencryption protocol is done.")
+	log.LLvl3("Reencryption protocol is done.")
 	dummyReply, err := s.dummyService.DummyRequest(&dummy.DummyRequest{Roster: roster, DKID: dknr.DKID})
 	if err != nil {
 		log.Errorf("Cannot get collective signature on the reencryption result: %v", err)
 		return nil, err
 	}
+	reply.XhatEnc = ocsntProto.XhatEnc
 	reply.Signature = dummyReply.Signature
 	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")
@@ -876,6 +876,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		piOCSNT.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
 		piOCSNT.Verify = s.verifyReencryptionNT
 		go func() {
+			log.LLvl3(s.ServerIdentity(), "in NewProtocol waiting for reencryption")
 			if !<-piOCSNT.Reencrypted {
 				log.Errorf("%s: reencryption got refused", s.ServerIdentity())
 			} else {
@@ -886,6 +887,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				//if err != nil {
 				//log.Errorf("Saving in storage failed: %v", err)
 				//}
+				log.LLvl3(s.ServerIdentity(), "before storing reencryption")
 				err = s.dummyService.StoreReencryption(piOCSNT.DKID, piOCSNT.XhatEnc)
 				if err != nil {
 					log.Errorf("Saving reencryption result in storage failed: %v", err)

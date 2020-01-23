@@ -15,7 +15,7 @@ OCSNT_struct holds all messages for the onchain-secret protocol.
 const NameOCSNT = "OCSNT"
 
 func init() {
-	network.RegisterMessages(&PartialReencrypt{}, &PartialReencryptReply{})
+	network.RegisterMessages(&PartialReencrypt{}, &PartialReencryptReply{}, &ReadyReply{})
 }
 
 // VerifyRequest is a callback-function that can be set by a service.
@@ -54,3 +54,10 @@ type structPartialReencryptReply struct {
 	*onet.TreeNode
 	PartialReencryptReply
 }
+
+type structReadyReply struct {
+	*onet.TreeNode
+	ReadyReply
+}
+
+type ReadyReply struct{}

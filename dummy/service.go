@@ -85,6 +85,7 @@ func (s *Service) DummyRequest(req *DummyRequest) (*DummyReply, error) {
 	}
 	reply := &DummyReply{}
 	reply.Signature = <-cosiProto.FinalSignature
+	log.LLvl3(s.ServerIdentity(), "signature is:", reply.Signature)
 	return reply, nil
 }
 
@@ -106,13 +107,14 @@ func (s *Service) dummyVerification(msg []byte, data []byte) bool {
 		if storedXhatEnc != nil {
 			log.LLvl3(s.ServerIdentity(), "===========> found reencryption")
 			if storedXhatEnc.Equal(dd.XhatEnc) {
+				log.LLvl3("=============== DKIDs match ====================")
 				return true
 			} else {
 				log.Errorf("Stored result does not match the result in the DummyRequest")
 				return false
 			}
 		} else {
-			log.Errorf("No result found for the given DKID %s", dd.DKID)
+			log.Errorf("%s: no result found for the given DKID %s", s.ServerIdentity(), dd.DKID)
 			return false
 		}
 	} else {

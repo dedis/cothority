@@ -45,9 +45,12 @@ type OCSNT struct {
 	DKID    string
 	IsReenc bool
 	// private fields
-	replies  []PartialReencryptReply
-	timeout  *time.Timer
-	doneOnce sync.Once
+	ui         *share.PubShare
+	isDone     bool
+	replies    []PartialReencryptReply
+	readyMesgs []ReadyReply
+	timeout    *time.Timer
+	doneOnce   sync.Once
 }
 
 // NewOCSNT initialises the structure for use in one round
@@ -58,8 +61,9 @@ func NewOCSNT(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		Reencrypted:      make(chan bool, 1),
 		Total:            total,
 		Threshold:        total - (total-1)/3,
+		isDone:           false,
 	}
-	err := o.RegisterHandlers(o.partialReencrypt, o.partialReencryptReply)
+	err := o.RegisterHandlers(o.partialReencrypt, o.partialReencryptReply, o.readyReply)
 	if err != nil {
 		return nil, xerrors.Errorf("registring handlers: %v", err)
 	}
@@ -99,8 +103,25 @@ func (o *OCSNT) Start() error {
 	errs := o.Broadcast(prc)
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
-		//fmt.Println("Some nodes failed with error(s):", errs)
 		return xerrors.New("too many nodes failed in broadcast")
+	}
+	var xc kyber.Point
+	if o.IsReenc {
+		xc = o.Xc
+	} else {
+		xc = cothority.Suite.Point().Null()
+	}
+	log.LLvl4("XC IS", xc.String(), o.U.String())
+	ui, ei, fi := o.generateShare(o.U, xc)
+	o.ui = ui
+	errs = o.Broadcast(&PartialReencryptReply{
+		Ui: ui,
+		Ei: ei,
+		Fi: fi,
+	})
+	if len(errs) > (o.Total-1)/3 {
+		log.Errorf("Some nodes failed with error(s) %v", errs)
+		return xerrors.New("too many nodes failed in broadcast PartialReencryptReply")
 	}
 	return nil
 }
@@ -108,85 +129,88 @@ func (o *OCSNT) Start() error {
 // PartialReencrypt is received by every node to give his part of
 // the share
 func (o *OCSNT) partialReencrypt(prc structPartialReencrypt) error {
-	log.Lvl3(o.Name() + ": starting partialreencrypt")
-	defer o.Done()
+	log.LLvl3(o.Name() + ": starting partialreencrypt")
+	//defer o.Done()
 
 	total := len(o.Roster().List)
 	o.Total = total
 	o.Threshold = total - (total-1)/3
-	o.IsReenc = prc.PartialReencrypt.IsReenc
 	o.DKID = prc.PartialReencrypt.DKID
 	o.U = prc.U
-	if prc.IsReenc {
-		o.Xc = prc.Xc
-	} else {
-		o.Xc = cothority.Suite.Point().Null()
-	}
+	o.Xc = prc.Xc
 
 	if o.Verify != nil {
 		if !o.Verify(&prc.PartialReencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to do the partial reencryption")
-			//fmt.Println(o.ServerIdentity(), "refused to do the partial reencryption")
 			errs := o.Broadcast(&PartialReencryptReply{})
 			if len(errs) > (o.Total-1)/3 {
 				log.Errorf("Some nodes failed with error(s) %v", errs)
-				//fmt.Println("Some nodes failed with error(s)", errs)
 				return xerrors.New("too many nodes failed in broadcast empty PartialReencryptReply")
 			}
 			return nil
 		}
 	}
 
-	ui := o.getUI(o.U, o.Xc)
-	// Calculating proofs
-	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
-	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(o.U, o.Xc))
-	hiHat := cothority.Suite.Point().Mul(si, nil)
-	hash := sha256.New()
-	ui.V.MarshalTo(hash)
-	uiHat.MarshalTo(hash)
-	hiHat.MarshalTo(hash)
-	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
+	var xc kyber.Point
+	if prc.IsReenc {
+		xc = o.Xc
+	} else {
+		xc = cothority.Suite.Point().Null()
+	}
+	log.LLvl4("XC IS", xc.String(), o.U.String())
+	ui, ei, fi := o.generateShare(o.U, xc)
+	o.ui = ui
+	//ui := o.getUI(o.U, o.Xc)
+	//// Calculating proofs
+	//si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
+	//uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(o.U, o.Xc))
+	//hiHat := cothority.Suite.Point().Mul(si, nil)
+	//hash := sha256.New()
+	//ui.V.MarshalTo(hash)
+	//uiHat.MarshalTo(hash)
+	//hiHat.MarshalTo(hash)
+	//ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 
-	log.LLvl3(o.ServerIdentity(), "is about to broadcast", ei.String())
 	errs := o.Broadcast(&PartialReencryptReply{
 		Ui: ui,
 		Ei: ei,
-		Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
+		Fi: fi,
+		//Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
 	})
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
-		//fmt.Println("Some nodes failed with error(s)", errs)
 		return xerrors.New("too many nodes failed in broadcast PartialReencryptReply")
 	}
 	return nil
 }
 
 func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
-	log.LLvl3(o.ServerIdentity(), "received partialReencryptReply from", prr.PartialReencryptReply.Ui)
+	log.LLvl3(o.ServerIdentity(), "received", prr.PartialReencryptReply.Ei.String(), "from", prr.ServerIdentity)
 	if prr.PartialReencryptReply.Ui == nil {
 		log.Lvl2("Node", prr.ServerIdentity, "refused to reply")
 		o.Failures++
 		if o.Failures > o.Total-o.Threshold {
 			log.Lvl2(prr.ServerIdentity, "couldn't get enough shares")
-			//fmt.Println(prr.ServerIdentity, "couldn't get enough shares")
 			o.finish(false)
 		}
 		return nil
 	}
 	o.replies = append(o.replies, prr.PartialReencryptReply)
 
-	var xc kyber.Point
-	if o.IsReenc {
-		xc = o.Xc
-	} else {
-		xc = cothority.Suite.Point().Null()
-	}
 	// minus one to exclude myself
-	if len(o.replies) >= int(o.Threshold-1) {
+	if !o.isDone && len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
-		o.Uis[0] = o.getUI(o.U, xc)
+		//o.Uis[0] = o.getUI(o.U, xc)
+		log.LLvl3(o.ServerIdentity(), "MY UI IS", o.ui)
+		o.Uis[o.ui.I] = o.ui
+		var xc kyber.Point
+		if o.IsReenc {
+			xc = o.Xc
+		} else {
+			xc = cothority.Suite.Point().Null()
+		}
 
+		log.LLvl4("XC IS", xc.String(), o.U.String())
 		for _, r := range o.replies {
 			// Verify proofs
 			ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, xc))
@@ -205,8 +229,8 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 			if e.Equal(r.Ei) {
 				o.Uis[r.Ui.I] = r.Ui
 			} else {
+				log.LLvl3("RECEIVED INVALID SHARE FROM", r.Ui.I)
 				log.Lvl1("Received invalid share from node", r.Ui.I)
-				//fmt.Println("Received invalid share from node", r.Ui.I)
 			}
 		}
 		xhatEnc, err := share.RecoverCommit(cothority.Suite, o.Uis, o.Threshold, len(o.Roster().List))
@@ -215,8 +239,17 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 			o.finish(false)
 		} else {
 			o.XhatEnc = xhatEnc
+			o.isDone = true
 			log.LLvl3(o.ServerIdentity(), "computed xhatenc:", o.XhatEnc.String())
-			o.finish(true)
+			if !o.IsRoot() {
+				err := o.SendToParent(&ReadyReply{})
+				if err != nil {
+					log.Errorf("%s: error sending readyreply to parent", o.ServerIdentity())
+				}
+				o.finish(true)
+			}
+			// If root don't finish here!
+			//o.finish(true)
 		}
 	}
 
@@ -230,6 +263,32 @@ func (o *OCSNT) partialReencryptReply(prr structPartialReencryptReply) error {
 	return nil
 }
 
+func (o *OCSNT) readyReply(rr structReadyReply) error {
+	log.LLvl3(o.ServerIdentity(), "received readyReply from", rr.ServerIdentity)
+	o.readyMesgs = append(o.readyMesgs, rr.ReadyReply)
+	// minus one to exclude myself
+	if len(o.replies) >= int(o.Threshold-1) {
+		log.LLvl2(o.ServerIdentity(), "collected sufficient number of ready messages")
+		o.finish(true)
+	}
+	return nil
+}
+
+func (o *OCSNT) generateShare(U, Xc kyber.Point) (*share.PubShare, kyber.Scalar, kyber.Scalar) {
+	ui := o.getUI(U, Xc)
+	// Calculating proofs
+	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
+	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(U, Xc))
+	hiHat := cothority.Suite.Point().Mul(si, nil)
+	hash := sha256.New()
+	ui.V.MarshalTo(hash)
+	uiHat.MarshalTo(hash)
+	hiHat.MarshalTo(hash)
+	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
+	fi := cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V))
+	return ui, ei, fi
+}
+
 func (o *OCSNT) getUI(U, Xc kyber.Point) *share.PubShare {
 	v := cothority.Suite.Point().Mul(o.Shared.V, U)
 	v.Add(v, cothority.Suite.Point().Mul(o.Shared.V, Xc))
@@ -240,7 +299,9 @@ func (o *OCSNT) getUI(U, Xc kyber.Point) *share.PubShare {
 }
 
 func (o *OCSNT) finish(result bool) {
-	o.timeout.Stop()
+	if o.IsRoot() {
+		o.timeout.Stop()
+	}
 	select {
 	case o.Reencrypted <- result:
 		// succeeded
