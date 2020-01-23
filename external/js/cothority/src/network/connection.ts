@@ -53,6 +53,11 @@ export interface IConnection {
      * @param service
      */
     copy(service: string): IConnection;
+
+    sendStream<T extends Message>(message: Message, reply: typeof Message, 
+        onMessage: (data: T, ws: WebSocketAdapter) => void, 
+        onClose: (code: number, reason: string) => void,
+        onError: (err: Error) => void): WebSocketAdapter;
 }
 
 /**
@@ -155,6 +160,70 @@ export class WebSocketConnection implements IConnection {
         if (p > 1) {
             throw new Error("Single connection doesn't support more than one parallel");
         }
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message, 
+        onMessage: (data: T, ws: WebSocketAdapter) => void, 
+        onClose: (code: number, reason: string) => void,
+        onError: (err: Error) => void): WebSocketAdapter {
+
+        if (!message.$type) {
+            onError(new Error(`message "${message.constructor.name}" is not registered`))
+            return
+        }
+
+        if (!reply.$type) {
+            onError(new Error(`message "${reply}" is not registered`))
+            return
+        }
+
+        const path = this.getURL() + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
+        Log.lvl4(`Socket: new WebSocket(${path})`);
+        const ws = factory(path);
+        const bytes = Buffer.from(message.$type.encode(message).finish());
+        const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
+        ws.onOpen(() => {
+            Log.lvl3("Sending message to", path);
+            ws.send(bytes);
+        });
+
+        ws.onMessage((data: Buffer) => {
+            clearTimeout(timer);
+            const buf = Buffer.from(data);
+            Log.lvl4("Getting message with length:", buf.length);
+
+            try {
+                const ret = reply.decode(buf) as T;
+                onMessage(ret, ws)
+            } catch (err) {
+                if (err instanceof util.ProtocolError) {
+                    onError(err);
+                } else {
+                    onError(
+                        new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
+                    );
+                }
+            }
+        });
+
+        ws.onClose((code: number, reason: string) => {
+            // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
+            // to non-null in case of error.
+            if (code !== 1000 || reason) {
+                onError(new Error(reason));
+            } else {
+                onClose(code, reason)
+            }
+        });
+
+        ws.onError((err: Error) => {
+            clearTimeout(timer);
+
+            onError(new Error("error in websocket " + path + ": " + err));
+        });
+
+        return ws;
     }
 
     copy(service: string): IConnection {
@@ -277,6 +346,47 @@ export class RosterWSConnection implements IConnection {
      */
     setTimeout(value: number) {
         this.nodes.setTimeout(value);
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message, 
+        onMessage: (data: T, ws: WebSocketAdapter) => void, 
+        onClose: (code: number, reason: string) => void,
+        onError: (err: Error) => void): WebSocketAdapter {
+
+        const errors: string[] = [];
+        const msgNbr = this.msgNbr;
+        this.msgNbr++;
+        const list = this.nodes.newList(this.service, this.parallel);
+        const pool = list.active;
+
+        Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
+            pool.map((conn) => conn.getURL()));
+
+        // Get the first reply - need to take care not to return a reject too soon, else
+        // all other promises will be ignored.
+        // The promises that never 'resolve' or 'reject' will later be collected by GC:
+        // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
+        var ws: WebSocketAdapter
+        pool.map((conn) => {
+            do {
+                const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
+                try {
+                    Log.lvl3(idStr, "sending");
+                    ws = conn.sendStream(message, reply, onMessage, onClose, onError);
+                    Log.lvl3(idStr, "received OK");
+                    if (list.done(conn) === 0) {
+                        Log.lvl3(idStr, "first to receive");
+                    }
+                    return;
+                } catch (e) {
+                    Log.lvl3(idStr, "has error", e);
+                    onError(e);
+                    conn = list.replace(conn);
+                }
+            } while (conn !== undefined);
+        });
+        return ws;
     }
 
     copy(service: string): IConnection {

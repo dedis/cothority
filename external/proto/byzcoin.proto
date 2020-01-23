@@ -280,6 +280,23 @@ message StreamingResponse {
   optional skipchain.SkipBlock block = 1;
 }
 
+message PaginateRequest {
+  required bytes startid = 1;
+  required uint64 pagesize = 2;
+  required uint64 numpages = 3;
+  required bool backward = 4;
+  optional bytes streamid = 5;
+}
+
+message PaginateResponse {
+  repeated skipchain.SkipBlock blocks = 1;
+  required uint64 pagenumber = 2;
+  required bytes streamid = 3;
+  required bool backward = 4;
+  required uint64 errorcode = 5;
+  repeated string errortext = 6;
+}
+
 // DownloadState requests the current global state of that node.
 // If it is the first call to the service, then Reset
 // must be true, else an error will be returned, or old data

@@ -44,6 +44,11 @@ message GetSingleBlock {
 	required bytes id = 1;
 }
 
+// GetStreamBlocks ask for a block and the ones that follow
+message GetStreamBlocks {
+    required bytes id = 1;
+}
+
 // GetSingleBlockByIndex searches for a block with the given index following
 // the genesis-block
 message GetSingleBlockByIndex {

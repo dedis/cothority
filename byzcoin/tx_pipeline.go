@@ -125,7 +125,7 @@ func (s *defaultTxProcessor) CollectTx() (*collectTxResult, error) {
 	s.latest = latest
 	s.Unlock()
 
-	log.Lvlf3("%s: Starting new block %d for chain %x", s.ServerIdentity(), latest.Index+1, s.scID)
+	log.Lvlf3("%s: Starting new block %d (%x) for chain %x", s.ServerIdentity(), latest.Index+1, latest.Hash, s.scID)
 	tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
 
 	proto, err := s.CreateProtocol(collectTxProtocol, tree)
