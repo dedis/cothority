@@ -117,7 +117,7 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 // that contain each K consecutive blocks.
 func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
 	key := msg.StreamID
-	if len(key) == 0 {
+	if key == nil || len(key) == 0 {
 		key = make([]byte, 32)
 		rand.Read(key)
 		paginateChans[string(key)] = make(chan *PaginateResponse)
@@ -155,6 +155,15 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				ErrorCode: 1,
 				ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
 					"but we found %d", msg.NumPages)},
+			}
+			return
+		}
+
+		if msg.StartID == nil {
+			outChan <- &PaginateResponse{
+				StreamID:  key,
+				ErrorCode: 1,
+				ErrorText: []string{"StartID is nil"},
 			}
 			return
 		}
