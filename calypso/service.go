@@ -620,6 +620,7 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 	}
 	// If "Reenc" flag is set to true, then the secret is reencrypted under
 	// Xc
+	log.LLvl3("In service xc is:", read.Xc)
 	ocsntProto.IsReenc = dknr.IsReenc
 	ocsntProto.Xc = read.Xc
 	//ocsntProto.Xc = cothority.Suite.Point().Null()
@@ -880,13 +881,6 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 			if !<-piOCSNT.Reencrypted {
 				log.Errorf("%s: reencryption got refused", s.ServerIdentity())
 			} else {
-				//s.storage.Lock()
-				//s.storage.Reencryptions[piOCSNT.DKID] = piOCSNT.XhatEnc
-				//s.storage.Unlock()
-				//err = s.save()
-				//if err != nil {
-				//log.Errorf("Saving in storage failed: %v", err)
-				//}
 				log.LLvl3(s.ServerIdentity(), "before storing reencryption")
 				err = s.dummyService.StoreReencryption(piOCSNT.DKID, piOCSNT.XhatEnc)
 				if err != nil {
@@ -945,11 +939,11 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 
 // verifyReencryption checks that the read and the write instances match.
 //func (s *Service) verifyReencryptionNT(vd *[]byte, xc kyber.Point, u kyber.Point, dkid string) bool {
-func (s *Service) verifyReencryptionNT(prc *ocsnt.PartialReencrypt) bool {
+func (s *Service) verifyReencryptionNT(sr *ocsnt.StartReencrypt) bool {
 	err := func() error {
 		var verificationData vData
 		//err := protobuf.DecodeWithConstructors(*vd, &verificationData, network.DefaultConstructors(cothority.Suite))
-		err := protobuf.DecodeWithConstructors(*prc.VerificationData, &verificationData, network.DefaultConstructors(cothority.Suite))
+		err := protobuf.DecodeWithConstructors(*sr.VerificationData, &verificationData, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return err
 		}
@@ -968,12 +962,10 @@ func (s *Service) verifyReencryptionNT(prc *ocsnt.PartialReencrypt) bool {
 		if verificationData.Ephemeral != nil {
 			return errors.New("ephemeral keys not supported yet")
 		}
-		//if !r.Xc.Equal(xc) {
-		if !r.Xc.Equal(prc.Xc) {
+		if !r.Xc.Equal(sr.Xc) {
 			return xerrors.New("wrong reader")
 		}
-		//validID, err := s.checkID(r.Write, r.Xc, u, dkid)
-		validID, err := s.checkID(r.Write, r.Xc, prc.U, prc.DKID)
+		validID, err := s.checkID(r.Write, r.Xc, sr.U, sr.DKID)
 		if !validID {
 			return err
 		}

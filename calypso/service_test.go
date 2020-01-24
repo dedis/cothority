@@ -296,6 +296,7 @@ func TestService_DecryptKey(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 	keyCopy1, err := dk1.RecoverKey(s.signer.Ed25519.Secret)
+	fmt.Println(dk1.XhatEnc.Data())
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 
@@ -305,6 +306,7 @@ func TestService_DecryptKey(t *testing.T) {
 	keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key2, keyCopy2)
+	fmt.Println(dk2.XhatEnc.Data())
 }
 
 func TestService_DecryptKeyNT(t *testing.T) {
@@ -314,27 +316,28 @@ func TestService_DecryptKeyNT(t *testing.T) {
 	key1 := []byte("secret key 1")
 	prWr1 := s.addWriteAndWait(t, key1)
 	prRe1 := s.addReadAndWait(t, prWr1, s.signer.Ed25519.Point)
-	//key2 := []byte("secret key 2")
-	//prWr2 := s.addWriteAndWait(t, key2)
-	//prRe2 := s.addReadAndWait(t, prWr2, s.signer.Ed25519.Point)
-
-	//_, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
-	//_, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "abbas", IsReenc: false, Read: *prRe1, Write: *prWr2})
-	//require.NotNil(t, err)
-	//_, err = s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: "kamil", IsReenc: false, Read: *prRe2, Write: *prWr1})
-	//require.NotNil(t, err)
+	key2 := []byte("secret key 2")
+	prWr2 := s.addWriteAndWait(t, key2)
+	prRe2 := s.addReadAndWait(t, prWr2, s.signer.Ed25519.Point)
 
 	dkid, err := generateID(prWr1, prRe1)
 	require.NoError(t, err)
-	dk1, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid, IsReenc: false, Read: *prRe1, Write: *prWr1})
+
+	_, err = s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
+	_, err = s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid, IsReenc: false, Read: *prRe1, Write: *prWr2})
+	require.NotNil(t, err)
+	_, err = s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid, IsReenc: false, Read: *prRe2, Write: *prWr1})
+	require.NotNil(t, err)
+
+	dk1, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid, IsReenc: true, Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
-	fmt.Println(dk1.XhatEnc.Data())
-	fmt.Println(dk1.Signature)
+	fmt.Println("Sig is:", dk1.Signature)
 
-	//keyCopy1, err := dk1.RecoverKey(s.signer.Ed25519.Secret)
-	//require.Nil(t, err)
-	//require.Equal(t, key1, keyCopy1)
+	keyCopy1, err := recoverKey(s.signer.Ed25519.Secret, dk1.XhatEnc, dk1.X, dk1.C)
+	require.Nil(t, err)
+	require.Equal(t, key1, keyCopy1)
+	fmt.Println(string(key1), string(keyCopy1))
 
 	//dk2, err := s.services[0].DecryptKeyNT(&DecryptKey{Read: *prRe2, Write: *prWr2})
 	//require.Nil(t, err)
@@ -624,4 +627,19 @@ func (s *ts) reconstructKeyFunc() (kyber.Scalar, error) {
 		return nil, xerrors.Errorf("while recovering secret: %v", err)
 	}
 	return sec, nil
+}
+
+func recoverKey(xc kyber.Scalar, xhatEnc kyber.Point, x kyber.Point, c kyber.Point) (key []byte, err error) {
+	xcInv := xc.Clone().Neg(xc)
+	XhatDec := x.Clone().Mul(xcInv, x)
+	Xhat := XhatDec.Clone().Add(xhatEnc, XhatDec)
+	XhatInv := Xhat.Clone().Neg(Xhat)
+
+	// Decrypt r.C to keyPointHat
+	XhatInv.Add(c, XhatInv)
+	key, err = XhatInv.Data()
+	if err != nil {
+		err = xerrors.Errorf("extracting data from point: %v", err)
+	}
+	return
 }

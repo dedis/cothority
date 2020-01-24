@@ -15,18 +15,19 @@ OCSNT_struct holds all messages for the onchain-secret protocol.
 const NameOCSNT = "OCSNT"
 
 func init() {
-	network.RegisterMessages(&PartialReencrypt{}, &PartialReencryptReply{}, &ReadyReply{})
+	//network.RegisterMessages(&PartialReencrypt{}, &PartialReencryptReply{}, &ReadyReply{})
+	network.RegisterMessages(&StartReencrypt{}, &PartialReencryption{}, &Ready{})
 }
 
 // VerifyRequest is a callback-function that can be set by a service.
 // Whenever a reencryption request is received, this function will be
 // called and its return-value used to determine whether or not to
 // allow reencryption.
-//type VerifyPartialRequest func(vd *[]byte, xc kyber.Point, u kyber.Point, id string) bool
-type VerifyPartialRequest func(prc *PartialReencrypt) bool
+type VerifyPartialRequest func(sr *StartReencrypt) bool
 
 // PartialReencrypt asks for a re-encryption share from a node
-type PartialReencrypt struct {
+//type PartialReencrypt struct {
+type StartReencrypt struct {
 	IsReenc bool
 	DKID    string
 	// U is the point from the write-request
@@ -36,28 +37,28 @@ type PartialReencrypt struct {
 	// VerificationData is optional and can be any slice of bytes, so that each
 	// node can verify if the reencryption request is valid or not.
 	VerificationData *[]byte
+	Pr               PartialReencryption
 }
 
-type structPartialReencrypt struct {
+type structStartReencrypt struct {
 	*onet.TreeNode
-	PartialReencrypt
+	StartReencrypt
 }
 
-// PartialReencryptReply returns the share to re-encrypt from one node
-type PartialReencryptReply struct {
+type PartialReencryption struct {
 	Ui *share.PubShare
 	Ei kyber.Scalar
 	Fi kyber.Scalar
 }
 
-type structPartialReencryptReply struct {
+type structPartialReencryption struct {
 	*onet.TreeNode
-	PartialReencryptReply
+	PartialReencryption
 }
 
-type structReadyReply struct {
+type structReady struct {
 	*onet.TreeNode
-	ReadyReply
+	Ready
 }
 
-type ReadyReply struct{}
+type Ready struct{}

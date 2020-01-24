@@ -38,19 +38,19 @@ func TestOCSNTBasic(t *testing.T) {
 	// nodes := []int{3, 5, 10}
 	for _, nbrNodes := range nodes {
 		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
-		ocs(t, nbrNodes, nbrNodes-1, 32, 0, false)
+		ocsnt(t, nbrNodes, nbrNodes-1, 32, 0, false)
 	}
 }
 
 // Tests a system with failing nodes
 func TestFail(t *testing.T) {
-	ocs(t, 4, 2, 32, 2, false)
+	ocsnt(t, 4, 2, 32, 2, false)
 }
 
 // Tests what happens if the nodes refuse to send their share
 func TestRefuse(t *testing.T) {
 	log.Lvl1("Starting setupDKG with 3 nodes and refusing to sign")
-	ocs(t, 3, 2, 32, 0, true)
+	ocsnt(t, 3, 2, 32, 0, true)
 }
 
 func TestOCSNTKeyLengths(t *testing.T) {
@@ -59,11 +59,11 @@ func TestOCSNTKeyLengths(t *testing.T) {
 	}
 	for keylen := 1; keylen < 64; keylen++ {
 		log.Lvl1("Testing keylen of", keylen)
-		ocs(t, 3, 2, keylen, 0, false)
+		ocsnt(t, 3, 2, keylen, 0, false)
 	}
 }
 
-func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
+func ocsnt(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	servers, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
@@ -105,7 +105,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	pi, err := services[0].(*testService).createOCSNT(tree, threshold)
 	require.Nil(t, err)
 	protocol := pi.(*OCSNT)
-	protocol.DKID = "ocsnt-test1"
+	protocol.DKID = "abbas"
 	protocol.IsReenc = true
 	protocol.U = U
 	protocol.Xc = xc.Public
@@ -170,12 +170,12 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 		if err != nil {
 			return nil, err
 		}
-		ocs := pi.(*OCSNT)
-		ocs.Shared = s.Shared
-		ocs.Verify = func(prc *PartialReencrypt) bool {
+		ocsnt := pi.(*OCSNT)
+		ocsnt.Shared = s.Shared
+		ocsnt.Verify = func(prc *PartialReencrypt) bool {
 			return prc.VerificationData != nil
 		}
-		return ocs, nil
+		return ocsnt, nil
 	default:
 		return nil, errors.New("unknown protocol for this service")
 	}
