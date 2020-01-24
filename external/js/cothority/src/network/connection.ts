@@ -54,10 +54,10 @@ export interface IConnection {
      */
     copy(service: string): IConnection;
 
-    sendStream<T extends Message>(message: Message, reply: typeof Message, 
-        onMessage: (data: T, ws: WebSocketAdapter) => void, 
-        onClose: (code: number, reason: string) => void,
-        onError: (err: Error) => void): WebSocketAdapter;
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter;
 }
 
 /**
@@ -163,19 +163,19 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message, 
-        onMessage: (data: T, ws: WebSocketAdapter) => void, 
-        onClose: (code: number, reason: string) => void,
-        onError: (err: Error) => void): WebSocketAdapter {
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter {
 
         if (!message.$type) {
-            onError(new Error(`message "${message.constructor.name}" is not registered`))
-            return
+            onError(new Error(`message "${message.constructor.name}" is not registered`));
+            return;
         }
 
         if (!reply.$type) {
-            onError(new Error(`message "${reply}" is not registered`))
-            return
+            onError(new Error(`message "${reply}" is not registered`));
+            return;
         }
 
         const path = this.getURL() + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
@@ -195,7 +195,7 @@ export class WebSocketConnection implements IConnection {
 
             try {
                 const ret = reply.decode(buf) as T;
-                onMessage(ret, ws)
+                onMessage(ret, ws);
             } catch (err) {
                 if (err instanceof util.ProtocolError) {
                     onError(err);
@@ -213,7 +213,7 @@ export class WebSocketConnection implements IConnection {
             if (code !== 1000 || reason) {
                 onError(new Error(reason));
             } else {
-                onClose(code, reason)
+                onClose(code, reason);
             }
         });
 
@@ -349,10 +349,10 @@ export class RosterWSConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message, 
-        onMessage: (data: T, ws: WebSocketAdapter) => void, 
-        onClose: (code: number, reason: string) => void,
-        onError: (err: Error) => void): WebSocketAdapter {
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter {
 
         const errors: string[] = [];
         const msgNbr = this.msgNbr;
@@ -367,7 +367,7 @@ export class RosterWSConnection implements IConnection {
         // all other promises will be ignored.
         // The promises that never 'resolve' or 'reject' will later be collected by GC:
         // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
-        var ws: WebSocketAdapter
+        let ws: WebSocketAdapter;
         pool.map((conn) => {
             do {
                 const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
