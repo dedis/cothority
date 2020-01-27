@@ -11,7 +11,16 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
-var paginateChans = make(map[string]chan *PaginateResponse)
+var paginateChans = paginateChansWrapper{
+	chans:     make(map[string]chan *PaginateResponse),
+	closeChan: make(map[string]chan bool),
+}
+
+type paginateChansWrapper struct {
+	sync.Mutex
+	chans     map[string]chan *PaginateResponse
+	closeChan map[string]chan bool
+}
 
 func init() {
 	network.RegisterMessages(&StreamingRequest{}, &StreamingResponse{},
@@ -114,27 +123,47 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 }
 
 // PaginateBlocks return blocks with pagination, ie. N asynchounous requests
-// that contain each K consecutive blocks.
+// that contain each K consecutive blocks. If a streamID is given, it uses the
+// same PaginateResponse chan AND the same close chan. The caller is responsible
+// for closing the close chan when the caller wants to close the connection. The
+// close chan should be closed only when no other requests are being processed using
+// the same streamID.
 func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
 	key := msg.StreamID
+	paginateChans.Lock()
 	if key == nil || len(key) == 0 {
 		key = make([]byte, 32)
 		rand.Read(key)
-		paginateChans[string(key)] = make(chan *PaginateResponse)
+		paginateChans.chans[string(key)] = make(chan *PaginateResponse)
+		paginateChans.closeChan[string(key)] = make(chan bool)
 	}
 
-	stopChan := make(chan bool)
-	outChan, ok := paginateChans[string(key)]
-	if !ok {
+	stopChan, okStop := paginateChans.closeChan[string(key)]
+	outChan, okChan := paginateChans.chans[string(key)]
+	paginateChans.Unlock()
+
+	if !okStop {
 		outChan = make(chan *PaginateResponse)
 		go func() {
 			outChan <- &PaginateResponse{
 				StreamID:  key,
 				ErrorCode: 1,
-				ErrorText: []string{fmt.Sprintf("StreamID %x unkown", msg.StreamID)},
+				ErrorText: []string{fmt.Sprintf("StreamID %x unkown for closeChan", msg.StreamID)},
 			}
 		}()
-		return outChan, stopChan, xerrors.Errorf("StreamID %x unkown", msg.StreamID)
+		return outChan, stopChan, xerrors.Errorf("StreamID %x unkown for closeChan", msg.StreamID)
+	}
+
+	if !okChan {
+		outChan = make(chan *PaginateResponse)
+		go func() {
+			outChan <- &PaginateResponse{
+				StreamID:  key,
+				ErrorCode: 1,
+				ErrorText: []string{fmt.Sprintf("StreamID %x unkown for chans", msg.StreamID)},
+			}
+		}()
+		return outChan, stopChan, xerrors.Errorf("StreamID %x unkown for chans", msg.StreamID)
 	}
 
 	go func() {
@@ -257,8 +286,17 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		// Waiting for the streaming connection to stop. This signal comes
 		// from onet, which sets it when the client closes the connection.
 		<-stopChan
-		close(outChan)
-		delete(paginateChans, string(key))
+		paginateChans.Lock()
+		_, ok := paginateChans.chans[string(key)]
+		if ok {
+			delete(paginateChans.chans, string(key))
+		}
+		_, ok = paginateChans.closeChan[string(key)]
+		if ok {
+			close(outChan)
+			delete(paginateChans.closeChan, string(key))
+		}
+		paginateChans.Unlock()
 	}()
 	return outChan, stopChan, nil
 }
