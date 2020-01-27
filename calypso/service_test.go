@@ -1,6 +1,7 @@
 package calypso
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -11,9 +12,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
+	"go.dedis.ch/cothority/v3/blscosi/protocol"
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/cothority/v3/darc"
+	"go.dedis.ch/cothority/v3/dummy"
 	"go.dedis.ch/kyber/v3"
+	"go.dedis.ch/kyber/v3/pairing"
 	"go.dedis.ch/kyber/v3/share"
 	"go.dedis.ch/kyber/v3/util/key"
 	"go.dedis.ch/onet/v3"
@@ -334,17 +338,24 @@ func TestService_DecryptKeyNT(t *testing.T) {
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 	fmt.Println("Sig is:", dk1.Signature)
 
-	keyCopy1, err := recoverKey(s.signer.Ed25519.Secret, dk1.XhatEnc, dk1.X, dk1.C)
+	keyCopy1, err := recoverReencKey(s.signer.Ed25519.Secret, dk1.XhatEnc, dk1.X, dk1.C)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 	fmt.Println(string(key1), string(keyCopy1))
+	require.NoError(t, verifySignature(dkid, dk1.XhatEnc, dk1.Signature, s.ltsRoster.ServicePublics(dummy.ServiceName)))
 
-	//dk2, err := s.services[0].DecryptKeyNT(&DecryptKey{Read: *prRe2, Write: *prWr2})
-	//require.Nil(t, err)
-	//require.True(t, dk2.X.Equal(s.ltsReply.X))
-	//keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
-	//require.Nil(t, err)
-	//require.Equal(t, key2, keyCopy2)
+	dkid2, err := generateID(prWr2, prRe2)
+	require.NoError(t, err)
+
+	dk2, err := s.services[0].DecryptKeyNT(&DecryptKeyNT{DKID: dkid2, IsReenc: false, Read: *prRe2, Write: *prWr2})
+	require.Nil(t, err)
+	require.True(t, dk2.X.Equal(s.ltsReply.X))
+
+	keyCopy2, err := recoverKey(dk2.XhatEnc, dk2.C)
+	require.Nil(t, err)
+	require.Equal(t, key2, keyCopy2)
+	fmt.Println(string(key2), string(keyCopy2))
+	require.NoError(t, verifySignature(dkid2, dk2.XhatEnc, dk2.Signature, s.ltsRoster.ServicePublics(dummy.ServiceName)))
 }
 
 func generateID(prW *byzcoin.Proof, prRe *byzcoin.Proof) (string, error) {
@@ -629,17 +640,40 @@ func (s *ts) reconstructKeyFunc() (kyber.Scalar, error) {
 	return sec, nil
 }
 
-func recoverKey(xc kyber.Scalar, xhatEnc kyber.Point, x kyber.Point, c kyber.Point) (key []byte, err error) {
-	xcInv := xc.Clone().Neg(xc)
-	XhatDec := x.Clone().Mul(xcInv, x)
-	Xhat := XhatDec.Clone().Add(xhatEnc, XhatDec)
+func recoverReencKey(Xc kyber.Scalar, XhatEnc kyber.Point, X kyber.Point, C kyber.Point) (key []byte, err error) {
+	XcInv := Xc.Clone().Neg(Xc)
+	XhatDec := X.Clone().Mul(XcInv, X)
+	Xhat := XhatDec.Clone().Add(XhatEnc, XhatDec)
 	XhatInv := Xhat.Clone().Neg(Xhat)
 
 	// Decrypt r.C to keyPointHat
-	XhatInv.Add(c, XhatInv)
+	XhatInv.Add(C, XhatInv)
 	key, err = XhatInv.Data()
 	if err != nil {
 		err = xerrors.Errorf("extracting data from point: %v", err)
 	}
 	return
+}
+
+func recoverKey(XhatEnc kyber.Point, C kyber.Point) (key []byte, err error) {
+	XhatInv := XhatEnc.Clone().Neg(XhatEnc)
+	XhatInv.Add(C, XhatInv)
+	key, err = XhatInv.Data()
+	if err != nil {
+		err = xerrors.Errorf("extracting data from point: %v", err)
+	}
+	return
+}
+
+func verifySignature(DKID string, XhatEnc kyber.Point, sig protocol.BlsSignature, publics []kyber.Point) error {
+	bnsuite := pairing.NewSuiteBn256()
+	ptBuf, err := XhatEnc.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	sh := sha256.New()
+	sh.Write([]byte(DKID))
+	sh.Write(ptBuf)
+	data := sh.Sum(nil)
+	return sig.Verify(bnsuite, data, publics)
 }
