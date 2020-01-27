@@ -165,12 +165,12 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	c := newTestClient(l)
 	log.Lvl1("Creating chain")
 	inter, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ro2 := onet.NewRoster(ro.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", ro2)
 	var sb1 *StoreSkipBlockReply
 	sb1, err = c.StoreSkipBlock(inter, ro2, nil)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	// This now works, because in order to implement concurrent writes
 	// correctly, we need to have StoreSkipBlock advance latest to the
 	// true latest block, atomically.
@@ -180,29 +180,47 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	//	"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
 	sb1, err = c.StoreSkipBlock(sb1.Latest, ro2, []byte{1, 2, 3})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.Equal(t, sb1.Latest.Data, []byte{1, 2, 3})
 	sb2, err := c.StoreSkipBlock(sb1.Latest, ro2, &testData{})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
 	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].To, sb2.Latest.Hash),
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
-	var updates *GetUpdateChainReply
 	// Check if we get a conode that doesn't know about the latest block.
-	for i := 0; i < 10; i++ {
-		updates, err = c.GetUpdateChain(inter.Roster, inter.Hash)
-		log.ErrFatal(err)
+	for _, si := range ro.List {
+		ro := onet.NewRoster([]*network.ServerIdentity{si})
+		updates, err := c.GetUpdateChain(ro, inter.Hash)
+		require.NoError(t, err)
+		require.Equal(t, 4, len(updates.Update),
+			"Should now have four Blocks to go from Genesis to current, "+
+				"but have", len(updates.Update), inter, sb2)
+		require.True(t, sb2.Latest.Equal(updates.Update[3]),
+			"Last block in update-chain should be last block added")
 	}
-	if len(updates.Update) != 4 {
-		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
+
+	// Adding node 3 again
+	log.Lvl1("Proposing new")
+	sb3, err := c.StoreSkipBlock(sb1.Latest, ro, []byte{1, 2, 3})
+	require.NoError(t, err)
+
+	log.Lvl1("Checking update-chain")
+	// Check if we get a conode that doesn't know about the latest block.
+	for _, si := range ro.List {
+		ro := onet.NewRoster([]*network.ServerIdentity{si})
+		updates, err := c.GetUpdateChain(ro, inter.Hash)
+		require.NoError(t, err)
+		require.Equal(t, 5, len(updates.Update),
+			"Should now have four Blocks to go from Genesis to current, "+
+				"but have", len(updates.Update), inter, sb3)
+		require.True(t, sb3.Latest.Equal(updates.Update[4]),
+			"Last block in update-chain should be last block added")
 	}
-	if !updates.Update[len(updates.Update)-1].Equal(sb2.Latest) {
-		t.Fatal("Last block in update-chain should be last block added")
-	}
-	c.Close()
+
+	require.NoError(t, c.Close())
 }
 
 func TestClient_StoreSkipBlockCorrupted(t *testing.T) {

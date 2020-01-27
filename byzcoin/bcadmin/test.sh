@@ -320,6 +320,11 @@ testAddDarc(){
   testOK runBA darc add
   ID=`cat ./darc_id.txt`
   testGrep "${ID:5:${#ID}-0}" runBA darc show --darc "$ID"
+
+  # checks the --shortPrint option
+  OUTRES=$(runBA darc add --shortPrint)
+  matchOK "$OUTRES" "darc:[0-9a-f]{64}
+\[ed25519:[0-9a-f]{64}\]" 
 }
 
 testDarcAddDeferred() {

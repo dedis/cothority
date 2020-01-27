@@ -43,21 +43,30 @@ export interface IConnection {
     setTimeout(value: number): void;
 
     /**
-     * Sets how many nodes will be contacted in parallel
-     * @param p number of nodes to contact in parallel
-     */
-    setParallel(p: number): void;
-
-    /**
      * Creates a copy of the connection, but usable with the given service.
      * @param service
      */
     copy(service: string): IConnection;
 
+    /**
+     * Send a message to the distant peer
+     * @param message Protobuf compatible message
+     * @param reply Protobuf type of the reply
+     * @param onMessage function called when a message is received
+     * @param onClose function called when the connection closes
+     * @param onError function called when an error occurs
+     */
     sendStream<T extends Message>(message: Message, reply: typeof Message,
                                   onMessage: (data: T, ws: WebSocketAdapter) => void,
                                   onClose: (code: number, reason: string) => void,
                                   onError: (err: Error) => void): WebSocketAdapter;
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @deprecated - don't use IConnection for that, but rather directly a
+     * RosterWSConnection.
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
 }
 
 /**
@@ -156,6 +165,14 @@ export class WebSocketConnection implements IConnection {
         });
     }
 
+    copy(service: string): IConnection {
+        return new WebSocketConnection(this.url, service);
+    }
+
+    /**
+     * @deprecated - use directly a RosterWSConnection if you want that
+     * @param p
+     */
     setParallel(p: number): void {
         if (p > 1) {
             throw new Error("Single connection doesn't support more than one parallel");
@@ -224,10 +241,6 @@ export class WebSocketConnection implements IConnection {
         });
 
         return ws;
-    }
-
-    copy(service: string): IConnection {
-        return new WebSocketConnection(this.url, service);
     }
 }
 
@@ -389,8 +402,35 @@ export class RosterWSConnection implements IConnection {
         return ws;
     }
 
-    copy(service: string): IConnection {
+    /**
+     * Return a new RosterWSConnection for the given service.
+     * @param service
+     */
+    copy(service: string): RosterWSConnection {
         return new RosterWSConnection(this.rID, service, this.parallel);
+    }
+
+    /**
+     * Invalidate a given address.
+     * @param address
+     */
+    invalidate(address: string): void {
+        this.nodes.gotError(address);
+    }
+
+    /**
+     * Update roster for this connection.
+     * @param r
+     */
+    setRoster(r: Roster) {
+        const newID = r.id.toString("hex");
+        if (newID !== this.rID) {
+            this.rID = newID;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r, this.nodes));
+            }
+            this.nodes = RosterWSConnection.nodes.get(this.rID);
+        }
     }
 }
 

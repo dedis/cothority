@@ -516,6 +516,52 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 	}
 }
 
+func TestService_GetUpdateChain(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	hosts, roster, s1 := makeHELS(local, 3)
+	roster12 := onet.NewRoster(roster.List[:2])
+	services := make([]*Service, 3)
+	for i, h := range hosts {
+		services[i] = h.GetService(ServiceName).(*Service)
+	}
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	root, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil,
+		NewBlock: sbRoot})
+	require.NoError(t, err)
+	scID := root.Latest.SkipChainID()
+
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: scID,
+		NewBlock: &SkipBlock{SkipBlockFix: &SkipBlockFix{Roster: roster12}}})
+	require.NoError(t, err)
+	getLengths(t, scID, services, []int{2, 2, 1})
+
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: scID,
+		NewBlock: &SkipBlock{SkipBlockFix: &SkipBlockFix{Roster: roster}}})
+	require.NoError(t, err)
+	getLengths(t, scID, services, []int{3, 3, 3})
+}
+
+func getLengths(t *testing.T, scID SkipBlockID, services []*Service,
+	results []int) {
+	require.Equal(t, len(services), len(results))
+	for i, s := range services {
+		log.Lvl2("Testing service", s.ServerIdentity(), "for", results[i],
+			"blocks")
+		uc, err := s.GetUpdateChain(&GetUpdateChain{LatestID: scID})
+		require.NoError(t, err)
+		require.Equal(t, results[i], len(uc.Update))
+	}
+}
+
 func TestService_ParallelGUC(t *testing.T) {
 	nbrRoutines := 10
 	local := onet.NewLocalTest(cothority.Suite)

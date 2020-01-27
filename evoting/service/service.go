@@ -6,13 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +19,7 @@ import (
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 
+	"github.com/go-ldap/ldap/v3"
 	"go.dedis.ch/cothority/v3"
 	dkgprotocol "go.dedis.ch/cothority/v3/dkg/rabin"
 	"go.dedis.ch/cothority/v3/evoting"
@@ -271,52 +267,39 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 		return res, nil
 	}
 
-	url := "https://people.epfl.ch/cgi-bin/people/vCard"
+	url := "ldaps://ldap.epfl.ch"
 	if req.LookupURL != "" {
 		url = req.LookupURL
 	}
-
-	// Make sure the only variable expansion in there is what we want it to be.
-	if strings.Contains(url, "%") {
-		return nil, errors.New("percent not allowed in LookupURL")
-	}
-	url = fmt.Sprintf(url+"?id=%06d", sciper)
-
-	resp, err := http.Get(url)
+	l, err := ldap.DialURL(url)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer l.Close()
 
-	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
-		return nil, errors.New("invalid or unknown sciper")
-	}
+	// Search for the given username
+	searchRequest := ldap.NewSearchRequest(
+		"o=epfl, c=ch",
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		fmt.Sprintf("(&(objectClass=person)(uniqueIdentifier=%d))", sciper),
+		[]string{"displayName", "mail"},
+		nil,
+	)
 
-	bodyLimit := io.LimitReader(resp.Body, 1<<17)
-	body, err := ioutil.ReadAll(bodyLimit)
+	sr, err := l.Search(searchRequest)
 	if err != nil {
 		return nil, err
+	}
+
+	// If no results, err.
+	// If more than one are returned, we look only at the first one.
+	if len(sr.Entries) == 0 {
+		return nil, errors.New("SCIPER not found")
 	}
 
 	reply := &evoting.LookupSciperReply{}
-	search := regexp.MustCompile("[:;]")
-	for _, line := range strings.Split(string(body), "\n") {
-		fr := search.Split(line, 2)
-		if len(fr) != 2 {
-			continue
-		}
-		value := strings.Replace(fr[1], "CHARSET=UTF-8:", "", 1)
-		switch fr[0] {
-		case "FN":
-			reply.FullName = value
-		case "EMAIL":
-			reply.Email = value
-		case "TITLE":
-			reply.Title = value
-		case "URL":
-			reply.URL = value
-		}
-	}
+	reply.FullName = sr.Entries[0].GetAttributeValue("displayName")
+	reply.Email = sr.Entries[0].GetAttributeValue("mail")
 
 	// Put it into the cache
 	s.sciperPut(sciper, reply)

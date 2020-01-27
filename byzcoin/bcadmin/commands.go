@@ -558,6 +558,10 @@ var cmds = cli.Commands{
 						Name:  "desc",
 						Usage: "the description for the new DARC (default: random)",
 					},
+					cli.BoolFlag{
+						Name:  "shortPrint",
+						Usage: "instead of printing the entire darc, prints the darc baseID in the first line and identity in the second one (optional)",
+					},
 				},
 			},
 			{

@@ -67,6 +67,17 @@ describe("BN256 Point Tests", () => {
         expect(prop).toHold();
     });
 
+    it("should yield the same point by negation and multiplication, for -1", () => {
+        const base = new BN256G1Point().base();
+        const scalarOne = new BN256Scalar().one();
+        const pointOne = new BN256G1Point().mul(scalarOne, base);
+
+        scalarOne.neg(scalarOne);
+        pointOne.neg(pointOne);
+
+        expect(pointOne.equals(new BN256G1Point().mul(scalarOne, base))).toBeTruthy();
+    });
+
     it("should not modify params with add/sub/neg/mul", () => {
         const prop = jsc.forall(jsc.uint8, (target) => {
             const pointRef = new BN256G1Point(target);

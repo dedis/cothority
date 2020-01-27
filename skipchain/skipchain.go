@@ -524,16 +524,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 			// to issue a new GetUpdateChain with the
 			// latest Roster to keep traversing.
 			break
-		} else {
-			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
-				// Likewise for the case where we know the block,
-				// but we are no longer in the Roster, stop searching.
-				// Don't add the block, as our node will not be contacted
-				// for new forward-links.
-				break
-			}
 		}
-
 		if next.Index <= block.Index {
 			return nil, ErrorInconsistentForwardLink
 		}
@@ -541,6 +532,17 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
+
+	// Remove all blocks from the end of the result until a block is found
+	// where this node is part of.
+	for b := len(blocks) - 1; b > 0; b-- {
+		if i, _ := blocks[b].Roster.Search(s.ServerIdentity().ID); i < 0 {
+			blocks = blocks[:b]
+		} else {
+			break
+		}
+	}
+
 	log.Lvlf3("Found %d blocks", len(blocks))
 	reply := &GetUpdateChainReply{Update: blocks}
 

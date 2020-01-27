@@ -756,3 +756,27 @@ func TestCastNodeFailureShuffleAllOk(t *testing.T) {
 	})
 	require.Nil(t, err)
 }
+
+func TestLookupSciper(t *testing.T) {
+	// Comment this out when you want to run this unit test for dev work.
+	t.Skip("unit tests should not call external servers")
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+	nodes, _, _ := local.GenBigTree(1, 1, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	_, err := s0.LookupSciper(&evoting.LookupSciper{Sciper: ""})
+	require.NotNil(t, err)
+	_, err = s0.LookupSciper(&evoting.LookupSciper{Sciper: "12345"})
+	require.NotNil(t, err)
+	_, err = s0.LookupSciper(&evoting.LookupSciper{Sciper: "1234567"})
+	require.NotNil(t, err)
+	_, err = s0.LookupSciper(&evoting.LookupSciper{Sciper: "000000"})
+	require.NotNil(t, err)
+
+	reply, err := s0.LookupSciper(&evoting.LookupSciper{Sciper: "257875"})
+	require.NoError(t, err)
+	require.Equal(t, reply.FullName, "Bryan Alexander Ford")
+	require.Equal(t, reply.Email, "bryan.ford@epfl.ch")
+}
