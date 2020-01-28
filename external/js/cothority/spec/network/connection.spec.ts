@@ -126,7 +126,7 @@ describe("WebSocketAdapter Tests", () => {
 
 });
 
-fdescribe("WebSocketAdapter Tests with sendStream", () => {
+describe("WebSocketAdapter Tests with sendStream", () => {
     afterAll(() => {
         setFactory((path: string) => new BrowserWebSocketAdapter(path));
 
