@@ -5,8 +5,6 @@ import { WebSocketConnection } from "../../src/network/connection";
 import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-// Need to first release a new version of cothroity that registers the
-// PaginateRequest and PaginateResponse messages nbefore running this test.
 fdescribe("Stream Tests", () => {
     const roster = ROSTER.slice(0, 4);
     let originalTimeout: number;
