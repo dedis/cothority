@@ -205,10 +205,28 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 //   - err - Error if any, nil otherwise.
 func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64, wait int) (
 	reply *ReadReply, err error) {
+	return c.AddReadForKey(proof, signer, signerCtr, signer.Ed25519.Point, wait)
+}
+
+// AddReadForKey creates a Read Instance, requesting rencryption towards a certain
+// public key, by adding a transaction on the byzcoin client.
+//
+// Input:
+//   - proof - A ByzCoin proof of the Write Operation.
+//   - signer - The data owner who will sign the transaction
+//   - signerCtr - A monotonically increasing counter for the signer
+//   - xc - The public key to rencrypt the secret to
+//   - wait - The number of blocks to wait -- 0 means no wait
+//
+// Output:
+//   - reply - ReadReply containing the transaction response and instance id
+//   - err - Error if any, nil otherwise.
+func (c *Client) AddReadForKey(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64, xc kyber.Point, wait int) (
+	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
 		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
-		Xc:    signer.Ed25519.Point,
+		Xc:    xc,
 	}
 	reply = &ReadReply{}
 	readBuf, err = protobuf.Encode(read)

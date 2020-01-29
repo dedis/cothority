@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.dedis.ch/kyber/v3/sign/schnorr"
+	"go.dedis.ch/kyber/v3/util/key"
 
 	"github.com/stretchr/testify/require"
 	"go.dedis.ch/cothority/v3"
@@ -123,13 +124,13 @@ func TestClient_Calypso(t *testing.T) {
 	// The darc inside it should be valid.
 	gDarc := msg.GenesisDarc
 	require.Nil(t, gDarc.Verify(true))
-	//Create Ledger
+	// Create Ledger
 	c, _, err := byzcoin.NewLedger(msg, false)
 	require.Nil(t, err)
-	//Create a Calypso Client (Byzcoin + Onet)
+	// Create a Calypso Client (Byzcoin + Onet)
 	calypsoClient := NewClient(c)
 
-	//Create the LTS
+	// Create the LTS
 	for _, who := range roster.List {
 		err := calypsoClient.Authorize(who, c.ID)
 		require.NoError(t, err)
@@ -140,7 +141,7 @@ func TestClient_Calypso(t *testing.T) {
 	//If no error, assign it
 	calypsoClient.ltsReply = ltsReply
 
-	//Create a signer, darc for data point #1
+	// Create a signer, darc for data point #1
 	darc1 := darc.NewDarc(darc.InitRules([]darc.Identity{provider1.Identity()},
 		[]darc.Identity{provider1.Identity()}), []byte("Provider1"))
 	// provider1 is the owner, while reader1 is allowed to do read
@@ -154,7 +155,7 @@ func TestClient_Calypso(t *testing.T) {
 	adminCt++
 	require.Nil(t, err)
 
-	//Create a similar darc for provider2, reader2
+	// Create a similar darc for provider2, reader2
 	darc2 := darc.NewDarc(darc.InitRules([]darc.Identity{provider2.Identity()},
 		[]darc.Identity{provider2.Identity()}), []byte("Provider2"))
 	// provider1 is the owner, while reader1 is allowed to do read
@@ -162,20 +163,20 @@ func TestClient_Calypso(t *testing.T) {
 		expression.InitOrExpr(provider2.Identity().String()))
 	darc2.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
 		expression.InitOrExpr(reader2.Identity().String()))
-	//Spawn it
+	// Spawn it
 	_, err = calypsoClient.SpawnDarc(admin, adminCt, gDarc, *darc2, 10)
 	adminCt++
 	require.Nil(t, err)
-	//Create a secret key
+	// Create a secret key
 	key1 := []byte("secret key 1")
-	//Create a Write instance
+	// Create a Write instance
 	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
 		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
-	//Write it to calypso
+	// Write it to calypso
 	wr1, err := calypsoClient.AddWrite(write1, provider1, 1, *darc1, 10)
 	require.Nil(t, err)
 	require.NotNil(t, wr1.InstanceID)
-	//Get the write proof
+	// Get the write proof
 	prWr1, err := calypsoClient.WaitProof(wr1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.NotNil(t, prWr1)
@@ -187,7 +188,7 @@ func TestClient_Calypso(t *testing.T) {
 	require.True(t, prRe1.InclusionProof.Match(re1.InstanceID.Slice()))
 
 	key2 := []byte("secret key 2")
-	//Create a Write instance
+	// Create a Write instance
 	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.InstanceID,
 		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
 	wr2, err := calypsoClient.AddWrite(write2, provider2, 1, *darc2, 10)
@@ -215,5 +216,26 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 
-	// use keyCopy to unlock the stuff in writeInstance.Data
+	// If writeInstance.Data was encrypted via, for example,
+	// https://godoc.org/crypto/cipher#example-NewGCM--Encrypt,
+	// at this point you could extract the key and the nonce from
+	// keyCopy1 and use them to decrypt writeInstance.Data.
+	// Alternatively, writeInstance.Data can be empty, and the
+	// data can be stored outside of ByzCoin in some other storage system,
+	// with a pointer to the data stored in writeInstance.ExtraData.
+
+	// A demo of re-encryption towards an distinct key from the
+	// signing key.
+	kp := key.NewKeyPair(cothority.Suite)
+	re3, err := calypsoClient.AddReadForKey(prWr1, reader1, 2, kp.Public, 10)
+	require.Nil(t, err)
+	prRe3, err := calypsoClient.WaitProof(re3.InstanceID, time.Second, nil)
+	require.Nil(t, err)
+	require.True(t, prRe1.InclusionProof.Match(re1.InstanceID.Slice()))
+	dk3, err := calypsoClient.DecryptKey(&DecryptKey{Read: *prRe3, Write: *prWr1})
+	require.Nil(t, err)
+	require.True(t, dk3.X.Equal(calypsoClient.ltsReply.X))
+	keyCopy3, err := dk3.RecoverKey(kp.Private)
+	require.Nil(t, err)
+	require.Equal(t, key1, keyCopy3)
 }
