@@ -5,7 +5,7 @@ import { WebSocketConnection } from "../../src/network/connection";
 import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-fdescribe("Stream Tests", () => {
+describe("Stream Tests", () => {
     const roster = ROSTER.slice(0, 4);
     let originalTimeout: number;
 
