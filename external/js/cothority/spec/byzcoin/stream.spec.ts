@@ -5,7 +5,7 @@ import { WebSocketConnection } from "../../src/network/connection";
 import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
-fdescribe("Stream Tests", () => {
+describe("Stream Tests", () => {
     const roster = ROSTER.slice(0, 4);
     let originalTimeout: number;
 
@@ -21,15 +21,15 @@ fdescribe("Stream Tests", () => {
 
         const conn = new WebSocketConnection(roster.list[0].getWebSocketAddress(), SkipchainRPC.serviceName);
 
-        const msg = new PaginateRequest({startid: rpc.genesisID, pagesize: 1, numpages: 1});
+        const msg = new PaginateRequest({startid: rpc.genesisID, pagesize: 1, numpages: 1,  backward: false});
 
         const foo = {
             onClose: (code: number, reason: string) => {
-                fail("onClose should ne be called");
+                fail("onClose should not be called");
                 done();
             },
             onError: (err: Error) => {
-                fail("onError should ne be called: " + err);
+                fail("onError should not be called: " + err);
                 done();
             },
             onMessage: (message: PaginateResponse, ws: WebSocketAdapter) => {

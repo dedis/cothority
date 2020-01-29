@@ -143,24 +143,20 @@ describe("WebSocketAdapter Tests with sendStream", () => {
         const msg = new Roster();
 
         const foo = {
-            // tslint:disable-next-line:no-empty
             onClose: (code: number, reason: string) => {
+                fail("onClose should not be called: " + code + ", " + reason);
+                done();
             },
-            // tslint:disable-next-line:no-empty
             onError: (err: Error) => {
+                fail("onError should not be called: " + err);
+                done();
             },
             onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
                 done();
             },
         };
 
-        spyOn(foo, "onClose");
-        spyOn(foo, "onError");
-
         conn.sendStream(msg, Roster, foo.onMessage, foo.onClose, foo.onError);
-
-        expect(foo.onClose).not.toHaveBeenCalled();
-        expect(foo.onError).not.toHaveBeenCalled();
     });
 
     it("should throw an error when code is not 1000", async (done) => {
