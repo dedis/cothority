@@ -5,6 +5,8 @@ import { WebSocketConnection } from "../../src/network/connection";
 import { SkipchainRPC } from "../../src/skipchain";
 import { BLOCK_INTERVAL, ROSTER, SIGNER, startConodes } from "../support/conondes";
 
+// Need to first release a new version of cothroity that registers the
+// PaginateRequest and PaginateResponse messages nbefore running this test.
 fdescribe("Stream Tests", () => {
     const roster = ROSTER.slice(0, 4);
     let originalTimeout: number;
@@ -15,7 +17,7 @@ fdescribe("Stream Tests", () => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = 2000;
     });
 
-    it("should send and receive data", async () => {
+    it("should send and receive data", async (done) => {
         const darc = ByzCoinRPC.makeGenesisDarc([SIGNER], roster);
         const rpc = await ByzCoinRPC.newByzCoinRPC(roster, darc, BLOCK_INTERVAL);
 
@@ -24,31 +26,19 @@ fdescribe("Stream Tests", () => {
         const msg = new PaginateRequest({startid: rpc.genesisID, pagesize: 1, numpages: 1});
 
         const foo = {
-            // tslint:disable-next-line:no-empty
             onClose: (code: number, reason: string) => {
-                // tslint:disable-next-line
-                console.log(">>>>>> on close", code, reason)
-                // done();
+                fail("onClose should ne be called");
+                done();
             },
-            // tslint:disable-next-line:no-empty
             onError: (err: Error) => {
-                // tslint:disable-next-line
-                console.log(">>>>> on error", err)
-                // done();
+                fail("onError should ne be called: " + err);
+                done();
             },
-            // tslint:disable-next-line:no-empty
             onMessage: (message: PaginateResponse, ws: WebSocketAdapter) => {
-                // done();
                 expect(message.blocks.length).toEqual(1);
+                done();
             },
         };
-
-        spyOn(foo, "onClose");
-        spyOn(foo, "onError");
-        spyOn(foo, "onMessage");
-        expect(foo.onClose).not.toHaveBeenCalled();
-        expect(foo.onError).not.toHaveBeenCalled();
-        expect(foo.onMessage).toHaveBeenCalled();
 
         conn.sendStream<PaginateResponse>(msg, PaginateResponse, foo.onMessage, foo.onClose, foo.onError);
     });
