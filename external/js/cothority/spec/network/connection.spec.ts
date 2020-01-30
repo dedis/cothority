@@ -123,4 +123,167 @@ describe("WebSocketAdapter Tests", () => {
         const conn2 = new WebSocketConnection("ws://a:1234", "");
         expect(conn2.getURL()).toBe("wss://a:1234");
     });
+
+});
+
+describe("WebSocketAdapter Tests with sendStream", () => {
+    afterAll(() => {
+        setFactory((path: string) => new BrowserWebSocketAdapter(path));
+
+        globalThis.location = {
+            ...globalThis.location,
+            protocol: "",
+        };
+    });
+
+    it("should send and receive data", async (done) => {
+        const ret = Buffer.from(Roster.encode(new Roster()).finish());
+        setFactory(() => new TestWebSocket(ret, null, null));
+        const conn = new WebSocketConnection("", "");
+        const msg = new Roster();
+
+        const foo = {
+            onClose: (code: number, reason: string) => {
+                fail("onClose should not be called: " + code + ", " + reason);
+                done();
+            },
+            onError: (err: Error) => {
+                fail("onError should not be called: " + err);
+                done();
+            },
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+                done();
+            },
+        };
+
+        conn.sendStream(msg, Roster, foo.onMessage, foo.onClose, foo.onError);
+    });
+
+    it("should throw an error when code is not 1000", async (done) => {
+        setFactory(() => new TestWebSocket(null, null, 1001));
+
+        const conn = new WebSocketConnection("", "");
+        const msg = new Roster();
+
+        const foo = {
+            // tslint:disable-next-line:no-empty
+            onClose: (code: number, reason: string) => {
+            },
+            onError: (err: Error) => {
+                expect(err).toEqual(new Error("reason to close"));
+                done();
+            },
+            // tslint:disable-next-line:no-empty
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+            },
+        };
+
+        spyOn(foo, "onMessage");
+        spyOn(foo, "onClose");
+
+        conn.sendStream(msg, Roster, foo.onMessage, foo.onClose, foo.onError);
+        expect(foo.onMessage).not.toHaveBeenCalled();
+        expect(foo.onClose).not.toHaveBeenCalled();
+    });
+
+    it("should timeout when no message is sent back", async (done) => {
+        setFactory(() => new TestWebSocket(null, null, null));
+
+        const conn = new WebSocketConnection("", "");
+        conn.setTimeout(200);
+        const msg = new Roster();
+
+        const foo = {
+            // tslint:disable-next-line:no-empty
+            onClose: (code: number, reason: string) => {
+            },
+            onError: (err: Error) => {
+                expect(err).toEqual(new Error("timeout"));
+                done();
+            },
+            // tslint:disable-next-line:no-empty
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+            },
+        };
+
+        spyOn(foo, "onMessage");
+        spyOn(foo, "onClose");
+
+        conn.sendStream(msg, Roster, foo.onMessage, foo.onClose, foo.onError);
+        expect(foo.onMessage).not.toHaveBeenCalled();
+        expect(foo.onClose).not.toHaveBeenCalled();
+    });
+
+    it("should throw on protobuf error", async (done) => {
+        setFactory(() => new TestWebSocket(Buffer.from([1, 2, 3]), null, 1000));
+
+        const conn = new WebSocketConnection("", "");
+        const msg = new Roster();
+
+        const foo = {
+            // tslint:disable-next-line:no-empty
+            onClose: (code: number, reason: string) => {
+            },
+            onError: (err: Error) => {
+                done();
+            },
+            // tslint:disable-next-line:no-empty
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+            },
+        };
+
+        spyOn(foo, "onMessage");
+        spyOn(foo, "onClose");
+
+        conn.sendStream(msg, Roster, foo.onMessage, foo.onClose, foo.onError);
+        expect(foo.onMessage).not.toHaveBeenCalled();
+        expect(foo.onClose).not.toHaveBeenCalled();
+    });
+
+    it("should reject unregistered messages and reply", async (done) => {
+        const conn = new WebSocketConnection("", "");
+
+        const foo = {
+            // tslint:disable-next-line:no-empty
+            onClose: (code: number, reason: string) => {
+            },
+            onError: (err: Error) => {
+                done();
+            },
+            // tslint:disable-next-line:no-empty
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+            },
+        };
+
+        spyOn(foo, "onMessage");
+        spyOn(foo, "onClose");
+
+        conn.sendStream(new UnregisteredMessage(), UnregisteredMessage, foo.onMessage, foo.onClose, foo.onError);
+        expect(foo.onMessage).not.toHaveBeenCalled();
+        expect(foo.onClose).not.toHaveBeenCalled();
+    });
+
+    it("should reject unregistered reply", async (done) => {
+        const conn = new WebSocketConnection("", "");
+
+        const foo = {
+            // tslint:disable-next-line:no-empty
+            onClose: (code: number, reason: string) => {
+            },
+            onError: (err: Error) => {
+                done();
+            },
+            // tslint:disable-next-line:no-empty
+            onMessage: (message: Message<Roster>, ws: BrowserWebSocketAdapter) => {
+            },
+        };
+
+        spyOn(foo, "onMessage");
+        spyOn(foo, "onClose");
+
+        conn.sendStream(new Roster(), UnregisteredMessage, foo.onMessage, foo.onClose, foo.onError);
+        expect(foo.onMessage).not.toHaveBeenCalled();
+        expect(foo.onClose).not.toHaveBeenCalled();
+    });
+
 });
