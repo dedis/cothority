@@ -8,7 +8,7 @@
 #
 # As you can see, you can run the long tests using the tag build argument.
 
-FROM golang:1.12
+FROM golang:1.13
 
 ARG test_tag
 ENV TEST_TAG=$test_tag

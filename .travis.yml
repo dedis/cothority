@@ -9,8 +9,8 @@ _: &language_js
 _: &gen_link_kyber
   pushd external/js/kyber && npm ci && npm run link && popd
 _: &get_go
-  - gimme 1.12.10
-  - . $HOME/.gimme/envs/go1.12.10.env
+  - gimme 1.12.16
+  - . $HOME/.gimme/envs/go1.12.16.env
 
 _: &stage_build_go
   script:
