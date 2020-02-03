@@ -98,7 +98,8 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	}
 	select {
 	case response := <-paginateResponse:
-		require.Greater(t, response.ErrorCode, uint64(0))
+		require.Equal(t, response.ErrorCode, uint64(4))
+		require.Equal(t, len(response.ErrorText), 3)
 		require.Equal(t, 0, len(response.Blocks))
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
@@ -211,7 +212,13 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	select {
 	case response := <-paginateResponse:
-		require.Greater(t, response.ErrorCode, uint64(0))
+		// We expect an error code 6 and not 5 because the genesis block has
+		// actually a random BackLinkIDs[0] instead of none (the reason is to have
+		// uniq chainID)
+		require.Equal(t, response.ErrorCode, uint64(6))
+		require.Equal(t, len(response.ErrorText), 7)
+		require.Equal(t, response.ErrorText[3], "0")
+		require.Equal(t, response.ErrorText[5], "1")
 		require.Equal(t, 0, len(response.Blocks))
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
@@ -249,7 +256,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	}
 	select {
 	case response := <-paginateResponse:
-		require.Greater(t, response.ErrorCode, uint64(0))
+		require.Equal(t, response.ErrorCode, uint64(4))
 		require.Equal(t, 0, len(response.Blocks))
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")

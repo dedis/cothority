@@ -171,7 +171,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		if msg.PageSize < 1 {
 			outChan <- &PaginateResponse{
 				StreamID:  key,
-				ErrorCode: 1,
+				ErrorCode: 2,
 				ErrorText: []string{fmt.Sprintf("PageSize should be >= 1, "+
 					"but we found %d", msg.PageSize)},
 			}
@@ -181,7 +181,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		if msg.NumPages < 1 {
 			outChan <- &PaginateResponse{
 				StreamID:  key,
-				ErrorCode: 1,
+				ErrorCode: 2,
 				ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
 					"but we found %d", msg.NumPages)},
 			}
@@ -191,7 +191,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		if msg.StartID == nil {
 			outChan <- &PaginateResponse{
 				StreamID:  key,
-				ErrorCode: 1,
+				ErrorCode: 3,
 				ErrorText: []string{"StartID is nil"},
 			}
 			return
@@ -206,7 +206,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 			if err != nil {
 				outChan <- &PaginateResponse{
 					StreamID:  key,
-					ErrorCode: 1,
+					ErrorCode: 4,
 					ErrorText: []string{"failed to get the first block with ID",
 						fmt.Sprintf("%x", msg.StartID), fmt.Sprintf("%v", err)},
 				}
@@ -233,7 +233,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				if nextID == nil {
 					outChan <- &PaginateResponse{
 						StreamID:  key,
-						ErrorCode: 1,
+						ErrorCode: 5,
 						ErrorText: []string{"couldn't find a nextID for block",
 							fmt.Sprintf("%x", skipBlock.Hash), "page number",
 							fmt.Sprintf("%d", pageNum), "index", fmt.Sprintf("%d", i)},
@@ -245,7 +245,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				if err != nil {
 					outChan <- &PaginateResponse{
 						StreamID:  key,
-						ErrorCode: 1,
+						ErrorCode: 6,
 						ErrorText: []string{"failed to get block with ID",
 							fmt.Sprintf("%x", nextID), "page number",
 							fmt.Sprintf("%d", pageNum), "index",
