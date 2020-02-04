@@ -76,6 +76,14 @@ export class WebSocketConnection implements IConnection {
         } else {
             url = addr;
         }
+        if (url.username !== "" || url.password !== "") {
+            throw new Error("addr contains authentication, which is not supported")
+        }
+        if (url.pathname !== "/" || url.hash !== "") {
+            // we don't check for url.search as url-parse doesn't define it
+            throw new Error("addr contains some unusable data after the host")
+        }
+
         if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
             if (globalThis.location.protocol === "https:") {
                 url.set("protocol", "wss");
