@@ -347,7 +347,8 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	// check the number of signers match with the number of signatures
 	if len(instr.SignerIdentities) != len(instr.Signatures) {
-		return xerrors.New("lengh of identities does not match the length of signatures")
+		return xerrors.New("length of identities does not match the length of" +
+			" signatures")
 	}
 
 	// check the signature counters
@@ -379,11 +380,16 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 
 	// check the signature
 	// Save the identities that provide good signatures
-	goodIdentities := make([]string, 0)
+	identitiesWithCorrectSignatures := make([]string, 0)
 	for i := range instr.Signatures {
 		if err := instr.SignerIdentities[i].Verify(msg, instr.Signatures[i]); err == nil {
-			goodIdentities = append(goodIdentities, instr.SignerIdentities[i].String())
+			identitiesWithCorrectSignatures = append(identitiesWithCorrectSignatures, instr.SignerIdentities[i].String())
 		}
+	}
+
+	if len(identitiesWithCorrectSignatures) != len(instr.Signatures) {
+		log.Warn("Found invalid signatures - please make sure you're using" +
+			" byzcoin.NewClientTransaction before signing it!")
 	}
 
 	// check the expression
@@ -403,10 +409,10 @@ func (instr Instruction) VerifyWithOption(st ReadOnlyStateTrie, msg []byte, ops 
 	}
 
 	if ops.EvalAttr != nil {
-		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, goodIdentities...)
+		err := darc.EvalExprAttr(d.Rules.Get(darc.Action(instr.Action())), getDarc, ops.EvalAttr, identitiesWithCorrectSignatures...)
 		return cothority.ErrorOrNil(err, "evaluating darc")
 	}
-	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, goodIdentities...)
+	err = darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, identitiesWithCorrectSignatures...)
 	return cothority.ErrorOrNil(err, "evaluating darc")
 }
 
