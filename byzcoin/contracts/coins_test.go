@@ -52,9 +52,6 @@ func TestCoin_Spawn(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	err := inst.SignWith(dummyCtxHash, gsigner)
-	require.Nil(t, err)
 
 	// Spawn cannot use getContract because the instance ID is the genesis darc.
 	// We need a zero contractCoin instead.
@@ -88,10 +85,8 @@ func TestCoin_InvokeMint(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	err := inst.SignWith(dummyCtxHash, gsigner)
-	require.Nil(t, err)
-	_, _, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	_, _, err := ct.getContract(inst.InstanceID).Invoke(ct, inst,
+		[]byzcoin.Coin{})
 	require.Error(t, err)
 
 	inst = byzcoin.Instruction{
@@ -103,8 +98,6 @@ func TestCoin_InvokeMint(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	err = inst.SignWith(dummyCtxHash, gsigner)
-	require.Nil(t, err)
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Nil(t, err)
@@ -136,8 +129,6 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
@@ -162,8 +153,6 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
 	c1 := byzcoin.Coin{Name: CoinName, Value: 1}
 	notOlCoin := iid("notOlCoin")
@@ -186,7 +175,6 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 		SignerIdentities: []darc.Identity{gsigner.Identity()},
 		SignerCounter:    []uint64{1},
 	}
-	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
 	// Try once with not enough coins available.
 	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
@@ -232,8 +220,6 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	dummyCtxHash := []byte("dummy_ctx_hash")
-	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
 
@@ -250,7 +236,6 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))

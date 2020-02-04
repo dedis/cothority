@@ -35,8 +35,8 @@ func PopPartySpawn(cl *byzcoin.Client, desc contracts.PopDesc, dID darc.ID,
 	}
 	mr := make([]byte, 8)
 	binary.LittleEndian.PutUint64(mr, reward)
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{byzcoin.Instruction{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(dID),
 			Spawn: &byzcoin.Spawn{
 				ContractID: contracts.ContractPopPartyID,
@@ -52,8 +52,8 @@ func PopPartySpawn(cl *byzcoin.Client, desc contracts.PopDesc, dID darc.ID,
 				}},
 			},
 			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
-		}},
-	}
+		},
+	)
 	err = ctx.FillSignersAndSignWith(signers...)
 	if err != nil {
 		return

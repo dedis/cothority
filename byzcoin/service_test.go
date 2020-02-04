@@ -363,9 +363,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	instr2 := createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID)
 	instr2.SignerIdentities = []darc.Identity{s.signer.Identity()}
 	instr2.SignerCounter = []uint64{3}
-	tx2 := ClientTransaction{
-		Instructions: []Instruction{instr1, instr2},
-	}
+	tx2 := NewClientTransaction(CurrentVersion, instr1, instr2)
 	h := tx2.Instructions.Hash()
 	for i := range tx2.Instructions {
 		err := tx2.Instructions[i].SignWith(h, s.signer)
@@ -390,9 +388,7 @@ func TestService_AddTransaction_ValidInvalid(t *testing.T) {
 	instr2 = createSpawnInstr(s.darc.GetBaseID(), dummyContract, "data", dcID2)
 	instr2.SignerCounter = []uint64{3}
 	instr2.SignerIdentities = []darc.Identity{s.signer.Identity()}
-	tx3 := ClientTransaction{
-		Instructions: []Instruction{instr1, instr2},
-	}
+	tx3 := NewClientTransaction(CurrentVersion, instr1, instr2)
 	tx3.SignWith(s.signer)
 	atx = &AddTxRequest{
 		Version:       CurrentVersion,
@@ -664,18 +660,16 @@ func TestService_DarcProxy(t *testing.T) {
 
 	// now set the signer with the correct callback
 	signer = darc.NewSignerProxy(email, ed.Public, ga)
-	ctx := ClientTransaction{
-		Instructions: []Instruction{
-			{
-				InstanceID: NewInstanceID(d2.GetBaseID()),
-				Spawn: &Spawn{
-					ContractID: "dummy",
-					Args:       Arguments{{Name: "data", Value: []byte("nothing in particular")}},
-				},
-				SignerCounter: []uint64{1},
+	ctx := NewClientTransaction(CurrentVersion,
+		Instruction{
+			InstanceID: NewInstanceID(d2.GetBaseID()),
+			Spawn: &Spawn{
+				ContractID: "dummy",
+				Args:       Arguments{{Name: "data", Value: []byte("nothing in particular")}},
 			},
+			SignerCounter: []uint64{1},
 		},
-	}
+	)
 
 	err = ctx.FillSignersAndSignWith(signer)
 	require.NoError(t, err)
@@ -687,7 +681,6 @@ func TestService_DarcProxy(t *testing.T) {
 		InclusionWait: 10,
 	})
 	transactionOK(t, resp, err)
-	require.NoError(t, err)
 }
 
 func TestService_WrongSigner(t *testing.T) {
@@ -1436,8 +1429,8 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 
-	ctx := ClientTransaction{
-		Instructions: []Instruction{{
+	ctx := NewClientTransaction(CurrentVersion,
+		Instruction{
 			InstanceID: NewInstanceID(s.darc.GetBaseID()),
 			Spawn: &Spawn{
 				ContractID: ContractDarcID,
@@ -1448,8 +1441,8 @@ func TestService_DarcSpawn(t *testing.T) {
 			},
 			SignerIdentities: []darc.Identity{s.signer.Identity()},
 			SignerCounter:    []uint64{1},
-		}},
-	}
+		},
+	)
 	require.Nil(t, ctx.Instructions[0].SignWith(ctx.Instructions.Hash(), s.signer))
 
 	s.sendTx(t, ctx)

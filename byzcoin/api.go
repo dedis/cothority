@@ -168,6 +168,14 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 		}
 	}
 
+	for _, inst := range tx.Instructions {
+		if inst.version != CurrentVersion {
+			return nil, xerrors.New(
+				"got instruction with wrong version - please use byzcoin." +
+					"NewClientTransaction")
+		}
+	}
+
 	// As we fetch the genesis if required, this will never be
 	// nil but either the genesis or the latest.
 	latest := c.getLatestKnownBlock()

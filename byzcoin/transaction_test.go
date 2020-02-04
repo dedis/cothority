@@ -208,9 +208,7 @@ func combineInstrsAndSign(signer darc.Signer, instrs ...Instruction) (ClientTran
 	for i := range instrs {
 		instrs[i].SignerIdentities = []darc.Identity{signer.Identity()}
 	}
-	t := ClientTransaction{
-		Instructions: instrs,
-	}
+	t := NewClientTransaction(CurrentVersion, instrs...)
 	h := t.Instructions.Hash()
 	for i := range t.Instructions {
 		if err := t.Instructions[i].SignWith(h, signer); err != nil {
