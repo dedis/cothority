@@ -20,7 +20,7 @@ describe("WebSocketAdapter Tests", () => {
     it("should send and receive data", async () => {
         const ret = Buffer.from(Roster.encode(new Roster()).finish());
         setFactory(() => new TestWebSocket(ret, null, 1000));
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         await expectAsync(conn.send(msg, Roster)).toBeResolved();
@@ -29,7 +29,7 @@ describe("WebSocketAdapter Tests", () => {
     it("should throw an error when code is not 1000", async () => {
         setFactory(() => new TestWebSocket(null, null, 1001));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         await expectAsync(conn.send(msg, Roster)).toBeRejectedWith(new Error("reason to close"));
@@ -38,7 +38,7 @@ describe("WebSocketAdapter Tests", () => {
     it("should timeout when no message is sent back", async () => {
         setFactory(() => new TestWebSocket(null, null, null));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         conn.setTimeout(200);
         const msg = new Roster();
 
@@ -48,14 +48,14 @@ describe("WebSocketAdapter Tests", () => {
     it("should throw on protobuf error", async () => {
         setFactory(() => new TestWebSocket(Buffer.from([1, 2, 3]), null, 1000));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         await expectAsync(conn.send(msg, Roster)).toBeRejected();
     });
 
     it("should reject unregistered messages", async () => {
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
 
         await expectAsync(conn.send(new UnregisteredMessage(), UnregisteredMessage)).toBeRejected();
         await expectAsync(conn.send(new Roster(), UnregisteredMessage)).toBeRejected();
