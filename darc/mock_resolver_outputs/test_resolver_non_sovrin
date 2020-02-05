@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "output pool create XVlBzg gen_txn_file=/tmp/genesis.txt
+Pool config "XVlBzg" has been created
+
+pool connect XVlBzg
+Pool "XVlBzg" has been connected
+
+ledger get-nym did=did:sov:WRfXPg8dantKVubE3HX8pw
+Following NYM has been received.
+Metadata:
++------------------------+-----------------+---------------------+---------------------+
+| Identifier             | Sequence Number | Request ID          | Transaction time    |
++------------------------+-----------------+---------------------+---------------------+
+| LibindyDid111111111111 | 104             | 1580906952614349000 | 2018-11-08 20:38:15 |
++------------------------+-----------------+---------------------+---------------------+
+Data:
++------------------------+------------------------+-------------------------+------+
+| Identifier             | Dest                   | Verkey                  | Role |
++------------------------+------------------------+-------------------------+------+
+| BrYDA5NubejDVHkCYBbpY5 | WRfXPg8dantKVubE3HX8pw | ~DygAyX2k2dgUufDhoJNVg8 | -    |
++------------------------+------------------------+-------------------------+------+
+
+ledger get-attrib did=did:sov:WRfXPg8dantKVubE3HX8pw raw=endpoint
+Following ATTRIB has been received.
+Metadata:
++------------------------+-----------------+---------------------+---------------------+
+| Identifier             | Sequence Number | Request ID          | Transaction time    |
++------------------------+-----------------+---------------------+---------------------+
+| LibindyDid111111111111 | 21              | 1580906952636220000 | 2017-09-06 17:31:57 |
++------------------------+-----------------+---------------------+---------------------+
+Data:
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data                                                                                                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| {"endpoint":{"agent":"https://agents.danubeclouds.com/agent/WRfXPg8dantKVubE3HX8pw","xdi":"https://xdi03-at.danubeclouds.com/cl/+!:did:sov:WRfXPg8dantKVubE3HX8pw"}} |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+pool disconnect
+Pool "XVlBzg" has been disconnected
+
+pool delete XVlBzg
+Pool "XVlBzg" has been deleted.
+
+Goodbye..."

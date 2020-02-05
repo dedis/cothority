@@ -48,6 +48,8 @@ message Identity {
   optional IdentityProxy proxy = 4;
   // Address of an EVM contract
   optional IdentityEvmContract evmcontract = 5;
+  // A claim signed by one of the keys in a DID Doc
+  optional IdentityDID did = 6;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -74,10 +76,19 @@ message IdentityDarc {
   required bytes id = 1;
 }
 
+<<<<<<< HEAD
 // IdentityEvmContract holds the address of an EVM contract.
 message IdentityEvmContract {
   // 	BEvmID  []byteBEvm InstanceID
   required bytes address = 1;
+=======
+// IdentityDID holds the DID and DIDDoc required to verify a claim
+// from a decentralized identifier
+message IdentityDID {
+  required string did = 1;
+  optional did.Doc diddoc = 2;
+  required string method = 3;
+>>>>>>> DARC: Update proto
 }
 
 // Signature is a signature on a Darc to accept a given decision.
