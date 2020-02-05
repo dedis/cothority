@@ -8,6 +8,22 @@ import (
 	"go.dedis.ch/onet/v3/network"
 )
 
+const (
+	// PaginateWrongInput is used when an invalid parameter is given in the
+	// paginate request
+	PaginateWrongInput = 2
+	// PaginateWrongStart is used when the startID is invalid
+	PaginateWrongStart = 3
+	// PaginatePageFailed is used when the first block of the page failed to be
+	// retreived
+	PaginatePageFailed = 4
+	// PaginateLinkMissing is used when the next (or previous if backward is
+	// true) block does not exist
+	PaginateLinkMissing = 5
+	// PaginateGetBlockFailed is used when it coulnd't get a next or previous block
+	PaginateGetBlockFailed = 6
+)
+
 func init() {
 	network.RegisterMessages(&StreamingRequest{}, &StreamingResponse{},
 		&PaginateRequest{}, &PaginateResponse{})
@@ -109,11 +125,8 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 }
 
 // PaginateBlocks return blocks with pagination, ie. N asynchounous requests
-// that contain each K consecutive blocks. If a streamID is given, it uses the
-// same PaginateResponse chan AND the same close chan. The caller is responsible
-// for closing the close chan when the caller wants to close the connection. The
-// close chan should be closed only when no other requests are being processed using
-// the same streamID.
+// that contain each K consecutive block. The caller is responsible for closing
+// the close chan when the caller wants to close the connection.
 func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
 
 	outChan := make(chan *PaginateResponse)
@@ -123,7 +136,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 		if msg.PageSize < 1 {
 			outChan <- &PaginateResponse{
-				ErrorCode: 2,
+				ErrorCode: PaginateWrongInput,
 				ErrorText: []string{fmt.Sprintf("PageSize should be >= 1, "+
 					"but we found %d", msg.PageSize)},
 			}
@@ -132,7 +145,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 		if msg.NumPages < 1 {
 			outChan <- &PaginateResponse{
-				ErrorCode: 2,
+				ErrorCode: PaginateWrongInput,
 				ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
 					"but we found %d", msg.NumPages)},
 			}
@@ -141,7 +154,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 		if msg.StartID == nil {
 			outChan <- &PaginateResponse{
-				ErrorCode: 3,
+				ErrorCode: PaginateWrongStart,
 				ErrorText: []string{"StartID is nil"},
 			}
 			return
@@ -155,7 +168,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 			blocks := make([]*skipchain.SkipBlock, msg.PageSize)
 			if err != nil {
 				outChan <- &PaginateResponse{
-					ErrorCode: 4,
+					ErrorCode: PaginatePageFailed,
 					ErrorText: []string{"failed to get the first block with ID",
 						fmt.Sprintf("%x", msg.StartID), fmt.Sprintf("%v", err)},
 				}
@@ -181,7 +194,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 				if nextID == nil {
 					outChan <- &PaginateResponse{
-						ErrorCode: 5,
+						ErrorCode: PaginateLinkMissing,
 						ErrorText: []string{"couldn't find a nextID for block",
 							fmt.Sprintf("%x", skipBlock.Hash), "page number",
 							fmt.Sprintf("%d", pageNum), "index", fmt.Sprintf("%d", i)},
@@ -192,7 +205,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				_, skipBlock, err = s.getBlockTx(nextID)
 				if err != nil {
 					outChan <- &PaginateResponse{
-						ErrorCode: 6,
+						ErrorCode: PaginateGetBlockFailed,
 						ErrorText: []string{"failed to get block with ID",
 							fmt.Sprintf("%x", nextID), "page number",
 							fmt.Sprintf("%d", pageNum), "index",
