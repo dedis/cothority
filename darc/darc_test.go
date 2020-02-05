@@ -1,13 +1,18 @@
 package darc
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/require"
+	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc/expression"
+	"go.dedis.ch/kyber/v3/sign/schnorr"
 )
 
 func TestRules(t *testing.T) {
@@ -620,4 +625,128 @@ func TestParseIdentity(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, i.Proxy)
 	require.Equal(t, in, i.String())
+
+	in = "did:method:WRfXPg8dantKVubE3HX8pw"
+	i, err = ParseIdentity(in)
+	require.Error(t, err)
+
+	in = "did:sov:WRfXPg8dantKVubE3HX8pw"
+	i, err = ParseIdentity(in)
+	require.NoError(t, err)
+	require.NotNil(t, i.DID)
+	require.Equal(t, strings.Split(in, ":")[2], i.DID.DID)
+	require.Equal(t, "sov", i.DID.Method)
+}
+
+func TestDarc_EvolveToDIDDarc(t *testing.T) {
+	dataPublisher := createDarc(1, "Patient Data Publisher Darc")
+
+	patientIdentity := NewIdentityDID("WRfXPg8dantKVubE3HX8pw", "sov")
+	patientRules := InitRules([]Identity{patientIdentity}, []Identity{patientIdentity})
+	patientDarc := NewDarc(patientRules, []byte("Patient Darc"))
+	err := patientDarc.EvolveFrom(dataPublisher.darc)
+	require.NoError(t, err)
+
+	r, patientDarcBuf, err := patientDarc.MakeEvolveRequest(dataPublisher.owners[0])
+	require.NoError(t, err)
+
+	err = r.Verify(dataPublisher.darc)
+	require.NoError(t, err)
+	patientDarcEvolved, err := r.MsgToDarc(patientDarcBuf)
+	require.NoError(t, err)
+	require.Equal(t, patientDarc.GetID(), patientDarcEvolved.GetID())
+
+	err = patientDarcEvolved.VerifyWithCB(func(s string, latest bool) *Darc {
+		if s == dataPublisher.darc.GetIdentityString() {
+			return dataPublisher.darc
+		}
+		return nil
+	}, true)
+	require.NoError(t, err)
+}
+
+func TestDarc_VerifyWithDIDDarc(t *testing.T) {
+	patientIdentity := NewIdentityDID("CvjH5UcquEEqsz5LrZcfvM", "sov")
+
+	patientRules := InitRules([]Identity{patientIdentity}, []Identity{patientIdentity})
+	patientRules.AddRule("Read", expression.InitOrExpr(patientIdentity.String()))
+
+	patientDarc := NewDarc(patientRules, []byte("Patient Darc"))
+
+	signature := "4b61e1e81fb17145d9a560724f16902673a5b9c86cb5bd330d51722fcd66b9311b1821e319e9160062f88eab476a9e3bdc5e770f85b194eec91585fea24d400e"
+	sigBuf := make([]byte, hex.DecodedLen(len([]byte(signature))))
+	hex.Decode(sigBuf, []byte(signature))
+
+	// overriding the global in the test
+	didResolver = &IndyCLIDIDResolver{
+		Path:            "./mock_resolver_outputs/test_resolver",
+		GenesisFilePath: "/does/not/matter/cause/it/is/a/test",
+	}
+
+	r := Request{
+		BaseID:     patientDarc.GetBaseID(),
+		Action:     "Read",
+		Msg:        []byte("Something..."),
+		Identities: []Identity{patientIdentity},
+		Signatures: [][]byte{sigBuf},
+	}
+
+	err := r.Verify(patientDarc)
+	require.NoError(t, err)
+}
+
+func TestDarc_VerifyWithNonSovrinDIDDarc(t *testing.T) {
+	patientIdentity := NewIdentityDID("Niz65jsZx5WJkGNXrYf6XZ", "foo")
+	patientRules := InitRules([]Identity{patientIdentity}, []Identity{patientIdentity})
+	patientRules.AddRule("Read", expression.InitOrExpr(patientIdentity.String()))
+
+	patientDarc := NewDarc(patientRules, []byte("Patient Darc"))
+
+	signature := "6d0bfd34e171bdde63ba6a60c1965e843e0de5951b2e455f2fe1b6cd4828cfe63b5d6d687e5c1feaf1803b34c6bce7e6261226665044916809fb36073eb11c0d"
+	sigBuf := make([]byte, hex.DecodedLen(len([]byte(signature))))
+	hex.Decode(sigBuf, []byte(signature))
+
+	// overriding the global in the test
+	didResolver = &IndyCLIDIDResolver{
+		Path:            "./mock_resolver_outputs/test_resolver_non_sovrin",
+		GenesisFilePath: "/does/not/matter/cause/it/is/a/test",
+	}
+
+	r := Request{
+		BaseID:     patientDarc.GetBaseID(),
+		Action:     "Read",
+		Msg:        []byte("Something..."),
+		Identities: []Identity{patientIdentity},
+		Signatures: [][]byte{sigBuf},
+	}
+
+	err := r.Verify(patientDarc)
+	require.Error(t, err)
+}
+
+// Helper method to generate data for testing DID stuff above
+func generateDIDAndRequestSignature() {
+	sk := cothority.Suite.Scalar().Pick(cothority.Suite.RandomStream())
+	pk := cothority.Suite.Point().Mul(sk, nil)
+	pkBuf, _ := pk.MarshalBinary()
+	did := base58.Encode(pkBuf[:16])
+	verkey := base58.Encode(pkBuf[16:])
+	fmt.Println("did", did, "verkey", verkey)
+
+	patientIdentity := NewIdentityDID(did, "sov")
+	patientRules := InitRules([]Identity{patientIdentity}, []Identity{patientIdentity})
+	patientRules.AddRule("Read", expression.InitOrExpr(patientIdentity.String()))
+
+	patientDarc := NewDarc(patientRules, []byte("Patient Darc"))
+	r := Request{
+		BaseID:     patientDarc.GetBaseID(),
+		Action:     "Read",
+		Msg:        []byte("Something..."),
+		Identities: []Identity{patientIdentity},
+	}
+	digest := r.Hash()
+	sig, _ := schnorr.Sign(cothority.Suite, sk, digest)
+	sigEncoded := make([]byte, hex.EncodedLen(len(sig)))
+	hex.Encode(sigEncoded, sig)
+	fmt.Println("signature", string(sigEncoded))
 }

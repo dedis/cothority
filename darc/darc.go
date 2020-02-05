@@ -42,6 +42,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -53,11 +55,27 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
 const evolve = "_evolve"
 const sign = "_sign"
+
+var didResolver DIDResolver
+
+func init() {
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// TODO: Allow chosing resolver through some conode configuration
+	didResolver = &IndyCLIDIDResolver{
+		Path:            "indy-cli",
+		GenesisFilePath: path.Join(userConfigDir, "/indy/genesis.txt"),
+	}
+}
 
 // GetDarc is a callback function that we expect the user of this library to
 // supply in some of our methods. The user is free to choose how he/she wants
@@ -830,6 +848,8 @@ func (id Identity) Type() int {
 		return 2
 	case id.Proxy != nil:
 		return 3
+	case id.DID != nil:
+		return 4
 	}
 	return -1
 }
@@ -846,6 +866,8 @@ func (id Identity) PrimaryIdentity() bool {
 		return true
 	case id.Proxy != nil:
 		return true
+	case id.DID != nil:
+		return false
 	}
 	return false
 }
@@ -861,6 +883,8 @@ func (id Identity) TypeString() string {
 		return "x509ec"
 	case 3:
 		return "proxy"
+	case 4:
+		return "did"
 	default:
 		return "No identity"
 	}
@@ -877,6 +901,8 @@ func (id Identity) String() string {
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.X509EC.Public)
 	case 3:
 		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.Proxy.Public, id.Proxy.Data)
+	case 4:
+		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.DID.Method, id.DID.DID)
 	default:
 		return "No identity"
 	}
@@ -894,6 +920,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.X509EC.Verify(msg, sig)
 	case 3:
 		return id.Proxy.Verify(msg, sig)
+	case 4:
+		return id.DID.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -919,6 +947,15 @@ func (id Identity) GetPublicBytes() []byte {
 			return nil
 		}
 		return buf
+	case 4:
+		doc, err := didResolver.Resolve(id.DID.DID)
+		if err != nil {
+			return nil
+		}
+		for _, pk := range doc.PublicKey {
+			return pk.Value
+		}
+		return nil
 	default:
 		return nil
 	}
@@ -977,6 +1014,15 @@ func NewIdentityProxy(s *SignerProxy) Identity {
 	}
 }
 
+func NewIdentityDID(id, method string) Identity {
+	return Identity{
+		DID: &IdentityDID{
+			DID:    id,
+			Method: method,
+		},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
@@ -985,6 +1031,10 @@ func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 // Equal returns true if both IdentityProxy are the same.
 func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 	return idp.Data == i2.Data && idp.Public.Equal(i2.Public)
+}
+
+func (iddid IdentityDID) Equal(iddid2 *IdentityDID) bool {
+	return iddid.DID == iddid2.DID
 }
 
 type sigRS struct {
@@ -1026,6 +1076,36 @@ func (idp IdentityProxy) Verify(msg, s []byte) error {
 	return eddsa.Verify(idp.Public, msg2, s)
 }
 
+// Verify returns nil if the signature is correct, or an error if something
+// fails
+func (iddid IdentityDID) Verify(msg, s []byte) error {
+	// TODO: Cache the results and set a TTL
+	doc, err := didResolver.Resolve(iddid.DID)
+	if err != nil {
+		return err
+	}
+
+	iddid.DIDDoc = doc
+	for _, publicKey := range iddid.DIDDoc.PublicKey {
+		// As of now, libindy only supports ed25519 keys and signatures
+		// Please refer to `CryptoService.crypto_types` in
+		// `libindy/src/services/crypto/mod.rs`
+		if publicKey.Type != Ed25519VerificationKey2018.String() {
+			continue
+		}
+		key := cothority.Suite.Point()
+		err := key.UnmarshalBinary(publicKey.Value)
+		if err != nil {
+			return fmt.Errorf("error unmarshalling key: %v", err)
+		}
+		err = schnorr.Verify(cothority.Suite, key, msg, s)
+		if err == nil {
+			return nil
+		}
+	}
+	return errors.New("couldn't find a key in DIDDoc that could verify this message")
+}
+
 // ParseIdentity returns an Identity structure that matches
 // the given string.
 func ParseIdentity(in string) (Identity, error) {
@@ -1042,6 +1122,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDX509ec(fields[1])
 	case "proxy":
 		return parseIDProxy(fields[1])
+	case "did":
+		return parseIDDID(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1088,6 +1170,17 @@ func parseIDProxy(in string) (Identity, error) {
 		Public: p,
 		Data:   fields[1],
 	}}, nil
+}
+
+func parseIDDID(in string) (Identity, error) {
+	fields := strings.SplitN(in, ":", 2)
+	if len(fields) != 2 {
+		return Identity{}, errors.New("expected did format of did:method:identifier")
+	}
+	if fields[0] != "sov" {
+		return Identity{}, fmt.Errorf("only did:sov is supported at the moment, got did:%s", fields[0])
+	}
+	return Identity{DID: &IdentityDID{DID: fields[1], Method: fields[0]}}, nil
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and

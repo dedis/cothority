@@ -241,7 +241,7 @@ func TestParsing_Empty(t *testing.T) {
 }
 
 func TestEval_DefaultParser(t *testing.T) {
-	keys := []string{"ed25519:a", "ed25519:b", "x509ec:c", "darc:d"}
+	keys := []string{"ed25519:a", "ed25519:b", "x509ec:c", "darc:d", "did:sov:WRfXPg8dantKVubE3HX8pw"}
 	expr := InitAndExpr(keys...)
 	ok, err := DefaultParser(expr, keys...)
 	if err != nil {
