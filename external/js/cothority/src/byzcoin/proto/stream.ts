@@ -37,7 +37,6 @@ export class PaginateRequest extends Message<PaginateRequest> {
     readonly pagesize: number;
     readonly numpages: number;
     readonly backward: boolean;
-    readonly streamid: Buffer;
 
     constructor(props?: Properties<PaginateRequest>) {
         super(props);
@@ -46,7 +45,6 @@ export class PaginateRequest extends Message<PaginateRequest> {
         this.pagesize = this.pagesize || 0;
         this.numpages = this.numpages || 0;
         this.backward = this.backward || false;
-        this.streamid = Buffer.from(this.streamid || EMPTY_BUFFER);
     }
 }
 
@@ -60,7 +58,6 @@ export class PaginateResponse extends Message<PaginateResponse> {
 
     readonly blocks: SkipBlock[];
     readonly pagenumber: number;
-    readonly streamid: Buffer;
     readonly backward: boolean;
     readonly errorcode: number;
     readonly errortext: string[];

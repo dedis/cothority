@@ -39,7 +39,6 @@ describe("Stream Tests", () => {
                 expect(message.errorcode.toString()).toEqual("0");
                 expect(message.errortext.length).toEqual(0);
                 expect(message.pagenumber.toString()).toEqual("0");
-                expect(message.streamid.toString("hex")).not.toEqual("");
                 ws.close(1000);
             },
         };
