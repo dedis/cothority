@@ -22,7 +22,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 1,
 		NumPages: 1,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err := service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -53,7 +52,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 2,
 		NumPages: 1,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -80,7 +78,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 1,
 		NumPages: 2,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -131,7 +128,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 2,
 		NumPages: 1,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -163,7 +159,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 1,
 		NumPages: 2,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -205,7 +200,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 2,
 		NumPages: 1,
 		Backward: true,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -238,7 +232,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 1,
 		NumPages: 2,
 		Backward: true,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -276,7 +269,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 2,
 		NumPages: 1,
 		Backward: true,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -308,7 +300,6 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		PageSize: 1,
 		NumPages: 2,
 		Backward: true,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
@@ -343,28 +334,23 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 
 	close(closeChan)
 
-	// Making two call with the second one specifying the streamID should use
-	// the same chan to return the two results.
+	// Using a wrong page size should return an error 2
 	paginateRequest = &PaginateRequest{
 		StartID:  s.genesis.Hash,
-		PageSize: 1,
+		PageSize: 0,
 		NumPages: 1,
 		Backward: false,
-		StreamID: nil,
 	}
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
-	var streamID []byte
 
 	select {
 	case response := <-paginateResponse:
-		if response.ErrorCode != 0 {
-			t.Errorf("expected to find error code 0, but found %d, here are "+
+		if response.ErrorCode != 2 {
+			t.Errorf("expected to find error code 2, but found %d, here are "+
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
-		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, s.genesis.Hash)
-		streamID = response.StreamID
+		require.Equal(t, 0, len(response.Blocks))
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}
@@ -375,26 +361,26 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 	case <-time.After(chanTimeout):
 	}
 
+	close(closeChan)
+
+	// Now using a wrong num page, it should also return an error 2
 	paginateRequest = &PaginateRequest{
 		StartID:  secondBlockHash,
 		PageSize: 1,
-		NumPages: 1,
+		NumPages: 0,
 		Backward: false,
-		StreamID: streamID,
 	}
 	// Should be the same paginateResponse chan
-	_, _, err = service.PaginateBlocks(paginateRequest)
+	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
 
 	select {
 	case response := <-paginateResponse:
-		if response.ErrorCode != 0 {
-			t.Errorf("expected to find error code 0, but found %d, here are "+
+		if response.ErrorCode != 2 {
+			t.Errorf("expected to find error code 2, but found %d, here are "+
 				"the messages: %v", response.ErrorCode, response.ErrorText)
 		}
-		require.Equal(t, 1, len(response.Blocks))
-		require.Equal(t, response.Blocks[0].Hash, secondBlockHash)
-		streamID = response.StreamID
+		require.Equal(t, 0, len(response.Blocks))
 	case <-time.After(chanTimeout):
 		t.Fatal("didn't get a papginateResponse in the channel after timeout")
 	}

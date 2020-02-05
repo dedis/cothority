@@ -285,7 +285,7 @@ message StreamingResponse {
 message PaginateRequest {
   // The first block to fetch
   required bytes startid = 1;
-  // Determines the length of the Blocks attribute in the  PaginateResponse.
+  // Determines the length of the Blocks attribute in the PaginateResponse.
   // The list contains PageSize consecutive blocks
   required uint64 pagesize = 2;
   // The number of (asynchrounous) requests the service will return to the
@@ -294,8 +294,6 @@ message PaginateRequest {
   // If true then blocks are consecutive in the reverse order, ie. following
   // backward links.
   required bool backward = 4;
-  // Identifies the service's channel of a previously established connection.
-  required bytes streamid = 5;
 }
 
 // PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
@@ -306,17 +304,13 @@ message PaginateResponse {
   // The page number index: relevant if the clients asked for more than one
   // asynchrounous reply from the service.
   required uint64 pagenumber = 2;
-  // Identifies the channel the service uses to send back messages. The client
-  // must provide it if he wants to send additional requests using the same
-  // channel.
-  required bytes streamid = 3;
   // Tells if the result contains consecutive blocks in a reversed order.
-  required bool backward = 4;
+  required bool backward = 3;
   // Used to tell the client if an error occured. Any error code not equal to
   // 0 means that something special happened.
-  required uint64 errorcode = 5;
+  required uint64 errorcode = 4;
   // A list of error messages in case something special happended.
-  repeated string errortext = 6;
+  repeated string errortext = 5;
 }
 
 // DownloadState requests the current global state of that node.

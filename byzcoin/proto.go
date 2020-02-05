@@ -306,7 +306,7 @@ type StreamingResponse struct {
 type PaginateRequest struct {
 	// The first block to fetch
 	StartID skipchain.SkipBlockID
-	// Determines the length of the Blocks attribute in the  PaginateResponse.
+	// Determines the length of the Blocks attribute in the PaginateResponse.
 	// The list contains PageSize consecutive blocks
 	PageSize uint64
 	// The number of (asynchrounous) requests the service will return to the
@@ -315,8 +315,6 @@ type PaginateRequest struct {
 	// If true then blocks are consecutive in the reverse order, ie. following
 	// backward links.
 	Backward bool
-	// Identifies the service's channel of a previously established connection.
-	StreamID []byte
 }
 
 // PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
@@ -327,10 +325,6 @@ type PaginateResponse struct {
 	// The page number index: relevant if the clients asked for more than one
 	// asynchrounous reply from the service.
 	PageNumber uint64
-	// Identifies the channel the service uses to send back messages. The client
-	// must provide it if he wants to send additional requests using the same
-	// channel.
-	StreamID []byte
 	// Tells if the result contains consecutive blocks in a reversed order.
 	Backward bool
 	// Used to tell the client if an error occured. Any error code not equal to

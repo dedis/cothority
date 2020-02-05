@@ -24798,7 +24798,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Determines the length of the Blocks attribute in the  PaginateResponse.
+     * Determines the length of the Blocks attribute in the PaginateResponse.
      * The list contains PageSize consecutive blocks
      * </pre>
      *
@@ -24807,7 +24807,7 @@ public final class ByzCoinProto {
     boolean hasPagesize();
     /**
      * <pre>
-     * Determines the length of the Blocks attribute in the  PaginateResponse.
+     * Determines the length of the Blocks attribute in the PaginateResponse.
      * The list contains PageSize consecutive blocks
      * </pre>
      *
@@ -24852,23 +24852,6 @@ public final class ByzCoinProto {
      * <code>required bool backward = 4;</code>
      */
     boolean getBackward();
-
-    /**
-     * <pre>
-     * Identifies the service's channel of a previously established connection.
-     * </pre>
-     *
-     * <code>required bytes streamid = 5;</code>
-     */
-    boolean hasStreamid();
-    /**
-     * <pre>
-     * Identifies the service's channel of a previously established connection.
-     * </pre>
-     *
-     * <code>required bytes streamid = 5;</code>
-     */
-    com.google.protobuf.ByteString getStreamid();
   }
   /**
    * <pre>
@@ -24892,7 +24875,6 @@ public final class ByzCoinProto {
       pagesize_ = 0L;
       numpages_ = 0L;
       backward_ = false;
-      streamid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -24937,11 +24919,6 @@ public final class ByzCoinProto {
             case 32: {
               bitField0_ |= 0x00000008;
               backward_ = input.readBool();
-              break;
-            }
-            case 42: {
-              bitField0_ |= 0x00000010;
-              streamid_ = input.readBytes();
               break;
             }
             default: {
@@ -25004,7 +24981,7 @@ public final class ByzCoinProto {
     private long pagesize_;
     /**
      * <pre>
-     * Determines the length of the Blocks attribute in the  PaginateResponse.
+     * Determines the length of the Blocks attribute in the PaginateResponse.
      * The list contains PageSize consecutive blocks
      * </pre>
      *
@@ -25015,7 +24992,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * Determines the length of the Blocks attribute in the  PaginateResponse.
+     * Determines the length of the Blocks attribute in the PaginateResponse.
      * The list contains PageSize consecutive blocks
      * </pre>
      *
@@ -25075,29 +25052,6 @@ public final class ByzCoinProto {
       return backward_;
     }
 
-    public static final int STREAMID_FIELD_NUMBER = 5;
-    private com.google.protobuf.ByteString streamid_;
-    /**
-     * <pre>
-     * Identifies the service's channel of a previously established connection.
-     * </pre>
-     *
-     * <code>required bytes streamid = 5;</code>
-     */
-    public boolean hasStreamid() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
-    /**
-     * <pre>
-     * Identifies the service's channel of a previously established connection.
-     * </pre>
-     *
-     * <code>required bytes streamid = 5;</code>
-     */
-    public com.google.protobuf.ByteString getStreamid() {
-      return streamid_;
-    }
-
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -25121,10 +25075,6 @@ public final class ByzCoinProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasStreamid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -25143,9 +25093,6 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBool(4, backward_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, streamid_);
       }
       unknownFields.writeTo(output);
     }
@@ -25171,10 +25118,6 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(4, backward_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, streamid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -25212,11 +25155,6 @@ public final class ByzCoinProto {
         result = result && (getBackward()
             == other.getBackward());
       }
-      result = result && (hasStreamid() == other.hasStreamid());
-      if (hasStreamid()) {
-        result = result && getStreamid()
-            .equals(other.getStreamid());
-      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -25246,10 +25184,6 @@ public final class ByzCoinProto {
         hash = (37 * hash) + BACKWARD_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
             getBackward());
-      }
-      if (hasStreamid()) {
-        hash = (37 * hash) + STREAMID_FIELD_NUMBER;
-        hash = (53 * hash) + getStreamid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -25397,8 +25331,6 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         backward_ = false;
         bitField0_ = (bitField0_ & ~0x00000008);
-        streamid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -25443,10 +25375,6 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000008;
         }
         result.backward_ = backward_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.streamid_ = streamid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -25508,9 +25436,6 @@ public final class ByzCoinProto {
         if (other.hasBackward()) {
           setBackward(other.getBackward());
         }
-        if (other.hasStreamid()) {
-          setStreamid(other.getStreamid());
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -25528,9 +25453,6 @@ public final class ByzCoinProto {
           return false;
         }
         if (!hasBackward()) {
-          return false;
-        }
-        if (!hasStreamid()) {
           return false;
         }
         return true;
@@ -25610,7 +25532,7 @@ public final class ByzCoinProto {
       private long pagesize_ ;
       /**
        * <pre>
-       * Determines the length of the Blocks attribute in the  PaginateResponse.
+       * Determines the length of the Blocks attribute in the PaginateResponse.
        * The list contains PageSize consecutive blocks
        * </pre>
        *
@@ -25621,7 +25543,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Determines the length of the Blocks attribute in the  PaginateResponse.
+       * Determines the length of the Blocks attribute in the PaginateResponse.
        * The list contains PageSize consecutive blocks
        * </pre>
        *
@@ -25632,7 +25554,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Determines the length of the Blocks attribute in the  PaginateResponse.
+       * Determines the length of the Blocks attribute in the PaginateResponse.
        * The list contains PageSize consecutive blocks
        * </pre>
        *
@@ -25646,7 +25568,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * Determines the length of the Blocks attribute in the  PaginateResponse.
+       * Determines the length of the Blocks attribute in the PaginateResponse.
        * The list contains PageSize consecutive blocks
        * </pre>
        *
@@ -25759,57 +25681,6 @@ public final class ByzCoinProto {
       public Builder clearBackward() {
         bitField0_ = (bitField0_ & ~0x00000008);
         backward_ = false;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString streamid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * Identifies the service's channel of a previously established connection.
-       * </pre>
-       *
-       * <code>required bytes streamid = 5;</code>
-       */
-      public boolean hasStreamid() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <pre>
-       * Identifies the service's channel of a previously established connection.
-       * </pre>
-       *
-       * <code>required bytes streamid = 5;</code>
-       */
-      public com.google.protobuf.ByteString getStreamid() {
-        return streamid_;
-      }
-      /**
-       * <pre>
-       * Identifies the service's channel of a previously established connection.
-       * </pre>
-       *
-       * <code>required bytes streamid = 5;</code>
-       */
-      public Builder setStreamid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000010;
-        streamid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Identifies the service's channel of a previously established connection.
-       * </pre>
-       *
-       * <code>required bytes streamid = 5;</code>
-       */
-      public Builder clearStreamid() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        streamid_ = getDefaultInstance().getStreamid();
         onChanged();
         return this;
       }
@@ -25935,31 +25806,10 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * Identifies the channel the service uses to send back messages. The client
-     * must provide it if he wants to send additional requests using the same
-     * channel.
-     * </pre>
-     *
-     * <code>required bytes streamid = 3;</code>
-     */
-    boolean hasStreamid();
-    /**
-     * <pre>
-     * Identifies the channel the service uses to send back messages. The client
-     * must provide it if he wants to send additional requests using the same
-     * channel.
-     * </pre>
-     *
-     * <code>required bytes streamid = 3;</code>
-     */
-    com.google.protobuf.ByteString getStreamid();
-
-    /**
-     * <pre>
      * Tells if the result contains consecutive blocks in a reversed order.
      * </pre>
      *
-     * <code>required bool backward = 4;</code>
+     * <code>required bool backward = 3;</code>
      */
     boolean hasBackward();
     /**
@@ -25967,7 +25817,7 @@ public final class ByzCoinProto {
      * Tells if the result contains consecutive blocks in a reversed order.
      * </pre>
      *
-     * <code>required bool backward = 4;</code>
+     * <code>required bool backward = 3;</code>
      */
     boolean getBackward();
 
@@ -25977,7 +25827,7 @@ public final class ByzCoinProto {
      * 0 means that something special happened.
      * </pre>
      *
-     * <code>required uint64 errorcode = 5;</code>
+     * <code>required uint64 errorcode = 4;</code>
      */
     boolean hasErrorcode();
     /**
@@ -25986,7 +25836,7 @@ public final class ByzCoinProto {
      * 0 means that something special happened.
      * </pre>
      *
-     * <code>required uint64 errorcode = 5;</code>
+     * <code>required uint64 errorcode = 4;</code>
      */
     long getErrorcode();
 
@@ -25995,7 +25845,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     java.util.List<java.lang.String>
         getErrortextList();
@@ -26004,7 +25854,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     int getErrortextCount();
     /**
@@ -26012,7 +25862,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     java.lang.String getErrortext(int index);
     /**
@@ -26020,7 +25870,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     com.google.protobuf.ByteString
         getErrortextBytes(int index);
@@ -26045,7 +25895,6 @@ public final class ByzCoinProto {
     private PaginateResponse() {
       blocks_ = java.util.Collections.emptyList();
       pagenumber_ = 0L;
-      streamid_ = com.google.protobuf.ByteString.EMPTY;
       backward_ = false;
       errorcode_ = 0L;
       errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -26089,26 +25938,21 @@ public final class ByzCoinProto {
               pagenumber_ = input.readUInt64();
               break;
             }
-            case 26: {
+            case 24: {
               bitField0_ |= 0x00000002;
-              streamid_ = input.readBytes();
+              backward_ = input.readBool();
               break;
             }
             case 32: {
               bitField0_ |= 0x00000004;
-              backward_ = input.readBool();
-              break;
-            }
-            case 40: {
-              bitField0_ |= 0x00000008;
               errorcode_ = input.readUInt64();
               break;
             }
-            case 50: {
+            case 42: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 errortext_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000020;
+                mutable_bitField0_ |= 0x00000010;
               }
               errortext_.add(bs);
               break;
@@ -26131,7 +25975,7 @@ public final class ByzCoinProto {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
           blocks_ = java.util.Collections.unmodifiableList(blocks_);
         }
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           errortext_ = errortext_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
@@ -26232,57 +26076,30 @@ public final class ByzCoinProto {
       return pagenumber_;
     }
 
-    public static final int STREAMID_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString streamid_;
-    /**
-     * <pre>
-     * Identifies the channel the service uses to send back messages. The client
-     * must provide it if he wants to send additional requests using the same
-     * channel.
-     * </pre>
-     *
-     * <code>required bytes streamid = 3;</code>
-     */
-    public boolean hasStreamid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <pre>
-     * Identifies the channel the service uses to send back messages. The client
-     * must provide it if he wants to send additional requests using the same
-     * channel.
-     * </pre>
-     *
-     * <code>required bytes streamid = 3;</code>
-     */
-    public com.google.protobuf.ByteString getStreamid() {
-      return streamid_;
-    }
-
-    public static final int BACKWARD_FIELD_NUMBER = 4;
+    public static final int BACKWARD_FIELD_NUMBER = 3;
     private boolean backward_;
     /**
      * <pre>
      * Tells if the result contains consecutive blocks in a reversed order.
      * </pre>
      *
-     * <code>required bool backward = 4;</code>
+     * <code>required bool backward = 3;</code>
      */
     public boolean hasBackward() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
      * Tells if the result contains consecutive blocks in a reversed order.
      * </pre>
      *
-     * <code>required bool backward = 4;</code>
+     * <code>required bool backward = 3;</code>
      */
     public boolean getBackward() {
       return backward_;
     }
 
-    public static final int ERRORCODE_FIELD_NUMBER = 5;
+    public static final int ERRORCODE_FIELD_NUMBER = 4;
     private long errorcode_;
     /**
      * <pre>
@@ -26290,10 +26107,10 @@ public final class ByzCoinProto {
      * 0 means that something special happened.
      * </pre>
      *
-     * <code>required uint64 errorcode = 5;</code>
+     * <code>required uint64 errorcode = 4;</code>
      */
     public boolean hasErrorcode() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <pre>
@@ -26301,20 +26118,20 @@ public final class ByzCoinProto {
      * 0 means that something special happened.
      * </pre>
      *
-     * <code>required uint64 errorcode = 5;</code>
+     * <code>required uint64 errorcode = 4;</code>
      */
     public long getErrorcode() {
       return errorcode_;
     }
 
-    public static final int ERRORTEXT_FIELD_NUMBER = 6;
+    public static final int ERRORTEXT_FIELD_NUMBER = 5;
     private com.google.protobuf.LazyStringList errortext_;
     /**
      * <pre>
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     public com.google.protobuf.ProtocolStringList
         getErrortextList() {
@@ -26325,7 +26142,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     public int getErrortextCount() {
       return errortext_.size();
@@ -26335,7 +26152,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     public java.lang.String getErrortext(int index) {
       return errortext_.get(index);
@@ -26345,7 +26162,7 @@ public final class ByzCoinProto {
      * A list of error messages in case something special happended.
      * </pre>
      *
-     * <code>repeated string errortext = 6;</code>
+     * <code>repeated string errortext = 5;</code>
      */
     public com.google.protobuf.ByteString
         getErrortextBytes(int index) {
@@ -26360,10 +26177,6 @@ public final class ByzCoinProto {
       if (isInitialized == 0) return false;
 
       if (!hasPagenumber()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasStreamid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -26395,16 +26208,13 @@ public final class ByzCoinProto {
         output.writeUInt64(2, pagenumber_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(3, streamid_);
+        output.writeBool(3, backward_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBool(4, backward_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeUInt64(5, errorcode_);
+        output.writeUInt64(4, errorcode_);
       }
       for (int i = 0; i < errortext_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, errortext_.getRaw(i));
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, errortext_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -26425,15 +26235,11 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, streamid_);
+          .computeBoolSize(3, backward_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(4, backward_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(5, errorcode_);
+          .computeUInt64Size(4, errorcode_);
       }
       {
         int dataSize = 0;
@@ -26466,11 +26272,6 @@ public final class ByzCoinProto {
         result = result && (getPagenumber()
             == other.getPagenumber());
       }
-      result = result && (hasStreamid() == other.hasStreamid());
-      if (hasStreamid()) {
-        result = result && getStreamid()
-            .equals(other.getStreamid());
-      }
       result = result && (hasBackward() == other.hasBackward());
       if (hasBackward()) {
         result = result && (getBackward()
@@ -26502,10 +26303,6 @@ public final class ByzCoinProto {
         hash = (37 * hash) + PAGENUMBER_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getPagenumber());
-      }
-      if (hasStreamid()) {
-        hash = (37 * hash) + STREAMID_FIELD_NUMBER;
-        hash = (53 * hash) + getStreamid().hashCode();
       }
       if (hasBackward()) {
         hash = (37 * hash) + BACKWARD_FIELD_NUMBER;
@@ -26668,14 +26465,12 @@ public final class ByzCoinProto {
         }
         pagenumber_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
-        streamid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
         backward_ = false;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         errorcode_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -26720,18 +26515,14 @@ public final class ByzCoinProto {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.streamid_ = streamid_;
+        result.backward_ = backward_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.backward_ = backward_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000008;
-        }
         result.errorcode_ = errorcode_;
-        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
           errortext_ = errortext_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000020);
+          bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.errortext_ = errortext_;
         result.bitField0_ = to_bitField0_;
@@ -26812,9 +26603,6 @@ public final class ByzCoinProto {
         if (other.hasPagenumber()) {
           setPagenumber(other.getPagenumber());
         }
-        if (other.hasStreamid()) {
-          setStreamid(other.getStreamid());
-        }
         if (other.hasBackward()) {
           setBackward(other.getBackward());
         }
@@ -26824,7 +26612,7 @@ public final class ByzCoinProto {
         if (!other.errortext_.isEmpty()) {
           if (errortext_.isEmpty()) {
             errortext_ = other.errortext_;
-            bitField0_ = (bitField0_ & ~0x00000020);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureErrortextIsMutable();
             errortext_.addAll(other.errortext_);
@@ -26839,9 +26627,6 @@ public final class ByzCoinProto {
       @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPagenumber()) {
-          return false;
-        }
-        if (!hasStreamid()) {
           return false;
         }
         if (!hasBackward()) {
@@ -27242,82 +27027,23 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString streamid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * Identifies the channel the service uses to send back messages. The client
-       * must provide it if he wants to send additional requests using the same
-       * channel.
-       * </pre>
-       *
-       * <code>required bytes streamid = 3;</code>
-       */
-      public boolean hasStreamid() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <pre>
-       * Identifies the channel the service uses to send back messages. The client
-       * must provide it if he wants to send additional requests using the same
-       * channel.
-       * </pre>
-       *
-       * <code>required bytes streamid = 3;</code>
-       */
-      public com.google.protobuf.ByteString getStreamid() {
-        return streamid_;
-      }
-      /**
-       * <pre>
-       * Identifies the channel the service uses to send back messages. The client
-       * must provide it if he wants to send additional requests using the same
-       * channel.
-       * </pre>
-       *
-       * <code>required bytes streamid = 3;</code>
-       */
-      public Builder setStreamid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000004;
-        streamid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Identifies the channel the service uses to send back messages. The client
-       * must provide it if he wants to send additional requests using the same
-       * channel.
-       * </pre>
-       *
-       * <code>required bytes streamid = 3;</code>
-       */
-      public Builder clearStreamid() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        streamid_ = getDefaultInstance().getStreamid();
-        onChanged();
-        return this;
-      }
-
       private boolean backward_ ;
       /**
        * <pre>
        * Tells if the result contains consecutive blocks in a reversed order.
        * </pre>
        *
-       * <code>required bool backward = 4;</code>
+       * <code>required bool backward = 3;</code>
        */
       public boolean hasBackward() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <pre>
        * Tells if the result contains consecutive blocks in a reversed order.
        * </pre>
        *
-       * <code>required bool backward = 4;</code>
+       * <code>required bool backward = 3;</code>
        */
       public boolean getBackward() {
         return backward_;
@@ -27327,10 +27053,10 @@ public final class ByzCoinProto {
        * Tells if the result contains consecutive blocks in a reversed order.
        * </pre>
        *
-       * <code>required bool backward = 4;</code>
+       * <code>required bool backward = 3;</code>
        */
       public Builder setBackward(boolean value) {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000004;
         backward_ = value;
         onChanged();
         return this;
@@ -27340,10 +27066,10 @@ public final class ByzCoinProto {
        * Tells if the result contains consecutive blocks in a reversed order.
        * </pre>
        *
-       * <code>required bool backward = 4;</code>
+       * <code>required bool backward = 3;</code>
        */
       public Builder clearBackward() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         backward_ = false;
         onChanged();
         return this;
@@ -27356,10 +27082,10 @@ public final class ByzCoinProto {
        * 0 means that something special happened.
        * </pre>
        *
-       * <code>required uint64 errorcode = 5;</code>
+       * <code>required uint64 errorcode = 4;</code>
        */
       public boolean hasErrorcode() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <pre>
@@ -27367,7 +27093,7 @@ public final class ByzCoinProto {
        * 0 means that something special happened.
        * </pre>
        *
-       * <code>required uint64 errorcode = 5;</code>
+       * <code>required uint64 errorcode = 4;</code>
        */
       public long getErrorcode() {
         return errorcode_;
@@ -27378,10 +27104,10 @@ public final class ByzCoinProto {
        * 0 means that something special happened.
        * </pre>
        *
-       * <code>required uint64 errorcode = 5;</code>
+       * <code>required uint64 errorcode = 4;</code>
        */
       public Builder setErrorcode(long value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000008;
         errorcode_ = value;
         onChanged();
         return this;
@@ -27392,10 +27118,10 @@ public final class ByzCoinProto {
        * 0 means that something special happened.
        * </pre>
        *
-       * <code>required uint64 errorcode = 5;</code>
+       * <code>required uint64 errorcode = 4;</code>
        */
       public Builder clearErrorcode() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         errorcode_ = 0L;
         onChanged();
         return this;
@@ -27403,9 +27129,9 @@ public final class ByzCoinProto {
 
       private com.google.protobuf.LazyStringList errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureErrortextIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
           errortext_ = new com.google.protobuf.LazyStringArrayList(errortext_);
-          bitField0_ |= 0x00000020;
+          bitField0_ |= 0x00000010;
          }
       }
       /**
@@ -27413,7 +27139,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public com.google.protobuf.ProtocolStringList
           getErrortextList() {
@@ -27424,7 +27150,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public int getErrortextCount() {
         return errortext_.size();
@@ -27434,7 +27160,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public java.lang.String getErrortext(int index) {
         return errortext_.get(index);
@@ -27444,7 +27170,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public com.google.protobuf.ByteString
           getErrortextBytes(int index) {
@@ -27455,7 +27181,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public Builder setErrortext(
           int index, java.lang.String value) {
@@ -27472,7 +27198,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public Builder addErrortext(
           java.lang.String value) {
@@ -27489,7 +27215,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public Builder addAllErrortext(
           java.lang.Iterable<java.lang.String> values) {
@@ -27504,11 +27230,11 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public Builder clearErrortext() {
         errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
@@ -27517,7 +27243,7 @@ public final class ByzCoinProto {
        * A list of error messages in case something special happended.
        * </pre>
        *
-       * <code>repeated string errortext = 6;</code>
+       * <code>repeated string errortext = 5;</code>
        */
       public Builder addErrortextBytes(
           com.google.protobuf.ByteString value) {
@@ -43442,53 +43168,52 @@ public final class ByzCoinProto {
       "(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(" +
       "\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002" +
       "id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001" +
-      " \001(\0132\024.skipchain.SkipBlock\"j\n\017PaginateRe" +
+      " \001(\0132\024.skipchain.SkipBlock\"X\n\017PaginateRe" +
       "quest\022\017\n\007startid\030\001 \002(\014\022\020\n\010pagesize\030\002 \002(\004" +
-      "\022\020\n\010numpages\030\003 \002(\004\022\020\n\010backward\030\004 \002(\010\022\020\n\010" +
-      "streamid\030\005 \002(\014\"\226\001\n\020PaginateResponse\022$\n\006b" +
-      "locks\030\001 \003(\0132\024.skipchain.SkipBlock\022\022\n\npag" +
-      "enumber\030\002 \002(\004\022\020\n\010streamid\030\003 \002(\014\022\020\n\010backw" +
-      "ard\030\004 \002(\010\022\021\n\terrorcode\030\005 \002(\004\022\021\n\terrortex" +
-      "t\030\006 \003(\t\"A\n\rDownloadState\022\021\n\tbyzcoinid\030\001 " +
-      "\002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"]\n\025Do" +
-      "wnloadStateResponse\022&\n\tkeyvalues\030\001 \003(\0132\023" +
-      ".byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022\r\n\005to" +
-      "tal\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005" +
-      "value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013statea" +
-      "ction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005value" +
-      "\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\"" +
-      ";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 \003(\t\022" +
-      "\023\n\013skipchainid\030\002 \002(\014\"@\n\031GetSignerCounter" +
-      "sResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\022\r\n\005index" +
-      "\030\002 \001(\004\"N\n\022GetInstanceVersion\022\023\n\013skipchai" +
-      "nid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007version" +
-      "\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013skip" +
-      "chainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032Get" +
-      "InstanceVersionResponse\022)\n\013statechange\030\001" +
-      " \002(\0132\024.byzcoin.StateChange\022\022\n\nblockindex" +
-      "\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013skipc" +
-      "hainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035GetA" +
-      "llInstanceVersionResponse\0229\n\014statechange" +
-      "s\030\001 \003(\0132#.byzcoin.GetInstanceVersionResp" +
-      "onse\"T\n\030CheckStateChangeValidity\022\023\n\013skip" +
+      "\022\020\n\010numpages\030\003 \002(\004\022\020\n\010backward\030\004 \002(\010\"\204\001\n" +
+      "\020PaginateResponse\022$\n\006blocks\030\001 \003(\0132\024.skip" +
+      "chain.SkipBlock\022\022\n\npagenumber\030\002 \002(\004\022\020\n\010b" +
+      "ackward\030\003 \002(\010\022\021\n\terrorcode\030\004 \002(\004\022\021\n\terro" +
+      "rtext\030\005 \003(\t\"A\n\rDownloadState\022\021\n\tbyzcoini" +
+      "d\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"]" +
+      "\n\025DownloadStateResponse\022&\n\tkeyvalues\030\001 \003" +
+      "(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022\r" +
+      "\n\005total\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014" +
+      "\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013st" +
+      "ateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005v" +
+      "alue\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 " +
+      "\002(\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 " +
+      "\003(\t\022\023\n\013skipchainid\030\002 \002(\014\"@\n\031GetSignerCou" +
+      "ntersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\022\r\n\005i" +
+      "ndex\030\002 \001(\004\"N\n\022GetInstanceVersion\022\023\n\013skip" +
       "chainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007ver" +
-      "sion\030\003 \002(\004\"_\n CheckStateChangeValidityRe" +
-      "sponse\022*\n\014statechanges\030\001 \003(\0132\024.byzcoin.S" +
-      "tateChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021ResolveIn" +
-      "stanceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006darcid\030" +
-      "\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInstanceI" +
-      "D\022\022\n\ninstanceid\030\001 \002(\014\"!\n\014DebugRequest\022\021\n" +
-      "\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n\010byz" +
-      "coins\030\001 \003(\0132\035.byzcoin.DebugResponseByzco" +
-      "in\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResponse" +
-      "State\"v\n\024DebugResponseByzcoin\022\021\n\tbyzcoin" +
-      "id\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchain.Sk" +
-      "ipBlock\022$\n\006latest\030\003 \001(\0132\024.skipchain.Skip" +
-      "Block\"J\n\022DebugResponseState\022\013\n\003key\030\001 \002(\014" +
-      "\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateChangeBod" +
-      "y\":\n\022DebugRemoveRequest\022\021\n\tbyzcoinid\030\001 \002" +
-      "(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.dedis.l" +
-      "ib.protoB\014ByzCoinProto"
+      "sion\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013" +
+      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n" +
+      "\032GetInstanceVersionResponse\022)\n\013statechan" +
+      "ge\030\001 \002(\0132\024.byzcoin.StateChange\022\022\n\nblocki" +
+      "ndex\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013s" +
+      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035" +
+      "GetAllInstanceVersionResponse\0229\n\014statech" +
+      "anges\030\001 \003(\0132#.byzcoin.GetInstanceVersion" +
+      "Response\"T\n\030CheckStateChangeValidity\022\023\n\013" +
+      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n" +
+      "\007version\030\003 \002(\004\"_\n CheckStateChangeValidi" +
+      "tyResponse\022*\n\014statechanges\030\001 \003(\0132\024.byzco" +
+      "in.StateChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021Resol" +
+      "veInstanceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006dar" +
+      "cid\030\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInsta" +
+      "nceID\022\022\n\ninstanceid\030\001 \002(\014\"!\n\014DebugReques" +
+      "t\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n" +
+      "\010byzcoins\030\001 \003(\0132\035.byzcoin.DebugResponseB" +
+      "yzcoin\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResp" +
+      "onseState\"v\n\024DebugResponseByzcoin\022\021\n\tbyz" +
+      "coinid\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchai" +
+      "n.SkipBlock\022$\n\006latest\030\003 \001(\0132\024.skipchain." +
+      "SkipBlock\"J\n\022DebugResponseState\022\013\n\003key\030\001" +
+      " \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateChang" +
+      "eBody\":\n\022DebugRemoveRequest\022\021\n\tbyzcoinid" +
+      "\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.ded" +
+      "is.lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -43661,13 +43386,13 @@ public final class ByzCoinProto {
     internal_static_byzcoin_PaginateRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_PaginateRequest_descriptor,
-        new java.lang.String[] { "Startid", "Pagesize", "Numpages", "Backward", "Streamid", });
+        new java.lang.String[] { "Startid", "Pagesize", "Numpages", "Backward", });
     internal_static_byzcoin_PaginateResponse_descriptor =
       getDescriptor().getMessageTypes().get(26);
     internal_static_byzcoin_PaginateResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_PaginateResponse_descriptor,
-        new java.lang.String[] { "Blocks", "Pagenumber", "Streamid", "Backward", "Errorcode", "Errortext", });
+        new java.lang.String[] { "Blocks", "Pagenumber", "Backward", "Errorcode", "Errortext", });
     internal_static_byzcoin_DownloadState_descriptor =
       getDescriptor().getMessageTypes().get(27);
     internal_static_byzcoin_DownloadState_fieldAccessorTable = new

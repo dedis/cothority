@@ -2,25 +2,11 @@ package byzcoin
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
-
-	"golang.org/x/xerrors"
 
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3/network"
 )
-
-var paginateChans = paginateChansWrapper{
-	chans:     make(map[string]chan *PaginateResponse),
-	closeChan: make(map[string]chan bool),
-}
-
-type paginateChansWrapper struct {
-	sync.Mutex
-	chans     map[string]chan *PaginateResponse
-	closeChan map[string]chan bool
-}
 
 func init() {
 	network.RegisterMessages(&StreamingRequest{}, &StreamingResponse{},
@@ -129,48 +115,14 @@ func (s *Service) StreamTransactions(msg *StreamingRequest) (chan *StreamingResp
 // close chan should be closed only when no other requests are being processed using
 // the same streamID.
 func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, chan bool, error) {
-	key := msg.StreamID
-	paginateChans.Lock()
-	if key == nil || len(key) == 0 {
-		key = make([]byte, 32)
-		rand.Read(key)
-		paginateChans.chans[string(key)] = make(chan *PaginateResponse)
-		paginateChans.closeChan[string(key)] = make(chan bool)
-	}
 
-	stopChan, okStop := paginateChans.closeChan[string(key)]
-	outChan, okChan := paginateChans.chans[string(key)]
-	paginateChans.Unlock()
-
-	if !okStop {
-		outChan = make(chan *PaginateResponse)
-		go func() {
-			outChan <- &PaginateResponse{
-				StreamID:  key,
-				ErrorCode: 1,
-				ErrorText: []string{fmt.Sprintf("StreamID %x unkown for closeChan", msg.StreamID)},
-			}
-		}()
-		return outChan, stopChan, xerrors.Errorf("StreamID %x unkown for closeChan", msg.StreamID)
-	}
-
-	if !okChan {
-		outChan = make(chan *PaginateResponse)
-		go func() {
-			outChan <- &PaginateResponse{
-				StreamID:  key,
-				ErrorCode: 1,
-				ErrorText: []string{fmt.Sprintf("StreamID %x unkown for chans", msg.StreamID)},
-			}
-		}()
-		return outChan, stopChan, xerrors.Errorf("StreamID %x unkown for chans", msg.StreamID)
-	}
+	outChan := make(chan *PaginateResponse)
+	stopChan := make(chan bool)
 
 	go func() {
 
 		if msg.PageSize < 1 {
 			outChan <- &PaginateResponse{
-				StreamID:  key,
 				ErrorCode: 2,
 				ErrorText: []string{fmt.Sprintf("PageSize should be >= 1, "+
 					"but we found %d", msg.PageSize)},
@@ -180,7 +132,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 		if msg.NumPages < 1 {
 			outChan <- &PaginateResponse{
-				StreamID:  key,
 				ErrorCode: 2,
 				ErrorText: []string{fmt.Sprintf("NumPages should be >= 1, "+
 					"but we found %d", msg.NumPages)},
@@ -190,7 +141,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 		if msg.StartID == nil {
 			outChan <- &PaginateResponse{
-				StreamID:  key,
 				ErrorCode: 3,
 				ErrorText: []string{"StartID is nil"},
 			}
@@ -205,7 +155,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 			blocks := make([]*skipchain.SkipBlock, msg.PageSize)
 			if err != nil {
 				outChan <- &PaginateResponse{
-					StreamID:  key,
 					ErrorCode: 4,
 					ErrorText: []string{"failed to get the first block with ID",
 						fmt.Sprintf("%x", msg.StartID), fmt.Sprintf("%v", err)},
@@ -232,7 +181,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 
 				if nextID == nil {
 					outChan <- &PaginateResponse{
-						StreamID:  key,
 						ErrorCode: 5,
 						ErrorText: []string{"couldn't find a nextID for block",
 							fmt.Sprintf("%x", skipBlock.Hash), "page number",
@@ -244,7 +192,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 				_, skipBlock, err = s.getBlockTx(nextID)
 				if err != nil {
 					outChan <- &PaginateResponse{
-						StreamID:  key,
 						ErrorCode: 6,
 						ErrorText: []string{"failed to get block with ID",
 							fmt.Sprintf("%x", nextID), "page number",
@@ -272,7 +219,6 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 			response := &PaginateResponse{
 				Blocks:     blocks,
 				PageNumber: pageNum,
-				StreamID:   key,
 				Backward:   msg.Backward,
 			}
 			// Allows the service to exit prematurely if the connection stops
@@ -286,17 +232,7 @@ func (s *Service) PaginateBlocks(msg *PaginateRequest) (chan *PaginateResponse, 
 		// Waiting for the streaming connection to stop. This signal comes
 		// from onet, which sets it when the client closes the connection.
 		<-stopChan
-		paginateChans.Lock()
-		_, ok := paginateChans.chans[string(key)]
-		if ok {
-			delete(paginateChans.chans, string(key))
-		}
-		_, ok = paginateChans.closeChan[string(key)]
-		if ok {
-			close(outChan)
-			delete(paginateChans.closeChan, string(key))
-		}
-		paginateChans.Unlock()
 	}()
+
 	return outChan, stopChan, nil
 }
