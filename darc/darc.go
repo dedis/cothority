@@ -733,7 +733,7 @@ func evalExprDarc(visited map[string]bool, expr expression.Expr, getDarc GetDarc
 			return true
 		}
 		if !found {
-			issue = errors.New("expression evaluated to false")
+			issue = fmt.Errorf("expression %s evaluated to false", expr)
 		}
 		return found
 	})
@@ -891,7 +891,7 @@ func (id Identity) PrimaryIdentity() bool {
 	case id.EvmContract != nil:
 		return true
 	case id.DID != nil:
-		return false
+		return true
 	}
 	return false
 }
@@ -982,14 +982,7 @@ func (id Identity) GetPublicBytes() []byte {
 	case 4:
 		return id.EvmContract.Address[:]
 	case 5:
-		doc, err := didResolver.Resolve(id.DID.DID)
-		if err != nil {
-			return nil
-		}
-		for _, pk := range doc.PublicKey {
-			return pk.Value
-		}
-		return nil
+		return []byte(fmt.Sprintf("did:%s:%s", id.DID.Method, id.DID.DID))
 	default:
 		return nil
 	}
@@ -1058,6 +1051,7 @@ func NewIdentityEvmContract(s *SignerEvmContract) Identity {
 	}
 }
 
+// NewIdentityDID creates a new DID identity struct
 func NewIdentityDID(id, method string) Identity {
 	return Identity{
 		DID: &IdentityDID{
@@ -1083,6 +1077,7 @@ func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
 		id.Address == id2.Address
 }
 
+// Equal returns true if both IdentityDIDs are the same.
 func (iddid IdentityDID) Equal(iddid2 *IdentityDID) bool {
 	return iddid.DID == iddid2.DID
 }
@@ -1165,7 +1160,10 @@ func (iddid IdentityDID) Verify(msg, s []byte) error {
 		}
 		err = schnorr.Verify(cothority.Suite, key, msg, s)
 		if err == nil {
+			fmt.Println("Succesfull")
 			return nil
+		} else {
+			fmt.Println("verification err", err)
 		}
 	}
 	return errors.New("couldn't find a key in DIDDoc that could verify this message")

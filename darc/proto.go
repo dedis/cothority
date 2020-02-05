@@ -1,7 +1,6 @@
 package darc
 
 import (
-	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -108,8 +107,40 @@ type IdentityEvmContract struct {
 // from a decentralized identifier
 type IdentityDID struct {
 	DID    string
-	DIDDoc *did.Doc
+	DIDDoc *DIDDoc
 	Method string
+}
+
+// DIDDoc stores the DID Document
+type DIDDoc struct {
+	Context        []string
+	ID             string
+	PublicKey      []PublicKey
+	Service        []DIDService
+	Authentication []VerificationMethod
+}
+
+// PublicKey DID doc public key
+type PublicKey struct {
+	ID         string
+	Type       string
+	Controller string
+	Value      []byte
+}
+
+// Service DID doc service
+type DIDService struct {
+	ID              string
+	Type            string
+	Priority        int
+	RecipientKeys   []string
+	RoutingKeys     []string
+	ServiceEndpoint string
+}
+
+// VerificationMethod authentication verification method
+type VerificationMethod struct {
+	PublicKey PublicKey
 }
 
 // Signature is a signature on a Darc to accept a given decision.

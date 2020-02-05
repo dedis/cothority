@@ -56,14 +56,16 @@ export default class ClientTransaction extends Message<ClientTransaction> {
      * Sign the hash of the instructions using the list of signers
      * @param signers List of signers
      */
-    signWith(signers: Signer[][]): void {
+    async signWith(signers: Signer[][]): Promise<void> {
         const ctxHash = this.hash();
 
         if (signers.length !== this.instructions.length) {
             throw new Error("need same number of signers as instructions");
         }
 
-        this.instructions.forEach((instr, i) => instr.signWith(ctxHash, signers[i]));
+        for (let i = 0; i < this.instructions.length; i++) {
+          await this.instructions[i].signWith(ctxHash, signers[i]);
+        }
     }
 
     /**
@@ -102,7 +104,7 @@ export default class ClientTransaction extends Message<ClientTransaction> {
             }
         }
         await this.updateCounters(rpc, signers);
-        this.signWith(signers);
+        await this.signWith(signers);
     }
 
     /**
@@ -243,9 +245,9 @@ export class Instruction extends Message<Instruction> {
      * @param ctxHash The client transaction hash
      * @param signers The list of signers
      */
-    signWith(ctxHash: Buffer, signers: Signer[]): void {
+    async signWith(ctxHash: Buffer, signers: Signer[]): Promise<void> {
         // @ts-ignore
-        this.signatures = signers.map((s) => s.sign(ctxHash));
+        this.signatures = await Promise.all(signers.map(async (s) => await s.sign(ctxHash));
     }
 
     /**
