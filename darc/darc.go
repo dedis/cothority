@@ -1014,6 +1014,7 @@ func NewIdentityProxy(s *SignerProxy) Identity {
 	}
 }
 
+// NewIdentityDID creates a new DID identity struct
 func NewIdentityDID(id, method string) Identity {
 	return Identity{
 		DID: &IdentityDID{
@@ -1033,6 +1034,7 @@ func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 	return idp.Data == i2.Data && idp.Public.Equal(i2.Public)
 }
 
+// Equal returns true if both IdentityDIDs are the same.
 func (iddid IdentityDID) Equal(iddid2 *IdentityDID) bool {
 	return iddid.DID == iddid2.DID
 }
