@@ -25,11 +25,17 @@ type IndyCLIDIDResolver struct {
 	GenesisFilePath string
 }
 
+// DIDVerificationKeyTypes represents the valid key types
+// that may be stored in a DID document
+// Refer to https://w3c-ccg.github.io/ld-cryptosuite-registry/
 type DIDVerificationKeyTypes int
 
 const (
+	// Ed25519VerificationKey2018 represents key type for Ed25519 keys
 	Ed25519VerificationKey2018 DIDVerificationKeyTypes = iota
+	// RsaVerificationKey2018 represents key type for RSA Keys
 	RsaVerificationKey2018
+	// EcdsaSecp256k1VerificationKey2019 represents key type for Secp256k1 keys
 	EcdsaSecp256k1VerificationKey2019
 )
 
@@ -138,6 +144,7 @@ func (r *IndyCLIDIDResolver) parseOutput(id, output string) (time.Time, []did.Pu
 	return _createdAt, []did.PublicKey{pk}, svcs, nil
 }
 
+// Resolve resolves a did to a DID document using indy-cli.
 func (r *IndyCLIDIDResolver) Resolve(id string) (*did.Doc, error) {
 	output, err := r.executeCli(id)
 	if strings.Contains(output, "NYM not found") {
