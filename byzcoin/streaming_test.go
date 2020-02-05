@@ -370,7 +370,7 @@ func TestStreamingService_PaginateBlocks(t *testing.T) {
 		NumPages: 0,
 		Backward: false,
 	}
-	// Should be the same paginateResponse chan
+
 	paginateResponse, closeChan, err = service.PaginateBlocks(paginateRequest)
 	require.NoError(t, err)
 

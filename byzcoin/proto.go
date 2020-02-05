@@ -317,8 +317,7 @@ type PaginateRequest struct {
 	Backward bool
 }
 
-// PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
-// so that a new PaginateRequest can use an already created channel.
+// PaginateResponse is a reponse from a PaginateRequest.
 type PaginateResponse struct {
 	// A list of consecutive blocks
 	Blocks []*skipchain.SkipBlock
@@ -330,7 +329,7 @@ type PaginateResponse struct {
 	// Used to tell the client if an error occured. Any error code not equal to
 	// 0 means that something special happened.
 	ErrorCode uint64
-	// A list of error messages in case something special happended.
+	// A list of error messages in case something special happened.
 	ErrorText []string
 }
 
