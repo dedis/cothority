@@ -76,7 +76,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
-	value = parsec.OrdChoice(exprValueNode(fn), identity(), proxy(), attr(), groupExpr)
+	value = parsec.OrdChoice(exprValueNode(fn), identity(), did(), proxy(), attr(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -122,6 +122,16 @@ func InitAndExpr(ids ...string) Expr {
 // IDs.
 func InitOrExpr(ids ...string) Expr {
 	return Expr(strings.Join(ids, " | "))
+}
+
+// Accepts tokens of the form "did:sov:BASE58"
+func did() parsec.Parser {
+	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		// TODO: Add support for more DID methods
+		p := parsec.Token(`did:sov:[0-9a-zA-Z]+`, "DID")
+		return p(s)
+	}
 }
 
 // Accepts tokens of the form "identity_type:HEX"

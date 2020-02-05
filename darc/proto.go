@@ -1,6 +1,7 @@
 package darc
 
 import (
+	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -64,6 +65,8 @@ type Identity struct {
 	X509EC *IdentityX509EC
 	// A claim which has been signed by a proxy or proxies.
 	Proxy *IdentityProxy
+	// A claim signed by one of the keys in a DID Doc
+	DID *IdentityDID
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -88,6 +91,14 @@ type IdentityProxy struct {
 type IdentityDarc struct {
 	// Signer SignerEd25519
 	ID ID
+}
+
+// IdentityDID holds the DID and DIDDoc required to verify a claim
+// from a decentralized identifier
+type IdentityDID struct {
+	DID    string
+	DIDDoc *did.Doc
+	Method string
 }
 
 // Signature is a signature on a Darc to accept a given decision.
