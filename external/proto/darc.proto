@@ -46,6 +46,8 @@ message Identity {
   optional IdentityX509EC x509ec = 3;
   // A claim which has been signed by a proxy or proxies.
   optional IdentityProxy proxy = 4;
+  // A claim signed by one of the keys in a DID Doc
+  optional IdentityDID did = 5;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -70,6 +72,14 @@ message IdentityProxy {
 message IdentityDarc {
   // Signer SignerEd25519
   required bytes id = 1;
+}
+
+// IdentityDID holds the DID and DIDDoc required to verify a claim
+// from a decentralized identifier
+message IdentityDID {
+  required string did = 1;
+  optional did.Doc diddoc = 2;
+  required string method = 3;
 }
 
 // Signature is a signature on a Darc to accept a given decision.
