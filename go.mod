@@ -19,8 +19,9 @@ require (
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/hyperledger/aries-framework-go v0.1.1
+	github.com/mr-tron/base58 v1.1.2
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
-	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
 	github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6
 	github.com/rs/cors v1.7.0 // indirect

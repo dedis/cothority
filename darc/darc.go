@@ -42,6 +42,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -57,11 +59,27 @@ import (
 	"go.dedis.ch/kyber/v3/suites"
 	"go.dedis.ch/kyber/v3/util/encoding"
 	"go.dedis.ch/kyber/v3/util/key"
+	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/protobuf"
 )
 
 const evolve = "_evolve"
 const sign = "_sign"
+
+var didResolver DIDResolver
+
+func init() {
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// TODO: Allow chosing resolver through some conode configuration
+	didResolver = &IndyCLIDIDResolver{
+		Path:            "indy-cli",
+		GenesisFilePath: path.Join(userConfigDir, "/indy/genesis.txt"),
+	}
+}
 
 // GetDarc is a callback function that we expect the user of this library to
 // supply in some of our methods. The user is free to choose how he/she wants
@@ -852,6 +870,8 @@ func (id Identity) Type() int {
 		return 3
 	case id.EvmContract != nil:
 		return 4
+	case id.DID != nil:
+		return 5
 	}
 	return -1
 }
@@ -870,6 +890,8 @@ func (id Identity) PrimaryIdentity() bool {
 		return true
 	case id.EvmContract != nil:
 		return true
+	case id.DID != nil:
+		return false
 	}
 	return false
 }
@@ -887,6 +909,8 @@ func (id Identity) TypeString() string {
 		return "proxy"
 	case 4:
 		return "evm_contract"
+	case 5:
+		return "did"
 	default:
 		return "No identity"
 	}
@@ -907,6 +931,8 @@ func (id Identity) String() string {
 		bevmString := hex.EncodeToString(id.EvmContract.BEvmID)
 		addrString := id.EvmContract.Address.Hex()
 		return fmt.Sprintf("%s:%s:%s", id.TypeString(), bevmString, addrString)
+	case 5:
+		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.DID.Method, id.DID.DID)
 	default:
 		return "No identity"
 	}
@@ -926,6 +952,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Proxy.Verify(msg, sig)
 	case 4:
 		return id.EvmContract.Verify(msg, sig)
+	case 5:
+		return id.DID.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -953,6 +981,15 @@ func (id Identity) GetPublicBytes() []byte {
 		return buf
 	case 4:
 		return id.EvmContract.Address[:]
+	case 5:
+		doc, err := didResolver.Resolve(id.DID.DID)
+		if err != nil {
+			return nil
+		}
+		for _, pk := range doc.PublicKey {
+			return pk.Value
+		}
+		return nil
 	default:
 		return nil
 	}
@@ -1021,6 +1058,15 @@ func NewIdentityEvmContract(s *SignerEvmContract) Identity {
 	}
 }
 
+func NewIdentityDID(id, method string) Identity {
+	return Identity{
+		DID: &IdentityDID{
+			DID:    id,
+			Method: method,
+		},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
@@ -1035,6 +1081,10 @@ func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
 func (id IdentityEvmContract) Equal(id2 *IdentityEvmContract) bool {
 	return bytes.Compare(id.BEvmID, id2.BEvmID) == 0 &&
 		id.Address == id2.Address
+}
+
+func (iddid IdentityDID) Equal(iddid2 *IdentityDID) bool {
+	return iddid.DID == iddid2.DID
 }
 
 type sigRS struct {
@@ -1091,6 +1141,36 @@ func (id IdentityEvmContract) Verify(msg, s []byte) error {
 	return xerrors.Errorf("invalid EVM Contract signature")
 }
 
+// Verify returns nil if the signature is correct, or an error if something
+// fails
+func (iddid IdentityDID) Verify(msg, s []byte) error {
+	// TODO: Cache the results and set a TTL
+	doc, err := didResolver.Resolve(iddid.DID)
+	if err != nil {
+		return err
+	}
+
+	iddid.DIDDoc = doc
+	for _, publicKey := range iddid.DIDDoc.PublicKey {
+		// As of now, libindy only supports ed25519 keys and signatures
+		// Please refer to `CryptoService.crypto_types` in
+		// `libindy/src/services/crypto/mod.rs`
+		if publicKey.Type != Ed25519VerificationKey2018.String() {
+			continue
+		}
+		key := cothority.Suite.Point()
+		err := key.UnmarshalBinary(publicKey.Value)
+		if err != nil {
+			return fmt.Errorf("error unmarshalling key: %v", err)
+		}
+		err = schnorr.Verify(cothority.Suite, key, msg, s)
+		if err == nil {
+			return nil
+		}
+	}
+	return errors.New("couldn't find a key in DIDDoc that could verify this message")
+}
+
 // ParseIdentity returns an Identity structure that matches
 // the given string.
 func ParseIdentity(in string) (Identity, error) {
@@ -1109,6 +1189,8 @@ func ParseIdentity(in string) (Identity, error) {
 		return parseIDProxy(fields[1])
 	case "evm_contract":
 		return parseIDEvmContract(fields[1])
+	case "did":
+		return parseIDDID(fields[1])
 	default:
 		return Identity{}, fmt.Errorf("unknown identity type %v", fields[0])
 	}
@@ -1178,6 +1260,17 @@ func parseIDEvmContract(in string) (Identity, error) {
 			Address: address,
 		},
 	}, nil
+}
+
+func parseIDDID(in string) (Identity, error) {
+	fields := strings.SplitN(in, ":", 2)
+	if len(fields) != 2 {
+		return Identity{}, errors.New("expected did format of did:method:identifier")
+	}
+	if fields[0] != "sov" {
+		return Identity{}, fmt.Errorf("only did:sov is supported at the moment, got did:%s", fields[0])
+	}
+	return Identity{DID: &IdentityDID{DID: fields[1], Method: fields[0]}}, nil
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and

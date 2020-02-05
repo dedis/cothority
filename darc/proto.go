@@ -1,6 +1,7 @@
 package darc
 
 import (
+	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
 	"go.dedis.ch/cothority/v3/darc/expression"
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/onet/v3/network"
@@ -69,6 +70,8 @@ type Identity struct {
 	Proxy *IdentityProxy
 	// Address of an EVM contract
 	EvmContract *IdentityEvmContract
+	// A claim signed by one of the keys in a DID Doc
+	DID *IdentityDID
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -99,6 +102,14 @@ type IdentityDarc struct {
 type IdentityEvmContract struct {
 	BEvmID  []byte // BEvm InstanceID
 	Address common.Address
+}
+
+// IdentityDID holds the DID and DIDDoc required to verify a claim
+// from a decentralized identifier
+type IdentityDID struct {
+	DID    string
+	DIDDoc *did.Doc
+	Method string
 }
 
 // Signature is a signature on a Darc to accept a given decision.
