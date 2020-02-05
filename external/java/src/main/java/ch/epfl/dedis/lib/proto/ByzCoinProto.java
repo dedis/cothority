@@ -25842,7 +25842,7 @@ public final class ByzCoinProto {
 
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -25851,7 +25851,7 @@ public final class ByzCoinProto {
         getErrortextList();
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -25859,7 +25859,7 @@ public final class ByzCoinProto {
     int getErrortextCount();
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -25867,7 +25867,7 @@ public final class ByzCoinProto {
     java.lang.String getErrortext(int index);
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -25877,8 +25877,7 @@ public final class ByzCoinProto {
   }
   /**
    * <pre>
-   * PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
-   * so that a new PaginateRequest can use an already created channel.
+   * PaginateResponse is a reponse from a PaginateRequest.
    * </pre>
    *
    * Protobuf type {@code byzcoin.PaginateResponse}
@@ -26128,7 +26127,7 @@ public final class ByzCoinProto {
     private com.google.protobuf.LazyStringList errortext_;
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -26139,7 +26138,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -26149,7 +26148,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -26159,7 +26158,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * A list of error messages in case something special happended.
+     * A list of error messages in case something special happened.
      * </pre>
      *
      * <code>repeated string errortext = 5;</code>
@@ -26415,8 +26414,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
-     * so that a new PaginateRequest can use an already created channel.
+     * PaginateResponse is a reponse from a PaginateRequest.
      * </pre>
      *
      * Protobuf type {@code byzcoin.PaginateResponse}
@@ -27136,7 +27134,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27147,7 +27145,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27157,7 +27155,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27167,7 +27165,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27178,7 +27176,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27195,7 +27193,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27212,7 +27210,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27227,7 +27225,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>
@@ -27240,7 +27238,7 @@ public final class ByzCoinProto {
       }
       /**
        * <pre>
-       * A list of error messages in case something special happended.
+       * A list of error messages in case something special happened.
        * </pre>
        *
        * <code>repeated string errortext = 5;</code>

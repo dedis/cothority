@@ -296,8 +296,7 @@ message PaginateRequest {
   required bool backward = 4;
 }
 
-// PaginateResponse is a reponse from a PaginateRequest. It returns the streamID
-// so that a new PaginateRequest can use an already created channel.
+// PaginateResponse is a reponse from a PaginateRequest.
 message PaginateResponse {
   // A list of consecutive blocks
   repeated skipchain.SkipBlock blocks = 1;
@@ -309,7 +308,7 @@ message PaginateResponse {
   // Used to tell the client if an error occured. Any error code not equal to
   // 0 means that something special happened.
   required uint64 errorcode = 4;
-  // A list of error messages in case something special happended.
+  // A list of error messages in case something special happened.
   repeated string errortext = 5;
 }
 
