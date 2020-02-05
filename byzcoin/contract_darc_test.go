@@ -32,7 +32,7 @@ func TestSecureDarc(t *testing.T) {
 	invokeEvolve := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolve)
 	invokeEvolveUnrestricted := darc.Action("invoke:" + ContractDarcID + "." + cmdDarcEvolveUnrestriction)
 
-	log.Info("spawn a new secure darc with spawn:insecure_darc - fail")
+	log.Lvl1("spawn a new secure darc with spawn:insecure_darc - fail")
 	secDarc := gDarc.Copy()
 	require.NoError(t, secDarc.Rules.AddRule("spawn:insecure_darc", []byte(restrictedSigner.Identity().String())))
 	secDarcBuf, err := secDarc.ToProto()
@@ -53,7 +53,7 @@ func TestSecureDarc(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.Error(t, err)
 
-	log.Info("do the same but without spawn:insecure_darc - pass")
+	log.Lvl1("do the same but without spawn:insecure_darc - pass")
 	require.NoError(t, secDarc.Rules.DeleteRules("spawn:insecure_darc"))
 	require.NoError(t, secDarc.Rules.UpdateRule(invokeEvolve, []byte(restrictedSigner.Identity().String())))
 	require.NoError(t, secDarc.Rules.UpdateRule(invokeEvolveUnrestricted, []byte(unrestrictedSigner.Identity().String())))
@@ -75,7 +75,7 @@ func TestSecureDarc(t *testing.T) {
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	require.NoError(t, err)
 
-	log.Info("spawn a darc with a version > 0 - fail")
+	log.Lvl1("spawn a darc with a version > 0 - fail")
 	secDarc.Version = 1
 	secDarcBuf, err = secDarc.ToProto()
 	ctx, err = cl.CreateTransaction(Instruction{
@@ -95,7 +95,7 @@ func TestSecureDarc(t *testing.T) {
 	require.Error(t, err)
 
 	secDarc.Version = 0
-	log.Info("evolve to add rules - fail")
+	log.Lvl1("evolve to add rules - fail")
 	{
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
@@ -119,7 +119,7 @@ func TestSecureDarc(t *testing.T) {
 		require.Error(t, err)
 	}
 
-	log.Info("evolve to modify the unrestrict_evolve rule - fail")
+	log.Lvl1("evolve to modify the unrestrict_evolve rule - fail")
 	{
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
@@ -146,7 +146,7 @@ func TestSecureDarc(t *testing.T) {
 
 	var barrier *skipchain.SkipBlock
 
-	log.Info("evolve to modify existing rules - pass")
+	log.Lvl1("evolve to modify existing rules - pass")
 	{
 		secDarc2 := secDarc.Copy()
 		require.NoError(t, secDarc2.EvolveFrom(secDarc))
@@ -180,7 +180,7 @@ func TestSecureDarc(t *testing.T) {
 	// should increase by one
 	require.Equal(t, myDarc.Version, gDarc.Version+1)
 
-	log.Info("evolve_unrestricted fails with the wrong signer")
+	log.Lvl1("evolve_unrestricted fails with the wrong signer")
 	{
 		myDarc2 := myDarc.Copy()
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))
@@ -204,7 +204,7 @@ func TestSecureDarc(t *testing.T) {
 		require.Error(t, err)
 	}
 
-	log.Info("evolve_unrestricted to add rules - pass")
+	log.Lvl1("evolve_unrestricted to add rules - pass")
 	{
 		myDarc2 := myDarc.Copy()
 		require.NoError(t, myDarc2.EvolveFrom(&myDarc))

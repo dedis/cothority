@@ -120,6 +120,8 @@ func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
 
 // NewClientTransaction creates a transaction compatible with the version passed
 // in arguments. Depending on the version, the hash will have a different value.
+// Most common usage is:
+//   byzcoin.NewClientTransaction(byzcoin.CurrentVersion, instr...)
 func NewClientTransaction(v Version, instrs ...Instruction) ClientTransaction {
 	ctx := ClientTransaction{Instructions: instrs}
 	ctx.Instructions.SetVersion(v)
@@ -297,6 +299,10 @@ func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	}
 	if len(signers) != len(instr.SignerCounter) {
 		return xerrors.New("the number of signers does not match the number of counters")
+	}
+	if instr.version != CurrentVersion {
+		return xerrors.New("cannot sign previous versions - please use" +
+			" byzcoin.NewClientTransaction")
 	}
 	instr.Signatures = make([][]byte, len(signers))
 	for i := range signers {

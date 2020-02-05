@@ -117,16 +117,16 @@ func ReadSpawn(c *cli.Context) error {
 		return xerrors.Errorf("failed to get the signer counters: %v", err)
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: calypso.ContractReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
 			SignerCounter: []uint64{counters.Counters[0] + 1},
-		}},
-	}
+		},
+	)
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

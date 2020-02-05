@@ -66,9 +66,7 @@ func (c *Client) CreateLTS(ltsRoster *onet.Roster, darcID darc.ID, signers []dar
 		},
 		SignerCounter: counters,
 	}
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{inst},
-	}
+	tx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion, inst)
 	if err := tx.FillSignersAndSignWith(signers...); err != nil {
 		return nil, xerrors.Errorf("signing txn: %v", err)
 	}
@@ -167,8 +165,8 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 	if err != nil {
 		return nil, xerrors.Errorf("encoding Write message: %v", err)
 	}
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(darc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
@@ -176,8 +174,8 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 					Name: "write", Value: writeBuf}},
 			},
 			SignerCounter: []uint64{signerCtr},
-		}},
-	}
+		},
+	)
 	//Sign the transaction
 	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
@@ -216,16 +214,16 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 		return nil, xerrors.Errorf("encoding Read message: %v", err)
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
 			SignerCounter: []uint64{signerCtr},
-		}},
-	}
+		},
+	)
 	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
 		return nil, xerrors.Errorf("signing txn: %v", err)
@@ -258,8 +256,8 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 		return nil, xerrors.Errorf("serializing darc to protobuf: %v", err)
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(controlDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: byzcoin.ContractDarcID,
@@ -269,8 +267,8 @@ func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 				}},
 			},
 			SignerCounter: []uint64{signerCtr},
-		}},
-	}
+		},
+	)
 	err = ctx.FillSignersAndSignWith(signer)
 	if err != nil {
 		return nil, xerrors.Errorf("signing txn: %v", err)
