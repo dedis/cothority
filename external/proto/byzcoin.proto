@@ -280,6 +280,38 @@ message StreamingResponse {
   optional skipchain.SkipBlock block = 1;
 }
 
+// PaginateRequest is a request to get NumPages times the consecutive list of
+// PageSize blocks.
+message PaginateRequest {
+  // The first block to fetch
+  required bytes startid = 1;
+  // Determines the length of the Blocks attribute in the PaginateResponse.
+  // The list contains PageSize consecutive blocks
+  required uint64 pagesize = 2;
+  // The number of (asynchrounous) requests the service will return to the
+  // client. Requests are send in a consecutive order wrt their list of blocks
+  required uint64 numpages = 3;
+  // If true then blocks are consecutive in the reverse order, ie. following
+  // backward links.
+  required bool backward = 4;
+}
+
+// PaginateResponse is a reponse from a PaginateRequest.
+message PaginateResponse {
+  // A list of consecutive blocks
+  repeated skipchain.SkipBlock blocks = 1;
+  // The page number index: relevant if the clients asked for more than one
+  // asynchrounous reply from the service.
+  required uint64 pagenumber = 2;
+  // Tells if the result contains consecutive blocks in a reversed order.
+  required bool backward = 3;
+  // Used to tell the client if an error occured. Any error code not equal to
+  // 0 means that something special happened.
+  required uint64 errorcode = 4;
+  // A list of error messages in case something special happened.
+  repeated string errortext = 5;
+}
+
 // DownloadState requests the current global state of that node.
 // If it is the first call to the service, then Reset
 // must be true, else an error will be returned, or old data

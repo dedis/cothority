@@ -24775,6 +24775,2537 @@ public final class ByzCoinProto {
 
   }
 
+  public interface PaginateRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.PaginateRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * The first block to fetch
+     * </pre>
+     *
+     * <code>required bytes startid = 1;</code>
+     */
+    boolean hasStartid();
+    /**
+     * <pre>
+     * The first block to fetch
+     * </pre>
+     *
+     * <code>required bytes startid = 1;</code>
+     */
+    com.google.protobuf.ByteString getStartid();
+
+    /**
+     * <pre>
+     * Determines the length of the Blocks attribute in the PaginateResponse.
+     * The list contains PageSize consecutive blocks
+     * </pre>
+     *
+     * <code>required uint64 pagesize = 2;</code>
+     */
+    boolean hasPagesize();
+    /**
+     * <pre>
+     * Determines the length of the Blocks attribute in the PaginateResponse.
+     * The list contains PageSize consecutive blocks
+     * </pre>
+     *
+     * <code>required uint64 pagesize = 2;</code>
+     */
+    long getPagesize();
+
+    /**
+     * <pre>
+     * The number of (asynchrounous) requests the service will return to the
+     * client. Requests are send in a consecutive order wrt their list of blocks
+     * </pre>
+     *
+     * <code>required uint64 numpages = 3;</code>
+     */
+    boolean hasNumpages();
+    /**
+     * <pre>
+     * The number of (asynchrounous) requests the service will return to the
+     * client. Requests are send in a consecutive order wrt their list of blocks
+     * </pre>
+     *
+     * <code>required uint64 numpages = 3;</code>
+     */
+    long getNumpages();
+
+    /**
+     * <pre>
+     * If true then blocks are consecutive in the reverse order, ie. following
+     * backward links.
+     * </pre>
+     *
+     * <code>required bool backward = 4;</code>
+     */
+    boolean hasBackward();
+    /**
+     * <pre>
+     * If true then blocks are consecutive in the reverse order, ie. following
+     * backward links.
+     * </pre>
+     *
+     * <code>required bool backward = 4;</code>
+     */
+    boolean getBackward();
+  }
+  /**
+   * <pre>
+   * PaginateRequest is a request to get NumPages times the consecutive list of
+   * PageSize blocks.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.PaginateRequest}
+   */
+  public  static final class PaginateRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.PaginateRequest)
+      PaginateRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PaginateRequest.newBuilder() to construct.
+    private PaginateRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PaginateRequest() {
+      startid_ = com.google.protobuf.ByteString.EMPTY;
+      pagesize_ = 0L;
+      numpages_ = 0L;
+      backward_ = false;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PaginateRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              startid_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              pagesize_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              numpages_ = input.readUInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              backward_ = input.readBool();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateRequest_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int STARTID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString startid_;
+    /**
+     * <pre>
+     * The first block to fetch
+     * </pre>
+     *
+     * <code>required bytes startid = 1;</code>
+     */
+    public boolean hasStartid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * The first block to fetch
+     * </pre>
+     *
+     * <code>required bytes startid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getStartid() {
+      return startid_;
+    }
+
+    public static final int PAGESIZE_FIELD_NUMBER = 2;
+    private long pagesize_;
+    /**
+     * <pre>
+     * Determines the length of the Blocks attribute in the PaginateResponse.
+     * The list contains PageSize consecutive blocks
+     * </pre>
+     *
+     * <code>required uint64 pagesize = 2;</code>
+     */
+    public boolean hasPagesize() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Determines the length of the Blocks attribute in the PaginateResponse.
+     * The list contains PageSize consecutive blocks
+     * </pre>
+     *
+     * <code>required uint64 pagesize = 2;</code>
+     */
+    public long getPagesize() {
+      return pagesize_;
+    }
+
+    public static final int NUMPAGES_FIELD_NUMBER = 3;
+    private long numpages_;
+    /**
+     * <pre>
+     * The number of (asynchrounous) requests the service will return to the
+     * client. Requests are send in a consecutive order wrt their list of blocks
+     * </pre>
+     *
+     * <code>required uint64 numpages = 3;</code>
+     */
+    public boolean hasNumpages() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * The number of (asynchrounous) requests the service will return to the
+     * client. Requests are send in a consecutive order wrt their list of blocks
+     * </pre>
+     *
+     * <code>required uint64 numpages = 3;</code>
+     */
+    public long getNumpages() {
+      return numpages_;
+    }
+
+    public static final int BACKWARD_FIELD_NUMBER = 4;
+    private boolean backward_;
+    /**
+     * <pre>
+     * If true then blocks are consecutive in the reverse order, ie. following
+     * backward links.
+     * </pre>
+     *
+     * <code>required bool backward = 4;</code>
+     */
+    public boolean hasBackward() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * If true then blocks are consecutive in the reverse order, ie. following
+     * backward links.
+     * </pre>
+     *
+     * <code>required bool backward = 4;</code>
+     */
+    public boolean getBackward() {
+      return backward_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasStartid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPagesize()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasNumpages()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasBackward()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, startid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(2, pagesize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(3, numpages_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBool(4, backward_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, startid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, pagesize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(3, numpages_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(4, backward_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest other = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest) obj;
+
+      boolean result = true;
+      result = result && (hasStartid() == other.hasStartid());
+      if (hasStartid()) {
+        result = result && getStartid()
+            .equals(other.getStartid());
+      }
+      result = result && (hasPagesize() == other.hasPagesize());
+      if (hasPagesize()) {
+        result = result && (getPagesize()
+            == other.getPagesize());
+      }
+      result = result && (hasNumpages() == other.hasNumpages());
+      if (hasNumpages()) {
+        result = result && (getNumpages()
+            == other.getNumpages());
+      }
+      result = result && (hasBackward() == other.hasBackward());
+      if (hasBackward()) {
+        result = result && (getBackward()
+            == other.getBackward());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasStartid()) {
+        hash = (37 * hash) + STARTID_FIELD_NUMBER;
+        hash = (53 * hash) + getStartid().hashCode();
+      }
+      if (hasPagesize()) {
+        hash = (37 * hash) + PAGESIZE_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getPagesize());
+      }
+      if (hasNumpages()) {
+        hash = (37 * hash) + NUMPAGES_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getNumpages());
+      }
+      if (hasBackward()) {
+        hash = (37 * hash) + BACKWARD_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getBackward());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PaginateRequest is a request to get NumPages times the consecutive list of
+     * PageSize blocks.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.PaginateRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.PaginateRequest)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateRequest_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.class, ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        startid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        pagesize_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        numpages_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        backward_ = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateRequest_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest result = new ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.startid_ = startid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.pagesize_ = pagesize_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.numpages_ = numpages_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.backward_ = backward_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest.getDefaultInstance()) return this;
+        if (other.hasStartid()) {
+          setStartid(other.getStartid());
+        }
+        if (other.hasPagesize()) {
+          setPagesize(other.getPagesize());
+        }
+        if (other.hasNumpages()) {
+          setNumpages(other.getNumpages());
+        }
+        if (other.hasBackward()) {
+          setBackward(other.getBackward());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasStartid()) {
+          return false;
+        }
+        if (!hasPagesize()) {
+          return false;
+        }
+        if (!hasNumpages()) {
+          return false;
+        }
+        if (!hasBackward()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString startid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * The first block to fetch
+       * </pre>
+       *
+       * <code>required bytes startid = 1;</code>
+       */
+      public boolean hasStartid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * The first block to fetch
+       * </pre>
+       *
+       * <code>required bytes startid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getStartid() {
+        return startid_;
+      }
+      /**
+       * <pre>
+       * The first block to fetch
+       * </pre>
+       *
+       * <code>required bytes startid = 1;</code>
+       */
+      public Builder setStartid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        startid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The first block to fetch
+       * </pre>
+       *
+       * <code>required bytes startid = 1;</code>
+       */
+      public Builder clearStartid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        startid_ = getDefaultInstance().getStartid();
+        onChanged();
+        return this;
+      }
+
+      private long pagesize_ ;
+      /**
+       * <pre>
+       * Determines the length of the Blocks attribute in the PaginateResponse.
+       * The list contains PageSize consecutive blocks
+       * </pre>
+       *
+       * <code>required uint64 pagesize = 2;</code>
+       */
+      public boolean hasPagesize() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * Determines the length of the Blocks attribute in the PaginateResponse.
+       * The list contains PageSize consecutive blocks
+       * </pre>
+       *
+       * <code>required uint64 pagesize = 2;</code>
+       */
+      public long getPagesize() {
+        return pagesize_;
+      }
+      /**
+       * <pre>
+       * Determines the length of the Blocks attribute in the PaginateResponse.
+       * The list contains PageSize consecutive blocks
+       * </pre>
+       *
+       * <code>required uint64 pagesize = 2;</code>
+       */
+      public Builder setPagesize(long value) {
+        bitField0_ |= 0x00000002;
+        pagesize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Determines the length of the Blocks attribute in the PaginateResponse.
+       * The list contains PageSize consecutive blocks
+       * </pre>
+       *
+       * <code>required uint64 pagesize = 2;</code>
+       */
+      public Builder clearPagesize() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        pagesize_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long numpages_ ;
+      /**
+       * <pre>
+       * The number of (asynchrounous) requests the service will return to the
+       * client. Requests are send in a consecutive order wrt their list of blocks
+       * </pre>
+       *
+       * <code>required uint64 numpages = 3;</code>
+       */
+      public boolean hasNumpages() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * The number of (asynchrounous) requests the service will return to the
+       * client. Requests are send in a consecutive order wrt their list of blocks
+       * </pre>
+       *
+       * <code>required uint64 numpages = 3;</code>
+       */
+      public long getNumpages() {
+        return numpages_;
+      }
+      /**
+       * <pre>
+       * The number of (asynchrounous) requests the service will return to the
+       * client. Requests are send in a consecutive order wrt their list of blocks
+       * </pre>
+       *
+       * <code>required uint64 numpages = 3;</code>
+       */
+      public Builder setNumpages(long value) {
+        bitField0_ |= 0x00000004;
+        numpages_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The number of (asynchrounous) requests the service will return to the
+       * client. Requests are send in a consecutive order wrt their list of blocks
+       * </pre>
+       *
+       * <code>required uint64 numpages = 3;</code>
+       */
+      public Builder clearNumpages() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        numpages_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private boolean backward_ ;
+      /**
+       * <pre>
+       * If true then blocks are consecutive in the reverse order, ie. following
+       * backward links.
+       * </pre>
+       *
+       * <code>required bool backward = 4;</code>
+       */
+      public boolean hasBackward() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * If true then blocks are consecutive in the reverse order, ie. following
+       * backward links.
+       * </pre>
+       *
+       * <code>required bool backward = 4;</code>
+       */
+      public boolean getBackward() {
+        return backward_;
+      }
+      /**
+       * <pre>
+       * If true then blocks are consecutive in the reverse order, ie. following
+       * backward links.
+       * </pre>
+       *
+       * <code>required bool backward = 4;</code>
+       */
+      public Builder setBackward(boolean value) {
+        bitField0_ |= 0x00000008;
+        backward_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * If true then blocks are consecutive in the reverse order, ie. following
+       * backward links.
+       * </pre>
+       *
+       * <code>required bool backward = 4;</code>
+       */
+      public Builder clearBackward() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        backward_ = false;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.PaginateRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.PaginateRequest)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PaginateRequest>
+        PARSER = new com.google.protobuf.AbstractParser<PaginateRequest>() {
+      @java.lang.Override
+      public PaginateRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PaginateRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PaginateRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PaginateRequest> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PaginateResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:byzcoin.PaginateResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> 
+        getBlocksList();
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlocks(int index);
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    int getBlocksCount();
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+        getBlocksOrBuilderList();
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getBlocksOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * The page number index: relevant if the clients asked for more than one
+     * asynchrounous reply from the service.
+     * </pre>
+     *
+     * <code>required uint64 pagenumber = 2;</code>
+     */
+    boolean hasPagenumber();
+    /**
+     * <pre>
+     * The page number index: relevant if the clients asked for more than one
+     * asynchrounous reply from the service.
+     * </pre>
+     *
+     * <code>required uint64 pagenumber = 2;</code>
+     */
+    long getPagenumber();
+
+    /**
+     * <pre>
+     * Tells if the result contains consecutive blocks in a reversed order.
+     * </pre>
+     *
+     * <code>required bool backward = 3;</code>
+     */
+    boolean hasBackward();
+    /**
+     * <pre>
+     * Tells if the result contains consecutive blocks in a reversed order.
+     * </pre>
+     *
+     * <code>required bool backward = 3;</code>
+     */
+    boolean getBackward();
+
+    /**
+     * <pre>
+     * Used to tell the client if an error occured. Any error code not equal to
+     * 0 means that something special happened.
+     * </pre>
+     *
+     * <code>required uint64 errorcode = 4;</code>
+     */
+    boolean hasErrorcode();
+    /**
+     * <pre>
+     * Used to tell the client if an error occured. Any error code not equal to
+     * 0 means that something special happened.
+     * </pre>
+     *
+     * <code>required uint64 errorcode = 4;</code>
+     */
+    long getErrorcode();
+
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    java.util.List<java.lang.String>
+        getErrortextList();
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    int getErrortextCount();
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    java.lang.String getErrortext(int index);
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getErrortextBytes(int index);
+  }
+  /**
+   * <pre>
+   * PaginateResponse is a reponse from a PaginateRequest.
+   * </pre>
+   *
+   * Protobuf type {@code byzcoin.PaginateResponse}
+   */
+  public  static final class PaginateResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:byzcoin.PaginateResponse)
+      PaginateResponseOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PaginateResponse.newBuilder() to construct.
+    private PaginateResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PaginateResponse() {
+      blocks_ = java.util.Collections.emptyList();
+      pagenumber_ = 0L;
+      backward_ = false;
+      errorcode_ = 0L;
+      errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PaginateResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                blocks_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              blocks_.add(
+                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry));
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000001;
+              pagenumber_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000002;
+              backward_ = input.readBool();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000004;
+              errorcode_ = input.readUInt64();
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                errortext_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              errortext_.add(bs);
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          blocks_ = java.util.Collections.unmodifiableList(blocks_);
+        }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          errortext_ = errortext_.getUnmodifiableView();
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateResponse_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BLOCKS_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> blocks_;
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> getBlocksList() {
+      return blocks_;
+    }
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+        getBlocksOrBuilderList() {
+      return blocks_;
+    }
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    public int getBlocksCount() {
+      return blocks_.size();
+    }
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlocks(int index) {
+      return blocks_.get(index);
+    }
+    /**
+     * <pre>
+     * A list of consecutive blocks
+     * </pre>
+     *
+     * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+     */
+    public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getBlocksOrBuilder(
+        int index) {
+      return blocks_.get(index);
+    }
+
+    public static final int PAGENUMBER_FIELD_NUMBER = 2;
+    private long pagenumber_;
+    /**
+     * <pre>
+     * The page number index: relevant if the clients asked for more than one
+     * asynchrounous reply from the service.
+     * </pre>
+     *
+     * <code>required uint64 pagenumber = 2;</code>
+     */
+    public boolean hasPagenumber() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * The page number index: relevant if the clients asked for more than one
+     * asynchrounous reply from the service.
+     * </pre>
+     *
+     * <code>required uint64 pagenumber = 2;</code>
+     */
+    public long getPagenumber() {
+      return pagenumber_;
+    }
+
+    public static final int BACKWARD_FIELD_NUMBER = 3;
+    private boolean backward_;
+    /**
+     * <pre>
+     * Tells if the result contains consecutive blocks in a reversed order.
+     * </pre>
+     *
+     * <code>required bool backward = 3;</code>
+     */
+    public boolean hasBackward() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Tells if the result contains consecutive blocks in a reversed order.
+     * </pre>
+     *
+     * <code>required bool backward = 3;</code>
+     */
+    public boolean getBackward() {
+      return backward_;
+    }
+
+    public static final int ERRORCODE_FIELD_NUMBER = 4;
+    private long errorcode_;
+    /**
+     * <pre>
+     * Used to tell the client if an error occured. Any error code not equal to
+     * 0 means that something special happened.
+     * </pre>
+     *
+     * <code>required uint64 errorcode = 4;</code>
+     */
+    public boolean hasErrorcode() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Used to tell the client if an error occured. Any error code not equal to
+     * 0 means that something special happened.
+     * </pre>
+     *
+     * <code>required uint64 errorcode = 4;</code>
+     */
+    public long getErrorcode() {
+      return errorcode_;
+    }
+
+    public static final int ERRORTEXT_FIELD_NUMBER = 5;
+    private com.google.protobuf.LazyStringList errortext_;
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getErrortextList() {
+      return errortext_;
+    }
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    public int getErrortextCount() {
+      return errortext_.size();
+    }
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    public java.lang.String getErrortext(int index) {
+      return errortext_.get(index);
+    }
+    /**
+     * <pre>
+     * A list of error messages in case something special happened.
+     * </pre>
+     *
+     * <code>repeated string errortext = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getErrortextBytes(int index) {
+      return errortext_.getByteString(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPagenumber()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasBackward()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasErrorcode()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getBlocksCount(); i++) {
+        if (!getBlocks(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < blocks_.size(); i++) {
+        output.writeMessage(1, blocks_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt64(2, pagenumber_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(3, backward_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(4, errorcode_);
+      }
+      for (int i = 0; i < errortext_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, errortext_.getRaw(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < blocks_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, blocks_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, pagenumber_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, backward_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(4, errorcode_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < errortext_.size(); i++) {
+          dataSize += computeStringSizeNoTag(errortext_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getErrortextList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse other = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse) obj;
+
+      boolean result = true;
+      result = result && getBlocksList()
+          .equals(other.getBlocksList());
+      result = result && (hasPagenumber() == other.hasPagenumber());
+      if (hasPagenumber()) {
+        result = result && (getPagenumber()
+            == other.getPagenumber());
+      }
+      result = result && (hasBackward() == other.hasBackward());
+      if (hasBackward()) {
+        result = result && (getBackward()
+            == other.getBackward());
+      }
+      result = result && (hasErrorcode() == other.hasErrorcode());
+      if (hasErrorcode()) {
+        result = result && (getErrorcode()
+            == other.getErrorcode());
+      }
+      result = result && getErrortextList()
+          .equals(other.getErrortextList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getBlocksCount() > 0) {
+        hash = (37 * hash) + BLOCKS_FIELD_NUMBER;
+        hash = (53 * hash) + getBlocksList().hashCode();
+      }
+      if (hasPagenumber()) {
+        hash = (37 * hash) + PAGENUMBER_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getPagenumber());
+      }
+      if (hasBackward()) {
+        hash = (37 * hash) + BACKWARD_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getBackward());
+      }
+      if (hasErrorcode()) {
+        hash = (37 * hash) + ERRORCODE_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getErrorcode());
+      }
+      if (getErrortextCount() > 0) {
+        hash = (37 * hash) + ERRORTEXT_FIELD_NUMBER;
+        hash = (53 * hash) + getErrortextList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PaginateResponse is a reponse from a PaginateRequest.
+     * </pre>
+     *
+     * Protobuf type {@code byzcoin.PaginateResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:byzcoin.PaginateResponse)
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateResponse_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.class, ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getBlocksFieldBuilder();
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (blocksBuilder_ == null) {
+          blocks_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          blocksBuilder_.clear();
+        }
+        pagenumber_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        backward_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        errorcode_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.internal_static_byzcoin_PaginateResponse_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse build() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse buildPartial() {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse result = new ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (blocksBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            blocks_ = java.util.Collections.unmodifiableList(blocks_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.blocks_ = blocks_;
+        } else {
+          result.blocks_ = blocksBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.pagenumber_ = pagenumber_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.backward_ = backward_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.errorcode_ = errorcode_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          errortext_ = errortext_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.errortext_ = errortext_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse other) {
+        if (other == ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse.getDefaultInstance()) return this;
+        if (blocksBuilder_ == null) {
+          if (!other.blocks_.isEmpty()) {
+            if (blocks_.isEmpty()) {
+              blocks_ = other.blocks_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureBlocksIsMutable();
+              blocks_.addAll(other.blocks_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.blocks_.isEmpty()) {
+            if (blocksBuilder_.isEmpty()) {
+              blocksBuilder_.dispose();
+              blocksBuilder_ = null;
+              blocks_ = other.blocks_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              blocksBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getBlocksFieldBuilder() : null;
+            } else {
+              blocksBuilder_.addAllMessages(other.blocks_);
+            }
+          }
+        }
+        if (other.hasPagenumber()) {
+          setPagenumber(other.getPagenumber());
+        }
+        if (other.hasBackward()) {
+          setBackward(other.getBackward());
+        }
+        if (other.hasErrorcode()) {
+          setErrorcode(other.getErrorcode());
+        }
+        if (!other.errortext_.isEmpty()) {
+          if (errortext_.isEmpty()) {
+            errortext_ = other.errortext_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureErrortextIsMutable();
+            errortext_.addAll(other.errortext_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasPagenumber()) {
+          return false;
+        }
+        if (!hasBackward()) {
+          return false;
+        }
+        if (!hasErrorcode()) {
+          return false;
+        }
+        for (int i = 0; i < getBlocksCount(); i++) {
+          if (!getBlocks(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> blocks_ =
+        java.util.Collections.emptyList();
+      private void ensureBlocksIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          blocks_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>(blocks_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> blocksBuilder_;
+
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> getBlocksList() {
+        if (blocksBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(blocks_);
+        } else {
+          return blocksBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public int getBlocksCount() {
+        if (blocksBuilder_ == null) {
+          return blocks_.size();
+        } else {
+          return blocksBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getBlocks(int index) {
+        if (blocksBuilder_ == null) {
+          return blocks_.get(index);
+        } else {
+          return blocksBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder setBlocks(
+          int index, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (blocksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlocksIsMutable();
+          blocks_.set(index, value);
+          onChanged();
+        } else {
+          blocksBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder setBlocks(
+          int index, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
+        if (blocksBuilder_ == null) {
+          ensureBlocksIsMutable();
+          blocks_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          blocksBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder addBlocks(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (blocksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlocksIsMutable();
+          blocks_.add(value);
+          onChanged();
+        } else {
+          blocksBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder addBlocks(
+          int index, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock value) {
+        if (blocksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlocksIsMutable();
+          blocks_.add(index, value);
+          onChanged();
+        } else {
+          blocksBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder addBlocks(
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
+        if (blocksBuilder_ == null) {
+          ensureBlocksIsMutable();
+          blocks_.add(builderForValue.build());
+          onChanged();
+        } else {
+          blocksBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder addBlocks(
+          int index, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
+        if (blocksBuilder_ == null) {
+          ensureBlocksIsMutable();
+          blocks_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          blocksBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder addAllBlocks(
+          java.lang.Iterable<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock> values) {
+        if (blocksBuilder_ == null) {
+          ensureBlocksIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, blocks_);
+          onChanged();
+        } else {
+          blocksBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder clearBlocks() {
+        if (blocksBuilder_ == null) {
+          blocks_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          blocksBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public Builder removeBlocks(int index) {
+        if (blocksBuilder_ == null) {
+          ensureBlocksIsMutable();
+          blocks_.remove(index);
+          onChanged();
+        } else {
+          blocksBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder getBlocksBuilder(
+          int index) {
+        return getBlocksFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder getBlocksOrBuilder(
+          int index) {
+        if (blocksBuilder_ == null) {
+          return blocks_.get(index);  } else {
+          return blocksBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+           getBlocksOrBuilderList() {
+        if (blocksBuilder_ != null) {
+          return blocksBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(blocks_);
+        }
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder addBlocksBuilder() {
+        return getBlocksFieldBuilder().addBuilder(
+            ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder addBlocksBuilder(
+          int index) {
+        return getBlocksFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * A list of consecutive blocks
+       * </pre>
+       *
+       * <code>repeated .skipchain.SkipBlock blocks = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder> 
+           getBlocksBuilderList() {
+        return getBlocksFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder> 
+          getBlocksFieldBuilder() {
+        if (blocksBuilder_ == null) {
+          blocksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlockOrBuilder>(
+                  blocks_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          blocks_ = null;
+        }
+        return blocksBuilder_;
+      }
+
+      private long pagenumber_ ;
+      /**
+       * <pre>
+       * The page number index: relevant if the clients asked for more than one
+       * asynchrounous reply from the service.
+       * </pre>
+       *
+       * <code>required uint64 pagenumber = 2;</code>
+       */
+      public boolean hasPagenumber() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * The page number index: relevant if the clients asked for more than one
+       * asynchrounous reply from the service.
+       * </pre>
+       *
+       * <code>required uint64 pagenumber = 2;</code>
+       */
+      public long getPagenumber() {
+        return pagenumber_;
+      }
+      /**
+       * <pre>
+       * The page number index: relevant if the clients asked for more than one
+       * asynchrounous reply from the service.
+       * </pre>
+       *
+       * <code>required uint64 pagenumber = 2;</code>
+       */
+      public Builder setPagenumber(long value) {
+        bitField0_ |= 0x00000002;
+        pagenumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * The page number index: relevant if the clients asked for more than one
+       * asynchrounous reply from the service.
+       * </pre>
+       *
+       * <code>required uint64 pagenumber = 2;</code>
+       */
+      public Builder clearPagenumber() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        pagenumber_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private boolean backward_ ;
+      /**
+       * <pre>
+       * Tells if the result contains consecutive blocks in a reversed order.
+       * </pre>
+       *
+       * <code>required bool backward = 3;</code>
+       */
+      public boolean hasBackward() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Tells if the result contains consecutive blocks in a reversed order.
+       * </pre>
+       *
+       * <code>required bool backward = 3;</code>
+       */
+      public boolean getBackward() {
+        return backward_;
+      }
+      /**
+       * <pre>
+       * Tells if the result contains consecutive blocks in a reversed order.
+       * </pre>
+       *
+       * <code>required bool backward = 3;</code>
+       */
+      public Builder setBackward(boolean value) {
+        bitField0_ |= 0x00000004;
+        backward_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Tells if the result contains consecutive blocks in a reversed order.
+       * </pre>
+       *
+       * <code>required bool backward = 3;</code>
+       */
+      public Builder clearBackward() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        backward_ = false;
+        onChanged();
+        return this;
+      }
+
+      private long errorcode_ ;
+      /**
+       * <pre>
+       * Used to tell the client if an error occured. Any error code not equal to
+       * 0 means that something special happened.
+       * </pre>
+       *
+       * <code>required uint64 errorcode = 4;</code>
+       */
+      public boolean hasErrorcode() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Used to tell the client if an error occured. Any error code not equal to
+       * 0 means that something special happened.
+       * </pre>
+       *
+       * <code>required uint64 errorcode = 4;</code>
+       */
+      public long getErrorcode() {
+        return errorcode_;
+      }
+      /**
+       * <pre>
+       * Used to tell the client if an error occured. Any error code not equal to
+       * 0 means that something special happened.
+       * </pre>
+       *
+       * <code>required uint64 errorcode = 4;</code>
+       */
+      public Builder setErrorcode(long value) {
+        bitField0_ |= 0x00000008;
+        errorcode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Used to tell the client if an error occured. Any error code not equal to
+       * 0 means that something special happened.
+       * </pre>
+       *
+       * <code>required uint64 errorcode = 4;</code>
+       */
+      public Builder clearErrorcode() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        errorcode_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureErrortextIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          errortext_ = new com.google.protobuf.LazyStringArrayList(errortext_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getErrortextList() {
+        return errortext_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public int getErrortextCount() {
+        return errortext_.size();
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public java.lang.String getErrortext(int index) {
+        return errortext_.get(index);
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getErrortextBytes(int index) {
+        return errortext_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public Builder setErrortext(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureErrortextIsMutable();
+        errortext_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public Builder addErrortext(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureErrortextIsMutable();
+        errortext_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public Builder addAllErrortext(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureErrortextIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, errortext_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public Builder clearErrortext() {
+        errortext_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A list of error messages in case something special happened.
+       * </pre>
+       *
+       * <code>repeated string errortext = 5;</code>
+       */
+      public Builder addErrortextBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureErrortextIsMutable();
+        errortext_.add(value);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:byzcoin.PaginateResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:byzcoin.PaginateResponse)
+    private static final ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse();
+    }
+
+    public static ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PaginateResponse>
+        PARSER = new com.google.protobuf.AbstractParser<PaginateResponse>() {
+      @java.lang.Override
+      public PaginateResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PaginateResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PaginateResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PaginateResponse> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.ByzCoinProto.PaginateResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface DownloadStateOrBuilder extends
       // @@protoc_insertion_point(interface_extends:byzcoin.DownloadState)
       com.google.protobuf.MessageOrBuilder {
@@ -40463,6 +42994,16 @@ public final class ByzCoinProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_byzcoin_StreamingResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_PaginateRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_PaginateRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_byzcoin_PaginateResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_byzcoin_PaginateResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_byzcoin_DownloadState_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -40625,47 +43166,52 @@ public final class ByzCoinProto {
       "(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(" +
       "\014\022\r\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002" +
       "id\030\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001" +
-      " \001(\0132\024.skipchain.SkipBlock\"A\n\rDownloadSt" +
-      "ate\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n" +
-      "\006length\030\003 \002(\021\"]\n\025DownloadStateResponse\022&" +
-      "\n\tkeyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValue\022\r" +
-      "\n\005nonce\030\002 \002(\004\022\r\n\005total\030\003 \001(\021\"(\n\nDBKeyVal" +
-      "ue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateC" +
-      "hangeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncontra" +
-      "ctid\030\002 \002(\t\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030\004 \002" +
-      "(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounters\022" +
-      "\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"" +
-      "@\n\031GetSignerCountersResponse\022\024\n\010counters" +
-      "\030\001 \003(\004B\002\020\001\022\r\n\005index\030\002 \001(\004\"N\n\022GetInstance" +
-      "Version\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstance" +
-      "id\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastInst" +
-      "anceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninst" +
-      "anceid\030\002 \002(\014\"[\n\032GetInstanceVersionRespon" +
-      "se\022)\n\013statechange\030\001 \002(\0132\024.byzcoin.StateC" +
-      "hange\022\022\n\nblockindex\030\002 \002(\021\"@\n\025GetAllInsta" +
-      "nceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninsta" +
-      "nceid\030\002 \002(\014\"Z\n\035GetAllInstanceVersionResp" +
-      "onse\0229\n\014statechanges\030\001 \003(\0132#.byzcoin.Get" +
-      "InstanceVersionResponse\"T\n\030CheckStateCha" +
-      "ngeValidity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninst" +
-      "anceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckSt" +
-      "ateChangeValidityResponse\022*\n\014statechange" +
-      "s\030\001 \003(\0132\024.byzcoin.StateChange\022\017\n\007blockid" +
-      "\030\002 \002(\014\"F\n\021ResolveInstanceID\022\023\n\013skipchain" +
-      "id\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(" +
-      "\n\022ResolvedInstanceID\022\022\n\ninstanceid\030\001 \002(\014" +
-      "\"!\n\014DebugRequest\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rD" +
-      "ebugResponse\022/\n\010byzcoins\030\001 \003(\0132\035.byzcoin" +
-      ".DebugResponseByzcoin\022)\n\004dump\030\002 \003(\0132\033.by" +
-      "zcoin.DebugResponseState\"v\n\024DebugRespons" +
-      "eByzcoin\022\021\n\tbyzcoinid\030\001 \002(\014\022%\n\007genesis\030\002" +
-      " \001(\0132\024.skipchain.SkipBlock\022$\n\006latest\030\003 \001" +
-      "(\0132\024.skipchain.SkipBlock\"J\n\022DebugRespons" +
-      "eState\022\013\n\003key\030\001 \002(\014\022\'\n\005state\030\002 \002(\0132\030.byz" +
-      "coin.StateChangeBody\":\n\022DebugRemoveReque" +
-      "st\022\021\n\tbyzcoinid\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014" +
-      "B\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoinProt" +
-      "o"
+      " \001(\0132\024.skipchain.SkipBlock\"X\n\017PaginateRe" +
+      "quest\022\017\n\007startid\030\001 \002(\014\022\020\n\010pagesize\030\002 \002(\004" +
+      "\022\020\n\010numpages\030\003 \002(\004\022\020\n\010backward\030\004 \002(\010\"\204\001\n" +
+      "\020PaginateResponse\022$\n\006blocks\030\001 \003(\0132\024.skip" +
+      "chain.SkipBlock\022\022\n\npagenumber\030\002 \002(\004\022\020\n\010b" +
+      "ackward\030\003 \002(\010\022\021\n\terrorcode\030\004 \002(\004\022\021\n\terro" +
+      "rtext\030\005 \003(\t\"A\n\rDownloadState\022\021\n\tbyzcoini" +
+      "d\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"]" +
+      "\n\025DownloadStateResponse\022&\n\tkeyvalues\030\001 \003" +
+      "(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\022\r" +
+      "\n\005total\030\003 \001(\021\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014" +
+      "\022\r\n\005value\030\002 \002(\014\"j\n\017StateChangeBody\022\023\n\013st" +
+      "ateaction\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\t\022\r\n\005v" +
+      "alue\030\003 \002(\014\022\017\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 " +
+      "\002(\014\";\n\021GetSignerCounters\022\021\n\tsignerids\030\001 " +
+      "\003(\t\022\023\n\013skipchainid\030\002 \002(\014\"@\n\031GetSignerCou" +
+      "ntersResponse\022\024\n\010counters\030\001 \003(\004B\002\020\001\022\r\n\005i" +
+      "ndex\030\002 \001(\004\"N\n\022GetInstanceVersion\022\023\n\013skip" +
+      "chainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007ver" +
+      "sion\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013" +
+      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n" +
+      "\032GetInstanceVersionResponse\022)\n\013statechan" +
+      "ge\030\001 \002(\0132\024.byzcoin.StateChange\022\022\n\nblocki" +
+      "ndex\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013s" +
+      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035" +
+      "GetAllInstanceVersionResponse\0229\n\014statech" +
+      "anges\030\001 \003(\0132#.byzcoin.GetInstanceVersion" +
+      "Response\"T\n\030CheckStateChangeValidity\022\023\n\013" +
+      "skipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n" +
+      "\007version\030\003 \002(\004\"_\n CheckStateChangeValidi" +
+      "tyResponse\022*\n\014statechanges\030\001 \003(\0132\024.byzco" +
+      "in.StateChange\022\017\n\007blockid\030\002 \002(\014\"F\n\021Resol" +
+      "veInstanceID\022\023\n\013skipchainid\030\001 \002(\014\022\016\n\006dar" +
+      "cid\030\002 \002(\014\022\014\n\004name\030\003 \002(\t\"(\n\022ResolvedInsta" +
+      "nceID\022\022\n\ninstanceid\030\001 \002(\014\"!\n\014DebugReques" +
+      "t\022\021\n\tbyzcoinid\030\001 \001(\014\"k\n\rDebugResponse\022/\n" +
+      "\010byzcoins\030\001 \003(\0132\035.byzcoin.DebugResponseB" +
+      "yzcoin\022)\n\004dump\030\002 \003(\0132\033.byzcoin.DebugResp" +
+      "onseState\"v\n\024DebugResponseByzcoin\022\021\n\tbyz" +
+      "coinid\030\001 \002(\014\022%\n\007genesis\030\002 \001(\0132\024.skipchai" +
+      "n.SkipBlock\022$\n\006latest\030\003 \001(\0132\024.skipchain." +
+      "SkipBlock\"J\n\022DebugResponseState\022\013\n\003key\030\001" +
+      " \002(\014\022\'\n\005state\030\002 \002(\0132\030.byzcoin.StateChang" +
+      "eBody\":\n\022DebugRemoveRequest\022\021\n\tbyzcoinid" +
+      "\030\001 \002(\014\022\021\n\tsignature\030\002 \002(\014B\'\n\027ch.epfl.ded" +
+      "is.lib.protoB\014ByzCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -40833,122 +43379,134 @@ public final class ByzCoinProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StreamingResponse_descriptor,
         new java.lang.String[] { "Block", });
-    internal_static_byzcoin_DownloadState_descriptor =
+    internal_static_byzcoin_PaginateRequest_descriptor =
       getDescriptor().getMessageTypes().get(25);
+    internal_static_byzcoin_PaginateRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_PaginateRequest_descriptor,
+        new java.lang.String[] { "Startid", "Pagesize", "Numpages", "Backward", });
+    internal_static_byzcoin_PaginateResponse_descriptor =
+      getDescriptor().getMessageTypes().get(26);
+    internal_static_byzcoin_PaginateResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_byzcoin_PaginateResponse_descriptor,
+        new java.lang.String[] { "Blocks", "Pagenumber", "Backward", "Errorcode", "Errortext", });
+    internal_static_byzcoin_DownloadState_descriptor =
+      getDescriptor().getMessageTypes().get(27);
     internal_static_byzcoin_DownloadState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DownloadState_descriptor,
         new java.lang.String[] { "Byzcoinid", "Nonce", "Length", });
     internal_static_byzcoin_DownloadStateResponse_descriptor =
-      getDescriptor().getMessageTypes().get(26);
+      getDescriptor().getMessageTypes().get(28);
     internal_static_byzcoin_DownloadStateResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DownloadStateResponse_descriptor,
         new java.lang.String[] { "Keyvalues", "Nonce", "Total", });
     internal_static_byzcoin_DBKeyValue_descriptor =
-      getDescriptor().getMessageTypes().get(27);
+      getDescriptor().getMessageTypes().get(29);
     internal_static_byzcoin_DBKeyValue_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DBKeyValue_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_byzcoin_StateChangeBody_descriptor =
-      getDescriptor().getMessageTypes().get(28);
+      getDescriptor().getMessageTypes().get(30);
     internal_static_byzcoin_StateChangeBody_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StateChangeBody_descriptor,
         new java.lang.String[] { "Stateaction", "Contractid", "Value", "Version", "Darcid", });
     internal_static_byzcoin_GetSignerCounters_descriptor =
-      getDescriptor().getMessageTypes().get(29);
+      getDescriptor().getMessageTypes().get(31);
     internal_static_byzcoin_GetSignerCounters_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetSignerCounters_descriptor,
         new java.lang.String[] { "Signerids", "Skipchainid", });
     internal_static_byzcoin_GetSignerCountersResponse_descriptor =
-      getDescriptor().getMessageTypes().get(30);
+      getDescriptor().getMessageTypes().get(32);
     internal_static_byzcoin_GetSignerCountersResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetSignerCountersResponse_descriptor,
         new java.lang.String[] { "Counters", "Index", });
     internal_static_byzcoin_GetInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(31);
+      getDescriptor().getMessageTypes().get(33);
     internal_static_byzcoin_GetInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", "Version", });
     internal_static_byzcoin_GetLastInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(32);
+      getDescriptor().getMessageTypes().get(34);
     internal_static_byzcoin_GetLastInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetLastInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", });
     internal_static_byzcoin_GetInstanceVersionResponse_descriptor =
-      getDescriptor().getMessageTypes().get(33);
+      getDescriptor().getMessageTypes().get(35);
     internal_static_byzcoin_GetInstanceVersionResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetInstanceVersionResponse_descriptor,
         new java.lang.String[] { "Statechange", "Blockindex", });
     internal_static_byzcoin_GetAllInstanceVersion_descriptor =
-      getDescriptor().getMessageTypes().get(34);
+      getDescriptor().getMessageTypes().get(36);
     internal_static_byzcoin_GetAllInstanceVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetAllInstanceVersion_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", });
     internal_static_byzcoin_GetAllInstanceVersionResponse_descriptor =
-      getDescriptor().getMessageTypes().get(35);
+      getDescriptor().getMessageTypes().get(37);
     internal_static_byzcoin_GetAllInstanceVersionResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_GetAllInstanceVersionResponse_descriptor,
         new java.lang.String[] { "Statechanges", });
     internal_static_byzcoin_CheckStateChangeValidity_descriptor =
-      getDescriptor().getMessageTypes().get(36);
+      getDescriptor().getMessageTypes().get(38);
     internal_static_byzcoin_CheckStateChangeValidity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckStateChangeValidity_descriptor,
         new java.lang.String[] { "Skipchainid", "Instanceid", "Version", });
     internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor =
-      getDescriptor().getMessageTypes().get(37);
+      getDescriptor().getMessageTypes().get(39);
     internal_static_byzcoin_CheckStateChangeValidityResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_CheckStateChangeValidityResponse_descriptor,
         new java.lang.String[] { "Statechanges", "Blockid", });
     internal_static_byzcoin_ResolveInstanceID_descriptor =
-      getDescriptor().getMessageTypes().get(38);
+      getDescriptor().getMessageTypes().get(40);
     internal_static_byzcoin_ResolveInstanceID_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ResolveInstanceID_descriptor,
         new java.lang.String[] { "Skipchainid", "Darcid", "Name", });
     internal_static_byzcoin_ResolvedInstanceID_descriptor =
-      getDescriptor().getMessageTypes().get(39);
+      getDescriptor().getMessageTypes().get(41);
     internal_static_byzcoin_ResolvedInstanceID_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ResolvedInstanceID_descriptor,
         new java.lang.String[] { "Instanceid", });
     internal_static_byzcoin_DebugRequest_descriptor =
-      getDescriptor().getMessageTypes().get(40);
+      getDescriptor().getMessageTypes().get(42);
     internal_static_byzcoin_DebugRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugRequest_descriptor,
         new java.lang.String[] { "Byzcoinid", });
     internal_static_byzcoin_DebugResponse_descriptor =
-      getDescriptor().getMessageTypes().get(41);
+      getDescriptor().getMessageTypes().get(43);
     internal_static_byzcoin_DebugResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponse_descriptor,
         new java.lang.String[] { "Byzcoins", "Dump", });
     internal_static_byzcoin_DebugResponseByzcoin_descriptor =
-      getDescriptor().getMessageTypes().get(42);
+      getDescriptor().getMessageTypes().get(44);
     internal_static_byzcoin_DebugResponseByzcoin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponseByzcoin_descriptor,
         new java.lang.String[] { "Byzcoinid", "Genesis", "Latest", });
     internal_static_byzcoin_DebugResponseState_descriptor =
-      getDescriptor().getMessageTypes().get(43);
+      getDescriptor().getMessageTypes().get(45);
     internal_static_byzcoin_DebugResponseState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugResponseState_descriptor,
         new java.lang.String[] { "Key", "State", });
     internal_static_byzcoin_DebugRemoveRequest_descriptor =
-      getDescriptor().getMessageTypes().get(44);
+      getDescriptor().getMessageTypes().get(46);
     internal_static_byzcoin_DebugRemoveRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_DebugRemoveRequest_descriptor,
