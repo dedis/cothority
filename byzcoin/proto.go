@@ -301,6 +301,38 @@ type StreamingResponse struct {
 	Block *skipchain.SkipBlock
 }
 
+// PaginateRequest is a request to get NumPages times the consecutive list of
+// PageSize blocks.
+type PaginateRequest struct {
+	// The first block to fetch
+	StartID skipchain.SkipBlockID
+	// Determines the length of the Blocks attribute in the PaginateResponse.
+	// The list contains PageSize consecutive blocks
+	PageSize uint64
+	// The number of (asynchrounous) requests the service will return to the
+	// client. Requests are send in a consecutive order wrt their list of blocks
+	NumPages uint64
+	// If true then blocks are consecutive in the reverse order, ie. following
+	// backward links.
+	Backward bool
+}
+
+// PaginateResponse is a reponse from a PaginateRequest.
+type PaginateResponse struct {
+	// A list of consecutive blocks
+	Blocks []*skipchain.SkipBlock
+	// The page number index: relevant if the clients asked for more than one
+	// asynchrounous reply from the service.
+	PageNumber uint64
+	// Tells if the result contains consecutive blocks in a reversed order.
+	Backward bool
+	// Used to tell the client if an error occured. Any error code not equal to
+	// 0 means that something special happened.
+	ErrorCode uint64
+	// A list of error messages in case something special happened.
+	ErrorText []string
+}
+
 // DownloadState requests the current global state of that node.
 // If it is the first call to the service, then Reset
 // must be true, else an error will be returned, or old data

@@ -2888,7 +2888,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
+	if err := s.RegisterStreamingHandlers(s.StreamTransactions, s.PaginateBlocks); err != nil {
 		return nil, xerrors.Errorf("registering handlers: %v", err)
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)

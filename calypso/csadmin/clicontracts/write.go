@@ -143,8 +143,8 @@ func WriteSpawn(c *cli.Context) error {
 		return xerrors.Errorf("getting signer counters: %v", err)
 	}
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(d.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: calypso.ContractWriteID,
@@ -152,8 +152,8 @@ func WriteSpawn(c *cli.Context) error {
 					Name: "write", Value: writeBuf}},
 			},
 			SignerCounter: []uint64{counters.Counters[0] + 1},
-		}},
-	}
+		},
+	)
 
 	err = ctx.FillSignersAndSignWith(*signer)
 	if err != nil {

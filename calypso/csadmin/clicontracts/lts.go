@@ -79,9 +79,7 @@ func LTSSpawn(c *cli.Context) error {
 		SignerCounter: []uint64{counters.Counters[0] + 1},
 	}
 
-	tx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{inst},
-	}
+	tx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion, inst)
 
 	err = tx.FillSignersAndSignWith(*signer)
 	if err != nil {

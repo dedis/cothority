@@ -40,16 +40,14 @@ from a specific version and know the exact dependencies, and know when
 you are about to opt-in to an API-breaking change (because the major version
 of one or more of your dependencies changes).
 
-We maintain a major version for 18 months.
+We maintain a major version for at least 18 months.
 
-The current major version is v3. It was released in Feb 2019. It will receive
-security updates, and possibly backports of simple and essential features
-from the master branch until June 2020.
+The current major version is v3. It was released in Feb 2019. It is currently
+built from master, and receiving security updates and new features which
+maintain backwards compatibility. There is currently no plan to start work
+on a new major version.
 
 The last major version was v2, which is end of life as of June 2019.
-
-As of Oct 2019, work is starting on v4. It will be released in Feb 2020, with
-an end of life in June 2021.
 
 As a general rule, the current and last versions of Go are tested and expected
 to work to compile Cothority. If you encounter problems with older versions of

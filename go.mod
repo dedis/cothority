@@ -12,7 +12,6 @@ require (
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-ldap/ldap/v3 v3.1.5
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
@@ -22,9 +21,9 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
-	github.com/urfave/cli v1.22.0
-	go.dedis.ch/kyber/v3 v3.0.11
-	go.dedis.ch/onet/v3 v3.0.31
+	github.com/urfave/cli v1.22.2
+	go.dedis.ch/kyber/v3 v3.0.12
+	go.dedis.ch/onet/v3 v3.0.32
 	go.dedis.ch/protobuf v1.0.11
 	go.etcd.io/bbolt v1.3.3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
