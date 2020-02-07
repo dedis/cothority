@@ -3,9 +3,9 @@
   "name": "@dedis/kyber",
   "version": "3.4.2",
   "description": "A typescript implementation of Kyber interfaces",
-  "main": "index.js",
+  "main": "dist/index.js",
   "browser": "bundle.min.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "node_modules/.bin/nyc --reporter=lcov --reporter=text node_modules/jasmine/bin/jasmine.js",

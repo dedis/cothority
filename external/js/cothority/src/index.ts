@@ -7,6 +7,7 @@ import * as network from "./network";
 import * as protobuf from "./protobuf";
 import * as skipchain from "./skipchain";
 import * as status from "./status";
+import * as personhood from "./personhood";
 
 export {
     byzcoin,
@@ -14,6 +15,7 @@ export {
     contracts,
     darc,
     network,
+    personhood,
     protobuf,
     skipchain,
     status,

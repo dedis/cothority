@@ -24,6 +24,7 @@ import {
     GetSignerCounters,
     GetSignerCountersResponse,
 } from "./proto/requests";
+import Log from "../log";
 
 export const currentVersion = 2;
 

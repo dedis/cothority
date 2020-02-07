@@ -3,13 +3,13 @@
   "name": "@dedis/cothority",
   "version": "3.4.3",
   "description": "A typescript implementation of the cothority",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "browser": "bundle.min.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/dedis/cothority.git"
   },
-  "types": "index.d.ts",
   "scripts": {
     "build": "npm run protobuf && tsc",
     "linter": "node_modules/.bin/tslint 'src/{,**/}*.ts' 'spec/{,**/}*.ts'",

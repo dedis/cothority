@@ -41,7 +41,7 @@ export default class RoPaSciInstance extends Instance {
     static readonly contractID = "ropasci";
 
     static fromObject(rpc: ByzCoinRPC, obj: any) {
-        const inst = Instance.fromBytes(obj.instance);
+        const inst = Instance.fromBytes(obj.spawnerInstance);
         const rps = new RoPaSciInstance(rpc, inst);
         rps.fillUp = obj.fillUp;
         rps.firstMove = obj.firstMove;

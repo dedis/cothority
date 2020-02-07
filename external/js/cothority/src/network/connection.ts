@@ -1,9 +1,9 @@
-import { Message, util } from "protobufjs/light";
+import {Message, util} from "protobufjs/light";
 import URL from "url-parse";
 import Log from "../log";
-import { Nodes } from "./nodes";
-import { Roster } from "./proto";
-import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
+import {Nodes} from "./nodes";
+import {Roster} from "./proto";
+import {BrowserWebSocketAdapter, WebSocketAdapter} from "./websocket-adapter";
 
 let factory: (path: string) => WebSocketAdapter = (path: string) => new BrowserWebSocketAdapter(path);
 
@@ -28,7 +28,7 @@ export interface IConnection {
      * @param reply     Protobuf type of the reply
      * @returns a promise resolving with the reply on success, rejecting otherwise
      */
-    send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
+    send<T extends Message>(message: Message, reply: typeof Message, keep?: boolean): Promise<T>;
 
     /**
      * Get the complete distant address
@@ -93,7 +93,7 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
+    async send<T extends Message>(message: Message, reply: typeof Message, keep?: boolean): Promise<T> {
         if (!message.$type) {
             return Promise.reject(new Error(`message "${message.constructor.name}" is not registered`));
         }
@@ -133,8 +133,12 @@ export class WebSocketConnection implements IConnection {
                         );
                     }
                 }
-
-                ws.close(1000);
+                if (!keep) {
+                    Log.print("not keeping connection", this.getURL());
+                    ws.close(1000);
+                } else {
+                    Log.print("keeping connection", this.getURL());
+                }
             });
 
             ws.onClose((code: number, reason: string) => {
