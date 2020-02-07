@@ -4,6 +4,7 @@ import Log from "../log";
 import {Nodes} from "./nodes";
 import {Roster} from "./proto";
 import {BrowserWebSocketAdapter, WebSocketAdapter} from "./websocket-adapter";
+import {Observable} from "rxjs";
 
 let factory: (path: string) => WebSocketAdapter = (path: string) => new BrowserWebSocketAdapter(path);
 
@@ -28,7 +29,7 @@ export interface IConnection {
      * @param reply     Protobuf type of the reply
      * @returns a promise resolving with the reply on success, rejecting otherwise
      */
-    send<T extends Message>(message: Message, reply: typeof Message, keep?: boolean): Promise<T>;
+    send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
 
     /**
      * Get the complete distant address
@@ -47,6 +48,13 @@ export interface IConnection {
      * @param service
      */
     copy(service: string): IConnection;
+
+    /**
+     * Send a message to the distant peer
+     * @param message Protobuf compatible message
+     * @param reply Protobuf type of the reply
+     */
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T>;
 
     /**
      * Sets how many nodes will be contacted in parallel
@@ -93,7 +101,7 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    async send<T extends Message>(message: Message, reply: typeof Message, keep?: boolean): Promise<T> {
+    async send<T extends Message>(message: Message, reply: typeof Message): Promise<T> {
         if (!message.$type) {
             return Promise.reject(new Error(`message "${message.constructor.name}" is not registered`));
         }
@@ -133,12 +141,8 @@ export class WebSocketConnection implements IConnection {
                         );
                     }
                 }
-                if (!keep) {
-                    Log.print("not keeping connection", this.getURL());
-                    ws.close(1000);
-                } else {
-                    Log.print("keeping connection", this.getURL());
-                }
+
+                ws.close(1000);
             });
 
             ws.onClose((code: number, reason: string) => {
@@ -169,6 +173,75 @@ export class WebSocketConnection implements IConnection {
         if (p > 1) {
             throw new Error("Single connection doesn't support more than one parallel");
         }
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T> {
+        /**
+         * ,
+         onMessage: (data: T, ws: WebSocketAdapter) => void,
+         onClose: (code: number, reason: string) => void,
+         onError: (err: Error) => void
+         */
+
+        return new Observable((sub) => {
+
+            if (!message.$type) {
+                sub.error(new Error(`message "${message.constructor.name}" is not registered`));
+                return;
+            }
+
+            if (!reply.$type) {
+                sub.error(new Error(`message "${reply}" is not registered`));
+                return;
+            }
+
+            const path = this.getURL() + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
+            Log.lvl4(`Socket: new WebSocket(${path})`);
+            const ws = factory(path);
+            const bytes = Buffer.from(message.$type.encode(message).finish());
+            const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
+            ws.onOpen(() => {
+                Log.lvl3("Sending message to", path);
+                ws.send(bytes);
+            });
+
+            ws.onMessage((data: Buffer) => {
+                clearTimeout(timer);
+                const buf = Buffer.from(data);
+                Log.lvl4("Getting message with length:", buf.length);
+
+                try {
+                    const ret = reply.decode(buf) as T;
+                    sub.next(ret);
+                } catch (err) {
+                    if (err instanceof util.ProtocolError) {
+                        sub.error(err);
+                    } else {
+                        sub.error(
+                            new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
+                        );
+                    }
+                }
+            });
+
+            ws.onClose((code: number, reason: string) => {
+                // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
+                // to non-null in case of error.
+                if (code !== 1000 || reason) {
+                    sub.error(new Error(reason));
+                } else {
+                    sub.error(`${code} - ${reason}`);
+                }
+            });
+
+            ws.onError((err: Error) => {
+                clearTimeout(timer);
+
+                sub.error(new Error("error in websocket " + path + ": " + err));
+            });
+
+        });
     }
 }
 
@@ -287,6 +360,14 @@ export class RosterWSConnection implements IConnection {
      */
     setTimeout(value: number) {
         this.nodes.setTimeout(value);
+    }
+
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T>{
+
+        return new Observable((sub) => {
+            sub.error("cannot send stream to a WS socket");
+        });
     }
 
     /**
