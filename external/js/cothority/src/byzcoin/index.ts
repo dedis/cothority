@@ -1,9 +1,9 @@
 import ByzCoinRPC from "./byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "./client-transaction";
 import ChainConfig from "./config";
-import Instance, { InstanceID } from "./instance";
-import Proof, {StateChangeBody} from "./proof";
 import * as contracts from "./contracts";
+import Instance, { InstanceID } from "./instance";
+import Proof, { StateChangeBody } from "./proof";
 import * as proto from "./proto";
 
 export {

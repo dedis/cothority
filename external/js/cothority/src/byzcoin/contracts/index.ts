@@ -2,14 +2,14 @@ import CredentialsInstance, { Attribute, Credential, CredentialStruct } from "..
 import { PopPartyInstance } from "../../personhood/pop-party-instance";
 import * as PopPartyProto from "../../personhood/proto";
 import RoPaSciInstance, { RoPaSciStruct } from "../../personhood/ro-pa-sci-instance";
-import SpawnerInstance, { SpawnerStruct, SPAWNER_COIN } from "../../personhood/spawner-instance";
+import SpawnerInstance, { SPAWNER_COIN, SpawnerStruct } from "../../personhood/spawner-instance";
 import CoinInstance, { Coin } from "./coin-instance";
 import DarcInstance from "./darc-instance";
 
 const coin = {
     Coin,
-    CoinInstance
-}
+    CoinInstance,
+};
 
 export {
     coin,
@@ -26,5 +26,5 @@ export {
     RoPaSciStruct,
     SpawnerInstance,
     SpawnerStruct,
-    SPAWNER_COIN
+    SPAWNER_COIN,
 };

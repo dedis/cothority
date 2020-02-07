@@ -4,10 +4,10 @@ import * as calypso from "./calypso";
 import * as darc from "./darc";
 import Log, { Logger } from "./log";
 import * as network from "./network";
+import * as personhood from "./personhood";
 import * as protobuf from "./protobuf";
 import * as skipchain from "./skipchain";
 import * as status from "./status";
-import * as personhood from "./personhood";
 
 export {
     byzcoin,

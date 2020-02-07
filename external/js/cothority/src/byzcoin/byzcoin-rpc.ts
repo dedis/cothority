@@ -1,9 +1,14 @@
 import Long from "long";
+import { Subject } from "rxjs";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
+import {
+    IConnection,
+    LeaderConnection,
+    RosterWSConnection,
+} from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -23,8 +28,9 @@ import {
     GetProofResponse,
     GetSignerCounters,
     GetSignerCountersResponse,
+    StreamingRequest,
+    StreamingResponse,
 } from "./proto/requests";
-import Log from "../log";
 
 export const currentVersion = 2;
 
@@ -40,13 +46,14 @@ const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
  */
 export default class ByzCoinRPC implements ICounterUpdater {
 
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
+
     get latest(): SkipBlock {
         return new SkipBlock(this._latest);
     }
 
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
-    }
     static readonly serviceName = "ByzCoin";
 
     /**
@@ -125,6 +132,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
     }
     private static staticCounters = new Map<string, Map<string, Long>>();
+    private newBlocks: Subject<SkipBlock>;
     private genesisDarc: Darc;
     private config: ChainConfig;
     private genesis: SkipBlock;
@@ -385,6 +393,33 @@ export default class ByzCoinRPC implements ICounterUpdater {
 
         const reply = await this.conn.send<CheckAuthorizationResponse>(req, CheckAuthorizationResponse);
         return reply.actions;
+    }
+
+    /**
+     * The returned subject replays all new blocks to all listeners.
+     * The streaming is attached to the first node of the connection-list.
+     */
+    getNewBlocks(): Subject<SkipBlock> {
+        if (this.newBlocks === undefined) {
+            this.newBlocks = new Subject<SkipBlock>();
+            const msgBlock = new StreamingRequest({
+                id: this.genesisID,
+            });
+            this.conn.sendStream<StreamingResponse>(msgBlock,
+                StreamingResponse).subscribe({
+                    next: (reply) => {
+                        this.newBlocks.next(reply.block);
+                    },
+                    error: (e) => {
+                        this.newBlocks.error(e);
+                    },
+                    complete: () => {
+                        this.newBlocks.complete();
+                    },
+                },
+            );
+        }
+        return this.newBlocks;
     }
 
     private counters(): Map<string, Long> {

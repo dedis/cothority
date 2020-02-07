@@ -1,10 +1,10 @@
-import {Message, util} from "protobufjs/light";
+import { Message, util } from "protobufjs/light";
+import { Observable } from "rxjs";
 import URL from "url-parse";
 import Log from "../log";
-import {Nodes} from "./nodes";
-import {Roster} from "./proto";
-import {BrowserWebSocketAdapter, WebSocketAdapter} from "./websocket-adapter";
-import {Observable} from "rxjs";
+import { Nodes } from "./nodes";
+import { Roster } from "./proto";
+import { BrowserWebSocketAdapter, WebSocketAdapter } from "./websocket-adapter";
 
 let factory: (path: string) => WebSocketAdapter = (path: string) => new BrowserWebSocketAdapter(path);
 
@@ -54,7 +54,7 @@ export interface IConnection {
      * @param message Protobuf compatible message
      * @param reply Protobuf type of the reply
      */
-    sendStream<T extends Message>(message: Message): Observable<T>;
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T>;
 
     /**
      * Sets how many nodes will be contacted in parallel
@@ -176,7 +176,7 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message): Observable<T> {
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T> {
         /**
          * ,
          onMessage: (data: T, ws: WebSocketAdapter) => void,
@@ -207,7 +207,7 @@ export class WebSocketConnection implements IConnection {
                 Log.lvl4("Getting message with length:", buf.length);
 
                 try {
-                    const ret = Message.decode(buf) as T;
+                    const ret = reply.decode(buf) as T;
                     sub.next(ret);
                 } catch (err) {
                     if (err instanceof util.ProtocolError) {
@@ -358,11 +358,9 @@ export class RosterWSConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message): Observable<T>{
-
-        return new Observable((sub) => {
-            sub.error("cannot send stream to a WS socket");
-        });
+    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T> {
+        const list = this.nodes.newList(this.service, this.parallel);
+        return list.active[0].sendStream(message, reply);
     }
 
     /**
