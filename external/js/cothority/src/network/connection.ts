@@ -54,7 +54,7 @@ export interface IConnection {
      * @param message Protobuf compatible message
      * @param reply Protobuf type of the reply
      */
-    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T>;
+    sendStream<T extends Message>(message: Message): Observable<T>;
 
     /**
      * Sets how many nodes will be contacted in parallel
@@ -176,7 +176,7 @@ export class WebSocketConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T> {
+    sendStream<T extends Message>(message: Message): Observable<T> {
         /**
          * ,
          onMessage: (data: T, ws: WebSocketAdapter) => void,
@@ -188,11 +188,6 @@ export class WebSocketConnection implements IConnection {
 
             if (!message.$type) {
                 sub.error(new Error(`message "${message.constructor.name}" is not registered`));
-                return;
-            }
-
-            if (!reply.$type) {
-                sub.error(new Error(`message "${reply}" is not registered`));
                 return;
             }
 
@@ -212,14 +207,14 @@ export class WebSocketConnection implements IConnection {
                 Log.lvl4("Getting message with length:", buf.length);
 
                 try {
-                    const ret = reply.decode(buf) as T;
+                    const ret = Message.decode(buf) as T;
                     sub.next(ret);
                 } catch (err) {
                     if (err instanceof util.ProtocolError) {
                         sub.error(err);
                     } else {
                         sub.error(
-                            new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
+                            new Error(`Other error: ${err}`),
                         );
                     }
                 }
@@ -363,7 +358,7 @@ export class RosterWSConnection implements IConnection {
     }
 
     /** @inheritdoc */
-    sendStream<T extends Message>(message: Message, reply: typeof Message): Observable<T>{
+    sendStream<T extends Message>(message: Message): Observable<T>{
 
         return new Observable((sub) => {
             sub.error("cannot send stream to a WS socket");
