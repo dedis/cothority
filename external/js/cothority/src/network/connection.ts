@@ -195,7 +195,7 @@ export class WebSocketConnection implements IConnection {
             return;
         }
 
-        const path = this.getURL() + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
+        const path = `${this.getURL()}/${this.service}/${message.$type.name.replace(/.../)}`;
         Log.lvl4(`Socket: new WebSocket(${path})`);
         const ws = factory(path);
         const bytes = Buffer.from(message.$type.encode(message).finish());

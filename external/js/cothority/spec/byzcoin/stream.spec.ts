@@ -46,7 +46,7 @@ describe("Stream Tests", () => {
         conn.sendStream<PaginateResponse>(msg, PaginateResponse, foo.onMessage, foo.onClose, foo.onError);
     });
 
-    afterEach( () => {
+    afterAll( () => {
         jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
     });
 });
