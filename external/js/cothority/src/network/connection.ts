@@ -1,5 +1,4 @@
 import { Message, util } from "protobufjs/light";
-import URL from "url-parse";
 import Log from "../log";
 import { Nodes } from "./nodes";
 import { Roster } from "./proto";
@@ -31,7 +30,7 @@ export interface IConnection {
     send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
 
     /**
-     * Get the complete distant address
+     * Get the origin of the distant address
      * @returns the address as a string
      */
     getURL(): string;
@@ -73,30 +72,42 @@ export interface IConnection {
  * Single peer connection to one single node.
  */
 export class WebSocketConnection implements IConnection {
-    private readonly url: string;
+    private readonly url: URL;
     private readonly service: string;
     private timeout: number;
 
     /**
-     * @param addr      Address of the distant peer
+     * @param addr      Absolute address of the distant peer
      * @param service   Name of the service to reach
      */
-    constructor(addr: string, service: string) {
-        const url = new URL(addr, {});
+    constructor(addr: string | URL, service: string) {
+        let url: URL;
+        if (typeof addr === "string") {
+            url = new URL(addr);
+        } else {
+            url = addr;
+        }
+        if (url.username !== "" || url.password !== "") {
+            throw new Error("addr contains authentication, which is not supported");
+        }
+        if (url.pathname !== "/" || url.search !== "" || url.hash !== "") {
+            throw new Error("addr contains more data than the origin");
+        }
+
         if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
             if (globalThis.location.protocol === "https:") {
-                url.set("protocol", "wss");
+                url.protocol = "wss";
             }
         }
-        this.url = url.href;
 
         this.service = service;
         this.timeout = 30 * 1000; // 30s by default
+        this.url = url;
     }
 
     /** @inheritdoc */
     getURL(): string {
-        return this.url;
+        return this.url.origin;
     }
 
     /** @inheritdoc */
@@ -115,15 +126,16 @@ export class WebSocketConnection implements IConnection {
         }
 
         return new Promise((resolve, reject) => {
-            const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
-            Log.lvl4(`Socket: new WebSocket(${path})`);
-            const ws = factory(path);
+            const url = new URL(this.url.href);
+            url.pathname = `/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            Log.lvl4(`Socket: new WebSocket(${url.href})`);
+            const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
             const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
             ws.onOpen(() => {
-                Log.lvl3("Sending message to", path);
+                Log.lvl3("Sending message to", url.href);
                 ws.send(bytes);
             });
 
@@ -159,8 +171,7 @@ export class WebSocketConnection implements IConnection {
 
             ws.onError((err: Error) => {
                 clearTimeout(timer);
-
-                reject(new Error("error in websocket " + path + ": " + err));
+                reject(new Error(`error in websocket ${url.href}: ${err.message}`));
             });
         });
     }
