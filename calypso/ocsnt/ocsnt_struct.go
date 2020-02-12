@@ -61,4 +61,6 @@ type structReady struct {
 	Ready
 }
 
-type Ready struct{}
+type Ready struct {
+	Success bool
+}

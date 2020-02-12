@@ -620,7 +620,7 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 	}
 	// If "Reenc" flag is set to true, then the secret is reencrypted under
 	// Xc
-	log.LLvl3("In service xc is:", read.Xc)
+	log.LLvl3("In service Xc is:", read.Xc)
 	ocsntProto.IsReenc = dknr.IsReenc
 	ocsntProto.Xc = read.Xc
 	//ocsntProto.Xc = cothority.Suite.Point().Null()
@@ -671,9 +671,10 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 		log.Errorf("Cannot get collective signature on the reencryption result: %v", err)
 		return nil, err
 	}
+	reply.C = write.C
+	reply.DKID = ocsntProto.DKID
 	reply.XhatEnc = ocsntProto.XhatEnc
 	reply.Signature = dummyReply.Signature
-	reply.C = write.C
 	log.Lvl3("Successfully reencrypted the key")
 	return
 }
@@ -866,10 +867,12 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 		s.storage.Unlock()
 		if !ok {
+			log.LLvlf1("Could not find LTSID: %s", id)
 			return nil, fmt.Errorf("didn't find LTSID %v", id)
 		}
 		pi, err := ocsnt.NewOCSNT(tn)
 		if err != nil {
+			log.LLvlf1("Error creating OCSNT protocol instance: %v", err)
 			return nil, xerrors.Errorf("creating OCSNT protocol instance: %v", err)
 		}
 		piOCSNT := pi.(*ocsnt.OCSNT)
@@ -938,7 +941,7 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 }
 
 // verifyReencryption checks that the read and the write instances match.
-//func (s *Service) verifyReencryptionNT(vd *[]byte, xc kyber.Point, u kyber.Point, dkid string) bool {
+//func (s *Service) verifyReencryptionNT(vd *[]byte, Xc kyber.Point, U kyber.Point, dkid string) bool {
 func (s *Service) verifyReencryptionNT(sr *ocsnt.StartReencrypt) bool {
 	err := func() error {
 		var verificationData vData
@@ -978,8 +981,8 @@ func (s *Service) verifyReencryptionNT(sr *ocsnt.StartReencrypt) bool {
 	return true
 }
 
-func (s *Service) checkID(w byzcoin.InstanceID, xc kyber.Point, u kyber.Point, dkid string) (bool, error) {
-	localDKID, err := GenerateDKID(w[:], xc, u)
+func (s *Service) checkID(w byzcoin.InstanceID, Xc kyber.Point, U kyber.Point, dkid string) (bool, error) {
+	localDKID, err := GenerateDKID(w[:], Xc, U)
 	if err != nil {
 		return false, fmt.Errorf("Cannot generate DKID: %v", err)
 	}

@@ -45,12 +45,14 @@ type OCSNT struct {
 	DKID    string
 	IsReenc bool
 	// private fields
-	ui         *share.PubShare
-	isDone     bool
-	replies    []PartialReencryption
-	readyMesgs []Ready
-	timeout    *time.Timer
-	doneOnce   sync.Once
+	ui      *share.PubShare
+	isDone  bool
+	replies []PartialReencryption
+	//readyMesgs []Ready
+	SuccessCount int
+	FailCount    int
+	timeout      *time.Timer
+	doneOnce     sync.Once
 }
 
 // NewOCSNT initialises the structure for use in one round
@@ -67,12 +69,16 @@ func NewOCSNT(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("registring handlers: %v", err)
 	}
+	//o.timeout = time.AfterFunc(1*time.Minute, func() {
+	//log.Lvl1("OCSNT protocol timeout")
+	//o.finish(false)
+	//})
 	return o, nil
 }
 
 // Start asks all children to reply with a shared reencryption
 func (o *OCSNT) Start() error {
-	log.Lvl3("Starting Protocol")
+	log.LLvl3("================", o.ServerIdentity(), "in Start() ================")
 	if o.Shared == nil {
 		o.finish(false)
 		return xerrors.New("please initialize Shared first")
@@ -96,13 +102,15 @@ func (o *OCSNT) Start() error {
 			return xerrors.New("refused to reencrypt")
 		}
 	}
-	o.timeout = time.AfterFunc(2*time.Minute, func() {
+	o.timeout = time.AfterFunc(1*time.Minute, func() {
 		log.Lvl1("OCSNT protocol timeout")
 		o.finish(false)
 	})
-	sr.Pr = o.generateShare()
+	sr.Pr = o.generatePartial()
+	log.LLvlf1("Before sending partialencrypt: %d, %x, %x, %x", sr.Pr.Ui.I, sr.Pr.Ui.V.String(), sr.Pr.Ei.String(), sr.Pr.Fi.String())
 	// Broadcast StartReencrypt message to other nodes
 	errs := o.Broadcast(sr)
+	log.LLvl1("Broadcast errors:", errs)
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
 		return xerrors.New("too many nodes failed in broadcast")
@@ -113,7 +121,7 @@ func (o *OCSNT) Start() error {
 // PartialReencrypt is received by every node to give his part of
 // the share
 func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
-	log.LLvl3(o.ServerIdentity(), "received", ssr.StartReencrypt.Pr.Ei.String(), "from", ssr.ServerIdentity)
+	log.Lvl3(o.ServerIdentity(), "received", ssr.StartReencrypt.Pr.Ei.String(), "from", ssr.ServerIdentity)
 	if ssr.StartReencrypt.Pr.Ui == nil {
 		log.Lvl2("Node", ssr.ServerIdentity, "refused to reply")
 		o.Failures++
@@ -125,15 +133,11 @@ func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
 	}
 	o.replies = append(o.replies, ssr.StartReencrypt.Pr)
 
-	o.IsReenc = ssr.IsReenc
-	o.DKID = ssr.DKID
-	o.U = ssr.U
-	o.Xc = ssr.Xc
-
 	if o.Verify != nil {
 		if !o.Verify(&ssr.StartReencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to do the partial reencryption")
 			errs := o.Broadcast(&PartialReencryption{})
+			log.LLvl1("Broadcast errors:", errs)
 			if len(errs) > (o.Total-1)/3 {
 				log.Errorf("Some nodes failed with error(s) %v", errs)
 				return xerrors.New("too many nodes failed in broadcast empty PartialReencryptReply")
@@ -142,8 +146,13 @@ func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
 		}
 	}
 
-	pr := o.generateShare()
+	o.IsReenc = ssr.IsReenc
+	o.DKID = ssr.DKID
+	o.U = ssr.U
+	o.Xc = ssr.Xc
+	pr := o.generatePartial()
 	errs := o.Broadcast(&pr)
+	log.LLvl1("Broadcast errors:", errs)
 	if len(errs) > (o.Total-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
 		return xerrors.New("too many nodes failed in broadcast PartialReencryptReply")
@@ -152,7 +161,7 @@ func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
 }
 
 func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
-	log.LLvl3(o.ServerIdentity(), "received", spr.PartialReencryption.Ei.String(), "from", spr.ServerIdentity)
+	log.Lvl3(o.ServerIdentity(), "received", spr.PartialReencryption.Ei.String(), "from", spr.ServerIdentity)
 	if spr.PartialReencryption.Ui == nil {
 		log.Lvl2("Node", spr.ServerIdentity, "refused to reply")
 		o.Failures++
@@ -165,7 +174,8 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 	o.replies = append(o.replies, spr.PartialReencryption)
 
 	// minus one to exclude myself
-	if !o.isDone && len(o.replies) >= int(o.Threshold-1) {
+	//if !o.isDone && len(o.replies) >= int(o.Threshold-1) {
+	if len(o.replies) >= int(o.Threshold-1) {
 		var xc kyber.Point
 		o.Uis = make([]*share.PubShare, len(o.List()))
 		o.Uis[o.ui.I] = o.ui
@@ -174,7 +184,6 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 		} else {
 			xc = cothority.Suite.Point().Null()
 		}
-		log.LLvl3("XC in loop:", xc)
 		for _, r := range o.replies {
 			// Verify proofs
 			ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, xc))
@@ -199,13 +208,17 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 		xhatEnc, err := share.RecoverCommit(cothority.Suite, o.Uis, o.Threshold, len(o.Roster().List))
 		if err != nil {
 			log.Errorf("%s couldn't recover secret", spr.ServerIdentity)
+			err := o.SendToParent(&Ready{Success: false})
+			if err != nil {
+				log.Errorf("%s: error sending readyreply to parent", o.ServerIdentity())
+			}
 			o.finish(false)
 		} else {
 			o.XhatEnc = xhatEnc
-			o.isDone = true
-			log.LLvl3(o.ServerIdentity(), "computed xhatenc:", o.XhatEnc.String())
+			//o.isDone = true
+			log.Lvl3(o.ServerIdentity(), "computed xhatenc:", o.XhatEnc.String())
 			if !o.IsRoot() {
-				err := o.SendToParent(&Ready{})
+				err := o.SendToParent(&Ready{Success: true})
 				if err != nil {
 					log.Errorf("%s: error sending readyreply to parent", o.ServerIdentity())
 				}
@@ -226,17 +239,30 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 }
 
 func (o *OCSNT) ready(sr structReady) error {
-	log.LLvl3(o.ServerIdentity(), "received readyfrom", sr.ServerIdentity)
-	o.readyMesgs = append(o.readyMesgs, sr.Ready)
+	//o.readyMesgs = append(o.readyMesgs, sr.Ready)
 	// minus one to exclude myself
-	if len(o.readyMesgs) >= int(o.Threshold-1) {
-		log.LLvl2(o.ServerIdentity(), "collected sufficient number of ready messages")
+	//if len(o.readyMesgs) >= int(o.Threshold-1) {
+	//log.Lvl2(o.ServerIdentity(), "collected sufficient number of ready messages")
+	//o.finish(true)
+	//}
+	log.Lvl3(o.ServerIdentity(), "received readyfrom", sr.ServerIdentity)
+	if sr.Ready.Success {
+		o.SuccessCount++
+	} else {
+		o.FailCount++
+	}
+	if o.SuccessCount >= o.Threshold {
+		log.Lvl2(o.ServerIdentity, "collected sufficient number of success messages")
 		o.finish(true)
+	}
+	if o.FailCount > o.Total-o.Threshold {
+		log.Lvl2(o.ServerIdentity, "collected more than the failure-threshold number of failure messages")
+		o.finish(false)
 	}
 	return nil
 }
 
-func (o *OCSNT) generateShare() PartialReencryption {
+func (o *OCSNT) generatePartial() PartialReencryption {
 	var xc kyber.Point
 	if o.IsReenc {
 		xc = o.Xc
@@ -266,6 +292,7 @@ func (o *OCSNT) getUI(U, Xc kyber.Point) *share.PubShare {
 	}
 }
 
+// WIP: Should all nodes have a timeout or just the leader?
 func (o *OCSNT) finish(result bool) {
 	// Other nodes do not have a timeout set
 	if o.IsRoot() {
@@ -278,5 +305,6 @@ func (o *OCSNT) finish(result bool) {
 		// would have blocked because some other call to finish()
 		// beat us.
 	}
+	log.Lvl1("=============================== I'm finishing:", o.ServerIdentity())
 	o.doneOnce.Do(func() { o.Done() })
 }
