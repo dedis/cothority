@@ -139,13 +139,14 @@ type DecryptKeyNT struct {
 	// request)
 	DKID    string
 	IsReenc bool
-	// Read is the proof that he has been accepted to read the secret.
-	Read byzcoin.Proof
 	// Write is the proof containing the write request.
 	Write byzcoin.Proof
+	// Read is the proof that he has been accepted to read the secret.
+	Read byzcoin.Proof
 }
 
 type DecryptKeyNTReply struct {
+	DKID      string
 	C         kyber.Point
 	XhatEnc   kyber.Point
 	X         kyber.Point
