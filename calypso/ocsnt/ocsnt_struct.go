@@ -16,7 +16,7 @@ const NameOCSNT = "OCSNT"
 
 func init() {
 	//network.RegisterMessages(&PartialReencrypt{}, &PartialReencryptReply{}, &ReadyReply{})
-	network.RegisterMessages(&StartReencrypt{}, &PartialReencryption{}, &Ready{})
+	network.RegisterMessages(&StartReencrypt{}, &PartialReencryption{}, &Recover{}, &RecoverReply{})
 }
 
 // VerifyRequest is a callback-function that can be set by a service.
@@ -37,7 +37,6 @@ type StartReencrypt struct {
 	// VerificationData is optional and can be any slice of bytes, so that each
 	// node can verify if the reencryption request is valid or not.
 	VerificationData *[]byte
-	Pr               PartialReencryption
 }
 
 type structStartReencrypt struct {
@@ -56,11 +55,20 @@ type structPartialReencryption struct {
 	PartialReencryption
 }
 
-type structReady struct {
+type structRecover struct {
 	*onet.TreeNode
-	Ready
+	Recover
 }
 
-type Ready struct {
+type Recover struct {
+	Replies []PartialReencryption
+}
+
+type structRecoverReply struct {
+	*onet.TreeNode
+	RecoverReply
+}
+
+type RecoverReply struct {
 	Success bool
 }
