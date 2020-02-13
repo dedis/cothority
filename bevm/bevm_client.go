@@ -346,8 +346,18 @@ func (client *Client) Call(account *EvmAccount,
 		return nil, xerrors.Errorf("failed to retrieve EVM state: %v", err)
 	}
 
+	// Compute timestamp for the EVM
+	timestamp, err := client.bcClient.GetLatestTimestamp()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to retrieve ByzCoin "+
+			"timestamp: %v", err)
+	}
+	// timestamp in ByzCoin is in [ns], whereas in EVM it is in [s]
+	evmTs := timestamp / 1e9
+
 	// Instantiate a new EVM
-	evm := vm.NewEVM(getContext(), stateDb, getChainConfig(), getVMConfig())
+	evm := vm.NewEVM(getContext(evmTs), stateDb, getChainConfig(),
+		getVMConfig())
 
 	// Perform the call (1 Ether should be enough for everyone [tm]...)
 	ret, _, err := evm.Call(vm.AccountRef(account.Address),

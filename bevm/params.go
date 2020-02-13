@@ -56,7 +56,7 @@ func getVMConfig() vm.Config {
 	return *vmconfig
 }
 
-func getContext() vm.Context {
+func getContext(timestamp int64) vm.Context {
 	placeHolder := common.HexToAddress("0")
 	return vm.Context{
 		CanTransfer: func(vm.StateDB, common.Address, *big.Int) bool {
@@ -72,7 +72,7 @@ func getContext() vm.Context {
 		Coinbase:    placeHolder,
 		GasLimit:    10000000000,
 		BlockNumber: big.NewInt(0),
-		Time:        big.NewInt(12345),
+		Time:        big.NewInt(timestamp),
 		Difficulty:  big.NewInt(1),
 	}
 
