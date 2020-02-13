@@ -1,16 +1,17 @@
 package bevm
 
 import (
-	"errors"
-
 	"go.dedis.ch/cothority/v3/byzcoin"
 	"go.dedis.ch/onet/v3"
 	"go.dedis.ch/onet/v3/log"
+	"golang.org/x/xerrors"
 )
 
 func init() {
-	// Ethereum starts goroutines for caching transactions, and never terminates them
-	log.AddUserUninterestingGoroutine("go-ethereum/core.(*txSenderCacher).cache")
+	// Ethereum starts goroutines for caching transactions, and never
+	// terminates them
+	log.AddUserUninterestingGoroutine(
+		"go-ethereum/core.(*txSenderCacher).cache")
 
 	_, err := onet.RegisterNewService(ContractBEvmID, newServiceBEvm)
 	log.ErrFatal(err)
@@ -32,7 +33,7 @@ func newServiceBEvm(c *onet.Context) (onet.Service, error) {
 
 	err := byzcoin.RegisterContract(c, ContractBEvmID, contractBEvmFromBytes)
 	if err != nil {
-		return nil, errors.New("error registering BEvm contract: " + err.Error())
+		return nil, xerrors.Errorf("failed to registe BEvm contract: %v", err)
 	}
 
 	return s, nil
@@ -46,7 +47,8 @@ func newServiceBEvmValue(c *onet.Context) (onet.Service, error) {
 	// BEvmValue does not support explicit creation, so we can pass nil
 	err := byzcoin.RegisterContract(c, ContractBEvmValueID, nil)
 	if err != nil {
-		return nil, errors.New("error registering BEvmValue contract: " + err.Error())
+		return nil, xerrors.Errorf("failed to register BEvmValue "+
+			"contract: %v", err)
 	}
 
 	return s, nil

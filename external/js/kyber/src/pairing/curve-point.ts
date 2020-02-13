@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { createHash } from "crypto";
+import { createHash } from "crypto-browserify";
 import { BNType, oneBN } from "../constants";
 import { modSqrt } from "../utils/tonelli-shanks";
 import { p } from "./constants";
@@ -172,7 +172,10 @@ export default class CurvePoint {
         const B = a.y.sqr().mod(p);
         const C = B.sqr().mod(p);
 
-        let t = a.x.add(B);
+        let t = a.y.mul(a.z).mod(p);
+        this.z = t.add(t).mod(p);
+
+        t = a.x.add(B);
         let t2 = t.sqr().mod(p);
         t = t2.sub(A);
         t2 = t.sub(C);
@@ -190,9 +193,6 @@ export default class CurvePoint {
         this.y = d.sub(this.x);
         t2 = e.mul(this.y).mod(p);
         this.y = t2.sub(t).mod(p);
-
-        t = a.y.mul(a.z).mod(p);
-        this.z = t.add(t).mod(p);
     }
 
     /**
@@ -202,15 +202,11 @@ export default class CurvePoint {
      */
     mul(a: CurvePoint, scalar: BN): void {
         const sum = new CurvePoint();
-        sum.setInfinity();
-        const t = new CurvePoint();
 
-        for (let i = scalar.bitLength(); i >= 0; i--) {
-            t.dbl(sum);
+        for (let i = scalar.bitLength() - 1; i >= 0; i--) {
+            sum.dbl(sum);
             if (scalar.testn(i)) {
-                sum.add(t, a);
-            } else {
-                sum.copy(t);
+                sum.add(sum, a);
             }
         }
 
@@ -244,7 +240,7 @@ export default class CurvePoint {
      */
     negative(a: CurvePoint): void {
         this.x = a.x;
-        this.y = a.y.negate();
+        this.y = a.y.negate().mod(p);
         this.z = a.z;
     }
 

@@ -26,6 +26,77 @@ describe("BN256 Point Tests", () => {
         expect(prop).toHold();
     });
 
+    it("should yield the same point by addition and mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarUnit = new BN256Scalar().one();
+            const pointUnit = new BN256G1Point().mul(scalarUnit, base);
+
+            const scalarAdder = new BN256Scalar();
+            const pointAdder = new BN256G1Point();
+            for (let i = 0; i < target; i++) {
+                scalarAdder.add(scalarAdder, scalarUnit);
+                pointAdder.add(pointAdder, pointUnit);
+            }
+
+            return pointAdder.equals(new BN256G1Point().mul(scalarAdder, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
+    it("should yield the same point by negative addition and multiplication", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const base = new BN256G1Point().base();
+            const scalarNegUnit = new BN256Scalar().one();
+            scalarNegUnit.neg(scalarNegUnit);
+            const pointNegUnit = new BN256G1Point().mul(scalarNegUnit, base);
+
+            const scalarSuber = new BN256Scalar().zero();
+            const pointSuber = new BN256G1Point().null();
+            for (let i = 0; i < target; i++) {
+                scalarSuber.add(scalarSuber, scalarNegUnit);
+                pointSuber.add(pointSuber, pointNegUnit);
+            }
+
+            return pointSuber.equals(new BN256G1Point().mul(scalarSuber, base));
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
+    it("should yield the same point by negation and multiplication, for -1", () => {
+        const base = new BN256G1Point().base();
+        const scalarOne = new BN256Scalar().one();
+        const pointOne = new BN256G1Point().mul(scalarOne, base);
+
+        scalarOne.neg(scalarOne);
+        pointOne.neg(pointOne);
+
+        expect(pointOne.equals(new BN256G1Point().mul(scalarOne, base))).toBeTruthy();
+    });
+
+    it("should not modify params with add/sub/neg/mul", () => {
+        const prop = jsc.forall(jsc.uint8, (target) => {
+            const pointRef = new BN256G1Point(target);
+            const scalarRef = new BN256Scalar(target);
+            const point = pointRef.clone();
+            const scalar = scalarRef.clone();
+
+            point.clone().add(point, point);
+            point.clone().sub(point, point);
+            point.clone().neg(point);
+            point.clone().mul(scalar, point);
+
+            return pointRef.equals(point) && scalarRef.equals(scalar);
+        });
+
+        // @ts-ignore
+        expect(prop).toHold();
+    });
+
     it("should add and multiply g1 points", () => {
         const prop = jsc.forall(jsc.array(jsc.uint8), (a) => {
             const p1 = new BN256G1Point(a);

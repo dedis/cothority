@@ -558,6 +558,10 @@ var cmds = cli.Commands{
 						Name:  "desc",
 						Usage: "the description for the new DARC (default: random)",
 					},
+					cli.BoolFlag{
+						Name:  "shortPrint",
+						Usage: "instead of printing the entire darc, prints the darc baseID in the first line and identity in the second one (optional)",
+					},
 				},
 			},
 			{
@@ -659,6 +663,11 @@ var cmds = cli.Commands{
 					cli.IntFlag{
 						Name:  "blocks",
 						Usage: "how many blocks to apply",
+					},
+					cli.IntFlag{
+						Name:  "summarize, sum",
+						Usage: "summarize this many blocks in output",
+						Value: 1,
 					},
 				},
 			},

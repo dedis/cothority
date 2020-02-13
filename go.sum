@@ -75,7 +75,11 @@ github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm
 github.com/gin-gonic/gin v1.3.0/go.mod h1:7cKuhb5qV2ggCFctp2fJQ+ErvciLZrIeoOSOm6mUr7Y=
 github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/3rZdM=
 github.com/go-kit/kit v0.8.0 h1:Wz+5lgoB0kkuqLEc6NVmwRknTKP6dTGbSqvhZtBI/j0=
+github.com/go-asn1-ber/asn1-ber v1.3.1 h1:gvPdv/Hr++TRFCl0UbPFHC54P9N9jgsRPnmnr419Uck=
+github.com/go-asn1-ber/asn1-ber v1.3.1/go.mod h1:hEBeB/ic+5LoWskz+yKT7vGhhPYkProFKoKdwZRWMe0=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
+github.com/go-ldap/ldap/v3 v3.1.5 h1:5o1ik2It7MJoXwoS7JXWUebf18L7E1VWBBgYV/iVsN0=
+github.com/go-ldap/ldap/v3 v3.1.5/go.mod h1:5Zun81jBTabRaI8lzN7E1JjyEl1g6zI6u9pd8luAK4Q=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
 github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=
 github.com/go-openapi/jsonpointer v0.17.0/go.mod h1:cOnomiV+CVVwFLk0A/MExoFMjwdsUdVpsRhURCKh+3M=
@@ -277,6 +281,12 @@ go.dedis.ch/onet/v3 v3.1.0/go.mod h1:dDV7bRKbT3LJ7enHBcys2O0jXEY2jTUB4dq8HtekGbA
 go.dedis.ch/onet/v4 v4.0.0-pre1 h1:sWZQj5tTrRCSeoBc3FYKfQmHrxq3DntLztbxdW5GjO4=
 go.dedis.ch/onet/v4 v4.0.0-pre1/go.mod h1:8jjB3FoDndY5weXSE+I1Nc9/6kwAGUyw4cXcJNswmSk=
 go.dedis.ch/protobuf v1.0.5/go.mod h1:eIV4wicvi6JK0q/QnfIEGeSFNG0ZeB24kzut5+HaRLo=
+go.dedis.ch/kyber/v3 v3.0.12 h1:15d61EyBcBoFIS97kS2c/Vz4o3FR8ALnZ2ck9J/ebYM=
+go.dedis.ch/kyber/v3 v3.0.12/go.mod h1:kXy7p3STAurkADD+/aZcsznZGKVHEqbtmdIzvPfrs1U=
+go.dedis.ch/onet/v3 v3.0.32 h1:k3ZuLU4j+NYPtM+hakhUzffbzmoETpRV6+Z8aq3P0eU=
+go.dedis.ch/onet/v3 v3.0.32/go.mod h1:dDV7bRKbT3LJ7enHBcys2O0jXEY2jTUB4dq8HtekGbA=
+go.dedis.ch/onet/v3 v3.1.0 h1:KwofJGuw9T+051ejuWWxA6K1N6blNvhuwz5neasWg8Y=
+go.dedis.ch/onet/v3 v3.1.0/go.mod h1:dDV7bRKbT3LJ7enHBcys2O0jXEY2jTUB4dq8HtekGbA=
 go.dedis.ch/protobuf v1.0.5/go.mod h1:eIV4wicvi6JK0q/QnfIEGeSFNG0ZeB24kzut5+HaRLo=
 go.dedis.ch/protobuf v1.0.6 h1:E61p2XjYbYrTf3WeXE8M8Ui5WA3hX/NgbHHi5D0FLxI=
 go.dedis.ch/protobuf v1.0.6/go.mod h1:YHYXW6dQ9p2iJ3f+2fxKnOpjGx0MvL4cwpg1RVNXaV8=

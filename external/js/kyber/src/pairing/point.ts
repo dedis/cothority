@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { Point } from "../index";
 import { BNType, G1, G2, GT } from "./bn";
 import BN256Scalar from "./scalar";
@@ -92,7 +92,7 @@ export class BN256G1Point implements Point {
 
     /** @inheritdoc */
     sub(a: BN256G1Point, b: BN256G1Point): BN256G1Point {
-        return this.add(a, b.neg(b));
+        return this.add(a, b.clone().neg(b));
     }
 
     /** @inheritdoc */

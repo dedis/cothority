@@ -22,9 +22,21 @@ export class Nodes {
     // Each time `gotError` is called, the corresponding node will be moved to the end of the list.
     private readonly nodeList: Node[] = [];
 
-    constructor(r: Roster) {
+    constructor(r: Roster, previous?: Nodes) {
         const addresses = r.list.map((conode) => conode.getWebSocketAddress());
-        shuffle(addresses);
+        if (previous === undefined) {
+            shuffle(addresses);
+        } else {
+            // Keep the order of the addresses, so that the fastest nodes stay at the beginning.
+            const fastest: string[] = [];
+            for (const addr of previous.nodeList) {
+                const i = addresses.findIndex((a) => a === addr.address);
+                if (i >= 0) {
+                    fastest.push(addresses.splice(i, 1)[0]);
+                }
+            }
+            addresses.unshift(...fastest);
+        }
         // Initialize the pool of connections
         this.nodeList = addresses.map((addr) => new Node(addr));
     }

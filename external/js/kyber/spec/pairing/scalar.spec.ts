@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import jsc from "jsverify";
-import { p } from "../../src/pairing/constants";
+import { order } from "../../src/pairing/constants";
 import BN256Scalar from "../../src/pairing/scalar";
 
 describe("BN256 Scalar Tests", () => {
@@ -12,7 +12,7 @@ describe("BN256 Scalar Tests", () => {
             sum.add(sA, sB);
             sum.add(sum, new BN256Scalar().zero());
 
-            return sum.getValue().eq(new BN(a + b).umod(p));
+            return sum.getValue().eq(new BN(a + b).umod(order));
         });
 
         // @ts-ignore
@@ -26,7 +26,7 @@ describe("BN256 Scalar Tests", () => {
             const res = new BN256Scalar();
             res.sub(sA, sB);
 
-            return res.getValue().eq(new BN(a - b).umod(p));
+            return res.getValue().eq(new BN(a - b).umod(order));
         });
 
         // @ts-ignore
@@ -40,7 +40,7 @@ describe("BN256 Scalar Tests", () => {
             const res = new BN256Scalar();
             res.mul(sA, sB);
 
-            return res.getValue().eq(new BN(a * b).umod(p));
+            return res.getValue().eq(new BN(a * b).umod(order));
         });
 
         // @ts-ignore
@@ -54,7 +54,7 @@ describe("BN256 Scalar Tests", () => {
             const res = new BN256Scalar();
             res.div(sA, sB);
 
-            return res.getValue().eq(new BN(a).umod(p));
+            return res.getValue().eq(new BN(a).umod(order));
         });
 
         // @ts-ignore

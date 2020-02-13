@@ -57,24 +57,22 @@ func TestService_ReshareLTS_Different(t *testing.T) {
 	ltsInstInfoBuf, err := protobuf.Encode(&LtsInstanceInfo{*otherRoster})
 	require.NoError(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{
-			{
-				InstanceID: s.ltsReply.InstanceID,
-				Invoke: &byzcoin.Invoke{
-					ContractID: ContractLongTermSecretID,
-					Command:    "reshare",
-					Args: []byzcoin.Argument{
-						{
-							Name:  "lts_instance_info",
-							Value: ltsInstInfoBuf,
-						},
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
+			InstanceID: s.ltsReply.InstanceID,
+			Invoke: &byzcoin.Invoke{
+				ContractID: ContractLongTermSecretID,
+				Command:    "reshare",
+				Args: []byzcoin.Argument{
+					{
+						Name:  "lts_instance_info",
+						Value: ltsInstInfoBuf,
 					},
 				},
-				SignerCounter: []uint64{2},
 			},
+			SignerCounter: []uint64{2},
 		},
-	}
+	)
 	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransactionAndWait(ctx, 4)
 	require.Error(t, err)
@@ -349,16 +347,16 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point, ctr uin
 	var err error
 	readBuf, err = protobuf.Encode(read)
 	require.Nil(t, err)
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
 			SignerCounter: []uint64{ctr},
-		}},
-	}
+		},
+	)
 	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
@@ -495,16 +493,16 @@ func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
 
-	ctx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{{
+	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
+		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(s.gDarc.GetBaseID()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
 				Args:       byzcoin.Arguments{{Name: "write", Value: writeBuf}},
 			},
 			SignerCounter: []uint64{ctr},
-		}},
-	}
+		},
+	)
 	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)

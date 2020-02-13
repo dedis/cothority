@@ -85,17 +85,16 @@ func TestClient_Log(t *testing.T) {
 
 	// Test naming, this is just a sanity check for eventlogs, the main
 	// naming test is in the byzcoin package.
-	spawnNamingTx := byzcoin.ClientTransaction{
-		Instructions: byzcoin.Instructions{
-			{
-				InstanceID: byzcoin.NewInstanceID(s.gen.GetBaseID()),
-				Spawn: &byzcoin.Spawn{
-					ContractID: byzcoin.ContractNamingID,
-				},
-				SignerCounter: c.incrementCtrs(),
+	spawnNamingTx, err := c.ByzCoin.CreateTransaction(
+		byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(s.gen.GetBaseID()),
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractNamingID,
 			},
+			SignerCounter: c.incrementCtrs(),
 		},
-	}
+	)
+	require.NoError(t, err)
 	require.NoError(t, spawnNamingTx.FillSignersAndSignWith(c.Signers...))
 	_, err = c.ByzCoin.AddTransactionAndWait(spawnNamingTx, 10)
 	require.NoError(t, err)

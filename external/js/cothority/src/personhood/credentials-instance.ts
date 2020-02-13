@@ -1,5 +1,5 @@
 import { Point } from "@dedis/kyber";
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto-browserify";
 import { Message, Properties } from "protobufjs/light";
 import ByzCoinRPC from "../byzcoin/byzcoin-rpc";
 import ClientTransaction, { Argument, Instruction } from "../byzcoin/client-transaction";

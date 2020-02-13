@@ -3,6 +3,8 @@ package personhood
 import (
 	"sync"
 
+	"go.dedis.ch/cothority/v3/personhood/contracts"
+
 	"go.dedis.ch/cothority/v3"
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/onet/v3/log"
@@ -65,7 +67,7 @@ func (s *Service) tryLoad() error {
 }
 
 type storage1 struct {
-	RoPaSci []*RoPaSci
+	RoPaSci []*contracts.RoPaSci
 	Parties map[string]*Party
 	Polls   map[string]*storagePolls
 
@@ -73,7 +75,7 @@ type storage1 struct {
 }
 
 type storage2 struct {
-	RoPaSci      []*RoPaSci
+	RoPaSci      []*contracts.RoPaSci
 	Parties      map[string]*Party
 	Polls        map[string]*storagePolls
 	Challenge    map[string]*ChallengeCandidate

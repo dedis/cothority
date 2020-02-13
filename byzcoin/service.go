@@ -2257,7 +2257,7 @@ func (s *Service) processOneTx(sst *stagingStateTrie, tx ClientTransaction,
 		cin = cout
 	}
 	if len(cin) != 0 {
-		log.Warn(s.ServerIdentity(), "Leftover coins detected, discarding.")
+		log.Lvl2(s.ServerIdentity(), "Leftover coins detected, discarding.")
 	}
 
 	return statesTemp, sst, nil
@@ -2888,7 +2888,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
+	if err := s.RegisterStreamingHandlers(s.StreamTransactions, s.PaginateBlocks); err != nil {
 		return nil, xerrors.Errorf("registering handlers: %v", err)
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)

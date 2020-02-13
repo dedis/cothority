@@ -1415,9 +1415,10 @@ func darcAdd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(c.App.Writer, d.String())
-	if err != nil {
-		return err
+	if c.Bool("shortPrint") {
+		log.Infof("darc:%x\n%s", d.GetBaseID(), identities)
+	} else {
+		log.Info(d.String())
 	}
 
 	// Saving ID in special file

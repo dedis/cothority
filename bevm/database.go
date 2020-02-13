@@ -49,9 +49,11 @@ type memBatch struct {
 
 // Putter
 func (b *memBatch) Put(key, value []byte) error {
-	log.Lvlf3("memBatch.Put(key=%v, value=%v)", hex.EncodeToString(key), hex.EncodeToString(value))
+	log.Lvlf3("memBatch.Put(key=%v, value=%v)", hex.EncodeToString(key),
+		hex.EncodeToString(value))
 
-	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value), false})
+	b.writes = append(b.writes, kv{common.CopyBytes(key),
+		common.CopyBytes(value), false})
 	b.size += len(value)
 
 	return nil

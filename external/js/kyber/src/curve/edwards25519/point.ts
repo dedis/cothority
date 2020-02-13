@@ -1,6 +1,6 @@
 // tslint:disable:no-bitwise
 import BN from "bn.js";
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto-browserify";
 import { eddsa } from "elliptic";
 import { BNType } from "../../constants";
 import { Point } from "../../index";

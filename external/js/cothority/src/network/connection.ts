@@ -1,5 +1,4 @@
 import { Message, util } from "protobufjs/light";
-import URL from "url-parse";
 import Log from "../log";
 import { Nodes } from "./nodes";
 import { Roster } from "./proto";
@@ -31,7 +30,7 @@ export interface IConnection {
     send<T extends Message>(message: Message, reply: typeof Message): Promise<T>;
 
     /**
-     * Get the complete distant address
+     * Get the origin of the distant address
      * @returns the address as a string
      */
     getURL(): string;
@@ -43,46 +42,72 @@ export interface IConnection {
     setTimeout(value: number): void;
 
     /**
-     * Sets how many nodes will be contacted in parallel
-     * @param p number of nodes to contact in parallel
-     */
-    setParallel(p: number): void;
-
-    /**
      * Creates a copy of the connection, but usable with the given service.
      * @param service
      */
     copy(service: string): IConnection;
+
+    /**
+     * Send a message to the distant peer
+     * @param message Protobuf compatible message
+     * @param reply Protobuf type of the reply
+     * @param onMessage function called when a message is received
+     * @param onClose function called when the connection closes
+     * @param onError function called when an error occurs
+     */
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter;
+    /**
+     * Sets how many nodes will be contacted in parallel
+     * @deprecated - don't use IConnection for that, but rather directly a
+     * RosterWSConnection.
+     * @param p number of nodes to contact in parallel
+     */
+    setParallel(p: number): void;
 }
 
 /**
  * Single peer connection to one single node.
  */
 export class WebSocketConnection implements IConnection {
-    private readonly url: string;
+    private readonly url: URL;
     private readonly service: string;
     private timeout: number;
 
     /**
-     * @param addr      Address of the distant peer
+     * @param addr      Absolute address of the distant peer
      * @param service   Name of the service to reach
      */
-    constructor(addr: string, service: string) {
-        const url = new URL(addr, {});
+    constructor(addr: string | URL, service: string) {
+        let url: URL;
+        if (typeof addr === "string") {
+            url = new URL(addr);
+        } else {
+            url = addr;
+        }
+        if (url.username !== "" || url.password !== "") {
+            throw new Error("addr contains authentication, which is not supported");
+        }
+        if (url.pathname !== "/" || url.search !== "" || url.hash !== "") {
+            throw new Error("addr contains more data than the origin");
+        }
+
         if (typeof globalThis !== "undefined" && typeof globalThis.location !== "undefined") {
             if (globalThis.location.protocol === "https:") {
-                url.set("protocol", "wss");
+                url.protocol = "wss";
             }
         }
-        this.url = url.href;
 
         this.service = service;
         this.timeout = 30 * 1000; // 30s by default
+        this.url = url;
     }
 
     /** @inheritdoc */
     getURL(): string {
-        return this.url;
+        return this.url.origin;
     }
 
     /** @inheritdoc */
@@ -101,15 +126,16 @@ export class WebSocketConnection implements IConnection {
         }
 
         return new Promise((resolve, reject) => {
-            const path = this.url + "/" + this.service + "/" + message.$type.name.replace(/.*\./, "");
-            Log.lvl4(`Socket: new WebSocket(${path})`);
-            const ws = factory(path);
+            const url = new URL(this.url.href);
+            url.pathname = `/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+            Log.lvl4(`Socket: new WebSocket(${url.href})`);
+            const ws = factory(url.href);
             const bytes = Buffer.from(message.$type.encode(message).finish());
 
             const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
 
             ws.onOpen(() => {
-                Log.lvl3("Sending message to", path);
+                Log.lvl3("Sending message to", url.href);
                 ws.send(bytes);
             });
 
@@ -145,20 +171,87 @@ export class WebSocketConnection implements IConnection {
 
             ws.onError((err: Error) => {
                 clearTimeout(timer);
-
-                reject(new Error("error in websocket " + path + ": " + err));
+                reject(new Error(`error in websocket ${url.href}: ${err.message}`));
             });
         });
     }
 
+    copy(service: string): IConnection {
+        return new WebSocketConnection(this.url, service);
+    }
+
+    /**
+     * @deprecated - use directly a RosterWSConnection if you want that
+     * @param p
+     */
     setParallel(p: number): void {
         if (p > 1) {
             throw new Error("Single connection doesn't support more than one parallel");
         }
     }
 
-    copy(service: string): IConnection {
-        return new WebSocketConnection(this.url, service);
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter {
+
+        if (!message.$type) {
+            onError(new Error(`message "${message.constructor.name}" is not registered`));
+            return;
+        }
+
+        if (!reply.$type) {
+            onError(new Error(`message "${reply}" is not registered`));
+            return;
+        }
+
+        const path = `${this.getURL()}/${this.service}/${message.$type.name.replace(/.*\./, "")}`;
+        Log.lvl4(`Socket: new WebSocket(${path})`);
+        const ws = factory(path);
+        const bytes = Buffer.from(message.$type.encode(message).finish());
+        const timer = setTimeout(() => ws.close(1000, "timeout"), this.timeout);
+        ws.onOpen(() => {
+            Log.lvl3("Sending message to", path);
+            ws.send(bytes);
+        });
+
+        ws.onMessage((data: Buffer) => {
+            clearTimeout(timer);
+            const buf = Buffer.from(data);
+            Log.lvl4("Getting message with length:", buf.length);
+
+            try {
+                const ret = reply.decode(buf) as T;
+                onMessage(ret, ws);
+            } catch (err) {
+                if (err instanceof util.ProtocolError) {
+                    onError(err);
+                } else {
+                    onError(
+                        new Error(`Error when trying to decode the message "${reply.$type.name}": ${err.message}`),
+                    );
+                }
+            }
+        });
+
+        ws.onClose((code: number, reason: string) => {
+            // nativescript-websocket on iOS doesn't return error-code 1002 in case of error, but sets the 'reason'
+            // to non-null in case of error.
+            if (code !== 1000 || reason) {
+                onError(new Error(reason));
+            } else {
+                onClose(code, reason);
+            }
+        });
+
+        ws.onError((err: Error) => {
+            clearTimeout(timer);
+
+            onError(new Error("error in websocket " + path + ": " + err));
+        });
+
+        return ws;
     }
 }
 
@@ -279,8 +372,76 @@ export class RosterWSConnection implements IConnection {
         this.nodes.setTimeout(value);
     }
 
-    copy(service: string): IConnection {
+    /** @inheritdoc */
+    sendStream<T extends Message>(message: Message, reply: typeof Message,
+                                  onMessage: (data: T, ws: WebSocketAdapter) => void,
+                                  onClose: (code: number, reason: string) => void,
+                                  onError: (err: Error) => void): WebSocketAdapter {
+
+        const errors: string[] = [];
+        const msgNbr = this.msgNbr;
+        this.msgNbr++;
+        const list = this.nodes.newList(this.service, this.parallel);
+        const pool = list.active;
+
+        Log.lvl3(`${this.connNbr}/${msgNbr}`, "sending", message.constructor.name, "with list:",
+            pool.map((conn) => conn.getURL()));
+
+        // Get the first reply - need to take care not to return a reject too soon, else
+        // all other promises will be ignored.
+        // The promises that never 'resolve' or 'reject' will later be collected by GC:
+        // https://stackoverflow.com/questions/36734900/what-happens-if-we-dont-resolve-or-reject-the-promise
+        let ws: WebSocketAdapter;
+        pool.map((conn) => {
+            do {
+                const idStr = `${this.connNbr}/${msgNbr.toString()}: ${conn.getURL()}`;
+                try {
+                    Log.lvl3(idStr, "sending");
+                    ws = conn.sendStream(message, reply, onMessage, onClose, onError);
+                    Log.lvl3(idStr, "received OK");
+                    if (list.done(conn) === 0) {
+                        Log.lvl3(idStr, "first to receive");
+                    }
+                    return;
+                } catch (e) {
+                    Log.lvl3(idStr, "has error", e);
+                    onError(e);
+                    conn = list.replace(conn);
+                }
+            } while (conn !== undefined);
+        });
+        return ws;
+    }
+
+    /**
+     * Return a new RosterWSConnection for the given service.
+     * @param service
+     */
+    copy(service: string): RosterWSConnection {
         return new RosterWSConnection(this.rID, service, this.parallel);
+    }
+
+    /**
+     * Invalidate a given address.
+     * @param address
+     */
+    invalidate(address: string): void {
+        this.nodes.gotError(address);
+    }
+
+    /**
+     * Update roster for this connection.
+     * @param r
+     */
+    setRoster(r: Roster) {
+        const newID = r.id.toString("hex");
+        if (newID !== this.rID) {
+            this.rID = newID;
+            if (!RosterWSConnection.nodes.has(this.rID)) {
+                RosterWSConnection.nodes.set(this.rID, new Nodes(r, this.nodes));
+            }
+            this.nodes = RosterWSConnection.nodes.get(this.rID);
+        }
     }
 }
 
