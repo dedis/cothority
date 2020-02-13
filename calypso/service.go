@@ -69,6 +69,16 @@ const calypsoReshareProto = "calypso_reshare_proto"
 
 var allowInsecureAdmin = false
 
+// Allows one to register custom MakeAttrInterpreters for the read request verify.
+var readMakeAttrInterpreter = make([]makeAttrInterpreterWrapper, 0)
+
+// makeAttrInterpreterWrapper holds the data needed to register a MakeAttrInterpreter
+type makeAttrInterpreterWrapper struct {
+	name        string
+	interpreter func(c ContractWrite, rst byzcoin.ReadOnlyStateTrie,
+		inst byzcoin.Instruction) func(string) error
+}
+
 func init() {
 	var err error
 	_, err = onet.GlobalProtocolRegister(calypsoReshareProto, dkgprotocol.NewSetup)
@@ -125,6 +135,15 @@ type vData struct {
 	Proof     byzcoin.Proof
 	Ephemeral kyber.Point
 	Signature *darc.Signature
+}
+
+// AddReadAttrInterpreter adds a new AttrInterpreters that will be evaluated
+// during a read request. This function is not thread safe and should only be
+// called in an init()
+func AddReadAttrInterpreter(name string, interpreter func(c ContractWrite,
+	rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) func(string) error) {
+
+	readMakeAttrInterpreter = append(readMakeAttrInterpreter, makeAttrInterpreterWrapper{name, interpreter})
 }
 
 // ProcessClientRequest implements onet.Service. We override the version

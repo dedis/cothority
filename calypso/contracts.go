@@ -219,7 +219,12 @@ func intersectRosters(r1, r2 *onet.Roster) int {
 // a read spawn
 func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
 	if inst.GetType() == byzcoin.SpawnType && inst.Spawn.ContractID == ContractReadID {
-		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: c.MakeAttrInterpreters(rst, inst)})
+
+		evalAttr := darc.AttrInterpreters{}
+		for _, makeAttrInterpreterWrapper := range readMakeAttrInterpreter {
+			evalAttr[makeAttrInterpreterWrapper.name] = makeAttrInterpreterWrapper.interpreter(c, rst, inst)
+		}
+		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: evalAttr})
 	}
 	return inst.VerifyWithOption(rst, ctxHash, nil)
 }

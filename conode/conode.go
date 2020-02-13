@@ -15,22 +15,26 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"reflect"
 	"time"
 
-	_ "github.com/dedis/odyssey/projectc"
+	"github.com/dedis/odyssey/catalogc"
 	_ "github.com/dedis/odyssey/catalogc"
+	"github.com/dedis/odyssey/projectc"
+	_ "github.com/dedis/odyssey/projectc"
 	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	_ "go.dedis.ch/cothority/v3/authprox"
-	_ "go.dedis.ch/cothority/v3/byzcoin"
+	"go.dedis.ch/cothority/v3/byzcoin"
 	_ "go.dedis.ch/cothority/v3/byzcoin/contracts"
-	_ "go.dedis.ch/cothority/v3/calypso"
+	"go.dedis.ch/cothority/v3/calypso"
 	_ "go.dedis.ch/cothority/v3/eventlog"
 	_ "go.dedis.ch/cothority/v3/evoting/service"
 	_ "go.dedis.ch/cothority/v3/personhood"
@@ -42,6 +46,8 @@ import (
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
+	"go.dedis.ch/protobuf"
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -51,6 +57,187 @@ const (
 )
 
 var gitTag = ""
+
+func init() {
+
+	allowedMake := func(c calypso.ContractWrite, rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) func(string) error {
+		log.Info("Hello from the MakeAttrInterpreters")
+		// The allowed rule checks if all the selected attributes by the data
+		// scientist are allowed the the data owner. Note that the list of
+		// attributes described by the allowed rule contains the attributes of type
+		// "allowed" (obviously), but also the attributes of type "must_have". We
+		// can therefore see the "must_have" type of attributes as a specialization
+		// of the "allowed" one.
+		al := func(attr string) error {
+			log.Info("Hello from the inside MakeAttrInterpreters")
+			// Expecting an 'attr' of form:
+			// attribute_id=checked&attribute_id2=hello+world&
+			// which, once parsed, gives map[attribute_id:[checked] attribute_id2:[hello+world]]
+			parsedQuery, err := url.ParseQuery(attr)
+			if err != nil {
+				return err
+			}
+
+			projectInstID := inst.Spawn.Args.Search("projectInstID")
+			if projectInstID == nil {
+				return xerrors.New("argument 'projectInstID' not found")
+			}
+
+			projectC := projectc.ProjectData{}
+			projectBuf, _, _, _, err := rst.GetValues(projectInstID)
+			if err != nil {
+				return fmt.Errorf("failed to get the given project instance '%x': %s",
+					projectInstID, err.Error())
+			}
+			err = protobuf.DecodeWithConstructors(projectBuf, &projectC,
+				network.DefaultConstructors(cothority.Suite))
+			if err != nil {
+				return xerrors.New("failed to decode project instance: " + err.Error())
+			}
+
+			failedReasons := catalogc.FailedReasons{}
+
+			// Each attribute selected by the data scientist should be in the
+			// attr:allowed list
+			var isAllowed func(url.Values, *catalogc.Attribute) error
+			isAllowed = func(parsedQuery url.Values, attr *catalogc.Attribute) error {
+				if attr.Value == "" {
+					return nil
+				}
+				ok := false
+				for key, vals := range parsedQuery {
+					log.Info("checking key:", key)
+					if key != attr.ID {
+						continue
+					}
+					if len(vals) != 1 {
+						return xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
+							"vals: %v", len(vals), key, vals)
+					}
+					val := vals[0]
+					if attr.Value != "" && attr.Value != val {
+						failedReasons.AddReason(attr.ID, fmt.Sprintf(
+							"must have value '%s', but we found value '%s'",
+							val, attr.Value), inst.InstanceID.String())
+						break
+					}
+					ok = true
+					break
+				}
+				if !ok {
+					failedReasons.AddReason(attr.ID, "This attribute is not allowed",
+						inst.InstanceID.String())
+				}
+				for _, subAttr := range attr.Attributes {
+					if attr.RuleType != "allowed" {
+						continue
+					}
+					isAllowed(parsedQuery, subAttr)
+					// if err != nil {
+					// 	return xerrors.Errorf("attribute '%s' not allowed", subAttr.ID)
+					// }
+				}
+				return nil
+			}
+
+			for _, ag := range projectC.Metadata.AttributesGroups {
+				for _, attr := range ag.Attributes {
+					// The "must_have" attributes must be checked by the other rule,
+					// because the user can actually check more "must_have"
+					// attributes that are required.
+					if attr.RuleType != "allowed" {
+						continue
+					}
+					isAllowed(parsedQuery, attr)
+					// if err != nil {
+					// 	return xerrors.Errorf("failed to check an allowed attribute: %v", err)
+					// }
+				}
+			}
+
+			if !failedReasons.IsEmpty() {
+				jsonStr, err := json.Marshal(failedReasons)
+				if err != nil {
+					return xerrors.Errorf("attr:allowed verification failed " +
+						"and we couldn't convert the failed reasons to JSON. " +
+						"Here is string representation: " + failedReasons.String())
+				}
+				return xerrors.Errorf("attr:allowed verification failed, here "+
+					"is why:\n%s", string(jsonStr))
+			}
+
+			return nil
+		}
+		return al
+	}
+
+	mustHaveMake := func(c calypso.ContractWrite, rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) func(string) error {
+		// Here we check if the specified "must have" attributes that the data owner
+		// set appear in the selected attributes from the data scientist.
+		mh := func(attr string) error {
+			// Expecting an 'attr' of form:
+			// attribute_id=checked&attribute_id2=hello+world&
+			// which, once parsed, gives map[attribute_id:[checked] attribute_id2:[hello+world]]
+			parsedQuery, err := url.ParseQuery(attr)
+			if err != nil {
+				return err
+			}
+
+			projectInstID := inst.Spawn.Args.Search("projectInstID")
+			if projectInstID == nil {
+				return xerrors.New("argument 'projectInstID' not found")
+			}
+
+			projectC := projectc.ProjectData{}
+			projectBuf, _, _, _, err := rst.GetValues(projectInstID)
+			if err != nil {
+				return fmt.Errorf("failed to get the given project instance '%x': %s", projectInstID, err.Error())
+			}
+			err = protobuf.DecodeWithConstructors(projectBuf, &projectC, network.DefaultConstructors(cothority.Suite))
+			if err != nil {
+				return xerrors.Errorf("failed to decode project instance: %v", err)
+			}
+
+			failedReasons := catalogc.FailedReasons{}
+
+			// Each attribute should have a corresponding Metadata.Attribute that
+			// has a corresponding value.
+			for key, vals := range parsedQuery {
+				if len(vals) != 1 {
+					return xerrors.Errorf("Expected 1 value but got %d. Key: %s, "+
+						"vals: %v", len(vals), key, vals)
+				}
+				val := vals[0]
+				attr, found := projectC.Metadata.GetAttribute(key)
+				if !found {
+					return xerrors.Errorf("Must-have attribute with key '%s' not "+
+						"found in the project metadata", key)
+				}
+				if val != "" && attr.Value != val {
+					failedReasons.AddReason(key, fmt.Sprintf("Expected '%s', got "+
+						"'%s'", val, attr.Value), inst.InstanceID.String())
+				}
+			}
+
+			if !failedReasons.IsEmpty() {
+				jsonStr, err := json.Marshal(failedReasons)
+				if err != nil {
+					return xerrors.Errorf("attr:must_have verification failed " +
+						"and we couldn't convert the failed reasons to JSON. " +
+						"Here is string representation: " + failedReasons.String())
+				}
+				return xerrors.Errorf("attr:must_have verification failed, here "+
+					"is why:\n%s", string(jsonStr))
+			}
+
+			return nil
+		}
+		return mh
+	}
+
+	calypso.AddReadAttrInterpreter("must_have", allowedMake)
+	calypso.AddReadAttrInterpreter("allowed", mustHaveMake)
+}
 
 func main() {
 	cliApp := cli.NewApp()
