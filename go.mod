@@ -8,7 +8,6 @@ require (
 	github.com/btcsuite/btcd v0.20.0-beta // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/deckarep/golang-set v1.7.1 // indirect
-	github.com/dedis/odyssey v0.0.0-20200206152744-4886ca8dc1d9
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-ldap/ldap/v3 v3.1.5
 	github.com/go-stack/stack v1.8.0 // indirect

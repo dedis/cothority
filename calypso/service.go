@@ -13,18 +13,18 @@
 // Contract "calypsoWrite" is used to store a secret in the ledger, so that an
 // authorized reader can retrieve it by creating a Read-instance.
 //
-// Accepted Instructions:
-//  - spawn:calypsoWrite creates a new write-request from the argument "write"
-//  - spawn:calypsoRead creates a new read-request for this write-request.
+// Accepted Instructions: - spawn:calypsoWrite creates a new write-request from
+// the argument "write" - spawn:calypsoRead creates a new read-request for this
+// write-request.
 //
 // Contract "calypsoRead" is used to create read instances that prove a reader
 // has access to a given write instance. They are only spawned by calling Spawn
 // on an existing Write instance, with the proposed Read request in the "read"
 // argument.
 //
-// TODO: correctly handle multi signatures for read requests: to whom should the
-// secret be re-encrypted to? Perhaps for multi signatures we only want to have
-// ephemeral keys.
+// TODO: correctly handle multi signatures for read requests: to whom should
+// the secret be re-encrypted to? Perhaps for multi signatures we only want to
+// have ephemeral keys.
 package calypso
 
 import (
@@ -69,10 +69,12 @@ const calypsoReshareProto = "calypso_reshare_proto"
 
 var allowInsecureAdmin = false
 
-// Allows one to register custom MakeAttrInterpreters for the read request verify.
+// Allows one to register custom MakeAttrInterpreters for the read request
+// verify.
 var readMakeAttrInterpreter = make([]makeAttrInterpreterWrapper, 0)
 
-// makeAttrInterpreterWrapper holds the data needed to register a MakeAttrInterpreter
+// makeAttrInterpreterWrapper holds the data needed to register a
+// MakeAttrInterpreter.
 type makeAttrInterpreterWrapper struct {
 	name        string
 	interpreter func(c ContractWrite, rst byzcoin.ReadOnlyStateTrie,
@@ -87,9 +89,9 @@ func init() {
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &vData{})
 
-	// The loopback check makes Java testing not work, because Java client commands
-	// come from outside of the docker container. The Java testing Docker
-	// container runs with this variable set.
+	// The loopback check makes Java testing not work, because Java client
+	// commands come from outside of the docker container. The Java testing
+	// Docker container runs with this variable set.
 	if os.Getenv("COTHORITY_ALLOW_INSECURE_ADMIN") != "" {
 		log.Warn("COTHORITY_ALLOW_INSECURE_ADMIN is set; Calypso admin actions allowed from the public network.")
 		allowInsecureAdmin = true
@@ -113,9 +115,9 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	storage *storage
-	// Genesis blocks are stored here instead of the usual skipchain DB as we don't
-	// want to override authorized skipchains or related security. The blocks are
-	// only used to insure that proofs start with the expected roster.
+	// Genesis blocks are stored here instead of the usual skipchain DB as we
+	// don't want to override authorized skipchains or related security. The
+	// blocks are only used to insure that proofs start with the expected roster.
 	genesisBlocks     map[string]*skipchain.SkipBlock
 	genesisBlocksLock sync.Mutex
 	// for use by testing only
@@ -139,7 +141,7 @@ type vData struct {
 
 // AddReadAttrInterpreter adds a new AttrInterpreters that will be evaluated
 // during a read request. This function is not thread safe and should only be
-// called in an init()
+// called in an init().
 func AddReadAttrInterpreter(name string, interpreter func(c ContractWrite,
 	rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction) func(string) error) {
 
@@ -166,8 +168,9 @@ func (s *Service) ProcessClientRequest(req *http.Request, path string, buf []byt
 	return s.ServiceProcessor.ProcessClientRequest(req, path, buf)
 }
 
-// Authorise adds a ByzCoinID to the list of authorized IDs. It can only be called
-// from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set to 'true'.
+// Authorise adds a ByzCoinID to the list of authorized IDs. It can only be
+// called from localhost, except if the COTHORITY_ALLOW_INSECURE_ADMIN is set
+// to 'true'.
 // Deprecated: please use Authorize.
 func (s *Service) Authorise(req *Authorise) (*AuthoriseReply, error) {
 	if len(req.ByzCoinID) == 0 {
@@ -222,8 +225,10 @@ func (s *Service) Authorize(req *Authorize) (*AuthorizeReply, error) {
 	bcID := string(req.ByzCoinID)
 	if _, ok := s.storage.AuthorisedByzCoinIDs[bcID]; ok {
 		s.storage.Unlock()
-		// This error string is tested against in `external/js/cothority/src/calypso/calypso-rpc.ts, so
-		// if you change the error-message here, all apps depending on the @dedis/cothority npm-package will fail.
+		// This error string is tested against in
+		// `external/js/cothority/src/calypso/calypso-rpc.ts, so if you change the
+		// error-message here, all apps depending on the @dedis/cothority
+		// npm-package will fail.
 		return nil, xerrors.New("ByzCoinID already authorised")
 	}
 	s.storage.AuthorisedByzCoinIDs[bcID] = true

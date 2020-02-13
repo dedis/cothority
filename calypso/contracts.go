@@ -211,8 +211,9 @@ func intersectRosters(r1, r2 *onet.Roster) int {
 	return res
 }
 
-// VerifyInstruction uses a specific verification based on attr in the case its
-// a read spawn
+// VerifyInstruction uses a specific verification based on attr in the case it
+// is a read spawn. This will check if any makeAttInterpreter has been
+// registered in the service and apply them.
 func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte) error {
 	if inst.GetType() == byzcoin.SpawnType && inst.Spawn.ContractID == ContractReadID {
 
@@ -223,13 +224,4 @@ func (c ContractWrite) VerifyInstruction(rst byzcoin.ReadOnlyStateTrie, inst byz
 		return inst.VerifyWithOption(rst, ctxHash, &byzcoin.VerificationOptions{EvalAttr: evalAttr})
 	}
 	return inst.VerifyWithOption(rst, ctxHash, nil)
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
