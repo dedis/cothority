@@ -235,8 +235,8 @@ func init() {
 		return mh
 	}
 
-	calypso.AddReadAttrInterpreter("must_have", allowedMake)
-	calypso.AddReadAttrInterpreter("allowed", mustHaveMake)
+	calypso.AddReadAttrInterpreter("allowed", allowedMake)
+	calypso.AddReadAttrInterpreter("must_have", mustHaveMake)
 }
 
 func main() {
