@@ -15,11 +15,9 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
-	"net/url"
 	"os"
 	"path"
 	"reflect"
@@ -28,9 +26,9 @@ import (
 	cli "github.com/urfave/cli"
 	"go.dedis.ch/cothority/v3"
 	_ "go.dedis.ch/cothority/v3/authprox"
-	"go.dedis.ch/cothority/v3/byzcoin"
+	_ "go.dedis.ch/cothority/v3/byzcoin"
 	_ "go.dedis.ch/cothority/v3/byzcoin/contracts"
-	"go.dedis.ch/cothority/v3/calypso"
+	_ "go.dedis.ch/cothority/v3/calypso"
 	_ "go.dedis.ch/cothority/v3/eventlog"
 	_ "go.dedis.ch/cothority/v3/evoting/service"
 	_ "go.dedis.ch/cothority/v3/personhood"
@@ -42,8 +40,6 @@ import (
 	"go.dedis.ch/onet/v3/cfgpath"
 	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
-	"go.dedis.ch/protobuf"
-	"golang.org/x/xerrors"
 )
 
 const (
