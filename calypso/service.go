@@ -76,7 +76,10 @@ var readMakeAttrInterpreter = make([]makeAttrInterpreterWrapper, 0)
 // makeAttrInterpreterWrapper holds the data needed to register a
 // MakeAttrInterpreter.
 type makeAttrInterpreterWrapper struct {
-	name        string
+	// name is the corresponding name of the custom attribute.
+	name string
+	// interpreter is the fonction producing the interepreter for the given name.
+	// We are using a callback to have access to the instance's context.
 	interpreter func(c ContractWrite, rst byzcoin.ReadOnlyStateTrie,
 		inst byzcoin.Instruction) func(string) error
 }

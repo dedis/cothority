@@ -12,7 +12,10 @@ require (
 	github.com/go-ldap/ldap/v3 v3.1.5
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
+	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
 	github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6
 	github.com/rs/cors v1.7.0 // indirect
