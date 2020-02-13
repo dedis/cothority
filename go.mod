@@ -8,7 +8,7 @@ require (
 	github.com/btcsuite/btcd v0.20.0-beta // indirect
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/deckarep/golang-set v1.7.1 // indirect
-  github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-ldap/ldap/v3 v3.1.5
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
