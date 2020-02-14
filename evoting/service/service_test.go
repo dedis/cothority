@@ -78,15 +78,25 @@ func TestService(t *testing.T) {
 
 	idAdminSig := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
 
+	elec := &lib.Election{
+		Name: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		Subtitle: map[string]string{
+			"en": "name in english",
+			"fr": "name in french",
+		},
+		Creator: idAdmin,
+		Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+		Roster:  roster,
+		End:     time.Now().Unix() + 86400,
+	}
+
 	// Try to create a new election on server[1], should fail.
 	replyOpen, err := s1.Open(&evoting.Open{
-		ID: replyLink.ID,
-		Election: &lib.Election{
-			Creator: idAdmin,
-			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
-			Roster:  roster,
-			End:     time.Now().Unix() + 86400,
-		},
+		ID:        replyLink.ID,
+		Election:  elec,
 		User:      idAdmin,
 		Signature: idAdminSig,
 	})
@@ -94,25 +104,41 @@ func TestService(t *testing.T) {
 
 	// Create a new election
 	replyOpen, err = s0.Open(&evoting.Open{
-		ID: replyLink.ID,
-		Election: &lib.Election{
-			Name: map[string]string{
-				"en": "name in english",
-				"fr": "name in french",
-			},
-			Subtitle: map[string]string{
-				"en": "name in english",
-				"fr": "name in french",
-			},
-			Creator: idAdmin,
-			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
-			Roster:  roster,
-			End:     time.Now().Unix() + 86400,
-		},
+		ID:        replyLink.ID,
+		Election:  elec,
 		User:      idAdmin,
 		Signature: idAdminSig,
 	})
 	require.Nil(t, err)
+	elec.ID = replyOpen.ID
+
+	// Try to modify an election on another master chain.
+	save := elec.Master
+	elec.Master = append([]byte{}, replyLink.ID...)
+	elec.Master[0]++
+	_, err = s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.Error(t, err)
+	elec.Master = save
+
+	// Update the election name.
+	elec.Name["en"] = "The new name"
+	_, err = s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.NoError(t, err)
+
+	// Make sure the change stuck.
+	box, err := s0.GetBox(&evoting.GetBox{ID: elec.ID})
+	require.NoError(t, err)
+	require.Equal(t, box.Election.Name["en"], elec.Name["en"])
 
 	// Try to cast a vote on a non-leader, should fail.
 	log.Lvl1("Casting vote on non-leader")
@@ -166,6 +192,29 @@ func TestService(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.Nil(t, local.WaitDone(time.Second))
+
+	// Cast a vote with empty points
+	log.Lvl1("Casting empty ballot (no points)")
+	ballot = &lib.Ballot{
+		User: idUser1,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
+
+	// Try to modify the election after a vote is cast.
+	_, err = s0.Open(&evoting.Open{
+		ID:        replyLink.ID,
+		Election:  elec,
+		User:      idAdmin,
+		Signature: idAdminSig,
+	})
+	require.Error(t, err)
 
 	// Prepare a helper for testing voting.
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {

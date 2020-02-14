@@ -17,3 +17,6 @@ func TestIsCreator(t *testing.T) {
 	assert.True(t, e.IsCreator(0))
 	assert.False(t, e.IsCreator(1))
 }
+
+func TestParse(t *testing.T) {
+}
