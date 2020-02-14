@@ -139,7 +139,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     it("should send and receive data", async (done) => {
         const ret = Buffer.from(Roster.encode(new Roster()).finish());
         setFactory(() => new TestWebSocket(ret, null, null));
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         const foo = {
@@ -162,7 +162,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     it("should throw an error when code is not 1000", async (done) => {
         setFactory(() => new TestWebSocket(null, null, 1001));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         const foo = {
@@ -189,7 +189,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     it("should timeout when no message is sent back", async (done) => {
         setFactory(() => new TestWebSocket(null, null, null));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         conn.setTimeout(200);
         const msg = new Roster();
 
@@ -217,7 +217,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     it("should throw on protobuf error", async (done) => {
         setFactory(() => new TestWebSocket(Buffer.from([1, 2, 3]), null, 1000));
 
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
         const msg = new Roster();
 
         const foo = {
@@ -241,7 +241,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     });
 
     it("should reject unregistered messages and reply", async (done) => {
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
 
         const foo = {
             // tslint:disable-next-line:no-empty
@@ -264,7 +264,7 @@ describe("WebSocketAdapter Tests with sendStream", () => {
     });
 
     it("should reject unregistered reply", async (done) => {
-        const conn = new WebSocketConnection("", "");
+        const conn = new WebSocketConnection("http://example.com", "");
 
         const foo = {
             // tslint:disable-next-line:no-empty
