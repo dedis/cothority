@@ -895,7 +895,7 @@ func darcShow(c *cli.Context) error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(c.App.Writer, d.String())
+	log.Info(d.String())
 	return err
 }
 

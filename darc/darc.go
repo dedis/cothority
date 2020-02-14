@@ -505,8 +505,8 @@ func (id ID) Equal(other ID) bool {
 	return bytes.Equal([]byte(id), []byte(other))
 }
 
-// DarcsToGetDarcs is a convenience function that convers a slice of darcs into
-// the GetDarc callback.
+// DarcsToGetDarcs is a convenience function that converts a slice of darcs
+// into the GetDarc callback.
 func DarcsToGetDarcs(darcs []*Darc) GetDarc {
 	return func(s string, latest bool) *Darc {
 		// build a map to store the latest darcs

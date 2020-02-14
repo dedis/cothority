@@ -241,6 +241,10 @@ var cmds = cli.Commands{
 								Name:  "export, x",
 								Usage: "export the instance id to STDOUT",
 							},
+							cli.StringFlag{
+								Name:  "projectInstID, pid",
+								Usage: "The project instance ID, which contains the metadata for verification (optional). This option is not directly used in the contract, it is only useful during the verification process in the case you registered a custom makeAttrInterpreter.",
+							},
 						},
 					},
 				},

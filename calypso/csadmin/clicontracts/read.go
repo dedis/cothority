@@ -112,6 +112,12 @@ func ReadSpawn(c *cli.Context) error {
 		return xerrors.Errorf("failed to encode read struct: %v", err)
 	}
 
+	projectInstID := c.String("projectInstID")
+	projectInstIDBuff, err := hex.DecodeString(projectInstID)
+	if err != nil {
+		return xerrors.New("failed to decode the projectInstID string")
+	}
+
 	counters, err := cl.GetSignerCounters(signer.Identity().String())
 	if err != nil {
 		return xerrors.Errorf("failed to get the signer counters: %v", err)
@@ -122,7 +128,10 @@ func ReadSpawn(c *cli.Context) error {
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: calypso.ContractReadID,
-				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
+				Args: byzcoin.Arguments{
+					{Name: "read", Value: readBuf},
+					{Name: "projectInstID", Value: projectInstIDBuff},
+				},
 			},
 			SignerCounter: []uint64{counters.Counters[0] + 1},
 		},

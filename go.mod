@@ -11,8 +11,8 @@ require (
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-ldap/ldap/v3 v3.1.5
+	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prataprc/goparsec v0.0.0-20180806094145-2600a2a4a410
