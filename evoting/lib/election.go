@@ -58,7 +58,7 @@ type Election struct {
 	Voted skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
 }
 
-// footer denotes the fields for the election footer
+// Footer denotes the fields for the election footer
 type Footer struct {
 	Text         string // Text is for storing footer content.
 	ContactTitle string // ContactTitle stores the title of the Contact person.

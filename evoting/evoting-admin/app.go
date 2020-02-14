@@ -33,7 +33,7 @@ var (
 	argShow         = flag.Bool("show", false, "Show the current Master config")
 	argDumpVoters   = flag.Bool("dumpvoters", false, "Dump a list of voters for election skipchain specified with -id (ballot de-duplication has already been taken into account, order is preserved)")
 	argDumpElection = flag.Bool("dumpelection", false, "Dump the current election config for the election specified with -id.")
-	argJson         = flag.Bool("json", false, "Dump in json mode.")
+	argJSON         = flag.Bool("json", false, "Dump in json mode.")
 	argLoad         = flag.String("load", "", "Load the specified json file to modify the election specified with -id.")
 )
 
@@ -94,7 +94,7 @@ func main() {
 			log.Fatal("get box request: ", err)
 		}
 
-		if *argJson {
+		if *argJSON {
 			e := reply.Election
 			j := &jsonElection{
 				Name:        e.Name,
