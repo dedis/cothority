@@ -23,7 +23,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/urfave/cli v1.22.2
 	go.dedis.ch/kyber/v3 v3.0.12
-	go.dedis.ch/kyber/v4 v4.0.0-pre2
 	go.dedis.ch/onet/v3 v3.1.0
 	go.dedis.ch/onet/v4 v4.0.0-pre1
 	go.dedis.ch/protobuf v1.0.11
