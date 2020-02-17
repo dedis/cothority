@@ -1,9 +1,17 @@
 import Long from "long";
+import { BehaviorSubject } from "rxjs";
+import { tap } from "rxjs/internal/operators/tap";
+import { distinctUntilChanged, filter, map, mergeMap } from "rxjs/operators";
 import { Rule } from "../darc";
 import Darc from "../darc/darc";
 import IdentityEd25519 from "../darc/identity-ed25519";
 import IdentityWrapper, { IIdentity } from "../darc/identity-wrapper";
-import { IConnection, LeaderConnection, RosterWSConnection } from "../network/connection";
+import { WebSocketAdapter } from "../network";
+import {
+    IConnection,
+    LeaderConnection,
+    RosterWSConnection,
+} from "../network/connection";
 import { Roster } from "../network/proto";
 import { SkipBlock } from "../skipchain/skipblock";
 import SkipchainRPC from "../skipchain/skipchain-rpc";
@@ -24,6 +32,7 @@ import {
     GetSignerCounters,
     GetSignerCountersResponse,
 } from "./proto/requests";
+import { StreamingRequest, StreamingResponse } from "./proto/stream";
 
 export const currentVersion = 2;
 
@@ -39,13 +48,14 @@ const CONFIG_INSTANCE_ID = Buffer.alloc(32, 0);
  */
 export default class ByzCoinRPC implements ICounterUpdater {
 
+    get genesisID(): InstanceID {
+        return this.genesis.computeHash();
+    }
+
     get latest(): SkipBlock {
         return new SkipBlock(this._latest);
     }
 
-    get genesisID(): InstanceID {
-        return this.genesis.computeHash();
-    }
     static readonly serviceName = "ByzCoin";
 
     /**
@@ -79,10 +89,12 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param waitMatch how many times to wait for a match - useful if its called just after an addTransactionAndWait.
      * @param interval how long to wait between two attempts in waitMatch.
      * @param latest if given, use this to prove the current state of the blockchain. Needs to be trusted!
+     * @param storage to be used to store instance caches
      * @returns a promise that resolves with the initialized ByzCoin instance
      */
     static async fromByzcoin(nodes: Roster | IConnection, skipchainID: Buffer, waitMatch: number = 0,
-                             interval: number = 1000, latest?: SkipBlock):
+                             interval: number = 1000, latest?: SkipBlock,
+                             storage?: IStorage):
         Promise<ByzCoinRPC> {
         const rpc = new ByzCoinRPC();
         if (nodes instanceof Roster) {
@@ -100,6 +112,7 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const di = await DarcInstance.fromByzcoin(rpc, ccProof.stateChangeBody.darcID, waitMatch, interval);
 
         rpc.genesisDarc = di.darc;
+        rpc.db = storage;
 
         return rpc;
     }
@@ -109,8 +122,10 @@ export default class ByzCoinRPC implements ICounterUpdater {
      * @param roster        The roster to use to create the genesis block
      * @param darc          The genesis darc
      * @param blockInterval The interval of block creation in nanoseconds
+     * @param storage       To be used to store instance caches
      */
-    static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long): Promise<ByzCoinRPC> {
+    static async newByzCoinRPC(roster: Roster, darc: Darc, blockInterval: Long,
+                               storage?: IStorage): Promise<ByzCoinRPC> {
         const leader = new LeaderConnection(roster, ByzCoinRPC.serviceName);
         const req = new CreateGenesisBlock({
             blockInterval,
@@ -121,13 +136,18 @@ export default class ByzCoinRPC implements ICounterUpdater {
         });
 
         const ret = await leader.send<CreateGenesisBlockResponse>(req, CreateGenesisBlockResponse);
-        return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash);
+        return ByzCoinRPC.fromByzcoin(roster, ret.skipblock.hash,
+            undefined, undefined, undefined, storage);
     }
     private static staticCounters = new Map<string, Map<string, Long>>();
+    private newBlockWS: WebSocketAdapter;
     private genesisDarc: Darc;
+    private newBlock: BehaviorSubject<SkipBlock>;
     private config: ChainConfig;
     private genesis: SkipBlock;
     private conn: IConnection;
+    private db: IStorage;
+    private cache = new Map<InstanceID, BehaviorSubject<Proof>>();
 
     private _latest: SkipBlock;
 
@@ -166,6 +186,70 @@ export default class ByzCoinRPC implements ICounterUpdater {
         const header = DataHeader.decode(this._latest.data);
 
         return header.version;
+    }
+
+    /**
+     * Returns an observable proof for an instance that will be
+     * automatically updated whenever the instance is changed.
+     * It returns a BehaviorSubject, which is a special observable that
+     * keeps the current value.
+     * It also caches all requests, so if there are two requests for the
+     * same id, no new observable will be created.
+     * It connects to `getNewBlocks` to be informed whenever a new block is
+     * created.
+     * @param id of the instance to return
+     * @throws an error if the instance does not exist
+     */
+    async proofObservable(id: InstanceID): Promise<BehaviorSubject<Proof>> {
+        const bs = this.cache.get(id);
+        if (bs !== undefined) {
+            return bs;
+        }
+
+        // Check if the db already has a version, which might be outdated,
+        // but still better than to wait for the network.
+        // might be old, but be informed as soon as the correct values arrive.
+        // This makes it possible to have a quick display of values that
+        const idStr = id.toString("hex");
+        const proofBuf = await this.db.get(idStr);
+        let dbProof: Proof;
+        if (proofBuf === undefined) {
+            dbProof = await this.getProofFromLatest(id);
+        } else {
+            dbProof = Proof.decode(proofBuf);
+        }
+        if (!dbProof.exists(id)) {
+            throw new Error("this instance does not exist");
+        }
+
+        // Create a new BehaviorSubject with the proof, which might not be
+        // current, but a best guess from the db of a previous session.
+        const bsNew = new BehaviorSubject(dbProof);
+        this.cache.set(id, bsNew);
+
+        // Set up a pipe from the block to fetch new versions if a new block
+        // arrives.
+        // Start with an observable that emits each new block as it arrives.
+        (await this.getNewBlocks())
+            .pipe(
+                // Make sure only newer blocks than the proof are taken into
+                // account
+                filter((block) => block.index > dbProof.latest.index),
+                // Get a new proof of the instance
+                mergeMap(() => this.getProofFromLatest(id)),
+                // Don't emit proofs that are already known
+                distinctUntilChanged((a, b) =>
+                    a.stateChangeBody.version.equals(b.stateChangeBody.version)),
+                // Store new proofs in the db for later use
+                tap((proof) =>
+                    this.db.set(idStr, Buffer.from(Proof.encode(proof).finish()))),
+                // Link to the BehaviorSubject
+            ).subscribe(bsNew);
+
+        // Return the BehaviorSubject - the pipe will continue to run in the
+        // background and check if the proof changed on the emission of
+        // every new block.
+        return bsNew;
     }
 
     /**
@@ -386,11 +470,71 @@ export default class ByzCoinRPC implements ICounterUpdater {
         return reply.actions;
     }
 
+    /**
+     * The returned BehaviorSubject replays all new blocks to all listeners.
+     * The streaming is attached to the first node of the connectionlist.
+     */
+    async getNewBlocks(): Promise<BehaviorSubject<SkipBlock>> {
+        if (this.newBlock !== undefined) {
+            return this.newBlock;
+        }
+        if (this._latest === undefined) {
+            await this.getProofFromLatest(CONFIG_INSTANCE_ID);
+        }
+        this.newBlock = new BehaviorSubject(this._latest);
+        const msgBlock = new StreamingRequest({
+            id: this.genesisID,
+        });
+        this.conn.sendStream<StreamingResponse>(msgBlock,
+            StreamingResponse).pipe(map(([sr, ws]) => {
+            this.newBlockWS = ws;
+            return sr.block;
+        })).subscribe(this.newBlock);
+        return this.newBlock;
+    }
+
+    /**
+     * Closes an eventual newBlock websocket. All connected BehaviorSubjects
+     * will get a 'completed' message.
+     */
+    closeNewBlocks() {
+        if (this.newBlock) {
+            this.newBlockWS.close(1000);
+            this.newBlock = undefined;
+        }
+    }
+
     private counters(): Map<string, Long> {
         const idStr = this.genesisID.toString("hex");
         if (!ByzCoinRPC.staticCounters.has(idStr)) {
             ByzCoinRPC.staticCounters.set(idStr, new Map<string, Long>());
         }
         return ByzCoinRPC.staticCounters.get(idStr);
+    }
+
+}
+
+/**
+ * IStorage represents a storage backend - either a local cache, or a db
+ * that stays around between sessions.
+ */
+export interface IStorage {
+    get(key: string): Promise<Buffer | undefined>;
+
+    set(key: string, value: Buffer): Promise<void>;
+}
+
+/**
+ * LocalCache wraps a Map<string, Buffer> to be used by the Marshaller.
+ */
+export class LocalCache implements IStorage {
+    private cache = new Map<string, Buffer>();
+
+    async get(key: string): Promise<Buffer | undefined> {
+        return this.cache.get(key);
+    }
+
+    async set(key: string, value: Buffer): Promise<void> {
+        this.cache.set(key, value);
     }
 }
