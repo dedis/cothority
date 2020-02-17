@@ -14,6 +14,20 @@ them as seem fit.
 This document describes the part of ByzCoin that are implemented and how to
 use them. It should grow over time as more parts of the system are implemented.
 
+## Short summary of ByzCoin
+
+- At its simplest, ByzCoin is nothing more than a **distributed ledger** (DL): a database that is decentralized and distributed across several nodes.
+- ByzCoin uses the **blockchain technology**: this is one of the DL
+  technology where every node has its local copy of the ledger
+(database). Every change to the ledger is packed into a block that is eventually
+cryptographically chained to the previous one.
+- In ByzCoin, the data are represented as instances of **Smart Contracts** (SC), where a smart contract can be seen as a class and an instance an object of this class. In ByzCoin, one can *Spawn* a new instance of a SC, *Invoke* a command (or method) on an existing instance, or *Delete* an instance. *Spawn*, *Invoke*, and *Delete* represent all the possible actions a user can do to update the ledger.
+- Every request to update the ledger comes to the form of an instruction
+  that is sent to one of the nodes. Each instruction must be approved by
+2/3 of the existing node to get accepted and thus update the
+ledger.
+- As an example, we can have a simple *Project* smart contract that has only one field: `status: string` representing the status of a project. One can *Spawn* a new instance of the project contract with a given status: `spawn:project("pending")`, and then say we implemented an `update_status` method on this SC, we can then call it to update the status of this smart contract's instance with an *Invoke*: `invoke:project.update_status("done")`. If the instruction is accepted, the status's change is eventually written in a block, allowing anyone to track and witness the status's evolution of a project on the Blockchain.
+
 ## Overview
 
 Here is a graphical overview of the current implementation in the cothority
