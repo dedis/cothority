@@ -177,13 +177,13 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 	// create darcs that do not have the full path, i.e. we set VerificationDarcs to nil
 	lightDarc1 := darcs[len(darcs)-1].Copy()
 	lightDarc1.VerificationDarcs = nil
-	lightDarc1.Signatures = []Signature{Signature{
+	lightDarc1.Signatures = []Signature{{
 		Signature: copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-1].Signatures[0].Signer,
 	}}
 	lightDarc2 := darcs[len(darcs)-2].Copy()
 	lightDarc2.VerificationDarcs = nil
-	lightDarc2.Signatures = []Signature{Signature{
+	lightDarc2.Signatures = []Signature{{
 		Signature: copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-2].Signatures[0].Signer,
 	}}

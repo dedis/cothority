@@ -59,7 +59,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 
 	data := &DataBody{
 		TxResults: []TxResult{
-			TxResult{ClientTransaction: ClientTransaction{Instructions: []Instruction{Instruction{}}}},
+			{ClientTransaction: ClientTransaction{Instructions: []Instruction{{}}}},
 		},
 	}
 	sb.Payload, err = protobuf.Encode(data)
@@ -71,7 +71,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
 		Args: []Argument{
-			Argument{
+			{
 				Name:  "darc",
 				Value: []byte{1, 2, 3},
 			},
@@ -87,7 +87,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	darcBytes, _ := protobuf.Encode(&darc.Darc{})
 	data.TxResults[0].ClientTransaction.Instructions[0].Spawn = &Spawn{
 		Args: []Argument{
-			Argument{
+			{
 				Name:  "darc",
 				Value: darcBytes,
 			},
@@ -187,7 +187,7 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 	service.GetProofResponse = &GetProofResponse{
 		Proof: Proof{
 			Latest: *sb,
-			Links:  []skipchain.ForwardLink{skipchain.ForwardLink{To: c.ID}},
+			Links:  []skipchain.ForwardLink{{To: c.ID}},
 		},
 	}
 
