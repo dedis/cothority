@@ -61,7 +61,6 @@ func NewOCSNT(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		Reencrypted:      make(chan bool, 1),
 		Total:            total,
 		Threshold:        total - (total-1)/3,
-		//isDone:           false,
 	}
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply, o.recover, o.recoverReply)
 	if err != nil {
@@ -96,6 +95,10 @@ func (o *OCSNT) Start() error {
 			return xerrors.New("refused to reencrypt")
 		}
 	}
+	if !o.IsReenc {
+		o.Xc = cothority.Suite.Point().Null()
+	}
+	o.ui = o.getUI()
 	o.timeout = time.AfterFunc(1*time.Minute, func() {
 		log.Lvl1("OCSNT protocol timeout")
 		o.finish(false)
@@ -112,17 +115,16 @@ func (o *OCSNT) Start() error {
 // PartialReencrypt is received by every node to give his part of
 // the share
 func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
-	log.LLvl3(o.ServerIdentity(), "starting reencryption for",
+	log.Lvl3(o.ServerIdentity(), "starting reencryption for",
 		ssr.StartReencrypt.DKID, "from", ssr.ServerIdentity)
 
 	if o.Verify != nil {
 		if !o.Verify(&ssr.StartReencrypt) {
-			log.LLvl2(o.ServerIdentity(), "refused to reencrypt")
+			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
 			return cothority.ErrorOrNil(o.SendToParent(&PartialReencryption{}),
 				"sending PartialReencryption to parent")
 		}
 	}
-
 	o.IsReenc = ssr.IsReenc
 	o.DKID = ssr.DKID
 	o.U = ssr.U
@@ -131,6 +133,7 @@ func (o *OCSNT) reencrypt(ssr structStartReencrypt) error {
 	} else {
 		o.Xc = cothority.Suite.Point().Null()
 	}
+	o.ui = o.getUI()
 	pr := o.generatePartial()
 	return cothority.ErrorOrNil(o.SendToParent(&pr), "sending PartialReencryption to parent")
 }
@@ -149,12 +152,9 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 
 	// minus one to exclude myself
 	if len(o.replies) >= int(o.Threshold-1) {
-		if !o.IsReenc {
-			o.Xc = cothority.Suite.Point().Null()
-		}
 		reply := o.generatePartial()
 		o.Uis = make([]*share.PubShare, len(o.List()))
-		o.Uis[o.ui.I] = o.getUI(o.U, o.Xc)
+		o.Uis[o.ui.I] = o.getUI()
 		o.verifyPartial()
 		xhatEnc, err := share.RecoverCommit(cothority.Suite, o.Uis, o.Threshold, len(o.Roster().List))
 		if err != nil {
@@ -182,12 +182,11 @@ func (o *OCSNT) reencryptReply(spr structPartialReencryption) error {
 }
 
 func (o *OCSNT) recover(sr structRecover) error {
-	log.LLvlf1("%s received replies of length %d", o.ServerIdentity(), len(sr.Replies))
 	o.replies = sr.Replies
 	if len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
 		if o.ui == nil {
-			o.ui = o.getUI(o.U, o.Xc)
+			o.ui = o.getUI()
 		}
 		o.Uis[o.ui.I] = o.ui
 		o.verifyPartial()
@@ -219,7 +218,7 @@ func (o *OCSNT) recover(sr structRecover) error {
 }
 
 func (o *OCSNT) recoverReply(rr structRecoverReply) error {
-	log.LLvl3(o.ServerIdentity(), "received RecoverReply from", rr.ServerIdentity)
+	log.Lvl3(o.ServerIdentity(), "received RecoverReply from", rr.ServerIdentity)
 	if rr.RecoverReply.Success {
 		o.successCount++
 		if o.successCount >= o.Threshold {
@@ -262,14 +261,7 @@ func (o *OCSNT) verifyPartial() {
 }
 
 func (o *OCSNT) generatePartial() PartialReencryption {
-	//var xc kyber.Point
-	//if o.IsReenc {
-	//xc = o.Xc
-	//} else {
-	//xc = cothority.Suite.Point().Null()
-	//}
-	//ui := o.getUI(o.U, xc)
-	o.ui = o.getUI(o.U, o.Xc)
+	//o.ui = o.getUI(o.U, o.Xc)
 	// Calculating proofs
 	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
 	//uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(o.U, xc))
@@ -286,9 +278,10 @@ func (o *OCSNT) generatePartial() PartialReencryption {
 	return PartialReencryption{Ui: o.ui, Ei: ei, Fi: fi}
 }
 
-func (o *OCSNT) getUI(U, Xc kyber.Point) *share.PubShare {
-	v := cothority.Suite.Point().Mul(o.Shared.V, U)
-	v.Add(v, cothority.Suite.Point().Mul(o.Shared.V, Xc))
+//func (o *OCSNT) getUI(U, Xc kyber.Point) *share.PubShare {
+func (o *OCSNT) getUI() *share.PubShare {
+	v := cothority.Suite.Point().Mul(o.Shared.V, o.U)
+	v.Add(v, cothority.Suite.Point().Mul(o.Shared.V, o.Xc))
 	return &share.PubShare{
 		I: o.Shared.Index,
 		V: v,
@@ -308,6 +301,5 @@ func (o *OCSNT) finish(result bool) {
 		// would have blocked because some other call to finish()
 		// beat us.
 	}
-	log.LLvl1("=============================== I'm finishing:", o.ServerIdentity())
 	o.doneOnce.Do(func() { o.Done() })
 }

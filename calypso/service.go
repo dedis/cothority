@@ -623,7 +623,6 @@ func (s *Service) DecryptKeyNT(dknr *DecryptKeyNT) (reply *DecryptKeyNTReply, er
 	log.LLvl3("In service Xc is:", read.Xc)
 	ocsntProto.IsReenc = dknr.IsReenc
 	ocsntProto.Xc = read.Xc
-	//ocsntProto.Xc = cothority.Suite.Point().Null()
 	log.Lvlf2("%v Public key is: %s", s.ServerIdentity(), ocsntProto.Xc)
 	ocsntProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
