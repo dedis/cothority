@@ -121,7 +121,7 @@ func TestClient_CreateTransaction(t *testing.T) {
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
@@ -201,7 +201,7 @@ func TestClient_GetProofCorrupted(t *testing.T) {
 func TestClient_Streaming(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
@@ -281,7 +281,7 @@ func TestClient_Streaming(t *testing.T) {
 func TestClient_NoPhantomSkipchain(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	registerDummy(servers)
+	registerDummy(t, servers)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.

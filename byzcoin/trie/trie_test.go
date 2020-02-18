@@ -385,10 +385,7 @@ func TestQuickCheck(t *testing.T) {
 		}
 
 		// Check that everything is ok.
-		if testTrie.IsValid() != nil {
-			return false
-		}
-		return true
+		return testTrie.IsValid() == nil
 	}
 	require.NoError(t, quick.Check(f, nil))
 }
@@ -448,10 +445,7 @@ func TestBatchQuickCheck(t *testing.T) {
 		}
 
 		// Check that everything is ok.
-		if testTrie.IsValid() != nil {
-			return false
-		}
-		return true
+		return testTrie.IsValid() == nil
 	}
 	require.NoError(t, quick.Check(f, nil))
 }

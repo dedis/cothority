@@ -263,14 +263,15 @@ func TestDeferred_ScenarioSingleInstruction(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	atr, err = cl.AddTransactionAndWait(ctx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	result, err = cl.GetDeferredDataAfter(myID, &atr.Proof.Latest)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(result.ExecResult[0]))
 
 	valueRes, _, _, err := pr.Get(result.ExecResult[0])
@@ -545,9 +546,10 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	atr, err = cl.AddTransactionAndWait(ctx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	result, err = cl.GetDeferredDataAfter(myID, &atr.Proof.Latest)
+	require.NoError(t, err)
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[0]), 2*genesisMsg.BlockInterval, nil)
@@ -562,11 +564,11 @@ func TestDeferred_ScenarioMultiInstructions(t *testing.T) {
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(result.ExecResult[1]), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(result.ExecResult[1]))
 
 	valueRes, _, _, err = pr.Get(result.ExecResult[1])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Such a miracle to retrieve this value that was set at the begining
 	require.Equal(t, valueRes, rootInstructionValue2)
@@ -1887,22 +1889,23 @@ func TestDeferred_ScenarioUpdateConfig(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	atr, err = cl.AddTransactionAndWait(ctx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	result, err = cl.GetDeferredDataAfter(myID, &atr.Proof.Latest)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(byzcoin.ConfigInstanceID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(byzcoin.ConfigInstanceID.Slice()))
 
 	_, valueBuf, _, _, err := pr.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	configResult := byzcoin.ChainConfig{}
 	err = protobuf.Decode(valueBuf, &configResult)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// We check if what we get has the updated values
 	require.Equal(t, config.BlockInterval, configResult.BlockInterval)
@@ -2193,18 +2196,19 @@ func TestDeferred_ScenarioMultipleSigners(t *testing.T) {
 	require.Nil(t, ctx.FillSignersAndSignWith(signer))
 
 	atr, err = cl.AddTransactionAndWait(ctx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	result, err = cl.GetDeferredDataAfter(myID, &atr.Proof.Latest)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(result.ExecResult))
 
 	time.Sleep(2 * genesisMsg.BlockInterval)
 	pr, err = cl.WaitProof(byzcoin.NewInstanceID(valueID.Slice()), 2*genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, pr.InclusionProof.Match(valueID.Slice()))
 
 	valueRes, _, _, err := pr.Get(valueID.Slice())
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Such a miracle to retrieve the updated value
 	require.Equal(t, valueRes, updatedValue)

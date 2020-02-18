@@ -43,7 +43,7 @@ func TestStat_Connectivity(t *testing.T) {
 	require.NoError(t, local.WaitDone(time.Second))
 
 	servers[2].Pause()
-	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
+	_, err = cl.CheckConnectivity(priv, ro.List, time.Second, false)
 	require.Error(t, err)
 
 	repl, err = cl.CheckConnectivity(priv, ro.List, time.Second, true)

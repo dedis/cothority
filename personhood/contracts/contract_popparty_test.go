@@ -31,5 +31,6 @@ func TestContractPopParty(t *testing.T) {
 	require.Equal(t, 1, len(scs))
 	pps := PopPartyStruct{}
 	err = protobuf.Decode(scs[0].Value, &pps)
+	require.NoError(t, err)
 	require.Equal(t, desc, pps.Description)
 }

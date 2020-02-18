@@ -77,16 +77,8 @@ func testRunCollectionTxProtocol(n, max, version int) ([]ClientTransaction, erro
 	}
 
 	var txs []ClientTransaction
-outer:
-	for {
-		select {
-		case newTxs, more := <-root.TxsChan:
-			if more {
-				txs = append(txs, newTxs...)
-			} else {
-				break outer
-			}
-		}
+	for newTxs := range root.TxsChan {
+		txs = append(txs, newTxs...)
 	}
 
 	return txs, nil

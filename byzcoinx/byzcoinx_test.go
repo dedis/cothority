@@ -238,7 +238,7 @@ func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, p
 	if sig.Sig == nil {
 		return fmt.Errorf("signature is nil")
 	}
-	if bytes.Compare(sig.Msg, proposal) != 0 {
+	if !bytes.Equal(sig.Msg, proposal) {
 		return fmt.Errorf("message in the signature is different from proposal")
 	}
 	err := func() error {

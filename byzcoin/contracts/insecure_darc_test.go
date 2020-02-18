@@ -76,6 +76,7 @@ func TestInsecureDarc(t *testing.T) {
 	require.NoError(t, newDarc2.EvolveFrom(newDarc))
 	newDarc2.Rules.AddRule("spawn:coin", []byte(signer.Identity().String()))
 	newDarc2Buf, err := newDarc2.ToProto()
+	require.NoError(t, err)
 	ctx, err = cl.CreateTransaction(byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(newDarc2.GetBaseID()),
 		Invoke: &byzcoin.Invoke{

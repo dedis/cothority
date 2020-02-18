@@ -103,7 +103,7 @@ func Test_EnrollAndSign(t *testing.T) {
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
-		resp, err := s.Signature(req)
+		_, err := s.Signature(req)
 		require.Error(t, err)
 
 		// And now correctly.
@@ -114,7 +114,7 @@ func Test_EnrollAndSign(t *testing.T) {
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
-		resp, err = s.Signature(req)
+		resp, err := s.Signature(req)
 		require.NoError(t, err)
 
 		ps := &dss.PartialSig{

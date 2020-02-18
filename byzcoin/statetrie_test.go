@@ -49,6 +49,7 @@ func TestStateTrie(t *testing.T) {
 	require.True(t, xerrors.Is(err, errKeyNotSet))
 
 	val, ver, cid, did, err := st.GetValues(key)
+	require.NoError(t, err)
 	require.Equal(t, value, val)
 	require.Equal(t, version, ver)
 	require.Equal(t, cid, string(contractID))

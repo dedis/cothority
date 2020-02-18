@@ -539,11 +539,6 @@ func createDarc(nbrOwners int, desc string) testDarc {
 	return td
 }
 
-func createSigner() Signer {
-	s, _ := createSignerIdentity()
-	return s
-}
-
 func createIdentity() Identity {
 	_, id := createSignerIdentity()
 	return id

@@ -242,13 +242,13 @@ func TestContract_Write_Benchmark(t *testing.T) {
 			iids[i] = s.addWrite(t, []byte("secret key"), ctr)
 			ctr++
 		}
-		timeSend := time.Now().Sub(start)
+		timeSend := time.Since(start)
 		log.Lvlf1("Time to send %d writes to the ledger: %s", totalTrans, timeSend)
 		start = time.Now()
 		for i := 0; i < totalTrans; i++ {
 			s.waitInstID(t, iids[i])
 		}
-		timeWait := time.Now().Sub(start)
+		timeWait := time.Since(start)
 		log.Lvlf1("Time to wait for %d writes in the ledger: %s", totalTrans, timeWait)
 		times = append(times, timeSend+timeWait)
 		for _, ti := range times {

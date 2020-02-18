@@ -183,7 +183,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	// we should be able to proceed because skipchain is fault tolerant
 	if nbrNodes > 4 {
 		local = onet.NewLocalTest(cothority.Suite)
-		servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
+		servers, _, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 		tss = local.GetServices(servers, tsid)
 		for i := 3; i < nbrNodes; i++ {
 			log.Lvl2("Checking failing signature at", i)

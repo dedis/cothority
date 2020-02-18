@@ -234,8 +234,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	}
 
 	// Register the function generating the protocol instance
-	var root *ProtocolBFTCoSi
-	root = node.(*ProtocolBFTCoSi)
+	root := node.(*ProtocolBFTCoSi)
 	root.Msg = msg
 	cMux.Lock()
 	counter := &Counter{refuseCount: refuseCount}

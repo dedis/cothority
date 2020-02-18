@@ -359,6 +359,7 @@ func TestStagingGetProof(t *testing.T) {
 	for i := 10; i < 20; i++ {
 		k := []byte{byte(i)}
 		p, err := sTrie.GetProof(k)
+		require.NoError(t, err)
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
 		require.False(t, ok)
@@ -382,6 +383,7 @@ func TestStagingGetProof(t *testing.T) {
 	for i := 10; i < 20; i++ {
 		k := []byte{byte(i)}
 		p, err := testTrie.GetProof(k)
+		require.NoError(t, err)
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
 		require.False(t, ok)

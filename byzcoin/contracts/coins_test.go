@@ -177,7 +177,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	}
 
 	// Try once with not enough coins available.
-	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
+	_, _, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
 	require.Error(t, err)
 
 	// Apply the changes to the mock trie.
@@ -220,7 +220,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	_, _, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
 
 	inst = byzcoin.Instruction{
@@ -236,7 +236,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 		SignerCounter:    []uint64{1},
 	}
 
-	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
+	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))

@@ -23,5 +23,6 @@ func TestContractCredential_Spawn(t *testing.T) {
 	require.Equal(t, 1, len(scs))
 	cred2 := CredentialStruct{}
 	err = protobuf.Decode(scs[0].Value, &cred2)
+	require.NoError(t, err)
 	require.Equal(t, cred, cred2)
 }

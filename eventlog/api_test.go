@@ -439,8 +439,8 @@ func TestClient_StreamEventsFrom(t *testing.T) {
 	}
 
 	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		require.NoError(t, c.StreamEventsFrom(h, c.ByzCoin.ID))

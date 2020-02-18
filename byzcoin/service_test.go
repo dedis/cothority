@@ -77,20 +77,20 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	service := s.services[1]
 
 	// invalid version, missing transaction
-	resp, err := service.CreateGenesisBlock(&CreateGenesisBlock{
+	_, err := service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version: 0,
 		Roster:  *s.roster,
 	})
 	require.Error(t, err)
 
 	// invalid: max block too small, big
-	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
+	_, err = service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version:      0,
 		Roster:       *s.roster,
 		MaxBlockSize: 3000,
 	})
 	require.Error(t, err)
-	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
+	_, err = service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version:      0,
 		Roster:       *s.roster,
 		MaxBlockSize: 30 * 1e6,
@@ -98,7 +98,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	require.Error(t, err)
 
 	// invalid darc
-	resp, err = service.CreateGenesisBlock(&CreateGenesisBlock{
+	_, err = service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version:     CurrentVersion,
 		Roster:      *s.roster,
 		GenesisDarc: darc.Darc{},
@@ -113,7 +113,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	genesisMsg.MaxBlockSize = 1 * 1e6
 
 	// finally passing
-	resp, err = service.CreateGenesisBlock(genesisMsg)
+	resp, err := service.CreateGenesisBlock(genesisMsg)
 	require.NoError(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
@@ -176,19 +176,19 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	defer s.local.CloseAll()
 
 	// wrong version
-	akvresp, err := s.service().AddTransaction(&AddTxRequest{
+	_, err := s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion + 1,
 	})
 	require.Error(t, err)
 
 	// missing skipchain
-	akvresp, err = s.service().AddTransaction(&AddTxRequest{
+	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion,
 	})
 	require.Error(t, err)
 
 	// missing transaction
-	akvresp, err = s.service().AddTransaction(&AddTxRequest{
+	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.genesis.SkipChainID(),
 	})
@@ -206,7 +206,7 @@ func testAddTransaction(t *testing.T, blockInterval time.Duration, sendToIdx int
 	log.Lvl1("adding the first tx")
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
 	require.NoError(t, err)
-	akvresp, err = s.service().AddTransaction(&AddTxRequest{
+	akvresp, err := s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
@@ -297,7 +297,7 @@ func TestService_AddTransaction_WrongNode(t *testing.T) {
 
 	outsideServer := s.local.GenServers(1)[0]
 	outside := outsideServer.Service(ServiceName).(*Service)
-	registerDummy([]*onet.Server{outsideServer})
+	registerDummy(t, []*onet.Server{outsideServer})
 
 	// add the first tx to outside server
 	log.Lvl1("adding the first tx - this should fail")
@@ -448,6 +448,7 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 	log.Lvl1("Adding another transaction to create block")
 	dcID = random.Bits(256, false, random.New())
 	atx.Transaction, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, dcID, s.signer, 2)
+	require.NoError(t, err)
 	atx.InclusionWait = 5
 	resp, err = s.services[1].AddTransaction(atx)
 	transactionOK(t, resp, err)
@@ -458,6 +459,7 @@ func TestService_AddTransaction_Parallel(t *testing.T) {
 		Key:     tx1.Instructions[0].DeriveID("").Slice(),
 		ID:      s.genesis.Hash,
 	})
+	require.NoError(t, err)
 	// No idea why the payload needs to be reset here - probably an error in the protobuf library.
 	payload = DataBody{}
 	require.NoError(t, protobuf.Decode(proof.Proof.Latest.Payload, &payload))
@@ -519,8 +521,8 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 
 	closing := make(chan bool)
 	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func(closeChan chan bool) {
-		wg.Add(1)
 		defer wg.Done()
 
 		c := uint64(1)
@@ -570,6 +572,7 @@ func TestService_AutomaticVersionUpgrade(t *testing.T) {
 		require.NoError(t, err)
 
 		header, err := decodeBlockHeader(&proof.Proof.Latest)
+		require.NoError(t, err)
 		if header.Version == CurrentVersion {
 			close(closing)
 			wg.Wait()
@@ -973,7 +976,7 @@ func TestService_BigTx(t *testing.T) {
 
 	// Try to send a value so big it will be refused.
 	s.value = make([]byte, defaultMaxBlockSize+1)
-	_, _, resp, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, _, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
 	require.Error(t, e1)
 	require.Contains(t, "transaction too large", e1.Error())
 	require.NoError(t, e2)
@@ -982,7 +985,7 @@ func TestService_BigTx(t *testing.T) {
 	s.value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, _, resp, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 1)
+	_, _, resp, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 0, 1)
 	transactionOK(t, resp, e1)
 	require.NoError(t, e2)
 	_, _, resp, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 2)
@@ -1077,6 +1080,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	// tx2 uses the dummy kind, its value should be stored.
 	value2 := []byte("b")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
+	require.NoError(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -1348,6 +1352,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 			SignerIDs:   []string{s.signer.Identity().String()},
 			SkipchainID: s.genesis.SkipChainID(),
 		})
+		require.NoError(t, err)
 
 		d2Buf, err := d2.ToProto()
 		require.NoError(t, err)
@@ -1478,6 +1483,7 @@ func TestService_DarcDelegation(t *testing.T) {
 		SignerCounter: []uint64{1},
 	}
 	ctx, err := combineInstrsAndSign(s.signer, instr)
+	require.NoError(t, err)
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
@@ -1662,7 +1668,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 		counter++
 		s.sendTxAndWait(t, dummyCtx, 10)
 
-		dur := time.Now().Sub(start)
+		dur := time.Since(start)
 		require.InDelta(t, dur, interval, float64(1*time.Second))
 	}
 }
@@ -1937,7 +1943,7 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 
 	// Create a new block
 	log.Lvl1("Creating two dummy blocks for the new node to catch up")
-	ct = addDummyTxs(t, s, 2, 1, ct)
+	addDummyTxs(t, s, 2, 1, ct)
 
 	log.Lvl1("And getting proof from new node that the testDarc exists")
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
@@ -1963,7 +1969,7 @@ func TestService_DownloadState(t *testing.T) {
 
 	log.Lvl1("Adding dummy transactions")
 	ct := addDummyTxs(t, s, 3, 3, 1)
-	ct = addDummyTxs(t, s, 1, 20, ct)
+	addDummyTxs(t, s, 1, 20, ct)
 
 	config, err := s.service().LoadConfig(s.genesis.SkipChainID())
 	require.NoError(t, err)
@@ -1973,26 +1979,26 @@ func TestService_DownloadState(t *testing.T) {
 
 	// Wrong parameters
 	log.Lvl1("Testing wrong parameters")
-	resp, err := s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 	})
 	require.Error(t, err)
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: skipchain.SkipBlockID{},
 		Nonce:     0,
 		Length:    1,
 	})
 	require.Error(t, err)
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 	})
 	require.Error(t, err)
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     1,
 	})
 	require.Error(t, err)
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
 	})
@@ -2001,7 +2007,7 @@ func TestService_DownloadState(t *testing.T) {
 	// Start one download and check it is aborted
 	// if we start a second download.
 	log.Lvl1("Check aborting of download and resuming")
-	resp, err = s.service().DownloadState(&DownloadState{
+	resp, err := s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     0,
 		Length:    1,
@@ -2009,7 +2015,7 @@ func TestService_DownloadState(t *testing.T) {
 	require.NoError(t, err)
 	nonce1 := resp.Nonce
 	// Continue 1st download
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     nonce1,
 		Length:    1,
@@ -2025,14 +2031,14 @@ func TestService_DownloadState(t *testing.T) {
 	nonce2 := resp.Nonce
 	require.NotEqual(t, nonce1, nonce2)
 	// Now 1st download should fail
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     nonce1,
 		Length:    1,
 	})
 	require.Error(t, err)
 	// And 2nd download should still continue
-	resp, err = s.service().DownloadState(&DownloadState{
+	_, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 		Nonce:     nonce2,
 		Length:    1,
@@ -2096,6 +2102,7 @@ func TestService_DownloadState(t *testing.T) {
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
 		err = protobuf.DecodeWithConstructors(val, &configCopy, network.DefaultConstructors(cothority.Suite))
+		require.NoError(t, err)
 		require.Equal(t, config, &configCopy)
 		stateTrieDown, err := service.getStateTrie(s.genesis.SkipChainID())
 		require.NoError(t, err)
@@ -2421,7 +2428,7 @@ func TestService_StateChangeStorageCatchUp(t *testing.T) {
 	}
 
 	newServer, newRoster, newService := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
-	registerDummy(newServer)
+	registerDummy(t, newServer)
 
 	newRoster = onet.NewRoster(append(s.roster.List, newRoster.List...))
 	ctx, _ := createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, 5)
@@ -2744,7 +2751,7 @@ func newSerWithVersion(t *testing.T, step int, interval time.Duration, n int, rw
 		service.defaultVersion = v
 		s.services = append(s.services, service)
 	}
-	registerDummy(s.hosts)
+	registerDummy(t, s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
 		[]string{
@@ -2901,19 +2908,20 @@ func versionContractFunc(rst ReadOnlyStateTrie, inst Instruction, c []Coin) ([]S
 	return []StateChange{sc}, c, nil
 }
 
-func registerDummy(servers []*onet.Server) {
+func registerDummy(t *testing.T, servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.Service in the method signature doesn't work :(
 	for _, s := range servers {
 		service := s.Service(ServiceName).(*Service)
 
 		err := service.testRegisterContract(dummyContract, adaptor(dummyContractFunc))
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		err = service.testRegisterContract(slowContract, adaptor(slowContractFunc))
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		err = service.testRegisterContract(invalidContract, adaptor(invalidContractFunc))
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		err = service.testRegisterContract(versionContract, adaptor(versionContractFunc))
+		require.NoError(t, err)
 	}
 }
 

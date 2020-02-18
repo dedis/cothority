@@ -36,8 +36,6 @@ type contractAttrValue struct {
 	value []byte
 }
 
-func notImpl(what string) error { return xerrors.Errorf("this contract does not implement %v", what) }
-
 func (c contractAttrValue) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
 	cout = coins
 

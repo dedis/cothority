@@ -22,11 +22,11 @@ import (
 
 func TestNewProof(t *testing.T) {
 	s := createSC(t)
-	p, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
-	require.NotNil(t, err)
+	_, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
+	require.Error(t, err)
 
 	key := []byte{1}
-	p, err = NewProof(s.c, s.s, s.genesis.Hash, key)
+	p, err := NewProof(s.c, s.s, s.genesis.Hash, key)
 	require.Nil(t, err)
 	require.False(t, p.InclusionProof.Match(key))
 

@@ -93,12 +93,8 @@ func TestProtocol(t *testing.T) {
 
 			// get and verify signature
 			_, err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.CompletePolicy{})
-			if err != nil {
-				local.CloseAll()
-				t.Fatal(err)
-			}
-
 			local.CloseAll()
+			require.NoError(t, err)
 		}
 	}
 }
@@ -531,8 +527,5 @@ func refuse(n *onet.TreeNodeInstance, msg, data []byte) bool {
 	counter.Lock()
 	defer counter.Unlock()
 	defer func() { counter.veriCount++ }()
-	if n.TreeNode().RosterIndex == counter.refuseIdx {
-		return false
-	}
-	return true
+	return n.TreeNode().RosterIndex != counter.refuseIdx
 }

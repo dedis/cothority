@@ -284,13 +284,13 @@ func TestService(t *testing.T) {
 	require.Nil(t, local.WaitDone(time.Second))
 
 	// Reconstruct on non-leader
-	reconstructReply, err := s1.Reconstruct(&evoting.Reconstruct{
+	_, err = s1.Reconstruct(&evoting.Reconstruct{
 		ID: replyOpen.ID,
 	})
 	require.Equal(t, err, errOnlyLeader)
 
 	// Reconstruct votes
-	reconstructReply, err = s0.Reconstruct(&evoting.Reconstruct{
+	reconstructReply, err := s0.Reconstruct(&evoting.Reconstruct{
 		ID: replyOpen.ID,
 	})
 	require.Nil(t, err)
@@ -577,6 +577,7 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	}
 
 	box, err := election.Box(s0.skipchain)
+	require.NoError(t, err)
 	mix := genMix(box.Ballots, election, roster.Get(0), local.GetPrivate(nodes[0]))
 	tx := lib.NewTransaction(mix, idAdmin)
 	_, err = lib.Store(s0.skipchain, election.ID, tx, nil)

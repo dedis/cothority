@@ -129,6 +129,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.TrieRoot = []byte{1, 2, 3}
 		buf, err := protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}
@@ -154,6 +155,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 			},
 		})
 		buf, err := protobuf.Encode(&dBody)
+		require.NoError(t, err)
 		sb.Payload = buf
 
 		var dHead DataHeader
@@ -164,6 +166,7 @@ func TestService_StateReplayFailures(t *testing.T) {
 
 		dHead.ClientTransactionHash = dBody.TxResults.Hash()
 		buf, err = protobuf.Encode(&dHead)
+		require.NoError(t, err)
 		sb.Data = buf
 		return sb, nil
 	}

@@ -200,8 +200,7 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 	log.Lvl3("U is:", U.String())
 
 	for len(key) > 0 {
-		var kp kyber.Point
-		kp = suite.Point().Embed(key, suite.RandomStream())
+		kp := suite.Point().Embed(key, suite.RandomStream())
 		log.Lvl3("Keypoint:", kp.String())
 		log.Lvl3("X:", X.String())
 		Cs = append(Cs, suite.Point().Add(C, kp))
