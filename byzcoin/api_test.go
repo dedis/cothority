@@ -10,7 +10,6 @@ import (
 	"go.dedis.ch/cothority/v3/darc"
 	"go.dedis.ch/cothority/v3/skipchain"
 	"go.dedis.ch/onet/v3"
-	"go.dedis.ch/onet/v3/log"
 	"go.dedis.ch/onet/v3/network"
 	"go.dedis.ch/protobuf"
 	"golang.org/x/xerrors"
@@ -226,9 +225,9 @@ func TestClient_Streaming(t *testing.T) {
 			tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+1)
 			// Need log.ErrFatal here, else it races with the rest of the code that
 			// uses 't'.
-			log.ErrFatal(err)
+			require.NoError(t, err)
 			_, err = c.AddTransaction(tx)
-			log.ErrFatal(err)
+			require.NoError(t, err)
 
 			// sleep for a block interval so we create multiple blocks
 			time.Sleep(msg.BlockInterval)

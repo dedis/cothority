@@ -80,14 +80,14 @@ func TestClient_ParallelGetUpdateChain(t *testing.T) {
 		clients[i] = newTestClient(l)
 	}
 	sb, err := clients[0].CreateGenesis(ro, 32, 32, VerificationStandard, []byte{})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	wg := sync.WaitGroup{}
 	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
 			_, err := clients[i%8].GetUpdateChain(sb.Roster, sb.Hash)
-			log.ErrFatal(err)
+			require.NoError(t, err)
 			wg.Done()
 		}(i)
 	}

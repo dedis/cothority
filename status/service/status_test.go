@@ -66,7 +66,7 @@ func TestStat_Request(t *testing.T) {
 	client := NewTestClient(local)
 	log.Lvl1("Sending request to service...")
 	stat, err := client.Request(el.List[0])
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Status["Generic"].Field["Available_Services"])
 }

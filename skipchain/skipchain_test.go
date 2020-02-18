@@ -59,7 +59,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	// make sure the correct default signature scheme is set to BDN
 	assert.Equal(t, BdnSignatureSchemeIndex, sbRoot.SignatureScheme)
 
@@ -235,7 +235,7 @@ func TestService_MultiLevel(t *testing.T) {
 			log.Lvl1("Making genesis for", base, maxHeight)
 			sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
 				base, maxHeight)
-			log.ErrFatal(err)
+			require.NoError(t, err)
 			latest := sbRoot
 			log.Lvl1("Adding blocks for", base, maxHeight)
 			for sbi := 1; sbi < 10; sbi++ {
@@ -243,14 +243,14 @@ func TestService_MultiLevel(t *testing.T) {
 				sb := NewSkipBlock()
 				sb.Roster = ro
 				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: latest.Hash, NewBlock: sb})
-				log.ErrFatal(err)
+				require.NoError(t, err)
 				latest = psbr.Latest
 				for n, i := range sb.BackLinkIDs {
 					for ns, s := range services {
 						for {
 							log.Lvl3("Checking backlink", n, ns)
 							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
-							log.ErrFatal(err)
+							require.NoError(t, err)
 							if len(bl.ForwardLink) == n+1 &&
 								bl.ForwardLink[n].To.Equal(sb.Hash) {
 								break
@@ -276,7 +276,7 @@ func TestService_Verification(t *testing.T) {
 
 	elRoot := onet.NewRoster(el.List[0:3])
 	sbRoot, err := makeGenesisRoster(service, elRoot)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	log.Lvl1("Creating non-conforming skipBlock")
 	sb := NewSkipBlock()
@@ -300,12 +300,12 @@ func TestService_Verification(t *testing.T) {
 
 	log.Lvl1("Creating skipblock with same Roster as root")
 	sbInter, err := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, sb.VerifierIDs, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.NotNil(t, sbInter)
 	log.Lvl1("Creating skipblock with sub-Roster from root")
 	elSub := onet.NewRoster(el.List[0:2])
 	_, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, sb.VerifierIDs, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 }
 
 func TestService_SignBlock(t *testing.T) {
@@ -317,12 +317,12 @@ func TestService_SignBlock(t *testing.T) {
 	service := genService.(*Service)
 
 	sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerificationNone, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	el2 := onet.NewRoster(el.List[0:2])
 	sb := NewSkipBlock()
 	sb.Roster = el2
 	reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	sbRoot = reply.Previous
 	sbSecond := reply.Latest
 	log.Lvl1("Verifying signatures")
@@ -348,11 +348,11 @@ func TestService_ProtocolVerification(t *testing.T) {
 	}
 
 	sbRoot, err := makeGenesisRosterArgs(s1, el, nil, []VerifierID{verifyID}, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	sbNext := sbRoot.Copy()
 	sbNext.BackLinkIDs = []SkipBlockID{sbRoot.Hash}
 	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbNext})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	for i := 0; i < 3; i++ {
 		select {
 		case <-count:
@@ -406,7 +406,7 @@ func TestService_RegisterVerification(t *testing.T) {
 		log.ErrFatal(s.registerVerification(VerifyTest, verifier))
 	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, []VerifierID{VerifyTest}, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ver))
 	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sb.Hash, NewBlock: sb})
@@ -414,7 +414,7 @@ func TestService_RegisterVerification(t *testing.T) {
 	require.Equal(t, 3, len(ver))
 
 	sb, err = makeGenesisRosterArgs(s1, el, nil, []VerifierID{ServiceVerifier}, 1, 1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
 	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sb.Hash, NewBlock: sb})
@@ -504,7 +504,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		},
 	}
 	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	last := time.Now()
 	for i := 0; i < 500; i++ {
@@ -513,7 +513,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		last = now
 		ssbrep, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
-		log.ErrFatal(err)
+		require.NoError(t, err)
 	}
 }
 
@@ -578,7 +578,7 @@ func TestService_ParallelGUC(t *testing.T) {
 		},
 	}
 	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(nbrRoutines)
@@ -671,7 +671,7 @@ func TestService_Propagation(t *testing.T) {
 	firstFiveRoster := onet.NewRoster(fullRoster.List[:5])
 	sbRoot, err := makeGenesisRosterArgs(service, firstFiveRoster, nil, VerificationNone,
 		3, 3)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.NotNil(t, sbRoot)
 
 	k := 9
@@ -685,7 +685,7 @@ func TestService_Propagation(t *testing.T) {
 		}
 
 		ssbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
-		log.ErrFatal(err)
+		require.NoError(t, err)
 
 		blocks[i] = ssbr.Latest
 	}
@@ -801,7 +801,7 @@ func TestService_AddFollow(t *testing.T) {
 	priv0 := local.GetPrivate(servers[0])
 	priv1 := local.GetPrivate(servers[1])
 	sig, err := schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ssb.Signature = &sig
 	_, err = service.StoreSkipBlock(ssb)
 	require.NotNil(t, err)
@@ -809,10 +809,10 @@ func TestService_AddFollow(t *testing.T) {
 	// Correct server signature
 	log.Lvl2("correct server signature")
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ssb.Signature = &sig
 	master0, err := service.StoreSkipBlock(ssb)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	// Not fully authenticated roster
 	log.Lvl2("2nd roster is not registered")
@@ -822,7 +822,7 @@ func TestService_AddFollow(t *testing.T) {
 	ssb.NewBlock = sb
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ssb.Signature = &sig
 	require.Equal(t, 0, services[1].db.Length())
 	_, err = service.StoreSkipBlock(ssb)
@@ -837,10 +837,10 @@ func TestService_AddFollow(t *testing.T) {
 		closing:  make(chan bool),
 	}}
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ssb.Signature = &sig
 	master1, err := service.StoreSkipBlock(ssb)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	// update skipblock and follow the skipblock
 	log.Lvl2("3 node signing with block update")
@@ -855,15 +855,15 @@ func TestService_AddFollow(t *testing.T) {
 	ssb.NewBlock = sb
 	ssb.TargetSkipChainID = master1.Latest.Hash
 	sig, err = schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ssb.Signature = &sig
 	sbs, err := service.db.getAll()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	for _, sb := range sbs {
 		services[1].db.Store(sb)
 	}
 	master2, err := services[1].StoreSkipBlock(ssb)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].To.Equal(master2.Latest.Hash))
 }
 
@@ -876,19 +876,19 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 	require.Equal(t, 0, len(service.Storage.Clients))
 	links, err := service.Listlink(&Listlink{})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(links.Publics))
 	_, err = service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: []byte{}})
 	require.NotNil(t, err)
 	msg, err := server.ServerIdentity.Public.MarshalBinary()
 	require.NoError(t, err)
 	sig, err := schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: sig})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	links, err = service.Listlink(&Listlink{})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(links.Publics))
 }
 
@@ -903,9 +903,9 @@ func TestService_Unlink(t *testing.T) {
 	kp := key.NewKeyPair(cothority.Suite)
 	msg, _ := kp.Public.MarshalBinary()
 	sig, err := schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.CreateLinkPrivate(&CreateLinkPrivate{Public: kp.Public, Signature: sig})
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(service.Storage.Clients))
 
 	// Wrong signature and wrong public key
@@ -967,13 +967,13 @@ func TestService_DelFollow(t *testing.T) {
 
 	// Test wrong signature
 	sig, err := schnorr.Sign(cothority.Suite, privWrong, msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.NotNil(t, err)
 	require.Equal(t, 2, len(service.Storage.FollowIDs))
 
 	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(service.Storage.FollowIDs))
@@ -982,7 +982,7 @@ func TestService_DelFollow(t *testing.T) {
 	iddel = []byte{2}
 	msg = append([]byte("delfollow:"), iddel...)
 	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(service.Storage.Follow))
@@ -999,18 +999,18 @@ func TestService_ListFollow(t *testing.T) {
 
 	// Check wrong signature
 	msg, err := servers[1].ServerIdentity.Public.MarshalBinary()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	msg = append([]byte("listfollow:"), msg...)
 	sig, err := schnorr.Sign(cothority.Suite, priv, msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	_, err = service.ListFollow(&ListFollow{Signature: sig})
 	require.NotNil(t, err)
 
 	msg, err = servers[0].ServerIdentity.Public.MarshalBinary()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	msg = append([]byte("listfollow:"), msg...)
 	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	lf, err := service.ListFollow(&ListFollow{Signature: sig})
 	require.NoError(t, err)
 	require.Equal(t, 2, len(*lf.Follow))

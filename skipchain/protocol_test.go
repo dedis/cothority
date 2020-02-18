@@ -86,7 +86,7 @@ func TestGB(t *testing.T) {
 	// it is totally out of date, and cannot answer anything
 
 	// ask for only one
-	sb := ts1.CallGB(sb0, false, 1)
+	sb := ts1.CallGB(t, sb0, false, 1)
 	require.NotNil(t, sb)
 	require.Equal(t, 1, len(sb))
 	require.Equal(t, sb0.Hash, sb[0].Hash)
@@ -95,7 +95,7 @@ func TestGB(t *testing.T) {
 	servers[2].Pause()
 
 	// ask for 10, expect to get the 4 of them
-	sb = ts1.CallGB(sb0, false, 10)
+	sb = ts1.CallGB(t, sb0, false, 10)
 	require.NotNil(t, sb)
 	require.Equal(t, 4, len(sb))
 	require.Equal(t, sb0.Hash, sb[0].Hash)
@@ -104,7 +104,7 @@ func TestGB(t *testing.T) {
 	require.Equal(t, sb3.Hash, sb[3].Hash)
 
 	// ask for 3
-	sb = ts1.CallGB(sb1, false, 3)
+	sb = ts1.CallGB(t, sb1, false, 3)
 	require.NotNil(t, sb)
 	require.Equal(t, 3, len(sb))
 	require.Equal(t, sb1.Hash, sb[0].Hash)
@@ -116,7 +116,7 @@ func TestGB(t *testing.T) {
 	// to get the request, but send no reply back. One of the others
 	// will find the blocks.
 	servers[2].Unpause()
-	sb = ts1.CallGB(sb0, false, 10)
+	sb = ts1.CallGB(t, sb0, false, 10)
 	require.NotNil(t, sb)
 	require.Equal(t, 4, len(sb))
 	require.Equal(t, sb0.Hash, sb[0].Hash)
@@ -125,7 +125,7 @@ func TestGB(t *testing.T) {
 	require.Equal(t, sb3.Hash, sb[3].Hash)
 
 	// with skipping, we expect to get sb0, sb1 and sb3.
-	sb = ts1.CallGB(sb0, true, 10)
+	sb = ts1.CallGB(t, sb0, true, 10)
 	require.NotNil(t, sb)
 	require.Equal(t, 3, len(sb))
 	require.Equal(t, sb0.Hash, sb[0].Hash)
@@ -155,7 +155,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	for _, t := range tss {
 		t.(*testService).FollowerIDs = []SkipBlockID{[]byte{0}}
 	}
-	sigs := tss[0].(*testService).CallER(tree, sb)
+	sigs := tss[0].(*testService).CallER(t, tree, sb)
 	require.Equal(t, 0, len(sigs))
 	local.CloseAll()
 
@@ -169,7 +169,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 			NewChain: NewChainAnyNode,
 		}}
 	}
-	sigs = tss[0].(*testService).CallER(tree, sb)
+	sigs = tss[0].(*testService).CallER(t, tree, sb)
 	require.True(t, len(sigs)+(nbrNodes-1)/3 >= nbrNodes-1)
 
 	for _, s := range sigs {
@@ -191,7 +191,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 			tss[i].(*testService).FollowerIDs = []SkipBlockID{[]byte{0}}
 			tss[i].(*testService).Followers = &[]FollowChainType{}
 			tss[i].(*testService).Unlock()
-			sigs = tss[0].(*testService).CallER(tree, sb)
+			sigs = tss[0].(*testService).CallER(t, tree, sb)
 			require.Equal(t, 0, len(sigs))
 			tss[i].(*testService).Lock()
 			tss[i].(*testService).Followers = &[]FollowChainType{{
@@ -212,24 +212,24 @@ type testService struct {
 	Db          *SkipBlockDB
 }
 
-func (ts *testService) CallER(t *onet.Tree, b *SkipBlock) []ProtoExtendSignature {
-	pi, err := ts.CreateProtocol(ProtocolExtendRoster, t)
+func (ts *testService) CallER(t *testing.T, tree *onet.Tree, b *SkipBlock) []ProtoExtendSignature {
+	pi, err := ts.CreateProtocol(ProtocolExtendRoster, tree)
 	if err != nil {
 		return []ProtoExtendSignature{}
 	}
 	pisc := pi.(*ExtendRoster)
 	pisc.ExtendRoster = &ProtoExtendRoster{Block: *b}
 	if err := pi.Start(); err != nil {
-		log.ErrFatal(err)
+		require.NoError(t, err)
 	}
 	return <-pisc.ExtendRosterReply
 }
 
-func (ts *testService) CallGB(sb *SkipBlock, sk bool, n int) []*SkipBlock {
-	t := sb.Roster.RandomSubset(ts.ServerIdentity(), 3).GenerateStar()
-	log.Lvl3("running on this tree", t.Dump())
+func (ts *testService) CallGB(t *testing.T, sb *SkipBlock, sk bool, n int) []*SkipBlock {
+	tree := sb.Roster.RandomSubset(ts.ServerIdentity(), 3).GenerateStar()
+	log.Lvl3("running on this tree", tree.Dump())
 
-	pi, err := ts.CreateProtocol(ProtocolGetBlocks, t)
+	pi, err := ts.CreateProtocol(ProtocolGetBlocks, tree)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -241,7 +241,7 @@ func (ts *testService) CallGB(sb *SkipBlock, sk bool, n int) []*SkipBlock {
 		Skipping: sk,
 	}
 	if err := pi.Start(); err != nil {
-		log.ErrFatal(err)
+		require.NoError(t, err)
 	}
 	result := <-pisc.GetBlocksReply
 	return result

@@ -109,7 +109,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	var err error
 	sbs[0], err = makeGenesisRosterArgs(s, onet.NewRoster(roster.List[0:2]),
 		nil, VerificationNone, 2, 3)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 
 	log.Lvl1("Initialize skipchain.")
 
@@ -351,10 +351,10 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	blocks := make([]*SkipBlock, nbrBlocks)
 	var err error
 	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	for i := 1; i < nbrBlocks; i++ {
 		reply, err := c.StoreSkipBlock(blocks[0], roster, nil)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		blocks[i] = reply.Latest
 	}
 
@@ -367,7 +367,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	// 0
 	sb1 := blocks[0]
 	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	require.True(t, sb1.Equal(search.SkipBlock))
 	require.Equal(t, links[0], len(search.Links))
 	require.True(t, sb1.SkipChainID().Equal(search.Links[0].To))
@@ -377,7 +377,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	for i := 1; i < nbrBlocks; i++ {
 		log.Lvl1("Creating new block", i)
 		search, err = c.GetSingleBlockByIndex(roster, sb1.SkipChainID(), i)
-		log.ErrFatal(err)
+		require.NoError(t, err)
 		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
 		require.Equal(t, links[i], len(search.Links))
 		for _, link := range search.Links[1:] {

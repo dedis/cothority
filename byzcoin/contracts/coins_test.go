@@ -41,7 +41,7 @@ func init() {
 
 func TestCoin_Spawn(t *testing.T) {
 	// Testing spawning of a new coin and checking it has zero coins in it.
-	ct := newCT("spawn:coin")
+	ct := newCT(t, "spawn:coin")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	inst := byzcoin.Instruction{
@@ -69,7 +69,7 @@ func TestCoin_Spawn(t *testing.T) {
 
 func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
-	ct := newCT("invoke:mint")
+	ct := newCT(t, "invoke:mint")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -114,7 +114,7 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 	ciBuf, err := protobuf.Encode(&ci)
 	require.NoError(t, err)
 
-	ct := newCT("invoke:mint")
+	ct := newCT(t, "invoke:mint")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -138,7 +138,7 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 }
 
 func TestCoin_InvokeStoreFetch(t *testing.T) {
-	ct := newCT("invoke:store", "invoke:fetch")
+	ct := newCT(t, "invoke:store", "invoke:fetch")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr := byzcoin.InstanceID{}
@@ -195,7 +195,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 
 func TestCoin_InvokeTransfer(t *testing.T) {
 	// Test that a coin can be transferred
-	ct := newCT("invoke:transfer")
+	ct := newCT(t, "invoke:transfer")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
 
 	coAddr1 := byzcoin.InstanceID{}
@@ -254,7 +254,7 @@ type cvTest struct {
 var gdarc *darc.Darc
 var gsigner darc.Signer
 
-func newCT(rStr ...string) *cvTest {
+func newCT(t *testing.T, rStr ...string) *cvTest {
 	ct := &cvTest{
 		make(map[string][]byte),
 		make(map[string]string),
@@ -269,7 +269,7 @@ func newCT(rStr ...string) *cvTest {
 	}
 	gdarc = darc.NewDarc(rules, []byte{})
 	dBuf, err := gdarc.ToProto()
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	ct.Store(byzcoin.NewInstanceID(gdarc.GetBaseID()), dBuf, "darc", gdarc.GetBaseID())
 	return ct
 }

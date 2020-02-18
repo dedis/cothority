@@ -51,19 +51,19 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	inter1.BackLinkIDs = []SkipBlockID{inter0.Hash}
 
 	b, err := db.GetResponsible(root0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, root0.Equal(b))
 
 	b, err = db.GetResponsible(root1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, root0.Equal(b))
 
 	b, err = db.GetResponsible(inter0)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.Equal(t, root1.Hash, b.Hash)
 
 	b, err = db.GetResponsible(inter1)
-	log.ErrFatal(err)
+	require.NoError(t, err)
 	assert.True(t, inter0.Equal(b))
 }
 
