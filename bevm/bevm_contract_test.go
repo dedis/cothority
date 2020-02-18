@@ -40,7 +40,7 @@ func Test_Spawn(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	_, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // Spawn and delete a BEvm instance
@@ -53,31 +53,31 @@ func Test_SpawnAndDelete(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize an account
 	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the account
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy a Candy contract
 	candySupply := big.NewInt(100)
 	candyContract, err := NewEvmContract(
 		"Candy", getContractData(t, "Candy", "abi"), getContractData(t, "Candy", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Delete the BEvm instance
 	err = bevmClient.Delete()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // Credit and display three accounts balances
@@ -90,17 +90,17 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize some accounts
 	accounts := []*EvmAccount{}
 	for _, privKey := range testPrivateKeys {
 		account, err := NewEvmAccount(privKey)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		accounts = append(accounts, account)
 	}
 
@@ -109,10 +109,10 @@ func Test_InvokeCreditAccounts(t *testing.T) {
 		amount := big.NewInt(int64((i + 1) * WeiPerEther))
 
 		err = bevmClient.CreditAccount(amount, account.Address)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		balance, err := bevmClient.GetAccountBalance(account.Address)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		require.Equal(t, amount, balance)
 	}
@@ -127,41 +127,41 @@ func Test_InvokeCandyContract(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize an account
 	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the account
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy a Candy contract
 	candySupply := big.NewInt(100)
 	candyContract, err := NewEvmContract(
 		"Candy", getContractData(t, "Candy", "abi"), getContractData(t, "Candy", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	candyInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, candyContract, candySupply)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get initial candy balance
 	candyBalance, err := bevmClient.Call(a, candyInstance, "getRemainingCandies")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, candySupply, candyBalance)
 
 	// Eat 10 candies
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, candyInstance, "eatCandy", big.NewInt(10))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get remaining candies
 	expectedCandyBalance := big.NewInt(90)
 	candyBalance, err = bevmClient.Call(a, candyInstance, "getRemainingCandies")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, expectedCandyBalance, candyBalance)
 }
 
@@ -174,31 +174,31 @@ func Test_Time(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize an account
 	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the account
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy a TimeTest contract
 	contract, err := NewEvmContract(
 		"TimeTest", getContractData(t, "TimeTest", "abi"), getContractData(t, "TimeTest", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	timeTestInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, contract)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Get current block time
 	expectedTime := big.NewInt(12345) // Currently hardcoded in getContext()
 	time, err := bevmClient.Call(a, timeTestInstance, "getTime")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, expectedTime, time)
 }
 
@@ -211,72 +211,72 @@ func Test_InvokeTokenContract(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize two accounts
 	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 	b, err := NewEvmAccount(testPrivateKeys[1])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the accounts
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), b.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy an ERC20 Token contract
 	erc20Contract, err := NewEvmContract(
 		"ERC20Token", getContractData(t, "ERC20Token", "abi"), getContractData(t, "ERC20Token", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	erc20Instance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Retrieve the total supply
 	supply, err := bevmClient.Call(a, erc20Instance, "totalSupply")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// A's initial balance should be the total supply, as he is the owner
 	balance, err := bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, supply, balance)
 
 	// B's initial balance should be empty
 	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	assertBigInt0(t, balance.(*big.Int))
 
 	// Transfer 100 tokens from A to B
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Instance, "transfer", b.Address, big.NewInt(100))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Check the new balances
 	newA := new(big.Int).Sub(supply.(*big.Int), big.NewInt(100))
 	newB := big.NewInt(100)
 
 	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, newA, balance)
 
 	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, newB, balance)
 
 	// Try to transfer 101 tokens from B to A; this should be rejected by the EVM
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, b, erc20Instance, "transfer", a.Address, big.NewInt(101))
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Check that the balances have not changed
 	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, newA, balance)
 
 	balance, err = bevmClient.Call(a, erc20Instance, "balanceOf", b.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, newB, balance)
 }
 
@@ -288,30 +288,30 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	// Spawn a new BEvm instance
 	instanceID, err := NewBEvm(bct.cl, bct.signer, bct.gDarc)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Create a new BEvm client
 	bevmClient, err := NewClient(bct.cl, bct.signer, instanceID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Initialize two accounts
 	a, err := NewEvmAccount(testPrivateKeys[0])
-	require.Nil(t, err)
+	require.NoError(t, err)
 	b, err := NewEvmAccount(testPrivateKeys[1])
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Credit the accounts
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), a.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	err = bevmClient.CreditAccount(big.NewInt(5*WeiPerEther), b.Address)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy an ERC20 Token contract
 	erc20Contract, err := NewEvmContract(
 		"ERC20Token", getContractData(t, "ERC20Token", "abi"), getContractData(t, "ERC20Token", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	erc20Instance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Contract)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Deploy a Loan contract
 	guarantee := big.NewInt(10000)
@@ -319,7 +319,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	loanContract, err := NewEvmContract(
 		"LoanContract", getContractData(t, "LoanContract", "abi"), getContractData(t, "LoanContract", "bin"))
-	require.Nil(t, err)
+	require.NoError(t, err)
 	loanInstance, err := bevmClient.Deploy(txParams.GasLimit, txParams.GasPrice, 0, a, loanContract,
 		loanAmount,            // wantedAmount: the amount in Ether that the borrower wants to borrow
 		big.NewInt(0),         // interest: the amount in Ether that the borrower will pay pack in addition to the borrowed amount
@@ -328,14 +328,14 @@ func Test_InvokeLoanContract(t *testing.T) {
 		erc20Instance.Address, // tokenContractAddress: the address of the ERC20 contract handling the tokens used as guarantee
 		big.NewInt(0),         // length: the duration of the loan, in days
 	)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	getBalances := func(from *EvmAccount, address common.Address) (tokenBalance, balance *big.Int) {
 		result, err := bevmClient.Call(from, erc20Instance, "balanceOf", address)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		tokenBalance = result.(*big.Int)
 		balance, err = bevmClient.GetAccountBalance(address)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		return
 	}
 
@@ -348,7 +348,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	// Transfer tokens from A as a guarantee (A owns all the tokens as he deployed the Token contract)
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, erc20Instance, "transfer", loanInstance.Address, guarantee)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	tokBal, _ = getBalances(a, a.Address)
 	expected := new(big.Int).Sub(initTokBalA, guarantee)
@@ -359,13 +359,13 @@ func Test_InvokeLoanContract(t *testing.T) {
 
 	// Check that there are enough tokens
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, 0, a, loanInstance, "checkTokens")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Lend
 	_, initEtherBalA := getBalances(a, a.Address)
 
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), b, loanInstance, "lend")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, bal = getBalances(a, a.Address)
 	expected = new(big.Int).Add(initEtherBalA, loanAmount)
@@ -375,7 +375,7 @@ func Test_InvokeLoanContract(t *testing.T) {
 	_, initEtherBalB := getBalances(a, b.Address)
 
 	err = bevmClient.Transaction(txParams.GasLimit, txParams.GasPrice, loanAmount.Uint64(), a, loanInstance, "payback")
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	_, bal = getBalances(a, b.Address)
 	expected = new(big.Int).Add(initEtherBalB, loanAmount)
@@ -409,7 +409,7 @@ func newBCTest(t *testing.T) (out *bcTest) {
 	out.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, out.roster,
 		[]string{"spawn:bevm", "invoke:bevm.credit", "invoke:bevm.transaction", "delete:bevm"},
 		out.signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	out.gDarc = &out.gMsg.GenesisDarc
 
 	// This BlockInterval is good for testing, but in real world applications this
@@ -417,7 +417,7 @@ func newBCTest(t *testing.T) (out *bcTest) {
 	out.gMsg.BlockInterval = time.Second
 
 	out.cl, _, err = byzcoin.NewLedger(out.gMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	out.cl.UseNode(0)
 
@@ -449,12 +449,12 @@ func getContractData(t *testing.T, name string, extension string) string {
 	// <name>_sol_<name>.{abi,bin}
 
 	curDir, err := os.Getwd()
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	path := filepath.Join(curDir, "testdata", name, name+"_sol_"+name+"."+extension)
 
 	data, err := ioutil.ReadFile(path)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	return string(data)
 }

@@ -22,11 +22,11 @@ func TestService_Naming(t *testing.T) {
 	s := local.GetServices(hosts, ByzCoinID)[0].(*Service)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"_name:" + ContractDarcID}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// Spawn the naming instance
 	spawnNamingTx, err := cl.CreateTransaction(Instruction{

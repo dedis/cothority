@@ -191,14 +191,14 @@ func TestViewChange_LostSync(t *testing.T) {
 
 	// then new blocks have been added
 	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = s.services[1].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
 		Transaction:   tx1,
 		InclusionWait: 5,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// give enough time for the propagation to be processed
 	time.Sleep(1 * time.Second)

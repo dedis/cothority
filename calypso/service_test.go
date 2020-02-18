@@ -288,17 +288,17 @@ func TestService_DecryptKey(t *testing.T) {
 	require.NotNil(t, err)
 
 	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 	keyCopy1, err := dk1.RecoverKey(s.signer.Ed25519.Secret)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, key1, keyCopy1)
 
 	dk2, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe2, Write: *prWr2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, dk2.X.Equal(s.ltsReply.X))
 	keyCopy2, err := dk2.RecoverKey(s.signer.Ed25519.Secret)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, key2, keyCopy2)
 }
 
@@ -315,11 +315,11 @@ func TestService_DecryptEphemeralKey(t *testing.T) {
 	prRe1 := s.addReadAndWait(t, prWr1, ephemeral.Public)
 
 	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, dk1.X.Equal(s.ltsReply.X))
 
 	keyCopy1, err := dk1.RecoverKey(ephemeral.Private)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, key1, keyCopy1)
 }
 
@@ -346,7 +346,7 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point, ctr uin
 	}
 	var err error
 	readBuf, err = protobuf.Encode(read)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
 		byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key()),
@@ -359,7 +359,7 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point, ctr uin
 	)
 	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	return ctx.Instructions[0].DeriveID("")
 }
 
@@ -444,12 +444,12 @@ func (s *ts) createGenesis(t *testing.T) {
 			"spawn:" + ContractLongTermSecretID,
 			"invoke:" + ContractLongTermSecretID + ".reshare"},
 		s.signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc
 	s.genesisMsg.BlockInterval = time.Second
 
 	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	for _, svc := range s.services {
 		req := &Authorize{ByzCoinID: s.cl.ID}
@@ -491,7 +491,7 @@ func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
 func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 	write := NewWrite(cothority.Suite, s.ltsReply.InstanceID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	ctx := byzcoin.NewClientTransaction(byzcoin.CurrentVersion,
 		byzcoin.Instruction{
@@ -505,7 +505,7 @@ func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 	)
 	require.Nil(t, ctx.FillSignersAndSignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	return ctx.Instructions[0].DeriveID("")
 }
 

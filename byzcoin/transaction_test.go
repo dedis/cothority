@@ -20,7 +20,7 @@ func TestTransaction_Signing(t *testing.T) {
 
 	// create the tx
 	ctx, err := createOneClientTx(d.GetBaseID(), "dummy_kind", []byte("dummy_value"), signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// create a db/trie
 	mdb := trie.NewMemDB()

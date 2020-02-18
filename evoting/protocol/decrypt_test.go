@@ -103,7 +103,7 @@ func runDecrypt(t *testing.T, n int) {
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballots[i], election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}
 
 	mixes := make([]*lib.Mix, n)
@@ -122,7 +122,7 @@ func runDecrypt(t *testing.T, n int) {
 		}
 		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		x, y = v, w
 	}
 
@@ -208,7 +208,7 @@ func TestDecryptNodeFailure(t *testing.T) {
 		mixes[i] = mix
 		tx = lib.NewTransaction(mix, election.Creator)
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		x, y = v, w
 	}
 

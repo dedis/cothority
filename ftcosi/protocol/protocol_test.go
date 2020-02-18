@@ -146,7 +146,7 @@ func TestProtocolQuickAnswer(t *testing.T) {
 			}
 
 			mask, err := cosi.NewMask(testSuite, publics, nil)
-			require.Nil(t, err)
+			require.NoError(t, err)
 			lenRes := testSuite.PointLen() + testSuite.ScalarLen()
 			mask.SetMask(sig[lenRes:])
 			// Test that we have less than nNodes signatures

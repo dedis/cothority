@@ -29,7 +29,7 @@ func TestClient_NewLedgerCorrupted(t *testing.T) {
 	service := servers[0].Service(testServiceName).(*corruptedService)
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	c := &Client{
 		Client: onet.NewClient(cothority.Suite, testServiceName),
 		Roster: *roster,
@@ -128,14 +128,14 @@ func TestClient_GetProof(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
 	msg.BlockInterval = 100 * time.Millisecond
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// The darc inside it should be valid.
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	c, csr, err := NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	gac, err := c.GetAllByzCoinIDs(roster.List[1])
 	require.NoError(t, err)
@@ -145,9 +145,9 @@ func TestClient_GetProof(t *testing.T) {
 	value := []byte{5, 6, 7, 8}
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	atr, err := c.AddTransactionAndWait(tx, 10)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
 	newID := tx.Instructions[0].Hash()
@@ -156,7 +156,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	require.Equal(t, 2, len(p.Proof.Links))
 	k, v0, _, _, err := p.Proof.KeyValue()
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, k, newID)
 	require.Equal(t, value, v0)
 
@@ -208,14 +208,14 @@ func TestClient_Streaming(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
 	msg.BlockInterval = time.Second
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	// The darc inside it should be valid.
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
 	c, csr, err := NewLedger(msg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	n := 2
 	go func() {
@@ -268,7 +268,7 @@ func TestClient_Streaming(t *testing.T) {
 
 	go func() {
 		err = c1.StreamTransactions(cb)
-		require.Nil(t, err)
+		require.NoError(t, err)
 	}()
 	select {
 	case <-done:

@@ -58,7 +58,7 @@ func TestCoin_Spawn(t *testing.T) {
 	c, _ := contractCoinFromBytes(nil)
 	sc, co, err := c.Spawn(ct, inst, []byzcoin.Coin{})
 
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(sc))
 
 	ca := inst.DeriveID("")
@@ -100,7 +100,7 @@ func TestCoin_InvokeMint(t *testing.T) {
 	}
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
 	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
@@ -112,7 +112,7 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 		Value: ^uint64(0),
 	}
 	ciBuf, err := protobuf.Encode(&ci)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	ct := newCT("invoke:mint")
 	ct.setSignatureCounter(gsigner.Identity().String(), 0)
@@ -159,7 +159,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	c2 := byzcoin.Coin{Name: notOlCoin, Value: 1}
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{c1, c2})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
 	require.Equal(t, 1, len(sc))
@@ -184,7 +184,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	ct.Store(coAddr, ciOne, ContractCoinID, gdarc.GetBaseID())
 
 	sc, co, err = ct.getContract(inst.InstanceID).Invoke(ct, inst, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, CoinName)
 	require.Equal(t, uint64(1), co[0].Value)
@@ -237,7 +237,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 	}
 
 	sc, co, err := ct.getContract(inst.InstanceID).Invoke(ct, inst, []byzcoin.Coin{})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
 	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])

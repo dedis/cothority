@@ -2488,7 +2488,7 @@ func TestService_Repair(t *testing.T) {
 	n := 5
 	for i := 0; i < n; i++ {
 		ctx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer, uint64(i+1))
-		require.Nil(t, err)
+		require.NoError(t, err)
 		s.sendTxAndWait(t, ctx, 10)
 
 		// take a copy of the state trie at the middle

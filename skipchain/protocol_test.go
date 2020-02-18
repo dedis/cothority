@@ -79,9 +79,9 @@ func TestGB(t *testing.T) {
 	ts2.Db = NewSkipBlockDB(db, bucket)
 	blocks := []*SkipBlock{sb0, sb1, sb2, sb3}
 	_, err := ts0.Db.StoreBlocks(blocks)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	_, err = ts1.Db.StoreBlocks(blocks)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	// do not save anything into ts2 so that
 	// it is totally out of date, and cannot answer anything
 

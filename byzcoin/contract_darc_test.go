@@ -21,11 +21,11 @@ func TestSecureDarc(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{}, signer.Identity())
-	require.Nil(t, err)
+	require.NoError(t, err)
 	gDarc := &genesisMsg.GenesisDarc
 	genesisMsg.BlockInterval = time.Second
 	cl, _, err := NewLedger(genesisMsg, false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	restrictedSigner := darc.NewSignerEd25519(nil, nil)
 	unrestrictedSigner := darc.NewSignerEd25519(nil, nil)
