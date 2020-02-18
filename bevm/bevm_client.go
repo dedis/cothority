@@ -77,9 +77,13 @@ func (contractInstance EvmContractInstance) packMethod(method string,
 	return contractInstance.Parent.Abi.Pack(method, args...)
 }
 
-func (contractInstance EvmContractInstance) unpackResult(method string,
+func (contractInstance EvmContractInstance) getAbi() abi.ABI {
+	return contractInstance.Parent.Abi
+}
+
+func unpackResult(contractAbi abi.ABI, method string,
 	resultBytes []byte) (interface{}, error) {
-	methodAbi, ok := contractInstance.Parent.Abi.Methods[method]
+	methodAbi, ok := contractAbi.Methods[method]
 	if !ok {
 		return nil, xerrors.Errorf("method \"%s\" does not exist for "+
 			"this contract", method)
@@ -95,7 +99,7 @@ func (contractInstance EvmContractInstance) unpackResult(method string,
 		// Create a pointer to the desired type
 		result := reflect.New(abiOutputs[0].Type.Type)
 
-		err := contractInstance.Parent.Abi.Unpack(result.Interface(),
+		err := contractAbi.Unpack(result.Interface(),
 			method, resultBytes)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to unpack single "+
@@ -107,9 +111,9 @@ func (contractInstance EvmContractInstance) unpackResult(method string,
 
 	default:
 		// Abi.Unpack() on multiple values supports a struct or array/slice as
-		// cwstructure into which the result is stored. Struct is cleaner, but
-		// it does not support unnamed outputs ("or purely underscored"). If
-		// this is needed, an array implementation, commented out, follows.
+		// structure into which the result is stored. Struct is cleaner, but it
+		// does not support unnamed outputs ("or purely underscored"). If this
+		// is needed, an array implementation, commented out, follows.
 
 		// Build a struct naming the fields after the outputs
 		var fields []reflect.StructField
@@ -126,7 +130,7 @@ func (contractInstance EvmContractInstance) unpackResult(method string,
 		structType := reflect.StructOf(fields)
 		s := reflect.New(structType)
 
-		err := contractInstance.Parent.Abi.Unpack(s.Interface(),
+		err := contractAbi.Unpack(s.Interface(),
 			method, resultBytes)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to unpack multiple "+
@@ -364,12 +368,12 @@ func (client *Client) Call(account *EvmAccount,
 		contractInstance.Address, callData, uint64(1*WeiPerEther),
 		big.NewInt(0))
 	if err != nil {
-		return nil, xerrors.Errorf("failed to executing EVM view "+
+		return nil, xerrors.Errorf("failed to execute EVM view "+
 			"method: %v", err)
 	}
 
-	// Unpack the result into the caller's variable
-	result, err := contractInstance.unpackResult(method, ret)
+	// Unpack the result
+	result, err := unpackResult(contractInstance.getAbi(), method, ret)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to unpack EVM view "+
 			"method result: %v", err)

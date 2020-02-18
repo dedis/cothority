@@ -3,7 +3,6 @@ package bevm
 import (
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -257,7 +256,6 @@ func (c *contractBEvm) Invoke(rst byzcoin.ReadOnlyStateTrie,
 				"transaction: %v", err)
 		}
 
-
 		// Retrieve the TimeReader (we are actually called with a GlobalState)
 		tr, ok := rst.(byzcoin.TimeReader)
 		if !ok {
@@ -330,8 +328,7 @@ func sendTx(tx *types.Transaction, stateDb *state.StateDB, timestamp uint64) (
 	var bc core.ChainContext
 
 	// Header represents a block header in the Ethereum blockchain.
-	var header *types.Header
-	header = &types.Header{
+	header := &types.Header{
 		Number:     big.NewInt(0),
 		Difficulty: big.NewInt(0),
 		ParentHash: common.Hash{0},
