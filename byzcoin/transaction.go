@@ -261,6 +261,22 @@ func (instr Instruction) ContractID() string {
 	return a
 }
 
+// Arguments returns the arguments of the instruction
+func (instr Instruction) Arguments() Arguments {
+	var args Arguments
+
+	switch instr.GetType() {
+	case SpawnType:
+		args = instr.Spawn.Args
+	case InvokeType:
+		args = instr.Invoke.Args
+	case DeleteType:
+		args = instr.Delete.Args
+	}
+
+	return args
+}
+
 // String returns a human readable form of the instruction.
 func (instr Instruction) String() string {
 	contractFn, ok := GetContractRegistry().Search(instr.ContractID())

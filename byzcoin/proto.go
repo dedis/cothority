@@ -240,6 +240,8 @@ type Invoke struct {
 type Delete struct {
 	// ContractID represents the kind of contract that is being deleted.
 	ContractID string
+	// Args holds all data necessary to delete the instance.
+	Args Arguments
 }
 
 // Argument is a name/value pair that will be passed to the contract.
